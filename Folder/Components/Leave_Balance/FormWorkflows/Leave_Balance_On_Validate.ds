@@ -1,0 +1,43 @@
+Leave_Balance_On_Validate as "Leave Balance - On Validate"
+{
+
+				type =  form
+				form = Leave_Balance
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											duplicateBalances = Leave_Balance[Employee == input.Employee && Leave_Type == input.Leave_Type && ID != input.ID];
+										if(duplicateBalances.count() > 0)
+										{
+											alert "Leave balance already exists for this employee and leave type.";
+											cancel submit;
+										}
+										if(ifnull(input.Balance_Days,0) < 0 || ifnull(input.Used_Days,0) < 0 || ifnull(input.Credited_Days,0) < 0)
+										{
+											alert "Leave balance, used days, and credited days cannot be negative.";
+											cancel submit;
+										}
+										if(input.Balance_Days == null)
+										{
+											input.Balance_Days = 0;
+										}
+										if(input.Used_Days == null)
+										{
+											input.Used_Days = 0;
+										}
+										if(input.Credited_Days == null)
+										{
+											input.Credited_Days = 0;
+										}
+						)
+					}
+				}
+
+			
+}

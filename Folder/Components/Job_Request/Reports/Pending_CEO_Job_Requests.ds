@@ -1,0 +1,50 @@
+list Pending_CEO_Job_Requests
+{
+
+			displayName = "Pending CEO Job Requests"
+			show all rows from Job_Request  [Status == "Pending_CEO"]  
+			(
+				Job_Title as "Job Title"
+				Department
+				Number_Of_Positions as "Number Of Positions"
+				Requested_By as "Requested By"
+				Status
+				CEO_Comments as "CEO Comments"
+				custom action "Approve Job Request"
+				(
+	  			workflow = Approve_Job_Request
+				column header = "Approve Job Request"
+				success message = "Job request approved"
+				condition = (Status == "Pending_CEO")
+				confirmation before execution
+				(
+					message for individual record = "Approve this job request?"
+					confirm button text = "Approve"		
+					cancel button text = "Cancel"
+				)
+				)
+				custom action "Reject Job Request"
+				(
+	  			workflow = Reject_Job_Request
+				column header = "Reject Job Request"
+				success message = "Job request rejected"
+				condition = (Status == "Pending_CEO")
+				confirmation before execution
+				(
+					message for individual record = "Reject this job request? Add CEO comments on the record before rejecting."
+					confirm button text = "Reject"		
+					cancel button text = "Cancel"
+				)
+				)
+			)
+			filters
+			(
+				Department
+				Status
+			)
+			sort by
+			(
+				Job_Title ascending
+			)
+		
+}

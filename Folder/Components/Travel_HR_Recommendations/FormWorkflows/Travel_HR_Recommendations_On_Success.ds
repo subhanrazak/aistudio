@@ -1,0 +1,27 @@
+Travel_HR_Recommendations_On_Success as "Travel HR Recommendations - On Success"
+{
+
+				type =  form
+				form = Travel_HR_Recommendations
+
+				record event = on add or edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											tokenMap = Map();
+										tokenMap.put("travel_request",input.Travel_Request);
+										tokenMap.put("recommendation_type",input.Recommendation_Type);
+										tokenMap.put("vendor",input.Vendor_Or_Operator);
+										tokenMap.put("estimated_cost",input.Estimated_Cost);
+										thisapp.Send_Configured_Notification("TRAVEL_OPTIONS_READY",tokenMap,"Travel options ready","Travel options are ready for review.");
+										thisapp.Add_Audit_Log("TRAVEL_RECOMMENDATION_SAVED","Travel","Travel_HR_Recommendations",input.ID,"Save","",if(input.Is_Selected == true,"Selected","Proposed"),"Travel recommendation saved.",true,"");
+						)
+					}
+				}
+
+			
+}

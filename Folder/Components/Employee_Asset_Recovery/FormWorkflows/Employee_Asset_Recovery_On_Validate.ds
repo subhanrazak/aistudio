@@ -1,0 +1,45 @@
+Employee_Asset_Recovery_On_Validate as "Employee Asset Recovery - On Validate"
+{
+
+				type =  form
+				form = Employee_Asset_Recovery
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Resignation_Request != null)
+										{
+											resignationRows = Resignation_Request[ID == input.Resignation_Request];
+											if(resignationRows.count() > 0)
+											{
+												input.Employee = resignationRows.Employee;
+											}
+										}
+										if(input.Recovery_Status == "Recovered" && input.Asset_Condition == null)
+										{
+											alert "Asset condition is required when an asset is recovered.";
+											cancel submit;
+										}
+										if(input.Recovery_Status == "Recovered" || input.Recovery_Status == "Not_Found")
+										{
+											if(input.Recovery_Date == null)
+											{
+												input.Recovery_Date = zoho.currentdate;
+											}
+										}
+										else
+										{
+											input.Recovery_Date = null;
+										}
+										input.External_Sync_Status = "Pending_Sync";
+						)
+					}
+				}
+
+			
+}

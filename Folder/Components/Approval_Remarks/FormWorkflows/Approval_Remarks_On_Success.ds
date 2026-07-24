@@ -1,0 +1,170 @@
+Approval_Remarks_On_Success as "Approval Remarks - On Success"
+{
+
+				type =  form
+				form = Approval_Remarks
+
+				record event = on add
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											oldStatus = ifnull(input.Previous_Status,"");
+										calculatedStatus = oldStatus;
+										eventKey = "APPROVAL_STATUS_UPDATED";
+										tokenMap = Map();
+										tokenMap.put("module",input.Module);
+										tokenMap.put("action",input.Action);
+										tokenMap.put("remarks",ifnull(input.Remarks,""));
+										actorProfile = ifnull(input.Actor_Profile,"");
+										if(input.Module == "Gift_Registration")
+										{
+											giftRecord = Gift_Registration[ID == input.Linked_Gift_Registration];
+											oldStatus = giftRecord.Status;
+											if(input.Action == "Rejected")
+											{
+												calculatedStatus = "Rejected";
+											}
+											else if(input.Action == "Returned")
+											{
+												calculatedStatus = "Approved_Return";
+											}
+											else if(input.Action == "Approved" && oldStatus == "Pending_Manager")
+											{
+												calculatedStatus = "Pending_HR";
+											}
+											else if(input.Action == "Approved" && oldStatus == "Pending_HR")
+											{
+												calculatedStatus = "Pending_Finance";
+											}
+											else if(input.Action == "Approved" && oldStatus == "Pending_Finance")
+											{
+												calculatedStatus = "Approved_Retain";
+											}
+											giftRecord.Status=calculatedStatus;
+											input.New_Status = calculatedStatus;
+										}
+										else if(input.Module == "Attendance_Leave" && input.Linked_Time_Off_Request != null)
+										{
+											leaveRecord = Time_Off_Request[ID == input.Linked_Time_Off_Request];
+											oldStatus = leaveRecord.Status;
+											if(input.Action == "Rejected")
+											{
+												calculatedStatus = "Rejected";
+											}
+											else if(input.Action == "Approved" && oldStatus == "Pending_Manager")
+											{
+												calculatedStatus = "Pending_HR";
+											}
+											else if(input.Action == "Approved" && oldStatus == "Pending_HR")
+											{
+												calculatedStatus = "Approved";
+											}
+											leaveRecord.Status=calculatedStatus;
+											input.New_Status = calculatedStatus;
+										}
+										else if(input.Module == "Attendance_Leave" && input.Linked_Regularisation_Request != null)
+										{
+											regularisationRecord = Regularisation_Request[ID == input.Linked_Regularisation_Request];
+											oldStatus = regularisationRecord.Status;
+											if(input.Action == "Rejected")
+											{
+												calculatedStatus = "Rejected";
+											}
+											else if(input.Action == "Approved" && oldStatus == "Pending_Manager")
+											{
+												calculatedStatus = "Pending_HR";
+											}
+											else if(input.Action == "Approved" && oldStatus == "Pending_HR")
+											{
+												calculatedStatus = "Approved";
+											}
+											regularisationRecord.Status=calculatedStatus;
+											input.New_Status = calculatedStatus;
+										}
+										else if(input.Module == "Travel")
+										{
+											travelRecord = Travel_Request[ID == input.Linked_Travel_Request];
+											oldStatus = travelRecord.Status;
+											if(input.Action == "Rejected")
+											{
+												calculatedStatus = "Rejected";
+											}
+											else if(input.Action == "Approved" && oldStatus == "Pending_Manager")
+											{
+												calculatedStatus = "Pending_CEO";
+											}
+											else if(input.Action == "Approved" && oldStatus == "Pending_CEO")
+											{
+												calculatedStatus = "Pending_HR";
+											}
+											else if(input.Action == "Approved" && oldStatus == "Pending_HR")
+											{
+												calculatedStatus = "Approved";
+											}
+											travelRecord.Status=calculatedStatus;
+											input.New_Status = calculatedStatus;
+										}
+										else if(input.Module == "Reimbursement")
+										{
+											reimbursementRecord = Reimbursement_Request[ID == input.Linked_Reimbursement_Request];
+											oldStatus = reimbursementRecord.Status;
+											if(input.Action == "Rejected")
+											{
+												calculatedStatus = "Rejected";
+											}
+											else if(input.Action == "Submitted" && oldStatus == "Draft")
+											{
+												if(reimbursementRecord.Category == "Health_Insurance")
+												{
+													calculatedStatus = "Pending_HR";
+												}
+												else
+												{
+													calculatedStatus = "Pending_Manager";
+												}
+											}
+											else if(input.Action == "Approved" && oldStatus == "Pending_Manager" || oldStatus == "Pending_HR")
+											{
+												calculatedStatus = "Pending_Finance";
+											}
+											else if(input.Action == "Approved" && oldStatus == "Pending_Finance")
+											{
+												calculatedStatus = "Processed";
+												reimbursementRecord.Processed_Date=zoho.currentdate;
+											}
+											reimbursementRecord.Status=calculatedStatus;
+											input.New_Status = calculatedStatus;
+										}
+										else if(input.Module == "Offboarding")
+										{
+											resignationRecord = Resignation_Request[ID == input.Linked_Resignation_Request];
+											oldStatus = resignationRecord.Status;
+											if(input.Action == "Rejected")
+											{
+												calculatedStatus = "Rejected";
+											}
+											else if(input.Action == "Approved" && oldStatus == "Pending_Manager")
+											{
+												calculatedStatus = "Pending_HR";
+											}
+											else if(input.Action == "Approved" && oldStatus == "Pending_HR")
+											{
+												calculatedStatus = "Approved";
+											}
+											resignationRecord.Status=calculatedStatus;
+											input.New_Status = calculatedStatus;
+										}
+										thisapp.Add_Audit_Log(eventKey,input.Module,"Approval_Remarks",input.ID,input.Action,oldStatus,calculatedStatus,ifnull(input.Remarks,""),true,"");
+										tokenMap.put("old_status",oldStatus);
+										tokenMap.put("new_status",calculatedStatus);
+										thisapp.Send_Configured_Notification(eventKey,tokenMap,"Approval status updated","Approval status updated for {{module}} from {{old_status}} to {{new_status}}.");
+						)
+					}
+				}
+
+			
+}

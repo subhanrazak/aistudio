@@ -1,0 +1,53 @@
+Job_Application_On_Success as "Job Application - On Success"
+{
+
+				type =  form
+				form = Job_Application
+
+				record event = on add or edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											tokenMap = Map();
+										tokenMap.put("status",input.Status);
+										tokenMap.put("source",ifnull(input.Source_Of_Application,""));
+										tokenMap.put("round",ifnull(input.Current_Round,0));
+										if(input.Candidate != null)
+										{
+											candidateRows = Candidate[ID == input.Candidate];
+											if(candidateRows.count() > 0)
+											{
+												tokenMap.put("candidate",candidateRows.Candidate_Name);
+											}
+										}
+										if(input.Job_Request != null)
+										{
+											jobRows = Job_Request[ID == input.Job_Request];
+											if(jobRows.count() > 0)
+											{
+												tokenMap.put("job_title",jobRows.Job_Title);
+											}
+										}
+										if(input.Status == "Offer_Accepted")
+										{
+											if(input.Offer_Accepted_Date == null)
+											{
+												input.Offer_Accepted_Date = zoho.currentdate;
+											}
+											thisapp.Add_Audit_Log("JOB_APPLICATION_OFFER_ACCEPTED","Recruitment","Job_Application",input.ID,"Offer Accepted","","Offer_Accepted","Offer documents/acceptance captured.",true,"");
+											thisapp.Send_Configured_Notification("JOB_APPLICATION_OFFER_ACCEPTED",tokenMap,"Offer accepted","{{candidate}} accepted the offer for {{job_title}}.");
+										}
+										else
+										{
+											thisapp.Add_Audit_Log("JOB_APPLICATION_SAVED","Recruitment","Job_Application",input.ID,"Saved","",input.Status,"Job application saved.",true,"");
+										}
+						)
+					}
+				}
+
+			
+}

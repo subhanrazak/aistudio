@@ -1,0 +1,42 @@
+Announcement_On_Success as "Announcement - On Success"
+{
+
+				type =  form
+				form = Announcement
+
+				record event = on add or edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Target_Employees != null && !input.Target_Employees.isEmpty())
+										{
+											for each  employeeId in input.Target_Employees
+											{
+												existingAckRows = Announcement_Acknowledgement[Announcement == input.ID && Employee == employeeId];
+												if(existingAckRows.count() == 0)
+												{
+													insertedAckId = insert into Announcement_Acknowledgement
+													[
+														Announcement=input.ID
+														Employee=employeeId
+														Acknowledged=false
+														Added_User=zoho.loginuser
+													];
+												}
+											}
+										}
+										tokenMap = Map();
+										tokenMap.put("title",input.Title);
+										tokenMap.put("deadline",ifnull(input.Acknowledgement_Deadline,""));
+										thisapp.Send_Configured_Notification("ANNOUNCEMENT_PUBLISHED",tokenMap,"Announcement published","A new announcement requires acknowledgement: {{title}}.");
+										thisapp.Add_Audit_Log("ANNOUNCEMENT_PUBLISHED","Training_Announcement","Announcement",input.ID,"Published","",if(input.Is_Active == true,"Active","Inactive"),"Announcement saved and acknowledgement rows created.",true,"");
+						)
+					}
+				}
+
+			
+}

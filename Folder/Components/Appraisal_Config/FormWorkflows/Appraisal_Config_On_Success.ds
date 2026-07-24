@@ -1,0 +1,33 @@
+Appraisal_Config_On_Success as "Appraisal Config - On Success"
+{
+
+				type =  form
+				form = Appraisal_Config
+
+				record event = on add or edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Is_Active == true)
+										{
+											tokenMap = Map();
+											tokenMap.put("appraisal_year",input.Appraisal_Year);
+											tokenMap.put("window_start",input.Window_Start);
+											tokenMap.put("window_end",input.Window_End);
+											thisapp.Add_Audit_Log("APPRAISAL_CONFIG_ACTIVE","Performance","Appraisal_Config",input.ID,"Activated","","Active","Appraisal cycle activated.",true,"");
+											thisapp.Send_Configured_Notification("APPRAISAL_CONFIG_ACTIVE",tokenMap,"Appraisal cycle active","Appraisal cycle {{appraisal_year}} is active from {{window_start}} to {{window_end}}.");
+										}
+										else
+										{
+											thisapp.Add_Audit_Log("APPRAISAL_CONFIG_SAVED","Performance","Appraisal_Config",input.ID,"Saved","","Inactive","Appraisal configuration saved.",true,"");
+										}
+						)
+					}
+				}
+
+			
+}

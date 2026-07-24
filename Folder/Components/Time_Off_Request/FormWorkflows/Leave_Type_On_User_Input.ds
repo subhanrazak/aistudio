@@ -1,0 +1,37 @@
+Leave_Type_On_User_Input as "Leave Type - On User Input"
+{
+
+				type =  form
+				form = Time_Off_Request
+
+				record event = on add or edit
+
+				on user input of Leave_Type
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											hide Baby_Birth_Date;
+										hide Supporting_Document;
+										if(input.Leave_Type != null)
+										{
+											leaveTypeRows = Leave_Type_Config[ID == input.Leave_Type];
+											if(leaveTypeRows.count() > 0)
+											{
+												if(leaveTypeRows.Document_Required == true)
+												{
+													show Supporting_Document;
+												}
+												if(leaveTypeRows.Leave_Type_Name == "Maternity" || leaveTypeRows.Leave_Type_Name == "Paternity")
+												{
+													show Baby_Birth_Date;
+												}
+											}
+										}
+						)
+					}
+				}
+
+			
+}

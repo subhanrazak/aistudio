@@ -1,0 +1,39 @@
+Training_Completion_On_Load as "Training Completion - On Load"
+{
+
+				type =  form
+				form = Training_Completion
+
+				record event = on add or edit
+
+				on load
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Employee == null)
+										{
+											input.Employee = zoho.loginuserid;
+										}
+										if(input.Employee_Record == null)
+										{
+											employeeRows = Employee_Master[Official_Email == zoho.loginuserid || Official_Email == zoho.loginuser];
+											if(employeeRows.count() > 0)
+											{
+												input.Employee_Record = employeeRows.ID;
+											}
+										}
+										if(input.Status == null || input.Status == "")
+										{
+											input.Status = "Completed";
+										}
+										disable Employee;
+										disable Employee_Record;
+										disable Status;
+						)
+					}
+				}
+
+			
+}

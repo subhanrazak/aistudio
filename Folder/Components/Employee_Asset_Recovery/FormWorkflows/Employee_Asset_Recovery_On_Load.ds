@@ -1,0 +1,36 @@
+Employee_Asset_Recovery_On_Load as "Employee Asset Recovery - On Load"
+{
+
+				type =  form
+				form = Employee_Asset_Recovery
+
+				record event = on add or edit
+
+				on load
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											disable Employee;
+										disable Recovery_Date;
+										disable External_Sync_Status;
+										hide Asset_Condition;
+										if(input.Resignation_Request != null)
+										{
+											resignationRows = Resignation_Request[ID == input.Resignation_Request];
+											if(resignationRows.count() > 0)
+											{
+												input.Employee = resignationRows.Employee;
+											}
+										}
+										if(input.Recovery_Status == "Recovered")
+										{
+											show Asset_Condition;
+										}
+						)
+					}
+				}
+
+			
+}

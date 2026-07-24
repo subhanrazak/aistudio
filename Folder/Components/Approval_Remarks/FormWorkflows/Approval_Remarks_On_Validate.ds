@@ -1,0 +1,59 @@
+Approval_Remarks_On_Validate as "Approval Remarks - On Validate"
+{
+
+				type =  form
+				form = Approval_Remarks
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Action in {"Rejected","Returned","On_Hold","Override_Deactivation"} && input.Remarks == null || input.Remarks.trim() == "")
+										{
+											alert "Remarks are required for this action.";
+											cancel submit;
+										}
+										linkedCount = 0;
+										if(input.Linked_Job_Application != null)
+										{
+											linkedCount = linkedCount + 1;
+										}
+										if(input.Linked_Time_Off_Request != null)
+										{
+											linkedCount = linkedCount + 1;
+										}
+										if(input.Linked_Regularisation_Request != null)
+										{
+											linkedCount = linkedCount + 1;
+										}
+										if(input.Linked_Travel_Request != null)
+										{
+											linkedCount = linkedCount + 1;
+										}
+										if(input.Linked_Reimbursement_Request != null)
+										{
+											linkedCount = linkedCount + 1;
+										}
+										if(input.Linked_Gift_Registration != null)
+										{
+											linkedCount = linkedCount + 1;
+										}
+										if(input.Linked_Resignation_Request != null)
+										{
+											linkedCount = linkedCount + 1;
+										}
+										if(linkedCount != 1)
+										{
+											alert "Select exactly one linked record for this approval.";
+											cancel submit;
+										}
+						)
+					}
+				}
+
+			
+}

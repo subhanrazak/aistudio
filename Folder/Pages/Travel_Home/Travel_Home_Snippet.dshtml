@@ -1,0 +1,279 @@
+<%
+	loginRole = ifnull(thisapp.permissions.loginUserProfile(),"");
+	isAdmin = loginRole == "Administrator" || loginRole == "Admin";
+	isHR = loginRole == "HR_ADMIN" || isAdmin;
+	loginEmail = ifnull(zoho.loginuserid,zoho.loginuser);
+	employeeRows = Employee_Master[Official_Email == loginEmail];
+	myTravelCount = 0;
+	if(employeeRows.count() > 0)
+	{
+		myTravelCount = Travel_Request[Employee == employeeRows.ID].count();
+	}
+	totalTravel = Travel_Request.count();
+	pendingManagerTravel = Travel_Request[Status == "Pending_Manager"].count();
+	pendingCEOTravel = Travel_Request[Status == "Pending_CEO"].count();
+	pendingHRTravel = Travel_Request[Status == "Pending_HR"].count();
+	approvedTravel = Travel_Request[Status == "Approved" || Status == "Bills_Pending"].count();
+	billsPendingTravel = Travel_Request[Status == "Bills_Pending"].count();
+	billsUploadedTravel = Travel_Request[Status == "Bills_Uploaded"].count();
+	requirementCount = Travel_Requirements.count();
+	recommendationCount = Travel_HR_Recommendations.count();
+	selectedRecommendationCount = Travel_HR_Recommendations[Is_Selected == true].count();
+	selectedOptionCount = Travel_Selected_Options.count();
+	estimatedTotal = 0;
+	actualTotal = 0;
+	for each  travelRec in Travel_Request[ID != 0]
+	{
+		estimatedTotal = estimatedTotal + ifnull(travelRec.Total_Estimated_Cost,0);
+		actualTotal = actualTotal + ifnull(travelRec.Total_Actual_Cost,0);
+	}
+	%>
+<style>
+/* ===== zcs-global utility stylesheet included once for Travel_Home ===== */
+:root { --zcs-theme-brand-color: var(--zcs_brand_color, #2A6FFC); --zcs-light-bg-color: var(--zcs_brand_light_color, #E8EFFF); --zcs-primary-text-color: var(--zcs_primary_text_color, #1A1A1A); --zcs-secondary-text-color: var(--zcs_secondary_text_color, #55576B); --zcs-teritiary-text-color: var(--zcs_tertiary_text_color, #77798C); --zcs-border-color: var(--zcs_tertiary_border_color, #E6E8F0); --zcs-page-bg-color: #F5F7FB; --zcs-white-color: #FFFFFF; --zcs-brand-foreground: var(--zcs_brand_foreground_color, #FFFFFF); }
+a { text-decoration: none; }
+.zcs-flex { display: flex; } .zcs-inline-flex { display: inline-flex; } .zcs-row { display: flex; flex-wrap: wrap; } .zcs-direction-column { flex-direction: column; } .zcs-align-items-center { align-items: center; } .zcs-align-items-start { align-items: flex-start; } .zcs-justify-space-between { justify-content: space-between; } .zcs-justify-center { justify-content: center; } .zcs-gap-4 { gap: .25rem; } .zcs-gap-6 { gap: .375rem; } .zcs-gap-8 { gap: .5rem; } .zcs-gap-10 { gap: .625rem; } .zcs-gap-12 { gap: .75rem; } .zcs-gap-14 { gap: .875rem; } .zcs-gap-16 { gap: 1rem; } .zcs-gap-18 { gap: 1.125rem; } .zcs-gap-20 { gap: 1.25rem; } .zcs-gap-24 { gap: 1.5rem; }
+.zcs-p-0 { padding: 0; } .zcs-p-8 { padding: .5rem; } .zcs-p-10 { padding: .625rem; } .zcs-p-12 { padding: .75rem; } .zcs-p-14 { padding: .875rem; } .zcs-p-16 { padding: 1rem; } .zcs-p-18 { padding: 1.125rem; } .zcs-p-20 { padding: 1.25rem; } .zcs-p-24 { padding: 1.5rem; } .zcs-px-10 { padding-left: .625rem; padding-right: .625rem; } .zcs-px-12 { padding-left: .75rem; padding-right: .75rem; } .zcs-px-16 { padding-left: 1rem; padding-right: 1rem; } .zcs-px-20 { padding-left: 1.25rem; padding-right: 1.25rem; } .zcs-px-24 { padding-left: 1.5rem; padding-right: 1.5rem; } .zcs-px-30 { padding-left: 1.875rem; padding-right: 1.875rem; } .zcs-py-2 { padding-top: .125rem; padding-bottom: .125rem; } .zcs-py-6 { padding-top: .375rem; padding-bottom: .375rem; } .zcs-py-8 { padding-top: .5rem; padding-bottom: .5rem; } .zcs-py-10 { padding-top: .625rem; padding-bottom: .625rem; } .zcs-py-12 { padding-top: .75rem; padding-bottom: .75rem; } .zcs-py-16 { padding-top: 1rem; padding-bottom: 1rem; } .zcs-py-24 { padding-top: 1.5rem; padding-bottom: 1.5rem; }
+.zcs-m-0 { margin: 0; } .zcs-mt-4 { margin-top: .25rem; } .zcs-mt-8 { margin-top: .5rem; } .zcs-mt-10 { margin-top: .625rem; } .zcs-mt-12 { margin-top: .75rem; } .zcs-mt-16 { margin-top: 1rem; } .zcs-mb-8 { margin-bottom: .5rem; } .zcs-mb-12 { margin-bottom: .75rem; } .zcs-mb-16 { margin-bottom: 1rem; } .zcs-w-full { width: 100%; } .zcs-wh-full { width: 100%; height: 100%; } .zcs-col-common { flex: 1 1 0%; min-width: 0; } .zcs-no-shrink { flex-shrink: 0; } .zcs-box-border { box-sizing: border-box; } .zcs-rounded-sm { border-radius: .25rem; } .zcs-rounded-md { border-radius: .375rem; } .zcs-rounded-lg { border-radius: .5rem; } .zcs-rounded-xl { border-radius: .75rem; } .zcs-rounded-2xl { border-radius: 1rem; } .zcs-rounded-half { border-radius: 50%; } .zcs-text-center { text-align: center; } .zcs-overflow-auto { overflow: auto; } .zcs-relative { position: relative; } .zcs-absolute { position: absolute; }
+.zcs-font-11 { font-size: .6875rem; } .zcs-font-12 { font-size: .75rem; } .zcs-font-13 { font-size: .8125rem; } .zcs-font-14 { font-size: .875rem; } .zcs-font-15 { font-size: .9375rem; } .zcs-font-16 { font-size: 1rem; } .zcs-font-18 { font-size: 1.125rem; } .zcs-font-20 { font-size: 1.25rem; } .zcs-font-22 { font-size: 1.375rem; } .zcs-font-24 { font-size: 1.5rem; } .zcs-font-30 { font-size: 1.875rem; } .zcs-font-36 { font-size: 2.25rem; } .zcs-font-normal { font-weight: 400; } .zcs-font-medium { font-weight: 500; } .zcs-font-semibold { font-weight: 600; } .zcs-font-bold { font-weight: 700; } .zcs-lh-body { line-height: 1.5; } .zcs-lh-heading { line-height: 1.25; } .zcs-ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.zcs-color-primary { color: var(--zcs-primary-text-color); } .zcs-color-secondary { color: var(--zcs-secondary-text-color); } .zcs-color-tertiary { color: var(--zcs-teritiary-text-color); } .zcs-color-theme { color: var(--zcs-theme-brand-color); } .zcs-color-white { color: var(--zcs-white-color); } .zcs-color-green { color: #179E6C; } .zcs-color-blue { color: #2A6FFC; } .zcs-color-orange { color: #F4660C; } .zcs-color-red { color: #FE455D; }
+.zcs-card { background-color: var(--zcs-white-color); border: 1px solid var(--zcs-border-color); border-radius: 12px; box-shadow: 0 8px 24px rgba(18, 19, 43, .04); }
+/* ZCS component CSS: header-heading-with-actions and buttons */
+.zcs-button { width: auto; min-width: 5rem; min-height: 36px; } .zcs-primary-button { background-color: var(--zcs-theme-brand-color); color: var(--zcs-brand-foreground); } .zcs-primary-outline-button { border: 1px solid var(--zcs-theme-brand-color); background-color: var(--zcs-white-color); color: var(--zcs-theme-brand-color); } .zcs-secondary-button { border: 1px solid var(--zcs-border-color); background-color: #F6F7FA; color: var(--zcs-primary-text-color); } .zcs-primary-button.zcs-button:hover { background-color: var(--zcs_brand_dark_color, #1652BB); } .zcs-primary-outline-button:hover, .zcs-secondary-button:hover { background-color: var(--zcs_component_hover_color, #F2F7FF); } .zcs-button-icon { width: 16px; max-height: 16px; } .zcs-page-header { background: var(--zcs-white-color); border: 1px solid var(--zcs-border-color); border-radius: 16px; box-shadow: 0 8px 24px rgba(18,19,43,.04); }
+/* ZCS component CSS: horizontal-tab-horizontal-tab-with-icon */
+.zcs-horizontal-tabhead { box-shadow: 0px -1px 0px 0px var(--zcs-border-color) inset; overflow-x: auto; overflow-y: hidden; -ms-overflow-style: none; scrollbar-width: none; } .zcs-horizontal-tabhead::-webkit-scrollbar { display: none; } .zcs-horizontal-tabitem { list-style-type: none; border-bottom: 2px solid transparent; letter-spacing: .1px; } .zcs-horizontal-tabicon { width: 16px; height: 16px; } .zcs-horizontal-tabtext { text-wrap: nowrap; } .zcs-horizontal-tabitem:hover .zcs-horizontal-tablink { color: var(--zcs-theme-brand-color); } .zcs-horizontal-tabitem.zcs-horizontal-tabactive { border-bottom-color: var(--zcs-theme-brand-color); } .zcs-horizontal-tabitem.zcs-horizontal-tabactive .zcs-horizontal-tablink { color: var(--zcs-theme-brand-color); }
+/* ZCS component CSS: quick actions and workspace cards */
+.zcs-quick-action-item { list-style-type: none; } .zcs-quick-action-item:hover .zcs-quick-action-link { color: var(--zcs-theme-brand-color); } .zcs-quick-action-item:hover .zcs-quick-action-text { text-decoration: underline; }
+/* Travel Home layout */
+.th-page { min-height: 100%; background: var(--zcs-page-bg-color); padding: 22px; box-sizing: border-box; font-family: Lato, Arial, sans-serif; color: var(--zcs-primary-text-color); }
+.th-hero { position: relative; overflow: hidden; color: var(--zcs-white-color); border-radius: 18px; padding: 24px; background: linear-gradient(135deg, var(--zcs-theme-brand-color), #0F766E); }
+.th-hero:after { content: ""; position: absolute; right: -90px; top: -110px; width: 300px; height: 300px; border-radius: 50%; border: 40px solid rgba(255,255,255,.13); }
+.th-hero:before { content: ""; position: absolute; right: 190px; bottom: -86px; width: 180px; height: 180px; border-radius: 50%; border: 26px solid rgba(255,255,255,.10); }
+.th-hero-content { position: relative; z-index: 1; }
+.th-hero .zcs-primary-outline-button { background: rgba(255,255,255,.12); border-color: rgba(255,255,255,.72); color: #FFFFFF; }
+.th-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 18px; }
+.th-kpi { grid-column: span 3; min-height: 118px; }
+.th-kpi-icon { width: 42px; height: 42px; border-radius: 12px; background: var(--zcs-light-bg-color); color: var(--zcs-theme-brand-color); }
+.th-kpi-value { font-size: 30px; font-weight: 700; line-height: 1.1; }
+.th-workspace { grid-column: span 9; overflow: hidden; }
+.th-actions { grid-column: span 3; }
+.th-tab-input { display: none; }
+.th-tabbar { overflow-x: auto; }
+.th-tabbar label { cursor: pointer; border-bottom: 2px solid transparent; }
+.th-panel { display: none; padding: 18px; }
+#th-tab-overview:checked ~ .zcs-horizontal-tabpanel label[for='th-tab-overview'], #th-tab-my:checked ~ .zcs-horizontal-tabpanel label[for='th-tab-my'], #th-tab-hr:checked ~ .zcs-horizontal-tabpanel label[for='th-tab-hr'], #th-tab-children:checked ~ .zcs-horizontal-tabpanel label[for='th-tab-children'], #th-tab-selection:checked ~ .zcs-horizontal-tabpanel label[for='th-tab-selection'], #th-tab-kanban:checked ~ .zcs-horizontal-tabpanel label[for='th-tab-kanban'] { color: var(--zcs-theme-brand-color); border-bottom-color: var(--zcs-theme-brand-color); }
+#th-tab-overview:checked ~ .th-panels .th-panel-overview, #th-tab-my:checked ~ .th-panels .th-panel-my, #th-tab-hr:checked ~ .th-panels .th-panel-hr, #th-tab-children:checked ~ .th-panels .th-panel-children, #th-tab-selection:checked ~ .th-panels .th-panel-selection, #th-tab-kanban:checked ~ .th-panels .th-panel-kanban { display: block; }
+.th-embed-card { border: 1px solid var(--zcs-border-color); border-radius: 14px; overflow: hidden; background: var(--zcs-white-color); margin-bottom: 18px; }
+.th-embed-header { border-bottom: 1px solid var(--zcs-border-color); background: #FAFBFF; }
+.th-report-frame { min-height: 620px; width: 100%; }
+.th-report-frame.tall { min-height: 700px; }
+.th-mini-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.th-tool-card { border: 1px solid var(--zcs-border-color); border-radius: 14px; background: #FFFFFF; padding: 18px; }
+.th-tool-input { width: 100%; height: 40px; border: 1px solid var(--zcs-border-color); border-radius: 8px; box-sizing: border-box; padding: 0 12px; color: var(--zcs-primary-text-color); background: #FFFFFF; font: inherit; }
+.th-tool-input:focus { outline: 2px solid var(--zcs-theme-brand-color); outline-offset: 1px; }
+.th-note { border: 1px dashed var(--zcs-border-color); background: #FAFBFF; border-radius: 12px; }
+.th-access-note { border: 1px solid #FAAE13; background: #FCF4E6; color: #7E5608; border-radius: 12px; }
+.th-status-strip { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.th-status-item { background: #FFFFFF; border: 1px solid var(--zcs-border-color); border-radius: 12px; padding: 14px; }
+@media (max-width: 1180px) { .th-kpi { grid-column: span 6; } .th-workspace, .th-actions { grid-column: span 12; } }
+@media (max-width: 760px) { .th-page { padding: 14px; } .th-hero { padding: 18px; } .th-hero-content, .zcs-page-header { flex-direction: column; align-items: flex-start; } .zcs-page-header { padding: 16px; } .th-kpi { grid-column: span 12; } .th-panel { padding: 12px; } .th-mini-grid, .th-status-strip { grid-template-columns: 1fr; } .th-report-frame { min-height: 520px; } }
+</style>
+
+<script>
+function thOpenParamPage(pageName, paramName, inputId) {
+	var inputEl = document.getElementById(inputId);
+	var value = inputEl ? inputEl.value : "";
+	if (value && value.trim() !== "") {
+		window.location.hash = "#Page:" + pageName + "?" + paramName + "=" + encodeURIComponent(value.trim());
+	}
+	else {
+		window.location.hash = "#Page:" + pageName;
+	}
+	return false;
+}
+</script>
+
+<div class="th-page zcs-flex zcs-direction-column zcs-gap-18">
+	<div class="zcs-page-header zcs-w-full zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12 zcs-px-30 zcs-py-24 zcs-box-border">
+		<div class="zcs-flex zcs-direction-column zcs-gap-4 zcs-ellipsis">
+			<h5 class="zcs-font-20 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-ellipsis zcs-m-0">Travel Home</h5>
+			<span class="zcs-font-14 zcs-color-secondary">Travel workspace for employee requests, HR recommendations, option selections, booking rows, bills, and status boards</span>
+		</div>
+		<div class="zcs-flex zcs-align-items-center zcs-gap-12 zcs-row">
+			<a class="zcs-button zcs-primary-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body" href="#Form:Travel_Request?zc_LoadIn=dialog">
+				<i class="zcs-button-icon zc-li-outline ui-1-simple-add"></i>
+				<span class="zcs-button-text">Raise Travel Request</span>
+			</a>
+			<a class="zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body" href="#Report:My_Travel_Requests">
+				<i class="zcs-button-icon zc-li-outline transport-road"></i>
+				<span class="zcs-button-text">My Requests</span>
+			</a>
+		</div>
+	</div>
+
+	<section class="th-hero">
+		<div class="th-hero-content zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-18">
+			<div class="zcs-flex zcs-direction-column zcs-gap-8">
+				<span class="zcs-font-13 zcs-font-semibold">IITB HR Travel</span>
+				<h3 class="zcs-font-30 zcs-font-bold zcs-lh-heading zcs-m-0">Manage travel approvals, HR options, selections, booking documents, and bills</h3>
+				<span class="zcs-font-15">Use the tabs below to review request queues, add requirement and recommendation rows, open the employee selection page, and monitor travel Kanban boards.</span>
+			</div>
+			<a class="zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body zcs-no-shrink" href="#Report:HR_All_Travel">
+				<i class="zcs-button-icon zc-li-outline arrows-1-tail-right"></i>
+				<span class="zcs-button-text">Open HR Travel Queue</span>
+			</a>
+		</div>
+	</section>
+
+	<section class="th-grid">
+		<article class="th-kpi zcs-card zcs-p-18 zcs-box-border zcs-flex zcs-direction-column zcs-gap-14">
+			<div class="zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12">
+				<div class="th-kpi-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline transport-road zcs-font-22"></i></div>
+				<span class="zcs-font-12 zcs-color-secondary">My Trips</span>
+			</div>
+			<div class="th-kpi-value zcs-color-primary"><%=myTravelCount%></div>
+			<span class="zcs-font-13 zcs-color-secondary">Logged-in employee travel requests</span>
+		</article>
+		<article class="th-kpi zcs-card zcs-p-18 zcs-box-border zcs-flex zcs-direction-column zcs-gap-14">
+			<div class="zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12">
+				<div class="th-kpi-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline ui-2-time zcs-font-22"></i></div>
+				<span class="zcs-font-12 zcs-color-secondary">Pending Reviews</span>
+			</div>
+			<div class="th-kpi-value zcs-color-primary"><%=pendingManagerTravel + pendingCEOTravel + pendingHRTravel%></div>
+			<span class="zcs-font-13 zcs-color-secondary"><%=pendingManagerTravel%> manager, <%=pendingCEOTravel%> CEO, <%=pendingHRTravel%> HR</span>
+		</article>
+		<article class="th-kpi zcs-card zcs-p-18 zcs-box-border zcs-flex zcs-direction-column zcs-gap-14">
+			<div class="zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12">
+				<div class="th-kpi-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline files-single-copy-04 zcs-font-22"></i></div>
+				<span class="zcs-font-12 zcs-color-secondary">Options</span>
+			</div>
+			<div class="th-kpi-value zcs-color-primary"><%=recommendationCount%></div>
+			<span class="zcs-font-13 zcs-color-secondary"><%=selectedRecommendationCount%> selected recommendations, <%=selectedOptionCount%> selected option rows</span>
+		</article>
+		<article class="th-kpi zcs-card zcs-p-18 zcs-box-border zcs-flex zcs-direction-column zcs-gap-14">
+			<div class="zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12">
+				<div class="th-kpi-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline business-money-coins zcs-font-22"></i></div>
+				<span class="zcs-font-12 zcs-color-secondary">Bills</span>
+			</div>
+			<div class="th-kpi-value zcs-color-primary"><%=billsPendingTravel%></div>
+			<span class="zcs-font-13 zcs-color-secondary"><%=billsUploadedTravel%> bill uploads submitted, INR <%=actualTotal%> actual total</span>
+		</article>
+
+		<section class="th-workspace zcs-card zcs-box-border">
+			<div class="th-tabs-shell">
+				<input class="th-tab-input" type="radio" name="th-tabs" id="th-tab-overview" checked>
+				<input class="th-tab-input" type="radio" name="th-tabs" id="th-tab-my">
+				<input class="th-tab-input" type="radio" name="th-tabs" id="th-tab-hr">
+				<input class="th-tab-input" type="radio" name="th-tabs" id="th-tab-children">
+				<input class="th-tab-input" type="radio" name="th-tabs" id="th-tab-selection">
+				<input class="th-tab-input" type="radio" name="th-tabs" id="th-tab-kanban">
+
+				<div class="zcs-horizontal-tabpanel zcs-flex zcs-direction-column zcs-wh-full">
+					<ul class="zcs-horizontal-tabhead th-tabbar zcs-flex zcs-gap-12 zcs-px-10 zcs-py-0 zcs-m-0 zcs-box-border">
+						<li class="zcs-horizontal-tabitem"><label for="th-tab-overview" class="zcs-horizontal-tablink zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-10 zcs-py-12 zcs-box-border zcs-font-medium zcs-lh-body zcs-color-tertiary"><i class="zcs-horizontal-tabicon zcs-font-16 zcs-font-medium zc-li-outline design-dashboard-level"></i><span class="zcs-horizontal-tabtext zcs-font-15">Overview</span></label></li>
+						<li class="zcs-horizontal-tabitem"><label for="th-tab-my" class="zcs-horizontal-tablink zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-10 zcs-py-12 zcs-box-border zcs-font-medium zcs-lh-body zcs-color-tertiary"><i class="zcs-horizontal-tabicon zcs-font-16 zcs-font-medium zc-li-outline transport-road"></i><span class="zcs-horizontal-tabtext zcs-font-15">My Requests</span></label></li>
+						<li class="zcs-horizontal-tabitem"><label for="th-tab-hr" class="zcs-horizontal-tablink zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-10 zcs-py-12 zcs-box-border zcs-font-medium zcs-lh-body zcs-color-tertiary"><i class="zcs-horizontal-tabicon zcs-font-16 zcs-font-medium zc-li-outline users-single-05"></i><span class="zcs-horizontal-tabtext zcs-font-15">HR Travel</span></label></li>
+						<li class="zcs-horizontal-tabitem"><label for="th-tab-children" class="zcs-horizontal-tablink zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-10 zcs-py-12 zcs-box-border zcs-font-medium zcs-lh-body zcs-color-tertiary"><i class="zcs-horizontal-tabicon zcs-font-16 zcs-font-medium zc-li-outline files-2-doc"></i><span class="zcs-horizontal-tabtext zcs-font-15">Requirements and Options</span></label></li>
+						<li class="zcs-horizontal-tabitem"><label for="th-tab-selection" class="zcs-horizontal-tablink zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-10 zcs-py-12 zcs-box-border zcs-font-medium zcs-lh-body zcs-color-tertiary"><i class="zcs-horizontal-tabicon zcs-font-16 zcs-font-medium zc-li-outline ui-1-check-circle-08"></i><span class="zcs-horizontal-tabtext zcs-font-15">Selection Page</span></label></li>
+						<li class="zcs-horizontal-tabitem"><label for="th-tab-kanban" class="zcs-horizontal-tablink zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-10 zcs-py-12 zcs-box-border zcs-font-medium zcs-lh-body zcs-color-tertiary"><i class="zcs-horizontal-tabicon zcs-font-16 zcs-font-medium zc-li-outline design-app"></i><span class="zcs-horizontal-tabtext zcs-font-15">Kanban</span></label></li>
+					</ul>
+				</div>
+
+				<div class="th-panels">
+					<div class="th-panel th-panel-overview">
+						<div class="th-status-strip zcs-mb-16">
+							<div class="th-status-item"><span class="zcs-font-12 zcs-color-secondary">All travel</span><div class="zcs-font-24 zcs-font-bold zcs-color-primary"><%=totalTravel%></div></div>
+							<div class="th-status-item"><span class="zcs-font-12 zcs-color-secondary">Approved and bills pending</span><div class="zcs-font-24 zcs-font-bold zcs-color-green"><%=approvedTravel%></div></div>
+							<div class="th-status-item"><span class="zcs-font-12 zcs-color-secondary">Requirement rows</span><div class="zcs-font-24 zcs-font-bold zcs-color-blue"><%=requirementCount%></div></div>
+							<div class="th-status-item"><span class="zcs-font-12 zcs-color-secondary">Estimated total</span><div class="zcs-font-20 zcs-font-bold zcs-color-primary">INR <%=estimatedTotal%></div></div>
+						</div>
+						<div class="th-mini-grid">
+							<div class="th-tool-card zcs-flex zcs-direction-column zcs-gap-12">
+								<div class="zcs-flex zcs-align-items-center zcs-gap-10"><i class="zc-li-outline transport-road zcs-font-22 zcs-color-theme"></i><h4 class="zcs-font-18 zcs-font-semibold zcs-m-0">Employee request flow</h4></div>
+								<p class="zcs-font-14 zcs-color-secondary zcs-m-0">Employees raise travel requests, monitor approval status, review HR recommendations, confirm one option per requirement, and upload bills when status reaches Bills_Pending.</p>
+								<div class="zcs-flex zcs-gap-10 zcs-row"><a class="zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-font-14" href="#Form:Travel_Request?zc_LoadIn=dialog">Raise Request</a><a class="zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-font-14" href="#Report:My_Travel_Requests">My Requests</a></div>
+							</div>
+							<div class="th-tool-card zcs-flex zcs-direction-column zcs-gap-12">
+								<div class="zcs-flex zcs-align-items-center zcs-gap-10"><i class="zc-li-outline users-single-05 zcs-font-22 zcs-color-theme"></i><h4 class="zcs-font-18 zcs-font-semibold zcs-m-0">HR booking flow</h4></div>
+								<p class="zcs-font-14 zcs-color-secondary zcs-m-0">HR reviews approved travel, adds requirement recommendations, monitors employee selections, fills selected option actuals and booking documents, and marks completion for bills.</p>
+								<div class="zcs-flex zcs-gap-10 zcs-row"><a class="zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-font-14" href="#Report:HR_All_Travel">HR All Travel</a><a class="zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-font-14" href="#Report:Travel_HR_Recommendations_List">Recommendations</a></div>
+							</div>
+							<div class="th-tool-card zcs-flex zcs-direction-column zcs-gap-12">
+								<div class="zcs-flex zcs-align-items-center zcs-gap-10"><i class="zc-li-outline ui-1-check-circle-08 zcs-font-22 zcs-color-theme"></i><h4 class="zcs-font-18 zcs-font-semibold zcs-m-0">Selection page pattern</h4></div>
+								<p class="zcs-font-14 zcs-color-secondary zcs-m-0">Travel_Selection_Page opens with a travel_request_id parameter and handles option selection, selected-option row creation, totals, notification, and audit logging.</p>
+								<label class="zcs-font-13 zcs-color-secondary" for="th-overview-travel-id">Travel Request ID</label>
+								<input class="th-tool-input" type="number" id="th-overview-travel-id" placeholder="Travel Request ID">
+								<a class="zcs-button zcs-primary-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-font-14" href="#Page:Travel_Selection_Page" onclick="return thOpenParamPage('Travel_Selection_Page','travel_request_id','th-overview-travel-id');"><i class="zcs-button-icon zc-li-outline arrows-1-tail-right"></i><span>Open Selection Page</span></a>
+							</div>
+							<div class="th-tool-card zcs-flex zcs-direction-column zcs-gap-12">
+								<div class="zcs-flex zcs-align-items-center zcs-gap-10"><i class="zc-li-outline business-money-coins zcs-font-22 zcs-color-theme"></i><h4 class="zcs-font-18 zcs-font-semibold zcs-m-0">Bills and reimbursement handoff</h4></div>
+								<p class="zcs-font-14 zcs-color-secondary zcs-m-0">When travel is completed, bills are uploaded from My_Travel_Requests and finance can continue through the linked reimbursement flow.</p>
+								<a class="zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-font-14" href="#Report:My_Travel_Requests"><i class="zcs-button-icon zc-li-outline arrows-1-tail-right"></i><span>Open Bills Queue</span></a>
+							</div>
+						</div>
+					</div>
+
+					<div class="th-panel th-panel-my">
+						<div class="th-embed-card"><div class="th-embed-header zcs-px-20 zcs-py-12"><h4 class="zcs-font-18 zcs-font-semibold zcs-m-0">My Travel Requests</h4><span class="zcs-font-13 zcs-color-secondary">Employee-facing travel status, bills upload, and read-only history after submission.</span></div><div class="th-report-frame tall" zc-component="report" zc-linkname="My_Travel_Requests" zc-height="700px"></div></div>
+					</div>
+
+					<div class="th-panel th-panel-hr">
+						<div class="th-embed-card"><div class="th-embed-header zcs-px-20 zcs-py-12"><h4 class="zcs-font-18 zcs-font-semibold zcs-m-0">HR All Travel</h4><span class="zcs-font-13 zcs-color-secondary">HR queue for approvals, booking completion, bills status, estimated totals, and actual totals.</span></div><div class="th-report-frame tall" zc-component="report" zc-linkname="HR_All_Travel" zc-height="700px"></div></div>
+					</div>
+
+					<div class="th-panel th-panel-children">
+						<div class="th-embed-card"><div class="th-embed-header zcs-px-20 zcs-py-12"><h4 class="zcs-font-18 zcs-font-semibold zcs-m-0">Travel Requirements List</h4><span class="zcs-font-13 zcs-color-secondary">Child rows for flights, trains, hotel, car rental, and other trip requirements.</span></div><div class="th-report-frame" zc-component="report" zc-linkname="Travel_Requirements_List" zc-height="620px"></div></div>
+						<div class="th-embed-card"><div class="th-embed-header zcs-px-20 zcs-py-12"><h4 class="zcs-font-18 zcs-font-semibold zcs-m-0">Travel HR Recommendations List</h4><span class="zcs-font-13 zcs-color-secondary">HR-proposed options per requirement with vendor, timing, cost, and selection status.</span></div><div class="th-report-frame" zc-component="report" zc-linkname="Travel_HR_Recommendations_List" zc-height="620px"></div></div>
+						<div class="th-embed-card"><div class="th-embed-header zcs-px-20 zcs-py-12"><h4 class="zcs-font-18 zcs-font-semibold zcs-m-0">Travel Selected Options List</h4><span class="zcs-font-13 zcs-color-secondary">Confirmed selected options, actual cost, booking reference, and booking document rows.</span></div><div class="th-report-frame" zc-component="report" zc-linkname="Travel_Selected_Options_List" zc-height="620px"></div></div>
+					</div>
+
+					<div class="th-panel th-panel-selection">
+						<div class="th-mini-grid zcs-mb-16">
+							<div class="th-tool-card zcs-flex zcs-direction-column zcs-gap-10">
+								<h4 class="zcs-font-18 zcs-font-semibold zcs-m-0">Open Travel Selection Page</h4>
+								<p class="zcs-font-14 zcs-color-secondary zcs-m-0">Enter a Travel_Request record ID. The page parameter must be travel_request_id.</p>
+								<input class="th-tool-input" type="number" id="th-travel-id" placeholder="Travel Request ID">
+								<a class="zcs-button zcs-primary-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-font-14" href="#Page:Travel_Selection_Page" onclick="return thOpenParamPage('Travel_Selection_Page','travel_request_id','th-travel-id');"><i class="zcs-button-icon zc-li-outline arrows-1-tail-right"></i><span>Open Selection Page</span></a>
+							</div>
+							<div class="th-tool-card zcs-flex zcs-direction-column zcs-gap-10">
+								<h4 class="zcs-font-18 zcs-font-semibold zcs-m-0">Selection readiness checklist</h4>
+								<p class="zcs-font-14 zcs-color-secondary zcs-m-0">The request should have at least one Travel_Requirements row, HR should add Travel_HR_Recommendations rows, and the employee should select one option per requirement.</p>
+								<div class="th-note zcs-p-14 zcs-font-13 zcs-color-secondary">Use the Requirements and Options tab to verify child rows before sending the employee to the selection page.</div>
+							</div>
+						</div>
+						<div class="th-embed-card"><div class="th-embed-header zcs-px-20 zcs-py-12"><h4 class="zcs-font-18 zcs-font-semibold zcs-m-0">Selected Options Reference</h4><span class="zcs-font-13 zcs-color-secondary">After confirmation, selected option rows appear here for HR booking follow-up.</span></div><div class="th-report-frame" zc-component="report" zc-linkname="Travel_Selected_Options_List" zc-height="620px"></div></div>
+					</div>
+
+					<div class="th-panel th-panel-kanban">
+						<div class="th-embed-card"><div class="th-embed-header zcs-px-20 zcs-py-12"><h4 class="zcs-font-18 zcs-font-semibold zcs-m-0">Travel Status Kanban</h4><span class="zcs-font-13 zcs-color-secondary">Request pipeline across manager, CEO, HR, approved, bills, processed, and rejected statuses.</span></div><div class="th-report-frame" zc-component="report" zc-linkname="Travel_Status_Kanban" zc-height="620px"></div></div>
+						<div class="th-embed-card"><div class="th-embed-header zcs-px-20 zcs-py-12"><h4 class="zcs-font-18 zcs-font-semibold zcs-m-0">Travel Recommendation Kanban</h4><span class="zcs-font-13 zcs-color-secondary">HR recommendation board grouped by selection state.</span></div><div class="th-report-frame" zc-component="report" zc-linkname="Travel_Recommendation_Kanban" zc-height="620px"></div></div>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<aside class="th-actions zcs-quick-actions-wrapper zcs-card zcs-flex zcs-direction-column zcs-gap-16 zcs-p-16 zcs-box-border">
+			<h5 class="zcs-font-18 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0">Quick actions</h5>
+			<ul class="zcs-flex zcs-direction-column zcs-gap-16 zcs-p-0 zcs-m-0">
+				<li class="zcs-quick-action-item"><a class="zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary" href="#Form:Travel_Request?zc_LoadIn=dialog"><i class="zcs-quick-action-icon zcs-font-medium zc-li-outline ui-1-simple-add"></i><span class="zcs-quick-action-text">Raise travel request</span></a></li>
+				<li class="zcs-quick-action-item"><a class="zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary" href="#Report:My_Travel_Requests"><i class="zcs-quick-action-icon zcs-font-medium zc-li-outline transport-road"></i><span class="zcs-quick-action-text">Open my travel requests</span></a></li>
+				<li class="zcs-quick-action-item"><a class="zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary" href="#Report:HR_All_Travel"><i class="zcs-quick-action-icon zcs-font-medium zc-li-outline users-single-05"></i><span class="zcs-quick-action-text">Open HR all travel</span></a></li>
+				<li class="zcs-quick-action-item"><a class="zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary" href="#Form:Travel_HR_Recommendations?zc_LoadIn=dialog"><i class="zcs-quick-action-icon zcs-font-medium zc-li-outline files-single-copy-04"></i><span class="zcs-quick-action-text">Add HR recommendation</span></a></li>
+				<li class="zcs-quick-action-item"><a class="zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary" href="#Form:Travel_Selected_Options?zc_LoadIn=dialog"><i class="zcs-quick-action-icon zcs-font-medium zc-li-outline ui-1-check-circle-08"></i><span class="zcs-quick-action-text">Add selected option</span></a></li>
+				<li class="zcs-quick-action-item"><a class="zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary" href="#Report:Travel_Status_Kanban"><i class="zcs-quick-action-icon zcs-font-medium zc-li-outline design-app"></i><span class="zcs-quick-action-text">Open travel Kanban</span></a></li>
+			</ul>
+			<div class="th-note zcs-p-14 zcs-flex zcs-direction-column zcs-gap-6">
+				<span class="zcs-font-13 zcs-font-semibold zcs-color-primary">Bills workflow</span>
+				<span class="zcs-font-13 zcs-color-secondary">Employees upload bills from My_Travel_Requests when a trip moves to Bills_Pending. HR and finance can monitor progress from HR_All_Travel.</span>
+			</div>
+<%
+	if(!isHR)
+	{
+		%>
+<div class="th-access-note zcs-p-14 zcs-font-13">Some HR recommendation, booking, and all-travel records may be restricted by profile permissions.</div>
+<%
+	}
+	%>
+</aside>
+	</section>
+</div>

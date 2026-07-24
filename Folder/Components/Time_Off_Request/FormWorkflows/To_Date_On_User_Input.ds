@@ -1,0 +1,43 @@
+To_Date_On_User_Input as "To Date - On User Input"
+{
+
+				type =  form
+				form = Time_Off_Request
+
+				record event = on add or edit
+
+				on user input of To_Date
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.From_Date != null && input.To_Date != null)
+										{
+											calculatedDays = 0;
+											cursorDate = input.From_Date;
+											for each  countIndex in {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31}
+											{
+												if(cursorDate <= input.To_Date)
+												{
+													weekDayNo = cursorDate.getDayOfWeek();
+													holidayRows = Holiday_Master[Holiday_Date == cursorDate && Is_Active == true];
+													if(weekDayNo != 1 && weekDayNo != 7 && holidayRows.count() == 0)
+													{
+														calculatedDays = calculatedDays + 1;
+													}
+													cursorDate = cursorDate.addDay(1);
+												}
+											}
+											if(input.Is_Half_Day == true)
+											{
+												calculatedDays = 0.5;
+											}
+											input.Number_Of_Days = calculatedDays;
+										}
+						)
+					}
+				}
+
+			
+}

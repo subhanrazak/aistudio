@@ -1,0 +1,74 @@
+Appraisal_Form_On_Load as "Appraisal Form - On Load"
+{
+
+				type =  form
+				form = Appraisal_Form
+
+				record event = on add or edit
+
+				on load
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											disable Appraisal_Config;
+										disable Manager;
+										hide HR_Signoff;
+										hide HR_Comments;
+										if(input.Status == null || input.Status == "")
+										{
+											input.Status = "Draft";
+										}
+										if(input.Appraisal_Config == null)
+										{
+											activeCycles = Appraisal_Config[Is_Active == true];
+											if(activeCycles.count() > 0)
+											{
+												input.Appraisal_Config = activeCycles.ID;
+											}
+										}
+										if(input.Employee == null)
+										{
+											employeeRows = Employee_Master[Official_Email == zoho.loginuserid || Official_Email == zoho.loginuser];
+											if(employeeRows.count() > 0)
+											{
+												input.Employee = employeeRows.ID;
+											}
+										}
+										if(input.Employee != null)
+										{
+											selectedEmployees = Employee_Master[ID == input.Employee];
+											if(selectedEmployees.count() > 0 && selectedEmployees.Primary_Manager != null)
+											{
+												managerEmployees = Employee_Master[ID == selectedEmployees.Primary_Manager];
+												if(managerEmployees.count() > 0)
+												{
+													input.Manager = managerEmployees.Official_Email;
+												}
+											}
+										}
+										if(input.Status == "HR_Approved")
+										{
+											show HR_Signoff;
+											show HR_Comments;
+											disable Employee;
+											disable Status;
+											disable HR_Signoff;
+											disable HR_Comments;
+										}
+										else if(input.Status == "Manager_Reviewed")
+										{
+											show HR_Signoff;
+											show HR_Comments;
+										}
+										else if(input.Status == "Submitted")
+										{
+											disable Employee;
+										}
+						)
+					}
+				}
+
+			
+}

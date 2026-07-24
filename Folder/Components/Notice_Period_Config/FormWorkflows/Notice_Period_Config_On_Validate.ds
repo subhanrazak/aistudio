@@ -1,0 +1,31 @@
+Notice_Period_Config_On_Validate as "Notice Period Config - On Validate"
+{
+
+				type =  form
+				form = Notice_Period_Config
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(ifnull(input.Notice_Period_Days,-1) < 0 || ifnull(input.Notice_Period_Days,366) > 365)
+										{
+											alert "Notice period days must be between 0 and 365.";
+											cancel submit;
+										}
+										existingConfigs = Notice_Period_Config[Employment_Type == input.Employment_Type && Is_Active == true && ID != input.ID];
+										if(input.Is_Active == true && existingConfigs.count() > 0)
+										{
+											alert "Config already exists for this employment type.";
+											cancel submit;
+										}
+						)
+					}
+				}
+
+			
+}

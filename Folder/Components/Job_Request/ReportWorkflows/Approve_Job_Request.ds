@@ -1,0 +1,33 @@
+Approve_Job_Request as "Approve Job Request"
+{
+
+				type =  functions
+				form = Job_Request
+				execution type = for each record	
+				on start
+				{
+					actions 
+					{
+					on click
+					(
+						if(input.Status != "Pending_CEO")
+										{
+											info "Only pending CEO job requests can be approved.";
+										}
+										else
+										{
+											input.Status = "Approved";
+											input.Approved_Date = zoho.currentdate;
+											tokenMap = Map();
+											tokenMap.put("job_title",input.Job_Title);
+											tokenMap.put("status",input.Status);
+											tokenMap.put("department",input.Department);
+											tokenMap.put("positions",input.Number_Of_Positions);
+											thisapp.Add_Audit_Log("JOB_REQUEST_APPROVED","Recruitment","Job_Request",input.ID,"Approved","Pending_CEO","Approved","CEO approved the job request.",true,"");
+											thisapp.Send_Configured_Notification("JOB_REQUEST_APPROVED",tokenMap,"Job request approved","Job request {{job_title}} has been approved.");
+										}
+					)
+					}
+				}
+			
+}

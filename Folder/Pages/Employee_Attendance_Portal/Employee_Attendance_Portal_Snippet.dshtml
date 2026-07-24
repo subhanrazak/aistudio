@@ -1,0 +1,546 @@
+<%
+	loginEmail = zoho.loginuserid;
+	if(loginEmail == null || loginEmail == "")
+	{
+		loginEmail = zoho.loginuser;
+	}
+	todayDate = zoho.currentdate;
+	nowTime = zoho.currenttime;
+	todayDisplay = todayDate.toString("dd-MMM-yyyy");
+	actionParam = ifnull(input.attendance_action,"");
+	actionMessage = "";
+	actionClass = "info";
+	actionIcon = "ui-1-check-circle-08";
+	employeeRows = Employee_Master[Official_Email == loginEmail || Official_Email == zoho.loginuser];
+	hasEmployee = employeeRows.count() > 0;
+	employeeName = "Employee";
+	employeeInitial = "E";
+	employeeEmail = loginEmail;
+	employeeDepartment = "-";
+	employeeDesignation = "-";
+	hasLog = false;
+	statusText = "Not_Marked";
+	sourceText = "-";
+	loginDisplay = "-";
+	logoutDisplay = "-";
+	hoursDisplay = "0";
+	statusBadge = "zcs-badge-grey";
+	canLogin = false;
+	canLogout = false;
+	portalNote = "";
+	myAttendanceUrl = "#Report:My_Attendance?zc_LoadIn=dialog&zc_Header=true";
+	myLeaveBalanceUrl = "#Report:My_Leave_Balance?zc_LoadIn=dialog&zc_Header=true";
+	applyLeaveUrl = "#Form:Time_Off_Request?zc_LoadIn=dialog";
+	regulariseUrl = "#Form:Regularisation_Request?zc_LoadIn=dialog";
+	loginUrl = "#Page:Employee_Attendance_Portal?attendance_action=login";
+	logoutUrl = "#Page:Employee_Attendance_Portal?attendance_action=logout";
+	if(hasEmployee == true)
+	{
+		emp = employeeRows;
+		employeeName = ifnull(emp.Full_Name,"Employee");
+		if(employeeName != "")
+		{
+			employeeInitial = employeeName.left(1);
+		}
+		employeeEmail = ifnull(emp.Official_Email,loginEmail);
+		employeeDepartment = ifnull(emp.Department,"-");
+		employeeDesignation = ifnull(emp.Designation,"-");
+		if(actionParam != "")
+		{
+			auditRecordId = 0;
+			try 
+			{
+				actionRows = Attendance_Log[Employee == emp.ID && Attendance_Date == todayDate];
+				if(actionParam == "login")
+				{
+					if(actionRows.count() == 0)
+					{
+						insertedLogId = insert into Attendance_Log
+						[
+							Employee=emp.ID
+							Attendance_Date=todayDate
+							Login_Time=nowTime
+							Working_Hours=0
+							Attendance_Status="Present"
+							Source="Manual"
+							Added_User=zoho.loginuser
+						];
+						auditRecordId = insertedLogId;
+						thisapp.Add_Audit_Log("ATTENDANCE_PORTAL_LOGIN","Attendance_Leave","Attendance_Log",insertedLogId,"Log In","","Present","Manual portal login at " + nowTime.toString("dd-MMM-yyyy hh:mm a"),true,"");
+						actionMessage = "Log in recorded successfully.";
+						actionClass = "success";
+						actionIcon = "ui-1-check-circle-08";
+					}
+					else
+					{
+						actionLog = actionRows;
+						auditRecordId = actionLog.ID;
+						if(actionLog.Logout_Time != null)
+						{
+							actionMessage = "Attendance is already closed for today.";
+							actionClass = "info";
+							actionIcon = "ui-1-check-circle-08";
+						}
+						else if(actionLog.Login_Time == null && ifnull(actionLog.Attendance_Status,"Not_Marked") == "Not_Marked")
+						{
+							oldStatus = ifnull(actionLog.Attendance_Status,"");
+							actionLog.Login_Time=nowTime;
+							actionLog.Working_Hours=0;
+							actionLog.Source="Manual";
+							actionLog.Attendance_Status="Present";
+							thisapp.Add_Audit_Log("ATTENDANCE_PORTAL_LOGIN","Attendance_Leave","Attendance_Log",actionLog.ID,"Log In",oldStatus,"Present","Manual portal login at " + nowTime.toString("dd-MMM-yyyy hh:mm a"),true,"");
+							actionMessage = "Log in recorded successfully.";
+							actionClass = "success";
+							actionIcon = "ui-1-check-circle-08";
+						}
+						else if(actionLog.Login_Time != null)
+						{
+							actionMessage = "Log in is already recorded. Use Log Out when your work day is complete.";
+							actionClass = "info";
+							actionIcon = "ui-1-check-circle-08";
+						}
+						else
+						{
+							actionMessage = "Today's attendance is not Not_Marked, so manual log in is unavailable from this portal.";
+							actionClass = "error";
+							actionIcon = "ui-1-circle-remove";
+						}
+					}
+				}
+				else if(actionParam == "logout")
+				{
+					if(actionRows.count() == 0)
+					{
+						actionMessage = "Log in first before recording log out.";
+						actionClass = "error";
+						actionIcon = "ui-1-circle-remove";
+					}
+					else
+					{
+						actionLog = actionRows;
+						auditRecordId = actionLog.ID;
+						if(actionLog.Login_Time == null)
+						{
+							actionMessage = "Log in first before recording log out.";
+							actionClass = "error";
+							actionIcon = "ui-1-circle-remove";
+						}
+						else if(actionLog.Logout_Time != null)
+						{
+							actionMessage = "Log out is already recorded for today.";
+							actionClass = "info";
+							actionIcon = "ui-1-check-circle-08";
+						}
+						else
+						{
+							oldStatus = ifnull(actionLog.Attendance_Status,"");
+							calculatedHours = (nowTime.toLong() - actionLog.Login_Time.toLong()) / 3600000;
+							if(calculatedHours == null || calculatedHours < 0)
+							{
+								calculatedHours = 0;
+							}
+							actionLog.Logout_Time=nowTime;
+							actionLog.Working_Hours=calculatedHours;
+							actionLog.Source="Manual";
+							if(actionLog.Attendance_Status == null || actionLog.Attendance_Status == "Not_Marked")
+							{
+								actionLog.Attendance_Status="Present";
+							}
+							thisapp.Add_Audit_Log("ATTENDANCE_PORTAL_LOGOUT","Attendance_Leave","Attendance_Log",actionLog.ID,"Log Out",oldStatus,actionLog.Attendance_Status,"Manual portal logout at " + nowTime.toString("dd-MMM-yyyy hh:mm a") + "; working hours: " + calculatedHours,true,"");
+							actionMessage = "Log out recorded successfully.";
+							actionClass = "success";
+							actionIcon = "ui-1-check-circle-08";
+						}
+					}
+				}
+				else
+				{
+					actionMessage = "Unknown attendance action.";
+					actionClass = "error";
+					actionIcon = "ui-1-circle-remove";
+				}
+			}			catch (actionErr)
+			{
+				actionErrorText = actionErr.toString();
+				actionMessage = "Attendance action failed. Please try again or contact HR.";
+				actionClass = "error";
+				actionIcon = "ui-1-circle-remove";
+				try 
+				{
+					thisapp.Add_Audit_Log("ATTENDANCE_PORTAL_ACTION_FAILED","Attendance_Leave","Attendance_Log",auditRecordId,"Portal Action","","","Employee attendance portal action failed for " + employeeEmail,false,actionErrorText);
+				}				catch (auditErr)
+				{
+				}
+			}
+		}
+		attendanceRows = Attendance_Log[Employee == emp.ID && Attendance_Date == todayDate];
+		hasLog = attendanceRows.count() > 0;
+		if(hasLog == true)
+		{
+			todayLog = attendanceRows;
+			statusText = ifnull(todayLog.Attendance_Status,"Not_Marked");
+			sourceText = ifnull(todayLog.Source,"-");
+			if(todayLog.Login_Time != null)
+			{
+				loginDisplay = todayLog.Login_Time.toString("dd-MMM-yyyy hh:mm a");
+			}
+			if(todayLog.Logout_Time != null)
+			{
+				logoutDisplay = todayLog.Logout_Time.toString("dd-MMM-yyyy hh:mm a");
+			}
+			hoursValue = ifnull(todayLog.Working_Hours,0);
+			hoursDisplay = "" + hoursValue;
+			if(todayLog.Login_Time != null && todayLog.Logout_Time == null)
+			{
+				canLogout = true;
+			}
+			else if(todayLog.Login_Time == null && statusText == "Not_Marked")
+			{
+				canLogin = true;
+			}
+			else if(todayLog.Logout_Time != null)
+			{
+				portalNote = "Attendance is closed for today.";
+			}
+			else
+			{
+				portalNote = "Manual portal action is unavailable while today's status is " + statusText + ".";
+			}
+		}
+		else
+		{
+			canLogin = true;
+			sourceText = "Manual";
+			portalNote = "No attendance row exists yet for today. Use Log In to create one.";
+		}
+		if(statusText == "Present")
+		{
+			statusBadge = "zcs-badge-green";
+		}
+		else if(statusText == "Absent")
+		{
+			statusBadge = "zcs-badge-red";
+		}
+		else if(statusText == "Half_Day" || statusText == "WFH" || statusText == "On_Duty")
+		{
+			statusBadge = "zcs-badge-yellow";
+		}
+		else if(statusText == "Holiday" || statusText == "Leave")
+		{
+			statusBadge = "zcs-badge-blue";
+		}
+		balances = Leave_Balance[Employee == emp.ID] sort by Leave_Type asc;
+	}
+	%>
+<style>
+/* zcs-global utility subset included once for this page */
+:root{--zcs-theme-brand-color:var(--zcs_brand_color);--zcs-white-color:#FFFFFF;--zcs-primary-text-color:var(--zcs_primary_text_color);--zcs-secondary-text-color:var(--zcs_secondary_text_color);--zcs-teritiary-text-color:var(--zcs_tertiary_text_color);--zcs-border-color:var(--zcs_tertiary_border_color)}
+.zcs-row{display:flex;flex-wrap:wrap}.zcs-flex{display:flex}.zcs-inline-flex{display:inline-flex}.zcs-direction-column{flex-direction:column}.zcs-align-items-center{align-items:center}.zcs-align-items-start{align-items:flex-start}.zcs-justify-center{justify-content:center}.zcs-justify-space-between{justify-content:space-between}.zcs-gap-4{gap:.25rem}.zcs-gap-6{gap:.375rem}.zcs-gap-8{gap:.5rem}.zcs-gap-10{gap:.625rem}.zcs-gap-12{gap:.75rem}.zcs-gap-16{gap:1rem}.zcs-gap-20{gap:1.25rem}.zcs-gap-24{gap:1.5rem}.zcs-p-0{padding:0}.zcs-p-8{padding:.5rem}.zcs-p-12{padding:.75rem}.zcs-p-16{padding:1rem}.zcs-p-18{padding:1.125rem}.zcs-p-20{padding:1.25rem}.zcs-p-24{padding:1.5rem}.zcs-p-25{padding:1.5625rem}.zcs-px-10{padding-left:.625rem;padding-right:.625rem}.zcs-px-12{padding-left:.75rem;padding-right:.75rem}.zcs-px-15{padding-left:.9375rem;padding-right:.9375rem}.zcs-px-16{padding-left:1rem;padding-right:1rem}.zcs-px-20{padding-left:1.25rem;padding-right:1.25rem}.zcs-px-30{padding-left:1.875rem;padding-right:1.875rem}.zcs-py-2{padding-top:.125rem;padding-bottom:.125rem}.zcs-py-6{padding-top:.375rem;padding-bottom:.375rem}.zcs-py-8{padding-top:.5rem;padding-bottom:.5rem}.zcs-py-10{padding-top:.625rem;padding-bottom:.625rem}.zcs-py-12{padding-top:.75rem;padding-bottom:.75rem}.zcs-py-14{padding-top:.875rem;padding-bottom:.875rem}.zcs-py-16{padding-top:1rem;padding-bottom:1rem}.zcs-py-24{padding-top:1.5rem;padding-bottom:1.5rem}.zcs-m-0{margin:0}.zcs-mt-4{margin-top:.25rem}.zcs-mt-8{margin-top:.5rem}.zcs-mt-10{margin-top:.625rem}.zcs-mt-12{margin-top:.75rem}.zcs-mt-16{margin-top:1rem}.zcs-mt-20{margin-top:1.25rem}.zcs-mb-0{margin-bottom:0}.zcs-mb-12{margin-bottom:.75rem}.zcs-mb-16{margin-bottom:1rem}.zcs-mx-0{margin-left:0;margin-right:0}.zcs-col-3{flex:0 0 25%;max-width:25%}.zcs-col-4{flex:0 0 33.333%;max-width:33.333%}.zcs-col-6{flex:0 0 50%;max-width:50%}.zcs-col-12{flex:0 0 100%;max-width:100%}.zcs-col-common{flex:1 1 0}.zcs-no-shrink{flex-shrink:0}.zcs-w-full{width:100%}.zcs-wh-full{width:100%;height:100%}.zcs-font-12{font-size:.75rem}.zcs-font-13{font-size:.8125rem}.zcs-font-14{font-size:.875rem}.zcs-font-15{font-size:.9375rem}.zcs-font-16{font-size:1rem}.zcs-font-18{font-size:1.125rem}.zcs-font-20{font-size:1.25rem}.zcs-font-22{font-size:1.375rem}.zcs-font-24{font-size:1.5rem}.zcs-font-28{font-size:1.75rem}.zcs-font-30{font-size:1.875rem}.zcs-font-40{font-size:2.5rem}.zcs-font-normal{font-weight:400}.zcs-font-medium{font-weight:500}.zcs-font-semibold{font-weight:600}.zcs-font-bold{font-weight:700}.zcs-lh-body{line-height:1.5}.zcs-lh-heading{line-height:1.25}.zcs-uppercase{text-transform:uppercase}.zcs-ellipsis{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.zcs-rounded-sm{border-radius:.25rem}.zcs-rounded-md{border-radius:.375rem}.zcs-rounded-lg{border-radius:.5rem}.zcs-rounded-xl{border-radius:.75rem}.zcs-rounded-2xl{border-radius:1rem}.zcs-rounded-half{border-radius:50%}.zcs-text-left{text-align:left}.zcs-text-center{text-align:center}.zcs-text-right{text-align:right}.zcs-box-border{box-sizing:border-box}.zcs-relative{position:relative}.zcs-sticky{position:sticky}.zcs-color-primary{color:var(--zcs-primary-text-color)}.zcs-color-secondary{color:var(--zcs-secondary-text-color)}.zcs-color-tertiary{color:var(--zcs-teritiary-text-color)}.zcs-color-white{color:var(--zcs-white-color)}.zcs-color-theme{color:var(--zcs-theme-brand-color)}.zcs-card{background-color:var(--zcs-white-color);border:1px solid #e7e7ee;border-radius:12px}a{text-decoration:none}
+/* ZCS component CSS: button-primary-button / header-heading-with-actions */
+.zcs-button{width:auto;min-width:5rem;min-height:36px}.zcs-primary-button{background-color:var(--zcs_brand_color);color:var(--zcs_brand_foreground_color)}.zcs-primary-outline-button{border:1px solid var(--zcs_brand_color);background-color:var(--zcs-white-color);color:var(--zcs_brand_color)}.zcs-secondary-button{border:1px solid var(--zcs_primary_border_color);background-color:var(--zcs_light_grey_color);color:var(--zcs_primary_text_color)}.zcs-primary-button.zcs-button:hover{background-color:var(--zcs_brand_dark_color)}.zcs-primary-outline-button:hover{background-color:var(--zcs_component_hover_color);border-color:var(--zcs_brand_color);color:var(--zcs_brand_color)}.zcs-button-icon{width:16px;max-height:16px}.zcs-page-header{background:#fff;border-bottom:1px solid #ececf3}
+/* ZCS component CSS: badge-filled-badge */
+.zcs-badge{width:auto}.zcs-badge-filled{border:1px solid transparent}.zcs-badge-filled.zcs-badge-theme{background-color:var(--zcs_brand_color);border-color:var(--zcs_brand_color);color:var(--zcs-white-color)}.zcs-badge-filled.zcs-badge-green{background-color:#179E6C;border-color:#179E6C;color:var(--zcs-white-color)}.zcs-badge-filled.zcs-badge-red{background-color:#FE455D;border-color:#FE455D;color:var(--zcs-white-color)}.zcs-badge-filled.zcs-badge-grey{background-color:#242424;border-color:#242424;color:var(--zcs-white-color)}.zcs-badge-filled.zcs-badge-yellow{background-color:#FAAE13;border-color:#FAAE13;color:var(--zcs-white-color)}.zcs-badge-filled.zcs-badge-blue{background-color:#2A6FFC;border-color:#2A6FFC;color:var(--zcs-white-color)}.zcs-badge-filled.zcs-badge-orange{background-color:#F4660C;border-color:#F4660C;color:var(--zcs-white-color)}
+/* ZCS component CSS: card-avatar-with-key-value / label-value-key-value-with-icon */
+.zcs-avatar{width:var(--zcs-avatar-size);height:var(--zcs-avatar-size);background-color:var(--zcs_brand_color);border-radius:var(--zcs-avatar-radius)}.zcs-avatar .zcs-avatar-img{border-radius:inherit;object-fit:cover}.zcs-labelvalue-wrapper.zcs-labelvalue-with-bg{background-color:#F9FAFE}.zcs-labelvalue-wrapper .zcs-labelvalue-color-green{color:#179e6c}.zcs-labelvalue-wrapper .zcs-labelvalue-color-blue{color:#2a6ffc}.zcs-labelvalue-wrapper .zcs-labelvalue-color-orange{color:#FF7E52}.zcs-labelvalue-wrapper .zcs-labelvalue-color-red{color:#FE455D}
+/* ZCS component CSS: table-simple-table */
+:root{--zcs-thead-color:#F9FAFE;--zcs-tr-h-color:#F9FAFE}.zcs-table-wrapper{border:1px solid var(--zcs_tertiary_border_color);background-color:var(--zcs-white-color);overflow:auto}.zcs-table-wrapper table{line-height:normal;border-collapse:collapse}.zcs-table-wrapper table thead{top:0}.zcs-table-wrapper table thead tr th{background-color:var(--zcs-thead-color);box-shadow:0 -1px 0 0 var(--zcs_tertiary_border_color) inset;white-space:nowrap}.zcs-table-wrapper table thead tr.zcs-tspace th{background-color:var(--zcs-white-color);box-shadow:none}.zcs-table-wrapper table tbody tr td{border-top:1px solid var(--zcs_tertiary_border_color)}.zcs-table-wrapper table tbody tr:first-child td{border-color:transparent}.zcs-table-wrapper table tbody tr:hover td{background-color:var(--zcs-tr-h-color)}.zcs-table-wrapper table tbody tr:first-child:hover td{border-color:var(--zcs_tertiary_border_color)}.zcs-table-wrapper table tbody tr td.zcs-green,.zcs-table-wrapper table tbody tr td .zcs-green{color:#179e6c}.zcs-table-wrapper table tbody tr td.zcs-red,.zcs-table-wrapper table tbody tr td .zcs-red{color:#fe455d}.zcs-table-wrapper table tbody tr td.zcs-yellow,.zcs-table-wrapper table tbody tr td .zcs-yellow{color:#b8770d}.zcs-table-wrapper table tbody tr td.zcs-blue,.zcs-table-wrapper table tbody tr td .zcs-blue{color:#09598e}
+/* Employee Attendance Portal custom layout */
+.attendance-page{min-height:100%;background:var(--zcs-page-bg-color,#F3F3F4);color:var(--zcs-primary-text-color);font-family:inherit}.attendance-content{padding:24px 30px}.quick-actions{flex-wrap:wrap}.employee-initial{color:var(--zcs_brand_foreground_color);font-size:28px;font-weight:700}.portal-grid{display:grid;grid-template-columns:minmax(280px,380px) 1fr;gap:20px;align-items:start}.profile-card{position:sticky;top:16px}.status-panel{background:#fff;border:1px solid #e7e7ee;border-radius:14px;box-shadow:0 2px 10px rgba(18,19,43,.04);overflow:hidden}.status-head{background:linear-gradient(90deg,var(--zcs_brand_light_color),#fff);border-bottom:1px solid #ececf3}.kpi-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.kpi-card{background:#F9FAFE;border:1px solid #eef0f6;border-radius:12px;padding:14px}.kpi-icon{width:34px;height:34px;border-radius:10px;background:var(--zcs_brand_light_color);color:var(--zcs_brand_color)}.action-panel{border-top:1px solid #ececf3;background:#fcfcff}.portal-note{background:#FCF4E6;border:1px solid #FAAE13;color:#7E5608;border-radius:10px;padding:12px}.action-banner{border-radius:12px;padding:14px 16px;border:1px solid;margin-bottom:16px}.action-banner.success{background:#E4FCF3;border-color:#179E6C;color:#0F704D}.action-banner.error{background:#FDE3E6;border-color:#FE455D;color:#A60E25}.action-banner.info{background:#E8EFFF;border-color:#2A6FFC;color:#19499E}.leave-section{margin-top:20px}.empty-state{min-height:260px;background:#fff;border:1px solid #e7e7ee;border-radius:14px}.empty-icon{width:72px;height:72px;border-radius:50%;background:var(--zcs_brand_light_color);color:var(--zcs_brand_color)}.related-link{border:1px solid #ececf3;border-radius:10px;color:var(--zcs-primary-text-color);background:#fff}.related-link:hover{border-color:var(--zcs_brand_color);color:var(--zcs_brand_color);background:var(--zcs_component_hover_color)}.mobile-stack{display:flex}.source-pill{background:#F9FAFE;border:1px solid #eef0f6;border-radius:999px;padding:4px 10px}
+@media (max-width:1100px){.portal-grid{grid-template-columns:1fr}.profile-card{position:static}.kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:700px){.attendance-content{padding:16px}.zcs-page-header{padding:16px;align-items:flex-start;flex-direction:column}.quick-actions{width:100%}.quick-actions .zcs-button{width:100%;justify-content:center}.kpi-grid{grid-template-columns:1fr}.action-panel{align-items:stretch;flex-direction:column}.action-panel .zcs-button{width:100%;justify-content:center}.mobile-stack{flex-direction:column}.zcs-col-xs-12{flex:0 0 100%;max-width:100%}}
+</style>
+
+<div class="attendance-page">
+<%
+	if(hasEmployee == false)
+	{
+		%>
+<div class='zcs-page-header zcs-w-full zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-8 zcs-px-30 zcs-py-24 zcs-box-border'>
+		<div class='zcs-flex zcs-direction-column zcs-gap-4 zcs-ellipsis'>
+			<h5 class='zcs-font-20 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-ellipsis zcs-m-0'>Employee Attendance Portal</h5>
+			<span class='zcs-font-14 zcs-color-secondary'>No Employee_Master record is linked to the signed-in email.</span>
+		</div>
+		<div class='zcs-flex zcs-align-items-center zcs-gap-12 quick-actions'>
+			<a class='zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body' href='#Report:Employee_Directory?zc_LoadIn=dialog&zc_Header=true'>
+				<i class='zcs-button-icon zc-li-outline users-single-01'></i>
+				<span class='zcs-button-text'>Employee Directory</span>
+			</a>
+		</div>
+	</div>
+	<div class='attendance-content'>
+		<div class='zcs-nodata-wrapper empty-state zcs-wh-full zcs-flex zcs-align-items-center zcs-justify-center zcs-text-center'>
+			<div class='zcs-nodata-content zcs-p-20 zcs-box-border'>
+				<div class='empty-icon zcs-inline-flex zcs-align-items-center zcs-justify-center'><i class='zc-li-outline ui-1-circle-remove zcs-font-40'></i></div>
+				<h5 class='zcs-nodata-header zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-mt-10 zcs-mx-0 zcs-mb-0'>Employee profile not found</h5>
+				<p class='zcs-nodata-desc zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-mt-12 zcs-mx-0 zcs-mb-0'>Ask HR to map Employee_Master.Official_Email to <%=loginEmail%>.</p>
+			</div>
+		</div>
+	</div>
+<%
+	}
+	else
+	{
+		%>
+<div class='zcs-page-header zcs-w-full zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-8 zcs-px-30 zcs-py-24 zcs-box-border'>
+		<div class='zcs-flex zcs-align-items-center zcs-gap-12 zcs-ellipsis'>
+			<div class='zcs-avatar zcs-flex zcs-align-items-center zcs-justify-center zcs-no-shrink' style='--zcs-avatar-size:48px;--zcs-avatar-radius:12px'>
+				<span class='employee-initial'><%=employeeInitial%></span>
+			</div>
+			<div class='zcs-flex zcs-direction-column zcs-gap-4 zcs-ellipsis'>
+				<h5 class='zcs-font-20 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-ellipsis zcs-m-0'>Attendance for <%=employeeName%></h5>
+				<span class='zcs-font-14 zcs-color-secondary zcs-ellipsis'>Live status for <%=todayDisplay%></span>
+			</div>
+		</div>
+		<div class='zcs-flex zcs-align-items-center zcs-gap-12 quick-actions'>
+			<a class='zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body' href='<%=myAttendanceUrl%>'>
+				<i class='zcs-button-icon zc-li-outline files-single-copy-04'></i>
+				<span class='zcs-button-text'>My Attendance</span>
+			</a>
+			<a class='zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body' href='<%=myLeaveBalanceUrl%>'>
+				<i class='zcs-button-icon zc-li-outline design-todo'></i>
+				<span class='zcs-button-text'>Leave Balance Report</span>
+			</a>
+		</div>
+	</div>
+
+	<div class='attendance-content'>
+<%
+		if(actionMessage != "")
+		{
+			%>
+<div class='action-banner <%=actionClass%> zcs-flex zcs-align-items-center zcs-gap-10'>
+				<i class='zc-li-outline <%=actionIcon%> zcs-font-18'></i>
+				<span class='zcs-font-14 zcs-font-medium'><%=actionMessage%></span>
+			</div>
+<%
+		}
+		%>
+<div class='portal-grid'>
+			<div class='profile-card'>
+				<div class='zcs-card zcs-flex zcs-direction-column zcs-gap-16 zcs-p-16 zcs-box-border'>
+					<div class='zcs-flex zcs-align-items-center zcs-gap-8'>
+						<div class='zcs-avatar zcs-flex zcs-align-items-center zcs-justify-center zcs-no-shrink' style='--zcs-avatar-size:42px;--zcs-avatar-radius:50%'>
+							<span class='employee-initial zcs-font-22'><%=employeeInitial%></span>
+						</div>
+						<div class='zcs-flex zcs-direction-column zcs-col-common zcs-ellipsis'>
+							<span class='zcs-font-16 zcs-font-medium zcs-lh-body zcs-color-primary zcs-ellipsis'><%=employeeName%></span>
+							<span class='zcs-font-13 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-ellipsis'><%=employeeEmail%></span>
+						</div>
+					</div>
+					<div class='zcs-labelvalue-wrapper zcs-labelvalue-with-bg zcs-rounded-xl zcs-px-15 zcs-py-10 zcs-box-border'>
+						<ul class='zcs-row zcs-p-0 zcs-m-0'>
+							<li class='zcs-flex zcs-direction-column zcs-align-items-center zcs-text-center zcs-gap-8 zcs-col-6 zcs-col-xs-12 zcs-px-15 zcs-py-10 zcs-box-border'>
+								<label class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary'>Department</label>
+								<span class='zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'><%=employeeDepartment%></span>
+							</li>
+							<li class='zcs-flex zcs-direction-column zcs-align-items-center zcs-text-center zcs-gap-8 zcs-col-6 zcs-col-xs-12 zcs-px-15 zcs-py-10 zcs-box-border'>
+								<label class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary'>Designation</label>
+								<span class='zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'><%=employeeDesignation%></span>
+							</li>
+							<li class='zcs-flex zcs-direction-column zcs-align-items-center zcs-text-center zcs-gap-8 zcs-col-6 zcs-col-xs-12 zcs-px-15 zcs-py-10 zcs-box-border'>
+								<label class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary'>Source</label>
+								<span class='zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'><%=sourceText%></span>
+							</li>
+							<li class='zcs-flex zcs-direction-column zcs-align-items-center zcs-text-center zcs-gap-8 zcs-col-6 zcs-col-xs-12 zcs-px-15 zcs-py-10 zcs-box-border'>
+								<label class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary'>Date</label>
+								<span class='zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'><%=todayDisplay%></span>
+							</li>
+						</ul>
+					</div>
+					<div class='zcs-flex zcs-direction-column zcs-gap-8'>
+						<a class='related-link zcs-flex zcs-align-items-center zcs-gap-10 zcs-px-12 zcs-py-10 zcs-box-border' href='<%=applyLeaveUrl%>'>
+							<i class='zc-li-outline ui-1-simple-add zcs-color-theme'></i>
+							<span class='zcs-font-14 zcs-color-primary'>Apply Leave</span>
+						</a>
+						<a class='related-link zcs-flex zcs-align-items-center zcs-gap-10 zcs-px-12 zcs-py-10 zcs-box-border' href='<%=regulariseUrl%>'>
+							<i class='zc-li-outline ui-1-edit-72 zcs-color-theme'></i>
+							<span class='zcs-font-14 zcs-color-primary'>Regularise Attendance</span>
+						</a>
+					</div>
+				</div>
+			</div>
+
+			<div class='zcs-flex zcs-direction-column zcs-gap-20'>
+				<div class='status-panel'>
+					<div class='status-head zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12 zcs-p-20 zcs-box-border mobile-stack'>
+						<div class='zcs-flex zcs-direction-column zcs-gap-6'>
+							<span class='zcs-font-13 zcs-color-tertiary zcs-uppercase'>Today's Attendance</span>
+							<div class='zcs-flex zcs-align-items-center zcs-gap-10'>
+								<h5 class='zcs-font-24 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0'><%=statusText%></h5>
+								<div class='zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border <%=statusBadge%>'>
+									<span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'><%=statusText%></span>
+								</div>
+							</div>
+						</div>
+						<div class='source-pill zcs-inline-flex zcs-align-items-center zcs-gap-8'>
+							<i class='zc-li-outline ui-2-time zcs-color-theme'></i>
+							<span class='zcs-font-14 zcs-color-primary'>Source: <%=sourceText%></span>
+						</div>
+					</div>
+
+					<div class='zcs-p-20 zcs-box-border'>
+						<div class='kpi-grid'>
+							<div class='kpi-card zcs-flex zcs-direction-column zcs-gap-8'>
+								<div class='kpi-icon zcs-inline-flex zcs-align-items-center zcs-justify-center'><i class='zc-li-outline ui-2-time'></i></div>
+								<span class='zcs-font-13 zcs-color-tertiary'>Login Time</span>
+								<strong class='zcs-font-15 zcs-font-semibold zcs-color-primary'><%=loginDisplay%></strong>
+							</div>
+							<div class='kpi-card zcs-flex zcs-direction-column zcs-gap-8'>
+								<div class='kpi-icon zcs-inline-flex zcs-align-items-center zcs-justify-center'><i class='zc-li-outline arrows-1-tail-right'></i></div>
+								<span class='zcs-font-13 zcs-color-tertiary'>Logout Time</span>
+								<strong class='zcs-font-15 zcs-font-semibold zcs-color-primary'><%=logoutDisplay%></strong>
+							</div>
+							<div class='kpi-card zcs-flex zcs-direction-column zcs-gap-8'>
+								<div class='kpi-icon zcs-inline-flex zcs-align-items-center zcs-justify-center'><i class='zc-li-outline design-todo'></i></div>
+								<span class='zcs-font-13 zcs-color-tertiary'>Working Hours</span>
+								<strong class='zcs-font-15 zcs-font-semibold zcs-color-primary'><%=hoursDisplay%></strong>
+							</div>
+							<div class='kpi-card zcs-flex zcs-direction-column zcs-gap-8'>
+								<div class='kpi-icon zcs-inline-flex zcs-align-items-center zcs-justify-center'><i class='zc-li-outline files-single-copy-04'></i></div>
+								<span class='zcs-font-13 zcs-color-tertiary'>Attendance Row</span>
+								<strong class='zcs-font-15 zcs-font-semibold zcs-color-primary'><%=if(hasLog == true,"Available","Will be created")%></strong>
+							</div>
+						</div>
+					</div>
+
+					<div class='action-panel zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-16 zcs-p-20 zcs-box-border'>
+						<div class='zcs-flex zcs-direction-column zcs-gap-4'>
+							<span class='zcs-font-14 zcs-font-medium zcs-color-primary'>Manual attendance action</span>
+							<span class='zcs-font-13 zcs-color-secondary'>Actions update Attendance_Log live and write Audit_Log through Add_Audit_Log.</span>
+						</div>
+<%
+		if(canLogin == true)
+		{
+			%>
+<a class='zcs-button zcs-primary-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-20 zcs-py-10 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-medium zcs-lh-body' href='<%=loginUrl%>'>
+								<i class='zcs-button-icon zc-li-outline ui-1-check-circle-08'></i>
+								<span class='zcs-button-text'>Log In</span>
+							</a>
+<%
+		}
+		else if(canLogout == true)
+		{
+			%>
+<a class='zcs-button zcs-primary-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-20 zcs-py-10 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-medium zcs-lh-body' href='<%=logoutUrl%>'>
+								<i class='zcs-button-icon zc-li-outline arrows-1-tail-right'></i>
+								<span class='zcs-button-text'>Log Out</span>
+							</a>
+<%
+		}
+		else
+		{
+			%>
+<div class='portal-note zcs-font-14 zcs-font-medium'><%=portalNote%></div>
+<%
+		}
+		%>
+</div>
+				</div>
+
+				<div class='leave-section status-panel'>
+					<div class='status-head zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12 zcs-p-20 zcs-box-border mobile-stack'>
+						<div class='zcs-flex zcs-direction-column zcs-gap-6'>
+							<span class='zcs-font-13 zcs-color-tertiary zcs-uppercase'>Leave Balances</span>
+							<h5 class='zcs-font-20 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0'>Current balance by leave type</h5>
+						</div>
+						<a class='zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body' href='<%=myLeaveBalanceUrl%>'>
+							<i class='zcs-button-icon zc-li-outline files-single-copy-04'></i>
+							<span class='zcs-button-text'>Open Report</span>
+						</a>
+					</div>
+					<div class='zcs-p-20 zcs-box-border'>
+<%
+		if(balances.count() == 0)
+		{
+			%>
+<div class='zcs-nodata-wrapper empty-state zcs-wh-full zcs-flex zcs-align-items-center zcs-justify-center zcs-text-center'>
+								<div class='zcs-nodata-content zcs-p-20 zcs-box-border'>
+									<h5 class='zcs-nodata-header zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-mt-10 zcs-mx-0 zcs-mb-0'>No leave balance rows found</h5>
+								</div>
+							</div>
+<%
+		}
+		else
+		{
+			%>
+<div class='zcs-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative'>
+								<table class='zcs-w-full'>
+									<thead class='zcs-sticky'>
+										<tr>
+											<th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Leave Type</th>
+											<th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Balance Days</th>
+											<th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Used Days</th>
+											<th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Credited Days</th>
+											<th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Last Credited</th>
+											<th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Comp Off Expiry</th>
+										</tr>
+										<tr class='zcs-tspace'><th class='zcs-p-2 zcs-box-border' colspan='6'></th></tr>
+									</thead>
+									<tbody>
+<%
+			for each  bal in balances
+			{
+				leaveTypeName = ifnull(bal.Leave_Type,"-");
+				balanceDays = ifnull(bal.Balance_Days,0);
+				usedDays = ifnull(bal.Used_Days,0);
+				creditedDays = ifnull(bal.Credited_Days,0);
+				lastCredited = "-";
+				if(bal.Last_Credited_Date != null)
+				{
+					lastCredited = bal.Last_Credited_Date.toString("dd-MMM-yyyy");
+				}
+				compExpiry = "-";
+				if(bal.Comp_Off_Expiry_Date != null)
+				{
+					compExpiry = bal.Comp_Off_Expiry_Date.toString("dd-MMM-yyyy");
+				}
+				balanceClass = "zcs-green";
+				if(balanceDays <= 0)
+				{
+					balanceClass = "zcs-red";
+				}
+				else if(balanceDays < 2)
+				{
+					balanceClass = "zcs-yellow";
+				}
+				%>
+<tr>
+											<td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'><%=leaveTypeName%></td>
+											<td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-semibold zcs-lh-body <%=balanceClass%>'><%=balanceDays%></td>
+											<td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=usedDays%></td>
+											<td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=creditedDays%></td>
+											<td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=lastCredited%></td>
+											<td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=compExpiry%></td>
+										</tr>
+<%
+			}
+			%>
+</tbody>
+								</table>
+							</div>
+<%
+		}
+		%>
+</div>
+				</div>
+			</div>
+		</div>
+	</div>
+<%
+	}
+	%>
+</div>
+<%
+	if(actionParam != "")
+	{
+		%>
+<script>
+(function(){
+	if(window.history && window.location && window.location.hash && window.location.hash.indexOf('attendance_action=') !== -1){
+		window.history.replaceState(null, '', '#Page:Employee_Attendance_Portal');
+	}
+})();
+</script>
+<%
+	}
+%>

@@ -1,0 +1,555 @@
+<%
+	loginEmail = zoho.loginuserid;
+	loginEmailAlt = zoho.loginuser;
+	currentEmployeeRows = Employee_Master[Official_Email == loginEmail || Official_Email == loginEmailAlt];
+	currentEmpId = "";
+	currentEmpName = ifnull(zoho.loginuser,"Logged-in user");
+	if(currentEmployeeRows.count() > 0)
+	{
+		currentEmpId = currentEmployeeRows.ID.toString();
+		currentEmpName = ifnull(currentEmployeeRows.Full_Name,currentEmpName);
+	}
+	activeEmployees = Employee_Master[Employment_Status == "Active" || Employment_Status == "Probation"];
+	employeeCount = activeEmployees.count();
+	activeCount = 0;
+	probationCount = 0;
+	deptOptions = list();
+	for each  empSeed in activeEmployees
+	{
+		if(empSeed.Employment_Status == "Active")
+		{
+			activeCount = activeCount + 1;
+		}
+		else if(empSeed.Employment_Status == "Probation")
+		{
+			probationCount = probationCount + 1;
+		}
+		deptNameSeed = ifnull(empSeed.Department.Department_Name,"Unassigned");
+		if(!deptOptions.contains(deptNameSeed))
+		{
+			deptOptions.add(deptNameSeed);
+		}
+	}
+	%>
+<style>
+/* ===== zcs-global.css essentials for this page ===== */
+:root {
+	--zcs-theme-brand-color: var(--zcs_brand_color, #2A6FFC);
+	--zcs-light-bg-color: var(--zcs_brand_light_color, #E8EFFF);
+	--zcs-primary-text-color: var(--zcs_primary_text_color, #1A1A1A);
+	--zcs-secondary-text-color: var(--zcs_secondary_text_color, #4B5563);
+	--zcs-teritiary-text-color: var(--zcs_tertiary_text_color, #878895);
+	--zcs-border-color: var(--zcs_tertiary_border_color, #E7E7EE);
+	--zcs-white-color: #FFFFFF;
+	--zcs-black-color: #000000;
+	--oc-line-color: var(--zcs_tertiary_border_color, #DDE2EA);
+	--oc-card-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+	font-size: 16px;
+	line-height: 1.5;
+}
+a { text-decoration: none; }
+.zcs-flex { display: flex; }
+.zcs-inline-flex { display: inline-flex; }
+.zcs-direction-column { flex-direction: column; }
+.zcs-row { display: flex; flex-wrap: wrap; }
+.zcs-row-nowrap { flex-wrap: nowrap; }
+.zcs-col-common { flex: 1 1 0%; min-width: 0; }
+.zcs-no-shrink { flex-shrink: 0; }
+.zcs-align-items-start { align-items: flex-start; }
+.zcs-align-items-center { align-items: center; }
+.zcs-justify-center { justify-content: center; }
+.zcs-justify-space-between { justify-content: space-between; }
+.zcs-gap-2 { gap: 0.125rem; }
+.zcs-gap-4 { gap: 0.25rem; }
+.zcs-gap-8 { gap: 0.5rem; }
+.zcs-gap-10 { gap: 0.625rem; }
+.zcs-gap-12 { gap: 0.75rem; }
+.zcs-gap-15 { gap: 0.9375rem; }
+.zcs-gap-16 { gap: 1rem; }
+.zcs-p-8 { padding: 0.5rem; }
+.zcs-p-16 { padding: 1rem; }
+.zcs-p-20 { padding: 1.25rem; }
+.zcs-px-10 { padding-left: 0.625rem; padding-right: 0.625rem; }
+.zcs-px-16 { padding-left: 1rem; padding-right: 1rem; }
+.zcs-px-30 { padding-left: 1.875rem; padding-right: 1.875rem; }
+.zcs-py-2 { padding-top: 0.125rem; padding-bottom: 0.125rem; }
+.zcs-py-8 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+.zcs-py-24 { padding-top: 1.5rem; padding-bottom: 1.5rem; }
+.zcs-m-0 { margin: 0; }
+.zcs-w-full { width: 100%; }
+.zcs-wh-full { width: 100%; height: 100%; }
+.zcs-box-border { box-sizing: border-box; }
+.zcs-rounded-sm { border-radius: 0.25rem; }
+.zcs-rounded-md { border-radius: 0.375rem; }
+.zcs-rounded-lg { border-radius: 0.5rem; }
+.zcs-font-11 { font-size: 0.6875rem; }
+.zcs-font-12 { font-size: 0.75rem; }
+.zcs-font-13 { font-size: 0.8125rem; }
+.zcs-font-14 { font-size: 0.875rem; }
+.zcs-font-16 { font-size: 1rem; }
+.zcs-font-18 { font-size: 1.125rem; }
+.zcs-font-22 { font-size: 1.375rem; }
+.zcs-font-normal { font-weight: 400; }
+.zcs-font-medium { font-weight: 500; }
+.zcs-font-semibold { font-weight: 600; }
+.zcs-font-bold { font-weight: 700; }
+.zcs-lh-body { line-height: 1.5; }
+.zcs-lh-heading { line-height: 1.25; }
+.zcs-color-primary { color: var(--zcs-primary-text-color); }
+.zcs-color-secondary { color: var(--zcs-secondary-text-color); }
+.zcs-color-tertiary { color: var(--zcs-teritiary-text-color); }
+.zcs-color-theme { color: var(--zcs-theme-brand-color); }
+.zcs-ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.zcs-cursor-pointer { cursor: pointer; }
+.zcs-card { background-color: var(--zcs-white-color); border: 1px solid var(--zcs-border-color); border-radius: 12px; }
+
+/* ZCS component CSS: card-user-info avatar */
+.zcs-avatar { width: var(--zcs-avatar-size); height: var(--zcs-avatar-size); background-color: var(--zcs_brand_color, #2A6FFC); border-radius: var(--zcs-avatar-radius); overflow: hidden; color: var(--zcs_brand_foreground_color, #FFFFFF); }
+.zcs-avatar .zcs-avatar-img { border-radius: inherit; object-fit: cover; display: block; }
+
+/* ZCS component CSS: badge-filled-badge */
+.zcs-badge { width: auto; }
+.zcs-badge-filled { border: 1px solid transparent; }
+.zcs-badge-filled.zcs-badge-theme { background-color: var(--zcs_brand_color, #2A6FFC); border-color: var(--zcs_brand_color, #2A6FFC); color: var(--zcs-white-color); }
+.zcs-badge-filled.zcs-badge-green { background-color: #179E6C; border-color: #179E6C; color: var(--zcs-white-color); }
+.zcs-badge-filled.zcs-badge-yellow { background-color: #FAAE13; border-color: #FAAE13; color: var(--zcs-white-color); }
+.zcs-badge-filled.zcs-badge-blue { background-color: #2A6FFC; border-color: #2A6FFC; color: var(--zcs-white-color); }
+.zcs-badge-filled.zcs-badge-grey { background-color: #242424; border-color: #242424; color: var(--zcs-white-color); }
+
+/* ZCS component CSS: button-primary-outline-button-no-icon */
+.zcs-button { width: auto; min-width: 5rem; min-height: 36px; cursor: pointer; font-family: inherit; }
+.zcs-primary-outline-button { border: 1px solid var(--zcs_brand_color, #2A6FFC); background-color: var(--zcs-white-color); color: var(--zcs_brand_color, #2A6FFC); }
+.zcs-primary-outline-button:hover { background-color: var(--zcs_component_hover_color, #F2F6FF); border-color: var(--zcs_brand_color, #2A6FFC); color: var(--zcs_brand_color, #2A6FFC); }
+.zcs-primary-outline-button:focus { outline: 2px solid var(--zcs_brand_color, #2A6FFC); outline-offset: 2px; }
+
+/* Org chart page */
+.oc-page { min-height: 100%; background: var(--zcs-page-bg-color, #F3F3F4); color: var(--zcs-primary-text-color); font-family: inherit; }
+.oc-header { background: linear-gradient(135deg, var(--zcs_brand_color, #2A6FFC), var(--zcs_brand_dark_color, #174EA6)); color: var(--zcs_brand_foreground_color, #FFFFFF); border-radius: 0 0 18px 18px; position: sticky; top: 0; z-index: 8; box-shadow: 0 8px 22px rgba(15, 23, 42, 0.13); }
+.oc-header .zcs-color-primary,
+.oc-header .zcs-color-secondary,
+.oc-header .zcs-color-tertiary { color: var(--zcs_brand_foreground_color, #FFFFFF); }
+.oc-header-subtitle { opacity: 0.86; }
+.oc-header-icon { width: 42px; height: 42px; border-radius: 12px; background: rgba(255,255,255,0.18); }
+.oc-shell { padding: 22px 30px 30px; box-sizing: border-box; }
+.oc-toolbar { background: var(--zcs-white-color); border: 1px solid var(--zcs-border-color); border-radius: 16px; box-shadow: var(--oc-card-shadow); padding: 16px; display: grid; grid-template-columns: minmax(240px, 1fr) 240px auto; gap: 12px; align-items: center; margin-bottom: 18px; }
+.oc-input-wrap { position: relative; }
+.oc-input-wrap i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--zcs-teritiary-text-color); }
+.oc-input,
+.oc-select { width: 100%; height: 40px; border: 1px solid var(--zcs-border-color); border-radius: 10px; background: var(--zcs-white-color); color: var(--zcs-primary-text-color); box-sizing: border-box; font: inherit; font-size: 14px; }
+.oc-input { padding: 0 12px 0 38px; }
+.oc-select { padding: 0 12px; }
+.oc-input:focus,
+.oc-select:focus { border-color: var(--zcs_brand_color, #2A6FFC); outline: 2px solid rgba(42, 111, 252, 0.16); outline-offset: 0; }
+.oc-toolbar-actions { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+.oc-summary-row { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.oc-source { display: none; }
+.oc-chart-scroll { overflow: auto; background: linear-gradient(180deg, rgba(255,255,255,0.85), rgba(255,255,255,0.66)); border: 1px solid var(--zcs-border-color); border-radius: 18px; box-shadow: var(--oc-card-shadow); padding: 26px; min-height: 420px; }
+.oc-tree { display: flex; align-items: flex-start; gap: 28px; min-width: max-content; }
+.oc-tree-node { display: flex; flex-direction: column; align-items: center; position: relative; }
+.oc-children { display: flex; align-items: flex-start; gap: 20px; padding-top: 34px; position: relative; }
+.oc-children:before { content: ""; position: absolute; top: 16px; left: 28px; right: 28px; border-top: 2px solid var(--oc-line-color); }
+.oc-child-branch { position: relative; }
+.oc-child-branch:before { content: ""; position: absolute; top: -18px; left: 50%; height: 18px; border-left: 2px solid var(--oc-line-color); }
+.oc-card-source,
+.oc-employee-card { width: 300px; min-height: 164px; position: relative; transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease; }
+.oc-employee-card { box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06); }
+.oc-employee-card:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(15, 23, 42, 0.10); border-color: var(--zcs_brand_color, #2A6FFC); }
+.oc-employee-card.is-current-user { border: 2px solid var(--zcs_brand_color, #2A6FFC); box-shadow: 0 0 0 4px var(--zcs_brand_light_color, #E8EFFF), 0 12px 28px rgba(15, 23, 42, 0.10); }
+.oc-employee-card.is-secondary-target { outline: 2px dashed var(--zcs_brand_color, #2A6FFC); outline-offset: 4px; }
+.oc-path-only { opacity: 0.72; }
+.oc-card-topline { display: flex; gap: 12px; align-items: flex-start; }
+.oc-emp-name { display: block; max-width: 176px; }
+.oc-meta { display: grid; gap: 7px; margin-top: 12px; }
+.oc-meta-line { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.oc-meta-line i { color: var(--zcs-teritiary-text-color); width: 16px; text-align: center; }
+.oc-card-footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+.oc-secondary-cue { border: 1px dashed var(--zcs_brand_color, #2A6FFC); color: var(--zcs_brand_color, #2A6FFC); background: var(--zcs_brand_light_color, #E8EFFF); border-radius: 999px; padding: 3px 8px; display: inline-flex; align-items: center; gap: 5px; max-width: 100%; cursor: default; }
+.oc-secondary-cue span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.oc-node-toggle { position: absolute; top: 10px; right: 10px; min-width: 0; min-height: 28px; padding: 4px 8px; border-radius: 999px; font-size: 12px; z-index: 2; }
+.oc-node-toggle[hidden] { display: none; }
+.oc-profile-link { color: var(--zcs_brand_color, #2A6FFC); display: inline-flex; align-items: center; gap: 5px; font-size: 13px; }
+.oc-profile-link:hover { text-decoration: underline; }
+.oc-initials { font-weight: 700; font-size: 16px; letter-spacing: 0.02em; }
+.oc-empty { width: 100%; min-width: 520px; padding: 48px 20px; text-align: center; color: var(--zcs-secondary-text-color); }
+.oc-empty i { font-size: 34px; color: var(--zcs-teritiary-text-color); display: block; margin-bottom: 10px; }
+.oc-count-note { color: rgba(255,255,255,0.82); }
+@media (max-width: 992px) {
+	.oc-header { position: static; border-radius: 0 0 14px 14px; }
+	.oc-shell { padding: 16px; }
+	.oc-toolbar { grid-template-columns: 1fr; }
+	.oc-toolbar-actions { justify-content: flex-start; }
+	.oc-summary-row { justify-content: flex-start; }
+	.oc-chart-scroll { padding: 18px; }
+}
+@media (max-width: 576px) {
+	.oc-header { padding: 16px; }
+	.oc-card-source,
+	.oc-employee-card { width: 270px; }
+	.oc-empty { min-width: 270px; }
+}
+</style>
+
+<div id="org-chart-page" class="oc-page">
+	<div class='zcs-page-header oc-header zcs-w-full zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-16 zcs-px-30 zcs-py-24 zcs-box-border'>
+		<div class='zcs-flex zcs-align-items-center zcs-gap-12 zcs-ellipsis'>
+			<div class='oc-header-icon zcs-flex zcs-align-items-center zcs-justify-center zcs-no-shrink'>
+				<i class='zc-li-outline business-chart-bar-32 zcs-font-22'></i>
+			</div>
+			<div class='zcs-flex zcs-direction-column zcs-gap-2 zcs-ellipsis'>
+				<h5 class='zcs-font-18 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-ellipsis zcs-m-0'>Organisation Chart</h5>
+				<span class='oc-header-subtitle zcs-font-13 zcs-lh-body zcs-ellipsis'>Active and probation employees. Current user: <%=currentEmpName%></span>
+			</div>
+		</div>
+		<div class='oc-summary-row'>
+			<div class='zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-theme'>
+				<span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'><%=employeeCount%> employees</span>
+			</div>
+			<div class='zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-green'>
+				<span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'><%=activeCount%> active</span>
+			</div>
+			<div class='zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-yellow'>
+				<span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'><%=probationCount%> probation</span>
+			</div>
+		</div>
+	</div>
+
+	<div class="oc-shell">
+		<div class="oc-toolbar" aria-label="Organisation chart controls">
+			<div class="oc-input-wrap">
+				<i class="zc-li-outline ui-1-zoom"></i>
+				<input id="oc-search" class="oc-input" type="search" placeholder="Search by name, designation, department, or manager" aria-label="Search organisation chart">
+			</div>
+			<select id="oc-department" class="oc-select" aria-label="Filter by department">
+				<option value="">All departments</option>
+<%
+	for each  deptName in deptOptions
+	{
+		deptKey = encodeURL(deptName);
+		%>
+<option value="<%=deptKey%>"><%=deptName%></option>
+<%
+	}
+	%>
+</select>
+			<div class="oc-toolbar-actions">
+				<button type="button" id="oc-expand-all" class="zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body">
+					<span class="zcs-button-text">Expand all</span>
+				</button>
+				<button type="button" id="oc-collapse-all" class="zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body">
+					<span class="zcs-button-text">Collapse all</span>
+				</button>
+			</div>
+		</div>
+
+		<div class="oc-chart-scroll" aria-live="polite">
+			<div id="oc-tree" class="oc-tree"></div>
+		</div>
+
+		<div id="oc-source" class="oc-source">
+<%
+	for each  emp in Employee_Master[Employment_Status == "Active" || Employment_Status == "Probation"] sort by Full_Name asc
+	{
+		empId = emp.ID.toString();
+		empName = ifnull(emp.Full_Name,"Unnamed Employee");
+		designation = ifnull(emp.Designation,"Designation not set");
+		deptName = ifnull(emp.Department.Department_Name,"Unassigned");
+		deptKey = encodeURL(deptName);
+		statusName = ifnull(emp.Employment_Status,"Active");
+		statusClass = "zcs-badge-blue";
+		if(statusName == "Active")
+		{
+			statusClass = "zcs-badge-green";
+		}
+		else if(statusName == "Probation")
+		{
+			statusClass = "zcs-badge-yellow";
+		}
+		primaryManagerId = "";
+		primaryManagerName = "";
+		if(emp.Primary_Manager != null)
+		{
+			primaryManagerId = emp.Primary_Manager.ID.toString();
+			primaryManagerName = ifnull(emp.Primary_Manager.Full_Name,"");
+		}
+		secondaryManagerId = "";
+		secondaryManagerName = "";
+		if(emp.Secondary_Manager != null)
+		{
+			secondaryManagerId = emp.Secondary_Manager.ID.toString();
+			secondaryManagerName = ifnull(emp.Secondary_Manager.Full_Name,"");
+		}
+		headRows = Department_Config[Is_Active == true && Department_Head == emp.ID];
+		isDepartmentHead = false;
+		if(headRows.count() > 0)
+		{
+			isDepartmentHead = true;
+		}
+		currentClass = "";
+		if(currentEmpId != "" && empId == currentEmpId)
+		{
+			currentClass = " is-current-user";
+		}
+		profilePhoto = ifnull(emp.Profile_Photo,"");
+		%>
+<div class="oc-card-source oc-employee-card zcs-card zcs-flex zcs-direction-column zcs-gap-12 zcs-p-20 zcs-box-border<%=currentClass%>"
+						 data-id="<%=empId%>"
+						 data-manager-id="<%=primaryManagerId%>"
+						 data-secondary-id="<%=secondaryManagerId%>"
+						 data-department-key="<%=deptKey%>"
+						 data-search="<%=encodeURL(empName + "" + designation + "" + deptName + "" + primaryManagerName + "" + secondaryManagerName)%>">
+					<button type="button" class="oc-node-toggle zcs-button zcs-primary-outline-button" aria-label="Toggle reporting line" hidden>Toggle</button>
+					<div class='oc-card-topline'>
+						<div class='zcs-avatar zcs-flex zcs-align-items-center zcs-justify-center zcs-no-shrink' style='--zcs-avatar-size: 50px; --zcs-avatar-radius: 12px'>
+							<span class="oc-initials" aria-hidden="true"></span>
+<%
+		if(profilePhoto != "")
+		{
+			%>
+<img class='zcs-avatar-img zcs-wh-full' src='<%=profilePhoto%>' alt='<%=empName%>' onerror="this.style.display='none';" />
+<%
+		}
+		%>
+</div>
+						<div class='zcs-flex zcs-direction-column zcs-col-common zcs-gap-4 zcs-ellipsis'>
+							<span class='oc-emp-name zcs-font-16 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-ellipsis'><%=empName%></span>
+							<span class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-secondary zcs-ellipsis'><%=designation%></span>
+							<div class='zcs-flex zcs-align-items-center zcs-gap-8 zcs-row'>
+								<div class='zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border <%=statusClass%>'>
+									<span class='zcs-badge-text zcs-font-12 zcs-font-normal zcs-lh-body'><%=statusName%></span>
+								</div>
+<%
+		if(isDepartmentHead)
+		{
+			%>
+<div class='zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-theme'>
+										<span class='zcs-badge-text zcs-font-12 zcs-font-normal zcs-lh-body'>Department Head</span>
+									</div>
+<%
+		}
+		if(currentClass != "")
+		{
+			%>
+<div class='zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-blue'>
+										<i class="zc-li-outline ui-1-check-circle-08 zcs-font-11"></i>
+										<span class='zcs-badge-text zcs-font-12 zcs-font-normal zcs-lh-body'>You</span>
+									</div>
+<%
+		}
+		%>
+</div>
+						</div>
+					</div>
+					<div class="oc-meta">
+						<div class="oc-meta-line">
+							<i class="zc-li-outline design-app"></i>
+							<span class="zcs-font-14 zcs-color-primary zcs-ellipsis"><%=deptName%></span>
+						</div>
+<%
+		if(primaryManagerName != "")
+		{
+			%>
+<div class="oc-meta-line">
+								<i class="zc-li-outline arrows-1-tail-right"></i>
+								<span class="zcs-font-13 zcs-color-secondary zcs-ellipsis">Reports to <%=primaryManagerName%></span>
+							</div>
+<%
+		}
+		%>
+</div>
+					<div class="oc-card-footer">
+<%
+		if(secondaryManagerId != "")
+		{
+			%>
+<span class="oc-secondary-cue zcs-font-12" data-secondary-id="<%=secondaryManagerId%>">
+								<i class="zc-li-outline arrows-1-tail-right"></i>
+								<span>Secondary: <%=secondaryManagerName%></span>
+							</span>
+<%
+		}
+		else
+		{
+			%>
+<span></span>
+<%
+		}
+		%>
+<a class="oc-profile-link" href="#Report:Employee_Directory?ID=<%=empId%>&amp;zc_LoadIn=dialog&amp;zc_Header=true&amp;zc_Footer=false&amp;zc_Search=false&amp;zc_AddRec=false&amp;zc_EditRec=false&amp;zc_DelRec=false&amp;zc_DuplRec=false&amp;zc_Print=false&amp;zc_Export=false" aria-label="Open internal profile for <%=empName%>">
+							<i class="zc-li-outline ui-1-edit-72"></i>
+							<span>Profile</span>
+						</a>
+					</div>
+				</div>
+<%
+	}
+	%>
+</div>
+	</div>
+</div>
+
+<script>
+(function() {
+	var page = document.getElementById('org-chart-page');
+	if (!page) { return; }
+	var source = page.querySelector('#oc-source');
+	var tree = page.querySelector('#oc-tree');
+	var searchInput = page.querySelector('#oc-search');
+	var deptSelect = page.querySelector('#oc-department');
+	var expandAllBtn = page.querySelector('#oc-expand-all');
+	var collapseAllBtn = page.querySelector('#oc-collapse-all');
+	var cards = Array.prototype.slice.call(source.children).map(function(card) {
+		var nameEl = card.querySelector('.oc-emp-name');
+		var name = nameEl ? nameEl.textContent.trim() : '';
+		var encodedSearch = card.getAttribute('data-search') || '';
+		var searchText = '';
+		try {
+			searchText = decodeURIComponent(encodedSearch.replace(/+/g, '%20')).toLowerCase();
+		} catch (err) {
+			searchText = card.textContent.toLowerCase();
+		}
+		return {
+			id: card.getAttribute('data-id'),
+			managerId: card.getAttribute('data-manager-id') || '',
+			secondaryId: card.getAttribute('data-secondary-id') || '',
+			deptKey: card.getAttribute('data-department-key') || '',
+			name: name,
+			searchText: searchText,
+			card: card,
+			children: [],
+			expanded: true
+		};
+	});
+	var byId = {};
+	cards.forEach(function(item) { byId[item.id] = item; });
+	var roots = [];
+	cards.forEach(function(item) {
+		if (item.managerId && byId[item.managerId] && item.managerId !== item.id) {
+			byId[item.managerId].children.push(item);
+		} else {
+			roots.push(item);
+		}
+	});
+
+	function setInitials(card) {
+		var nameEl = card.querySelector('.oc-emp-name');
+		var initialsEl = card.querySelector('.oc-initials');
+		if (!nameEl || !initialsEl) { return; }
+		var parts = nameEl.textContent.trim().split(/s+/).filter(Boolean);
+		var initials = '';
+		if (parts.length > 0) { initials += parts[0].charAt(0); }
+		if (parts.length > 1) { initials += parts[parts.length - 1].charAt(0); }
+		initialsEl.textContent = (initials || 'U').toUpperCase();
+	}
+
+	function matchesSelf(item, query, deptKey) {
+		var deptOk = !deptKey || item.deptKey === deptKey;
+		var searchOk = !query || item.searchText.indexOf(query) !== -1;
+		return deptOk && searchOk;
+	}
+
+	function visibleModel(item, query, deptKey) {
+		var childModels = item.children.map(function(child) {
+			return visibleModel(child, query, deptKey);
+		}).filter(Boolean);
+		var selfMatch = matchesSelf(item, query, deptKey);
+		if (selfMatch || childModels.length > 0) {
+			return { item: item, selfMatch: selfMatch, children: childModels };
+		}
+		return null;
+	}
+
+	function renderNode(model, filtering) {
+		var item = model.item;
+		var branch = document.createElement('div');
+		branch.className = 'oc-tree-node';
+		var card = item.card.cloneNode(true);
+		card.classList.remove('oc-card-source');
+		card.classList.add('oc-employee-card');
+		if (!model.selfMatch) {
+			card.classList.add('oc-path-only');
+		}
+		setInitials(card);
+		var toggle = card.querySelector('.oc-node-toggle');
+		if (toggle && item.children.length > 0) {
+			toggle.hidden = false;
+			toggle.textContent = item.expanded || filtering ? 'Collapse' : 'Expand';
+			toggle.addEventListener('click', function(event) {
+				event.preventDefault();
+				event.stopPropagation();
+				item.expanded = !item.expanded;
+				render();
+			});
+		}
+		branch.appendChild(card);
+		if (model.children.length > 0 && (item.expanded || filtering)) {
+			var childrenWrap = document.createElement('div');
+			childrenWrap.className = 'oc-children';
+			model.children.forEach(function(childModel) {
+				var childBranch = document.createElement('div');
+				childBranch.className = 'oc-child-branch';
+				childBranch.appendChild(renderNode(childModel, filtering));
+				childrenWrap.appendChild(childBranch);
+			});
+			branch.appendChild(childrenWrap);
+		}
+		return branch;
+	}
+
+	function renderEmpty(message) {
+		tree.innerHTML = '';
+		var empty = document.createElement('div');
+		empty.className = 'oc-empty';
+		empty.innerHTML = '<i class="zc-li-outline ui-1-zoom"></i><div class="zcs-font-16 zcs-font-semibold zcs-color-primary">' + message + '</div><div class="zcs-font-14 zcs-color-secondary">Try a different search term or department filter.</div>';
+		tree.appendChild(empty);
+	}
+
+	function render() {
+		var query = (searchInput.value || '').trim().toLowerCase();
+		var deptKey = deptSelect.value || '';
+		var filtering = !!query || !!deptKey;
+		var models = roots.map(function(root) {
+			return visibleModel(root, query, deptKey);
+		}).filter(Boolean);
+		tree.innerHTML = '';
+		if (cards.length === 0) {
+			renderEmpty('No active or probation employees are available.');
+			return;
+		}
+		if (models.length === 0) {
+			renderEmpty('No employees match your current filters.');
+			return;
+		}
+		models.forEach(function(model) {
+			tree.appendChild(renderNode(model, filtering));
+		});
+	}
+
+	function setExpanded(value) {
+		cards.forEach(function(item) { item.expanded = value; });
+		render();
+	}
+
+	searchInput.addEventListener('input', render);
+	deptSelect.addEventListener('change', render);
+	expandAllBtn.addEventListener('click', function() { setExpanded(true); });
+	collapseAllBtn.addEventListener('click', function() { setExpanded(false); });
+
+	page.addEventListener('mouseover', function(event) {
+		var cue = event.target.closest('.oc-secondary-cue');
+		if (!cue) { return; }
+		var secondaryId = cue.getAttribute('data-secondary-id');
+		if (!secondaryId) { return; }
+		page.querySelectorAll('.oc-employee-card[data-id="' + secondaryId + '"]').forEach(function(card) {
+			card.classList.add('is-secondary-target');
+		});
+	});
+	page.addEventListener('mouseout', function(event) {
+		if (!event.target.closest('.oc-secondary-cue')) { return; }
+		page.querySelectorAll('.oc-employee-card.is-secondary-target').forEach(function(card) {
+			card.classList.remove('is-secondary-target');
+		});
+	});
+
+	render();
+})();
+</script>

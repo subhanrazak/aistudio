@@ -1,0 +1,46 @@
+Notification_Config_On_Validate as "Notification Config - On Validate"
+{
+
+				type =  form
+				form = Notification_Config
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Event_Key == null || input.Event_Key.trim() == "")
+										{
+											alert "Event key is required.";
+											cancel submit;
+										}
+										if(input.Recipient_Emails == null || input.Recipient_Emails.trim() == "")
+										{
+											alert "Recipient emails are required.";
+											cancel submit;
+										}
+										if(input.Subject_Template == null || input.Subject_Template.trim() == "")
+										{
+											alert "Subject template is required.";
+											cancel submit;
+										}
+										if(input.Body_Template == null || input.Body_Template.trim() == "")
+										{
+											alert "Body template is required.";
+											cancel submit;
+										}
+										existingTemplates = Notification_Config[Event_Key == input.Event_Key && ID != input.ID];
+										if(existingTemplates.count() > 0)
+										{
+											alert "Event key already exists.";
+											cancel submit;
+										}
+						)
+					}
+				}
+
+			
+}

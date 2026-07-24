@@ -1,0 +1,31 @@
+Appraisal_Question_Response_On_Validate as "Appraisal Question Response - On Validate"
+{
+
+				type =  form
+				form = Appraisal_Question_Response
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Manager_Score != null && input.Manager_Score < 1 || input.Manager_Score > 5)
+										{
+											alert "Manager score must be between 1 and 5.";
+											cancel submit;
+										}
+										parentForms = Appraisal_Form[ID == input.Appraisal_Form];
+										if(parentForms.count() > 0 && parentForms.Status == "Closed")
+										{
+											alert "Question responses cannot be changed after the appraisal form is closed.";
+											cancel submit;
+										}
+						)
+					}
+				}
+
+			
+}

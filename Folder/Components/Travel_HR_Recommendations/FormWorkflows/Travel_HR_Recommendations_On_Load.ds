@@ -1,0 +1,43 @@
+Travel_HR_Recommendations_On_Load as "Travel HR Recommendations - On Load"
+{
+
+				type =  form
+				form = Travel_HR_Recommendations
+
+				record event = on add or edit
+
+				on load
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											disable Recommendation_Type;
+										hide Departure_Time;
+										hide Arrival_Time;
+										hide Check_In_Date;
+										hide Check_Out_Date;
+										if(input.Travel_Requirement != null)
+										{
+											requirementRows = Travel_Requirements[ID == input.Travel_Requirement];
+											if(requirementRows.count() > 0)
+											{
+												input.Recommendation_Type = requirementRows.Requirement_Type;
+												if(requirementRows.Requirement_Type == "Hotel")
+												{
+													show Check_In_Date;
+													show Check_Out_Date;
+												}
+												else
+												{
+													show Departure_Time;
+													show Arrival_Time;
+												}
+											}
+										}
+						)
+					}
+				}
+
+			
+}

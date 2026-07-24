@@ -1,0 +1,53 @@
+ID_Card_Request_On_Load as "ID Card Request - On Load"
+{
+
+				type =  form
+				form = ID_Card_Request
+
+				record event = on add or edit
+
+				on load
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											disable Raised_By;
+										disable Valid_From;
+										disable Received_Date;
+										hide Employee_Requester;
+										hide Member_Requester;
+										hide Barcode_Display;
+										if(input.Raised_By == null)
+										{
+											input.Raised_By = zoho.loginuserid;
+										}
+										if(input.Requester_Type == "Employee")
+										{
+											show Employee_Requester;
+										}
+										else if(input.Requester_Type == "Member")
+										{
+											show Member_Requester;
+										}
+										if(input.Extension_ID_Number != null && input.Extension_ID_Number != "")
+										{
+											show Barcode_Display;
+										}
+										if(input.Status == "Received" || input.Status == "Deactivated")
+										{
+											disable Requester_Type;
+											disable Employee_Requester;
+											disable Member_Requester;
+											disable Recipient_Name;
+											disable Recipient_Designation;
+											disable Request_Type;
+											disable Extension_ID_Number;
+											disable Status;
+										}
+						)
+					}
+				}
+
+			
+}

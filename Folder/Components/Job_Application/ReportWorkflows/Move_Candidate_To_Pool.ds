@@ -1,0 +1,24 @@
+Move_Candidate_To_Pool as "Move Candidate To Pool"
+{
+
+				type =  functions
+				form = Job_Application
+				execution type = for each record	
+				on start
+				{
+					actions 
+					{
+					on click
+					(
+						candidateRows = Candidate[ID == input.Candidate];
+										if(candidateRows.count() > 0)
+										{
+											candidateRows.Is_In_Pool=true;
+											candidateRows.Pool_Notes="Moved from job application " + input.ID + " with status " + input.Status;
+											thisapp.Add_Audit_Log("CANDIDATE_MOVED_TO_POOL","Recruitment","Job_Application",input.ID,"Move to Pool",input.Status,input.Status,"Candidate moved to talent pool.",true,"");
+										}
+					)
+					}
+				}
+			
+}

@@ -1,0 +1,66 @@
+Comp_Off_Award_On_Success as "Comp Off Award - On Success"
+{
+
+				type =  form
+				form = Comp_Off_Award
+
+				record event = on add
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											compOffTypes = Leave_Type_Config[Leave_Type_Name == "Comp_Off" && Is_Active == true];
+										if(compOffTypes.count() > 0)
+										{
+											compOffTypeId = compOffTypes.ID;
+											validityDays = ifnull(compOffTypes.Validity_Days,90);
+											calculatedExpiry = input.Work_Date.addDay(validityDays);
+											input.Expiry_Date = calculatedExpiry;
+											totalBalance = 0;
+											for each  employeeId in input.Employees
+											{
+												balanceRows = Leave_Balance[Employee == employeeId && Leave_Type == compOffTypeId];
+												if(balanceRows.count() == 0)
+												{
+													insertedBalanceId = insert into Leave_Balance
+													[
+														Employee=employeeId
+														Leave_Type=compOffTypeId
+														Balance_Days=input.Awarded_Days
+														Used_Days=0
+														Credited_Days=input.Awarded_Days
+														Last_Credited_Date=zoho.currentdate
+														Comp_Off_Expiry_Date=calculatedExpiry
+														Added_User=zoho.loginuser
+													];
+													totalBalance = totalBalance + input.Awarded_Days;
+												}
+												else
+												{
+													for each  balanceRec in balanceRows
+													{
+														oldBalance = ifnull(balanceRec.Balance_Days,0);
+														balanceRec.Balance_Days=oldBalance + input.Awarded_Days;
+														balanceRec.Credited_Days=ifnull(balanceRec.Credited_Days,0) + input.Awarded_Days;
+														balanceRec.Last_Credited_Date=zoho.currentdate;
+														balanceRec.Comp_Off_Expiry_Date=calculatedExpiry;
+														totalBalance = totalBalance + balanceRec.Balance_Days;
+													}
+												}
+											}
+											input.Balance = totalBalance;
+											thisapp.Add_Audit_Log("COMP_OFF_AWARDED","Attendance_Leave","Comp_Off_Award",input.ID,"Awarded","",input.Awarded_Days.toString(),"Comp-off awarded for work date " + input.Work_Date + ".",true,"");
+										}
+										else
+										{
+											thisapp.Add_Audit_Log("COMP_OFF_AWARD_FAILED","Attendance_Leave","Comp_Off_Award",input.ID,"Award Failed","","","Active Comp_Off leave type was not found.",false,"Comp_Off leave type missing");
+										}
+						)
+					}
+				}
+
+			
+}

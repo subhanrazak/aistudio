@@ -1,0 +1,42 @@
+Reimbursement_Type_On_User_Input as "Reimbursement Type - On User Input"
+{
+
+				type =  form
+				form = Reimbursement_Request
+
+				record event = on add or edit
+
+				on user input of Reimbursement_Type
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											hide Insurance_Sub_Type;
+										input.Category = "";
+										if(input.Reimbursement_Type != null)
+										{
+											typeRows = Reimbursement_Type_Config[ID == input.Reimbursement_Type];
+											if(typeRows.count() > 0)
+											{
+												input.Category = typeRows.Category;
+												if(ifnull(input.Amount_Claimed,0) <= ifnull(typeRows.Limit_Amount,0) || ifnull(typeRows.Limit_Amount,0) == 0)
+												{
+													input.within_limit = true;
+												}
+												else
+												{
+													input.within_limit = false;
+												}
+												if(typeRows.Category == "Health_Insurance")
+												{
+													show Insurance_Sub_Type;
+												}
+											}
+										}
+						)
+					}
+				}
+
+			
+}

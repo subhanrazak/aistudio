@@ -1,0 +1,65 @@
+Interview_Feedback_On_Success as "Interview Feedback - On Success"
+{
+
+				type =  form
+				form = Interview_Feedback
+
+				record event = on add
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											appRows = Job_Application[ID == input.Job_Application];
+										if(appRows.count() > 0)
+										{
+											oldStatus = appRows.Status;
+											tokenMap = Map();
+											tokenMap.put("candidate",input.Candidate);
+											tokenMap.put("job_title",input.Job_Request);
+											tokenMap.put("round",input.Round_Number);
+											tokenMap.put("recommendation",input.Recommendation);
+											if(input.Recommendation == "Next_Round")
+											{
+												appRows.Current_Round=ifnull(appRows.Current_Round,1) + 1;
+												appRows.Status="Active";
+												thisapp.Add_Audit_Log("INTERVIEW_NEXT_ROUND","Recruitment","Interview_Feedback",input.ID,"Next Round",oldStatus,"Active","Candidate moved to next interview round.",true,"");
+												thisapp.Send_Configured_Notification("INTERVIEW_NEXT_ROUND",tokenMap,"Candidate moved to next round","{{candidate}} has moved to next round for {{job_title}}.");
+											}
+											else if(input.Recommendation == "On_Hold")
+											{
+												appRows.Status="On_Hold";
+												thisapp.Add_Audit_Log("INTERVIEW_ON_HOLD","Recruitment","Interview_Feedback",input.ID,"On Hold",oldStatus,"On_Hold","Application placed on hold from interview feedback.",true,"");
+											}
+											else if(input.Recommendation == "Candidate_Pool")
+											{
+												appRows.Status="Rejected";
+												candidateRows = Candidate[ID == appRows.Candidate];
+												if(candidateRows.count() > 0)
+												{
+													candidateRows.Is_In_Pool=true;
+													candidateRows.Pool_Notes="Moved to pool from interview recommendation.";
+												}
+												thisapp.Add_Audit_Log("INTERVIEW_CANDIDATE_POOL","Recruitment","Interview_Feedback",input.ID,"Candidate Pool",oldStatus,"Rejected","Application rejected and candidate moved to pool.",true,"");
+											}
+											else if(input.Recommendation == "Reject")
+											{
+												appRows.Status="Rejected";
+												thisapp.Add_Audit_Log("INTERVIEW_REJECT","Recruitment","Interview_Feedback",input.ID,"Reject",oldStatus,"Rejected","Candidate rejected from interview feedback.",true,"");
+												thisapp.Send_Configured_Notification("INTERVIEW_REJECT",tokenMap,"Candidate rejected","{{candidate}} has been rejected for {{job_title}}.");
+											}
+											else if(input.Recommendation == "Select")
+											{
+												appRows.Status="Selected";
+												thisapp.Add_Audit_Log("INTERVIEW_SELECT","Recruitment","Interview_Feedback",input.ID,"Select",oldStatus,"Selected","Candidate selected from interview feedback.",true,"");
+												thisapp.Send_Configured_Notification("INTERVIEW_SELECT",tokenMap,"Candidate selected","{{candidate}} has been selected for {{job_title}}.");
+											}
+										}
+						)
+					}
+				}
+
+			
+}

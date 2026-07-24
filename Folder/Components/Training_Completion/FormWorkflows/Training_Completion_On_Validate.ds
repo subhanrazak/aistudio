@@ -1,0 +1,55 @@
+Training_Completion_On_Validate as "Training Completion - On Validate"
+{
+
+				type =  form
+				form = Training_Completion
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Employee == null)
+										{
+											input.Employee = zoho.loginuserid;
+										}
+										if(input.Employee_Record == null)
+										{
+											employeeRows = Employee_Master[Official_Email == zoho.loginuserid || Official_Email == zoho.loginuser];
+											if(employeeRows.count() > 0)
+											{
+												input.Employee_Record = employeeRows.ID;
+											}
+										}
+										programmeRows = Training_Programme[ID == input.Training_Programme];
+										if(programmeRows.count() > 0)
+										{
+											if(input.Completion_Date < programmeRows.Training_Date)
+											{
+												alert "Completion date cannot be before the training date.";
+												cancel submit;
+											}
+											if(input.Employee_Record != null && !input.Employee_Record in programmeRows.Assigned_Employees)
+											{
+												alert "Completion can only be submitted for assigned employees.";
+												cancel submit;
+											}
+										}
+										if(input.Certificate_Upload != null)
+										{
+											certificateName = input.Certificate_Upload.toString().toLowerCase();
+											if(!(certificateName.contains(".pdf") || certificateName.contains(".jpg") || certificateName.contains(".jpeg") || certificateName.contains(".png")))
+											{
+												alert "Certificate upload must be a PDF, JPG, JPEG, or PNG file.";
+												cancel submit;
+											}
+										}
+						)
+					}
+				}
+
+			
+}

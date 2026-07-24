@@ -1,0 +1,43 @@
+Gift_Registration_On_Load as "Gift Registration - On Load"
+{
+
+				type =  form
+				form = Gift_Registration
+
+				record event = on add or edit
+
+				on load
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											hide Final_Decision;
+										if(input.Employee == null)
+										{
+											employeeRows = Employee_Master[Official_Email == zoho.loginuserid || Official_Email == zoho.loginuser];
+											if(employeeRows.count() > 0)
+											{
+												input.Employee = employeeRows.ID;
+											}
+										}
+										if(input.Status == "Pending_Finance")
+										{
+											show Final_Decision;
+										}
+										if(input.Status == "Approved_Retain" || input.Status == "Approved_Return" || input.Status == "Rejected")
+										{
+											disable Gift_Name;
+											disable Gift_Description;
+											disable Received_From;
+											disable Received_Date;
+											disable Vendor_Details;
+											disable Estimated_Value;
+											disable Final_Decision;
+										}
+						)
+					}
+				}
+
+			
+}

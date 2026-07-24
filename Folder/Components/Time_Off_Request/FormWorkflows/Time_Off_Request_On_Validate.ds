@@ -1,0 +1,68 @@
+Time_Off_Request_On_Validate as "Time Off Request - On Validate"
+{
+
+				type =  form
+				form = Time_Off_Request
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.From_Date > input.To_Date)
+										{
+											alert "From date cannot be after to date.";
+											cancel submit;
+										}
+										if(input.Is_Half_Day == true && input.Half_Day_Session in {"",null})
+										{
+											alert "Half-day session is required for half-day requests.";
+											cancel submit;
+										}
+										leaveTypeRows = Leave_Type_Config[ID == input.Leave_Type];
+										leaveTypeName = "";
+										if(leaveTypeRows.count() > 0)
+										{
+											leaveTypeName = leaveTypeRows.Leave_Type_Name;
+											if(leaveTypeRows.Document_Required == true && input.Supporting_Document == null)
+											{
+												alert "Supporting document is required for this leave type.";
+												cancel submit;
+											}
+											if(leaveTypeName == "Maternity" || leaveTypeName == "Paternity" && input.Baby_Birth_Date == null)
+											{
+												alert "Baby birth date is required for maternity or paternity leave.";
+												cancel submit;
+											}
+										}
+										overlapRows = Time_Off_Request[Employee == input.Employee && ID != input.ID && Status != "Rejected" && Status != "Cancelled" && From_Date <= input.To_Date && To_Date >= input.From_Date];
+										if(overlapRows.count() > 0)
+										{
+											alert "An overlapping time-off request already exists.";
+											cancel submit;
+										}
+										if(input.Number_Of_Days == null || input.Number_Of_Days <= 0)
+										{
+											alert "Number of days must be greater than zero.";
+											cancel submit;
+										}
+										balanceRows = Leave_Balance[Employee == input.Employee && Leave_Type == input.Leave_Type];
+										availableBalance = 0;
+										if(balanceRows.count() > 0)
+										{
+											availableBalance = ifnull(balanceRows.Balance_Days,0);
+										}
+										if(leaveTypeName != "WFH" && leaveTypeName != "On_Duty" && availableBalance < input.Number_Of_Days)
+										{
+											alert "Insufficient leave balance for this request.";
+											cancel submit;
+										}
+						)
+					}
+				}
+
+			
+}

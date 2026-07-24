@@ -1,0 +1,43 @@
+Travel_Selected_Options_On_Success as "Travel Selected Options - On Success"
+{
+
+				type =  form
+				form = Travel_Selected_Options
+
+				record event = on add or edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Booking_Document != null && input.Booking_Uploaded_Date == null)
+										{
+											selectedRows = Travel_Selected_Options[ID == input.ID];
+											if(selectedRows.count() > 0)
+											{
+												selectedRows.Booking_Uploaded_Date=zoho.currentdate;
+											}
+										}
+										estimatedTotal = 0;
+										actualTotal = 0;
+										optionRows = Travel_Selected_Options[Travel_Request == input.Travel_Request];
+										for each  optionRec in optionRows
+										{
+											estimatedTotal = estimatedTotal + ifnull(optionRec.Estimated_Cost,0);
+											actualTotal = actualTotal + ifnull(optionRec.Actual_Cost,0);
+										}
+										parentRequests = Travel_Request[ID == input.Travel_Request];
+										if(parentRequests.count() > 0)
+										{
+											parentRequests.Total_Estimated_Cost=estimatedTotal;
+											parentRequests.Total_Actual_Cost=actualTotal;
+										}
+										thisapp.Add_Audit_Log("TRAVEL_SELECTED_OPTION_SAVED","Travel","Travel_Selected_Options",input.ID,"Save","","","Selected travel option saved and totals recalculated.",true,"");
+						)
+					}
+				}
+
+			
+}

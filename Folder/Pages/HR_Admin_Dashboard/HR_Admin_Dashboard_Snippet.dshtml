@@ -1,0 +1,488 @@
+<%
+	loginEmail = zoho.loginuserid;
+	if(loginEmail == null || loginEmail == "")
+	{
+		loginEmail = zoho.loginuser;
+	}
+	loginRole = ifnull(thisapp.permissions.loginUserProfile(),"");
+	isAllowed = loginRole == "HR_ADMIN" || loginRole == "Administrator" || loginRole == "Admin";
+	todayDate = zoho.currentdate;
+	todayDisplay = todayDate.toString("dd-MMM-yyyy");
+	soonDate = todayDate.addDay(30);
+	sevenDayDate = todayDate.addDay(7);
+	userName = ifnull(zoho.loginuser,"HR Admin");
+	hrRows = Employee_Master[Official_Email == loginEmail || Official_Email == zoho.loginuser];
+	if(hrRows.count() > 0)
+	{
+		userName = ifnull(hrRows.Full_Name,userName);
+	}
+	if(isAllowed == true)
+	{
+		activeEmployeeRows = Employee_Master[Employment_Status == "Active" || Employment_Status == "Probation"];
+		totalHeadcount = activeEmployeeRows.count();
+		activeHeadcount = Employee_Master[Employment_Status == "Active"].count();
+		probationHeadcount = Employee_Master[Employment_Status == "Probation"].count();
+		inactiveHeadcount = Employee_Master[Employment_Status == "Inactive"].count();
+		fullTimeCount = Employee_Master[Employment_Status == "Active" || Employment_Status == "Probation" && Employment_Type == "Full_Time"].count();
+		contractorCount = Employee_Master[Employment_Status == "Active" || Employment_Status == "Probation" && Employment_Type == "Contractor"].count();
+		internCount = Employee_Master[Employment_Status == "Active" || Employment_Status == "Probation" && Employment_Type == "Intern"].count();
+		fullTimePct = 0;
+		contractorPct = 0;
+		internPct = 0;
+		if(totalHeadcount > 0)
+		{
+			fullTimePct = (fullTimeCount * 100) / totalHeadcount;
+			contractorPct = (contractorCount * 100) / totalHeadcount;
+			internPct = (internCount * 100) / totalHeadcount;
+		}
+		departmentRows = Department_Config[Is_Active == true] sort by Department_Name asc;
+		maxDepartmentCount = 1;
+		for each  deptSeed in departmentRows
+		{
+			deptSeedCount = Employee_Master[Department == deptSeed.ID && Employment_Status == "Active" || Employment_Status == "Probation"].count();
+			if(deptSeedCount > maxDepartmentCount)
+			{
+				maxDepartmentCount = deptSeedCount;
+			}
+		}
+		approvedJobRows = Job_Request[Status == "Approved"];
+		approvedJobCount = approvedJobRows.count();
+		approvedPositionCount = 0;
+		linkedinPendingCount = 0;
+		for each  jobSeed in approvedJobRows
+		{
+			approvedPositionCount = approvedPositionCount + ifnull(jobSeed.Number_Of_Positions,0);
+			if(ifnull(jobSeed.Linkedin_Posted,false) == false)
+			{
+				linkedinPendingCount = linkedinPendingCount + 1;
+			}
+		}
+		applicationActiveCount = Job_Application[Status == "Active"].count();
+		applicationOnHoldCount = Job_Application[Status == "On_Hold"].count();
+		applicationSelectedCount = Job_Application[Status == "Selected"].count();
+		applicationRejectedCount = Job_Application[Status == "Rejected"].count();
+		applicationOfferAcceptedCount = Job_Application[Status == "Offer_Accepted"].count();
+		applicationJoinedCount = Job_Application[Status == "Joined"].count();
+		recruitmentTotal = applicationActiveCount + applicationOnHoldCount + applicationSelectedCount + applicationRejectedCount + applicationOfferAcceptedCount + applicationJoinedCount;
+		activeAppPct = 0;
+		holdAppPct = 0;
+		selectedAppPct = 0;
+		offerAppPct = 0;
+		joinedAppPct = 0;
+		rejectedAppPct = 0;
+		if(recruitmentTotal > 0)
+		{
+			activeAppPct = (applicationActiveCount * 100) / recruitmentTotal;
+			holdAppPct = (applicationOnHoldCount * 100) / recruitmentTotal;
+			selectedAppPct = (applicationSelectedCount * 100) / recruitmentTotal;
+			offerAppPct = (applicationOfferAcceptedCount * 100) / recruitmentTotal;
+			joinedAppPct = (applicationJoinedCount * 100) / recruitmentTotal;
+			rejectedAppPct = (applicationRejectedCount * 100) / recruitmentTotal;
+		}
+		todayAttendanceRows = Attendance_Log[Attendance_Date == todayDate];
+		attendanceMarkedCount = todayAttendanceRows.count();
+		presentTodayCount = Attendance_Log[Attendance_Date == todayDate && Attendance_Status == "Present"].count();
+		wfhTodayCount = Attendance_Log[Attendance_Date == todayDate && Attendance_Status == "WFH" || Attendance_Status == "On_Duty"].count();
+		leaveTodayCount = Attendance_Log[Attendance_Date == todayDate && Attendance_Status == "Leave"].count();
+		absentTodayCount = Attendance_Log[Attendance_Date == todayDate && Attendance_Status == "Absent"].count();
+		halfDayTodayCount = Attendance_Log[Attendance_Date == todayDate && Attendance_Status == "Half_Day"].count();
+		notMarkedTodayCount = Attendance_Log[Attendance_Date == todayDate && Attendance_Status == "Not_Marked"].count();
+		noAttendanceLogCount = totalHeadcount - attendanceMarkedCount;
+		if(noAttendanceLogCount < 0)
+		{
+			noAttendanceLogCount = 0;
+		}
+		attendanceCompletionPct = 0;
+		if(totalHeadcount > 0)
+		{
+			attendanceCompletionPct = (attendanceMarkedCount * 100) / totalHeadcount;
+		}
+		appraisalDraftCount = Appraisal_Form[Status == "Draft"].count();
+		appraisalSubmittedCount = Appraisal_Form[Status == "Submitted"].count();
+		appraisalManagerReviewedCount = Appraisal_Form[Status == "Manager_Reviewed"].count();
+		appraisalHrApprovedCount = Appraisal_Form[Status == "HR_Approved"].count();
+		appraisalTotal = appraisalDraftCount + appraisalSubmittedCount + appraisalManagerReviewedCount + appraisalHrApprovedCount;
+		appraisalCompletionPct = 0;
+		if(appraisalTotal > 0)
+		{
+			appraisalCompletionPct = (appraisalHrApprovedCount * 100) / appraisalTotal;
+		}
+		appraisalDraftPct = 0;
+		appraisalSubmittedPct = 0;
+		appraisalManagerReviewedPct = 0;
+		appraisalHrApprovedPct = 0;
+		if(appraisalTotal > 0)
+		{
+			appraisalDraftPct = (appraisalDraftCount * 100) / appraisalTotal;
+			appraisalSubmittedPct = (appraisalSubmittedCount * 100) / appraisalTotal;
+			appraisalManagerReviewedPct = (appraisalManagerReviewedCount * 100) / appraisalTotal;
+			appraisalHrApprovedPct = (appraisalHrApprovedCount * 100) / appraisalTotal;
+		}
+		resignationApprovedRows = Resignation_Request[Status == "Approved" && Effective_LWD != null];
+		offboardingOverdueCount = 0;
+		offboardingNextSevenCount = 0;
+		offboardingNextThirtyCount = 0;
+		offboardingFutureCount = 0;
+		for each  resignationSeed in resignationApprovedRows
+		{
+			if(resignationSeed.Effective_LWD < todayDate)
+			{
+				offboardingOverdueCount = offboardingOverdueCount + 1;
+			}
+			else if(resignationSeed.Effective_LWD <= sevenDayDate)
+			{
+				offboardingNextSevenCount = offboardingNextSevenCount + 1;
+			}
+			else if(resignationSeed.Effective_LWD <= soonDate)
+			{
+				offboardingNextThirtyCount = offboardingNextThirtyCount + 1;
+			}
+			else
+			{
+				offboardingFutureCount = offboardingFutureCount + 1;
+			}
+		}
+		pendingHROffboardingCount = Resignation_Request[Status == "Pending_HR"].count();
+		probationAlertRows = Employee_Master[Employment_Status == "Probation" && Probation_End_Date != null && Probation_End_Date <= soonDate] sort by Probation_End_Date asc;
+		probationAlertCount = probationAlertRows.count();
+		expiredCardRows = ID_Card_Request[Status == "Received" && Valid_Upto != null && Valid_Upto < todayDate] sort by Valid_Upto asc;
+		expiringCardRows = ID_Card_Request[Status == "Received" && Valid_Upto != null && Valid_Upto >= todayDate && Valid_Upto <= soonDate] sort by Valid_Upto asc;
+		expiredCardCount = expiredCardRows.count();
+		expiringCardCount = expiringCardRows.count();
+		idCardAlertCount = expiredCardCount + expiringCardCount;
+		pendingHRReimbursementRows = Reimbursement_Request[Status == "Pending_HR"] sort by Expense_Date desc;
+		pendingHRReimbursementCount = pendingHRReimbursementRows.count();
+		pendingHRReimbursementAmount = 0;
+		for each  reimbursementSeed in pendingHRReimbursementRows
+		{
+			pendingHRReimbursementAmount = pendingHRReimbursementAmount + ifnull(reimbursementSeed.Amount_Claimed,0);
+		}
+		%>
+<style>
+/* ===== zcs-global.css included once for HR_Admin_Dashboard (utility subset used by this page) ===== */
+:root { --zcs-theme-brand-color: var(--zcs_brand_color, #2A6FFC); --zcs-light-bg-color: var(--zcs_brand_light_color, #E8EFFF); --zcs-primary-text-color: var(--zcs_primary_text_color, #1A1A1A); --zcs-secondary-text-color: var(--zcs_secondary_text_color, #55576B); --zcs-teritiary-text-color: var(--zcs_tertiary_text_color, #77798C); --zcs-border-color: var(--zcs_tertiary_border_color, #E6E8F0); --zcs-page-bg-color: #F5F7FB; --zcs-white-color: #FFFFFF; --zcs-brand-foreground: var(--zcs_brand_foreground_color, #FFFFFF); }
+a { text-decoration: none; }
+.zcs-flex { display: flex; } .zcs-inline-flex { display: inline-flex; } .zcs-row { display: flex; flex-wrap: wrap; } .zcs-direction-column { flex-direction: column; } .zcs-align-items-center { align-items: center; } .zcs-align-items-start { align-items: flex-start; } .zcs-justify-space-between { justify-content: space-between; } .zcs-justify-center { justify-content: center; } .zcs-gap-4 { gap: .25rem; } .zcs-gap-6 { gap: .375rem; } .zcs-gap-8 { gap: .5rem; } .zcs-gap-10 { gap: .625rem; } .zcs-gap-12 { gap: .75rem; } .zcs-gap-16 { gap: 1rem; } .zcs-gap-18 { gap: 1.125rem; } .zcs-gap-20 { gap: 1.25rem; } .zcs-gap-24 { gap: 1.5rem; }
+.zcs-p-0 { padding: 0; } .zcs-p-8 { padding: .5rem; } .zcs-p-12 { padding: .75rem; } .zcs-p-14 { padding: .875rem; } .zcs-p-16 { padding: 1rem; } .zcs-p-18 { padding: 1.125rem; } .zcs-p-20 { padding: 1.25rem; } .zcs-p-24 { padding: 1.5rem; } .zcs-px-10 { padding-left: .625rem; padding-right: .625rem; } .zcs-px-12 { padding-left: .75rem; padding-right: .75rem; } .zcs-px-16 { padding-left: 1rem; padding-right: 1rem; } .zcs-px-24 { padding-left: 1.5rem; padding-right: 1.5rem; } .zcs-py-2 { padding-top: .125rem; padding-bottom: .125rem; } .zcs-py-6 { padding-top: .375rem; padding-bottom: .375rem; } .zcs-py-8 { padding-top: .5rem; padding-bottom: .5rem; } .zcs-py-10 { padding-top: .625rem; padding-bottom: .625rem; } .zcs-py-12 { padding-top: .75rem; padding-bottom: .75rem; } .zcs-py-16 { padding-top: 1rem; padding-bottom: 1rem; }
+.zcs-m-0 { margin: 0; } .zcs-mb-6 { margin-bottom: .375rem; } .zcs-mb-8 { margin-bottom: .5rem; } .zcs-mt-10 { margin-top: .625rem; } .zcs-w-full { width: 100%; } .zcs-box-border { box-sizing: border-box; } .zcs-rounded-sm { border-radius: .25rem; } .zcs-rounded-md { border-radius: .375rem; } .zcs-rounded-lg { border-radius: .5rem; } .zcs-rounded-xl { border-radius: .75rem; } .zcs-rounded-2xl { border-radius: 1rem; } .zcs-text-left { text-align: left; } .zcs-text-right { text-align: right; } .zcs-text-center { text-align: center; } .zcs-overflow-auto { overflow: auto; }
+.zcs-font-11 { font-size: .6875rem; } .zcs-font-12 { font-size: .75rem; } .zcs-font-13 { font-size: .8125rem; } .zcs-font-14 { font-size: .875rem; } .zcs-font-15 { font-size: .9375rem; } .zcs-font-16 { font-size: 1rem; } .zcs-font-18 { font-size: 1.125rem; } .zcs-font-20 { font-size: 1.25rem; } .zcs-font-22 { font-size: 1.375rem; } .zcs-font-24 { font-size: 1.5rem; } .zcs-font-28 { font-size: 1.75rem; } .zcs-font-30 { font-size: 1.875rem; } .zcs-font-normal { font-weight: 400; } .zcs-font-medium { font-weight: 500; } .zcs-font-semibold { font-weight: 600; } .zcs-font-bold { font-weight: 700; } .zcs-lh-body { line-height: 1.5; } .zcs-lh-heading { line-height: 1.25; }
+.zcs-color-primary { color: var(--zcs-primary-text-color); } .zcs-color-secondary { color: var(--zcs-secondary-text-color); } .zcs-color-tertiary { color: var(--zcs-teritiary-text-color); } .zcs-color-theme { color: var(--zcs-theme-brand-color); } .zcs-color-white { color: var(--zcs-white-color); } .zcs-color-green { color: #179E6C; } .zcs-color-red { color: #FE455D; } .zcs-color-yellow { color: #B8770D; } .zcs-color-blue { color: #2A6FFC; }
+.zcs-card { background-color: var(--zcs-white-color); border: 1px solid var(--zcs-border-color); border-radius: 12px; box-shadow: 0 8px 24px rgba(18, 19, 43, .04); }
+/* ZCS component CSS: layout-dashboard panel tiles */
+.zcs-panel-wrapper ul li { list-style-type: none; } .zcs-panel { border: 1px solid var(--zcs-border-color); box-shadow: 0 2px 8px 0 #F2F2F6; background-color: var(--zcs-white-color); transition: all .2s ease; } .zcs-panel-icon-wrapper { width: 42px; height: 42px; } .zcs-panel-icon { width: 24px; height: 24px; line-height: 24px; } .zcs-panel.zcs-panel-green .zcs-panel-icon-wrapper { background-color: #E4FCF3; color: #179E6C; } .zcs-panel.zcs-panel-yellow .zcs-panel-icon-wrapper { background-color: #FCF4E6; color: #B8770D; } .zcs-panel.zcs-panel-red .zcs-panel-icon-wrapper { background-color: #FDE3E6; color: #FE455D; } .zcs-panel.zcs-panel-d_blue .zcs-panel-icon-wrapper { background-color: #EAF2FF; color: #1652BB; } .zcs-panel.zcs-panel-blue .zcs-panel-icon-wrapper { background-color: #F2F9FF; color: #2A8BCC; } .zcs-panel.zcs-panel-orange .zcs-panel-icon-wrapper { background-color: #FDF5F3; color: #F4660C; } .zcs-panel.zcs-panel-violet .zcs-panel-icon-wrapper { background-color: #F6F6FB; color: #5C66FF; } .zcs-panel:hover { border-color: var(--zcs-theme-brand-color); background-image: linear-gradient(rgb(253 253 255 / 10%), #F7F9FF); }
+/* ZCS component CSS: badge-filled-badge */
+.zcs-badge { width: auto; } .zcs-badge-filled { border: 1px solid transparent; } .zcs-badge-filled.zcs-badge-theme { background-color: var(--zcs-theme-brand-color); border-color: var(--zcs-theme-brand-color); color: var(--zcs-white-color); } .zcs-badge-filled.zcs-badge-green { background-color: #179E6C; border-color: #179E6C; color: var(--zcs-white-color); } .zcs-badge-filled.zcs-badge-red { background-color: #FE455D; border-color: #FE455D; color: var(--zcs-white-color); } .zcs-badge-filled.zcs-badge-grey { background-color: #242424; border-color: #242424; color: var(--zcs-white-color); } .zcs-badge-filled.zcs-badge-yellow { background-color: #FAAE13; border-color: #FAAE13; color: var(--zcs-white-color); } .zcs-badge-filled.zcs-badge-blue { background-color: #2A6FFC; border-color: #2A6FFC; color: var(--zcs-white-color); } .zcs-badge-filled.zcs-badge-orange { background-color: #F4660C; border-color: #F4660C; color: var(--zcs-white-color); }
+/* ZCS component CSS: progress-bar-range-bar-with-text */
+.zcs-progress-bar { height: 8px; background-color: var(--zcs_component_hover_color, #EEF2F7); overflow: hidden; } .zcs-progress-bar-indicator { height: inherit; border-radius: inherit; background-color: var(--zcs-theme-brand-color); }
+/* ZCS component CSS: table-simple-table */
+.zcs-table-wrapper { border: 1px solid var(--zcs-border-color); background-color: var(--zcs-white-color); overflow: auto; } .zcs-table-wrapper table { line-height: normal; border-collapse: collapse; min-width: 100%; } .zcs-table-wrapper table thead tr th { background-color: #F9FAFE; box-shadow: 0 -1px 0 0 var(--zcs-border-color) inset; white-space: nowrap; } .zcs-table-wrapper table tbody tr td { border-top: 1px solid var(--zcs-border-color); vertical-align: top; } .zcs-table-wrapper table tbody tr:hover td { background-color: #F9FAFE; }
+/* ZCS component CSS: button-primary-button */
+.zcs-button { width: auto; min-width: 5rem; min-height: 36px; } .zcs-primary-button { background-color: var(--zcs-theme-brand-color); color: var(--zcs-brand-foreground); } .zcs-primary-outline-button { border: 1px solid var(--zcs-theme-brand-color); background-color: var(--zcs-white-color); color: var(--zcs-theme-brand-color); } .zcs-button:hover { filter: brightness(.98); } .zcs-button-icon { width: 16px; max-height: 16px; }
+.hrdash-page { background: var(--zcs-page-bg-color); padding: 22px; box-sizing: border-box; font-family: Lato, Arial, sans-serif; }
+.hr-dash-hero { position: relative; overflow: hidden; color: var(--zcs-white-color); border-radius: 18px; padding: 24px; background: linear-gradient(135deg, var(--zcs-theme-brand-color), #1328CD); }
+.hr-dash-hero:after { content: ""; position: absolute; right: -90px; top: -120px; width: 320px; height: 320px; border-radius: 50%; border: 42px solid rgba(255,255,255,.12); }
+.hr-dash-hero:before { content: ""; position: absolute; right: 160px; bottom: -90px; width: 190px; height: 190px; border-radius: 50%; border: 28px solid rgba(255,255,255,.10); }
+.hr-dash-hero-content { position: relative; z-index: 1; }
+.hr-dash-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 18px; }
+.hr-kpi { grid-column: span 3; } .hr-card-4 { grid-column: span 4; } .hr-card-5 { grid-column: span 5; } .hr-card-6 { grid-column: span 6; } .hr-card-7 { grid-column: span 7; } .hr-card-8 { grid-column: span 8; } .hr-card-12 { grid-column: span 12; }
+.hr-mini-stat { border: 1px solid var(--zcs-border-color); border-radius: 12px; background: #FAFBFF; padding: 12px; }
+.hr-bar-row { display: grid; grid-template-columns: 132px 1fr 52px; gap: 10px; align-items: center; }
+.hr-segment { border-radius: 999px; background: #EEF2F7; height: 10px; overflow: hidden; }
+.hr-segment span { display: block; height: 100%; background: var(--zcs-theme-brand-color); border-radius: inherit; }
+.hr-status-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+.hr-status-dot.green { background: #179E6C; } .hr-status-dot.yellow { background: #FAAE13; } .hr-status-dot.red { background: #FE455D; } .hr-status-dot.blue { background: #2A6FFC; } .hr-status-dot.orange { background: #F4660C; } .hr-status-dot.grey { background: #8B90A0; }
+.hr-list { list-style: none; margin: 0; padding: 0; } .hr-list li { border-top: 1px solid var(--zcs-border-color); padding: 12px 0; } .hr-list li:first-child { border-top: 0; padding-top: 0; }
+.hr-nodata { min-height: 92px; border: 1px dashed var(--zcs-border-color); border-radius: 12px; background: #FAFBFF; }
+@media (max-width: 1100px) { .hr-kpi, .hr-card-4, .hr-card-5, .hr-card-6, .hr-card-7, .hr-card-8 { grid-column: span 6; } }
+@media (max-width: 700px) { .hrdash-page { padding: 14px; } .hr-kpi, .hr-card-4, .hr-card-5, .hr-card-6, .hr-card-7, .hr-card-8, .hr-card-12 { grid-column: span 12; } .hr-bar-row { grid-template-columns: 1fr; } }
+</style>
+<div class="hrdash-page zcs-flex zcs-direction-column zcs-gap-20">
+	<div class="hr-dash-hero">
+		<div class="hr-dash-hero-content zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-16">
+			<div>
+				<div class="zcs-inline-flex zcs-align-items-center zcs-gap-8 zcs-badge zcs-badge-filled zcs-badge-theme zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-font-12 zcs-font-medium zcs-lh-body">Live HR operations</div>
+				<h2 class="zcs-font-30 zcs-font-bold zcs-lh-heading zcs-m-0 zcs-mt-10">HR Admin Dashboard</h2>
+				<p class="zcs-font-15 zcs-font-normal zcs-lh-body zcs-m-0 zcs-mt-10">Hello <%=userName%>. Operational snapshot as of <%=todayDisplay%>.</p>
+			</div>
+			<div class="zcs-flex zcs-gap-10">
+				<a class="zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body" href="#Report:All_Employees">
+					<i class="zcs-button-icon zc-li-outline users-single-02"></i>
+					<span class="zcs-button-text">Employee list</span>
+				</a>
+				<a class="zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body" href="#Report:HR_Reimbursement_Queue">
+					<i class="zcs-button-icon zc-li-outline arrows-1-tail-right"></i>
+					<span class="zcs-button-text">HR queue</span>
+				</a>
+			</div>
+		</div>
+	</div>
+
+	<div class="zcs-panel-wrapper">
+		<ul class="hr-dash-grid zcs-p-0 zcs-m-0">
+			<li class="hr-kpi">
+				<div class="zcs-panel zcs-panel-d_blue zcs-wh-full zcs-flex zcs-direction-column zcs-gap-8 zcs-rounded-lg zcs-p-16 zcs-box-border">
+					<div class="zcs-flex zcs-align-items-center zcs-gap-10"><div class="zcs-panel-icon-wrapper zcs-flex zcs-align-items-center zcs-justify-center zcs-rounded-lg"><i class="zcs-panel-icon zcs-font-24 zc-li-outline users-single-02"></i></div><h4 class="zcs-font-24 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0"><%=totalHeadcount%></h4></div>
+					<p class="zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0">Active and probation headcount</p>
+				</div>
+			</li>
+			<li class="hr-kpi">
+				<div class="zcs-panel zcs-panel-yellow zcs-wh-full zcs-flex zcs-direction-column zcs-gap-8 zcs-rounded-lg zcs-p-16 zcs-box-border">
+					<div class="zcs-flex zcs-align-items-center zcs-gap-10"><div class="zcs-panel-icon-wrapper zcs-flex zcs-align-items-center zcs-justify-center zcs-rounded-lg"><i class="zcs-panel-icon zcs-font-24 zc-li-outline arrows-4-restore"></i></div><h4 class="zcs-font-24 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0"><%=approvedJobCount%></h4></div>
+					<p class="zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0">Open approved job requests</p>
+				</div>
+			</li>
+			<li class="hr-kpi">
+				<div class="zcs-panel zcs-panel-green zcs-wh-full zcs-flex zcs-direction-column zcs-gap-8 zcs-rounded-lg zcs-p-16 zcs-box-border">
+					<div class="zcs-flex zcs-align-items-center zcs-gap-10"><div class="zcs-panel-icon-wrapper zcs-flex zcs-align-items-center zcs-justify-center zcs-rounded-lg"><i class="zcs-panel-icon zcs-font-24 zc-li-outline ui-1-check-circle-08"></i></div><h4 class="zcs-font-24 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0"><%=attendanceMarkedCount%></h4></div>
+					<p class="zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0">Attendance records today</p>
+				</div>
+			</li>
+			<li class="hr-kpi">
+				<div class="zcs-panel zcs-panel-red zcs-wh-full zcs-flex zcs-direction-column zcs-gap-8 zcs-rounded-lg zcs-p-16 zcs-box-border">
+					<div class="zcs-flex zcs-align-items-center zcs-gap-10"><div class="zcs-panel-icon-wrapper zcs-flex zcs-align-items-center zcs-justify-center zcs-rounded-lg"><i class="zcs-panel-icon zcs-font-24 zc-li-outline ui-2-time"></i></div><h4 class="zcs-font-24 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0"><%=probationAlertCount + idCardAlertCount + pendingHRReimbursementCount%></h4></div>
+					<p class="zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0">HR attention items</p>
+				</div>
+			</li>
+		</ul>
+	</div>
+
+	<div class="hr-dash-grid">
+		<section class="zcs-card zcs-p-20 zcs-box-border hr-card-7">
+			<div class="zcs-flex zcs-justify-space-between zcs-align-items-center zcs-gap-12 zcs-mb-8">
+				<div><h3 class="zcs-font-18 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0">Headcount by department</h3><p class="zcs-font-13 zcs-color-tertiary zcs-lh-body zcs-m-0">Active and probation employees only</p></div>
+				<span class="zcs-badge zcs-badge-filled zcs-badge-blue zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-font-12"><%=activeHeadcount%> Active</span>
+			</div>
+			<div class="zcs-flex zcs-direction-column zcs-gap-10">
+<%
+		if(departmentRows.count() == 0)
+		{
+			%>
+<div class="hr-nodata zcs-flex zcs-align-items-center zcs-justify-center zcs-text-center"><div><h5 class="zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0">No department data</h5></div></div>
+<%
+		}
+		else
+		{
+			for each  deptItem in departmentRows
+			{
+				deptCount = Employee_Master[Department == deptItem.ID && Employment_Status == "Active" || Employment_Status == "Probation"].count();
+				deptPct = 0;
+				if(maxDepartmentCount > 0)
+				{
+					deptPct = (deptCount * 100) / maxDepartmentCount;
+				}
+				%>
+<div class="hr-bar-row">
+						<span class="zcs-font-14 zcs-color-primary zcs-lh-body"><%=deptItem.Department_Name%></span>
+						<div class="hr-segment"><span style="width:<%=deptPct%>%;"></span></div>
+						<strong class="zcs-font-14 zcs-color-primary zcs-text-right"><%=deptCount%></strong>
+					</div>
+<%
+			}
+		}
+		%>
+</div>
+		</section>
+
+		<section class="zcs-card zcs-p-20 zcs-box-border hr-card-5">
+			<h3 class="zcs-font-18 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0">Employment type mix</h3>
+			<p class="zcs-font-13 zcs-color-tertiary zcs-lh-body zcs-m-0 zcs-mb-8">Total includes Active and Probation statuses</p>
+			<div class="zcs-flex zcs-direction-column zcs-gap-12">
+				<div class="hr-mini-stat"><div class="zcs-flex zcs-justify-space-between zcs-mb-6"><span class="zcs-font-14 zcs-color-primary">Full time</span><strong><%=fullTimeCount%></strong></div><div class="zcs-progress-bar zcs-rounded-sm"><div class="zcs-progress-bar-indicator" style="width:<%=fullTimePct%>%;"></div></div></div>
+				<div class="hr-mini-stat"><div class="zcs-flex zcs-justify-space-between zcs-mb-6"><span class="zcs-font-14 zcs-color-primary">Contractor</span><strong><%=contractorCount%></strong></div><div class="zcs-progress-bar zcs-rounded-sm"><div class="zcs-progress-bar-indicator" style="width:<%=contractorPct%>%;"></div></div></div>
+				<div class="hr-mini-stat"><div class="zcs-flex zcs-justify-space-between zcs-mb-6"><span class="zcs-font-14 zcs-color-primary">Intern</span><strong><%=internCount%></strong></div><div class="zcs-progress-bar zcs-rounded-sm"><div class="zcs-progress-bar-indicator" style="width:<%=internPct%>%;"></div></div></div>
+				<div class="zcs-flex zcs-gap-8 zcs-row"><span class="zcs-badge zcs-badge-filled zcs-badge-grey zcs-inline-flex zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-font-12">Inactive: <%=inactiveHeadcount%></span><span class="zcs-badge zcs-badge-filled zcs-badge-yellow zcs-inline-flex zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-font-12">Probation: <%=probationHeadcount%></span></div>
+			</div>
+		</section>
+
+		<section class="zcs-card zcs-p-20 zcs-box-border hr-card-4">
+			<div class="zcs-flex zcs-justify-space-between zcs-align-items-center zcs-mb-8"><h3 class="zcs-font-18 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0">Approved job requests</h3><a class="zcs-font-13 zcs-color-theme" href="#Report:Job_Request_List">View report</a></div>
+			<div class="zcs-flex zcs-direction-column zcs-gap-12">
+				<div class="hr-mini-stat"><span class="zcs-font-13 zcs-color-tertiary">Open approved requests</span><h4 class="zcs-font-28 zcs-font-semibold zcs-m-0 zcs-color-primary"><%=approvedJobCount%></h4></div>
+				<div class="hr-mini-stat"><span class="zcs-font-13 zcs-color-tertiary">Approved positions</span><h4 class="zcs-font-28 zcs-font-semibold zcs-m-0 zcs-color-primary"><%=approvedPositionCount%></h4></div>
+				<div class="hr-mini-stat"><span class="zcs-font-13 zcs-color-tertiary">LinkedIn post pending</span><h4 class="zcs-font-28 zcs-font-semibold zcs-m-0 zcs-color-primary"><%=linkedinPendingCount%></h4></div>
+			</div>
+		</section>
+
+		<section class="zcs-card zcs-p-20 zcs-box-border hr-card-8">
+			<div class="zcs-flex zcs-justify-space-between zcs-align-items-center zcs-mb-8"><div><h3 class="zcs-font-18 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0">Recruitment pipeline</h3><p class="zcs-font-13 zcs-color-tertiary zcs-lh-body zcs-m-0">Applications across lifecycle stages</p></div><a class="zcs-font-13 zcs-color-theme" href="#Report:Job_Application_History">History</a></div>
+			<div class="zcs-flex zcs-direction-column zcs-gap-10">
+				<div class="hr-bar-row"><span><i class="hr-status-dot blue"></i> Active</span><div class="hr-segment"><span style="width:<%=activeAppPct%>%;"></span></div><strong class="zcs-text-right"><%=applicationActiveCount%></strong></div>
+				<div class="hr-bar-row"><span><i class="hr-status-dot yellow"></i> On hold</span><div class="hr-segment"><span style="width:<%=holdAppPct%>%;"></span></div><strong class="zcs-text-right"><%=applicationOnHoldCount%></strong></div>
+				<div class="hr-bar-row"><span><i class="hr-status-dot orange"></i> Selected</span><div class="hr-segment"><span style="width:<%=selectedAppPct%>%;"></span></div><strong class="zcs-text-right"><%=applicationSelectedCount%></strong></div>
+				<div class="hr-bar-row"><span><i class="hr-status-dot green"></i> Offer accepted</span><div class="hr-segment"><span style="width:<%=offerAppPct%>%;"></span></div><strong class="zcs-text-right"><%=applicationOfferAcceptedCount%></strong></div>
+				<div class="hr-bar-row"><span><i class="hr-status-dot green"></i> Joined</span><div class="hr-segment"><span style="width:<%=joinedAppPct%>%;"></span></div><strong class="zcs-text-right"><%=applicationJoinedCount%></strong></div>
+				<div class="hr-bar-row"><span><i class="hr-status-dot red"></i> Rejected</span><div class="hr-segment"><span style="width:<%=rejectedAppPct%>%;"></span></div><strong class="zcs-text-right"><%=applicationRejectedCount%></strong></div>
+			</div>
+		</section>
+
+		<section class="zcs-card zcs-p-20 zcs-box-border hr-card-6">
+			<div class="zcs-flex zcs-justify-space-between zcs-align-items-center zcs-mb-8"><div><h3 class="zcs-font-18 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0">Attendance today</h3><p class="zcs-font-13 zcs-color-tertiary zcs-lh-body zcs-m-0"><%=todayDisplay%></p></div><span class="zcs-badge zcs-badge-filled zcs-badge-theme zcs-inline-flex zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-font-12"><%=attendanceCompletionPct%>% marked</span></div>
+			<div class="zcs-table-wrapper zcs-rounded-sm zcs-box-border"><table class="zcs-w-full"><thead><tr><th class="zcs-px-16 zcs-py-8 zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Status</th><th class="zcs-px-16 zcs-py-8 zcs-text-right zcs-font-14 zcs-font-medium zcs-color-primary">Count</th></tr></thead><tbody>
+				<tr><td class="zcs-px-16 zcs-py-8"><i class="hr-status-dot green"></i> Present</td><td class="zcs-px-16 zcs-py-8 zcs-text-right"><%=presentTodayCount%></td></tr>
+				<tr><td class="zcs-px-16 zcs-py-8"><i class="hr-status-dot blue"></i> WFH or On Duty</td><td class="zcs-px-16 zcs-py-8 zcs-text-right"><%=wfhTodayCount%></td></tr>
+				<tr><td class="zcs-px-16 zcs-py-8"><i class="hr-status-dot yellow"></i> Leave or Half Day</td><td class="zcs-px-16 zcs-py-8 zcs-text-right"><%=leaveTodayCount + halfDayTodayCount%></td></tr>
+				<tr><td class="zcs-px-16 zcs-py-8"><i class="hr-status-dot red"></i> Absent</td><td class="zcs-px-16 zcs-py-8 zcs-text-right"><%=absentTodayCount%></td></tr>
+				<tr><td class="zcs-px-16 zcs-py-8"><i class="hr-status-dot grey"></i> Not marked or no log</td><td class="zcs-px-16 zcs-py-8 zcs-text-right"><%=notMarkedTodayCount + noAttendanceLogCount%></td></tr>
+			</tbody></table></div>
+		</section>
+
+		<section class="zcs-card zcs-p-20 zcs-box-border hr-card-6">
+			<div class="zcs-flex zcs-justify-space-between zcs-align-items-center zcs-mb-8"><div><h3 class="zcs-font-18 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0">Appraisal pipeline</h3><p class="zcs-font-13 zcs-color-tertiary zcs-lh-body zcs-m-0">HR sign-off completion: <%=appraisalCompletionPct%>%</p></div><a class="zcs-font-13 zcs-color-theme" href="#Report:HR_All_Appraisals">View all</a></div>
+			<div class="zcs-flex zcs-direction-column zcs-gap-10">
+				<div class="hr-bar-row"><span><i class="hr-status-dot grey"></i> Draft</span><div class="hr-segment"><span style="width:<%=appraisalDraftPct%>%;"></span></div><strong class="zcs-text-right"><%=appraisalDraftCount%></strong></div>
+				<div class="hr-bar-row"><span><i class="hr-status-dot blue"></i> Submitted</span><div class="hr-segment"><span style="width:<%=appraisalSubmittedPct%>%;"></span></div><strong class="zcs-text-right"><%=appraisalSubmittedCount%></strong></div>
+				<div class="hr-bar-row"><span><i class="hr-status-dot yellow"></i> Manager reviewed</span><div class="hr-segment"><span style="width:<%=appraisalManagerReviewedPct%>%;"></span></div><strong class="zcs-text-right"><%=appraisalManagerReviewedCount%></strong></div>
+				<div class="hr-bar-row"><span><i class="hr-status-dot green"></i> HR approved</span><div class="hr-segment"><span style="width:<%=appraisalHrApprovedPct%>%;"></span></div><strong class="zcs-text-right"><%=appraisalHrApprovedCount%></strong></div>
+			</div>
+		</section>
+
+		<section class="zcs-card zcs-p-20 zcs-box-border hr-card-6">
+			<div class="zcs-flex zcs-justify-space-between zcs-align-items-center zcs-mb-8"><h3 class="zcs-font-18 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0">Offboarding by effective LWD</h3><a class="zcs-font-13 zcs-color-theme" href="#Report:HR_Offboarding_Dashboard">Dashboard report</a></div>
+			<div class="zcs-row zcs-gap-12">
+				<div class="hr-mini-stat" style="flex:1 1 130px;"><span class="zcs-font-12 zcs-color-tertiary">Overdue</span><h4 class="zcs-font-24 zcs-m-0 zcs-color-red"><%=offboardingOverdueCount%></h4></div>
+				<div class="hr-mini-stat" style="flex:1 1 130px;"><span class="zcs-font-12 zcs-color-tertiary">Next 7 days</span><h4 class="zcs-font-24 zcs-m-0 zcs-color-yellow"><%=offboardingNextSevenCount%></h4></div>
+				<div class="hr-mini-stat" style="flex:1 1 130px;"><span class="zcs-font-12 zcs-color-tertiary">Next 30 days</span><h4 class="zcs-font-24 zcs-m-0 zcs-color-blue"><%=offboardingNextThirtyCount%></h4></div>
+				<div class="hr-mini-stat" style="flex:1 1 130px;"><span class="zcs-font-12 zcs-color-tertiary">Pending HR approval</span><h4 class="zcs-font-24 zcs-m-0 zcs-color-primary"><%=pendingHROffboardingCount%></h4></div>
+			</div>
+		</section>
+
+		<section class="zcs-card zcs-p-20 zcs-box-border hr-card-6">
+			<div class="zcs-flex zcs-justify-space-between zcs-align-items-center zcs-mb-8"><h3 class="zcs-font-18 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0">Pending HR reimbursements</h3><a class="zcs-font-13 zcs-color-theme" href="#Report:HR_Reimbursement_Queue">Open queue</a></div>
+			<div class="zcs-row zcs-gap-12">
+				<div class="hr-mini-stat" style="flex:1 1 180px;"><span class="zcs-font-12 zcs-color-tertiary">Requests awaiting HR</span><h4 class="zcs-font-28 zcs-m-0 zcs-color-primary"><%=pendingHRReimbursementCount%></h4></div>
+				<div class="hr-mini-stat" style="flex:1 1 180px;"><span class="zcs-font-12 zcs-color-tertiary">Amount claimed</span><h4 class="zcs-font-24 zcs-m-0 zcs-color-primary">INR <%=pendingHRReimbursementAmount%></h4></div>
+			</div>
+<%
+		if(pendingHRReimbursementCount > 0)
+		{
+			shownReimbursements = 0;
+			%>
+<ul class="hr-list zcs-mt-10">
+<%
+			for each  reimbursementItem in pendingHRReimbursementRows
+			{
+				if(shownReimbursements < 4)
+				{
+					employeeText = "-";
+					if(reimbursementItem.Employee != null)
+					{
+						employeeText = ifnull(reimbursementItem.Employee.Full_Name,"-");
+					}
+					expenseDateText = "-";
+					if(reimbursementItem.Expense_Date != null)
+					{
+						expenseDateText = reimbursementItem.Expense_Date.toString("dd-MMM-yyyy");
+					}
+					%>
+<li class="zcs-flex zcs-justify-space-between zcs-gap-12"><div><strong class="zcs-font-14 zcs-color-primary"><%=employeeText%></strong><div class="zcs-font-12 zcs-color-tertiary"><%=ifnull(reimbursementItem.Category,"-")%> | <%=expenseDateText%></div></div><span class="zcs-font-14 zcs-font-semibold">INR <%=ifnull(reimbursementItem.Amount_Claimed,0)%></span></li>
+<%
+					shownReimbursements = shownReimbursements + 1;
+				}
+			}
+			%>
+</ul>
+<%
+		}
+		%>
+</section>
+
+		<section class="zcs-card zcs-p-20 zcs-box-border hr-card-6">
+			<div class="zcs-flex zcs-justify-space-between zcs-align-items-center zcs-mb-8"><div><h3 class="zcs-font-18 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0">Probation alerts</h3><p class="zcs-font-13 zcs-color-tertiary zcs-m-0">Ending on or before <%=soonDate.toString("dd-MMM-yyyy")%></p></div><span class="zcs-badge zcs-badge-filled zcs-badge-yellow zcs-inline-flex zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-font-12"><%=probationAlertCount%> alerts</span></div>
+<%
+		if(probationAlertCount == 0)
+		{
+			%>
+<div class="hr-nodata zcs-flex zcs-align-items-center zcs-justify-center zcs-text-center"><h5 class="zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0">No probation alerts</h5></div>
+<%
+		}
+		else
+		{
+			shownProbation = 0;
+			%>
+<ul class="hr-list">
+<%
+			for each  probationItem in probationAlertRows
+			{
+				if(shownProbation < 6)
+				{
+					probationDateText = probationItem.Probation_End_Date.toString("dd-MMM-yyyy");
+					%>
+<li class="zcs-flex zcs-justify-space-between zcs-gap-12"><div><strong class="zcs-font-14 zcs-color-primary"><%=probationItem.Full_Name%></strong><div class="zcs-font-12 zcs-color-tertiary"><%=ifnull(probationItem.Department.Department_Name,"-")%> | <%=ifnull(probationItem.Designation,"-")%></div></div><span class="zcs-font-13 zcs-color-yellow"><%=probationDateText%></span></li>
+<%
+					shownProbation = shownProbation + 1;
+				}
+			}
+			%>
+</ul>
+<%
+		}
+		%>
+</section>
+
+		<section class="zcs-card zcs-p-20 zcs-box-border hr-card-6">
+			<div class="zcs-flex zcs-justify-space-between zcs-align-items-center zcs-mb-8"><div><h3 class="zcs-font-18 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0">ID card expiry alerts</h3><p class="zcs-font-13 zcs-color-tertiary zcs-m-0">Expired or expiring in 30 days</p></div><a class="zcs-font-13 zcs-color-theme" href="#Report:HR_ID_Card_Management">Manage cards</a></div>
+			<div class="zcs-row zcs-gap-12 zcs-mb-8"><div class="hr-mini-stat" style="flex:1 1 150px;"><span class="zcs-font-12 zcs-color-tertiary">Expired</span><h4 class="zcs-font-24 zcs-m-0 zcs-color-red"><%=expiredCardCount%></h4></div><div class="hr-mini-stat" style="flex:1 1 150px;"><span class="zcs-font-12 zcs-color-tertiary">Expiring soon</span><h4 class="zcs-font-24 zcs-m-0 zcs-color-yellow"><%=expiringCardCount%></h4></div></div>
+<%
+		if(idCardAlertCount == 0)
+		{
+			%>
+<div class="hr-nodata zcs-flex zcs-align-items-center zcs-justify-center zcs-text-center"><h5 class="zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0">No ID card expiry alerts</h5></div>
+<%
+		}
+		else
+		{
+			shownCards = 0;
+			%>
+<ul class="hr-list">
+<%
+			for each  cardItem in expiredCardRows
+			{
+				if(shownCards < 3)
+				{
+					cardDateText = cardItem.Valid_Upto.toString("dd-MMM-yyyy");
+					%>
+<li class="zcs-flex zcs-justify-space-between zcs-gap-12"><div><strong class="zcs-font-14 zcs-color-primary"><%=ifnull(cardItem.Recipient_Name,"-")%></strong><div class="zcs-font-12 zcs-color-tertiary"><%=ifnull(cardItem.Requester_Type,"-")%> | <%=ifnull(cardItem.Extension_ID_Number,"-")%></div></div><span class="zcs-font-13 zcs-color-red"><%=cardDateText%></span></li>
+<%
+					shownCards = shownCards + 1;
+				}
+			}
+			for each  cardSoonItem in expiringCardRows
+			{
+				if(shownCards < 6)
+				{
+					cardSoonDateText = cardSoonItem.Valid_Upto.toString("dd-MMM-yyyy");
+					%>
+<li class="zcs-flex zcs-justify-space-between zcs-gap-12"><div><strong class="zcs-font-14 zcs-color-primary"><%=ifnull(cardSoonItem.Recipient_Name,"-")%></strong><div class="zcs-font-12 zcs-color-tertiary"><%=ifnull(cardSoonItem.Requester_Type,"-")%> | <%=ifnull(cardSoonItem.Extension_ID_Number,"-")%></div></div><span class="zcs-font-13 zcs-color-yellow"><%=cardSoonDateText%></span></li>
+<%
+					shownCards = shownCards + 1;
+				}
+			}
+			%>
+</ul>
+<%
+		}
+		%>
+</section>
+	</div>
+</div>
+<%
+	}
+	else
+	{
+		%>
+<style>
+:root { --zcs-theme-brand-color: var(--zcs_brand_color, #2A6FFC); --zcs-primary-text-color: var(--zcs_primary_text_color, #1A1A1A); --zcs-teritiary-text-color: var(--zcs_tertiary_text_color, #77798C); --zcs-border-color: var(--zcs_tertiary_border_color, #E6E8F0); --zcs-white-color: #FFFFFF; }
+.hrdash-page { padding: 22px; background: #F5F7FB; font-family: Lato, Arial, sans-serif; }
+.zcs-card { background: var(--zcs-white-color); border: 1px solid var(--zcs-border-color); border-radius: 12px; padding: 24px; text-align: center; }
+.zcs-font-18 { font-size: 1.125rem; } .zcs-color-primary { color: var(--zcs-primary-text-color); } .zcs-color-tertiary { color: var(--zcs-teritiary-text-color); }
+</style>
+<div class="hrdash-page">
+	<div class="zcs-card">
+		<i class="zc-li-outline ui-1-lock" style="font-size:28px;color:var(--zcs-theme-brand-color);"></i>
+		<h3 class="zcs-font-18 zcs-color-primary">Restricted dashboard</h3>
+		<p class="zcs-color-tertiary">This HR operational dashboard is available to HR_ADMIN and Administrator users.</p>
+	</div>
+</div>
+<%
+	}
+%>

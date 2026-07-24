@@ -1,0 +1,38 @@
+Training_Programme_On_Success as "Training Programme - On Success"
+{
+
+				type =  form
+				form = Training_Programme
+
+				record event = on add or edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Linked_Training_Request != null && !input.Linked_Training_Request.isEmpty())
+										{
+											for each  requestId in input.Linked_Training_Request
+											{
+												requestRows = Training_Request[ID == requestId];
+												if(requestRows.count() > 0 && requestRows.Status != "Closed")
+												{
+													requestRows.Status="Programme_Created";
+												}
+											}
+										}
+										tokenMap = Map();
+										tokenMap.put("programme_name",input.Programme_Name);
+										tokenMap.put("training_date",input.Training_Date);
+										tokenMap.put("training_mode",input.Training_Mode);
+										tokenMap.put("venue_or_link",ifnull(input.Venue_Or_Link,""));
+										thisapp.Send_Configured_Notification("TRAINING_PROGRAMME_SCHEDULED",tokenMap,"Training programme scheduled","{{programme_name}} is scheduled on {{training_date}} via {{training_mode}}.");
+										thisapp.Add_Audit_Log("TRAINING_PROGRAMME_SAVED","Training","Training_Programme",input.ID,"Save","",input.Status,"Training programme saved and linked requests updated.",true,"");
+						)
+					}
+				}
+
+			
+}

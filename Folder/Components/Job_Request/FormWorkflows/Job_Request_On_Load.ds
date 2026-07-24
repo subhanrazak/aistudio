@@ -1,0 +1,55 @@
+Job_Request_On_Load as "Job Request - On Load"
+{
+
+				type =  form
+				form = Job_Request
+
+				record event = on add or edit
+
+				on load
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Requested_By == null)
+										{
+											input.Requested_By = zoho.loginuserid;
+										}
+										disable Requested_By;
+										disable Approved_Date;
+										if(input.Status == null || input.Status == "Draft")
+										{
+											input.Status = "Draft";
+											disable Status;
+											hide CEO_Comments;
+											hide Approved_Date;
+											hide Linkedin_Posted;
+										}
+										else if(input.Status == "Pending_CEO")
+										{
+											disable Status;
+											show CEO_Comments;
+											hide Approved_Date;
+											hide Linkedin_Posted;
+										}
+										else if(input.Status == "Approved")
+										{
+											disable Status;
+											show CEO_Comments;
+											show Approved_Date;
+											show Linkedin_Posted;
+										}
+										else
+										{
+											disable Status;
+											show CEO_Comments;
+											show Approved_Date;
+											show Linkedin_Posted;
+										}
+						)
+					}
+				}
+
+			
+}

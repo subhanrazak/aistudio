@@ -1,0 +1,46 @@
+Job_Request_On_Success as "Job Request - On Success"
+{
+
+				type =  form
+				form = Job_Request
+
+				record event = on add or edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											tokenMap = Map();
+										tokenMap.put("job_title",input.Job_Title);
+										tokenMap.put("status",input.Status);
+										tokenMap.put("department",input.Department);
+										tokenMap.put("positions",input.Number_Of_Positions);
+										if(input.ID != null && input.Status == "Draft")
+										{
+											input.Status = "Pending_CEO";
+											tokenMap.put("status","Pending_CEO");
+											thisapp.Add_Audit_Log("JOB_REQUEST_SUBMITTED","Recruitment","Job_Request",input.ID,"Submitted","Draft","Pending_CEO","Job request submitted for CEO approval.",true,"");
+											thisapp.Send_Configured_Notification("JOB_REQUEST_SUBMITTED",tokenMap,"Job request submitted for CEO approval","Job request {{job_title}} has been submitted for CEO approval.");
+										}
+										else if(input.Status == "Approved")
+										{
+											if(input.Approved_Date == null)
+											{
+												input.Approved_Date = zoho.currentdate;
+											}
+											thisapp.Add_Audit_Log("JOB_REQUEST_APPROVED","Recruitment","Job_Request",input.ID,"Approved","Pending_CEO","Approved","Job request approved by CEO.",true,"");
+											thisapp.Send_Configured_Notification("JOB_REQUEST_APPROVED",tokenMap,"Job request approved","Job request {{job_title}} has been approved.");
+										}
+										else if(input.Status == "Rejected")
+										{
+											thisapp.Add_Audit_Log("JOB_REQUEST_REJECTED","Recruitment","Job_Request",input.ID,"Rejected","Pending_CEO","Rejected",ifnull(input.CEO_Comments,""),true,"");
+											thisapp.Send_Configured_Notification("JOB_REQUEST_REJECTED",tokenMap,"Job request rejected","Job request {{job_title}} has been rejected. Comments: {{status}}");
+										}
+						)
+					}
+				}
+
+			
+}

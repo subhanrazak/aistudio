@@ -1,0 +1,28 @@
+schedule_id_card_deactivation as "ID Card Deactivation"
+{
+
+				type =  schedule
+				start = "2025-01-01 00:01:00"
+				frequency = daily
+				time zone = "Asia/Kolkata"
+				on start
+				{
+					actions 
+					{
+					on load
+					(
+						deactivatedCount = 0;
+										for each  cardRec in ID_Card_Request[Status == "Received" && Valid_Upto < zoho.currentdate]
+										{
+											cardRec.Status="Deactivated";
+											deactivatedCount = deactivatedCount + 1;
+										}
+										if(deactivatedCount > 0)
+										{
+											thisapp.Add_Audit_Log("ID_CARD_DEACTIVATION","ID_Card","ID_Card_Request",0,"Deactivate","Received","Deactivated","Deactivated " + deactivatedCount + " expired ID cards.",true,"");
+										}
+					)
+					}
+				}
+			
+}

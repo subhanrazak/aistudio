@@ -1,0 +1,33 @@
+Regularisation_Request_On_Load as "Regularisation Request - On Load"
+{
+
+				type =  form
+				form = Regularisation_Request
+
+				record event = on add or edit
+
+				on load
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											hide Leave_Type;
+										if(input.Employee == null)
+										{
+											employeeRows = Employee_Master[Official_Email == zoho.loginuserid || Official_Email == zoho.loginuser];
+											if(employeeRows.count() > 0)
+											{
+												input.Employee = employeeRows.ID;
+											}
+										}
+										if(input.Regularisation_Type == "Leave")
+										{
+											show Leave_Type;
+										}
+						)
+					}
+				}
+
+			
+}

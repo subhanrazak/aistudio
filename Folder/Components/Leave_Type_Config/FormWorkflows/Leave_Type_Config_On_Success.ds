@@ -1,0 +1,43 @@
+Leave_Type_Config_On_Success as "Leave Type Config - On Success"
+{
+
+				type =  form
+				form = Leave_Type_Config
+
+				record event = on add or edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											createdCount = 0;
+										if(input.Is_Active == true)
+										{
+											activeEmployees = Employee_Master[Employment_Status in {"Active","Probation"}];
+											for each  employeeRecord in activeEmployees
+											{
+												existingBalance = Leave_Balance[Employee == employeeRecord.ID && Leave_Type == input.ID];
+												if(existingBalance.count() == 0)
+												{
+													insert into Leave_Balance
+													[
+														Employee=employeeRecord.ID
+														Leave_Type=input.ID
+														Balance_Days=0
+														Used_Days=0
+														Credited_Days=0
+														Added_User=zoho.loginuser
+													]
+													createdCount = createdCount + 1;
+												}
+											}
+										}
+										thisapp.Add_Audit_Log("LEAVE_TYPE_BALANCE_SEED","Attendance_Leave","Leave_Type_Config",input.ID,"Seed Leave Balances","","","Created missing leave balance rows: " + createdCount,true,"");
+						)
+					}
+				}
+
+			
+}

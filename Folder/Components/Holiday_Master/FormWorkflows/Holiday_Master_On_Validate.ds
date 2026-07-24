@@ -1,0 +1,26 @@
+Holiday_Master_On_Validate as "Holiday Master - On Validate"
+{
+
+				type =  form
+				form = Holiday_Master
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											duplicateHolidays = Holiday_Master[Holiday_Date == input.Holiday_Date && Year == input.Year && Is_Active == true && ID != input.ID];
+										if(input.Is_Active == true && duplicateHolidays.count() > 0)
+										{
+											alert "A holiday already exists on this date for the selected year.";
+											cancel submit;
+										}
+						)
+					}
+				}
+
+			
+}

@@ -1,0 +1,25 @@
+schedule_travel_bills_reminder as "Travel Bills Reminder"
+{
+
+				type =  schedule
+				start = "2025-01-01 09:00:00"
+				frequency = daily
+				time zone = "Asia/Kolkata"
+				on start
+				{
+					actions 
+					{
+					on load
+					(
+						pendingBills = Travel_Request[Status == "Bills_Pending"];
+										if(pendingBills.count() > 0)
+										{
+											tokenMap = Map();
+											tokenMap.put("pending_count",pendingBills.count());
+											thisapp.Send_Configured_Notification("TRAVEL_BILLS_REMINDER",tokenMap,"Pending travel bills","There are {{pending_count}} travel requests awaiting bill upload.");
+										}
+					)
+					}
+				}
+			
+}

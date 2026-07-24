@@ -1,0 +1,37 @@
+Appraisal_Basic_Questions_On_Validate as "Appraisal Basic Questions - On Validate"
+{
+
+				type =  form
+				form = Appraisal_Basic_Questions
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(ifnull(input.Question_Order,0) <= 0)
+										{
+											alert "Question order must be greater than zero.";
+											cancel submit;
+										}
+										duplicateQuestions = Appraisal_Basic_Questions[Appraisal_Config == input.Appraisal_Config && Question_Order == input.Question_Order && ID != input.ID];
+										if(duplicateQuestions.count() > 0)
+										{
+											alert "Question order must be unique within the appraisal cycle.";
+											cancel submit;
+										}
+										parentCycles = Appraisal_Config[ID == input.Appraisal_Config];
+										if(parentCycles.count() > 0 && parentCycles.Is_Active == true)
+										{
+											alert "Questions can be changed only while the appraisal cycle is inactive.";
+											cancel submit;
+										}
+						)
+					}
+				}
+
+			
+}

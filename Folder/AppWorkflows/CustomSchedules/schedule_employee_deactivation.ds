@@ -1,0 +1,51 @@
+schedule_employee_deactivation as "Employee Deactivation"
+{
+
+				type =  schedule
+				start = "2025-01-01 23:00:00"
+				frequency = daily
+				time zone = "Asia/Kolkata"
+				on start
+				{
+					actions 
+					{
+					on load
+					(
+						deactivatedCount = 0;
+										blockedCount = 0;
+										for each  resignationRec in Resignation_Request[Status == "Approved" && Effective_LWD <= zoho.currentdate]
+										{
+											pendingChecklist = Offboarding_Checklist[Resignation_Request == resignationRec.ID && Status == "Pending"];
+											pendingAssets = Employee_Asset_Recovery[Resignation_Request == resignationRec.ID && Recovery_Status == "Pending"];
+											employeeRows = Employee_Master[ID == resignationRec.Employee];
+											if(employeeRows.count() > 0)
+											{
+												if(pendingChecklist.count() == 0 && pendingAssets.count() == 0)
+												{
+													if(employeeRows.Employment_Status != "Inactive")
+													{
+														employeeRows.Employment_Status="Inactive";
+														deactivatedCount = deactivatedCount + 1;
+													}
+												}
+												else
+												{
+													blockedCount = blockedCount + 1;
+												}
+											}
+										}
+										if(deactivatedCount > 0)
+										{
+											thisapp.Add_Audit_Log("EMPLOYEE_DEACTIVATION","Offboarding","Employee_Master",0,"Deactivate","Active","Inactive","Deactivated " + deactivatedCount + " employees after completed offboarding.",true,"");
+										}
+										if(blockedCount > 0)
+										{
+											tokenMap = Map();
+											tokenMap.put("blocked_count",blockedCount);
+											thisapp.Send_Configured_Notification("OFFBOARDING_DEACTIVATION_BLOCKED",tokenMap,"Offboarding deactivation blocked","{{blocked_count}} employee deactivations are blocked by pending checklist or asset items.");
+										}
+					)
+					}
+				}
+			
+}

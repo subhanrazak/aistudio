@@ -1,0 +1,31 @@
+Travel_Requirements_On_Validate as "Travel Requirements - On Validate"
+{
+
+				type =  form
+				form = Travel_Requirements
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											parentRequests = Travel_Request[ID == input.Travel_Request];
+										if(parentRequests.count() == 0)
+										{
+											alert "Parent travel request is required.";
+											cancel submit;
+										}
+										if(parentRequests.count() > 0 && parentRequests.Status != "Pending_Manager")
+										{
+											alert "Travel requirements can be changed only while the travel request is pending manager review.";
+											cancel submit;
+										}
+						)
+					}
+				}
+
+			
+}

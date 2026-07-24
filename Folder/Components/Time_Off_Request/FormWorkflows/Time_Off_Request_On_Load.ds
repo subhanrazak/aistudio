@@ -1,0 +1,57 @@
+Time_Off_Request_On_Load as "Time Off Request - On Load"
+{
+
+				type =  form
+				form = Time_Off_Request
+
+				record event = on add or edit
+
+				on load
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											disable Number_Of_Days;
+										hide Half_Day_Session;
+										hide Baby_Birth_Date;
+										hide Supporting_Document;
+										hide Applied_By;
+										if(input.Applied_By == null)
+										{
+											input.Applied_By = zoho.loginuserid;
+										}
+										if(input.Employee == null)
+										{
+											employeeRows = Employee_Master[Official_Email == zoho.loginuserid || Official_Email == zoho.loginuser];
+											if(employeeRows.count() > 0)
+											{
+												input.Employee = employeeRows.ID;
+											}
+										}
+										if(input.Is_Half_Day == true)
+										{
+											show Half_Day_Session;
+											input.Number_Of_Days = 0.5;
+										}
+										if(input.Leave_Type != null)
+										{
+											leaveTypeRows = Leave_Type_Config[ID == input.Leave_Type];
+											if(leaveTypeRows.count() > 0)
+											{
+												if(leaveTypeRows.Document_Required == true)
+												{
+													show Supporting_Document;
+												}
+												if(leaveTypeRows.Leave_Type_Name == "Maternity" || leaveTypeRows.Leave_Type_Name == "Paternity")
+												{
+													show Baby_Birth_Date;
+												}
+											}
+										}
+						)
+					}
+				}
+
+			
+}

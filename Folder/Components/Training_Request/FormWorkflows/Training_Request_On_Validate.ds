@@ -1,0 +1,43 @@
+Training_Request_On_Validate as "Training Request - On Validate"
+{
+
+				type =  form
+				form = Training_Request
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Raised_By == null)
+										{
+											input.Raised_By = zoho.loginuserid;
+										}
+										managerAllowed = false;
+										managerEmployees = Employee_Master[Official_Email == zoho.loginuserid || Official_Email == zoho.loginuser];
+										if(managerEmployees.count() > 0)
+										{
+											directReports = Employee_Master[Primary_Manager == managerEmployees.ID || Secondary_Manager == managerEmployees.ID && Employment_Status == "Active" || Employment_Status == "Probation"];
+											if(directReports.count() > 0)
+											{
+												managerAllowed = true;
+											}
+										}
+										if(zoho.loginuser == zoho.adminuserid)
+										{
+											managerAllowed = true;
+										}
+										if(input.ID == null && managerAllowed == false)
+										{
+											alert "Only Managers can raise training requests.";
+											cancel submit;
+										}
+						)
+					}
+				}
+
+			
+}

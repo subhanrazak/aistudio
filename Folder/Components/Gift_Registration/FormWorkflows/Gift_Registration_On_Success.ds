@@ -1,0 +1,39 @@
+Gift_Registration_On_Success as "Gift Registration - On Success"
+{
+
+				type =  form
+				form = Gift_Registration
+
+				record event = on add or edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Status == "Pending_Manager")
+										{
+											try 
+											{
+												tokenMap = Map();
+												tokenMap.put("gift_name",input.Gift_Name);
+												tokenMap.put("employee",input.Employee.toString());
+												tokenMap.put("status",input.Status);
+												thisapp.Send_Configured_Notification("GIFT_SUBMITTED",tokenMap,"Gift registration submitted","A gift registration has been submitted and is pending manager review.");
+											}	catch (notifyErr)
+											{
+											}
+										}
+										try 
+										{
+											thisapp.Add_Audit_Log("GIFT_REGISTRATION_SAVE","Gift_Registration","Gift_Registration",input.ID,"Save","",input.Status,"Gift registration saved",true,"");
+										}catch (auditErr)
+										{
+										}
+						)
+					}
+				}
+
+			
+}

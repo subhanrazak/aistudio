@@ -1,0 +1,37 @@
+Reject_Job_Request as "Reject Job Request"
+{
+
+				type =  functions
+				form = Job_Request
+				execution type = for each record	
+				on start
+				{
+					actions 
+					{
+					on click
+					(
+						if(input.Status != "Pending_CEO")
+										{
+											info "Only pending CEO job requests can be rejected.";
+										}
+										else if(ifnull(input.CEO_Comments,"") == "")
+										{
+											info "Enter CEO comments on the job request before rejecting it.";
+										}
+										else
+										{
+											input.Status = "Rejected";
+											tokenMap = Map();
+											tokenMap.put("job_title",input.Job_Title);
+											tokenMap.put("status",input.Status);
+											tokenMap.put("department",input.Department);
+											tokenMap.put("positions",input.Number_Of_Positions);
+											tokenMap.put("comments",ifnull(input.CEO_Comments,""));
+											thisapp.Add_Audit_Log("JOB_REQUEST_REJECTED","Recruitment","Job_Request",input.ID,"Rejected","Pending_CEO","Rejected",ifnull(input.CEO_Comments,""),true,"");
+											thisapp.Send_Configured_Notification("JOB_REQUEST_REJECTED",tokenMap,"Job request rejected","Job request {{job_title}} has been rejected. Comments: {{comments}}");
+										}
+					)
+					}
+				}
+			
+}

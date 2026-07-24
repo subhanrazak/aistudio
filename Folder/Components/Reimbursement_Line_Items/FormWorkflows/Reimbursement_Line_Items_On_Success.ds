@@ -1,0 +1,31 @@
+Reimbursement_Line_Items_On_Success as "Reimbursement Line Items - On Success"
+{
+
+				type =  form
+				form = Reimbursement_Line_Items
+
+				record event = on add or edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											totalClaimed = 0;
+										itemRows = Reimbursement_Line_Items[Reimbursement_Request == input.Reimbursement_Request];
+										for each  itemRec in itemRows
+										{
+											totalClaimed = totalClaimed + ifnull(itemRec.Amount,0);
+										}
+										parentRequests = Reimbursement_Request[ID == input.Reimbursement_Request];
+										if(parentRequests.count() > 0)
+										{
+											parentRequests.Amount_Claimed=totalClaimed;
+										}
+						)
+					}
+				}
+
+			
+}

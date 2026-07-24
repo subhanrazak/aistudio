@@ -1,0 +1,31 @@
+Employee_Master_On_Validate as "Employee Master - On Validate"
+{
+
+				type =  form
+				form = Employee_Master
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Employment_Status == "Probation" && input.Probation_End_Date == null)
+										{
+											alert "Probation end date is required for probation employees.";
+											cancel submit;
+										}
+										duplicateEmployees = Employee_Master[Official_Email == input.Official_Email && ID != input.ID];
+										if(duplicateEmployees.count() > 0)
+										{
+											alert "Official email already exists.";
+											cancel submit;
+										}
+						)
+					}
+				}
+
+			
+}

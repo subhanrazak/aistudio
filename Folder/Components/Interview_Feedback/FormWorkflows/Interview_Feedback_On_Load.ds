@@ -1,0 +1,47 @@
+Interview_Feedback_On_Load as "Interview Feedback - On Load"
+{
+
+				type =  form
+				form = Interview_Feedback
+
+				record event = on add or edit
+
+				on load
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Panel_Member == null)
+										{
+											input.Panel_Member = zoho.loginuserid;
+										}
+										disable Candidate;
+										disable Job_Request;
+										disable Round_Number;
+										disable Panel_Member;
+										disable Feedback_Date;
+										if(input.Job_Application != null)
+										{
+											appRows = Job_Application[ID == input.Job_Application];
+											if(appRows.count() > 0)
+											{
+												input.Round_Number = appRows.Current_Round;
+												candidateRows = Candidate[ID == appRows.Candidate];
+												if(candidateRows.count() > 0)
+												{
+													input.Candidate = candidateRows.Candidate_Name;
+												}
+												jobRows = Job_Request[ID == appRows.Job_Request];
+												if(jobRows.count() > 0)
+												{
+													input.Job_Request = jobRows.Job_Title;
+												}
+											}
+										}
+						)
+					}
+				}
+
+			
+}

@@ -1,0 +1,89 @@
+Reimbursement_Request_On_Validate as "Reimbursement Request - On Validate"
+{
+
+				type =  form
+				form = Reimbursement_Request
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Employee == null)
+										{
+											employeeRows = Employee_Master[Official_Email == zoho.loginuserid || Official_Email == zoho.loginuser];
+											if(employeeRows.count() > 0)
+											{
+												input.Employee = employeeRows.ID;
+											}
+										}
+										if(input.Reimbursement_Type != null)
+										{
+											typeRows = Reimbursement_Type_Config[ID == input.Reimbursement_Type];
+											if(typeRows.count() > 0)
+											{
+												input.Category = typeRows.Category;
+												if(ifnull(input.Amount_Claimed,0) <= ifnull(typeRows.Limit_Amount,0) || ifnull(typeRows.Limit_Amount,0) == 0)
+												{
+													input.within_limit = true;
+												}
+												else
+												{
+													input.within_limit = false;
+												}
+											}
+										}
+										if(ifnull(input.Amount_Claimed,0) <= 0)
+										{
+											alert "Amount claimed must be greater than zero.";
+											cancel submit;
+										}
+										if(input.Source == "Direct")
+										{
+											if(input.Expense_Date == null)
+											{
+												alert "Expense date is required for direct reimbursements.";
+												cancel submit;
+											}
+											if(input.Expense_Date > zoho.currentdate)
+											{
+												alert "Expense date cannot be in the future.";
+												cancel submit;
+											}
+											if(input.Supporting_Bills == null)
+											{
+												alert "Supporting bills are required for direct reimbursements.";
+												cancel submit;
+											}
+										}
+										if(input.Source == "Travel_Module")
+										{
+											if(input.Linked_Travel_Request == null)
+											{
+												alert "Linked travel request is required for travel reimbursements.";
+												cancel submit;
+											}
+											if(input.ID != null)
+											{
+												itemRows = Reimbursement_Line_Items[Reimbursement_Request == input.ID];
+												if(input.Status != "Draft" && itemRows.count() == 0)
+												{
+													alert "At least one reimbursement line item is required before travel reimbursement submission.";
+													cancel submit;
+												}
+											}
+										}
+										if(input.Category == "Health_Insurance" && input.Insurance_Sub_Type == null)
+										{
+											alert "Insurance sub type is required for health insurance reimbursements.";
+											cancel submit;
+										}
+						)
+					}
+				}
+
+			
+}

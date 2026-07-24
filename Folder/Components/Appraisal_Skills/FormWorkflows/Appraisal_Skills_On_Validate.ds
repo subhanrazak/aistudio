@@ -1,0 +1,36 @@
+Appraisal_Skills_On_Validate as "Appraisal Skills - On Validate"
+{
+
+				type =  form
+				form = Appraisal_Skills
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Self_Score != null && input.Self_Score < 1 || input.Self_Score > 5)
+										{
+											alert "Self score must be between 1 and 5.";
+											cancel submit;
+										}
+										if(input.Manager_Score != null && input.Manager_Score < 1 || input.Manager_Score > 5)
+										{
+											alert "Manager score must be between 1 and 5.";
+											cancel submit;
+										}
+										parentForms = Appraisal_Form[ID == input.Appraisal_Form];
+										if(parentForms.count() > 0 && parentForms.Status == "Closed")
+										{
+											alert "Skills cannot be changed after the appraisal form is closed.";
+											cancel submit;
+										}
+						)
+					}
+				}
+
+			
+}

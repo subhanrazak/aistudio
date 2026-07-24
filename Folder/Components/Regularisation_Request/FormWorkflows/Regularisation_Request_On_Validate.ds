@@ -1,0 +1,42 @@
+Regularisation_Request_On_Validate as "Regularisation Request - On Validate"
+{
+
+				type =  form
+				form = Regularisation_Request
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Regularisation_Date >= zoho.currentdate)
+										{
+											alert "Regularisation date must be before today.";
+											cancel submit;
+										}
+										oldestAllowedDate = zoho.currentdate.addDay(-30);
+										if(input.Regularisation_Date < oldestAllowedDate)
+										{
+											alert "Regularisation can be requested only within 30 days.";
+											cancel submit;
+										}
+										if(input.Regularisation_Type == "Leave" && input.Leave_Type == null)
+										{
+											alert "Leave type is required for leave regularisation.";
+											cancel submit;
+										}
+										duplicateRequests = Regularisation_Request[Employee == input.Employee && Regularisation_Date == input.Regularisation_Date && Status != "Rejected" && ID != input.ID];
+										if(duplicateRequests.count() > 0)
+										{
+											alert "A pending or approved regularisation already exists for this employee and date.";
+											cancel submit;
+										}
+						)
+					}
+				}
+
+			
+}

@@ -1,0 +1,43 @@
+Resignation_Request_On_Validate as "Resignation Request - On Validate"
+{
+
+				type =  form
+				form = Resignation_Request
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Employee == null)
+										{
+											employeeRows = Employee_Master[Official_Email == zoho.loginuserid || Official_Email == zoho.loginuser];
+											if(employeeRows.count() > 0)
+											{
+												input.Employee = employeeRows.ID;
+											}
+										}
+										if(input.Resignation_Date > zoho.currentdate)
+										{
+											alert "Resignation date cannot be in the future.";
+											cancel submit;
+										}
+										if(input.HR_Modified_LWD != null && input.LWD_Modification_File == null)
+										{
+											alert "LWD modification file is required when HR modifies the last working day.";
+											cancel submit;
+										}
+										if(input.HR_Modified_LWD != null && input.HR_Modified_LWD < input.Resignation_Date)
+										{
+											alert "HR modified LWD cannot be before resignation date.";
+											cancel submit;
+										}
+						)
+					}
+				}
+
+			
+}

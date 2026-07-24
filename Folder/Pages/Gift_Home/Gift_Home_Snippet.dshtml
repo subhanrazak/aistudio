@@ -1,0 +1,231 @@
+<%
+	loginRole = ifnull(thisapp.permissions.loginUserProfile(),"");
+	isAdmin = loginRole == "Administrator" || loginRole == "Admin";
+	isHR = loginRole == "HR_ADMIN" || loginRole == "HR" || isAdmin;
+	isFinance = loginRole == "FINANCE" || loginRole == "FINANCE_ADMIN" || loginRole == "Finance" || isAdmin;
+	myGiftCount = Gift_Registration[Employee.Official_Email == zoho.loginuser || Employee.Official_Email == zoho.loginuserid].count();
+	totalGiftCount = Gift_Registration.count();
+	pendingManagerCount = Gift_Registration[Status == "Pending_Manager"].count();
+	pendingHRCount = Gift_Registration[Status == "Pending_HR"].count();
+	pendingFinanceCount = Gift_Registration[Status == "Pending_Finance"].count();
+	approvedRetainCount = Gift_Registration[Status == "Approved_Retain"].count();
+	approvedReturnCount = Gift_Registration[Status == "Approved_Return"].count();
+	rejectedCount = Gift_Registration[Status == "Rejected"].count();
+	openReviewCount = pendingManagerCount + pendingHRCount + pendingFinanceCount;
+	retainedReturnCount = approvedRetainCount + approvedReturnCount;
+	totalDeclaredValue = 0;
+	financeQueueValue = 0;
+	for each  giftRec in Gift_Registration[ID != 0]
+	{
+		totalDeclaredValue = totalDeclaredValue + ifnull(giftRec.Estimated_Value,0);
+		if(giftRec.Status == "Pending_Finance")
+		{
+			financeQueueValue = financeQueueValue + ifnull(giftRec.Estimated_Value,0);
+		}
+	}
+	%>
+<style>
+/* ===== zcs-global utility stylesheet included once for Gift_Home ===== */
+:root { --zcs-theme-brand-color: var(--zcs_brand_color, #2A6FFC); --zcs-light-bg-color: var(--zcs_brand_light_color, #E8EFFF); --zcs-primary-text-color: var(--zcs_primary_text_color, #1A1A1A); --zcs-secondary-text-color: var(--zcs_secondary_text_color, #55576B); --zcs-teritiary-text-color: var(--zcs_tertiary_text_color, #77798C); --zcs-border-color: var(--zcs_tertiary_border_color, #E6E8F0); --zcs-page-bg-color: #F5F7FB; --zcs-white-color: #FFFFFF; --zcs-brand-foreground: var(--zcs_brand_foreground_color, #FFFFFF); }
+a { text-decoration: none; }
+.zcs-flex { display: flex; } .zcs-inline-flex { display: inline-flex; } .zcs-row { display: flex; flex-wrap: wrap; } .zcs-direction-column { flex-direction: column; } .zcs-align-items-center { align-items: center; } .zcs-align-items-start { align-items: flex-start; } .zcs-justify-space-between { justify-content: space-between; } .zcs-justify-center { justify-content: center; } .zcs-gap-4 { gap: .25rem; } .zcs-gap-6 { gap: .375rem; } .zcs-gap-8 { gap: .5rem; } .zcs-gap-10 { gap: .625rem; } .zcs-gap-12 { gap: .75rem; } .zcs-gap-14 { gap: .875rem; } .zcs-gap-16 { gap: 1rem; } .zcs-gap-18 { gap: 1.125rem; } .zcs-gap-20 { gap: 1.25rem; } .zcs-gap-24 { gap: 1.5rem; }
+.zcs-p-0 { padding: 0; } .zcs-p-8 { padding: .5rem; } .zcs-p-10 { padding: .625rem; } .zcs-p-12 { padding: .75rem; } .zcs-p-14 { padding: .875rem; } .zcs-p-16 { padding: 1rem; } .zcs-p-18 { padding: 1.125rem; } .zcs-p-20 { padding: 1.25rem; } .zcs-p-24 { padding: 1.5rem; } .zcs-px-10 { padding-left: .625rem; padding-right: .625rem; } .zcs-px-12 { padding-left: .75rem; padding-right: .75rem; } .zcs-px-16 { padding-left: 1rem; padding-right: 1rem; } .zcs-px-20 { padding-left: 1.25rem; padding-right: 1.25rem; } .zcs-px-24 { padding-left: 1.5rem; padding-right: 1.5rem; } .zcs-px-30 { padding-left: 1.875rem; padding-right: 1.875rem; } .zcs-py-2 { padding-top: .125rem; padding-bottom: .125rem; } .zcs-py-6 { padding-top: .375rem; padding-bottom: .375rem; } .zcs-py-8 { padding-top: .5rem; padding-bottom: .5rem; } .zcs-py-10 { padding-top: .625rem; padding-bottom: .625rem; } .zcs-py-12 { padding-top: .75rem; padding-bottom: .75rem; } .zcs-py-16 { padding-top: 1rem; padding-bottom: 1rem; } .zcs-py-24 { padding-top: 1.5rem; padding-bottom: 1.5rem; }
+.zcs-m-0 { margin: 0; } .zcs-mt-4 { margin-top: .25rem; } .zcs-mt-8 { margin-top: .5rem; } .zcs-mt-10 { margin-top: .625rem; } .zcs-mt-12 { margin-top: .75rem; } .zcs-mt-16 { margin-top: 1rem; } .zcs-mb-8 { margin-bottom: .5rem; } .zcs-mb-12 { margin-bottom: .75rem; } .zcs-mb-16 { margin-bottom: 1rem; } .zcs-w-full { width: 100%; } .zcs-wh-full { width: 100%; height: 100%; } .zcs-col-common { flex: 1 1 0%; min-width: 0; } .zcs-no-shrink { flex-shrink: 0; } .zcs-box-border { box-sizing: border-box; } .zcs-rounded-sm { border-radius: .25rem; } .zcs-rounded-md { border-radius: .375rem; } .zcs-rounded-lg { border-radius: .5rem; } .zcs-rounded-xl { border-radius: .75rem; } .zcs-rounded-2xl { border-radius: 1rem; } .zcs-rounded-half { border-radius: 50%; } .zcs-text-center { text-align: center; } .zcs-overflow-auto { overflow: auto; } .zcs-relative { position: relative; } .zcs-absolute { position: absolute; }
+.zcs-font-11 { font-size: .6875rem; } .zcs-font-12 { font-size: .75rem; } .zcs-font-13 { font-size: .8125rem; } .zcs-font-14 { font-size: .875rem; } .zcs-font-15 { font-size: .9375rem; } .zcs-font-16 { font-size: 1rem; } .zcs-font-18 { font-size: 1.125rem; } .zcs-font-20 { font-size: 1.25rem; } .zcs-font-22 { font-size: 1.375rem; } .zcs-font-24 { font-size: 1.5rem; } .zcs-font-30 { font-size: 1.875rem; } .zcs-font-36 { font-size: 2.25rem; } .zcs-font-normal { font-weight: 400; } .zcs-font-medium { font-weight: 500; } .zcs-font-semibold { font-weight: 600; } .zcs-font-bold { font-weight: 700; } .zcs-lh-body { line-height: 1.5; } .zcs-lh-heading { line-height: 1.25; } .zcs-ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.zcs-color-primary { color: var(--zcs-primary-text-color); } .zcs-color-secondary { color: var(--zcs-secondary-text-color); } .zcs-color-tertiary { color: var(--zcs-teritiary-text-color); } .zcs-color-theme { color: var(--zcs-theme-brand-color); } .zcs-color-white { color: var(--zcs-white-color); } .zcs-color-green { color: #179E6C; } .zcs-color-blue { color: #2A6FFC; } .zcs-color-orange { color: #F4660C; } .zcs-color-red { color: #FE455D; } .zcs-color-yellow { color: #B8770D; }
+.zcs-card { background-color: var(--zcs-white-color); border: 1px solid var(--zcs-border-color); border-radius: 12px; box-shadow: 0 8px 24px rgba(18, 19, 43, .04); }
+/* ZCS component CSS: header-heading-with-actions and button-primary-button */
+.zcs-button { width: auto; min-width: 5rem; min-height: 36px; } .zcs-primary-button { background-color: var(--zcs-theme-brand-color); color: var(--zcs-brand-foreground); } .zcs-primary-outline-button { border: 1px solid var(--zcs-theme-brand-color); background-color: var(--zcs-white-color); color: var(--zcs-theme-brand-color); } .zcs-secondary-button { border: 1px solid var(--zcs-border-color); background-color: #F6F7FA; color: var(--zcs-primary-text-color); } .zcs-primary-button.zcs-button:hover { background-color: var(--zcs_brand_dark_color, #1652BB); } .zcs-primary-outline-button:hover, .zcs-secondary-button:hover { background-color: var(--zcs_component_hover_color, #F2F7FF); } .zcs-button-icon { width: 16px; max-height: 16px; } .zcs-page-header { background: var(--zcs-white-color); border: 1px solid var(--zcs-border-color); border-radius: 16px; box-shadow: 0 8px 24px rgba(18,19,43,.04); }
+/* ZCS component CSS: horizontal-tab-horizontal-tab-with-icon */
+.zcs-horizontal-tabhead { box-shadow: 0px -1px 0px 0px var(--zcs-border-color) inset; overflow-x: auto; overflow-y: hidden; -ms-overflow-style: none; scrollbar-width: none; } .zcs-horizontal-tabhead::-webkit-scrollbar { display: none; } .zcs-horizontal-tabitem { list-style-type: none; border-bottom: 2px solid transparent; letter-spacing: .1px; } .zcs-horizontal-tabicon { width: 16px; height: 16px; } .zcs-horizontal-tabtext { text-wrap: nowrap; } .zcs-horizontal-tabitem:hover .zcs-horizontal-tablink { color: var(--zcs-theme-brand-color); } .zcs-horizontal-tabitem.zcs-horizontal-tabactive { border-bottom-color: var(--zcs-theme-brand-color); } .zcs-horizontal-tabitem.zcs-horizontal-tabactive .zcs-horizontal-tablink { color: var(--zcs-theme-brand-color); }
+/* ZCS component CSS: quick-actions-card-type-quick-actions and badge-filled-badge */
+.zcs-quick-action-item { list-style-type: none; } .zcs-quick-action-item:hover .zcs-quick-action-link { color: var(--zcs-theme-brand-color); } .zcs-quick-action-item:hover .zcs-quick-action-text { text-decoration: underline; }
+.zcs-badge { width: auto; } .zcs-badge-filled { border: 1px solid transparent; } .zcs-badge-filled.zcs-badge-theme { background-color: var(--zcs-theme-brand-color); border-color: var(--zcs-theme-brand-color); color: var(--zcs-white-color); } .zcs-badge-filled.zcs-badge-green { background-color: #179E6C; border-color: #179E6C; color: var(--zcs-white-color); } .zcs-badge-filled.zcs-badge-red { background-color: #FE455D; border-color: #FE455D; color: var(--zcs-white-color); } .zcs-badge-filled.zcs-badge-yellow { background-color: #FAAE13; border-color: #FAAE13; color: var(--zcs-white-color); } .zcs-badge-filled.zcs-badge-blue { background-color: #2A6FFC; border-color: #2A6FFC; color: var(--zcs-white-color); } .zcs-badge-filled.zcs-badge-orange { background-color: #F4660C; border-color: #F4660C; color: var(--zcs-white-color); }
+/* Gift Home layout */
+.gh-page { min-height: 100%; background: var(--zcs-page-bg-color); padding: 22px; box-sizing: border-box; font-family: Lato, Arial, sans-serif; color: var(--zcs-primary-text-color); }
+.gh-hero { position: relative; overflow: hidden; color: var(--zcs-white-color); border-radius: 18px; padding: 24px; background: linear-gradient(135deg, var(--zcs-theme-brand-color), #7C3AED); }
+.gh-hero:after { content: ""; position: absolute; right: -90px; top: -110px; width: 300px; height: 300px; border-radius: 50%; border: 40px solid rgba(255,255,255,.13); }
+.gh-hero:before { content: ""; position: absolute; right: 190px; bottom: -86px; width: 180px; height: 180px; border-radius: 50%; border: 26px solid rgba(255,255,255,.10); }
+.gh-hero-content { position: relative; z-index: 1; }
+.gh-hero .zcs-primary-outline-button { background: rgba(255,255,255,.12); border-color: rgba(255,255,255,.72); color: #FFFFFF; }
+.gh-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 18px; }
+.gh-kpi { grid-column: span 3; min-height: 118px; }
+.gh-kpi-icon { width: 42px; height: 42px; border-radius: 12px; background: var(--zcs-light-bg-color); color: var(--zcs-theme-brand-color); }
+.gh-kpi-value { font-size: 30px; font-weight: 700; line-height: 1.1; }
+.gh-workspace { grid-column: span 9; overflow: hidden; }
+.gh-actions { grid-column: span 3; }
+.gh-tab-input { display: none; }
+.gh-tabbar { overflow-x: auto; }
+.gh-tabbar label { cursor: pointer; border-bottom: 2px solid transparent; }
+.gh-panel { display: none; padding: 18px; }
+#gh-tab-overview:checked ~ .zcs-horizontal-tabpanel label[for='gh-tab-overview'], #gh-tab-new:checked ~ .zcs-horizontal-tabpanel label[for='gh-tab-new'], #gh-tab-my:checked ~ .zcs-horizontal-tabpanel label[for='gh-tab-my'], #gh-tab-hr:checked ~ .zcs-horizontal-tabpanel label[for='gh-tab-hr'], #gh-tab-kanban:checked ~ .zcs-horizontal-tabpanel label[for='gh-tab-kanban'] { color: var(--zcs-theme-brand-color); border-bottom-color: var(--zcs-theme-brand-color); }
+#gh-tab-overview:checked ~ .gh-panels .gh-panel-overview, #gh-tab-new:checked ~ .gh-panels .gh-panel-new, #gh-tab-my:checked ~ .gh-panels .gh-panel-my, #gh-tab-hr:checked ~ .gh-panels .gh-panel-hr, #gh-tab-kanban:checked ~ .gh-panels .gh-panel-kanban { display: block; }
+.gh-embed-card { border: 1px solid var(--zcs-border-color); border-radius: 14px; overflow: hidden; background: var(--zcs-white-color); margin-bottom: 18px; }
+.gh-embed-header { border-bottom: 1px solid var(--zcs-border-color); background: #FAFBFF; }
+.gh-report-frame { min-height: 640px; width: 100%; }
+.gh-report-frame.tall { min-height: 720px; }
+.gh-form-frame { min-height: 760px; width: 100%; }
+.gh-mini-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.gh-tool-card { border: 1px solid var(--zcs-border-color); border-radius: 14px; background: #FFFFFF; padding: 18px; }
+.gh-note { border: 1px dashed var(--zcs-border-color); background: #FAFBFF; border-radius: 12px; }
+.gh-access-note { border: 1px solid #FAAE13; background: #FCF4E6; color: #7E5608; border-radius: 12px; }
+.gh-status-strip { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.gh-status-item { background: #FFFFFF; border: 1px solid var(--zcs-border-color); border-radius: 12px; padding: 14px; }
+@media (max-width: 1180px) { .gh-kpi { grid-column: span 6; } .gh-workspace, .gh-actions { grid-column: span 12; } }
+@media (max-width: 760px) { .gh-page { padding: 14px; } .gh-hero { padding: 18px; } .gh-hero-content, .zcs-page-header { flex-direction: column; align-items: flex-start; } .zcs-page-header { padding: 16px; } .gh-kpi { grid-column: span 12; } .gh-panel { padding: 12px; } .gh-mini-grid, .gh-status-strip { grid-template-columns: 1fr; } .gh-report-frame { min-height: 540px; } }
+</style>
+
+<div class="gh-page zcs-flex zcs-direction-column zcs-gap-18">
+	<div class="zcs-page-header zcs-w-full zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12 zcs-px-30 zcs-py-24 zcs-box-border">
+		<div class="zcs-flex zcs-direction-column zcs-gap-4 zcs-ellipsis">
+			<h5 class="zcs-font-20 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-ellipsis zcs-m-0">Gift Home</h5>
+			<span class="zcs-font-14 zcs-color-secondary">Gift declaration workspace for employees, HR review, finance retain or return decisions, and status tracking</span>
+		</div>
+		<div class="zcs-flex zcs-align-items-center zcs-gap-12 zcs-row">
+			<a class="zcs-button zcs-primary-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body" href="#Form:Gift_Registration?zc_LoadIn=dialog">
+				<i class="zcs-button-icon zc-li-outline ui-1-simple-add"></i>
+				<span class="zcs-button-text">Declare Gift</span>
+			</a>
+			<a class="zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body" href="#Report:My_Gift_Registrations">
+				<i class="zcs-button-icon zc-li-outline files-2-doc"></i>
+				<span class="zcs-button-text">My Declarations</span>
+			</a>
+		</div>
+	</div>
+
+	<section class="gh-hero">
+		<div class="gh-hero-content zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-18">
+			<div class="zcs-flex zcs-direction-column zcs-gap-8">
+				<div class="zcs-inline-flex zcs-align-items-center zcs-gap-8 zcs-font-14 zcs-font-medium">
+					<i class="zc-li-outline business-tie-01 zcs-font-18"></i>
+					<span>Gift Registry Workspace</span>
+				</div>
+				<h2 class="zcs-font-30 zcs-font-bold zcs-lh-heading zcs-m-0">Declare, review, and close every gift decision from one page</h2>
+				<p class="zcs-font-15 zcs-lh-body zcs-m-0">Employees can file a declaration while HR and finance teams track pending reviews, retain or return outcomes, and kanban status movement.</p>
+			</div>
+			<div class="zcs-flex zcs-direction-column zcs-gap-10 zcs-no-shrink">
+				<a class="zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body" href="#Report:HR_Gift_Registry">
+					<i class="zcs-button-icon zc-li-outline ui-1-zoom"></i>
+					<span class="zcs-button-text">Open HR Registry</span>
+				</a>
+				<a class="zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body" href="#Report:Gift_Status_Kanban">
+					<i class="zcs-button-icon zc-li-outline design-2-dashboard-level"></i>
+					<span class="zcs-button-text">Open Kanban</span>
+				</a>
+			</div>
+		</div>
+	</section>
+
+	<section class="gh-grid">
+		<div class="gh-kpi zcs-card zcs-p-18 zcs-flex zcs-direction-column zcs-gap-14 zcs-box-border">
+			<div class="zcs-flex zcs-align-items-center zcs-justify-space-between">
+				<span class="gh-kpi-icon zcs-inline-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline files-2-paper zcs-font-22"></i></span>
+				<span class="zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-theme"><span class="zcs-badge-text zcs-font-13 zcs-font-normal zcs-lh-body">Mine</span></span>
+			</div>
+			<div><div class="gh-kpi-value"><%=myGiftCount%></div><div class="zcs-font-13 zcs-color-secondary zcs-mt-4">My gift declarations</div></div>
+		</div>
+		<div class="gh-kpi zcs-card zcs-p-18 zcs-flex zcs-direction-column zcs-gap-14 zcs-box-border">
+			<div class="zcs-flex zcs-align-items-center zcs-justify-space-between">
+				<span class="gh-kpi-icon zcs-inline-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline arrows-4-restore zcs-font-22"></i></span>
+				<span class="zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-orange"><span class="zcs-badge-text zcs-font-13 zcs-font-normal zcs-lh-body">Review</span></span>
+			</div>
+			<div><div class="gh-kpi-value"><%=openReviewCount%></div><div class="zcs-font-13 zcs-color-secondary zcs-mt-4">Open manager, HR, and finance reviews</div></div>
+		</div>
+		<div class="gh-kpi zcs-card zcs-p-18 zcs-flex zcs-direction-column zcs-gap-14 zcs-box-border">
+			<div class="zcs-flex zcs-align-items-center zcs-justify-space-between">
+				<span class="gh-kpi-icon zcs-inline-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline business-money-coins zcs-font-22"></i></span>
+				<span class="zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-yellow"><span class="zcs-badge-text zcs-font-13 zcs-font-normal zcs-lh-body">Finance</span></span>
+			</div>
+			<div><div class="gh-kpi-value"><%=pendingFinanceCount%></div><div class="zcs-font-13 zcs-color-secondary zcs-mt-4">Pending finance decisions</div></div>
+		</div>
+		<div class="gh-kpi zcs-card zcs-p-18 zcs-flex zcs-direction-column zcs-gap-14 zcs-box-border">
+			<div class="zcs-flex zcs-align-items-center zcs-justify-space-between">
+				<span class="gh-kpi-icon zcs-inline-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline ui-1-check-circle-08 zcs-font-22"></i></span>
+				<span class="zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-green"><span class="zcs-badge-text zcs-font-13 zcs-font-normal zcs-lh-body">Closed</span></span>
+			</div>
+			<div><div class="gh-kpi-value"><%=retainedReturnCount%></div><div class="zcs-font-13 zcs-color-secondary zcs-mt-4">Approved retain or return outcomes</div></div>
+		</div>
+	</section>
+
+	<section class="gh-grid">
+		<div class="gh-workspace zcs-card zcs-box-border">
+			<input class="gh-tab-input" type="radio" name="gh-tabs" id="gh-tab-overview" checked>
+			<input class="gh-tab-input" type="radio" name="gh-tabs" id="gh-tab-new">
+			<input class="gh-tab-input" type="radio" name="gh-tabs" id="gh-tab-my">
+			<input class="gh-tab-input" type="radio" name="gh-tabs" id="gh-tab-hr">
+			<input class="gh-tab-input" type="radio" name="gh-tabs" id="gh-tab-kanban">
+			<div class="zcs-horizontal-tabpanel zcs-flex zcs-direction-column zcs-wh-full">
+				<ul class="gh-tabbar zcs-horizontal-tabhead zcs-flex zcs-gap-12 zcs-px-10 zcs-py-0 zcs-m-0 zcs-box-border">
+					<li class="zcs-horizontal-tabitem"><label for="gh-tab-overview" class="zcs-horizontal-tablink zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-10 zcs-py-12 zcs-box-border zcs-font-medium zcs-lh-body zcs-color-tertiary"><i class="zcs-horizontal-tabicon zcs-font-16 zc-li-outline design-2-dashboard-level"></i><span class="zcs-horizontal-tabtext zcs-font-15">Overview</span></label></li>
+					<li class="zcs-horizontal-tabitem"><label for="gh-tab-new" class="zcs-horizontal-tablink zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-10 zcs-py-12 zcs-box-border zcs-font-medium zcs-lh-body zcs-color-tertiary"><i class="zcs-horizontal-tabicon zcs-font-16 zc-li-outline ui-1-simple-add"></i><span class="zcs-horizontal-tabtext zcs-font-15">Declare Gift</span></label></li>
+					<li class="zcs-horizontal-tabitem"><label for="gh-tab-my" class="zcs-horizontal-tablink zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-10 zcs-py-12 zcs-box-border zcs-font-medium zcs-lh-body zcs-color-tertiary"><i class="zcs-horizontal-tabicon zcs-font-16 zc-li-outline files-2-doc"></i><span class="zcs-horizontal-tabtext zcs-font-15">My Gifts</span></label></li>
+					<li class="zcs-horizontal-tabitem"><label for="gh-tab-hr" class="zcs-horizontal-tablink zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-10 zcs-py-12 zcs-box-border zcs-font-medium zcs-lh-body zcs-color-tertiary"><i class="zcs-horizontal-tabicon zcs-font-16 zc-li-outline ui-1-zoom"></i><span class="zcs-horizontal-tabtext zcs-font-15">HR and Finance Registry</span></label></li>
+					<li class="zcs-horizontal-tabitem"><label for="gh-tab-kanban" class="zcs-horizontal-tablink zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-10 zcs-py-12 zcs-box-border zcs-font-medium zcs-lh-body zcs-color-tertiary"><i class="zcs-horizontal-tabicon zcs-font-16 zc-li-outline design-bullet-list-68"></i><span class="zcs-horizontal-tabtext zcs-font-15">Status Kanban</span></label></li>
+				</ul>
+			</div>
+			<div class="gh-panels">
+				<div class="gh-panel gh-panel-overview">
+					<div class="gh-status-strip zcs-mb-16">
+						<div class="gh-status-item"><div class="zcs-font-13 zcs-color-secondary">Pending Manager</div><div class="zcs-font-24 zcs-font-bold zcs-mt-4"><%=pendingManagerCount%></div></div>
+						<div class="gh-status-item"><div class="zcs-font-13 zcs-color-secondary">Pending HR</div><div class="zcs-font-24 zcs-font-bold zcs-mt-4"><%=pendingHRCount%></div></div>
+						<div class="gh-status-item"><div class="zcs-font-13 zcs-color-secondary">Approved Retain</div><div class="zcs-font-24 zcs-font-bold zcs-mt-4"><%=approvedRetainCount%></div></div>
+						<div class="gh-status-item"><div class="zcs-font-13 zcs-color-secondary">Approved Return</div><div class="zcs-font-24 zcs-font-bold zcs-mt-4"><%=approvedReturnCount%></div></div>
+					</div>
+					<div class="gh-mini-grid">
+						<article class="gh-tool-card zcs-flex zcs-direction-column zcs-gap-10">
+							<div class="zcs-flex zcs-align-items-center zcs-gap-8"><i class="zc-li-outline ui-1-check-circle-08 zcs-font-20 zcs-color-green"></i><h4 class="zcs-font-18 zcs-font-semibold zcs-m-0">Registry coverage</h4></div>
+							<p class="zcs-font-14 zcs-color-secondary zcs-m-0">Total declarations: <strong class="zcs-color-primary"><%=totalGiftCount%></strong>. Total declared estimated value: <strong class="zcs-color-primary">INR <%=totalDeclaredValue%></strong>.</p>
+							<a class="zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body" href="#Report:HR_Gift_Registry"><i class="zcs-button-icon zc-li-outline ui-1-zoom"></i><span class="zcs-button-text">Review Registry</span></a>
+						</article>
+						<article class="gh-tool-card zcs-flex zcs-direction-column zcs-gap-10">
+							<div class="zcs-flex zcs-align-items-center zcs-gap-8"><i class="zc-li-outline business-money-coins zcs-font-20 zcs-color-yellow"></i><h4 class="zcs-font-18 zcs-font-semibold zcs-m-0">Finance queue</h4></div>
+							<p class="zcs-font-14 zcs-color-secondary zcs-m-0">Pending finance items: <strong class="zcs-color-primary"><%=pendingFinanceCount%></strong>. Queue value: <strong class="zcs-color-primary">INR <%=financeQueueValue%></strong>. Rejected declarations: <strong class="zcs-color-primary"><%=rejectedCount%></strong>.</p>
+							<a class="zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body" href="#Report:Gift_Status_Kanban"><i class="zcs-button-icon zc-li-outline design-bullet-list-68"></i><span class="zcs-button-text">Track Status</span></a>
+						</article>
+					</div>
+				</div>
+				<div class="gh-panel gh-panel-new">
+					<div class="gh-embed-card"><div class="gh-embed-header zcs-px-20 zcs-py-12"><h4 class="zcs-font-18 zcs-font-semibold zcs-m-0">Gift Registration Create Flow</h4><span class="zcs-font-13 zcs-color-secondary">Employee declaration form embedded for reliable submission.</span></div><div class="gh-form-frame" zc-component="form" zc-linkname="Gift_Registration" zc-height="760px"></div></div>
+				</div>
+				<div class="gh-panel gh-panel-my">
+					<div class="gh-embed-card"><div class="gh-embed-header zcs-px-20 zcs-py-12"><h4 class="zcs-font-18 zcs-font-semibold zcs-m-0">My Gift Registrations</h4><span class="zcs-font-13 zcs-color-secondary">Employee-facing declaration history and current approval state.</span></div><div class="gh-report-frame" zc-component="report" zc-linkname="My_Gift_Registrations" zc-height="640px"></div></div>
+				</div>
+				<div class="gh-panel gh-panel-hr">
+<%
+	if(isHR || isFinance)
+	{
+		%>
+<div class="gh-embed-card"><div class="gh-embed-header zcs-px-20 zcs-py-12"><h4 class="zcs-font-18 zcs-font-semibold zcs-m-0">HR Gift Registry</h4><span class="zcs-font-13 zcs-color-secondary">HR and finance review workspace for all gift declarations.</span></div><div class="gh-report-frame tall" zc-component="report" zc-linkname="HR_Gift_Registry" zc-height="720px"></div></div>
+<%
+	}
+	else
+	{
+		%>
+<div class="gh-access-note zcs-p-18 zcs-flex zcs-align-items-start zcs-gap-10"><i class="zc-li-outline ui-3-alert zcs-font-22"></i><div><h4 class="zcs-font-16 zcs-font-semibold zcs-m-0">Restricted review queue</h4><p class="zcs-font-14 zcs-mt-4 zcs-mb-0">HR and finance registry access is permission controlled. Use My Gifts for employee declarations.</p></div></div>
+<%
+	}
+	%>
+</div>
+				<div class="gh-panel gh-panel-kanban">
+					<div class="gh-embed-card"><div class="gh-embed-header zcs-px-20 zcs-py-12"><h4 class="zcs-font-18 zcs-font-semibold zcs-m-0">Gift Status Kanban</h4><span class="zcs-font-13 zcs-color-secondary">Kanban view grouped by Pending Manager, Pending HR, Pending Finance, Approved, and Rejected statuses.</span></div><div class="gh-report-frame tall" zc-component="report" zc-linkname="Gift_Status_Kanban" zc-height="720px"></div></div>
+				</div>
+			</div>
+		</div>
+
+		<aside class="gh-actions zcs-flex zcs-direction-column zcs-gap-18">
+			<div class="zcs-quick-actions-wrapper zcs-card zcs-flex zcs-direction-column zcs-gap-16 zcs-p-16 zcs-box-border">
+				<h5 class="zcs-font-18 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0">Quick actions</h5>
+				<ul class="zcs-flex zcs-direction-column zcs-gap-16 zcs-p-0 zcs-m-0">
+					<li class="zcs-quick-action-item zcs-card zcs-px-12 zcs-py-8 zcs-box-border"><a class="zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary" href="#Form:Gift_Registration?zc_LoadIn=dialog"><i class="zcs-quick-action-icon zc-li-outline ui-1-simple-add"></i><span class="zcs-quick-action-text">Declare a gift</span></a></li>
+					<li class="zcs-quick-action-item zcs-card zcs-px-12 zcs-py-8 zcs-box-border"><a class="zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary" href="#Report:My_Gift_Registrations"><i class="zcs-quick-action-icon zc-li-outline files-2-doc"></i><span class="zcs-quick-action-text">View my declarations</span></a></li>
+					<li class="zcs-quick-action-item zcs-card zcs-px-12 zcs-py-8 zcs-box-border"><a class="zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary" href="#Report:HR_Gift_Registry"><i class="zcs-quick-action-icon zc-li-outline ui-1-zoom"></i><span class="zcs-quick-action-text">Open HR registry</span></a></li>
+					<li class="zcs-quick-action-item zcs-card zcs-px-12 zcs-py-8 zcs-box-border"><a class="zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary" href="#Report:Gift_Status_Kanban"><i class="zcs-quick-action-icon zc-li-outline design-bullet-list-68"></i><span class="zcs-quick-action-text">Track kanban status</span></a></li>
+				</ul>
+			</div>
+			<div class="gh-note zcs-p-16 zcs-flex zcs-direction-column zcs-gap-10">
+				<div class="zcs-flex zcs-align-items-center zcs-gap-8"><i class="zc-li-outline ui-2-time zcs-font-20 zcs-color-theme"></i><h5 class="zcs-font-18 zcs-font-semibold zcs-m-0">Routing guide</h5></div>
+				<p class="zcs-font-14 zcs-color-secondary zcs-m-0">New declarations start in Pending Manager. Manager approval moves to Pending HR; HR approval moves to Pending Finance; finance closes the case as Approved Retain or Approved Return.</p>
+			</div>
+		</aside>
+	</section>
+</div>

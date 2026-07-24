@@ -1,0 +1,554 @@
+<%
+	jobApplicationParam = input.job_application_id;
+	appRows = Job_Application[ID == jobApplicationParam];
+	submitted = ifnull(input.convert_submit,"");
+	conversionMessage = "";
+	conversionSuccess = false;
+	newEmployeeId = null;
+	newEmployeeUrl = "";
+	%>
+<style>
+/* zcs-global utility subset included once for this page */
+:root{--zcs-theme-brand-color:var(--zcs_brand_color);--zcs-white-color:#FFFFFF;--zcs-primary-text-color:var(--zcs_primary_text_color);--zcs-secondary-text-color:var(--zcs_secondary_text_color);--zcs-teritiary-text-color:var(--zcs_tertiary_text_color);--zcs-border-color:var(--zcs_tertiary_border_color)}
+.zcs-row{display:flex;flex-wrap:wrap}.zcs-flex{display:flex}.zcs-inline-flex{display:inline-flex}.zcs-direction-column{flex-direction:column}.zcs-align-items-center{align-items:center}.zcs-align-items-start{align-items:flex-start}.zcs-align-items-stretch{align-items:stretch}.zcs-justify-center{justify-content:center}.zcs-justify-space-between{justify-content:space-between}.zcs-gap-4{gap:.25rem}.zcs-gap-6{gap:.375rem}.zcs-gap-8{gap:.5rem}.zcs-gap-10{gap:.625rem}.zcs-gap-12{gap:.75rem}.zcs-gap-14{gap:.875rem}.zcs-gap-16{gap:1rem}.zcs-gap-20{gap:1.25rem}.zcs-gap-24{gap:1.5rem}.zcs-p-0{padding:0}.zcs-p-8{padding:.5rem}.zcs-p-12{padding:.75rem}.zcs-p-16{padding:1rem}.zcs-p-18{padding:1.125rem}.zcs-p-20{padding:1.25rem}.zcs-p-24{padding:1.5rem}.zcs-px-10{padding-left:.625rem;padding-right:.625rem}.zcs-px-16{padding-left:1rem;padding-right:1rem}.zcs-px-20{padding-left:1.25rem;padding-right:1.25rem}.zcs-px-30{padding-left:1.875rem;padding-right:1.875rem}.zcs-py-2{padding-top:.125rem;padding-bottom:.125rem}.zcs-py-6{padding-top:.375rem;padding-bottom:.375rem}.zcs-py-8{padding-top:.5rem;padding-bottom:.5rem}.zcs-py-10{padding-top:.625rem;padding-bottom:.625rem}.zcs-py-14{padding-top:.875rem;padding-bottom:.875rem}.zcs-py-16{padding-top:1rem;padding-bottom:1rem}.zcs-py-24{padding-top:1.5rem;padding-bottom:1.5rem}.zcs-m-0{margin:0}.zcs-mt-4{margin-top:.25rem}.zcs-mt-8{margin-top:.5rem}.zcs-mt-10{margin-top:.625rem}.zcs-mt-12{margin-top:.75rem}.zcs-mt-16{margin-top:1rem}.zcs-mt-20{margin-top:1.25rem}.zcs-mt-24{margin-top:1.5rem}.zcs-mx-0{margin-left:0;margin-right:0}.zcs-mb-0{margin-bottom:0}.zcs-col-12{flex:0 0 100%;max-width:100%}.zcs-col-common{flex:1 1 0}.zcs-no-shrink{flex-shrink:0}.zcs-w-full{width:100%}.zcs-h-full{height:100%}.zcs-wh-full{width:100%;height:100%}.zcs-font-12{font-size:.75rem}.zcs-font-13{font-size:.8125rem}.zcs-font-14{font-size:.875rem}.zcs-font-15{font-size:.9375rem}.zcs-font-16{font-size:1rem}.zcs-font-18{font-size:1.125rem}.zcs-font-20{font-size:1.25rem}.zcs-font-22{font-size:1.375rem}.zcs-font-24{font-size:1.5rem}.zcs-font-28{font-size:1.75rem}.zcs-font-40{font-size:2.5rem}.zcs-font-normal{font-weight:400}.zcs-font-medium{font-weight:500}.zcs-font-semibold{font-weight:600}.zcs-font-bold{font-weight:700}.zcs-lh-body{line-height:1.5}.zcs-lh-heading{line-height:1.25}.zcs-uppercase{text-transform:uppercase}.zcs-ellipsis{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.zcs-rounded-sm{border-radius:.25rem}.zcs-rounded-md{border-radius:.375rem}.zcs-rounded-lg{border-radius:.5rem}.zcs-rounded-xl{border-radius:.75rem}.zcs-rounded-2xl{border-radius:1rem}.zcs-rounded-half{border-radius:50%}.zcs-text-center{text-align:center}.zcs-box-border{box-sizing:border-box}.zcs-color-primary{color:var(--zcs-primary-text-color)}.zcs-color-secondary{color:var(--zcs-secondary-text-color)}.zcs-color-tertiary{color:var(--zcs-teritiary-text-color)}.zcs-color-white{color:var(--zcs-white-color)}.zcs-color-theme{color:var(--zcs-theme-brand-color)}.zcs-card{background-color:var(--zcs-white-color);border:1px solid #e7e7ee;border-radius:12px}a{text-decoration:none}
+/* ZCS component CSS: button-primary-button / button-primary-outline-button / header-heading-with-actions */
+.zcs-button{width:auto;min-width:5rem;min-height:36px}.zcs-primary-button{background-color:var(--zcs_brand_color);color:var(--zcs_brand_foreground_color)}.zcs-primary-outline-button{border:1px solid var(--zcs_brand_color);background-color:var(--zcs-white-color);color:var(--zcs_brand_color)}.zcs-secondary-button{border:1px solid var(--zcs_primary_border_color);background-color:var(--zcs_light_grey_color);color:var(--zcs_primary_text_color)}.zcs-primary-button.zcs-button:hover{background-color:var(--zcs_brand_dark_color)}.zcs-primary-outline-button:hover{background-color:var(--zcs_component_hover_color);border-color:var(--zcs_brand_color);color:var(--zcs_brand_color)}.zcs-button-icon{width:16px;max-height:16px}.zcs-page-header{background:#fff;border-bottom:1px solid #ececf3}
+/* ZCS component CSS: card-profile-card */
+.zcs-avatar{width:var(--zcs-avatar-size);height:var(--zcs-avatar-size);background-color:var(--zcs_brand_color);border-radius:var(--zcs-avatar-radius)}.zcs-avatar .zcs-avatar-img{border-radius:inherit;object-fit:cover}
+/* ZCS component CSS: badge-filled-badge */
+.zcs-badge{width:auto}.zcs-badge-filled{border:1px solid transparent}.zcs-badge-filled.zcs-badge-theme{background-color:var(--zcs_brand_color);border-color:var(--zcs_brand_color);color:var(--zcs-white-color)}.zcs-badge-filled.zcs-badge-green{background-color:#179E6C;border-color:#179E6C;color:var(--zcs-white-color)}.zcs-badge-filled.zcs-badge-red{background-color:#FE455D;border-color:#FE455D;color:var(--zcs-white-color)}.zcs-badge-filled.zcs-badge-grey{background-color:#242424;border-color:#242424;color:var(--zcs-white-color)}.zcs-badge-filled.zcs-badge-yellow{background-color:#FAAE13;border-color:#FAAE13;color:var(--zcs-white-color)}.zcs-badge-filled.zcs-badge-blue{background-color:#2A6FFC;border-color:#2A6FFC;color:var(--zcs-white-color)}.zcs-badge-filled.zcs-badge-orange{background-color:#F4660C;border-color:#F4660C;color:var(--zcs-white-color)}
+/* ZCS component CSS: stepper-in-progress */
+.zcs-stepper-status{width:32px;height:32px;background-color:var(--zcs_brand_color);border:4px solid var(--zcs-white-color)}.zcs-stepper-count{border:1px solid var(--zcs_tertiary_border_color);display:none}.zcs-stepper-icon.zcs-stepper-failed{display:none}.zcs-stepper-level{display:none;background-color:var(--zcs_brand_color)}.zcs-stepper:not(:last-child):before{content:'';width:100%;height:1px;border-top:1px solid var(--zcs_brand_color);box-sizing:border-box;position:absolute;top:calc((32px - 1px)/2);left:50%}.zcs-stepper-active .zcs-stepper-status{border:1px solid var(--zcs_brand_color);outline:4px solid var(--zcs-white-color);background-color:var(--zcs-white-color)}.zcs-stepper-active .zcs-stepper-count{display:flex;border-width:0;color:var(--zcs_brand_color)}.zcs-stepper-active .zcs-stepper-icon{display:none}.zcs-stepper-active .zcs-stepper-text{font-weight:500;color:var(--zcs_brand_color)}.zcs-stepper.zcs-stepper-active:before,.zcs-stepper.zcs-stepper-active~.zcs-stepper:before{border-color:var(--zcs_tertiary_border_color)}.zcs-stepper-active~.zcs-stepper .zcs-stepper-status{background-color:var(--zcs-white-color)}.zcs-stepper-active~.zcs-stepper .zcs-stepper-count{display:flex}.zcs-stepper-active~.zcs-stepper .zcs-stepper-icon{display:none}.zcs-stepper-active~.zcs-stepper .zcs-stepper-text{color:var(--zcs_tertiary_text_color)}
+/* ZCS component CSS: no-data-no-data-with-button uses button CSS above */
+.convert-page{min-height:100%;background:var(--zcs-page-bg-color,#F3F3F4);color:var(--zcs-primary-text-color);font-family:inherit}.convert-content{padding:24px 30px}.quick-actions{flex-wrap:wrap}.candidate-avatar-initial{color:var(--zcs_brand_foreground_color);font-size:28px;font-weight:700}.convert-grid{display:grid;grid-template-columns:minmax(280px,380px) 1fr;gap:20px;align-items:start}.profile-card{position:sticky;top:16px}.summary-list{display:grid;grid-template-columns:1fr;gap:12px}.summary-item{background:#F9FAFE;border:1px solid #eef0f6;border-radius:10px;padding:12px}.form-card{background:#fff;border:1px solid #e7e7ee;border-radius:14px;box-shadow:0 2px 10px rgba(18,19,43,.04);overflow:hidden}.form-head{background:linear-gradient(90deg,var(--zcs_brand_light_color),#fff);border-bottom:1px solid #ececf3}.input-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.field-block{display:flex;flex-direction:column;gap:7px}.field-block label{font-size:13px;color:var(--zcs-teritiary-text-color)}.field-block input,.field-block select{height:40px;border:1px solid var(--zcs-border-color,#d8dbe6);border-radius:8px;background:#fff;color:var(--zcs-primary-text-color);font:inherit;padding:0 12px;box-sizing:border-box}.field-block input:focus,.field-block select:focus{outline:2px solid var(--zcs_brand_color);outline-offset:1px}.field-help{font-size:12px;color:var(--zcs-secondary-text-color)}.required-mark{color:#FE455D}.conversion-banner{border-radius:12px;padding:14px 16px;border:1px solid}.conversion-banner.success{background:#E4FCF3;border-color:#179E6C;color:#0F704D}.conversion-banner.error{background:#FDE3E6;border-color:#FE455D;color:#A60E25}.conversion-banner.info{background:#E8EFFF;border-color:#2A6FFC;color:#19499E}.stepper-wrap{background:#fff;border:1px solid #e7e7ee;border-radius:12px;padding:18px}.empty-state{min-height:290px;background:#fff;border:1px solid #e7e7ee;border-radius:14px}.empty-icon{width:72px;height:72px;border-radius:50%;background:var(--zcs_brand_light_color);color:var(--zcs_brand_color)}.submit-row{border-top:1px solid #ececf3;background:#fcfcff}.disabled-note{background:#FCF4E6;border:1px solid #FAAE13;color:#7E5608;border-radius:10px;padding:12px}.related-link{border:1px solid #ececf3;border-radius:10px;color:var(--zcs-primary-text-color);background:#fff}.related-link:hover{border-color:var(--zcs_brand_color);color:var(--zcs_brand_color);background:var(--zcs_component_hover_color)}.hidden-field{display:none!important}
+@media (max-width:1100px){.convert-grid{grid-template-columns:1fr}.profile-card{position:static}.input-grid{grid-template-columns:1fr}.zcs-stepper-wrapper ul{flex-direction:column;gap:24px}.zcs-stepper-wrapper ul .zcs-stepper{flex-direction:row;gap:16px}.zcs-stepper:not(:last-child):before{width:1px;height:100%;border-left:1px solid var(--zcs_brand_color);border-top:0;left:calc((32px - 1px)/2)}}
+@media (max-width:700px){.convert-content{padding:16px}.zcs-page-header{padding:16px;align-items:flex-start;flex-direction:column}.quick-actions{width:100%}.zcs-page-header .quick-actions .zcs-button{width:100%;justify-content:center}.submit-row{align-items:stretch;flex-direction:column}.submit-row .zcs-button,.submit-row button{width:100%}}
+</style>
+
+<div class="convert-page">
+<%
+	if(appRows.count() == 0)
+	{
+		%>
+<div class='zcs-page-header zcs-w-full zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-8 zcs-px-30 zcs-py-24 zcs-box-border'>
+		<div class='zcs-flex zcs-direction-column zcs-gap-4 zcs-ellipsis'>
+			<h5 class='zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-ellipsis zcs-m-0'>Convert Candidate to Employee</h5>
+			<span class='zcs-font-14 zcs-color-secondary'>No job application was found for the supplied page parameter.</span>
+		</div>
+		<div class='zcs-flex zcs-align-items-center zcs-gap-12 quick-actions'>
+			<a class='zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body' href='#Report:Active_Job_Applications?zc_LoadIn=dialog&zc_Header=true'>
+				<i class='zcs-button-icon zc-li-outline files-single-copy-04'></i>
+				<span class='zcs-button-text'>Active Applications</span>
+			</a>
+		</div>
+	</div>
+	<div class='convert-content'>
+		<div class='zcs-nodata-wrapper empty-state zcs-wh-full zcs-flex zcs-align-items-center zcs-justify-center zcs-text-center'>
+			<div class='zcs-nodata-content zcs-p-20 zcs-box-border'>
+				<div class='empty-icon zcs-inline-flex zcs-align-items-center zcs-justify-center'>
+					<i class='zc-li-outline ui-1-circle-remove zcs-font-40'></i>
+				</div>
+				<h5 class='zcs-nodata-header zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-mt-10 zcs-mx-0 zcs-mb-0'>Application not found</h5>
+				<p class='zcs-nodata-desc zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-mt-12 zcs-mx-0 zcs-mb-0'>Open this page with a valid job_application_id to start employee conversion.</p>
+			</div>
+		</div>
+	</div>
+<%
+	}
+	else
+	{
+		app = appRows;
+		candidateRows = Candidate[ID == app.Candidate];
+		if(candidateRows.count() == 0)
+		{
+			%>
+<div class='zcs-page-header zcs-w-full zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-8 zcs-px-30 zcs-py-24 zcs-box-border'>
+		<div class='zcs-flex zcs-direction-column zcs-gap-4 zcs-ellipsis'>
+			<h5 class='zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-ellipsis zcs-m-0'>Convert Candidate to Employee</h5>
+			<span class='zcs-font-14 zcs-color-secondary'>The selected job application does not have a reachable candidate.</span>
+		</div>
+	</div>
+	<div class='convert-content'>
+		<div class='zcs-nodata-wrapper empty-state zcs-wh-full zcs-flex zcs-align-items-center zcs-justify-center zcs-text-center'>
+			<div class='zcs-nodata-content zcs-p-20 zcs-box-border'>
+				<div class='empty-icon zcs-inline-flex zcs-align-items-center zcs-justify-center'><i class='zc-li-outline users-single-01 zcs-font-40'></i></div>
+				<h5 class='zcs-nodata-header zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-mt-10 zcs-mx-0 zcs-mb-0'>Candidate missing</h5>
+				<p class='zcs-nodata-desc zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-mt-12 zcs-mx-0 zcs-mb-0'>Review the job application and candidate records before converting.</p>
+			</div>
+		</div>
+	</div>
+<%
+		}
+		else
+		{
+			cand = candidateRows;
+			jobRows = Job_Request[ID == app.Job_Request];
+			candidateName = ifnull(cand.Candidate_Name,"Candidate");
+			candidateInitial = candidateName.left(1);
+			candidateEmail = ifnull(cand.Email,"");
+			candidatePhone = ifnull(cand.Phone,"-");
+			jobTitle = "-";
+			jobDepartmentId = null;
+			jobDepartmentName = "-";
+			if(jobRows.count() > 0)
+			{
+				jobTitle = ifnull(jobRows.Job_Title,"-");
+				jobDepartmentId = jobRows.Department;
+				jobDepartmentName = ifnull(jobRows.Department,"-");
+			}
+			existingEmployees = Employee_Master[Official_Email == candidateEmail];
+			existingEmployeeFound = existingEmployees.count() > 0;
+			alreadyJoined = app.Status == "Joined";
+			canConvert = app.Status == "Offer_Accepted" && existingEmployeeFound == false;
+			todayString = zoho.currentdate.toString("yyyy-MM-dd");
+			defaultDoj = todayString;
+			defaultTenure = todayString;
+			defaultProbation = zoho.currentdate.addDay(90).toString("yyyy-MM-dd");
+			statusBadge = "zcs-badge-blue";
+			if(app.Status == "Offer_Accepted")
+			{
+				statusBadge = "zcs-badge-green";
+			}
+			else if(app.Status == "Joined")
+			{
+				statusBadge = "zcs-badge-theme";
+			}
+			else if(app.Status == "Rejected")
+			{
+				statusBadge = "zcs-badge-red";
+			}
+			else if(app.Status == "On_Hold")
+			{
+				statusBadge = "zcs-badge-yellow";
+			}
+			submitted = ifnull(input.convert_submit,"");
+			if(submitted == "1")
+			{
+				employmentType = ifnull(input.employment_type,"");
+				dojRaw = ifnull(input.date_of_joining,"");
+				departmentRaw = ifnull(input.department,"");
+				designationRaw = ifnull(input.designation,"");
+				managerRaw = ifnull(input.primary_manager,"");
+				probationRaw = ifnull(input.probation_end_date,"");
+				dobRaw = ifnull(input.date_of_birth,"");
+				genderRaw = ifnull(input.gender,"");
+				tenureRaw = ifnull(input.tenure_date,"");
+				if(tenureRaw == "")
+				{
+					tenureRaw = dojRaw;
+				}
+				validationMessage = "";
+				if(canConvert == false)
+				{
+					validationMessage = validationMessage + "This application is not eligible for conversion. It must be Offer_Accepted and must not already have an employee with the candidate email. ";
+				}
+				if(employmentType == "")
+				{
+					validationMessage = validationMessage + "Employment type is required. ";
+				}
+				if(dojRaw == "")
+				{
+					validationMessage = validationMessage + "Date of joining is required. ";
+				}
+				if(departmentRaw == "")
+				{
+					validationMessage = validationMessage + "Department is required. ";
+				}
+				if(designationRaw == "")
+				{
+					validationMessage = validationMessage + "Designation is required. ";
+				}
+				if(probationRaw == "")
+				{
+					validationMessage = validationMessage + "Probation end date is required. ";
+				}
+				if(dobRaw == "")
+				{
+					validationMessage = validationMessage + "Date of birth is required. ";
+				}
+				if(genderRaw == "")
+				{
+					validationMessage = validationMessage + "Gender is required. ";
+				}
+				if(tenureRaw == "")
+				{
+					validationMessage = validationMessage + "Tenure date is required. ";
+				}
+				departmentId = null;
+				if(departmentRaw != "")
+				{
+					if(departmentRaw.isNumber())
+					{
+						departmentId = departmentRaw.toNumber();
+					}
+					else
+					{
+						validationMessage = validationMessage + "Selected department value is invalid. ";
+					}
+				}
+				deptRows = Department_Config[ID == departmentId];
+				if(departmentRaw != "" && deptRows.count() == 0)
+				{
+					validationMessage = validationMessage + "Selected department is not available. ";
+				}
+				managerId = null;
+				if(managerRaw != "")
+				{
+					if(managerRaw.isNumber())
+					{
+						managerId = managerRaw.toNumber();
+						managerRows = Employee_Master[ID == managerId];
+						if(managerRows.count() == 0)
+						{
+							validationMessage = validationMessage + "Selected primary manager is not available. ";
+						}
+						else
+						{
+							managerId = managerRows.ID;
+						}
+					}
+					else
+					{
+						validationMessage = validationMessage + "Selected primary manager value is invalid. ";
+					}
+				}
+				dojValue = null;
+				probationValue = null;
+				dobValue = null;
+				tenureValue = null;
+				try 
+				{
+					if(dojRaw != "")
+					{
+						dojValue = dojRaw.toDate("yyyy-MM-dd");
+					}
+					if(probationRaw != "")
+					{
+						probationValue = probationRaw.toDate("yyyy-MM-dd");
+					}
+					if(dobRaw != "")
+					{
+						dobValue = dobRaw.toDate("yyyy-MM-dd");
+					}
+					if(tenureRaw != "")
+					{
+						tenureValue = tenureRaw.toDate("yyyy-MM-dd");
+					}
+				}				catch (dateErr)
+				{
+					validationMessage = validationMessage + "One or more date values are invalid. ";
+				}
+				noticeRows = Notice_Period_Config[Employment_Type == employmentType && Is_Active == true] sort by Effective_From desc;
+				if(noticeRows.count() == 0 && employmentType != "")
+				{
+					validationMessage = validationMessage + "No active notice period configuration exists for " + employmentType + ". ";
+				}
+				if(validationMessage == "")
+				{
+					insertError = "";
+					try 
+					{
+						insertedEmployeeId = insert into Employee_Master
+						[
+							Full_Name=candidateName
+							Date_Of_Birth=dobValue
+							Gender=genderRaw
+							Official_Email=candidateEmail
+							Phone=cand.Phone
+							Department=deptRows.ID
+							Designation=designationRaw
+							Employment_Type=employmentType
+							Date_Of_Joining=dojValue
+							Tenure_Date=tenureValue
+							Primary_Manager=managerId
+							Notice_Period_Days=noticeRows.ID
+							Employment_Status="Probation"
+							Probation_End_Date=probationValue
+							Added_User=zoho.loginuser
+						];
+						newEmployeeId = insertedEmployeeId;
+						app.Status="Joined";
+						tokenMap = Map();
+						tokenMap.put("employee",candidateName);
+						tokenMap.put("candidate",candidateName);
+						tokenMap.put("email",candidateEmail);
+						tokenMap.put("job_title",jobTitle);
+						tokenMap.put("designation",designationRaw);
+						tokenMap.put("department",deptRows.Department_Name);
+						tokenMap.put("date_of_joining",dojRaw);
+						thisapp.Send_Configured_Notification("EMPLOYEE_WELCOME",tokenMap,"Welcome to IITB","Welcome {{employee}}. Your employee record has been created for {{designation}} in {{department}}.");
+						thisapp.Add_Audit_Log("CANDIDATE_CONVERTED_TO_EMPLOYEE","Recruitment","Job_Application",app.ID,"Convert To Employee","Offer_Accepted","Joined","Created Employee_Master record from accepted candidate. Employee ID: " + insertedEmployeeId,true,"");
+						conversionSuccess = true;
+						conversionMessage = "Employee record created and job application marked Joined.";
+						newEmployeeUrl = "#Report:All_Employees?ID=" + insertedEmployeeId + "&zc_LoadIn=dialog&zc_Header=true";
+						canConvert = false;
+						alreadyJoined = true;
+						existingEmployeeFound = true;
+					}					catch (e)
+					{
+						insertError = e.toString();
+						thisapp.Add_Audit_Log("CANDIDATE_CONVERTED_TO_EMPLOYEE","Recruitment","Job_Application",app.ID,"Convert To Employee","Offer_Accepted","","Employee conversion failed for " + candidateName,false,insertError);
+						conversionMessage = "Conversion failed: " + insertError;
+					}
+				}
+				else
+				{
+					conversionMessage = validationMessage;
+				}
+			}
+			if(existingEmployeeFound == true && newEmployeeId == null)
+			{
+				newEmployeeId = existingEmployees.ID;
+				newEmployeeUrl = "#Report:All_Employees?ID=" + existingEmployees.ID + "&zc_LoadIn=dialog&zc_Header=true";
+			}
+			candidateDetailUrl = "#Page:Candidate_Detail?candidate_id=" + cand.ID;
+			applicationUrl = "#Report:Active_Job_Applications?ID=" + app.ID + "&zc_LoadIn=dialog&zc_Header=true";
+			employeeDirectoryUrl = "#Report:Employee_Directory?zc_LoadIn=dialog&zc_Header=true";
+			selectedEmploymentType = ifnull(input.employment_type,"Full_Time");
+			selectedDepartment = ifnull(ifnull(input.department,jobDepartmentId),"").toString();
+			selectedDesignation = ifnull(input.designation,if(jobTitle != "-",jobTitle,""));
+			selectedManager = ifnull(input.primary_manager,"").toString();
+			selectedDoj = ifnull(input.date_of_joining,defaultDoj);
+			selectedProbation = ifnull(input.probation_end_date,defaultProbation);
+			selectedDob = ifnull(input.date_of_birth,"");
+			selectedGender = ifnull(input.gender,"");
+			selectedTenure = ifnull(input.tenure_date,defaultTenure);
+			%>
+<div class='zcs-page-header zcs-w-full zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-8 zcs-px-30 zcs-py-24 zcs-box-border'>
+		<div class='zcs-flex zcs-align-items-center zcs-gap-12 zcs-ellipsis'>
+			<div class='zcs-avatar zcs-flex zcs-align-items-center zcs-justify-center zcs-no-shrink' style='--zcs-avatar-size:48px;--zcs-avatar-radius:12px'>
+				<span class='candidate-avatar-initial'><%=candidateInitial%></span>
+			</div>
+			<div class='zcs-flex zcs-direction-column zcs-gap-4 zcs-ellipsis'>
+				<h5 class='zcs-font-20 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-ellipsis zcs-m-0'>Convert <%=candidateName%></h5>
+				<span class='zcs-font-14 zcs-color-secondary zcs-ellipsis'>Create Employee_Master from accepted candidate and close the recruitment application</span>
+			</div>
+		</div>
+		<div class='zcs-flex zcs-align-items-center zcs-gap-12 quick-actions'>
+			<a class='zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body' href='<%=candidateDetailUrl%>'>
+				<i class='zcs-button-icon zc-li-outline users-single-01'></i>
+				<span class='zcs-button-text'>Candidate Detail</span>
+			</a>
+			<a class='zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body' href='<%=applicationUrl%>'>
+				<i class='zcs-button-icon zc-li-outline files-single-copy-04'></i>
+				<span class='zcs-button-text'>Application</span>
+			</a>
+		</div>
+	</div>
+
+	<div class='convert-content'>
+		<div class='stepper-wrap zcs-mb-0'>
+			<div class='zcs-stepper-wrapper'>
+				<ul class='zcs-flex zcs-gap-8 zcs-p-0 zcs-m-0'>
+					<li class='zcs-stepper zcs-col-common zcs-flex zcs-direction-column zcs-align-items-center zcs-gap-4 zcs-text-center zcs-relative'>
+						<div class='zcs-stepper-status zcs-flex zcs-direction-column zcs-align-items-center zcs-justify-center zcs-rounded-half zcs-text-center zcs-relative zcs-box-border'><h6 class='zcs-stepper-count zcs-col-common zcs-w-full zcs-flex zcs-align-items-center zcs-justify-center zcs-rounded-half zcs-font-12 zcs-font-semibold zcs-lh-body zcs-color-tertiary zcs-m-0 zcs-box-border'>1</h6><i class='zcs-stepper-icon zcs-stepper-passed zcs-font-18 zcs-font-bold zcs-color-white zc-li-outline ui-1-check-small'></i><i class='zcs-stepper-icon zcs-stepper-failed zcs-font-18 zcs-color-white zc-li-outline ui-1-circle-remove'></i><span class='zcs-stepper-level zcs-rounded-half' style='width:0%;height:0%;'></span></div>
+						<span class='zcs-stepper-text zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'>Offer Accepted</span>
+					</li>
+					<li class='zcs-stepper <%=if(conversionSuccess == true || alreadyJoined == true,"","zcs-stepper-active")%> zcs-col-common zcs-flex zcs-direction-column zcs-align-items-center zcs-gap-4 zcs-text-center zcs-relative'>
+						<div class='zcs-stepper-status zcs-flex zcs-direction-column zcs-align-items-center zcs-justify-center zcs-rounded-half zcs-text-center zcs-relative zcs-box-border'><h6 class='zcs-stepper-count zcs-col-common zcs-w-full zcs-flex zcs-align-items-center zcs-justify-center zcs-rounded-half zcs-font-12 zcs-font-semibold zcs-lh-body zcs-color-tertiary zcs-m-0 zcs-box-border'>2</h6><i class='zcs-stepper-icon zcs-stepper-passed zcs-font-18 zcs-font-bold zcs-color-white zc-li-outline ui-1-check-small'></i><i class='zcs-stepper-icon zcs-stepper-failed zcs-font-18 zcs-color-white zc-li-outline ui-1-circle-remove'></i><span class='zcs-stepper-level zcs-rounded-half' style='width:0%;height:0%;'></span></div>
+						<span class='zcs-stepper-text zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'>HR Details</span>
+					</li>
+					<li class='zcs-stepper <%=if(conversionSuccess == true || alreadyJoined == true,"zcs-stepper-active","")%> zcs-col-common zcs-flex zcs-direction-column zcs-align-items-center zcs-gap-4 zcs-text-center zcs-relative'>
+						<div class='zcs-stepper-status zcs-flex zcs-direction-column zcs-align-items-center zcs-justify-center zcs-rounded-half zcs-text-center zcs-relative zcs-box-border'><h6 class='zcs-stepper-count zcs-col-common zcs-w-full zcs-flex zcs-align-items-center zcs-justify-center zcs-rounded-half zcs-font-12 zcs-font-semibold zcs-lh-body zcs-color-tertiary zcs-m-0 zcs-box-border'>3</h6><i class='zcs-stepper-icon zcs-stepper-passed zcs-font-18 zcs-font-bold zcs-color-white zc-li-outline ui-1-check-small'></i><i class='zcs-stepper-icon zcs-stepper-failed zcs-font-18 zcs-color-white zc-li-outline ui-1-circle-remove'></i><span class='zcs-stepper-level zcs-rounded-half' style='width:0%;height:0%;'></span></div>
+						<span class='zcs-stepper-text zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'>Joined</span>
+					</li>
+				</ul>
+			</div>
+		</div>
+<%
+			if(conversionMessage != "")
+			{
+				bannerClass = if(conversionSuccess == true,"success","error");
+				%>
+<div class='conversion-banner <%=bannerClass%> zcs-flex zcs-align-items-center zcs-gap-10 zcs-mt-16'>
+				<i class='zc-li-outline <%=if(conversionSuccess == true,"ui-1-check-circle-08","ui-1-circle-remove")%> zcs-font-18'></i>
+				<span class='zcs-font-14 zcs-font-medium'><%=conversionMessage%></span>
+			</div>
+<%
+			}
+			if(alreadyJoined == true && conversionSuccess == false)
+			{
+				%>
+<div class='conversion-banner info zcs-flex zcs-align-items-center zcs-gap-10 zcs-mt-16'>
+				<i class='zc-li-outline ui-1-check-circle-08 zcs-font-18'></i>
+				<span class='zcs-font-14 zcs-font-medium'>This application is already marked Joined.</span>
+			</div>
+<%
+			}
+			if(existingEmployeeFound == true && conversionSuccess == false)
+			{
+				%>
+<div class='disabled-note zcs-flex zcs-align-items-center zcs-gap-10 zcs-mt-16'>
+				<i class='zc-li-outline ui-1-alert-circle-i zcs-font-18'></i>
+				<span class='zcs-font-14 zcs-font-medium'>An employee record already exists for this candidate email. Review the existing employee instead of creating a duplicate.</span>
+			</div>
+<%
+			}
+			if(app.Status != "Offer_Accepted" && alreadyJoined == false)
+			{
+				%>
+<div class='disabled-note zcs-flex zcs-align-items-center zcs-gap-10 zcs-mt-16'>
+				<i class='zc-li-outline ui-1-alert-circle-i zcs-font-18'></i>
+				<span class='zcs-font-14 zcs-font-medium'>Only Offer_Accepted applications can be converted. Current status is <%=app.Status%>.</span>
+			</div>
+<%
+			}
+			%>
+<div class='convert-grid zcs-mt-20'>
+			<aside class='profile-card'>
+				<div class='zcs-card zcs-flex zcs-direction-column zcs-gap-16 zcs-p-20 zcs-box-border'>
+					<div class='zcs-flex zcs-align-items-center zcs-gap-16'>
+						<div class='zcs-avatar zcs-flex zcs-align-items-center zcs-justify-center zcs-no-shrink' style='--zcs-avatar-size:75px;--zcs-avatar-radius:14px'>
+							<span class='candidate-avatar-initial'><%=candidateInitial%></span>
+						</div>
+						<div class='zcs-flex zcs-direction-column zcs-gap-4 zcs-col-common zcs-ellipsis'>
+							<h6 class='zcs-font-18 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-ellipsis zcs-m-0'><%=candidateName%></h6>
+							<span class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-secondary zcs-ellipsis'><%=candidateEmail%></span>
+							<span class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-secondary zcs-ellipsis'><%=candidatePhone%></span>
+						</div>
+					</div>
+					<div class='summary-list'>
+						<div class='summary-item'>
+							<label class='zcs-font-13 zcs-color-tertiary'>Application Status</label>
+							<div class='zcs-mt-6'><span class='zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border <%=statusBadge%>'><span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'><%=app.Status%></span></span></div>
+						</div>
+						<div class='summary-item'>
+							<label class='zcs-font-13 zcs-color-tertiary'>Job Title</label>
+							<div class='zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary zcs-mt-4'><%=jobTitle%></div>
+						</div>
+						<div class='summary-item'>
+							<label class='zcs-font-13 zcs-color-tertiary'>Job Department</label>
+							<div class='zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary zcs-mt-4'><%=jobDepartmentName%></div>
+						</div>
+						<div class='summary-item'>
+							<label class='zcs-font-13 zcs-color-tertiary'>Source</label>
+							<div class='zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary zcs-mt-4'><%=ifnull(cand.Source,"-")%></div>
+						</div>
+					</div>
+				</div>
+				<div class='zcs-card zcs-flex zcs-direction-column zcs-gap-10 zcs-p-18 zcs-box-border zcs-mt-16'>
+					<h6 class='zcs-font-16 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0'>Follow-up links</h6>
+					<a class='related-link zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-8 zcs-px-16 zcs-py-10 zcs-box-border' href='<%=employeeDirectoryUrl%>'>
+						<span class='zcs-flex zcs-align-items-center zcs-gap-8'><i class='zc-li-outline users-wm'></i><span>Employee Directory</span></span><i class='zc-li-outline arrows-1-tail-right'></i>
+					</a>
+					<a class='related-link zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-8 zcs-px-16 zcs-py-10 zcs-box-border' href='#Report:All_Employees?zc_LoadIn=dialog&zc_Header=true'>
+						<span class='zcs-flex zcs-align-items-center zcs-gap-8'><i class='zc-li-outline business-contact-85'></i><span>All Employees</span></span><i class='zc-li-outline arrows-1-tail-right'></i>
+					</a>
+<%
+			if(newEmployeeUrl != "")
+			{
+				%>
+<a class='related-link zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-8 zcs-px-16 zcs-py-10 zcs-box-border' href='<%=newEmployeeUrl%>'>
+						<span class='zcs-flex zcs-align-items-center zcs-gap-8'><i class='zc-li-outline ui-1-check-circle-08'></i><span>New Employee</span></span><i class='zc-li-outline arrows-1-tail-right'></i>
+					</a>
+<%
+			}
+			%>
+</div>
+			</aside>
+
+			<section class='form-card'>
+				<div class='form-head zcs-p-20 zcs-box-border'>
+					<h6 class='zcs-font-18 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0'>Employee details</h6>
+					<p class='zcs-font-14 zcs-color-secondary zcs-mt-6 zcs-mx-0 zcs-mb-0'>Submit creates Employee_Master, seeds leave balances through the Employee_Master workflow, marks the job application Joined, sends a configured welcome notification, and writes an audit log.</p>
+				</div>
+				<form method='GET' action='#Page:Convert_To_Employee'>
+					<input type='hidden' name='job_application_id' value='<%=app.ID%>' />
+					<input type='hidden' name='convert_submit' value='1' />
+					<div class='zcs-p-20 zcs-box-border'>
+						<div class='input-grid'>
+							<div class='field-block'>
+								<label>Employment Type <span class='required-mark'>*</span></label>
+								<select name='employment_type' <%=if(canConvert == true,"","disabled")%>>
+									<option value='Full_Time' <%=if(selectedEmploymentType == "Full_Time","selected","")%>>Full_Time</option>
+									<option value='Contractor' <%=if(selectedEmploymentType == "Contractor","selected","")%>>Contractor</option>
+									<option value='Intern' <%=if(selectedEmploymentType == "Intern","selected","")%>>Intern</option>
+								</select>
+							</div>
+							<div class='field-block'>
+								<label>Date of Joining <span class='required-mark'>*</span></label>
+								<input type='date' name='date_of_joining' value='<%=selectedDoj%>' <%=if(canConvert == true,"","disabled")%> />
+							</div>
+							<div class='field-block'>
+								<label>Department <span class='required-mark'>*</span></label>
+								<select name='department' <%=if(canConvert == true,"","disabled")%>>
+									<option value=''>Select department</option>
+<%
+			for each  dept in Department_Config[Is_Active == true] sort by Department_Name asc
+			{
+				%>
+<option value='<%=dept.ID%>' <%=if(selectedDepartment == dept.ID.toString(),"selected","")%>><%=dept.Department_Name%></option>
+<%
+			}
+			%>
+</select>
+							</div>
+							<div class='field-block'>
+								<label>Designation <span class='required-mark'>*</span></label>
+								<input type='text' name='designation' value='<%=selectedDesignation%>' placeholder='Enter designation' <%=if(canConvert == true,"","disabled")%> />
+							</div>
+							<div class='field-block'>
+								<label>Primary Manager</label>
+								<select name='primary_manager' <%=if(canConvert == true,"","disabled")%>>
+									<option value=''>No primary manager</option>
+<%
+			for each  mgr in Employee_Master[Employment_Status == "Active" || Employment_Status == "Probation"] sort by Full_Name asc
+			{
+				%>
+<option value='<%=mgr.ID%>' <%=if(selectedManager == mgr.ID.toString(),"selected","")%>><%=mgr.Full_Name%></option>
+<%
+			}
+			%>
+</select>
+							</div>
+							<div class='field-block'>
+								<label>Probation End Date <span class='required-mark'>*</span></label>
+								<input type='date' name='probation_end_date' value='<%=selectedProbation%>' <%=if(canConvert == true,"","disabled")%> />
+							</div>
+							<div class='field-block'>
+								<label>Date of Birth <span class='required-mark'>*</span></label>
+								<input type='date' name='date_of_birth' value='<%=selectedDob%>' <%=if(canConvert == true,"","disabled")%> />
+							</div>
+							<div class='field-block'>
+								<label>Gender <span class='required-mark'>*</span></label>
+								<select name='gender' <%=if(canConvert == true,"","disabled")%>>
+									<option value=''>Select gender</option>
+									<option value='Male' <%=if(selectedGender == "Male","selected","")%>>Male</option>
+									<option value='Female' <%=if(selectedGender == "Female","selected","")%>>Female</option>
+									<option value='Other' <%=if(selectedGender == "Other","selected","")%>>Other</option>
+								</select>
+							</div>
+							<div class='field-block'>
+								<label>Tenure Date <span class='required-mark'>*</span></label>
+								<input type='date' name='tenure_date' value='<%=selectedTenure%>' <%=if(canConvert == true,"","disabled")%> />
+								<span class='field-help'>Use date of joining unless HR needs a different tenure anchor.</span>
+							</div>
+							<div class='field-block'>
+								<label>Official Email</label>
+								<input type='email' value='<%=candidateEmail%>' disabled />
+								<span class='field-help'>Copied from Candidate.Email and checked for duplicate employees.</span>
+							</div>
+						</div>
+					</div>
+					<div class='submit-row zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12 zcs-px-20 zcs-py-16 zcs-box-border'>
+						<span class='zcs-font-13 zcs-color-secondary'>Employment status will be set to Probation.</span>
+						<div class='zcs-flex zcs-align-items-center zcs-gap-12 quick-actions'>
+							<a class='zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body' href='<%=candidateDetailUrl%>'>
+								<i class='zcs-button-icon zc-li-outline arrows-1-tail-left'></i>
+								<span class='zcs-button-text'>Back to Candidate</span>
+							</a>
+							<button class='zcs-button zcs-primary-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body' type='submit' <%=if(canConvert == true,"","disabled")%>>
+								<i class='zcs-button-icon zc-li-outline ui-1-check-circle-08'></i>
+								<span class='zcs-button-text'>Create Employee</span>
+							</button>
+						</div>
+					</div>
+				</form>
+			</section>
+		</div>
+	</div>
+<%
+		}
+	}
+	%>
+</div>

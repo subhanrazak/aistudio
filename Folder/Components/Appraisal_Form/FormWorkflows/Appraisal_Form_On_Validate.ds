@@ -1,0 +1,110 @@
+Appraisal_Form_On_Validate as "Appraisal Form - On Validate"
+{
+
+				type =  form
+				form = Appraisal_Form
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Appraisal_Config == null)
+										{
+											alert "An active appraisal cycle is required.";
+											cancel submit;
+										}
+										activeCycles = Appraisal_Config[ID == input.Appraisal_Config];
+										if(activeCycles.count() == 0)
+										{
+											alert "Selected appraisal cycle could not be found.";
+											cancel submit;
+										}
+										if(activeCycles.count() > 0)
+										{
+											if(input.ID == null && zoho.currentdate < activeCycles.Window_Start || zoho.currentdate > activeCycles.Window_End)
+											{
+												alert "Appraisal forms can only be created during the active appraisal window.";
+												cancel submit;
+											}
+											if(input.Status == "Manager_Reviewed" && zoho.currentdate < activeCycles.Manager_Scoring_Start || zoho.currentdate > activeCycles.Manager_Scoring_End)
+											{
+												alert "Manager review can only be completed during the manager scoring window.";
+												cancel submit;
+											}
+										}
+										duplicateForms = Appraisal_Form[Employee == input.Employee && Appraisal_Config == input.Appraisal_Config && ID != input.ID];
+										if(duplicateForms.count() > 0)
+										{
+											alert "An appraisal form already exists for this employee and cycle.";
+											cancel submit;
+										}
+										if(input.Status == "Submitted")
+										{
+											objectiveRows = Appraisal_Objectives[Appraisal_Form == input.ID];
+											if(objectiveRows.count() == 0)
+											{
+												alert "At least one appraisal objective is required before submission.";
+												cancel submit;
+											}
+											incompleteObjectives = Appraisal_Objectives[Appraisal_Form == input.ID && Self_Score == null];
+											if(incompleteObjectives.count() > 0)
+											{
+												alert "Self scores are required for all objectives before submission.";
+												cancel submit;
+											}
+											skillRows = Appraisal_Skills[Appraisal_Form == input.ID];
+											incompleteSkills = Appraisal_Skills[Appraisal_Form == input.ID && Self_Score == null];
+											if(skillRows.count() > 0 && incompleteSkills.count() > 0)
+											{
+												alert "Self scores are required for all skills before submission.";
+												cancel submit;
+											}
+											questionRows = Appraisal_Question_Response[Appraisal_Form == input.ID];
+											incompleteQuestions = Appraisal_Question_Response[Appraisal_Form == input.ID && Response == ""];
+											if(questionRows.count() > 0 && incompleteQuestions.count() > 0)
+											{
+												alert "Responses are required for all appraisal questions before submission.";
+												cancel submit;
+											}
+										}
+										if(input.Status == "Manager_Reviewed")
+										{
+											unscoredObjectives = Appraisal_Objectives[Appraisal_Form == input.ID && Manager_Score == null];
+											if(unscoredObjectives.count() > 0)
+											{
+												alert "Manager scores are required for all objectives before manager review completion.";
+												cancel submit;
+											}
+											unscoredSkills = Appraisal_Skills[Appraisal_Form == input.ID && Manager_Score == null];
+											if(unscoredSkills.count() > 0)
+											{
+												alert "Manager scores are required for all skills before manager review completion.";
+												cancel submit;
+											}
+											unscoredQuestions = Appraisal_Question_Response[Appraisal_Form == input.ID && Manager_Score == null];
+											if(unscoredQuestions.count() > 0)
+											{
+												alert "Manager scores are required for all question responses before manager review completion.";
+												cancel submit;
+											}
+										}
+										if(input.HR_Signoff == true && input.Status != "Manager_Reviewed" && input.Status != "HR_Approved")
+										{
+											alert "HR signoff is allowed only after manager review.";
+											cancel submit;
+										}
+										if(input.Status == "HR_Approved" && input.HR_Signoff != true)
+										{
+											alert "HR signoff is required before HR approval.";
+											cancel submit;
+										}
+						)
+					}
+				}
+
+			
+}

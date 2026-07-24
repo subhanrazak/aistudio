@@ -1,0 +1,35 @@
+KPI_KRA_On_Load as "KPI KRA - On Load"
+{
+
+				type =  form
+				form = KPI_KRA
+
+				record event = on add or edit
+
+				on load
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											disable Manager;
+										disable Appraisal_Config;
+										disable Is_Locked;
+										if(input.Manager == null)
+										{
+											input.Manager = zoho.loginuserid;
+										}
+										if(input.Appraisal_Config == null)
+										{
+											activeCycles = Appraisal_Config[Is_Active == true];
+											if(activeCycles.count() > 0)
+											{
+												input.Appraisal_Config = activeCycles.ID;
+											}
+										}
+						)
+					}
+				}
+
+			
+}

@@ -1,0 +1,32 @@
+schedule_comp_off_expiry as "Comp Off Expiry"
+{
+
+				type =  schedule
+				start = "2025-01-01 07:00:00"
+				frequency = daily
+				time zone = "Asia/Kolkata"
+				on start
+				{
+					actions 
+					{
+					on load
+					(
+						expiredCount = 0;
+										for each  balanceRec in Leave_Balance[Comp_Off_Expiry_Date != null && Comp_Off_Expiry_Date < zoho.currentdate && Balance_Days > 0]
+										{
+											leaveTypeRows = Leave_Type_Config[ID == balanceRec.Leave_Type];
+											if(leaveTypeRows.count() > 0 && leaveTypeRows.Leave_Type_Name == "Comp_Off")
+											{
+												oldBalance = ifnull(balanceRec.Balance_Days,0);
+												balanceRec.Balance_Days=0;
+												balanceRec.Comp_Off_Expiry_Date=null;
+												expiredCount = expiredCount + 1;
+												thisapp.Add_Audit_Log("COMP_OFF_EXPIRED","Attendance_Leave","Leave_Balance",balanceRec.ID,"Expire",oldBalance,"0","Expired comp-off balance.",true,"");
+											}
+										}
+										thisapp.Add_Audit_Log("COMP_OFF_EXPIRY_SUMMARY","Attendance_Leave","Leave_Balance",0,"Expiry Summary","","","Comp-off expiry changed " + expiredCount + " balances.",true,"");
+					)
+					}
+				}
+			
+}

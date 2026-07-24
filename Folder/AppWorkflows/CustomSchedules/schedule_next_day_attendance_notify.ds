@@ -1,0 +1,21 @@
+schedule_next_day_attendance_notify as "Next Day Attendance Notify"
+{
+
+				type =  schedule
+				start = "2025-01-01 08:00:00"
+				frequency = daily
+				time zone = "Asia/Kolkata"
+				on start
+				{
+					actions 
+					{
+					on load
+					(
+						previousAttendanceDate = zoho.currentdate.addDay(-1);
+										pendingCount = Attendance_Log[Attendance_Date == previousAttendanceDate && Attendance_Status == "Not_Marked"].count();
+										thisapp.Add_Audit_Log("ATTENDANCE_NEXT_DAY_REMINDER","Attendance","Attendance_Log",0,"Reminder","","Not_Marked","Reminder audit only. Pending previous-day attendance rows: " + pendingCount + ".",true,"");
+					)
+					}
+				}
+			
+}

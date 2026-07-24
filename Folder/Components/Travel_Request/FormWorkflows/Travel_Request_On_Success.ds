@@ -1,0 +1,50 @@
+Travel_Request_On_Success as "Travel Request - On Success"
+{
+
+				type =  form
+				form = Travel_Request
+
+				record event = on add or edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											travelRows = Travel_Request[ID == input.ID];
+										statusForAudit = input.Status;
+										if(input.Travel_Completed_Date != null && input.Status == "Approved")
+										{
+											travelRows.Status="Bills_Pending";
+											statusForAudit = "Bills_Pending";
+										}
+										if(input.Bills_Uploaded != null && input.Status == "Bills_Pending")
+										{
+											travelRows.Status="Bills_Uploaded";
+											travelRows.Bills_Upload_Date=zoho.currentdate;
+											statusForAudit = "Bills_Uploaded";
+										}
+										tokenMap = Map();
+										tokenMap.put("employee",input.Employee);
+										tokenMap.put("destination",input.Destination);
+										tokenMap.put("status",statusForAudit);
+										if(statusForAudit == "Pending_Manager")
+										{
+											thisapp.Send_Configured_Notification("TRAVEL_REQUEST_SUBMITTED",tokenMap,"Travel request submitted","A travel request for {{destination}} has been submitted for manager approval.");
+										}
+										else if(statusForAudit == "Bills_Pending")
+										{
+											thisapp.Send_Configured_Notification("TRAVEL_BILLS_PENDING",tokenMap,"Travel bills pending","Please upload travel bills for {{destination}}.");
+										}
+										else if(statusForAudit == "Bills_Uploaded")
+										{
+											thisapp.Send_Configured_Notification("TRAVEL_BILLS_UPLOADED",tokenMap,"Travel bills uploaded","Travel bills have been uploaded for {{destination}}.");
+										}
+										thisapp.Add_Audit_Log("TRAVEL_REQUEST_UPDATED","Travel","Travel_Request",input.ID,"Save","",statusForAudit,"Travel request saved.",true,"");
+						)
+					}
+				}
+
+			
+}

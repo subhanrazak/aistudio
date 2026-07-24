@@ -1,0 +1,25 @@
+schedule_announcement_reminder as "Announcement Reminder"
+{
+
+				type =  schedule
+				start = "2025-01-01 09:00:00"
+				frequency = daily
+				time zone = "Asia/Kolkata"
+				on start
+				{
+					actions 
+					{
+					on load
+					(
+						pendingRows = Announcement_Acknowledgement[Acknowledged == false];
+										if(pendingRows.count() > 0)
+										{
+											tokenMap = Map();
+											tokenMap.put("pending_count",pendingRows.count());
+											thisapp.Send_Configured_Notification("ANNOUNCEMENT_ACK_REMINDER",tokenMap,"Pending announcement acknowledgements","There are {{pending_count}} pending announcement acknowledgements.");
+										}
+					)
+					}
+				}
+			
+}

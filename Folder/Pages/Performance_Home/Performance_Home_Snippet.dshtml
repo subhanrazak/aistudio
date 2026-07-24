@@ -1,0 +1,298 @@
+<%
+	loginEmail = zoho.loginuserid;
+	if(loginEmail == null || loginEmail == "")
+	{
+		loginEmail = zoho.loginuser;
+	}
+	loginRole = ifnull(thisapp.permissions.loginUserProfile(),"");
+	isAdmin = loginRole == "Administrator" || loginRole == "Admin";
+	isHR = loginRole == "HR_ADMIN" || isAdmin;
+	isManager = loginRole == "MANAGER" || isHR || loginRole == "CEO" || isAdmin;
+	userName = ifnull(zoho.loginuser,"Performance user");
+	userSubtitle = "Performance workspace";
+	currentEmployeeRows = Employee_Master[Official_Email == loginEmail || Official_Email == zoho.loginuser];
+	if(currentEmployeeRows.count() > 0)
+	{
+		userName = ifnull(currentEmployeeRows.Full_Name,userName);
+		userSubtitle = ifnull(currentEmployeeRows.Designation,userSubtitle);
+	}
+	activeCycles = Appraisal_Config[Is_Active == true].count();
+	totalCycles = Appraisal_Config.count();
+	kpiCount = KPI_KRA.count();
+	lockedKpiCount = KPI_KRA[Is_Locked == true].count();
+	myAppraisalCount = Appraisal_Form[Employee.Official_Email == loginEmail || Employee.Official_Email == zoho.loginuser].count();
+	managerQueueCount = Appraisal_Form[Manager == zoho.loginuserid || Manager == zoho.loginuser].count();
+	draftCount = Appraisal_Form[Status == "Draft"].count();
+	submittedCount = Appraisal_Form[Status == "Submitted"].count();
+	managerReviewedCount = Appraisal_Form[Status == "Manager_Reviewed"].count();
+	hrApprovedCount = Appraisal_Form[Status == "HR_Approved"].count();
+	hrPendingCount = Appraisal_Form[Status == "Manager_Reviewed" && HR_Signoff == false].count();
+	objectiveRows = Appraisal_Objectives.count();
+	skillRows = Appraisal_Skills.count();
+	responseRows = Appraisal_Question_Response.count();
+	questionRows = Appraisal_Basic_Questions.count();
+	%>
+<style>
+/* ZCS global utility subset included once for Performance_Home */
+:root { --zcs-theme-brand-color: var(--zcs_brand_color, #2A6FFC); --zcs-light-bg-color: var(--zcs_brand_light_color, #E8EFFF); --zcs-primary-text-color: var(--zcs_primary_text_color, #1A1A1A); --zcs-secondary-text-color: var(--zcs_secondary_text_color, #55576B); --zcs-teritiary-text-color: var(--zcs_tertiary_text_color, #77798C); --zcs-border-color: var(--zcs_tertiary_border_color, #E6E8F0); --zcs-page-bg-color: #F5F7FB; --zcs-white-color: #FFFFFF; --zcs-brand-foreground: var(--zcs_brand_foreground_color, #FFFFFF); }
+a { text-decoration: none; }
+.zcs-flex { display: flex; } .zcs-inline-flex { display: inline-flex; } .zcs-row { display: flex; flex-wrap: wrap; } .zcs-direction-column { flex-direction: column; } .zcs-align-items-center { align-items: center; } .zcs-align-items-start { align-items: flex-start; } .zcs-justify-space-between { justify-content: space-between; } .zcs-justify-center { justify-content: center; } .zcs-gap-4 { gap: .25rem; } .zcs-gap-6 { gap: .375rem; } .zcs-gap-8 { gap: .5rem; } .zcs-gap-10 { gap: .625rem; } .zcs-gap-12 { gap: .75rem; } .zcs-gap-16 { gap: 1rem; } .zcs-gap-18 { gap: 1.125rem; } .zcs-gap-20 { gap: 1.25rem; } .zcs-gap-24 { gap: 1.5rem; }
+.zcs-p-0 { padding: 0; } .zcs-p-8 { padding: .5rem; } .zcs-p-10 { padding: .625rem; } .zcs-p-12 { padding: .75rem; } .zcs-p-16 { padding: 1rem; } .zcs-p-18 { padding: 1.125rem; } .zcs-p-20 { padding: 1.25rem; } .zcs-p-24 { padding: 1.5rem; } .zcs-px-8 { padding-left: .5rem; padding-right: .5rem; } .zcs-px-10 { padding-left: .625rem; padding-right: .625rem; } .zcs-px-12 { padding-left: .75rem; padding-right: .75rem; } .zcs-px-16 { padding-left: 1rem; padding-right: 1rem; } .zcs-px-20 { padding-left: 1.25rem; padding-right: 1.25rem; } .zcs-px-24 { padding-left: 1.5rem; padding-right: 1.5rem; } .zcs-px-30 { padding-left: 1.875rem; padding-right: 1.875rem; } .zcs-py-2 { padding-top: .125rem; padding-bottom: .125rem; } .zcs-py-6 { padding-top: .375rem; padding-bottom: .375rem; } .zcs-py-8 { padding-top: .5rem; padding-bottom: .5rem; } .zcs-py-10 { padding-top: .625rem; padding-bottom: .625rem; } .zcs-py-12 { padding-top: .75rem; padding-bottom: .75rem; } .zcs-py-16 { padding-top: 1rem; padding-bottom: 1rem; } .zcs-py-24 { padding-top: 1.5rem; padding-bottom: 1.5rem; }
+.zcs-m-0 { margin: 0; } .zcs-mt-4 { margin-top: .25rem; } .zcs-mt-8 { margin-top: .5rem; } .zcs-mt-12 { margin-top: .75rem; } .zcs-mt-16 { margin-top: 1rem; } .zcs-mb-4 { margin-bottom: .25rem; } .zcs-mb-8 { margin-bottom: .5rem; } .zcs-w-full { width: 100%; } .zcs-wh-full { width: 100%; height: 100%; } .zcs-col-common { flex: 1 1 0%; min-width: 0; } .zcs-no-shrink { flex-shrink: 0; } .zcs-box-border { box-sizing: border-box; } .zcs-rounded-sm { border-radius: .25rem; } .zcs-rounded-md { border-radius: .375rem; } .zcs-rounded-lg { border-radius: .5rem; } .zcs-rounded-xl { border-radius: .75rem; } .zcs-rounded-2xl { border-radius: 1rem; } .zcs-text-left { text-align: left; } .zcs-text-right { text-align: right; } .zcs-text-center { text-align: center; } .zcs-overflow-auto { overflow: auto; } .zcs-sticky { position: sticky; } .zcs-relative { position: relative; }
+.zcs-font-11 { font-size: .6875rem; } .zcs-font-12 { font-size: .75rem; } .zcs-font-13 { font-size: .8125rem; } .zcs-font-14 { font-size: .875rem; } .zcs-font-15 { font-size: .9375rem; } .zcs-font-16 { font-size: 1rem; } .zcs-font-18 { font-size: 1.125rem; } .zcs-font-20 { font-size: 1.25rem; } .zcs-font-22 { font-size: 1.375rem; } .zcs-font-24 { font-size: 1.5rem; } .zcs-font-30 { font-size: 1.875rem; } .zcs-font-normal { font-weight: 400; } .zcs-font-medium { font-weight: 500; } .zcs-font-semibold { font-weight: 600; } .zcs-font-bold { font-weight: 700; } .zcs-lh-body { line-height: 1.5; } .zcs-lh-heading { line-height: 1.25; } .zcs-ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.zcs-color-primary { color: var(--zcs-primary-text-color); } .zcs-color-secondary { color: var(--zcs-secondary-text-color); } .zcs-color-tertiary { color: var(--zcs-teritiary-text-color); } .zcs-color-theme { color: var(--zcs-theme-brand-color); } .zcs-color-white { color: var(--zcs-white-color); } .zcs-color-green { color: #179E6C; } .zcs-color-blue { color: #2A6FFC; } .zcs-color-orange { color: #F4660C; } .zcs-color-yellow { color: #b8770d; }
+.zcs-card { background-color: var(--zcs-white-color); border: 1px solid var(--zcs-border-color); border-radius: 12px; box-shadow: 0 8px 24px rgba(18, 19, 43, .04); }
+/* ZCS component CSS: button-primary-button and button-primary-outline-button */
+.zcs-button { width: auto; min-width: 5rem; min-height: 36px; } .zcs-primary-button { background-color: var(--zcs-theme-brand-color); color: var(--zcs-brand-foreground); } .zcs-primary-outline-button { border: 1px solid var(--zcs-theme-brand-color); background-color: var(--zcs-white-color); color: var(--zcs-theme-brand-color); } .zcs-secondary-button { border: 1px solid var(--zcs-border-color); background-color: #F6F7FA; color: var(--zcs-primary-text-color); } .zcs-primary-button.zcs-button:hover { background-color: var(--zcs_brand_dark_color, #1652BB); } .zcs-primary-outline-button:hover, .zcs-secondary-button:hover { background-color: var(--zcs_component_hover_color, #F2F7FF); } .zcs-button-icon { width: 16px; max-height: 16px; }
+/* ZCS component CSS: horizontal-tab-horizontal-tab-with-icon */
+.zcs-horizontal-tabhead { box-shadow: 0px -1px 0px 0px var(--zcs-border-color) inset; overflow-x: auto; overflow-y: hidden; -ms-overflow-style: none; scrollbar-width: none; } .zcs-horizontal-tabhead::-webkit-scrollbar { display: none; } .zcs-horizontal-tabitem { list-style-type: none; border-bottom: 2px solid transparent; letter-spacing: .1px; } .zcs-horizontal-tabicon { width: 16px; height: 16px; } .zcs-horizontal-tabtext { text-wrap: nowrap; } .zcs-horizontal-tabitem:hover .zcs-horizontal-tablink { color: var(--zcs-theme-brand-color); } .zcs-horizontal-tabitem.zcs-horizontal-tabactive { border-bottom-color: var(--zcs-theme-brand-color); } .zcs-horizontal-tabitem.zcs-horizontal-tabactive .zcs-horizontal-tablink { color: var(--zcs-theme-brand-color); }
+/* ZCS component CSS: badge-filled-badge */
+.zcs-badge { width: auto; } .zcs-badge-filled { border: 1px solid transparent; } .zcs-badge-filled.zcs-badge-theme { background-color: var(--zcs-theme-brand-color); border-color: var(--zcs-theme-brand-color); color: var(--zcs-white-color); } .zcs-badge-filled.zcs-badge-green { background-color: #179E6C; border-color: #179E6C; color: var(--zcs-white-color); } .zcs-badge-filled.zcs-badge-blue { background-color: #2A6FFC; border-color: #2A6FFC; color: var(--zcs-white-color); } .zcs-badge-filled.zcs-badge-orange { background-color: #F4660C; border-color: #F4660C; color: var(--zcs-white-color); } .zcs-badge-filled.zcs-badge-grey { background-color: #242424; border-color: #242424; color: var(--zcs-white-color); } .zcs-badge-filled.zcs-badge-yellow { background-color: #FAAE13; border-color: #FAAE13; color: var(--zcs-white-color); }
+/* ZCS component CSS: table-simple-table */
+.zcs-table-wrapper { border: 1px solid var(--zcs-border-color); background-color: var(--zcs-white-color); overflow: auto; } .zcs-table-wrapper table { line-height: normal; border-collapse: collapse; } .zcs-table-wrapper table thead { top: 0; } .zcs-table-wrapper table thead tr th { background-color: #F9FAFE; box-shadow: 0px -1px 0px 0px var(--zcs-border-color) inset; white-space: nowrap; } .zcs-table-wrapper table tbody tr td { border-top: 1px solid var(--zcs-border-color); } .zcs-table-wrapper table tbody tr:first-child td { border-color: transparent; } .zcs-table-wrapper table tbody tr:hover td { background-color: #F9FAFE; }
+.ph-page { min-height: 100%; background: var(--zcs-page-bg-color); padding: 22px; box-sizing: border-box; font-family: Lato, Arial, sans-serif; color: var(--zcs-primary-text-color); }
+.ph-header { background: var(--zcs-white-color); border: 1px solid var(--zcs-border-color); border-radius: 16px; box-shadow: 0 8px 24px rgba(18,19,43,.04); }
+.ph-hero { position: relative; overflow: hidden; color: var(--zcs-white-color); border-radius: 18px; padding: 24px; background: linear-gradient(135deg, var(--zcs-theme-brand-color), #1328CD); }
+.ph-hero:after { content: ""; position: absolute; right: -90px; top: -110px; width: 300px; height: 300px; border-radius: 50%; border: 40px solid rgba(255,255,255,.13); }
+.ph-hero:before { content: ""; position: absolute; right: 190px; bottom: -86px; width: 180px; height: 180px; border-radius: 50%; border: 26px solid rgba(255,255,255,.10); }
+.ph-hero-content { position: relative; z-index: 1; }
+.ph-hero .zcs-primary-outline-button { background: rgba(255,255,255,.12); border-color: rgba(255,255,255,.72); color: #FFFFFF; }
+.ph-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 18px; }
+.ph-kpi { grid-column: span 3; min-height: 120px; }
+.ph-kpi-icon { width: 42px; height: 42px; border-radius: 12px; background: var(--zcs-light-bg-color); color: var(--zcs-theme-brand-color); }
+.ph-kpi-value { font-size: 30px; font-weight: 700; line-height: 1.1; }
+.ph-workspace { grid-column: span 9; overflow: hidden; }
+.ph-actions { grid-column: span 3; }
+.ph-tab-input { display: none; }
+.ph-tabbar { overflow-x: auto; }
+.ph-tabbar label { cursor: pointer; }
+.ph-panel { display: none; padding: 18px; }
+#ph-tab-my:checked ~ .ph-tabbar label[for='ph-tab-my'], #ph-tab-manager:checked ~ .ph-tabbar label[for='ph-tab-manager'], #ph-tab-hr:checked ~ .ph-tabbar label[for='ph-tab-hr'], #ph-tab-config:checked ~ .ph-tabbar label[for='ph-tab-config'], #ph-tab-children:checked ~ .ph-tabbar label[for='ph-tab-children'], #ph-tab-kanban:checked ~ .ph-tabbar label[for='ph-tab-kanban'] { color: var(--zcs-theme-brand-color); border-bottom-color: var(--zcs-theme-brand-color); }
+#ph-tab-my:checked ~ .ph-panels .ph-panel-my, #ph-tab-manager:checked ~ .ph-panels .ph-panel-manager, #ph-tab-hr:checked ~ .ph-panels .ph-panel-hr, #ph-tab-config:checked ~ .ph-panels .ph-panel-config, #ph-tab-children:checked ~ .ph-panels .ph-panel-children, #ph-tab-kanban:checked ~ .ph-panels .ph-panel-kanban { display: block; }
+.ph-embed-card { border: 1px solid var(--zcs-border-color); border-radius: 14px; overflow: hidden; background: var(--zcs-white-color); }
+.ph-embed-header { border-bottom: 1px solid var(--zcs-border-color); background: #FAFBFF; }
+.ph-report-frame { min-height: 620px; }
+.ph-report-frame-short { min-height: 430px; }
+.ph-two-col { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.ph-access-note { border: 1px dashed var(--zcs-border-color); background: #FAFBFF; border-radius: 12px; }
+.ph-action-list { list-style: none; }
+.ph-action-item { list-style-type: none; } .ph-action-item:hover { border-color: var(--zcs-theme-brand-color); } .ph-action-item:hover .ph-action-link { color: var(--zcs-theme-brand-color); }
+@media (max-width: 1100px) { .ph-kpi { grid-column: span 6; } .ph-workspace, .ph-actions { grid-column: span 12; } .ph-two-col { grid-template-columns: 1fr; } }
+@media (max-width: 680px) { .ph-page { padding: 14px; } .ph-kpi { grid-column: span 12; } .ph-hero { padding: 18px; } .ph-hero-content, .ph-header { flex-direction: column; align-items: flex-start; } .ph-header { padding: 16px; } .ph-panel { padding: 12px; } .ph-report-frame { min-height: 520px; } }
+</style>
+
+<div class="ph-page zcs-flex zcs-direction-column zcs-gap-18">
+	<div class="ph-header zcs-w-full zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12 zcs-px-30 zcs-py-24 zcs-box-border">
+		<div class="zcs-flex zcs-direction-column zcs-gap-4 zcs-ellipsis">
+			<h5 class="zcs-font-20 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-ellipsis zcs-m-0">Performance Home</h5>
+			<span class="zcs-font-14 zcs-color-secondary">Appraisal cycles, KPIs, self-appraisal, scoring, and HR sign-off workspace</span>
+		</div>
+		<div class="zcs-flex zcs-align-items-center zcs-gap-12">
+			<a class="zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body" href="#Report:Appraisal_Status_Kanban?zc_LoadIn=dialog">
+				<i class="zcs-button-icon zc-li-outline business-chart-bar-32"></i>
+				<span class="zcs-button-text">Status Kanban</span>
+			</a>
+			<a class="zcs-button zcs-primary-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body" href="#Form:Appraisal_Form?zc_LoadIn=dialog">
+				<i class="zcs-button-icon zc-li-outline ui-1-simple-add"></i>
+				<span class="zcs-button-text">Start Appraisal</span>
+			</a>
+		</div>
+	</div>
+
+	<section class="ph-hero zcs-box-border">
+		<div class="ph-hero-content zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-20">
+			<div class="zcs-flex zcs-direction-column zcs-gap-8">
+				<span class="zcs-font-13 zcs-font-medium">Signed in as <%=userName%></span>
+				<h2 class="zcs-font-30 zcs-font-bold zcs-lh-heading zcs-m-0">Performance cycle command center</h2>
+				<span class="zcs-font-15"><%=userSubtitle%> \u00B7 live appraisal, KPI/KRA, scoring, and sign-off visibility</span>
+			</div>
+			<div class="zcs-flex zcs-align-items-center zcs-gap-10">
+				<div class="zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-theme"><span class="zcs-badge-text zcs-font-13">Self-appraisal</span></div>
+<%
+	if(isManager)
+	{
+		%>
+<div class="zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-blue"><span class="zcs-badge-text zcs-font-13">Manager scoring</span></div>
+<%
+	}
+	if(isHR)
+	{
+		%>
+<div class="zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-green"><span class="zcs-badge-text zcs-font-13">HR sign-off</span></div>
+<%
+	}
+	%>
+</div>
+		</div>
+	</section>
+
+	<div class="ph-grid">
+		<div class="ph-kpi zcs-card zcs-p-18 zcs-box-border zcs-flex zcs-direction-column zcs-gap-12">
+			<div class="zcs-flex zcs-justify-space-between zcs-align-items-start zcs-gap-12">
+				<div class="ph-kpi-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline business-calendar-grid-58 zcs-font-22"></i></div>
+				<span class="zcs-font-13 zcs-color-tertiary">Active cycles</span>
+			</div>
+			<div class="ph-kpi-value zcs-color-primary"><%=activeCycles%></div>
+			<div class="zcs-font-14 zcs-color-secondary"><%=totalCycles%> configured appraisal cycle records</div>
+		</div>
+		<div class="ph-kpi zcs-card zcs-p-18 zcs-box-border zcs-flex zcs-direction-column zcs-gap-12">
+			<div class="zcs-flex zcs-justify-space-between zcs-align-items-start zcs-gap-12">
+				<div class="ph-kpi-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline design-2-ruler-pencil zcs-font-22"></i></div>
+				<span class="zcs-font-13 zcs-color-tertiary">KPI/KRA rows</span>
+			</div>
+			<div class="ph-kpi-value zcs-color-primary"><%=kpiCount%></div>
+			<div class="zcs-font-14 zcs-color-secondary"><%=lockedKpiCount%> locked against active windows</div>
+		</div>
+		<div class="ph-kpi zcs-card zcs-p-18 zcs-box-border zcs-flex zcs-direction-column zcs-gap-12">
+			<div class="zcs-flex zcs-justify-space-between zcs-align-items-start zcs-gap-12">
+				<div class="ph-kpi-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline files-2-doc zcs-font-22"></i></div>
+				<span class="zcs-font-13 zcs-color-tertiary">My appraisals</span>
+			</div>
+			<div class="ph-kpi-value zcs-color-primary"><%=myAppraisalCount%></div>
+			<div class="zcs-font-14 zcs-color-secondary">Self-appraisal records tied to your employee profile</div>
+		</div>
+		<div class="ph-kpi zcs-card zcs-p-18 zcs-box-border zcs-flex zcs-direction-column zcs-gap-12">
+			<div class="zcs-flex zcs-justify-space-between zcs-align-items-start zcs-gap-12">
+				<div class="ph-kpi-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline ui-1-check-circle-08 zcs-font-22"></i></div>
+				<span class="zcs-font-13 zcs-color-tertiary">HR pending</span>
+			</div>
+			<div class="ph-kpi-value zcs-color-primary"><%=hrPendingCount%></div>
+			<div class="zcs-font-14 zcs-color-secondary">Manager-reviewed rows awaiting HR sign-off</div>
+		</div>
+
+		<section class="ph-workspace zcs-card zcs-box-border">
+			<input class="ph-tab-input" type="radio" name="ph-tabs" id="ph-tab-my" checked>
+			<input class="ph-tab-input" type="radio" name="ph-tabs" id="ph-tab-manager">
+			<input class="ph-tab-input" type="radio" name="ph-tabs" id="ph-tab-hr">
+			<input class="ph-tab-input" type="radio" name="ph-tabs" id="ph-tab-config">
+			<input class="ph-tab-input" type="radio" name="ph-tabs" id="ph-tab-children">
+			<input class="ph-tab-input" type="radio" name="ph-tabs" id="ph-tab-kanban">
+
+			<ul class="ph-tabbar zcs-horizontal-tabhead zcs-flex zcs-gap-12 zcs-px-10 zcs-py-0 zcs-m-0 zcs-box-border">
+				<li class="zcs-horizontal-tabitem"><label for="ph-tab-my" class="zcs-horizontal-tablink zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-10 zcs-py-12 zcs-box-border zcs-font-medium zcs-lh-body zcs-color-tertiary"><i class="zcs-horizontal-tabicon zcs-font-16 zc-li-outline users-single-01"></i><span class="zcs-horizontal-tabtext zcs-font-15">My Appraisal</span></label></li>
+				<li class="zcs-horizontal-tabitem"><label for="ph-tab-manager" class="zcs-horizontal-tablink zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-10 zcs-py-12 zcs-box-border zcs-font-medium zcs-lh-body zcs-color-tertiary"><i class="zcs-horizontal-tabicon zcs-font-16 zc-li-outline business-tie-01"></i><span class="zcs-horizontal-tabtext zcs-font-15">Manager Queue</span></label></li>
+				<li class="zcs-horizontal-tabitem"><label for="ph-tab-hr" class="zcs-horizontal-tablink zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-10 zcs-py-12 zcs-box-border zcs-font-medium zcs-lh-body zcs-color-tertiary"><i class="zcs-horizontal-tabicon zcs-font-16 zc-li-outline ui-1-check-circle-08"></i><span class="zcs-horizontal-tabtext zcs-font-15">HR Sign-off</span></label></li>
+				<li class="zcs-horizontal-tabitem"><label for="ph-tab-config" class="zcs-horizontal-tablink zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-10 zcs-py-12 zcs-box-border zcs-font-medium zcs-lh-body zcs-color-tertiary"><i class="zcs-horizontal-tabicon zcs-font-16 zc-li-outline design-2-ruler-pencil"></i><span class="zcs-horizontal-tabtext zcs-font-15">Config &amp; KPIs</span></label></li>
+				<li class="zcs-horizontal-tabitem"><label for="ph-tab-children" class="zcs-horizontal-tablink zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-10 zcs-py-12 zcs-box-border zcs-font-medium zcs-lh-body zcs-color-tertiary"><i class="zcs-horizontal-tabicon zcs-font-16 zc-li-outline files-2-stack"></i><span class="zcs-horizontal-tabtext zcs-font-15">Child Rows</span></label></li>
+				<li class="zcs-horizontal-tabitem"><label for="ph-tab-kanban" class="zcs-horizontal-tablink zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-10 zcs-py-12 zcs-box-border zcs-font-medium zcs-lh-body zcs-color-tertiary"><i class="zcs-horizontal-tabicon zcs-font-16 zc-li-outline business-chart-bar-32"></i><span class="zcs-horizontal-tabtext zcs-font-15">Kanban</span></label></li>
+			</ul>
+
+			<div class="ph-panels">
+				<div class="ph-panel ph-panel-my">
+					<div class="ph-embed-card">
+						<div class="ph-embed-header zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12 zcs-px-20 zcs-py-16 zcs-box-border">
+							<div><h5 class="zcs-font-18 zcs-font-semibold zcs-m-0 zcs-color-primary">My Appraisal</h5><span class="zcs-font-13 zcs-color-secondary">Self-appraisal records filtered to your employee profile</span></div>
+							<a class="zcs-button zcs-primary-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14" href="#Form:Appraisal_Form?zc_LoadIn=dialog"><i class="zcs-button-icon zc-li-outline ui-1-simple-add"></i><span>Start</span></a>
+						</div>
+						<div class="ph-report-frame" zc-component="report" zc-linkname="My_Appraisal" zc-height="620px"></div>
+					</div>
+				</div>
+
+				<div class="ph-panel ph-panel-manager">
+					<div class="ph-embed-card">
+						<div class="ph-embed-header zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12 zcs-px-20 zcs-py-16 zcs-box-border">
+							<div><h5 class="zcs-font-18 zcs-font-semibold zcs-m-0 zcs-color-primary">Manager Appraisal Queue</h5><span class="zcs-font-13 zcs-color-secondary"><%=managerQueueCount%> appraisal rows routed to the logged-in manager identity</span></div>
+							<a class="zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14" href="#Report:Manager_Appraisal_Queue?zc_LoadIn=dialog"><i class="zcs-button-icon zc-li-outline arrows-1-tail-right"></i><span>Open</span></a>
+						</div>
+						<div class="ph-report-frame" zc-component="report" zc-linkname="Manager_Appraisal_Queue" zc-height="620px"></div>
+					</div>
+				</div>
+
+				<div class="ph-panel ph-panel-hr">
+					<div class="ph-embed-card">
+						<div class="ph-embed-header zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12 zcs-px-20 zcs-py-16 zcs-box-border">
+							<div><h5 class="zcs-font-18 zcs-font-semibold zcs-m-0 zcs-color-primary">HR All Appraisals</h5><span class="zcs-font-13 zcs-color-secondary">HR sign-off and complete appraisal pipeline report</span></div>
+							<a class="zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14" href="#Report:HR_All_Appraisals?zc_LoadIn=dialog"><i class="zcs-button-icon zc-li-outline arrows-1-tail-right"></i><span>Open</span></a>
+						</div>
+						<div class="ph-report-frame" zc-component="report" zc-linkname="HR_All_Appraisals" zc-height="620px"></div>
+					</div>
+				</div>
+
+				<div class="ph-panel ph-panel-config">
+					<div class="ph-two-col">
+						<div class="ph-embed-card">
+							<div class="ph-embed-header zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12 zcs-px-20 zcs-py-16 zcs-box-border">
+								<div><h5 class="zcs-font-18 zcs-font-semibold zcs-m-0 zcs-color-primary">Appraisal Config List</h5><span class="zcs-font-13 zcs-color-secondary">Cycle windows and active cycle controls</span></div>
+								<a class="zcs-button zcs-primary-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14" href="#Form:Appraisal_Config?zc_LoadIn=dialog"><i class="zcs-button-icon zc-li-outline ui-1-simple-add"></i><span>Add</span></a>
+							</div>
+							<div class="ph-report-frame-short" zc-component="report" zc-linkname="Appraisal_Config_List" zc-height="430px"></div>
+						</div>
+						<div class="ph-embed-card">
+							<div class="ph-embed-header zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12 zcs-px-20 zcs-py-16 zcs-box-border">
+								<div><h5 class="zcs-font-18 zcs-font-semibold zcs-m-0 zcs-color-primary">KPI KRA List</h5><span class="zcs-font-13 zcs-color-secondary">Manager-defined objectives, weightage, target, and lock state</span></div>
+								<a class="zcs-button zcs-primary-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14" href="#Form:KPI_KRA?zc_LoadIn=dialog"><i class="zcs-button-icon zc-li-outline ui-1-simple-add"></i><span>Add</span></a>
+							</div>
+							<div class="ph-report-frame-short" zc-component="report" zc-linkname="KPI_KRA_List" zc-height="430px"></div>
+						</div>
+						<div class="ph-embed-card">
+							<div class="ph-embed-header zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12 zcs-px-20 zcs-py-16 zcs-box-border">
+								<div><h5 class="zcs-font-18 zcs-font-semibold zcs-m-0 zcs-color-primary">Appraisal Basic Questions</h5><span class="zcs-font-13 zcs-color-secondary">HR-authored cycle questions used to seed response rows</span></div>
+								<a class="zcs-button zcs-primary-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14" href="#Form:Appraisal_Basic_Questions?zc_LoadIn=dialog"><i class="zcs-button-icon zc-li-outline ui-1-simple-add"></i><span>Add</span></a>
+							</div>
+							<div class="ph-report-frame-short" zc-component="report" zc-linkname="Appraisal_Basic_Questions_List" zc-height="430px"></div>
+						</div>
+						<div class="zcs-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative">
+							<table class="zcs-w-full">
+								<thead class="zcs-sticky"><tr><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Stage</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Count</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Owner</th></tr></thead>
+								<tbody>
+									<tr><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary">Draft</td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-color-primary"><%=draftCount%></td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-secondary">Employee</td></tr>
+									<tr><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary">Submitted</td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-color-primary"><%=submittedCount%></td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-secondary">Manager</td></tr>
+									<tr><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary">Manager Reviewed</td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-color-primary"><%=managerReviewedCount%></td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-secondary">HR</td></tr>
+									<tr><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary">HR Approved</td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-color-primary"><%=hrApprovedCount%></td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-secondary">Closed</td></tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+
+				<div class="ph-panel ph-panel-children">
+					<div class="ph-two-col">
+						<div class="ph-embed-card">
+							<div class="ph-embed-header zcs-px-20 zcs-py-16 zcs-box-border"><h5 class="zcs-font-18 zcs-font-semibold zcs-m-0 zcs-color-primary">Appraisal Objectives</h5><span class="zcs-font-13 zcs-color-secondary"><%=objectiveRows%> functional objective child rows</span></div>
+							<div class="ph-report-frame-short" zc-component="report" zc-linkname="Appraisal_Objectives_List" zc-height="430px"></div>
+						</div>
+						<div class="ph-embed-card">
+							<div class="ph-embed-header zcs-px-20 zcs-py-16 zcs-box-border"><h5 class="zcs-font-18 zcs-font-semibold zcs-m-0 zcs-color-primary">Appraisal Skills</h5><span class="zcs-font-13 zcs-color-secondary"><%=skillRows%> employee skill declaration child rows</span></div>
+							<div class="ph-report-frame-short" zc-component="report" zc-linkname="Appraisal_Skills_List" zc-height="430px"></div>
+						</div>
+						<div class="ph-embed-card">
+							<div class="ph-embed-header zcs-px-20 zcs-py-16 zcs-box-border"><h5 class="zcs-font-18 zcs-font-semibold zcs-m-0 zcs-color-primary">Question Responses</h5><span class="zcs-font-13 zcs-color-secondary"><%=responseRows%> seeded appraisal response child rows</span></div>
+							<div class="ph-report-frame-short" zc-component="report" zc-linkname="Appraisal_Question_Response_List" zc-height="430px"></div>
+						</div>
+						<div class="ph-access-note zcs-p-20 zcs-box-border zcs-flex zcs-direction-column zcs-gap-10">
+							<div class="zcs-flex zcs-align-items-center zcs-gap-8"><i class="zc-li-outline files-2-stack zcs-font-18 zcs-color-theme"></i><span class="zcs-font-16 zcs-font-semibold zcs-color-primary">Child row coverage</span></div>
+							<span class="zcs-font-14 zcs-color-secondary">Objectives, skills, and question-response reports are embedded here for auditability. Basic questions are surfaced in the Config &amp; KPIs tab and currently total <%=questionRows%> rows.</span>
+							<a class="zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14" href="#Report:Appraisal_Basic_Questions_List?zc_LoadIn=dialog"><i class="zcs-button-icon zc-li-outline arrows-1-tail-right"></i><span>Open Questions</span></a>
+						</div>
+					</div>
+				</div>
+
+				<div class="ph-panel ph-panel-kanban">
+					<div class="ph-embed-card">
+						<div class="ph-embed-header zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12 zcs-px-20 zcs-py-16 zcs-box-border">
+							<div><h5 class="zcs-font-18 zcs-font-semibold zcs-m-0 zcs-color-primary">Appraisal Status Kanban</h5><span class="zcs-font-13 zcs-color-secondary">Draft, submitted, manager reviewed, and HR approved pipeline view</span></div>
+							<a class="zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14" href="#Report:Appraisal_Status_Kanban?zc_LoadIn=dialog"><i class="zcs-button-icon zc-li-outline arrows-1-tail-right"></i><span>Open</span></a>
+						</div>
+						<div class="ph-report-frame" zc-component="report" zc-linkname="Appraisal_Status_Kanban" zc-height="620px"></div>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<aside class="ph-actions zcs-card zcs-flex zcs-direction-column zcs-gap-16 zcs-p-16 zcs-box-border">
+			<h5 class="zcs-font-18 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0">Quick actions</h5>
+			<ul class="ph-action-list zcs-flex zcs-direction-column zcs-gap-12 zcs-p-0 zcs-m-0">
+				<li class="ph-action-item zcs-card zcs-px-12 zcs-py-8 zcs-box-border"><a class="ph-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary" href="#Form:Appraisal_Form?zc_LoadIn=dialog"><i class="zcs-font-medium zc-li-outline ui-1-simple-add"></i><span>Start self-appraisal</span></a></li>
+				<li class="ph-action-item zcs-card zcs-px-12 zcs-py-8 zcs-box-border"><a class="ph-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary" href="#Report:My_Appraisal?zc_LoadIn=dialog"><i class="zcs-font-medium zc-li-outline users-single-01"></i><span>Open My_Appraisal</span></a></li>
+				<li class="ph-action-item zcs-card zcs-px-12 zcs-py-8 zcs-box-border"><a class="ph-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary" href="#Form:KPI_KRA?zc_LoadIn=dialog"><i class="zcs-font-medium zc-li-outline design-2-ruler-pencil"></i><span>Add KPI/KRA</span></a></li>
+				<li class="ph-action-item zcs-card zcs-px-12 zcs-py-8 zcs-box-border"><a class="ph-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary" href="#Report:Manager_Appraisal_Queue?zc_LoadIn=dialog"><i class="zcs-font-medium zc-li-outline business-tie-01"></i><span>Manager queue</span></a></li>
+				<li class="ph-action-item zcs-card zcs-px-12 zcs-py-8 zcs-box-border"><a class="ph-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary" href="#Report:HR_All_Appraisals?zc_LoadIn=dialog"><i class="zcs-font-medium zc-li-outline ui-1-check-circle-08"></i><span>HR all appraisals</span></a></li>
+				<li class="ph-action-item zcs-card zcs-px-12 zcs-py-8 zcs-box-border"><a class="ph-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary" href="#Report:Appraisal_Status_Kanban?zc_LoadIn=dialog"><i class="zcs-font-medium zc-li-outline business-chart-bar-32"></i><span>Status kanban</span></a></li>
+			</ul>
+			<div class="ph-access-note zcs-p-16 zcs-box-border zcs-flex zcs-direction-column zcs-gap-8">
+				<div class="zcs-flex zcs-align-items-center zcs-gap-8"><i class="zc-li-outline ui-1-lock zcs-font-18 zcs-color-tertiary"></i><span class="zcs-font-15 zcs-color-primary zcs-font-medium">Access routing</span></div>
+				<span class="zcs-font-14 zcs-color-secondary">Creator report permissions determine which embedded queues can be opened by employees, managers, HR, and administrators.</span>
+			</div>
+		</aside>
+	</div>
+</div>

@@ -1,0 +1,52 @@
+Travel_Request_On_Load as "Travel Request - On Load"
+{
+
+				type =  form
+				form = Travel_Request
+
+				record event = on add or edit
+
+				on load
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Employee == null)
+										{
+											employeeRows = Employee_Master[Official_Email == zoho.loginuserid || Official_Email == zoho.loginuser];
+											if(employeeRows.count() > 0)
+											{
+												input.Employee = employeeRows.ID;
+											}
+										}
+										if(input.Status == null || input.Status == "")
+										{
+											input.Status = "Pending_Manager";
+										}
+										disable Employee;
+										disable Status;
+										disable Booking_Amount;
+										disable Bills_Upload_Date;
+										disable Linked_Reimbursement;
+										disable Total_Estimated_Cost;
+										disable Total_Actual_Cost;
+										hide Bills_Uploaded;
+										hide Bills_Upload_Date;
+										if(input.Status == "Bills_Pending")
+										{
+											show Bills_Uploaded;
+											show Bills_Upload_Date;
+										}
+										else if(input.Status == "Bills_Uploaded" || input.Status == "Processed")
+										{
+											show Bills_Uploaded;
+											show Bills_Upload_Date;
+											disable Bills_Uploaded;
+										}
+						)
+					}
+				}
+
+			
+}

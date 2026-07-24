@@ -1,0 +1,78 @@
+schedule_monthly_leave_credit as "Monthly Leave Credit"
+{
+
+				type =  schedule
+				start = "2025-01-01 06:00:00"
+				frequency = monthly
+				time zone = "Asia/Kolkata"
+				on start
+				{
+					actions 
+					{
+					on load
+					(
+						creditedCount = 0;
+										for each  leaveTypeRec in Leave_Type_Config[Is_Active == true && Credit_Frequency == "Monthly"]
+										{
+											for each  employeeRec in Employee_Master[Employment_Status == "Active" || Employment_Status == "Probation"]
+											{
+												shouldCredit = true;
+												if(leaveTypeRec.Credit_After_15th == true && employeeRec.Date_Of_Joining != null)
+												{
+													if(employeeRec.Date_Of_Joining.getMonth() == zoho.currentdate.getMonth() && employeeRec.Date_Of_Joining.getYear() == zoho.currentdate.getYear() && employeeRec.Date_Of_Joining.getDay() > 15)
+													{
+														shouldCredit = false;
+													}
+												}
+												if(shouldCredit == true)
+												{
+													balanceRows = Leave_Balance[Employee == employeeRec.ID && Leave_Type == leaveTypeRec.ID];
+													creditQty = ifnull(leaveTypeRec.Credit_Quantity,0);
+													maxAllowed = ifnull(leaveTypeRec.Max_Balance,0);
+													if(balanceRows.count() == 0)
+													{
+														startingBalance = creditQty;
+														if(maxAllowed > 0 && startingBalance > maxAllowed)
+														{
+															startingBalance = maxAllowed;
+														}
+														insertedBalanceId = insert into Leave_Balance
+														[
+															Employee=employeeRec.ID
+															Leave_Type=leaveTypeRec.ID
+															Balance_Days=startingBalance
+															Used_Days=0
+															Credited_Days=creditQty
+															Last_Credited_Date=zoho.currentdate
+															Added_User=zoho.loginuser
+														];
+														creditedCount = creditedCount + 1;
+													}
+													else
+													{
+														for each  balanceRec in balanceRows
+														{
+															oldBalance = ifnull(balanceRec.Balance_Days,0);
+															newBalance = oldBalance + creditQty;
+															if(maxAllowed > 0 && newBalance > maxAllowed)
+															{
+																newBalance = maxAllowed;
+															}
+															if(newBalance != oldBalance || balanceRec.Last_Credited_Date != zoho.currentdate)
+															{
+																balanceRec.Balance_Days=newBalance;
+																balanceRec.Credited_Days=ifnull(balanceRec.Credited_Days,0) + creditQty;
+																balanceRec.Last_Credited_Date=zoho.currentdate;
+																creditedCount = creditedCount + 1;
+															}
+														}
+													}
+												}
+											}
+										}
+										thisapp.Add_Audit_Log("LEAVE_MONTHLY_CREDIT","Attendance_Leave","Leave_Balance",0,"Monthly Credit","","","Monthly leave credit changed " + creditedCount + " balances.",true,"");
+					)
+					}
+				}
+			
+}

@@ -1,0 +1,34 @@
+Training_Request_On_Success as "Training Request - On Success"
+{
+
+				type =  form
+				form = Training_Request
+
+				record event = on add or edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											tokenMap = Map();
+										tokenMap.put("training_topic",input.Training_Topic);
+										tokenMap.put("urgency",input.Urgency);
+										tokenMap.put("status",input.Status);
+										tokenMap.put("raised_by",ifnull(input.Raised_By,""));
+										if(input.Status == "Submitted")
+										{
+											thisapp.Send_Configured_Notification("TRAINING_REQUEST_SUBMITTED",tokenMap,"Training request submitted","A {{urgency}} training request has been submitted for {{training_topic}}.");
+											thisapp.Add_Audit_Log("TRAINING_REQUEST_SUBMITTED","Training","Training_Request",input.ID,"Submitted","",input.Status,"Training request submitted for HR review.",true,"");
+										}
+										else
+										{
+											thisapp.Add_Audit_Log("TRAINING_REQUEST_UPDATED","Training","Training_Request",input.ID,"Updated","",input.Status,"Training request updated.",true,"");
+										}
+						)
+					}
+				}
+
+			
+}

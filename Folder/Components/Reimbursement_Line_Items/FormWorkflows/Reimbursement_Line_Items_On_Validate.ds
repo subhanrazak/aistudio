@@ -1,0 +1,39 @@
+Reimbursement_Line_Items_On_Validate as "Reimbursement Line Items - On Validate"
+{
+
+				type =  form
+				form = Reimbursement_Line_Items
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Amount <= 0)
+										{
+											alert "Amount must be greater than zero.";
+											cancel submit;
+										}
+										if(input.Expense_Date > zoho.currentdate)
+										{
+											alert "Expense date cannot be in the future.";
+											cancel submit;
+										}
+										parentRequests = Reimbursement_Request[ID == input.Reimbursement_Request];
+										if(parentRequests.count() > 0)
+										{
+											if(parentRequests.Status != "Draft" && parentRequests.Status != "Pending_Manager" && parentRequests.Status != "Pending_HR")
+											{
+												alert "Reimbursement line items can be edited only before finance processing.";
+												cancel submit;
+											}
+										}
+						)
+					}
+				}
+
+			
+}

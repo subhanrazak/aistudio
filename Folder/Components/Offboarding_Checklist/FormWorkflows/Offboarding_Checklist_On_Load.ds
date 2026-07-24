@@ -1,0 +1,32 @@
+Offboarding_Checklist_On_Load as "Offboarding Checklist - On Load"
+{
+
+				type =  form
+				form = Offboarding_Checklist
+
+				record event = on add or edit
+
+				on load
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											disable Resignation_Request;
+										disable Checklist_Item;
+										disable Responsible_Department;
+										disable Completed_Date;
+										if(input.Responsible_Department != null && input.Responsible_Person == null)
+										{
+											departmentRows = Department_Config[ID == input.Responsible_Department];
+											if(departmentRows.count() > 0 && departmentRows.Department_Head != null)
+											{
+												input.Responsible_Person = departmentRows.Department_Head;
+											}
+										}
+						)
+					}
+				}
+
+			
+}

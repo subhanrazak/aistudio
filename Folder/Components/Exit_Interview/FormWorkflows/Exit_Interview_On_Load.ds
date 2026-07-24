@@ -1,0 +1,34 @@
+Exit_Interview_On_Load as "Exit Interview - On Load"
+{
+
+				type =  form
+				form = Exit_Interview
+
+				record event = on add or edit
+
+				on load
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											disable Employee;
+										disable Conducted_By;
+										if(input.Conducted_By == null)
+										{
+											input.Conducted_By = zoho.loginuserid;
+										}
+										if(input.Resignation_Request != null)
+										{
+											resignationRows = Resignation_Request[ID == input.Resignation_Request];
+											if(resignationRows.count() > 0)
+											{
+												input.Employee = resignationRows.Employee;
+											}
+										}
+						)
+					}
+				}
+
+			
+}

@@ -1,0 +1,30 @@
+Application_Offer_Document_On_Validate as "Application Offer Document - On Validate"
+{
+
+				type =  form
+				form = Application_Offer_Document
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											parentApplications = Job_Application[ID == input.Job_Application];
+										if(parentApplications.count() > 0)
+										{
+											parentStatus = parentApplications.Status;
+											if(input.ID == null && parentStatus != "Offer_Accepted")
+											{
+												alert "Offer document rows can be added only after the parent application reaches Offer Accepted.";
+												cancel submit;
+											}
+										}
+						)
+					}
+				}
+
+			
+}

@@ -1,0 +1,38 @@
+Candidate_On_Validate as "Candidate - On Validate"
+{
+
+				type =  form
+				form = Candidate
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Source == "Referral" && input.Referred_By == null)
+										{
+											alert "Referred By is required when Source is Referral.";
+											cancel submit;
+										}
+										if(input.Source == "Agency" && input.Agency == null)
+										{
+											alert "Agency is required when Source is Agency.";
+											cancel submit;
+										}
+										if(input.Source != "Referral")
+										{
+											input.Referred_By = null;
+										}
+										if(input.Source != "Agency")
+										{
+											input.Agency = null;
+										}
+						)
+					}
+				}
+
+			
+}

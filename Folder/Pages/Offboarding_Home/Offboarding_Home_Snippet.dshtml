@@ -1,0 +1,265 @@
+<%
+	loginEmail = ifnull(zoho.loginuserid,zoho.loginuser);
+	employeeRows = Employee_Master[Official_Email == loginEmail];
+	employeeName = "Employee";
+	employeeInitial = "E";
+	employeeMeta = loginEmail;
+	myResignationCount = 0;
+	if(employeeRows.count() > 0)
+	{
+		emp = employeeRows;
+		employeeName = ifnull(emp.Full_Name,"Employee");
+		if(employeeName != "")
+		{
+			employeeInitial = employeeName.left(1);
+		}
+		employeeMeta = ifnull(emp.Designation,"Employee");
+		myResignationCount = Resignation_Request[Employee == emp.ID].count();
+	}
+	totalResignations = Resignation_Request.count();
+	pendingManager = Resignation_Request[Status == "Pending_Manager"].count();
+	pendingHR = Resignation_Request[Status == "Pending_HR"].count();
+	approvedResignations = Resignation_Request[Status == "Approved"].count();
+	rejectedResignations = Resignation_Request[Status == "Rejected"].count();
+	exitInterviewCount = Exit_Interview.count();
+	confidentialExitCount = Exit_Interview[Is_Confidential == true].count();
+	checklistPending = Offboarding_Checklist[Status == "Pending"].count();
+	checklistCompleted = Offboarding_Checklist[Status == "Completed"].count();
+	checklistWaived = Offboarding_Checklist[Status == "Waived"].count();
+	assetPending = Employee_Asset_Recovery[Recovery_Status == "Pending"].count();
+	assetRecovered = Employee_Asset_Recovery[Recovery_Status == "Recovered"].count();
+	assetNotFound = Employee_Asset_Recovery[Recovery_Status == "Not_Found"].count();
+	syncFailed = Employee_Asset_Recovery[External_Sync_Status == "Sync_Failed"].count();
+	syncPending = Employee_Asset_Recovery[External_Sync_Status == "Pending_Sync"].count();
+	%>
+<style>
+/* ===== zcs-global utility stylesheet included once for Offboarding_Home ===== */
+:root{--zcs-theme-brand-color:var(--zcs_brand_color,#2A6FFC);--zcs-light-bg-color:var(--zcs_brand_light_color,#E8EFFF);--zcs-page-bg-color:#F5F7FB;--zcs-white-color:#FFFFFF;--zcs-primary-text-color:var(--zcs_primary_text_color,#1A1A1A);--zcs-secondary-text-color:var(--zcs_secondary_text_color,#55576B);--zcs-teritiary-text-color:var(--zcs_tertiary_text_color,#77798C);--zcs-border-color:var(--zcs_tertiary_border_color,#E6E8F0);--zcs-brand-foreground:var(--zcs_brand_foreground_color,#FFFFFF)}
+a{text-decoration:none}.zcs-row{display:flex;flex-wrap:wrap}.zcs-flex{display:flex}.zcs-inline-flex{display:inline-flex}.zcs-direction-column{flex-direction:column}.zcs-align-items-start{align-items:flex-start}.zcs-align-items-center{align-items:center}.zcs-justify-center{justify-content:center}.zcs-justify-space-between{justify-content:space-between}.zcs-gap-4{gap:.25rem}.zcs-gap-6{gap:.375rem}.zcs-gap-8{gap:.5rem}.zcs-gap-10{gap:.625rem}.zcs-gap-12{gap:.75rem}.zcs-gap-14{gap:.875rem}.zcs-gap-16{gap:1rem}.zcs-gap-18{gap:1.125rem}.zcs-gap-20{gap:1.25rem}.zcs-gap-24{gap:1.5rem}.zcs-p-0{padding:0}.zcs-p-2{padding:.125rem}.zcs-p-8{padding:.5rem}.zcs-p-10{padding:.625rem}.zcs-p-12{padding:.75rem}.zcs-p-14{padding:.875rem}.zcs-p-16{padding:1rem}.zcs-p-18{padding:1.125rem}.zcs-p-20{padding:1.25rem}.zcs-p-24{padding:1.5rem}.zcs-px-10{padding-left:.625rem;padding-right:.625rem}.zcs-px-12{padding-left:.75rem;padding-right:.75rem}.zcs-px-14{padding-left:.875rem;padding-right:.875rem}.zcs-px-16{padding-left:1rem;padding-right:1rem}.zcs-px-20{padding-left:1.25rem;padding-right:1.25rem}.zcs-px-24{padding-left:1.5rem;padding-right:1.5rem}.zcs-px-30{padding-left:1.875rem;padding-right:1.875rem}.zcs-py-2{padding-top:.125rem;padding-bottom:.125rem}.zcs-py-6{padding-top:.375rem;padding-bottom:.375rem}.zcs-py-8{padding-top:.5rem;padding-bottom:.5rem}.zcs-py-10{padding-top:.625rem;padding-bottom:.625rem}.zcs-py-12{padding-top:.75rem;padding-bottom:.75rem}.zcs-py-14{padding-top:.875rem;padding-bottom:.875rem}.zcs-py-16{padding-top:1rem;padding-bottom:1rem}.zcs-py-24{padding-top:1.5rem;padding-bottom:1.5rem}.zcs-m-0{margin:0}.zcs-mt-4{margin-top:.25rem}.zcs-mt-8{margin-top:.5rem}.zcs-mt-10{margin-top:.625rem}.zcs-mt-12{margin-top:.75rem}.zcs-mt-16{margin-top:1rem}.zcs-mb-8{margin-bottom:.5rem}.zcs-mb-12{margin-bottom:.75rem}.zcs-mb-16{margin-bottom:1rem}.zcs-w-full{width:100%}.zcs-wh-full{width:100%;height:100%}.zcs-col-common{flex:1 1 0%;min-width:0}.zcs-no-shrink{flex-shrink:0}.zcs-box-border{box-sizing:border-box}.zcs-rounded-sm{border-radius:.25rem}.zcs-rounded-md{border-radius:.375rem}.zcs-rounded-lg{border-radius:.5rem}.zcs-rounded-xl{border-radius:.75rem}.zcs-rounded-2xl{border-radius:1rem}.zcs-rounded-half{border-radius:50%}.zcs-text-left{text-align:left}.zcs-text-center{text-align:center}.zcs-text-right{text-align:right}.zcs-overflow-auto{overflow:auto}.zcs-relative{position:relative}.zcs-sticky{position:sticky}.zcs-cursor-pointer{cursor:pointer}.zcs-font-11{font-size:.6875rem}.zcs-font-12{font-size:.75rem}.zcs-font-13{font-size:.8125rem}.zcs-font-14{font-size:.875rem}.zcs-font-15{font-size:.9375rem}.zcs-font-16{font-size:1rem}.zcs-font-18{font-size:1.125rem}.zcs-font-20{font-size:1.25rem}.zcs-font-22{font-size:1.375rem}.zcs-font-24{font-size:1.5rem}.zcs-font-28{font-size:1.75rem}.zcs-font-30{font-size:1.875rem}.zcs-font-36{font-size:2.25rem}.zcs-font-normal{font-weight:400}.zcs-font-medium{font-weight:500}.zcs-font-semibold{font-weight:600}.zcs-font-bold{font-weight:700}.zcs-lh-body{line-height:1.5}.zcs-lh-heading{line-height:1.25}.zcs-uppercase{text-transform:uppercase}.zcs-ellipsis{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.zcs-color-primary{color:var(--zcs-primary-text-color)}.zcs-color-secondary{color:var(--zcs-secondary-text-color)}.zcs-color-tertiary{color:var(--zcs-teritiary-text-color)}.zcs-color-theme{color:var(--zcs-theme-brand-color)}.zcs-color-white{color:var(--zcs-white-color)}.zcs-color-green{color:#179E6C}.zcs-color-red{color:#FE455D}.zcs-color-yellow{color:#B8770D}.zcs-color-blue{color:#2A6FFC}.zcs-card{background-color:var(--zcs-white-color);border:1px solid var(--zcs-border-color);border-radius:12px;box-shadow:0 8px 24px rgba(18,19,43,.04)}
+/* ZCS component CSS: header-heading-with-actions and button-primary-button */
+.zcs-page-header{background:var(--zcs-white-color);border:1px solid var(--zcs-border-color);border-radius:16px;box-shadow:0 8px 24px rgba(18,19,43,.04)}.zcs-button{width:auto;min-width:5rem;min-height:36px}.zcs-primary-button{background-color:var(--zcs-theme-brand-color);color:var(--zcs-brand-foreground)}.zcs-primary-outline-button{border:1px solid var(--zcs-theme-brand-color);background-color:var(--zcs-white-color);color:var(--zcs-theme-brand-color)}.zcs-secondary-button{border:1px solid var(--zcs-border-color);background-color:#F6F7FA;color:var(--zcs-primary-text-color)}.zcs-primary-button.zcs-button:hover{background-color:var(--zcs_brand_dark_color,#1652BB)}.zcs-primary-outline-button:hover,.zcs-secondary-button:hover{background-color:var(--zcs_component_hover_color,#F2F7FF)}.zcs-button-icon{width:16px;max-height:16px}
+/* ZCS component CSS: horizontal-tab-horizontal-tab-with-icon */
+.zcs-horizontal-tabhead{box-shadow:0 -1px 0 0 var(--zcs-border-color) inset;overflow-x:auto;overflow-y:hidden;-ms-overflow-style:none;scrollbar-width:none}.zcs-horizontal-tabhead::-webkit-scrollbar{display:none}.zcs-horizontal-tabitem{list-style-type:none;border-bottom:2px solid transparent;letter-spacing:.1px}.zcs-horizontal-tabicon{width:16px;height:16px}.zcs-horizontal-tabtext{text-wrap:nowrap}.zcs-horizontal-tabitem:hover .zcs-horizontal-tablink{color:var(--zcs-theme-brand-color)}.zcs-horizontal-tabitem.zcs-horizontal-tabactive{border-bottom-color:var(--zcs-theme-brand-color)}.zcs-horizontal-tabitem.zcs-horizontal-tabactive .zcs-horizontal-tablink{color:var(--zcs-theme-brand-color)}
+/* ZCS component CSS: badge-badge-with-icon */
+.zcs-badge{width:auto}.zcs-badge-filled,.zcs-badge-filled-outline{border:1px solid}.zcs-badge-filled-outline.zcs-badge-theme{background-color:var(--zcs_component_hover_color,#F2F7FF);border-color:var(--zcs-theme-brand-color);color:var(--zcs-theme-brand-color)}.zcs-badge-filled-outline.zcs-badge-green{background-color:#E4FCF3;border-color:#179E6C;color:#179E6C}.zcs-badge-filled-outline.zcs-badge-red{background-color:#FDE3E6;border-color:#FE455D;color:#FE455D}.zcs-badge-filled-outline.zcs-badge-yellow{background-color:#FCF4E6;border-color:#FAAE13;color:#B8770D}.zcs-badge-filled-outline.zcs-badge-blue{background-color:#E8EFFF;border-color:#2A6FFC;color:#2A6FFC}.zcs-badge-filled-outline.zcs-badge-grey{background-color:#E8E8E8;border-color:#242424;color:#242424}
+/* ZCS component CSS: quick-actions-card-type-quick-actions */
+.zcs-quick-action-item{list-style-type:none}.zcs-quick-action-item.zcs-card:hover{border-color:var(--zcs-theme-brand-color)}.zcs-quick-action-item:hover .zcs-quick-action-link{color:var(--zcs-theme-brand-color)}.zcs-quick-action-item:hover .zcs-quick-action-text{text-decoration:underline}.zcs-quick-action-item.zcs-card:hover .zcs-quick-action-text{text-decoration:none}
+/* ZCS component CSS: table-simple-table */
+:root{--zcs-thead-color:#F9FAFE;--zcs-tr-h-color:#F9FAFE}.zcs-table-wrapper{border:1px solid var(--zcs-border-color);background-color:var(--zcs-white-color);overflow:auto}.zcs-table-wrapper table{line-height:normal;border-collapse:collapse}.zcs-table-wrapper table thead{top:0}.zcs-table-wrapper table thead tr th{background-color:var(--zcs-thead-color);box-shadow:0 -1px 0 0 var(--zcs-border-color) inset;white-space:nowrap}.zcs-table-wrapper table thead tr.zcs-tspace th{background-color:var(--zcs-white-color);box-shadow:none}.zcs-table-wrapper table tbody tr td{border-top:1px solid var(--zcs-border-color)}.zcs-table-wrapper table tbody tr:first-child td{border-color:transparent}.zcs-table-wrapper table tbody tr:hover td{background-color:var(--zcs-tr-h-color)}.zcs-table-wrapper table tbody tr:first-child:hover td{border-color:var(--zcs-border-color)}.zcs-table-wrapper table tbody tr td.zcs-green{color:#179E6C}.zcs-table-wrapper table tbody tr td.zcs-yellow{color:#B8770D}.zcs-table-wrapper table tbody tr td.zcs-blue{color:#09598E}.zcs-table-wrapper table tbody tr td.zcs-red{color:#FE455D}
+/* Offboarding Home layout */
+.obh-page{min-height:100%;background:var(--zcs-page-bg-color);padding:22px;box-sizing:border-box;font-family:Lato,Arial,sans-serif;color:var(--zcs-primary-text-color)}.obh-hero{position:relative;overflow:hidden;color:#fff;border-radius:18px;padding:24px;background:linear-gradient(135deg,var(--zcs-theme-brand-color),#334155)}.obh-hero:after{content:"";position:absolute;right:-90px;top:-100px;width:300px;height:300px;border-radius:50%;border:42px solid rgba(255,255,255,.13)}.obh-hero:before{content:"";position:absolute;right:210px;bottom:-90px;width:180px;height:180px;border-radius:50%;border:26px solid rgba(255,255,255,.10)}.obh-hero-content{position:relative;z-index:1}.obh-hero .zcs-primary-outline-button{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.72);color:#fff}.obh-grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:18px}.obh-kpi{grid-column:span 3;min-height:118px}.obh-kpi-icon{width:42px;height:42px;border-radius:12px;background:var(--zcs-light-bg-color);color:var(--zcs-theme-brand-color)}.obh-kpi-value{font-size:30px;font-weight:700;line-height:1.1}.obh-workspace{grid-column:span 9;overflow:hidden}.obh-actions{grid-column:span 3}.obh-tab-input{display:none}.obh-tabbar{overflow-x:auto}.obh-tabbar label{cursor:pointer;border-bottom:2px solid transparent}.obh-panel{display:none;padding:18px}.obh-panels{background:#fff}.obh-tab-input#obh-tab-overview:checked~.zcs-horizontal-tabpanel label[for='obh-tab-overview'],.obh-tab-input#obh-tab-my:checked~.zcs-horizontal-tabpanel label[for='obh-tab-my'],.obh-tab-input#obh-tab-hr:checked~.zcs-horizontal-tabpanel label[for='obh-tab-hr'],.obh-tab-input#obh-tab-exit:checked~.zcs-horizontal-tabpanel label[for='obh-tab-exit'],.obh-tab-input#obh-tab-checklist:checked~.zcs-horizontal-tabpanel label[for='obh-tab-checklist'],.obh-tab-input#obh-tab-assets:checked~.zcs-horizontal-tabpanel label[for='obh-tab-assets'],.obh-tab-input#obh-tab-kanban:checked~.zcs-horizontal-tabpanel label[for='obh-tab-kanban']{color:var(--zcs-theme-brand-color);border-bottom-color:var(--zcs-theme-brand-color)}.obh-tab-input#obh-tab-overview:checked~.obh-panels .obh-panel-overview,.obh-tab-input#obh-tab-my:checked~.obh-panels .obh-panel-my,.obh-tab-input#obh-tab-hr:checked~.obh-panels .obh-panel-hr,.obh-tab-input#obh-tab-exit:checked~.obh-panels .obh-panel-exit,.obh-tab-input#obh-tab-checklist:checked~.obh-panels .obh-panel-checklist,.obh-tab-input#obh-tab-assets:checked~.obh-panels .obh-panel-assets,.obh-tab-input#obh-tab-kanban:checked~.obh-panels .obh-panel-kanban{display:block}.obh-embed-card{border:1px solid var(--zcs-border-color);border-radius:14px;overflow:hidden;background:#fff;margin-bottom:18px}.obh-embed-header{border-bottom:1px solid var(--zcs-border-color);background:#FAFBFF}.obh-report-frame{min-height:620px;width:100%}.obh-report-frame.tall{min-height:700px}.obh-mini-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.obh-flow-card{border:1px solid var(--zcs-border-color);border-radius:14px;background:#fff;padding:18px}.obh-status-strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.obh-status-item{background:#fff;border:1px solid var(--zcs-border-color);border-radius:12px;padding:14px}.obh-note{border:1px dashed var(--zcs-border-color);background:#FAFBFF;border-radius:12px}.obh-directory-link{color:var(--zcs-theme-brand-color);font-weight:500}.obh-directory-link:hover{text-decoration:underline}.obh-avatar{width:54px;height:54px;border-radius:16px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.28);color:#fff}.obh-kanban-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.obh-kanban-grid .obh-embed-card{margin-bottom:0}@media(max-width:1180px){.obh-kpi{grid-column:span 6}.obh-workspace,.obh-actions{grid-column:span 12}.obh-kanban-grid{grid-template-columns:1fr}}@media(max-width:760px){.obh-page{padding:14px}.obh-hero{padding:18px}.obh-hero-content,.zcs-page-header{flex-direction:column;align-items:flex-start}.zcs-page-header{padding:16px}.obh-kpi{grid-column:span 12}.obh-panel{padding:12px}.obh-mini-grid,.obh-status-strip{grid-template-columns:1fr}.obh-report-frame{min-height:520px}}
+</style>
+
+<div class="obh-page zcs-flex zcs-direction-column zcs-gap-18">
+	<div class="zcs-page-header zcs-w-full zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12 zcs-px-30 zcs-py-24 zcs-box-border">
+		<div class="zcs-flex zcs-direction-column zcs-gap-4 zcs-ellipsis">
+			<h5 class="zcs-font-20 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-ellipsis zcs-m-0">Offboarding Home</h5>
+			<span class="zcs-font-14 zcs-color-secondary">Workspace for resignations, exit interviews, checklist ownership, asset recovery, sync failures, and status boards.</span>
+		</div>
+		<div class="zcs-flex zcs-align-items-center zcs-gap-12 zcs-row">
+			<a class="zcs-button zcs-primary-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body" href="#Form:Resignation_Request?zc_LoadIn=dialog">
+				<i class="zcs-button-icon zc-li-outline ui-1-simple-add"></i>
+				<span class="zcs-button-text">Submit Resignation</span>
+			</a>
+			<a class="zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body" href="#Report:HR_Offboarding_Dashboard">
+				<i class="zcs-button-icon zc-li-outline business-briefcase-24"></i>
+				<span class="zcs-button-text">HR Dashboard</span>
+			</a>
+		</div>
+	</div>
+
+	<section class="obh-hero">
+		<div class="obh-hero-content zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-18">
+			<div class="zcs-flex zcs-align-items-center zcs-gap-16">
+				<div class="obh-avatar zcs-flex zcs-align-items-center zcs-justify-center zcs-font-24 zcs-font-bold zcs-no-shrink"><%=employeeInitial%></div>
+				<div class="zcs-flex zcs-direction-column zcs-gap-8">
+					<span class="zcs-font-13 zcs-font-semibold">IITB HR Offboarding</span>
+					<h3 class="zcs-font-30 zcs-font-bold zcs-lh-heading zcs-m-0">Coordinate a clean exit from resignation through checklist and asset closure</h3>
+					<span class="zcs-font-15">Signed in as <%=employeeName%> - <%=employeeMeta%>. Use the tabs below to work across every offboarding queue and board.</span>
+				</div>
+			</div>
+			<a class="zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body zcs-no-shrink" href="#Report:IT_Asset_Recovery_Dashboard">
+				<i class="zcs-button-icon zc-li-outline business-money-coins"></i>
+				<span class="zcs-button-text">Open Asset Recovery</span>
+			</a>
+		</div>
+	</section>
+
+	<section class="obh-grid">
+		<article class="obh-kpi zcs-card zcs-p-18 zcs-box-border zcs-flex zcs-direction-column zcs-gap-14">
+			<div class="zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12">
+				<div class="obh-kpi-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline arrows-4-restore zcs-font-22"></i></div>
+				<span class="zcs-font-12 zcs-color-secondary">Pending approvals</span>
+			</div>
+			<div class="obh-kpi-value zcs-color-primary"><%=pendingManager + pendingHR%></div>
+			<span class="zcs-font-13 zcs-color-secondary"><%=pendingManager%> manager and <%=pendingHR%> HR resignation requests</span>
+		</article>
+		<article class="obh-kpi zcs-card zcs-p-18 zcs-box-border zcs-flex zcs-direction-column zcs-gap-14">
+			<div class="zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12">
+				<div class="obh-kpi-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline users-single-05 zcs-font-22"></i></div>
+				<span class="zcs-font-12 zcs-color-secondary">Approved exits</span>
+			</div>
+			<div class="obh-kpi-value zcs-color-primary"><%=approvedResignations%></div>
+			<span class="zcs-font-13 zcs-color-secondary"><%=exitInterviewCount%> exit interview rows, <%=confidentialExitCount%> confidential</span>
+		</article>
+		<article class="obh-kpi zcs-card zcs-p-18 zcs-box-border zcs-flex zcs-direction-column zcs-gap-14">
+			<div class="zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12">
+				<div class="obh-kpi-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline design-todo zcs-font-22"></i></div>
+				<span class="zcs-font-12 zcs-color-secondary">Checklist pending</span>
+			</div>
+			<div class="obh-kpi-value zcs-color-primary"><%=checklistPending%></div>
+			<span class="zcs-font-13 zcs-color-secondary"><%=checklistCompleted%> completed and <%=checklistWaived%> waived tasks</span>
+		</article>
+		<article class="obh-kpi zcs-card zcs-p-18 zcs-box-border zcs-flex zcs-direction-column zcs-gap-14">
+			<div class="zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12">
+				<div class="obh-kpi-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline ui-3-alert zcs-font-22"></i></div>
+				<span class="zcs-font-12 zcs-color-secondary">Asset exceptions</span>
+			</div>
+			<div class="obh-kpi-value zcs-color-primary"><%=assetPending + syncFailed%></div>
+			<span class="zcs-font-13 zcs-color-secondary"><%=assetPending%> pending recovery and <%=syncFailed%> failed sync rows</span>
+		</article>
+
+		<section class="obh-workspace zcs-card zcs-box-border">
+			<div class="obh-tabs-shell">
+				<input class="obh-tab-input" type="radio" name="obh-tabs" id="obh-tab-overview" checked>
+				<input class="obh-tab-input" type="radio" name="obh-tabs" id="obh-tab-my">
+				<input class="obh-tab-input" type="radio" name="obh-tabs" id="obh-tab-hr">
+				<input class="obh-tab-input" type="radio" name="obh-tabs" id="obh-tab-exit">
+				<input class="obh-tab-input" type="radio" name="obh-tabs" id="obh-tab-checklist">
+				<input class="obh-tab-input" type="radio" name="obh-tabs" id="obh-tab-assets">
+				<input class="obh-tab-input" type="radio" name="obh-tabs" id="obh-tab-kanban">
+
+				<div class="zcs-horizontal-tabpanel zcs-flex zcs-direction-column zcs-wh-full">
+					<ul class="zcs-horizontal-tabhead obh-tabbar zcs-flex zcs-gap-12 zcs-px-10 zcs-py-0 zcs-m-0 zcs-box-border">
+						<li class="zcs-horizontal-tabitem"><label for="obh-tab-overview" class="zcs-horizontal-tablink zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-10 zcs-py-12 zcs-box-border zcs-font-medium zcs-lh-body zcs-color-tertiary"><i class="zcs-horizontal-tabicon zcs-font-16 zcs-font-medium zc-li-outline design-dashboard-level"></i><span class="zcs-horizontal-tabtext zcs-font-15">Overview</span></label></li>
+						<li class="zcs-horizontal-tabitem"><label for="obh-tab-my" class="zcs-horizontal-tablink zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-10 zcs-py-12 zcs-box-border zcs-font-medium zcs-lh-body zcs-color-tertiary"><i class="zcs-horizontal-tabicon zcs-font-16 zcs-font-medium zc-li-outline users-single-01"></i><span class="zcs-horizontal-tabtext zcs-font-15">My Requests</span></label></li>
+						<li class="zcs-horizontal-tabitem"><label for="obh-tab-hr" class="zcs-horizontal-tablink zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-10 zcs-py-12 zcs-box-border zcs-font-medium zcs-lh-body zcs-color-tertiary"><i class="zcs-horizontal-tabicon zcs-font-16 zcs-font-medium zc-li-outline business-briefcase-24"></i><span class="zcs-horizontal-tabtext zcs-font-15">HR Dashboard</span></label></li>
+						<li class="zcs-horizontal-tabitem"><label for="obh-tab-exit" class="zcs-horizontal-tablink zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-10 zcs-py-12 zcs-box-border zcs-font-medium zcs-lh-body zcs-color-tertiary"><i class="zcs-horizontal-tabicon zcs-font-16 zcs-font-medium zc-li-outline ui-1-edit-72"></i><span class="zcs-horizontal-tabtext zcs-font-15">Exit Interviews</span></label></li>
+						<li class="zcs-horizontal-tabitem"><label for="obh-tab-checklist" class="zcs-horizontal-tablink zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-10 zcs-py-12 zcs-box-border zcs-font-medium zcs-lh-body zcs-color-tertiary"><i class="zcs-horizontal-tabicon zcs-font-16 zcs-font-medium zc-li-outline design-todo"></i><span class="zcs-horizontal-tabtext zcs-font-15">Checklist</span></label></li>
+						<li class="zcs-horizontal-tabitem"><label for="obh-tab-assets" class="zcs-horizontal-tablink zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-10 zcs-py-12 zcs-box-border zcs-font-medium zcs-lh-body zcs-color-tertiary"><i class="zcs-horizontal-tabicon zcs-font-16 zcs-font-medium zc-li-outline business-money-coins"></i><span class="zcs-horizontal-tabtext zcs-font-15">Assets</span></label></li>
+						<li class="zcs-horizontal-tabitem"><label for="obh-tab-kanban" class="zcs-horizontal-tablink zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-10 zcs-py-12 zcs-box-border zcs-font-medium zcs-lh-body zcs-color-tertiary"><i class="zcs-horizontal-tabicon zcs-font-16 zcs-font-medium zc-li-outline design-app"></i><span class="zcs-horizontal-tabtext zcs-font-15">Kanbans</span></label></li>
+					</ul>
+				</div>
+
+				<div class="obh-panels">
+					<div class="obh-panel obh-panel-overview">
+						<div class="obh-status-strip zcs-mb-16">
+							<div class="obh-status-item"><span class="zcs-font-12 zcs-color-secondary">Total resignations</span><div class="zcs-font-24 zcs-font-bold zcs-color-primary"><%=totalResignations%></div></div>
+							<div class="obh-status-item"><span class="zcs-font-12 zcs-color-secondary">Approved</span><div class="zcs-font-24 zcs-font-bold zcs-color-green"><%=approvedResignations%></div></div>
+							<div class="obh-status-item"><span class="zcs-font-12 zcs-color-secondary">Rejected</span><div class="zcs-font-24 zcs-font-bold zcs-color-red"><%=rejectedResignations%></div></div>
+							<div class="obh-status-item"><span class="zcs-font-12 zcs-color-secondary">My resignation rows</span><div class="zcs-font-24 zcs-font-bold zcs-color-blue"><%=myResignationCount%></div></div>
+						</div>
+						<div class="obh-mini-grid">
+							<div class="obh-flow-card zcs-flex zcs-direction-column zcs-gap-12">
+								<div class="zcs-flex zcs-align-items-center zcs-gap-10"><i class="zc-li-outline arrows-4-restore zcs-font-22 zcs-color-theme"></i><h4 class="zcs-font-18 zcs-font-semibold zcs-m-0">Resignation flow</h4></div>
+								<p class="zcs-font-14 zcs-color-secondary zcs-m-0">Employees submit requests, managers and HR approve through Approval_Remarks, and the approved row drives exit interviews, checklist creation, and deactivation checks.</p>
+								<div class="zcs-flex zcs-gap-10 zcs-row"><a class="zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-font-14" href="#Form:Resignation_Request?zc_LoadIn=dialog">Submit Resignation</a><a class="zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-font-14" href="#Report:My_Resignation_Requests">My Requests</a></div>
+							</div>
+							<div class="obh-flow-card zcs-flex zcs-direction-column zcs-gap-12">
+								<div class="zcs-flex zcs-align-items-center zcs-gap-10"><i class="zc-li-outline ui-1-edit-72 zcs-font-22 zcs-color-theme"></i><h4 class="zcs-font-18 zcs-font-semibold zcs-m-0">Exit interview flow</h4></div>
+								<p class="zcs-font-14 zcs-color-secondary zcs-m-0">HR records confidential feedback against approved resignation requests and reviews categories using list and Kanban views.</p>
+								<div class="zcs-flex zcs-gap-10 zcs-row"><a class="zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-font-14" href="#Form:Exit_Interview?zc_LoadIn=dialog">Add Interview</a><a class="zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-font-14" href="#Report:Exit_Interview_List">Interview List</a></div>
+							</div>
+							<div class="obh-flow-card zcs-flex zcs-direction-column zcs-gap-12">
+								<div class="zcs-flex zcs-align-items-center zcs-gap-10"><i class="zc-li-outline design-todo zcs-font-22 zcs-color-theme"></i><h4 class="zcs-font-18 zcs-font-semibold zcs-m-0">Checklist flow</h4></div>
+								<p class="zcs-font-14 zcs-color-secondary zcs-m-0">Responsible departments update Pending, Completed, and Waived tasks. HR uses completion status to decide deactivation readiness.</p>
+								<div class="zcs-flex zcs-gap-10 zcs-row"><a class="zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-font-14" href="#Report:Offboarding_Checklist_View">Checklist View</a><a class="zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-font-14" href="#Report:Offboarding_Checklist_Kanban">Checklist Kanban</a></div>
+							</div>
+							<div class="obh-flow-card zcs-flex zcs-direction-column zcs-gap-12">
+								<div class="zcs-flex zcs-align-items-center zcs-gap-10"><i class="zc-li-outline business-money-coins zcs-font-22 zcs-color-theme"></i><h4 class="zcs-font-18 zcs-font-semibold zcs-m-0">Asset recovery flow</h4></div>
+								<p class="zcs-font-14 zcs-color-secondary zcs-m-0">IT manually adds recovery rows, marks recovered or not found, and monitors safe external sync status until the real integration is enabled.</p>
+								<div class="zcs-flex zcs-gap-10 zcs-row"><a class="zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-font-14" href="#Form:Employee_Asset_Recovery?zc_LoadIn=dialog">Add Asset Row</a><a class="zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-font-14" href="#Report:Asset_Sync_Failed">Sync Failures</a></div>
+							</div>
+						</div>
+					</div>
+
+					<div class="obh-panel obh-panel-my">
+						<div class="obh-embed-card"><div class="obh-embed-header zcs-px-20 zcs-py-12"><h4 class="zcs-font-18 zcs-font-semibold zcs-m-0">My Resignation Requests</h4><span class="zcs-font-13 zcs-color-secondary">Employee-facing resignation history and current approval status.</span></div><div class="obh-report-frame tall" zc-component="report" zc-linkname="My_Resignation_Requests" zc-height="700px"></div></div>
+					</div>
+
+					<div class="obh-panel obh-panel-hr">
+						<div class="obh-embed-card"><div class="obh-embed-header zcs-px-20 zcs-py-12"><h4 class="zcs-font-18 zcs-font-semibold zcs-m-0">HR Offboarding Dashboard</h4><span class="zcs-font-13 zcs-color-secondary">HR queue for resignation approvals, effective last working day, and offboarding readiness.</span></div><div class="obh-report-frame tall" zc-component="report" zc-linkname="HR_Offboarding_Dashboard" zc-height="700px"></div></div>
+					</div>
+
+					<div class="obh-panel obh-panel-exit">
+						<div class="obh-embed-card"><div class="obh-embed-header zcs-px-20 zcs-py-12"><h4 class="zcs-font-18 zcs-font-semibold zcs-m-0">Exit Interview List</h4><span class="zcs-font-13 zcs-color-secondary">Confidential interview feedback by resignation request, category, rejoin response, and HR owner.</span></div><div class="obh-report-frame tall" zc-component="report" zc-linkname="Exit_Interview_List" zc-height="700px"></div></div>
+					</div>
+
+					<div class="obh-panel obh-panel-checklist">
+						<div class="obh-embed-card"><div class="obh-embed-header zcs-px-20 zcs-py-12"><h4 class="zcs-font-18 zcs-font-semibold zcs-m-0">Offboarding Checklist View</h4><span class="zcs-font-13 zcs-color-secondary">Department task ownership, responsible person, status, completion date, and notes.</span></div><div class="obh-report-frame tall" zc-component="report" zc-linkname="Offboarding_Checklist_View" zc-height="700px"></div></div>
+					</div>
+
+					<div class="obh-panel obh-panel-assets">
+						<div class="obh-embed-card"><div class="obh-embed-header zcs-px-20 zcs-py-12"><h4 class="zcs-font-18 zcs-font-semibold zcs-m-0">IT Asset Recovery Dashboard</h4><span class="zcs-font-13 zcs-color-secondary">IT work queue for asset details, recovery status, condition, recovery date, and sync state.</span></div><div class="obh-report-frame" zc-component="report" zc-linkname="IT_Asset_Recovery_Dashboard" zc-height="620px"></div></div>
+						<div class="obh-embed-card"><div class="obh-embed-header zcs-px-20 zcs-py-12"><h4 class="zcs-font-18 zcs-font-semibold zcs-m-0">Asset Sync Failed</h4><span class="zcs-font-13 zcs-color-secondary">Exception queue for rows where the future external asset sync is marked failed.</span></div><div class="obh-report-frame" zc-component="report" zc-linkname="Asset_Sync_Failed" zc-height="620px"></div></div>
+					</div>
+
+					<div class="obh-panel obh-panel-kanban">
+						<div class="obh-kanban-grid">
+							<div class="obh-embed-card"><div class="obh-embed-header zcs-px-20 zcs-py-12"><h4 class="zcs-font-18 zcs-font-semibold zcs-m-0">Resignation Status Kanban</h4><span class="zcs-font-13 zcs-color-secondary">Pipeline grouped by resignation status.</span></div><div class="obh-report-frame" zc-component="report" zc-linkname="Resignation_Status_Kanban" zc-height="620px"></div></div>
+							<div class="obh-embed-card"><div class="obh-embed-header zcs-px-20 zcs-py-12"><h4 class="zcs-font-18 zcs-font-semibold zcs-m-0">Exit Interview Category Kanban</h4><span class="zcs-font-13 zcs-color-secondary">Interview feedback grouped by exit reason category.</span></div><div class="obh-report-frame" zc-component="report" zc-linkname="Exit_Interview_Category_Kanban" zc-height="620px"></div></div>
+							<div class="obh-embed-card"><div class="obh-embed-header zcs-px-20 zcs-py-12"><h4 class="zcs-font-18 zcs-font-semibold zcs-m-0">Offboarding Checklist Kanban</h4><span class="zcs-font-13 zcs-color-secondary">Checklist task board grouped by Pending, Completed, and Waived.</span></div><div class="obh-report-frame" zc-component="report" zc-linkname="Offboarding_Checklist_Kanban" zc-height="620px"></div></div>
+							<div class="obh-embed-card"><div class="obh-embed-header zcs-px-20 zcs-py-12"><h4 class="zcs-font-18 zcs-font-semibold zcs-m-0">Asset Recovery Kanban</h4><span class="zcs-font-13 zcs-color-secondary">Asset recovery board grouped by recovery status.</span></div><div class="obh-report-frame" zc-component="report" zc-linkname="Asset_Recovery_Kanban" zc-height="620px"></div></div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<aside class="obh-actions zcs-quick-actions-wrapper zcs-card zcs-flex zcs-direction-column zcs-gap-16 zcs-p-16 zcs-box-border">
+			<h5 class="zcs-font-18 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0">Quick actions</h5>
+			<ul class="zcs-flex zcs-direction-column zcs-gap-16 zcs-p-0 zcs-m-0">
+				<li class="zcs-quick-action-item"><a class="zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary" href="#Form:Resignation_Request?zc_LoadIn=dialog"><i class="zcs-quick-action-icon zcs-font-medium zc-li-outline ui-1-simple-add"></i><span class="zcs-quick-action-text">Submit resignation request</span></a></li>
+				<li class="zcs-quick-action-item"><a class="zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary" href="#Report:My_Resignation_Requests"><i class="zcs-quick-action-icon zcs-font-medium zc-li-outline users-single-01"></i><span class="zcs-quick-action-text">Open my resignation requests</span></a></li>
+				<li class="zcs-quick-action-item"><a class="zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary" href="#Report:HR_Offboarding_Dashboard"><i class="zcs-quick-action-icon zcs-font-medium zc-li-outline business-briefcase-24"></i><span class="zcs-quick-action-text">Open HR offboarding dashboard</span></a></li>
+				<li class="zcs-quick-action-item"><a class="zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary" href="#Form:Exit_Interview?zc_LoadIn=dialog"><i class="zcs-quick-action-icon zcs-font-medium zc-li-outline ui-1-edit-72"></i><span class="zcs-quick-action-text">Add exit interview</span></a></li>
+				<li class="zcs-quick-action-item"><a class="zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary" href="#Report:Offboarding_Checklist_View"><i class="zcs-quick-action-icon zcs-font-medium zc-li-outline design-todo"></i><span class="zcs-quick-action-text">Open checklist view</span></a></li>
+				<li class="zcs-quick-action-item"><a class="zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary" href="#Form:Employee_Asset_Recovery?zc_LoadIn=dialog"><i class="zcs-quick-action-icon zcs-font-medium zc-li-outline business-money-coins"></i><span class="zcs-quick-action-text">Add asset recovery row</span></a></li>
+				<li class="zcs-quick-action-item"><a class="zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary" href="#Report:Asset_Sync_Failed"><i class="zcs-quick-action-icon zcs-font-medium zc-li-outline ui-3-alert"></i><span class="zcs-quick-action-text">Open sync failures</span></a></li>
+			</ul>
+			<div class="obh-note zcs-p-14 zcs-flex zcs-direction-column zcs-gap-6">
+				<span class="zcs-font-13 zcs-font-semibold zcs-color-primary">Asset sync note</span>
+				<span class="zcs-font-13 zcs-color-secondary">External asset integration is a safe stub in this build. Use Asset_Sync_Failed to monitor rows that require IT review.</span>
+			</div>
+			<div class="zcs-flex zcs-direction-column zcs-gap-8">
+				<div class="zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-yellow"><i class="zcs-badge-icon zcs-no-shrink zc-li-outline loader-dots-06"></i><span class="zcs-badge-text zcs-font-13 zcs-font-normal zcs-lh-body"><%=syncPending%> pending sync</span></div>
+				<div class="zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-green"><i class="zcs-badge-icon zcs-no-shrink zc-li-outline ui-1-check-circle-08"></i><span class="zcs-badge-text zcs-font-13 zcs-font-normal zcs-lh-body"><%=assetRecovered%> recovered assets</span></div>
+				<div class="zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-red"><i class="zcs-badge-icon zcs-no-shrink zc-li-outline ui-1-circle-remove"></i><span class="zcs-badge-text zcs-font-13 zcs-font-normal zcs-lh-body"><%=assetNotFound%> not found assets</span></div>
+			</div>
+		</aside>
+	</section>
+
+	<section class="zcs-card zcs-p-16 zcs-box-border">
+		<div class="zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12 zcs-mb-12">
+			<div>
+				<span class="zcs-font-12 zcs-uppercase zcs-color-tertiary">Reachability map</span>
+				<h5 class="zcs-font-18 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-mt-4 zcs-mb-8">All offboarding views and boards</h5>
+			</div>
+			<div class="zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-theme"><i class="zcs-badge-icon zcs-no-shrink zc-li-outline ui-1-check-circle-08"></i><span class="zcs-badge-text zcs-font-13 zcs-font-normal zcs-lh-body">All linked</span></div>
+		</div>
+		<div class="zcs-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative">
+			<table class="zcs-w-full">
+				<thead class="zcs-sticky">
+					<tr>
+						<th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Area</th>
+						<th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Component</th>
+						<th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Open</th>
+					</tr>
+					<tr class="zcs-tspace"><th class="zcs-p-8 zcs-box-border" colspan="3"></th></tr>
+				</thead>
+				<tbody>
+					<tr><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary">Employee</td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary">My_Resignation_Requests</td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14"><a class="obh-directory-link" href="#Report:My_Resignation_Requests">Open report</a></td></tr>
+					<tr><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary">HR</td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary">HR_Offboarding_Dashboard</td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14"><a class="obh-directory-link" href="#Report:HR_Offboarding_Dashboard">Open report</a></td></tr>
+					<tr><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary">Exit interview</td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary">Exit_Interview_List</td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14"><a class="obh-directory-link" href="#Report:Exit_Interview_List">Open report</a></td></tr>
+					<tr><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary">Checklist</td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary">Offboarding_Checklist_View</td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14"><a class="obh-directory-link" href="#Report:Offboarding_Checklist_View">Open report</a></td></tr>
+					<tr><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary">IT assets</td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary">IT_Asset_Recovery_Dashboard</td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14"><a class="obh-directory-link" href="#Report:IT_Asset_Recovery_Dashboard">Open report</a></td></tr>
+					<tr><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary">IT exceptions</td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary">Asset_Sync_Failed</td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14"><a class="obh-directory-link" href="#Report:Asset_Sync_Failed">Open report</a></td></tr>
+					<tr><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary">Kanban</td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary">Resignation_Status_Kanban</td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14"><a class="obh-directory-link" href="#Report:Resignation_Status_Kanban">Open Kanban</a></td></tr>
+					<tr><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary">Kanban</td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary">Exit_Interview_Category_Kanban</td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14"><a class="obh-directory-link" href="#Report:Exit_Interview_Category_Kanban">Open Kanban</a></td></tr>
+					<tr><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary">Kanban</td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary">Offboarding_Checklist_Kanban</td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14"><a class="obh-directory-link" href="#Report:Offboarding_Checklist_Kanban">Open Kanban</a></td></tr>
+					<tr><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary">Kanban</td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary">Asset_Recovery_Kanban</td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14"><a class="obh-directory-link" href="#Report:Asset_Recovery_Kanban">Open Kanban</a></td></tr>
+				</tbody>
+			</table>
+		</div>
+	</section>
+</div>

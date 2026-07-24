@@ -1,0 +1,36 @@
+Recovery_Status_On_User_Input as "Recovery Status - On User Input"
+{
+
+				type =  form
+				form = Employee_Asset_Recovery
+
+				record event = on add or edit
+
+				on user input of Recovery_Status
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											hide Asset_Condition;
+										if(input.Recovery_Status == "Recovered")
+										{
+											show Asset_Condition;
+											input.Recovery_Date = zoho.currentdate;
+										}
+										else if(input.Recovery_Status == "Not_Found")
+										{
+											input.Asset_Condition = "Missing";
+											input.Recovery_Date = zoho.currentdate;
+										}
+										else
+										{
+											input.Asset_Condition = null;
+											input.Recovery_Date = null;
+										}
+						)
+					}
+				}
+
+			
+}

@@ -1,0 +1,44 @@
+Travel_Requirement_On_User_Input as "Travel HR Recommendations Requirement - On User Input"
+{
+
+				type =  form
+				form = Travel_HR_Recommendations
+
+				record event = on add or edit
+
+				on user input of Travel_Requirement
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											hide Departure_Time;
+										hide Arrival_Time;
+										hide Check_In_Date;
+										hide Check_Out_Date;
+										input.Recommendation_Type = "";
+										if(input.Travel_Requirement != null)
+										{
+											requirementRows = Travel_Requirements[ID == input.Travel_Requirement];
+											if(requirementRows.count() > 0)
+											{
+												input.Recommendation_Type = requirementRows.Requirement_Type;
+												input.Travel_Request = requirementRows.Travel_Request;
+												if(requirementRows.Requirement_Type == "Hotel")
+												{
+													show Check_In_Date;
+													show Check_Out_Date;
+												}
+												else
+												{
+													show Departure_Time;
+													show Arrival_Time;
+												}
+											}
+										}
+						)
+					}
+				}
+
+			
+}

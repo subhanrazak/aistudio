@@ -1,0 +1,34 @@
+Travel_Selected_Options_On_Delete as "Travel Selected Options - On Delete"
+{
+
+				type =  form
+				form = Travel_Selected_Options
+
+				record event = on delete
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											estimatedTotal = 0;
+										actualTotal = 0;
+										optionRows = Travel_Selected_Options[Travel_Request == input.Travel_Request && ID != input.ID];
+										for each  optionRec in optionRows
+										{
+											estimatedTotal = estimatedTotal + ifnull(optionRec.Estimated_Cost,0);
+											actualTotal = actualTotal + ifnull(optionRec.Actual_Cost,0);
+										}
+										parentRequests = Travel_Request[ID == input.Travel_Request];
+										if(parentRequests.count() > 0)
+										{
+											parentRequests.Total_Estimated_Cost=estimatedTotal;
+											parentRequests.Total_Actual_Cost=actualTotal;
+										}
+						)
+					}
+				}
+
+			
+}

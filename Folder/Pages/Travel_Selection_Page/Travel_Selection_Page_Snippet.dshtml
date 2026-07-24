@@ -1,0 +1,489 @@
+<%
+	loginEmail = zoho.loginuserid;
+	if(loginEmail == null || loginEmail == "")
+	{
+		loginEmail = zoho.loginuser;
+	}
+	requestIdParam = input.travel_request_id;
+	tripRows = Travel_Request[ID == requestIdParam];
+	submitted = ifnull(input.confirm_selection,"");
+	selectedParam = ifnull(input.selections,"");
+	selectedMap = Map();
+	if(selectedParam != "")
+	{
+		selectedPairs = selectedParam.toList(",");
+		for each  selectedPair in selectedPairs
+		{
+			selectedTokens = selectedPair.toList(":");
+			if(selectedTokens.size() == 2)
+			{
+				selectedMap.put(selectedTokens.get(0),selectedTokens.get(1));
+			}
+		}
+	}
+	confirmMessage = "";
+	confirmSuccess = false;
+	confirmClass = "info";
+	confirmIcon = "ui-1-alert-circle-i";
+	%>
+<style>
+/* zcs-global utility stylesheet included once for this page */
+:root{--zcs-theme-brand-color:var(--zcs_brand_color);--zcs-white-color:#fff;--zcs-primary-text-color:var(--zcs_primary_text_color);--zcs-secondary-text-color:var(--zcs_secondary_text_color);--zcs-teritiary-text-color:var(--zcs_tertiary_text_color);--zcs-border-color:var(--zcs_tertiary_border_color);--zcs-page-bg-color:#F3F3F4}.zcs-row{display:flex;flex-wrap:wrap}.zcs-flex{display:flex}.zcs-inline-flex{display:inline-flex}.zcs-direction-column{flex-direction:column}.zcs-align-items-center{align-items:center}.zcs-align-items-start{align-items:flex-start}.zcs-justify-center{justify-content:center}.zcs-justify-space-between{justify-content:space-between}.zcs-gap-4{gap:.25rem}.zcs-gap-6{gap:.375rem}.zcs-gap-8{gap:.5rem}.zcs-gap-10{gap:.625rem}.zcs-gap-12{gap:.75rem}.zcs-gap-14{gap:.875rem}.zcs-gap-16{gap:1rem}.zcs-gap-20{gap:1.25rem}.zcs-gap-24{gap:1.5rem}.zcs-p-0{padding:0}.zcs-p-8{padding:.5rem}.zcs-p-12{padding:.75rem}.zcs-p-16{padding:1rem}.zcs-p-18{padding:1.125rem}.zcs-p-20{padding:1.25rem}.zcs-p-24{padding:1.5rem}.zcs-px-10{padding-left:.625rem;padding-right:.625rem}.zcs-px-12{padding-left:.75rem;padding-right:.75rem}.zcs-px-16{padding-left:1rem;padding-right:1rem}.zcs-px-20{padding-left:1.25rem;padding-right:1.25rem}.zcs-px-30{padding-left:1.875rem;padding-right:1.875rem}.zcs-py-2{padding-top:.125rem;padding-bottom:.125rem}.zcs-py-5{padding-top:.3125rem;padding-bottom:.3125rem}.zcs-py-6{padding-top:.375rem;padding-bottom:.375rem}.zcs-py-8{padding-top:.5rem;padding-bottom:.5rem}.zcs-py-10{padding-top:.625rem;padding-bottom:.625rem}.zcs-py-12{padding-top:.75rem;padding-bottom:.75rem}.zcs-py-16{padding-top:1rem;padding-bottom:1rem}.zcs-py-24{padding-top:1.5rem;padding-bottom:1.5rem}.zcs-m-0{margin:0}.zcs-mt-4{margin-top:.25rem}.zcs-mt-6{margin-top:.375rem}.zcs-mt-8{margin-top:.5rem}.zcs-mt-10{margin-top:.625rem}.zcs-mt-12{margin-top:.75rem}.zcs-mt-14{margin-top:.875rem}.zcs-mt-16{margin-top:1rem}.zcs-mt-20{margin-top:1.25rem}.zcs-mt-24{margin-top:1.5rem}.zcs-mx-0{margin-left:0;margin-right:0}.zcs-mb-0{margin-bottom:0}.zcs-col-common{flex:1 1 0}.zcs-no-shrink{flex-shrink:0}.zcs-w-full{width:100%}.zcs-wh-full{width:100%;height:100%}.zcs-font-12{font-size:.75rem}.zcs-font-13{font-size:.8125rem}.zcs-font-14{font-size:.875rem}.zcs-font-15{font-size:.9375rem}.zcs-font-16{font-size:1rem}.zcs-font-18{font-size:1.125rem}.zcs-font-20{font-size:1.25rem}.zcs-font-22{font-size:1.375rem}.zcs-font-24{font-size:1.5rem}.zcs-font-28{font-size:1.75rem}.zcs-font-40{font-size:2.5rem}.zcs-font-normal{font-weight:400}.zcs-font-medium{font-weight:500}.zcs-font-semibold{font-weight:600}.zcs-font-bold{font-weight:700}.zcs-lh-body{line-height:1.5}.zcs-lh-heading{line-height:1.25}.zcs-uppercase{text-transform:uppercase}.zcs-ellipsis{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.zcs-rounded-sm{border-radius:.25rem}.zcs-rounded-md{border-radius:.375rem}.zcs-rounded-lg{border-radius:.5rem}.zcs-rounded-xl{border-radius:.75rem}.zcs-rounded-2xl{border-radius:1rem}.zcs-rounded-half{border-radius:50%}.zcs-text-center{text-align:center}.zcs-box-border{box-sizing:border-box}.zcs-relative{position:relative}.zcs-color-primary{color:var(--zcs-primary-text-color)}.zcs-color-secondary{color:var(--zcs-secondary-text-color)}.zcs-color-tertiary{color:var(--zcs-teritiary-text-color)}.zcs-color-white{color:var(--zcs-white-color)}.zcs-color-theme{color:var(--zcs-theme-brand-color)}.zcs-card{background-color:var(--zcs-white-color);border:1px solid #e7e7ee;border-radius:12px}a{text-decoration:none}
+/* ZCS component CSS: button-primary-button / button-primary-outline-button */
+.zcs-button{width:auto;min-width:5rem;min-height:36px}.zcs-primary-button{background-color:var(--zcs_brand_color);color:var(--zcs_brand_foreground_color);border:0}.zcs-primary-outline-button{border:1px solid var(--zcs_brand_color);background-color:var(--zcs-white-color);color:var(--zcs_brand_color)}.zcs-secondary-button{border:1px solid var(--zcs_primary_border_color);background-color:var(--zcs_light_grey_color);color:var(--zcs_primary_text_color)}.zcs-primary-button.zcs-button:hover{background-color:var(--zcs_brand_dark_color)}.zcs-primary-outline-button:hover{background-color:var(--zcs_component_hover_color);border-color:var(--zcs_brand_color);color:var(--zcs_brand_color)}.zcs-button-icon{width:16px;max-height:16px}.zcs-button[disabled],button.zcs-button:disabled{opacity:.55;cursor:not-allowed}
+/* ZCS component CSS: badge-filled-badge */
+.zcs-badge{width:auto}.zcs-badge-filled{border:1px solid transparent}.zcs-badge-filled.zcs-badge-theme{background-color:var(--zcs_brand_color);border-color:var(--zcs_brand_color);color:var(--zcs-white-color)}.zcs-badge-filled.zcs-badge-green{background-color:#179E6C;border-color:#179E6C;color:var(--zcs-white-color)}.zcs-badge-filled.zcs-badge-red{background-color:#FE455D;border-color:#FE455D;color:var(--zcs-white-color)}.zcs-badge-filled.zcs-badge-grey{background-color:#242424;border-color:#242424;color:var(--zcs-white-color)}.zcs-badge-filled.zcs-badge-yellow{background-color:#FAAE13;border-color:#FAAE13;color:var(--zcs-white-color)}.zcs-badge-filled.zcs-badge-blue{background-color:#2A6FFC;border-color:#2A6FFC;color:var(--zcs-white-color)}.zcs-badge-filled.zcs-badge-orange{background-color:#F4660C;border-color:#F4660C;color:var(--zcs-white-color)}
+/* Page-specific layout using ZCS classes */
+.travel-selection-page{min-height:100%;background:var(--zcs-page-bg-color);color:var(--zcs-primary-text-color);font-family:inherit}.zcs-page-header{background:#fff;border-bottom:1px solid #ececf3}.quick-actions{flex-wrap:wrap}.travel-content{padding:24px 30px}.travel-layout{display:grid;grid-template-columns:minmax(270px,360px) 1fr;gap:20px;align-items:start}.trip-card{position:sticky;top:16px}.summary-list{display:grid;grid-template-columns:1fr;gap:12px}.summary-item{background:#F9FAFE;border:1px solid #eef0f6;border-radius:10px;padding:12px}.requirement-card{background:#fff;border:1px solid #e7e7ee;border-radius:14px;box-shadow:0 2px 10px rgba(18,19,43,.04);overflow:hidden}.requirement-head{background:linear-gradient(90deg,var(--zcs_brand_light_color),#fff);border-bottom:1px solid #ececf3}.option-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.radio-wrap input[type='radio']{position:absolute;opacity:0;pointer-events:none}.option-card{display:block;height:100%;border:1px solid #e3e6ef;border-radius:12px;background:#fff;cursor:pointer;transition:border-color .16s ease,box-shadow .16s ease,transform .16s ease;overflow:hidden}.option-card:hover{border-color:var(--zcs_brand_color);box-shadow:0 8px 20px rgba(18,19,43,.08);transform:translateY(-1px)}.radio-wrap input[type='radio']:checked+.option-card{border:2px solid var(--zcs_brand_color);box-shadow:0 0 0 3px var(--zcs_brand_light_color)}.radio-wrap input[type='radio']:disabled+.option-card{opacity:.65;cursor:not-allowed;transform:none}.option-top{border-bottom:1px solid #eef0f6}.option-meta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.meta-cell{background:#F9FAFE;border:1px solid #eef0f6;border-radius:9px;padding:10px}.radio-dot{width:22px;height:22px;border-radius:50%;border:2px solid var(--zcs_tertiary_border_color);background:#fff}.radio-wrap input[type='radio']:checked+.option-card .radio-dot{border-color:var(--zcs_brand_color);background:radial-gradient(circle at center,var(--zcs_brand_color) 0 42%,transparent 46%)}.confirm-banner{border-radius:12px;padding:14px 16px;border:1px solid}.confirm-banner.success{background:#E4FCF3;border-color:#179E6C;color:#0F704D}.confirm-banner.error{background:#FDE3E6;border-color:#FE455D;color:#A60E25}.confirm-banner.info{background:#E8EFFF;border-color:#2A6FFC;color:#19499E}.empty-state{min-height:320px;background:#fff;border:1px solid #e7e7ee;border-radius:14px}.empty-icon{width:72px;height:72px;border-radius:50%;background:var(--zcs_brand_light_color);color:var(--zcs_brand_color)}.submit-panel{background:#fff;border:1px solid #e7e7ee;border-radius:14px;position:sticky;bottom:16px;box-shadow:0 6px 18px rgba(18,19,43,.08)}.related-link{border:1px solid #ececf3;border-radius:10px;color:var(--zcs-primary-text-color);background:#fff}.related-link:hover{border-color:var(--zcs_brand_color);color:var(--zcs_brand_color);background:var(--zcs_component_hover_color)}.warning-note{background:#FCF4E6;border:1px solid #FAAE13;color:#7E5608;border-radius:10px;padding:12px}.selected-pill{background:var(--zcs_brand_light_color);color:var(--zcs_brand_color);border-radius:999px;padding:4px 10px}.cost-text{color:#179E6C}.subtle-line{height:1px;background:#ececf3;width:100%}
+@media (max-width:1100px){.travel-layout{grid-template-columns:1fr}.trip-card{position:static}.option-grid{grid-template-columns:1fr}.submit-panel{position:static}}
+@media (max-width:700px){.travel-content{padding:16px}.zcs-page-header{padding:16px;align-items:flex-start;flex-direction:column}.quick-actions{width:100%}.zcs-page-header .quick-actions .zcs-button,.submit-panel .zcs-button{width:100%;justify-content:center}.submit-panel{align-items:stretch;flex-direction:column}.option-meta{grid-template-columns:1fr}}
+</style>
+
+<div class="travel-selection-page">
+<%
+	if(tripRows.count() == 0)
+	{
+		%>
+<div class='zcs-page-header zcs-w-full zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-8 zcs-px-30 zcs-py-24 zcs-box-border'>
+		<div class='zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-ellipsis'>
+			<h5 class='zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-ellipsis zcs-m-0'>Select Travel Options</h5>
+		</div>
+		<div class='zcs-flex zcs-align-items-center zcs-gap-12 quick-actions'>
+			<a class='zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body' href='#Report:My_Travel_Requests?zc_LoadIn=dialog&zc_Header=true'>
+				<i class='zcs-button-icon zc-li-outline transport-road'></i>
+				<span class='zcs-button-text'>My Travel Requests</span>
+			</a>
+		</div>
+	</div>
+	<div class='travel-content'>
+		<div class='zcs-nodata-wrapper empty-state zcs-wh-full zcs-flex zcs-align-items-center zcs-justify-center zcs-text-center'>
+			<div class='zcs-nodata-content zcs-p-20 zcs-box-border'>
+				<div class='empty-icon zcs-inline-flex zcs-align-items-center zcs-justify-center'><i class='zc-li-outline ui-1-circle-remove zcs-font-40'></i></div>
+				<h5 class='zcs-nodata-header zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-mt-10 zcs-mx-0 zcs-mb-0'>Travel request not found</h5>
+				<p class='zcs-nodata-desc zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-mt-12 zcs-mx-0 zcs-mb-0'>Open this page with a valid travel_request_id to review HR-proposed options.</p>
+			</div>
+		</div>
+	</div>
+<%
+	}
+	else
+	{
+		trip = tripRows;
+		employeeName = "-";
+		employeeEmail = "";
+		employeeDepartment = "-";
+		employeeRows = Employee_Master[ID == trip.Employee];
+		if(employeeRows.count() > 0)
+		{
+			employeeName = ifnull(employeeRows.Full_Name,"-");
+			employeeEmail = ifnull(employeeRows.Official_Email,"");
+			employeeDepartment = ifnull(employeeRows.Department,"-");
+		}
+		requirements = Travel_Requirements[Travel_Request == trip.ID] sort by Requirement_Type asc;
+		recommendations = Travel_HR_Recommendations[Travel_Request == trip.ID] sort by Estimated_Cost asc;
+		selectedOptions = Travel_Selected_Options[Travel_Request == trip.ID];
+		requirementCount = requirements.count();
+		recommendationCount = recommendations.count();
+		selectedOptionCount = selectedOptions.count();
+		isOwner = employeeEmail == loginEmail || employeeEmail == zoho.loginuser;
+		isClosed = trip.Status == "Rejected" || trip.Status == "Processed" || trip.Status == "Bills_Uploaded";
+		canConfirm = isOwner == true && isClosed == false && requirementCount > 0 && recommendationCount > 0;
+		statusBadge = "zcs-badge-blue";
+		if(trip.Status == "Approved" || trip.Status == "Bills_Pending")
+		{
+			statusBadge = "zcs-badge-green";
+		}
+		else if(trip.Status == "Rejected")
+		{
+			statusBadge = "zcs-badge-red";
+		}
+		else if(trip.Status == "Processed" || trip.Status == "Bills_Uploaded")
+		{
+			statusBadge = "zcs-badge-grey";
+		}
+		else if(trip.Status == "Pending_HR" || trip.Status == "Pending_CEO" || trip.Status == "Pending_Manager")
+		{
+			statusBadge = "zcs-badge-orange";
+		}
+		travelReportUrl = "#Report:My_Travel_Requests?ID=" + trip.ID + "&zc_LoadIn=dialog&zc_Header=true";
+		requirementsUrl = "#Report:Travel_Requirements_List?Travel_Request=" + trip.ID + "&zc_LoadIn=dialog&zc_Header=true";
+		recommendationsUrl = "#Report:Travel_HR_Recommendations_List?Travel_Request=" + trip.ID + "&zc_LoadIn=dialog&zc_Header=true";
+		selectedUrl = "#Report:Travel_Selected_Options_List?Travel_Request=" + trip.ID + "&zc_LoadIn=dialog&zc_Header=true";
+		if(submitted == "1")
+		{
+			if(canConfirm == false)
+			{
+				confirmMessage = "Selections cannot be confirmed for this request. Check request ownership, status, requirements, and available recommendations.";
+				confirmClass = "error";
+				confirmIcon = "ui-1-circle-remove";
+			}
+			else
+			{
+				validationMessage = "";
+				selectionCount = 0;
+				for each  reqCheck in requirements
+				{
+					selectedValueCheck = ifnull(selectedMap.get(reqCheck.ID.toString()),"");
+					reqRecsCheck = Travel_HR_Recommendations[Travel_Request == trip.ID && Travel_Requirement == reqCheck.ID];
+					if(reqRecsCheck.count() == 0)
+					{
+						validationMessage = validationMessage + "No HR recommendation exists for " + reqCheck.Requirement_Type + ". ";
+					}
+					else if(selectedValueCheck == "")
+					{
+						validationMessage = validationMessage + "Select one option for " + reqCheck.Requirement_Type + ". ";
+					}
+					else if(selectedValueCheck.isNumber() == false)
+					{
+						validationMessage = validationMessage + "The selected option for " + reqCheck.Requirement_Type + " is invalid. ";
+					}
+					else
+					{
+						selectedIdCheck = selectedValueCheck.toNumber();
+						selectedRecCheck = Travel_HR_Recommendations[ID == selectedIdCheck && Travel_Request == trip.ID && Travel_Requirement == reqCheck.ID];
+						if(selectedRecCheck.count() == 0)
+						{
+							validationMessage = validationMessage + "The selected option for " + reqCheck.Requirement_Type + " is no longer available. ";
+						}
+						else
+						{
+							selectionCount = selectionCount + 1;
+						}
+					}
+				}
+				if(validationMessage != "")
+				{
+					confirmMessage = validationMessage;
+					confirmClass = "error";
+					confirmIcon = "ui-1-circle-remove";
+				}
+				else
+				{
+					try 
+					{
+						for each  clearRec in Travel_HR_Recommendations[Travel_Request == trip.ID]
+						{
+							clearRec.Is_Selected=false;
+						}
+						for each  reqSave in requirements
+						{
+							selectedValueSave = ifnull(selectedMap.get(reqSave.ID.toString()),"");
+							selectedIdSave = selectedValueSave.toNumber();
+							selectedRecRows = Travel_HR_Recommendations[ID == selectedIdSave && Travel_Request == trip.ID && Travel_Requirement == reqSave.ID];
+							if(selectedRecRows.count() > 0)
+							{
+								selectedRec = selectedRecRows;
+								selectedRec.Is_Selected=true;
+								existingOptionRows = Travel_Selected_Options[Travel_Request == trip.ID && Recommendation.Travel_Requirement == reqSave.ID];
+								if(existingOptionRows.count() > 0)
+								{
+									existingOptionRows.Recommendation=selectedRec.ID;
+									existingOptionRows.Recommendation_Type=selectedRec.Recommendation_Type;
+									existingOptionRows.Vendor_Or_Operator=selectedRec.Vendor_Or_Operator;
+									existingOptionRows.Estimated_Cost=selectedRec.Estimated_Cost;
+								}
+								else
+								{
+									insert into Travel_Selected_Options
+									[
+										Travel_Request=trip.ID
+										Recommendation=selectedRec.ID
+										Recommendation_Type=selectedRec.Recommendation_Type
+										Vendor_Or_Operator=selectedRec.Vendor_Or_Operator
+										Estimated_Cost=selectedRec.Estimated_Cost
+										Added_User=zoho.loginuser
+									]
+								}
+							}
+						}
+						estimatedTotal = 0;
+						actualTotal = 0;
+						refreshedOptions = Travel_Selected_Options[Travel_Request == trip.ID];
+						for each  optionRec in refreshedOptions
+						{
+							estimatedTotal = estimatedTotal + ifnull(optionRec.Estimated_Cost,0);
+							actualTotal = actualTotal + ifnull(optionRec.Actual_Cost,0);
+						}
+						trip.Total_Estimated_Cost=estimatedTotal;
+						trip.Total_Actual_Cost=actualTotal;
+						tokenMap = Map();
+						tokenMap.put("travel_request",trip.ID);
+						tokenMap.put("destination",ifnull(trip.Destination,""));
+						tokenMap.put("employee",employeeName);
+						tokenMap.put("employee_email",employeeEmail);
+						tokenMap.put("selected_count",selectionCount);
+						tokenMap.put("total_estimated_cost",estimatedTotal);
+						thisapp.Send_Configured_Notification("TRAVEL_OPTIONS_SELECTED",tokenMap,"Travel options selected","{{employee}} selected {{selected_count}} travel options for {{destination}}. Total estimated cost: {{total_estimated_cost}}.");
+						thisapp.Add_Audit_Log("TRAVEL_OPTIONS_SELECTED","Travel","Travel_Request",trip.ID,"Select Options","","Selected","Employee selected " + selectionCount + " HR-proposed travel options. Total estimated cost: " + estimatedTotal,true,"");
+						confirmMessage = "Travel options confirmed. HR has been notified and estimated totals were recalculated.";
+						confirmSuccess = true;
+						confirmClass = "success";
+						confirmIcon = "ui-1-check-circle-08";
+						selectedOptionCount = refreshedOptions.count();
+						selectedOptions = refreshedOptions;
+					}					catch (e)
+					{
+						errMsg = e.toString();
+						thisapp.Add_Audit_Log("TRAVEL_OPTIONS_SELECTED","Travel","Travel_Request",trip.ID,"Select Options","","","Travel option confirmation failed.",false,errMsg);
+						confirmMessage = "Confirmation failed: " + errMsg;
+						confirmClass = "error";
+						confirmIcon = "ui-1-circle-remove";
+					}
+				}
+			}
+		}
+		%>
+<div class='zcs-page-header zcs-w-full zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-8 zcs-px-30 zcs-py-24 zcs-box-border'>
+		<div class='zcs-flex zcs-direction-column zcs-gap-4 zcs-ellipsis'>
+			<h5 class='zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-ellipsis zcs-m-0'>Select Travel Options</h5>
+			<span class='zcs-font-14 zcs-color-secondary'>Choose one HR-proposed option for each requirement before confirming.</span>
+		</div>
+		<div class='zcs-flex zcs-align-items-center zcs-gap-12 quick-actions'>
+			<a class='zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body' href='<%=travelReportUrl%>'>
+				<i class='zcs-button-icon zc-li-outline transport-road'></i>
+				<span class='zcs-button-text'>Travel Request</span>
+			</a>
+			<a class='zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body' href='<%=recommendationsUrl%>'>
+				<i class='zcs-button-icon zc-li-outline files-single-copy-04'></i>
+				<span class='zcs-button-text'>Recommendations</span>
+			</a>
+		</div>
+	</div>
+
+	<div class='travel-content'>
+<%
+		if(confirmMessage != "")
+		{
+			%>
+<div class='confirm-banner <%=confirmClass%> zcs-flex zcs-align-items-center zcs-gap-10 zcs-mb-0'>
+				<i class='zc-li-outline <%=confirmIcon%> zcs-font-18'></i>
+				<span class='zcs-font-14 zcs-font-medium'><%=confirmMessage%></span>
+			</div>
+<%
+		}
+		if(isOwner == false)
+		{
+			%>
+<div class='warning-note zcs-flex zcs-align-items-center zcs-gap-10 zcs-mt-16'>
+				<i class='zc-li-outline ui-1-alert-circle-i zcs-font-18'></i>
+				<span class='zcs-font-14 zcs-font-medium'>This request belongs to <%=employeeName%>. You can review the options, but only the request employee can confirm selections.</span>
+			</div>
+<%
+		}
+		if(isClosed == true)
+		{
+			%>
+<div class='warning-note zcs-flex zcs-align-items-center zcs-gap-10 zcs-mt-16'>
+				<i class='zc-li-outline ui-1-alert-circle-i zcs-font-18'></i>
+				<span class='zcs-font-14 zcs-font-medium'>This request is in <%=trip.Status%> status, so option confirmation is locked.</span>
+			</div>
+<%
+		}
+		%>
+<div class='travel-layout zcs-mt-20'>
+			<aside class='trip-card'>
+				<div class='zcs-card zcs-flex zcs-direction-column zcs-gap-16 zcs-p-20 zcs-box-border'>
+					<div class='zcs-flex zcs-align-items-center zcs-gap-16'>
+						<div class='empty-icon zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-no-shrink'><i class='zc-li-outline transport-air-baloon zcs-font-28'></i></div>
+						<div class='zcs-flex zcs-direction-column zcs-gap-4 zcs-col-common zcs-ellipsis'>
+							<h6 class='zcs-font-18 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-ellipsis zcs-m-0'><%=ifnull(trip.Destination,"-")%></h6>
+							<span class='zcs-font-14 zcs-color-secondary zcs-ellipsis'><%=employeeName%> \u00B7 <%=employeeDepartment%></span>
+							<span class='zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border <%=statusBadge%>'><span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'><%=trip.Status%></span></span>
+						</div>
+					</div>
+					<div class='summary-list'>
+						<div class='summary-item'>
+							<label class='zcs-font-13 zcs-color-tertiary'>Travel Type</label>
+							<div class='zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary zcs-mt-4'><%=ifnull(trip.Travel_Type,"-")%></div>
+						</div>
+						<div class='summary-item'>
+							<label class='zcs-font-13 zcs-color-tertiary'>Travel Dates</label>
+							<div class='zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary zcs-mt-4'><%=ifnull(trip.Travel_From_Date,"-")%> to <%=ifnull(trip.Travel_To_Date,"-")%></div>
+						</div>
+						<div class='summary-item'>
+							<label class='zcs-font-13 zcs-color-tertiary'>Purpose</label>
+							<div class='zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary zcs-mt-4'><%=ifnull(trip.Purpose,"-")%></div>
+						</div>
+						<div class='summary-item'>
+							<label class='zcs-font-13 zcs-color-tertiary'>Requirements</label>
+							<div class='zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary zcs-mt-4'><%=requirementCount%> requirement(s), <%=recommendationCount%> recommendation(s)</div>
+						</div>
+						<div class='summary-item'>
+							<label class='zcs-font-13 zcs-color-tertiary'>Selected Options</label>
+							<div class='zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary zcs-mt-4'><%=selectedOptionCount%> selected row(s)</div>
+						</div>
+						<div class='summary-item'>
+							<label class='zcs-font-13 zcs-color-tertiary'>Estimated Total</label>
+							<div class='zcs-font-16 zcs-font-semibold zcs-lh-body cost-text zcs-mt-4'>INR <%=ifnull(trip.Total_Estimated_Cost,0)%></div>
+						</div>
+					</div>
+				</div>
+				<div class='zcs-card zcs-flex zcs-direction-column zcs-gap-10 zcs-p-18 zcs-box-border zcs-mt-16'>
+					<h6 class='zcs-font-16 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0'>Related records</h6>
+					<a class='related-link zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-8 zcs-px-16 zcs-py-10 zcs-box-border' href='<%=requirementsUrl%>'>
+						<span class='zcs-flex zcs-align-items-center zcs-gap-8'><i class='zc-li-outline design-bullet-list-67'></i><span>Requirements</span></span><i class='zc-li-outline arrows-1-tail-right'></i>
+					</a>
+					<a class='related-link zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-8 zcs-px-16 zcs-py-10 zcs-box-border' href='<%=selectedUrl%>'>
+						<span class='zcs-flex zcs-align-items-center zcs-gap-8'><i class='zc-li-outline ui-1-check-circle-08'></i><span>Selected Options</span></span><i class='zc-li-outline arrows-1-tail-right'></i>
+					</a>
+				</div>
+			</aside>
+
+			<section>
+				<form method='GET' action='#Page:Travel_Selection_Page' onsubmit="var picked=[];var radios=this.querySelectorAll('input[type=radio]:checked');for(var i=0;i<radios.length;i++){var req=radios[i].getAttribute('data-req');var val=radios[i].value;if(req&&val){picked.push(req+':'+val);}}this.querySelector('input[name=selections]').value=picked.join(',');">
+					<input type='hidden' name='travel_request_id' value='<%=trip.ID%>' />
+					<input type='hidden' name='confirm_selection' value='1' />
+					<input type='hidden' name='selections' value='<%=selectedParam%>' />
+<%
+		if(requirementCount == 0)
+		{
+			%>
+<div class='zcs-nodata-wrapper empty-state zcs-wh-full zcs-flex zcs-align-items-center zcs-justify-center zcs-text-center'>
+							<div class='zcs-nodata-content zcs-p-20 zcs-box-border'>
+								<div class='empty-icon zcs-inline-flex zcs-align-items-center zcs-justify-center'><i class='zc-li-outline design-bullet-list-67 zcs-font-40'></i></div>
+								<h5 class='zcs-nodata-header zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-mt-10 zcs-mx-0 zcs-mb-0'>No requirements available</h5>
+								<p class='zcs-nodata-desc zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-mt-12 zcs-mx-0 zcs-mb-0'>HR recommendations can be selected only after travel requirements exist.</p>
+							</div>
+						</div>
+<%
+		}
+		else
+		{
+			for each  req in requirements
+			{
+				reqRecs = Travel_HR_Recommendations[Travel_Request == trip.ID && Travel_Requirement == req.ID] sort by Estimated_Cost asc;
+				currentChoice = ifnull(selectedMap.get(req.ID.toString()),"");
+				if(currentChoice == "")
+				{
+					selectedRecRows = Travel_HR_Recommendations[Travel_Request == trip.ID && Travel_Requirement == req.ID && Is_Selected == true];
+					if(selectedRecRows.count() > 0)
+					{
+						currentChoice = selectedRecRows.ID;
+					}
+				}
+				if(currentChoice == "")
+				{
+					existingSelectedRows = Travel_Selected_Options[Travel_Request == trip.ID && Recommendation.Travel_Requirement == req.ID];
+					if(existingSelectedRows.count() > 0)
+					{
+						currentChoice = existingSelectedRows.Recommendation;
+					}
+				}
+				currentChoiceText = ifnull(currentChoice,"").toString();
+				%>
+<div class='requirement-card zcs-mb-0' style='margin-bottom:18px;'>
+							<div class='requirement-head zcs-p-20 zcs-box-border'>
+								<div class='zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12'>
+									<div class='zcs-flex zcs-direction-column zcs-gap-4'>
+										<h6 class='zcs-font-18 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0'><%=req.Requirement_Type%></h6>
+										<p class='zcs-font-14 zcs-color-secondary zcs-mt-4 zcs-mx-0 zcs-mb-0'>Preferred: <%=ifnull(req.Preferred_Date,"-")%> <%=ifnull(req.Preferred_Time,"")%></p>
+									</div>
+									<span class='zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border <%=if(reqRecs.count() > 0,"zcs-badge-blue","zcs-badge-yellow")%>'><span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'><%=reqRecs.count()%> option(s)</span></span>
+								</div>
+<%
+				if(ifnull(req.Additional_Notes,"") != "")
+				{
+					%>
+<div class='zcs-font-14 zcs-color-secondary zcs-mt-10'><i class='zc-li-outline files-notes zcs-color-theme'></i> <%=req.Additional_Notes%></div>
+<%
+				}
+				%>
+</div>
+							<div class='zcs-p-20 zcs-box-border'>
+<%
+				if(reqRecs.count() == 0)
+				{
+					%>
+<div class='warning-note zcs-flex zcs-align-items-center zcs-gap-10'>
+										<i class='zc-li-outline ui-1-alert-circle-i zcs-font-18'></i>
+										<span class='zcs-font-14 zcs-font-medium'>HR has not added recommendations for this requirement yet.</span>
+									</div>
+<%
+				}
+				else
+				{
+					%>
+<div class='option-grid'>
+<%
+					for each  rec in reqRecs
+					{
+						recIdText = rec.ID.toString();
+						checkedText = if(currentChoiceText == recIdText,"checked","");
+						disabledText = if(canConfirm == true,"","disabled");
+						selectedBadgeClass = if(rec.Is_Selected == true || currentChoiceText == recIdText,"zcs-badge-green","zcs-badge-blue");
+						%>
+<div class='radio-wrap zcs-relative'>
+												<input id='rec_<%=rec.ID%>' type='radio' name='req_<%=req.ID%>' data-req='<%=req.ID%>' value='<%=rec.ID%>' <%=checkedText%> <%=disabledText%> required />
+												<label class='option-card' for='rec_<%=rec.ID%>'>
+													<div class='option-top zcs-p-16 zcs-box-border zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12'>
+														<div class='zcs-flex zcs-direction-column zcs-gap-4 zcs-ellipsis'>
+															<h6 class='zcs-font-16 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-ellipsis zcs-m-0'><%=ifnull(rec.Vendor_Or_Operator,"-")%></h6>
+															<span class='zcs-font-13 zcs-color-secondary zcs-ellipsis'><%=ifnull(rec.Recommendation_Type,req.Requirement_Type)%></span>
+														</div>
+														<div class='radio-dot zcs-no-shrink'></div>
+													</div>
+													<div class='zcs-p-16 zcs-box-border zcs-flex zcs-direction-column zcs-gap-14'>
+														<div class='zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-10'>
+															<span class='zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border <%=selectedBadgeClass%>'><span class='zcs-badge-text zcs-font-13 zcs-font-normal zcs-lh-body'><%=if(rec.Is_Selected == true || currentChoiceText == recIdText,"Selected","Available")%></span></span>
+															<span class='zcs-font-18 zcs-font-bold cost-text'>INR <%=ifnull(rec.Estimated_Cost,0)%></span>
+														</div>
+														<div class='option-meta'>
+															<div class='meta-cell'>
+																<label class='zcs-font-12 zcs-color-tertiary'>Departure</label>
+																<div class='zcs-font-13 zcs-font-medium zcs-color-primary zcs-mt-4'><%=ifnull(rec.Departure_Time,"-")%></div>
+															</div>
+															<div class='meta-cell'>
+																<label class='zcs-font-12 zcs-color-tertiary'>Arrival</label>
+																<div class='zcs-font-13 zcs-font-medium zcs-color-primary zcs-mt-4'><%=ifnull(rec.Arrival_Time,"-")%></div>
+															</div>
+															<div class='meta-cell'>
+																<label class='zcs-font-12 zcs-color-tertiary'>Check In</label>
+																<div class='zcs-font-13 zcs-font-medium zcs-color-primary zcs-mt-4'><%=ifnull(rec.Check_In_Date,"-")%></div>
+															</div>
+															<div class='meta-cell'>
+																<label class='zcs-font-12 zcs-color-tertiary'>Check Out</label>
+																<div class='zcs-font-13 zcs-font-medium zcs-color-primary zcs-mt-4'><%=ifnull(rec.Check_Out_Date,"-")%></div>
+															</div>
+														</div>
+<%
+						if(ifnull(rec.Notes,"") != "")
+						{
+							%>
+<div class='zcs-font-13 zcs-color-secondary'><i class='zc-li-outline files-notes zcs-color-theme'></i> <%=rec.Notes%></div>
+<%
+						}
+						%>
+</div>
+												</label>
+											</div>
+<%
+					}
+					%>
+</div>
+<%
+				}
+				%>
+</div>
+						</div>
+<%
+			}
+		}
+		%>
+<div class='submit-panel zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12 zcs-px-20 zcs-py-16 zcs-box-border'>
+						<div class='zcs-flex zcs-direction-column zcs-gap-4'>
+							<span class='zcs-font-14 zcs-font-semibold zcs-color-primary'>Confirm selections</span>
+							<span class='zcs-font-13 zcs-color-secondary'>Confirmation updates selected recommendations, creates or updates selected-option rows, recalculates totals, notifies HR, and writes an audit log.</span>
+						</div>
+						<button class='zcs-button zcs-primary-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body' type='submit' <%=if(canConfirm == true && requirementCount > 0,"","disabled")%> onclick="return confirm('Confirm the selected travel options for this request?');">
+							<i class='zcs-button-icon zc-li-outline ui-1-check-circle-08'></i>
+							<span class='zcs-button-text'>Confirm Options</span>
+						</button>
+					</div>
+				</form>
+			</section>
+		</div>
+	</div>
+<%
+	}
+	%>
+</div>

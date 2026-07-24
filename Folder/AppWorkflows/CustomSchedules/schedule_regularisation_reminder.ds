@@ -1,0 +1,24 @@
+schedule_regularisation_reminder as "Regularisation Reminder"
+{
+
+				type =  schedule
+				start = "2025-01-01 09:00:00"
+				frequency = daily
+				time zone = "Asia/Kolkata"
+				on start
+				{
+					actions 
+					{
+					on load
+					(
+						reminderDay = zoho.currentdate.getDay();
+										if(reminderDay == 13 || reminderDay == 28)
+										{
+											pendingCount = Attendance_Log[Attendance_Date < zoho.currentdate && Attendance_Status == "Not_Marked"].count();
+											thisapp.Add_Audit_Log("ATTENDANCE_REGULARISATION_REMINDER","Attendance","Attendance_Log",0,"Reminder","","Not_Marked","Regularisation reminder audit only. Pending rows: " + pendingCount + ".",true,"");
+										}
+					)
+					}
+				}
+			
+}

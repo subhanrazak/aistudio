@@ -1,0 +1,41 @@
+Offboarding_Checklist_On_Validate as "Offboarding Checklist - On Validate"
+{
+
+				type =  form
+				form = Offboarding_Checklist
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Status == "Completed" && input.Completed_Date == null)
+										{
+											input.Completed_Date = zoho.currentdate;
+										}
+										if(input.Status != "Completed")
+										{
+											input.Completed_Date = null;
+										}
+										if(input.Status == "Waived" && ifnull(input.Notes,"") == "")
+										{
+											alert "Notes are required when waiving an offboarding checklist item.";
+											cancel submit;
+										}
+										if(input.Responsible_Department != null && input.Responsible_Person == null)
+										{
+											departmentRows = Department_Config[ID == input.Responsible_Department];
+											if(departmentRows.count() > 0 && departmentRows.Department_Head != null)
+											{
+												input.Responsible_Person = departmentRows.Department_Head;
+											}
+										}
+						)
+					}
+				}
+
+			
+}

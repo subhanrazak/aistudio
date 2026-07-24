@@ -1,0 +1,31 @@
+Offboarding_Checklist_Config_On_Validate as "Offboarding Checklist Config - On Validate"
+{
+
+				type =  form
+				form = Offboarding_Checklist_Config
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(ifnull(input.Display_Order,0) <= 0)
+										{
+											alert "Display order must be greater than zero.";
+											cancel submit;
+										}
+										duplicateItems = Offboarding_Checklist_Config[Checklist_Item == input.Checklist_Item && Responsible_Department == input.Responsible_Department && ID != input.ID];
+										if(duplicateItems.count() > 0)
+										{
+											alert "Checklist item already exists for this department.";
+											cancel submit;
+										}
+						)
+					}
+				}
+
+			
+}

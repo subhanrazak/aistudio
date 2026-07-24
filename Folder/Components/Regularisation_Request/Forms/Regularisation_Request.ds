@@ -1,0 +1,126 @@
+form Regularisation_Request
+{
+
+			displayname = "Regularisation Request"
+			Regularisation_Details
+			(
+				type = section
+				displayname = "Regularisation Details"
+	 			row = 1
+	 			column = 0   
+				width = medium
+			)
+			must have Employee
+			(
+				type = picklist	
+				values  = Employee_Master[Employment_Status == "Active" || Employment_Status == "Probation"].ID
+    			displayformat = [Full_Name]
+	 			row = 1
+	 			column = 1   
+				width = medium
+			)
+			must have Regularisation_Date
+			(
+    			type = date
+				displayname = "Regularisation Date"
+				alloweddays = 0,1,2,3,4,5,6
+	 			row = 1
+	 			column = 2   
+				width = medium
+			)
+			must have Regularisation_Type
+			(
+				type = picklist
+				displayname = "Regularisation Type"
+				values = {"Leave","Missed_Punch","WFH","On_Duty"}
+	 			row = 1
+	 			column = 1   
+				width = medium
+			)
+			Leave_Type
+			(
+				type = picklist	
+				displayname = "Leave Type"
+				values  = Leave_Type_Config[Is_Active == true].ID
+    			displayformat = [Leave_Type_Name]
+	 			row = 1
+	 			column = 2   
+				width = medium
+			)
+			Reason_Details
+			(
+				type = section
+				displayname = "Reason Details"
+				visibility = true
+	 			row = 2
+	 			column = 0   
+				width = medium
+			)
+			must have Reason
+			(
+    			type = textarea
+				height = 140px
+	 			row = 2
+	 			column = 1   
+				width = medium
+			)
+			Supporting_Document
+			(
+    			type = upload file
+				displayname = "Supporting Document"
+				browse = local_drive, google_docs, zoho_docs
+	 			row = 2
+	 			column = 2   
+				width = medium
+				personal data = true
+			)
+			Status_Details
+			(
+				type = section
+				displayname = "Status Details"
+				visibility = true
+	 			row = 3
+	 			column = 0   
+				width = medium
+			)
+			Status
+			(
+				type = picklist
+				values = {"Pending_Manager","Pending_HR","Approved","Rejected"}
+				initial value = "Pending_Manager"
+	 			row = 3
+	 			column = 1   
+				width = medium
+			)
+	
+			actions
+			{
+				on add
+				{
+					Submit
+					(
+   						type = submit
+   						displayname = "Submit"
+					)
+					Reset
+					(
+   						type = reset
+   						displayname = "Reset"
+					)
+				}
+				on edit
+				{
+					Update
+					(
+   						type = submit
+   						displayname = "Update"
+					)
+					Cancel
+					(
+   						type = cancel
+   						displayname = "Cancel"
+					)
+				}
+			}
+		
+}

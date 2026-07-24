@@ -1,0 +1,247 @@
+<%
+	loginEmail = zoho.loginuserid;
+	if(loginEmail == null || loginEmail == "")
+	{
+		loginEmail = zoho.loginuser;
+	}
+	section = ifnull(input.Section,"Requests");
+	if(section == "")
+	{
+		section = "Requests";
+	}
+	if(section != "Requests" && section != "MyRequests" && section != "Programmes" && section != "Schedule" && section != "Completions" && section != "Announcements" && section != "MyAcks" && section != "PendingAcks" && section != "Kanbans")
+	{
+		section = "Requests";
+	}
+	targetUrl = "#Report:Training_Request_List?zc_LoadIn=embed-trainingAnnouncementFrame&zc_Header=true";
+	if(section == "MyRequests")
+	{
+		targetUrl = "#Report:My_Training_Requests?zc_LoadIn=embed-trainingAnnouncementFrame&zc_Header=true";
+	}
+	else if(section == "Programmes")
+	{
+		targetUrl = "#Report:Training_Programme_List?zc_LoadIn=embed-trainingAnnouncementFrame&zc_Header=true";
+	}
+	else if(section == "Schedule")
+	{
+		targetUrl = "#Report:My_Training_Schedule?zc_LoadIn=embed-trainingAnnouncementFrame&zc_Header=true";
+	}
+	else if(section == "Completions")
+	{
+		targetUrl = "#Report:Training_Completion_List?zc_LoadIn=embed-trainingAnnouncementFrame&zc_Header=true";
+	}
+	else if(section == "Announcements")
+	{
+		targetUrl = "#Report:Announcement_List?zc_LoadIn=embed-trainingAnnouncementFrame&zc_Header=true";
+	}
+	else if(section == "MyAcks")
+	{
+		targetUrl = "#Report:My_Announcement_Acknowledgements?zc_LoadIn=embed-trainingAnnouncementFrame&zc_Header=true";
+	}
+	else if(section == "PendingAcks")
+	{
+		targetUrl = "#Report:Pending_Announcement_Acknowledgements?zc_LoadIn=embed-trainingAnnouncementFrame&zc_Header=true";
+	}
+	else if(section == "Kanbans")
+	{
+		targetUrl = "#Report:Training_Request_Kanban?zc_LoadIn=embed-trainingAnnouncementFrame&zc_Header=true";
+	}
+	openUrl(targetUrl,"same window");
+	todayDisplay = zoho.currentdate.toString("dd-MMM-yyyy");
+	trainingRequestsTotal = Training_Request[ID != 0].count();
+	myTrainingRequestsTotal = Training_Request[Raised_By == zoho.loginuserid || Raised_By == zoho.loginuser].count();
+	programmeTotal = Training_Programme[ID != 0].count();
+	myScheduleTotal = Training_Programme[Assigned_Employees.Official_Email == zoho.loginuser || Assigned_Employees.Official_Email == loginEmail].count();
+	completionTotal = Training_Completion[ID != 0].count();
+	announcementTotal = Announcement[ID != 0].count();
+	activeAnnouncementTotal = Announcement[Is_Active == true].count();
+	myAckTotal = Announcement_Acknowledgement[Employee.Official_Email == zoho.loginuser || Employee.Official_Email == loginEmail].count();
+	pendingAckTotal = Announcement_Acknowledgement[Acknowledged == false].count();
+	%>
+<style>
+/* zcs-global utility sheet subset for this page */
+:root{--zcs-theme-brand-color:var(--zcs_brand_color);--zcs-page-bg-color:#F3F3F4;--zcs-white-color:#FFFFFF;--zcs-primary-text-color:var(--zcs_primary_text_color);--zcs-secondary-text-color:var(--zcs_secondary_text_color);--zcs-teritiary-text-color:var(--zcs_tertiary_text_color);--zcs-border-color:var(--zcs_tertiary_border_color)}
+.zcs-row{display:flex;flex-wrap:wrap}.zcs-flex{display:flex}.zcs-inline-flex{display:inline-flex}.zcs-direction-column{flex-direction:column}.zcs-align-items-start{align-items:flex-start}.zcs-align-items-center{align-items:center}.zcs-justify-center{justify-content:center}.zcs-justify-space-between{justify-content:space-between}.zcs-gap-4{gap:.25rem}.zcs-gap-6{gap:.375rem}.zcs-gap-8{gap:.5rem}.zcs-gap-10{gap:.625rem}.zcs-gap-12{gap:.75rem}.zcs-gap-14{gap:.875rem}.zcs-gap-16{gap:1rem}.zcs-gap-20{gap:1.25rem}.zcs-gap-24{gap:1.5rem}.zcs-p-0{padding:0}.zcs-p-2{padding:.125rem}.zcs-p-8{padding:.5rem}.zcs-p-10{padding:.625rem}.zcs-p-12{padding:.75rem}.zcs-p-14{padding:.875rem}.zcs-p-16{padding:1rem}.zcs-p-18{padding:1.125rem}.zcs-p-20{padding:1.25rem}.zcs-p-24{padding:1.5rem}.zcs-px-8{padding-left:.5rem;padding-right:.5rem}.zcs-px-10{padding-left:.625rem;padding-right:.625rem}.zcs-px-12{padding-left:.75rem;padding-right:.75rem}.zcs-px-14{padding-left:.875rem;padding-right:.875rem}.zcs-px-16{padding-left:1rem;padding-right:1rem}.zcs-px-20{padding-left:1.25rem;padding-right:1.25rem}.zcs-px-30{padding-left:1.875rem;padding-right:1.875rem}.zcs-py-0{padding-top:0;padding-bottom:0}.zcs-py-2{padding-top:.125rem;padding-bottom:.125rem}.zcs-py-6{padding-top:.375rem;padding-bottom:.375rem}.zcs-py-8{padding-top:.5rem;padding-bottom:.5rem}.zcs-py-10{padding-top:.625rem;padding-bottom:.625rem}.zcs-py-12{padding-top:.75rem;padding-bottom:.75rem}.zcs-py-14{padding-top:.875rem;padding-bottom:.875rem}.zcs-py-20{padding-top:1.25rem;padding-bottom:1.25rem}.zcs-py-24{padding-top:1.5rem;padding-bottom:1.5rem}.zcs-m-0{margin:0}.zcs-mt-4{margin-top:.25rem}.zcs-mt-8{margin-top:.5rem}.zcs-mt-10{margin-top:.625rem}.zcs-mt-12{margin-top:.75rem}.zcs-mt-16{margin-top:1rem}.zcs-mt-18{margin-top:1.125rem}.zcs-mb-0{margin-bottom:0}.zcs-mb-8{margin-bottom:.5rem}.zcs-mb-12{margin-bottom:.75rem}.zcs-mb-16{margin-bottom:1rem}.zcs-mx-0{margin-left:0;margin-right:0}.zcs-w-full{width:100%}.zcs-wh-full{width:100%;height:100%}.zcs-col-common{flex:1 1 0}.zcs-no-shrink{flex-shrink:0}.zcs-font-12{font-size:.75rem}.zcs-font-13{font-size:.8125rem}.zcs-font-14{font-size:.875rem}.zcs-font-15{font-size:.9375rem}.zcs-font-16{font-size:1rem}.zcs-font-18{font-size:1.125rem}.zcs-font-20{font-size:1.25rem}.zcs-font-22{font-size:1.375rem}.zcs-font-24{font-size:1.5rem}.zcs-font-28{font-size:1.75rem}.zcs-font-30{font-size:1.875rem}.zcs-font-normal{font-weight:400}.zcs-font-medium{font-weight:500}.zcs-font-semibold{font-weight:600}.zcs-font-bold{font-weight:700}.zcs-lh-body{line-height:1.5}.zcs-lh-heading{line-height:1.25}.zcs-uppercase{text-transform:uppercase}.zcs-ellipsis{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.zcs-rounded-sm{border-radius:.25rem}.zcs-rounded-md{border-radius:.375rem}.zcs-rounded-lg{border-radius:.5rem}.zcs-rounded-xl{border-radius:.75rem}.zcs-rounded-2xl{border-radius:1rem}.zcs-rounded-half{border-radius:50%}.zcs-text-left{text-align:left}.zcs-text-center{text-align:center}.zcs-text-right{text-align:right}.zcs-box-border{box-sizing:border-box}.zcs-relative{position:relative}.zcs-sticky{position:sticky}.zcs-cursor-pointer{cursor:pointer}.zcs-color-primary{color:var(--zcs-primary-text-color)}.zcs-color-secondary{color:var(--zcs-secondary-text-color)}.zcs-color-tertiary{color:var(--zcs-teritiary-text-color)}.zcs-color-white{color:var(--zcs-white-color)}.zcs-color-theme{color:var(--zcs-theme-brand-color)}.zcs-card{background-color:var(--zcs-white-color);border:1px solid #e7e7ee;border-radius:12px}a{text-decoration:none}
+/* ZCS component: header-heading-with-actions and button-primary-button */
+.zcs-page-header{background:#fff;border-bottom:1px solid #ececf3}.zcs-button{width:auto;min-width:5rem;min-height:36px}.zcs-primary-button{background-color:var(--zcs_brand_color);color:var(--zcs_brand_foreground_color)}.zcs-primary-outline-button{border:1px solid var(--zcs_brand_color);background-color:var(--zcs-white-color);color:var(--zcs_brand_color)}.zcs-secondary-button{border:1px solid var(--zcs_primary_border_color);background-color:var(--zcs_light_grey_color);color:var(--zcs_primary_text_color)}.zcs-primary-button.zcs-button:hover{background-color:var(--zcs_brand_dark_color)}.zcs-primary-outline-button:hover{background-color:var(--zcs_component_hover_color);border-color:var(--zcs_brand_color);color:var(--zcs_brand_color)}.zcs-button-icon{width:16px;max-height:16px}
+/* ZCS component: horizontal-tab-horizontal-tab-with-icon */
+.zcs-horizontal-tabhead{box-shadow:0 -1px 0 0 var(--zcs_tertiary_border_color) inset;overflow-x:auto;overflow-y:hidden;-ms-overflow-style:none;scrollbar-width:none}.zcs-horizontal-tabhead::-webkit-scrollbar{display:none}.zcs-horizontal-tabitem{list-style-type:none;border-bottom:2px solid transparent;letter-spacing:.1px}.zcs-horizontal-tabicon{width:16px;height:16px}.zcs-horizontal-tabtext{text-wrap:nowrap}.zcs-horizontal-tabitem:hover .zcs-horizontal-tablink{color:var(--zcs_brand_color)}.zcs-horizontal-tabitem.zcs-horizontal-tabactive{border-bottom-color:var(--zcs_brand_color)}.zcs-horizontal-tabitem.zcs-horizontal-tabactive .zcs-horizontal-tablink{color:var(--zcs_brand_color)}.zcs-horizontal-tabbody{overflow:auto}
+/* ZCS component: badge-filled-badge */
+.zcs-badge{width:auto}.zcs-badge-filled{border:1px solid transparent}.zcs-badge-filled.zcs-badge-theme{background-color:var(--zcs_brand_color);border-color:var(--zcs_brand_color);color:var(--zcs-white-color)}.zcs-badge-filled.zcs-badge-green{background-color:#179E6C;border-color:#179E6C;color:var(--zcs-white-color)}.zcs-badge-filled.zcs-badge-red{background-color:#FE455D;border-color:#FE455D;color:var(--zcs-white-color)}.zcs-badge-filled.zcs-badge-grey{background-color:#242424;border-color:#242424;color:var(--zcs-white-color)}.zcs-badge-filled.zcs-badge-yellow{background-color:#FAAE13;border-color:#FAAE13;color:var(--zcs-white-color)}.zcs-badge-filled.zcs-badge-blue{background-color:#2A6FFC;border-color:#2A6FFC;color:var(--zcs-white-color)}.zcs-badge-filled.zcs-badge-orange{background-color:#F4660C;border-color:#F4660C;color:var(--zcs-white-color)}
+/* ZCS component: quick-actions-icon-with-text */
+.zcs-quick-action-item{list-style-type:none}.zcs-quick-action-item.zcs-card:hover{border-color:var(--zcs_brand_color)}.zcs-quick-action-item:hover .zcs-quick-action-link{color:var(--zcs_brand_color)}.zcs-quick-action-item:hover .zcs-quick-action-text{text-decoration:underline}.zcs-quick-action-item.zcs-card:hover .zcs-quick-action-text{text-decoration:none}
+/* ZCS component: table-simple-table */
+:root{--zcs-thead-color:#F9FAFE;--zcs-tr-h-color:#F9FAFE}.zcs-table-wrapper{border:1px solid var(--zcs_tertiary_border_color);background-color:var(--zcs-white-color);overflow:auto}.zcs-table-wrapper table{line-height:normal;border-collapse:collapse}.zcs-table-wrapper table thead{top:0}.zcs-table-wrapper table thead tr th{background-color:var(--zcs-thead-color);box-shadow:0 -1px 0 0 var(--zcs_tertiary_border_color) inset;white-space:nowrap}.zcs-table-wrapper table thead tr.zcs-tspace th{background-color:var(--zcs-white-color);box-shadow:none}.zcs-table-wrapper table tbody tr td{border-top:1px solid var(--zcs_tertiary_border_color)}.zcs-table-wrapper table tbody tr:first-child td{border-color:transparent}.zcs-table-wrapper table tbody tr:hover td{background-color:var(--zcs-tr-h-color)}.zcs-table-wrapper table tbody tr:first-child:hover td{border-color:var(--zcs_tertiary_border_color)}.zcs-table-wrapper table tbody tr td.zcs-green,.zcs-table-wrapper table tbody tr td .zcs-green{color:#179e6c}.zcs-table-wrapper table tbody tr td.zcs-yellow,.zcs-table-wrapper table tbody tr td .zcs-yellow{color:#b8770d}.zcs-table-wrapper table tbody tr td.zcs-blue,.zcs-table-wrapper table tbody tr td .zcs-blue{color:#09598e}
+/* Training and Announcement Home layout */
+.tah-page{min-height:100%;background:var(--zcs-page-bg-color);color:var(--zcs-primary-text-color);font-family:inherit}.tah-content{padding:24px 30px}.tah-hero{background:linear-gradient(135deg,var(--zcs_brand_color),var(--zcs_brand_dark_color));border-radius:18px;color:var(--zcs_brand_foreground_color);position:relative;overflow:hidden}.tah-hero:after{content:"";position:absolute;right:-56px;top:-70px;width:240px;height:240px;border-radius:50%;border:44px solid rgba(255,255,255,.14)}.tah-hero-inner{position:relative;z-index:1}.tah-hero-icon{width:58px;height:58px;border-radius:16px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.28);color:var(--zcs_brand_foreground_color)}.tah-kpi-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-top:18px}.tah-kpi{background:#fff;border:1px solid #e7e7ee;border-radius:14px;padding:16px;box-sizing:border-box}.tah-kpi-icon{width:38px;height:38px;border-radius:12px;background:var(--zcs_brand_light_color);color:var(--zcs_brand_color)}.tah-shell{display:grid;grid-template-columns:330px minmax(0,1fr);gap:18px;align-items:start;margin-top:18px}.tah-sidebar{position:sticky;top:16px}.tah-card-link{border:1px solid #ececf3;border-radius:12px;background:#fff;color:var(--zcs-primary-text-color);transition:.2s ease}.tah-card-link:hover{border-color:var(--zcs_brand_color);background:var(--zcs_component_hover_color);color:var(--zcs_brand_color)}.tah-tabbar{background:#fff;border:1px solid #e7e7ee;border-radius:14px 14px 0 0}.tah-frame-wrap{background:#fff;border:1px solid #e7e7ee;border-top:0;border-radius:0 0 14px 14px;min-height:640px;overflow:hidden}.tah-frame{width:100%;min-height:640px;height:calc(100vh - 240px);overflow:auto}.tah-directory{margin-top:18px}.tah-section-title{letter-spacing:.08em}.tah-report-link{color:var(--zcs_brand_color);font-weight:500}.tah-report-link:hover{text-decoration:underline}.tah-action-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.tah-muted-panel{background:#F9FAFE;border:1px dashed #dfe2ee;border-radius:12px}.tah-mobile-actions{flex-wrap:wrap}.tah-quick-actions-wrapper{border-radius:14px}.tah-kanban-grid{display:grid;grid-template-columns:1fr;gap:10px}
+@media (max-width:1180px){.tah-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.tah-shell{grid-template-columns:1fr}.tah-sidebar{position:static}.tah-action-grid{grid-template-columns:1fr}}
+@media (max-width:700px){.tah-content{padding:16px}.zcs-page-header{padding:16px;align-items:flex-start;flex-direction:column}.tah-mobile-actions{width:100%}.tah-mobile-actions .zcs-button{width:100%;justify-content:center}.tah-kpi-grid{grid-template-columns:1fr}.tah-hero-inner{flex-direction:column;align-items:flex-start}.tah-frame{height:650px}.tah-horizontal-tablink{padding-left:.75rem;padding-right:.75rem}}
+</style>
+
+<div class='tah-page'>
+	<div class='zcs-page-header zcs-w-full zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-8 zcs-px-30 zcs-py-24 zcs-box-border'>
+		<div class='zcs-flex zcs-direction-column zcs-gap-4 zcs-ellipsis'>
+			<h5 class='zcs-font-20 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-ellipsis zcs-m-0'>Training Announcement Home</h5>
+			<span class='zcs-font-14 zcs-color-secondary'>A unified workspace for training requests, programmes, schedules, completions, announcements, acknowledgements, and Kanban views.</span>
+		</div>
+		<div class='zcs-flex zcs-align-items-center zcs-gap-12 tah-mobile-actions'>
+			<a class='zcs-button zcs-primary-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body' href='#Form:Training_Request?zc_LoadIn=dialog'>
+				<i class='zcs-button-icon zc-li-outline ui-1-simple-add'></i>
+				<span class='zcs-button-text'>Raise Training Request</span>
+			</a>
+			<a class='zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body' href='#Form:Training_Programme?zc_LoadIn=dialog'>
+				<i class='zcs-button-icon zc-li-outline ui-2-calendar-date'></i>
+				<span class='zcs-button-text'>Create Programme</span>
+			</a>
+			<a class='zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body' href='#Form:Announcement?zc_LoadIn=dialog'>
+				<i class='zcs-button-icon zc-li-outline ui-3-megaphone'></i>
+				<span class='zcs-button-text'>Publish Announcement</span>
+			</a>
+		</div>
+	</div>
+
+	<div class='tah-content'>
+		<div class='tah-hero zcs-p-24 zcs-box-border'>
+			<div class='tah-hero-inner zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-20'>
+				<div class='zcs-flex zcs-align-items-center zcs-gap-16'>
+					<div class='tah-hero-icon zcs-flex zcs-align-items-center zcs-justify-center zcs-font-24 zcs-font-bold zcs-no-shrink'><i class='zc-li-outline education-paper-diploma'></i></div>
+					<div class='zcs-flex zcs-direction-column zcs-gap-4'>
+						<span class='zcs-font-13 zcs-uppercase'>Workspace date</span>
+						<h4 class='zcs-font-28 zcs-font-semibold zcs-lh-heading zcs-color-white zcs-m-0'><%=todayDisplay%></h4>
+						<span class='zcs-font-14'>Use the tabs to load each training and announcement report in place.</span>
+					</div>
+				</div>
+				<div class='zcs-flex zcs-align-items-center zcs-gap-10'>
+					<i class='zc-li-outline users-single-01 zcs-font-20'></i>
+					<span class='zcs-font-15 zcs-font-medium'><%=loginEmail%></span>
+				</div>
+			</div>
+		</div>
+
+		<div class='tah-kpi-grid'>
+			<div class='tah-kpi zcs-flex zcs-direction-column zcs-gap-10'>
+				<div class='zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-8'>
+					<div class='tah-kpi-icon zcs-inline-flex zcs-align-items-center zcs-justify-center'><i class='zc-li-outline design-todo'></i></div>
+					<div class='zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-theme'><span class='zcs-badge-text zcs-font-13 zcs-font-normal zcs-lh-body'>Requests</span></div>
+				</div>
+				<span class='zcs-font-13 zcs-color-tertiary'>Training Requests</span>
+				<strong class='zcs-font-30 zcs-font-semibold zcs-color-primary'><%=trainingRequestsTotal%></strong>
+			</div>
+			<div class='tah-kpi zcs-flex zcs-direction-column zcs-gap-10'>
+				<div class='tah-kpi-icon zcs-inline-flex zcs-align-items-center zcs-justify-center'><i class='zc-li-outline ui-2-calendar-date'></i></div>
+				<span class='zcs-font-13 zcs-color-tertiary'>Training Programmes</span>
+				<strong class='zcs-font-30 zcs-font-semibold zcs-color-primary'><%=programmeTotal%></strong>
+			</div>
+			<div class='tah-kpi zcs-flex zcs-direction-column zcs-gap-10'>
+				<div class='tah-kpi-icon zcs-inline-flex zcs-align-items-center zcs-justify-center'><i class='zc-li-outline ui-1-check-circle-08'></i></div>
+				<span class='zcs-font-13 zcs-color-tertiary'>Training Completions</span>
+				<strong class='zcs-font-30 zcs-font-semibold zcs-color-primary'><%=completionTotal%></strong>
+			</div>
+			<div class='tah-kpi zcs-flex zcs-direction-column zcs-gap-10'>
+				<div class='zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-8'>
+					<div class='tah-kpi-icon zcs-inline-flex zcs-align-items-center zcs-justify-center'><i class='zc-li-outline ui-3-megaphone'></i></div>
+					<div class='zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-green'><span class='zcs-badge-text zcs-font-13 zcs-font-normal zcs-lh-body'>Active <%=activeAnnouncementTotal%></span></div>
+				</div>
+				<span class='zcs-font-13 zcs-color-tertiary'>Announcements</span>
+				<strong class='zcs-font-30 zcs-font-semibold zcs-color-primary'><%=announcementTotal%></strong>
+			</div>
+		</div>
+
+		<div class='tah-shell'>
+			<aside class='tah-sidebar zcs-flex zcs-direction-column zcs-gap-16'>
+				<div class='zcs-quick-actions-wrapper tah-quick-actions-wrapper zcs-card zcs-flex zcs-direction-column zcs-gap-16 zcs-p-16 zcs-box-border'>
+					<h5 class='zcs-font-18 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0'>Quick actions</h5>
+					<ul class='zcs-flex zcs-direction-column zcs-gap-16 zcs-p-0 zcs-m-0'>
+						<li class='zcs-quick-action-item'><a class='zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary zcs-cursor-pointer' href='#Report:My_Training_Requests?zc_LoadIn=embed-trainingAnnouncementFrame&amp;zc_Header=true'><i class='zcs-quick-action-icon zcs-font-medium zc-li-outline users-single-01'></i><span class='zcs-quick-action-text'>Open my training requests</span></a></li>
+						<li class='zcs-quick-action-item'><a class='zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary zcs-cursor-pointer' href='#Report:My_Training_Schedule?zc_LoadIn=embed-trainingAnnouncementFrame&amp;zc_Header=true'><i class='zcs-quick-action-icon zcs-font-medium zc-li-outline ui-2-calendar-date'></i><span class='zcs-quick-action-text'>Open my training schedule</span></a></li>
+						<li class='zcs-quick-action-item'><a class='zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary zcs-cursor-pointer' href='#Report:Pending_Announcement_Acknowledgements?zc_LoadIn=embed-trainingAnnouncementFrame&amp;zc_Header=true'><i class='zcs-quick-action-icon zcs-font-medium zc-li-outline arrows-4-restore'></i><span class='zcs-quick-action-text'>Review pending acknowledgements</span></a></li>
+						<li class='zcs-quick-action-item'><a class='zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary zcs-cursor-pointer' href='#Form:Training_Completion?zc_LoadIn=dialog'><i class='zcs-quick-action-icon zcs-font-medium zc-li-outline ui-1-check-circle-08'></i><span class='zcs-quick-action-text'>Record training completion</span></a></li>
+					</ul>
+				</div>
+
+				<div class='zcs-card zcs-flex zcs-direction-column zcs-gap-12 zcs-p-16 zcs-box-border'>
+					<div class='zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-8'>
+						<h5 class='zcs-font-18 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0'>My snapshot</h5>
+						<i class='zc-li-outline users-single-01 zcs-color-theme'></i>
+					</div>
+					<a class='tah-card-link zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-10 zcs-p-12 zcs-box-border' href='#Report:My_Training_Requests?zc_LoadIn=embed-trainingAnnouncementFrame&amp;zc_Header=true'><span class='zcs-font-14'>My training requests</span><strong><%=myTrainingRequestsTotal%></strong></a>
+					<a class='tah-card-link zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-10 zcs-p-12 zcs-box-border' href='#Report:My_Training_Schedule?zc_LoadIn=embed-trainingAnnouncementFrame&amp;zc_Header=true'><span class='zcs-font-14'>My schedule rows</span><strong><%=myScheduleTotal%></strong></a>
+					<a class='tah-card-link zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-10 zcs-p-12 zcs-box-border' href='#Report:My_Announcement_Acknowledgements?zc_LoadIn=embed-trainingAnnouncementFrame&amp;zc_Header=true'><span class='zcs-font-14'>My acknowledgements</span><strong><%=myAckTotal%></strong></a>
+				</div>
+
+				<div class='zcs-card zcs-flex zcs-direction-column zcs-gap-12 zcs-p-16 zcs-box-border'>
+					<h5 class='zcs-font-18 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0'>Kanban shortcuts</h5>
+					<div class='tah-kanban-grid'>
+						<a class='tah-card-link zcs-flex zcs-align-items-center zcs-gap-10 zcs-p-12 zcs-box-border' href='#Report:Training_Request_Kanban?zc_LoadIn=embed-trainingAnnouncementFrame&amp;zc_Header=true'><i class='zc-li-outline design-todo zcs-color-theme'></i><span class='zcs-font-14'>Training request Kanban</span></a>
+						<a class='tah-card-link zcs-flex zcs-align-items-center zcs-gap-10 zcs-p-12 zcs-box-border' href='#Report:Training_Programme_Kanban?zc_LoadIn=embed-trainingAnnouncementFrame&amp;zc_Header=true'><i class='zc-li-outline ui-2-calendar-date zcs-color-theme'></i><span class='zcs-font-14'>Training programme Kanban</span></a>
+						<a class='tah-card-link zcs-flex zcs-align-items-center zcs-gap-10 zcs-p-12 zcs-box-border' href='#Report:Training_Completion_Kanban?zc_LoadIn=embed-trainingAnnouncementFrame&amp;zc_Header=true'><i class='zc-li-outline ui-1-check-circle-08 zcs-color-theme'></i><span class='zcs-font-14'>Training completion Kanban</span></a>
+						<a class='tah-card-link zcs-flex zcs-align-items-center zcs-gap-10 zcs-p-12 zcs-box-border' href='#Report:Announcement_Status_Kanban?zc_LoadIn=embed-trainingAnnouncementFrame&amp;zc_Header=true'><i class='zc-li-outline ui-3-megaphone zcs-color-theme'></i><span class='zcs-font-14'>Announcement status Kanban</span></a>
+					</div>
+				</div>
+
+				<div class='zcs-card zcs-flex zcs-direction-column zcs-gap-12 zcs-p-16 zcs-box-border'>
+					<h5 class='zcs-font-18 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0'>Acknowledgement queue</h5>
+					<div class='tah-muted-panel zcs-p-12 zcs-box-border zcs-flex zcs-direction-column zcs-gap-8'>
+						<span class='zcs-font-14 zcs-color-primary'>Pending acknowledgements: <strong><%=pendingAckTotal%></strong></span>
+						<span class='zcs-font-14 zcs-color-primary'>My acknowledgement rows: <strong><%=myAckTotal%></strong></span>
+					</div>
+				</div>
+			</aside>
+
+			<main class='zcs-flex zcs-direction-column'>
+				<div class='zcs-horizontal-tabpanel zcs-flex zcs-direction-column zcs-wh-full'>
+					<ul class='zcs-horizontal-tabhead tah-tabbar zcs-flex zcs-gap-12 zcs-px-10 zcs-py-0 zcs-m-0 zcs-box-border'>
+						<li class='zcs-horizontal-tabitem <%=if(section == "Requests","zcs-horizontal-tabactive","")%>'><a class='zcs-horizontal-tablink tah-horizontal-tablink zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-10 zcs-py-12 zcs-box-border zcs-font-medium zcs-lh-body zcs-color-tertiary' href='#Page:Training_Announcement_Home?Section=Requests'><i class='zcs-horizontal-tabicon zcs-font-16 zcs-font-medium zc-li-outline design-todo'></i><span class='zcs-horizontal-tabtext zcs-font-15'>Requests</span></a></li>
+						<li class='zcs-horizontal-tabitem <%=if(section == "MyRequests","zcs-horizontal-tabactive","")%>'><a class='zcs-horizontal-tablink tah-horizontal-tablink zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-10 zcs-py-12 zcs-box-border zcs-font-medium zcs-lh-body zcs-color-tertiary' href='#Page:Training_Announcement_Home?Section=MyRequests'><i class='zcs-horizontal-tabicon zcs-font-16 zcs-font-medium zc-li-outline users-single-01'></i><span class='zcs-horizontal-tabtext zcs-font-15'>My Requests</span></a></li>
+						<li class='zcs-horizontal-tabitem <%=if(section == "Programmes","zcs-horizontal-tabactive","")%>'><a class='zcs-horizontal-tablink tah-horizontal-tablink zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-10 zcs-py-12 zcs-box-border zcs-font-medium zcs-lh-body zcs-color-tertiary' href='#Page:Training_Announcement_Home?Section=Programmes'><i class='zcs-horizontal-tabicon zcs-font-16 zcs-font-medium zc-li-outline education-paper-diploma'></i><span class='zcs-horizontal-tabtext zcs-font-15'>Programmes</span></a></li>
+						<li class='zcs-horizontal-tabitem <%=if(section == "Schedule","zcs-horizontal-tabactive","")%>'><a class='zcs-horizontal-tablink tah-horizontal-tablink zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-10 zcs-py-12 zcs-box-border zcs-font-medium zcs-lh-body zcs-color-tertiary' href='#Page:Training_Announcement_Home?Section=Schedule'><i class='zcs-horizontal-tabicon zcs-font-16 zcs-font-medium zc-li-outline ui-2-calendar-date'></i><span class='zcs-horizontal-tabtext zcs-font-15'>My Schedule</span></a></li>
+						<li class='zcs-horizontal-tabitem <%=if(section == "Completions","zcs-horizontal-tabactive","")%>'><a class='zcs-horizontal-tablink tah-horizontal-tablink zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-10 zcs-py-12 zcs-box-border zcs-font-medium zcs-lh-body zcs-color-tertiary' href='#Page:Training_Announcement_Home?Section=Completions'><i class='zcs-horizontal-tabicon zcs-font-16 zcs-font-medium zc-li-outline ui-1-check-circle-08'></i><span class='zcs-horizontal-tabtext zcs-font-15'>Completions</span></a></li>
+						<li class='zcs-horizontal-tabitem <%=if(section == "Announcements","zcs-horizontal-tabactive","")%>'><a class='zcs-horizontal-tablink tah-horizontal-tablink zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-10 zcs-py-12 zcs-box-border zcs-font-medium zcs-lh-body zcs-color-tertiary' href='#Page:Training_Announcement_Home?Section=Announcements'><i class='zcs-horizontal-tabicon zcs-font-16 zcs-font-medium zc-li-outline ui-3-megaphone'></i><span class='zcs-horizontal-tabtext zcs-font-15'>Announcements</span></a></li>
+						<li class='zcs-horizontal-tabitem <%=if(section == "MyAcks","zcs-horizontal-tabactive","")%>'><a class='zcs-horizontal-tablink tah-horizontal-tablink zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-10 zcs-py-12 zcs-box-border zcs-font-medium zcs-lh-body zcs-color-tertiary' href='#Page:Training_Announcement_Home?Section=MyAcks'><i class='zcs-horizontal-tabicon zcs-font-16 zcs-font-medium zc-li-outline ui-1-check-circle-07'></i><span class='zcs-horizontal-tabtext zcs-font-15'>My Acks</span></a></li>
+						<li class='zcs-horizontal-tabitem <%=if(section == "PendingAcks","zcs-horizontal-tabactive","")%>'><a class='zcs-horizontal-tablink tah-horizontal-tablink zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-10 zcs-py-12 zcs-box-border zcs-font-medium zcs-lh-body zcs-color-tertiary' href='#Page:Training_Announcement_Home?Section=PendingAcks'><i class='zcs-horizontal-tabicon zcs-font-16 zcs-font-medium zc-li-outline arrows-4-restore'></i><span class='zcs-horizontal-tabtext zcs-font-15'>Pending Acks</span></a></li>
+						<li class='zcs-horizontal-tabitem <%=if(section == "Kanbans","zcs-horizontal-tabactive","")%>'><a class='zcs-horizontal-tablink tah-horizontal-tablink zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-10 zcs-py-12 zcs-box-border zcs-font-medium zcs-lh-body zcs-color-tertiary' href='#Page:Training_Announcement_Home?Section=Kanbans'><i class='zcs-horizontal-tabicon zcs-font-16 zcs-font-medium zc-li-outline loader-dots-06'></i><span class='zcs-horizontal-tabtext zcs-font-15'>Kanbans</span></a></li>
+					</ul>
+					<div class='tah-frame-wrap'>
+						<div elName='zc-component' name='trainingAnnouncementFrame' class='tah-frame' pageLinkName='' viewLinkName=''></div>
+					</div>
+				</div>
+
+				<div class='tah-directory zcs-card zcs-p-16 zcs-box-border'>
+					<div class='zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12 zcs-mb-12'>
+						<div>
+							<span class='tah-section-title zcs-font-12 zcs-uppercase zcs-color-tertiary'>Navigation directory</span>
+							<h5 class='zcs-font-18 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-mt-4 zcs-mx-0 zcs-mb-0'>All training and announcement views</h5>
+						</div>
+						<div class='zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-theme'><span class='zcs-badge-text zcs-font-13 zcs-font-normal zcs-lh-body'>Reachability map</span></div>
+					</div>
+					<div class='zcs-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative'>
+						<table class='zcs-w-full'>
+							<thead class='zcs-sticky'>
+								<tr>
+									<th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Area</th>
+									<th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Component</th>
+									<th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Open in workspace</th>
+								</tr>
+								<tr class='zcs-tspace'><th class='zcs-p-8 zcs-box-border' colspan='3'></th></tr>
+							</thead>
+							<tbody>
+								<tr><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary'>Training requests</td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary'>Training_Request_List</td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14'><a class='tah-report-link' href='#Report:Training_Request_List?zc_LoadIn=embed-trainingAnnouncementFrame&amp;zc_Header=true'>Open report</a></td></tr>
+								<tr><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary'>Training requests</td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary'>My_Training_Requests</td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14'><a class='tah-report-link' href='#Report:My_Training_Requests?zc_LoadIn=embed-trainingAnnouncementFrame&amp;zc_Header=true'>Open report</a></td></tr>
+								<tr><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary'>Training programmes</td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary'>Training_Programme_List</td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14'><a class='tah-report-link' href='#Report:Training_Programme_List?zc_LoadIn=embed-trainingAnnouncementFrame&amp;zc_Header=true'>Open report</a></td></tr>
+								<tr><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary'>Training programmes</td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary'>My_Training_Schedule</td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14'><a class='tah-report-link' href='#Report:My_Training_Schedule?zc_LoadIn=embed-trainingAnnouncementFrame&amp;zc_Header=true'>Open report</a></td></tr>
+								<tr><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary'>Training completions</td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary'>Training_Completion_List</td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14'><a class='tah-report-link' href='#Report:Training_Completion_List?zc_LoadIn=embed-trainingAnnouncementFrame&amp;zc_Header=true'>Open report</a></td></tr>
+								<tr><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary'>Announcements</td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary'>Announcement_List</td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14'><a class='tah-report-link' href='#Report:Announcement_List?zc_LoadIn=embed-trainingAnnouncementFrame&amp;zc_Header=true'>Open report</a></td></tr>
+								<tr><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary'>Acknowledgements</td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary'>My_Announcement_Acknowledgements</td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14'><a class='tah-report-link' href='#Report:My_Announcement_Acknowledgements?zc_LoadIn=embed-trainingAnnouncementFrame&amp;zc_Header=true'>Open report</a></td></tr>
+								<tr><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary'>Acknowledgements</td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary'>Pending_Announcement_Acknowledgements</td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14'><a class='tah-report-link' href='#Report:Pending_Announcement_Acknowledgements?zc_LoadIn=embed-trainingAnnouncementFrame&amp;zc_Header=true'>Open report</a></td></tr>
+								<tr><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary'>Kanban</td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary'>Training_Request_Kanban</td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14'><a class='tah-report-link' href='#Report:Training_Request_Kanban?zc_LoadIn=embed-trainingAnnouncementFrame&amp;zc_Header=true'>Open Kanban</a></td></tr>
+								<tr><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary'>Kanban</td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary'>Training_Programme_Kanban</td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14'><a class='tah-report-link' href='#Report:Training_Programme_Kanban?zc_LoadIn=embed-trainingAnnouncementFrame&amp;zc_Header=true'>Open Kanban</a></td></tr>
+								<tr><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary'>Kanban</td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary'>Training_Completion_Kanban</td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14'><a class='tah-report-link' href='#Report:Training_Completion_Kanban?zc_LoadIn=embed-trainingAnnouncementFrame&amp;zc_Header=true'>Open Kanban</a></td></tr>
+								<tr><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary'>Kanban</td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary'>Announcement_Status_Kanban</td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14'><a class='tah-report-link' href='#Report:Announcement_Status_Kanban?zc_LoadIn=embed-trainingAnnouncementFrame&amp;zc_Header=true'>Open Kanban</a></td></tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</main>
+		</div>
+	</div>
+</div>

@@ -1,0 +1,34 @@
+Travel_Selected_Options_On_Validate as "Travel Selected Options - On Validate"
+{
+
+				type =  form
+				form = Travel_Selected_Options
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Actual_Cost < 0)
+										{
+											alert "Actual cost cannot be negative.";
+											cancel submit;
+										}
+										parentRequests = Travel_Request[ID == input.Travel_Request];
+										if(parentRequests.count() > 0)
+										{
+											if(parentRequests.Status != "Pending_HR" && parentRequests.Status != "Approved" && parentRequests.Status != "Bills_Pending")
+											{
+												alert "Selected travel options can be changed only during HR booking or bill processing stages.";
+												cancel submit;
+											}
+										}
+						)
+					}
+				}
+
+			
+}

@@ -1,0 +1,21 @@
+schedule_appraisal_reminders as "Appraisal Reminders"
+{
+
+				type =  schedule
+				start = "2025-01-01 09:00:00"
+				frequency = daily
+				time zone = "Asia/Kolkata"
+				on start
+				{
+					actions 
+					{
+					on load
+					(
+						activeCycles = Appraisal_Config[Is_Active == true && Window_Start <= zoho.currentdate && Manager_Scoring_End >= zoho.currentdate];
+										reminderCount = activeCycles.count();
+										thisapp.Add_Audit_Log("APPRAISAL_REMINDER","Performance","Appraisal_Config",0,"Reminder","","","Reminder audit only. Active appraisal cycles in window: " + reminderCount + ".",true,"");
+					)
+					}
+				}
+			
+}

@@ -1,0 +1,41 @@
+Offboarding_Checklist_On_Success as "Offboarding Checklist - On Success"
+{
+
+				type =  form
+				form = Offboarding_Checklist
+
+				record event = on add or edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											try 
+										{
+											thisapp.Add_Audit_Log("OFFBOARDING_CHECKLIST_SAVE","Offboarding","Offboarding_Checklist",input.ID,"Save","",input.Status,"Offboarding checklist item saved",true,"");
+										}catch (auditErr)
+										{
+										}
+										if(input.Resignation_Request != null)
+										{
+											openItems = Offboarding_Checklist[Resignation_Request == input.Resignation_Request && Status == "Pending"];
+											if(openItems.count() == 0)
+											{
+												try 
+												{
+													tokenMap = Map();
+													tokenMap.put("resignation_request",input.Resignation_Request.toString());
+													thisapp.Send_Configured_Notification("OFFBOARDING_CHECKLIST_COMPLETE",tokenMap,"Offboarding checklist complete","All checklist items are complete or waived for resignation {{resignation_request}}.");
+												}		catch (notifyErr)
+												{
+												}
+											}
+										}
+						)
+					}
+				}
+
+			
+}

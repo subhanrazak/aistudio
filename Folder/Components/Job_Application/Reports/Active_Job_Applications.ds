@@ -1,0 +1,60 @@
+default list Active_Job_Applications
+{
+
+			displayName = "Active Job Applications"
+			show all rows from Job_Application  [Status == "Active" || Status == "On_Hold" || Status == "Selected"]  
+			(
+				Candidate
+				Job_Request as "Job Request"
+				Application_Date as "Application Date"
+				Source_Of_Application as "Source Of Application"
+				Current_Round as "Current Round"
+				Status
+				custom action "View Feedback"
+				(
+	  			workflow = View_Interview_Feedback
+				column header = "View Feedback"
+				success message = "Opening interview feedback"
+				)
+				custom action "Move to Pool"
+				(
+	  			workflow = Move_Candidate_To_Pool
+				column header = "Move to Pool"
+				success message = "Candidate moved to pool"
+				condition = (Status == "Rejected" || Status == "On_Hold")
+				)
+				custom action "Place on Hold"
+				(
+	  			workflow = Place_Application_On_Hold
+				column header = "Place on Hold"
+				success message = "Application placed on hold"
+				condition = (Status == "Active")
+				)
+				custom action "Resume"
+				(
+	  			workflow = Resume_Job_Application
+				column header = "Resume"
+				success message = "Application resumed"
+				condition = (Status == "On_Hold")
+				)
+				custom action "Convert to Employee"
+				(
+	  			workflow = Convert_Application_To_Employee
+				column header = "Convert to Employee"
+				success message = "Opening employee conversion"
+				condition = (Status == "Offer_Accepted")
+				)
+			)
+			filters
+			(
+				Candidate
+				Job_Request
+				Status
+				Source_Of_Application
+			)
+			sort by
+			(
+				Application_Date descending
+			)
+		
+}

@@ -1,0 +1,29 @@
+schedule_lock_kpi_on_window_open as "Lock KPI On Window Open"
+{
+
+				type =  schedule
+				start = "2025-01-01 00:01:00"
+				frequency = daily
+				time zone = "Asia/Kolkata"
+				on start
+				{
+					actions 
+					{
+					on load
+					(
+						lockedCount = 0;
+										activeCycles = Appraisal_Config[Is_Active == true && Window_Start <= zoho.currentdate];
+										for each  cycleRec in activeCycles
+										{
+											for each  kpiRec in KPI_KRA[Appraisal_Config == cycleRec.ID && Is_Locked == false]
+											{
+												kpiRec.Is_Locked=true;
+												lockedCount = lockedCount + 1;
+											}
+										}
+										thisapp.Add_Audit_Log("KPI_LOCKED","Performance","KPI_KRA",0,"Lock","Unlocked","Locked","KPI/KRA lock schedule locked " + lockedCount + " records.",true,"");
+					)
+					}
+				}
+			
+}

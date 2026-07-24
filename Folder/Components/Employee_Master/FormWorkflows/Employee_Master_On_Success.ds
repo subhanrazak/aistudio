@@ -1,0 +1,40 @@
+Employee_Master_On_Success as "Employee Master - On Success"
+{
+
+				type =  form
+				form = Employee_Master
+
+				record event = on add
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											createdCount = 0;
+										activeLeaveTypes = Leave_Type_Config[Is_Active == true];
+										for each  leaveTypeRecord in activeLeaveTypes
+										{
+											existingBalance = Leave_Balance[Employee == input.ID && Leave_Type == leaveTypeRecord.ID];
+											if(existingBalance.count() == 0)
+											{
+												insert into Leave_Balance
+												[
+													Employee=input.ID
+													Leave_Type=leaveTypeRecord.ID
+													Balance_Days=0
+													Used_Days=0
+													Credited_Days=0
+													Added_User=zoho.loginuser
+												]
+												createdCount = createdCount + 1;
+											}
+										}
+										thisapp.Add_Audit_Log("EMPLOYEE_LEAVE_BALANCE_SEED","Employee","Employee_Master",input.ID,"Seed Leave Balances","","","Created missing leave balance rows: " + createdCount,true,"");
+						)
+					}
+				}
+
+			
+}

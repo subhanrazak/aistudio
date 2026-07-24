@@ -1,0 +1,43 @@
+Gift_Registration_On_Validate as "Gift Registration - On Validate"
+{
+
+				type =  form
+				form = Gift_Registration
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Employee == null)
+										{
+											employeeRows = Employee_Master[Official_Email == zoho.loginuserid || Official_Email == zoho.loginuser];
+											if(employeeRows.count() > 0)
+											{
+												input.Employee = employeeRows.ID;
+											}
+										}
+										if(input.Received_Date > zoho.currentdate)
+										{
+											alert "Received date cannot be in the future.";
+											cancel submit;
+										}
+										if(ifnull(input.Estimated_Value,0) < 0)
+										{
+											alert "Estimated value cannot be negative.";
+											cancel submit;
+										}
+										if(input.Status == "Pending_Finance" && input.Final_Decision == null)
+										{
+											alert "Final decision is required while the gift is pending finance review.";
+											cancel submit;
+										}
+						)
+					}
+				}
+
+			
+}

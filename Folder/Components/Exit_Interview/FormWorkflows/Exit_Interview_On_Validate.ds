@@ -1,0 +1,37 @@
+Exit_Interview_On_Validate as "Exit Interview - On Validate"
+{
+
+				type =  form
+				form = Exit_Interview
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Resignation_Request != null)
+										{
+											resignationRows = Resignation_Request[ID == input.Resignation_Request];
+											if(resignationRows.count() > 0)
+											{
+												input.Employee = resignationRows.Employee;
+												if(input.Interview_Date < resignationRows.Resignation_Date)
+												{
+													alert "Interview date cannot be before the resignation date.";
+													cancel submit;
+												}
+											}
+										}
+										if(input.Conducted_By == null)
+										{
+											input.Conducted_By = zoho.loginuserid;
+										}
+						)
+					}
+				}
+
+			
+}

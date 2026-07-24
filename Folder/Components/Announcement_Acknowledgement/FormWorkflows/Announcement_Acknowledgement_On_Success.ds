@@ -1,0 +1,37 @@
+Announcement_Acknowledgement_On_Success as "Announcement Acknowledgement - On Success"
+{
+
+				type =  form
+				form = Announcement_Acknowledgement
+
+				record event = on add or edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Acknowledged == true && input.Acknowledged_Date == null)
+										{
+											ackRows = Announcement_Acknowledgement[ID == input.ID];
+											if(ackRows.count() > 0)
+											{
+												ackRows.Acknowledged_Date=zoho.currenttime;
+											}
+										}
+										tokenMap = Map();
+										tokenMap.put("announcement",input.Announcement);
+										tokenMap.put("employee",input.Employee);
+										tokenMap.put("acknowledged",input.Acknowledged);
+										if(input.Acknowledged == true)
+										{
+											thisapp.Send_Configured_Notification("ANNOUNCEMENT_ACKNOWLEDGED",tokenMap,"Announcement acknowledged","An employee acknowledged an announcement.");
+											thisapp.Add_Audit_Log("ANNOUNCEMENT_ACKNOWLEDGED","Training_Announcement","Announcement_Acknowledgement",input.ID,"Acknowledged","Pending","Acknowledged","Announcement acknowledgement submitted.",true,"");
+										}
+						)
+					}
+				}
+
+			
+}

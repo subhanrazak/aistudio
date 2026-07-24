@@ -1,0 +1,41 @@
+Job_Application_On_User_Input as "Interview Feedback Job Application - On User Input"
+{
+
+				type =  form
+				form = Interview_Feedback
+
+				record event = on add or edit
+
+				on user input of Job_Application
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											input.Candidate = "";
+										input.Job_Request = "";
+										input.Round_Number = null;
+										if(input.Job_Application != null)
+										{
+											appRows = Job_Application[ID == input.Job_Application];
+											if(appRows.count() > 0)
+											{
+												input.Round_Number = appRows.Current_Round;
+												candidateRows = Candidate[ID == appRows.Candidate];
+												if(candidateRows.count() > 0)
+												{
+													input.Candidate = candidateRows.Candidate_Name;
+												}
+												jobRows = Job_Request[ID == appRows.Job_Request];
+												if(jobRows.count() > 0)
+												{
+													input.Job_Request = jobRows.Job_Title;
+												}
+											}
+										}
+						)
+					}
+				}
+
+			
+}

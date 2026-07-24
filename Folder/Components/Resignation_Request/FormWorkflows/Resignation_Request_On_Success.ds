@@ -1,0 +1,58 @@
+Resignation_Request_On_Success as "Resignation Request - On Success"
+{
+
+				type =  form
+				form = Resignation_Request
+
+				record event = on add or edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											noticeDays = 0;
+										employeeRows = Employee_Master[ID == input.Employee];
+										if(employeeRows.count() > 0 && employeeRows.Notice_Period_Days != null)
+										{
+											noticeRows = Notice_Period_Config[ID == employeeRows.Notice_Period_Days];
+											if(noticeRows.count() > 0)
+											{
+												noticeDays = ifnull(noticeRows.Notice_Period_Days,0);
+											}
+										}
+										if(input.Last_Working_Day == null)
+										{
+											input.Last_Working_Day = input.Resignation_Date.addDay(noticeDays);
+										}
+										if(input.HR_Modified_LWD != null)
+										{
+											input.Effective_LWD = input.HR_Modified_LWD;
+										}
+										else if(input.Effective_LWD == null)
+										{
+											input.Effective_LWD = input.Last_Working_Day;
+										}
+										try 
+										{
+											tokenMap = Map();
+											tokenMap.put("employee",input.Employee.toString());
+											tokenMap.put("status",input.Status);
+											tokenMap.put("effective_lwd",input.Effective_LWD.toString());
+											thisapp.Send_Configured_Notification("RESIGNATION_SUBMITTED",tokenMap,"Resignation request update","A resignation request is now {{status}} with effective LWD {{effective_lwd}}.");
+										}catch (notifyErr)
+										{
+										}
+										try 
+										{
+											thisapp.Add_Audit_Log("RESIGNATION_SAVE","Offboarding","Resignation_Request",input.ID,"Save","",input.Status,"Resignation request saved",true,"");
+										}catch (auditErr)
+										{
+										}
+						)
+					}
+				}
+
+			
+}

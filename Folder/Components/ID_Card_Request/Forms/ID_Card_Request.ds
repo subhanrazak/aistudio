@@ -1,0 +1,187 @@
+form ID_Card_Request
+{
+
+			displayname = "ID Card Request"
+			Request_Details
+			(
+				type = section
+				displayname = "Request Details"
+	 			row = 1
+	 			column = 0   
+				width = medium
+			)
+			Raised_By
+			(
+    			type = picklist
+				displayname = "Raised By"
+				module = users
+				displayformat = [name]
+	 			row = 1
+	 			column = 1   
+				width = medium
+			)
+			must have Requester_Type
+			(
+				type = picklist
+				displayname = "Requester Type"
+				values = {"Employee","Member"}
+	 			row = 1
+	 			column = 2   
+				width = medium
+			)
+			Employee_Requester
+			(
+				type = picklist	
+				displayname = "Employee Requester"
+				values  = Employee_Master[Employment_Status == "Active" || Employment_Status == "Probation"].ID
+    			displayformat = [Full_Name]
+	 			row = 1
+	 			column = 1   
+				width = medium
+			)
+			Member_Requester
+			(
+				type = picklist	
+				displayname = "Member Requester"
+				values  = Member_Master[Is_Active == true].ID
+    			displayformat = [Member_Name]
+	 			row = 1
+	 			column = 2   
+				width = medium
+			)
+			must have Recipient_Name
+			(
+    			type = text
+				displayname = "Recipient Name"
+				maxchar = 150
+	 			row = 1
+	 			column = 1   
+				width = medium
+			)
+			Recipient_Designation
+			(
+    			type = text
+				displayname = "Recipient Designation"
+				maxchar = 150
+	 			row = 1
+	 			column = 2   
+				width = medium
+			)
+			Recipient_Photo
+			(
+    			type = image
+				displayname = "Recipient Photo"
+				source  = file,camera
+				aspect ratio = square
+				camera = primary
+	 			row = 1
+	 			column = 1   
+				width = medium
+				personal data = true
+			)
+			must have Request_Type
+			(
+				type = picklist
+				displayname = "Request Type"
+				values = {"New","Renewal"}
+				initial value = "New"
+	 			row = 1
+	 			column = 2   
+				width = medium
+			)
+			Card_Details
+			(
+				type = section
+				displayname = "Card Details"
+				visibility = true
+	 			row = 2
+	 			column = 0   
+				width = medium
+			)
+			Extension_ID_Number
+			(
+    			type = text
+				displayname = "Extension ID Number"
+				maxchar = 100
+	 			row = 2
+	 			column = 1   
+				width = medium
+			)
+			Barcode_Display
+			(
+				type = barcode
+				displayname = "Barcode Display"
+				value = "${Extension_ID_Number}"
+				barcode type = "Code-128"
+	 			row = 2
+	 			column = 2   
+				width = medium
+			)
+			Valid_From
+			(
+    			type = date
+				displayname = "Valid From"
+				alloweddays = 0,1,2,3,4,5,6
+	 			row = 2
+	 			column = 1   
+				width = medium
+			)
+			Valid_Upto
+			(
+    			type = date
+				displayname = "Valid Upto"
+				alloweddays = 0,1,2,3,4,5,6
+	 			row = 2
+	 			column = 2   
+				width = medium
+			)
+			Status
+			(
+				type = picklist
+				values = {"Submitted","Extension_ID_Updated","Card_Generated","Received","Deactivated"}
+				initial value = "Submitted"
+	 			row = 2
+	 			column = 1   
+				width = medium
+			)
+			Received_Date
+			(
+    			type = date
+				displayname = "Received Date"
+				alloweddays = 0,1,2,3,4,5,6
+	 			row = 2
+	 			column = 2   
+				width = medium
+			)
+	
+			actions
+			{
+				on add
+				{
+					Submit
+					(
+   						type = submit
+   						displayname = "Submit"
+					)
+					Reset
+					(
+   						type = reset
+   						displayname = "Reset"
+					)
+				}
+				on edit
+				{
+					Update
+					(
+   						type = submit
+   						displayname = "Update"
+					)
+					Cancel
+					(
+   						type = cancel
+   						displayname = "Cancel"
+					)
+				}
+			}
+		
+}

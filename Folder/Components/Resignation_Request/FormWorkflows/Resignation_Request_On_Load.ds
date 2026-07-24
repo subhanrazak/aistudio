@@ -1,0 +1,37 @@
+Resignation_Request_On_Load as "Resignation Request - On Load"
+{
+
+				type =  form
+				form = Resignation_Request
+
+				record event = on add or edit
+
+				on load
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											disable Last_Working_Day;
+										disable Effective_LWD;
+										if(input.Employee == null)
+										{
+											employeeRows = Employee_Master[Official_Email == zoho.loginuserid || Official_Email == zoho.loginuser];
+											if(employeeRows.count() > 0)
+											{
+												input.Employee = employeeRows.ID;
+											}
+										}
+										if(input.Status == "Approved" || input.Status == "Rejected")
+										{
+											disable Employee;
+											disable Resignation_Date;
+											disable Reason;
+											disable Exit_Type;
+										}
+						)
+					}
+				}
+
+			
+}

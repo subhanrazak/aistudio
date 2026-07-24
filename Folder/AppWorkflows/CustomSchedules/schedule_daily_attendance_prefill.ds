@@ -1,0 +1,36 @@
+schedule_daily_attendance_prefill as "Daily Attendance Prefill"
+{
+
+				type =  schedule
+				start = "2025-01-01 06:00:00"
+				frequency = daily
+				time zone = "Asia/Kolkata"
+				on start
+				{
+					actions 
+					{
+					on load
+					(
+						createdCount = 0;
+										for each  employeeRec in Employee_Master[Employment_Status in {"Active","Probation"}]
+										{
+											existingAttendance = Attendance_Log[Employee == employeeRec.ID && Attendance_Date == zoho.currentdate];
+											if(existingAttendance.count() == 0)
+											{
+												insertedAttendanceId = insert into Attendance_Log
+												[
+													Employee=employeeRec.ID
+													Attendance_Date=zoho.currentdate
+													Attendance_Status="Not_Marked"
+													Source="System"
+													Added_User=zoho.loginuser
+												];
+												createdCount = createdCount + 1;
+											}
+										}
+										thisapp.Add_Audit_Log("ATTENDANCE_PREFILL","Attendance","Attendance_Log",0,"Prefill","","Not_Marked","Daily attendance prefill created " + createdCount + " rows.",true,"");
+					)
+					}
+				}
+			
+}

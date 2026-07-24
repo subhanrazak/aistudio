@@ -1,0 +1,72 @@
+ID_Card_Request_On_Validate as "ID Card Request - On Validate"
+{
+
+				type =  form
+				form = ID_Card_Request
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Raised_By == null)
+										{
+											input.Raised_By = zoho.loginuserid;
+										}
+										if(input.Requester_Type == "Employee")
+										{
+											if(input.Employee_Requester == null)
+											{
+												alert "Employee requester is required for employee ID card requests.";
+												cancel submit;
+											}
+											employeeRows = Employee_Master[ID == input.Employee_Requester];
+											if(employeeRows.count() > 0)
+											{
+												input.Recipient_Name = employeeRows.Full_Name;
+												input.Recipient_Designation = employeeRows.Designation;
+											}
+										}
+										if(input.Requester_Type == "Member")
+										{
+											if(input.Member_Requester == null)
+											{
+												alert "Member requester is required for member ID card requests.";
+												cancel submit;
+											}
+											memberRows = Member_Master[ID == input.Member_Requester];
+											if(memberRows.count() > 0)
+											{
+												input.Recipient_Name = memberRows.Member_Name;
+												input.Recipient_Designation = memberRows.Member_Type;
+											}
+										}
+										if(input.Request_Type == "Renewal" && input.Extension_ID_Number == null || input.Extension_ID_Number == "")
+										{
+											alert "Extension ID is mandatory for renewal requests.";
+											cancel submit;
+										}
+										if(input.Status == "Received")
+										{
+											if(input.Received_Date == null)
+											{
+												input.Received_Date = zoho.currentdate;
+											}
+											if(input.Valid_From == null)
+											{
+												input.Valid_From = zoho.currentdate;
+											}
+											if(input.Valid_Upto == null)
+											{
+												input.Valid_Upto = zoho.currentdate.addYear(3);
+											}
+										}
+						)
+					}
+				}
+
+			
+}

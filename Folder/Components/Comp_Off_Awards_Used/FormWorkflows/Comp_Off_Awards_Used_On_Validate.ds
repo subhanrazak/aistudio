@@ -1,0 +1,40 @@
+Comp_Off_Awards_Used_On_Validate as "Comp Off Awards Used - On Validate"
+{
+
+				type =  form
+				form = Comp_Off_Awards_Used
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Days_Consumed == null || input.Days_Consumed <= 0)
+										{
+											alert "Days consumed must be greater than zero.";
+											cancel submit;
+										}
+										awardRows = Comp_Off_Award[ID == input.Comp_Off_Award];
+										if(awardRows.count() > 0 && input.Days_Consumed > ifnull(awardRows.Balance,0))
+										{
+											alert "Days consumed cannot be greater than the available award balance.";
+											cancel submit;
+										}
+										parentRequests = Time_Off_Request[ID == input.Time_Off_Request];
+										if(parentRequests.count() > 0)
+										{
+											if(parentRequests.Status == "Approved" || parentRequests.Status == "Rejected" || parentRequests.Status == "Cancelled")
+											{
+												alert "Comp-off usage rows cannot be changed after the parent request is finalized.";
+												cancel submit;
+											}
+										}
+						)
+					}
+				}
+
+			
+}

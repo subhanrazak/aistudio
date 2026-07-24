@@ -1,0 +1,174 @@
+form Reimbursement_Request
+{
+
+			displayname = "Reimbursement Request"
+			Reimbursement_Details
+			(
+				type = section
+				displayname = "Reimbursement Details"
+	 			row = 1
+	 			column = 0   
+				width = medium
+			)
+			Employee
+			(
+				type = picklist	
+				values  = Employee_Master[Employment_Status == "Active" || Employment_Status == "Probation"].ID
+    			displayformat = [Full_Name]
+	 			row = 1
+	 			column = 1   
+				width = medium
+			)
+			must have Reimbursement_Type
+			(
+				type = picklist	
+				displayname = "Reimbursement Type"
+				values  = Reimbursement_Type_Config[Is_Active == true].ID
+    			displayformat = [Type_Name]
+	 			row = 1
+	 			column = 2   
+				width = medium
+			)
+			Category
+			(
+    			type = text
+				maxchar = 100
+	 			row = 1
+	 			column = 1   
+				width = medium
+			)
+			Source
+			(
+				type = picklist
+				values = {"Direct","Travel_Module"}
+				initial value = "Direct"
+	 			row = 1
+	 			column = 2   
+				width = medium
+			)
+			Linked_Travel_Request
+			(
+				type = picklist	
+				displayname = "Linked Travel Request"
+				values  = Travel_Request.ID
+    			displayformat = [Destination]
+	 			row = 1
+	 			column = 1   
+				width = medium
+			)
+			Amount_Claimed
+			(
+				displayname = "Amount Claimed"
+				type = INR
+				format = commadotindian
+				initial value = 0
+				maxchar = 14
+	 			row = 1
+	 			column = 2   
+				width = medium
+			)
+			Expense_Date
+			(
+    			type = date
+				displayname = "Expense Date"
+				initial value = "${zoho.currentdate}"
+				alloweddays = 0,1,2,3,4,5,6
+	 			row = 1
+	 			column = 1   
+				width = medium
+			)
+			must have Description
+			(
+    			type = textarea
+				height = 140px
+	 			row = 1
+	 			column = 2   
+				width = medium
+			)
+			Supporting_Bills
+			(
+    			type = upload file
+				displayname = "Supporting Bills"
+				browse = local_drive, google_docs, zoho_docs
+	 			row = 1
+	 			column = 1   
+				width = medium
+				personal data = true
+			)
+			Insurance_Sub_Type
+			(
+				type = picklist
+				displayname = "Insurance Sub Type"
+				values = {"Term_Life","Accidental"}
+	 			row = 1
+	 			column = 2   
+				width = medium
+			)
+			within_limit
+			(
+    			type = checkbox
+				displayname = "Within Limit"
+				initial value = true
+	 			row = 1
+	 			column = 1   
+				width = medium
+			)
+			Processing_Details
+			(
+				type = section
+				displayname = "Processing Details"
+				visibility = true
+	 			row = 2
+	 			column = 0   
+				width = medium
+			)
+			Status
+			(
+				type = picklist
+				values = {"Draft","Pending_Manager","Pending_HR","Pending_Finance","Processed","Rejected"}
+				initial value = "Draft"
+	 			row = 2
+	 			column = 1   
+				width = medium
+			)
+			Processed_Date
+			(
+    			type = date
+				displayname = "Processed Date"
+				alloweddays = 0,1,2,3,4,5,6
+	 			row = 2
+	 			column = 2   
+				width = medium
+			)
+	
+			actions
+			{
+				on add
+				{
+					Submit
+					(
+   						type = submit
+   						displayname = "Submit"
+					)
+					Reset
+					(
+   						type = reset
+   						displayname = "Reset"
+					)
+				}
+				on edit
+				{
+					Update
+					(
+   						type = submit
+   						displayname = "Update"
+					)
+					Cancel
+					(
+   						type = cancel
+   						displayname = "Cancel"
+					)
+				}
+			}
+		
+}

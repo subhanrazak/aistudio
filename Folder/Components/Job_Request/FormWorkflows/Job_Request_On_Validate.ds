@@ -1,0 +1,44 @@
+Job_Request_On_Validate as "Job Request - On Validate"
+{
+
+				type =  form
+				form = Job_Request
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(ifnull(input.Number_Of_Positions,0) < 1)
+										{
+											alert "Number of positions must be at least 1.";
+											cancel submit;
+										}
+										allowedCreator = false;
+										creatorEmployees = Employee_Master[Official_Email == zoho.loginuser];
+										if(creatorEmployees.count() > 0)
+										{
+											departmentRows = Department_Config[Department_Head == creatorEmployees.ID && Is_Active == true];
+											if(departmentRows.count() > 0)
+											{
+												allowedCreator = true;
+											}
+										}
+										if(zoho.loginuser == zoho.adminuserid)
+										{
+											allowedCreator = true;
+										}
+										if(input.ID == null && allowedCreator == false)
+										{
+											alert "Only department heads or HR admins can create job requests.";
+											cancel submit;
+										}
+						)
+					}
+				}
+
+			
+}

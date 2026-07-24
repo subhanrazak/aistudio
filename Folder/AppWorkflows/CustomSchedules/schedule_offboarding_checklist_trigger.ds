@@ -1,0 +1,44 @@
+schedule_offboarding_checklist_trigger as "Offboarding Checklist Trigger"
+{
+
+				type =  schedule
+				start = "2025-01-01 07:00:00"
+				frequency = daily
+				time zone = "Asia/Kolkata"
+				on start
+				{
+					actions 
+					{
+					on load
+					(
+						createdCount = 0;
+										triggerDate = zoho.currentdate.addDay(7);
+										for each  resignationRec in Resignation_Request[Status == "Approved" && Effective_LWD == triggerDate]
+										{
+											existingTasks = Offboarding_Checklist[Resignation_Request == resignationRec.ID];
+											if(existingTasks.count() == 0)
+											{
+												employeeRows = Employee_Master[ID == resignationRec.Employee];
+												for each  configRec in Offboarding_Checklist_Config[Is_Active == true]
+												{
+													insertedChecklistId = insert into Offboarding_Checklist
+													[
+														Resignation_Request=resignationRec.ID
+														Checklist_Item=configRec.ID
+														Responsible_Department=configRec.Responsible_Department
+														Status="Pending"
+														Added_User=zoho.loginuser
+													];
+													createdCount = createdCount + 1;
+												}
+											}
+										}
+										if(createdCount > 0)
+										{
+											thisapp.Add_Audit_Log("OFFBOARDING_CHECKLIST_TRIGGER","Offboarding","Offboarding_Checklist",0,"Create","","Pending","Created " + createdCount + " offboarding checklist rows.",true,"");
+										}
+					)
+					}
+				}
+			
+}

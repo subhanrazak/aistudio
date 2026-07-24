@@ -1,0 +1,84 @@
+Appraisal_Form_On_Success as "Appraisal Form - On Success"
+{
+
+				type =  form
+				form = Appraisal_Form
+
+				record event = on add or edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											formRows = Appraisal_Form[ID == input.ID];
+										oldStatus = "";
+										if(formRows.count() > 0)
+										{
+											oldStatus = formRows.Status;
+										}
+										if(input.HR_Signoff == true && input.Status == "Manager_Reviewed")
+										{
+											formRows.Status="HR_Approved";
+										}
+										if(input.ID != null)
+										{
+											objectiveCount = Appraisal_Objectives[Appraisal_Form == input.ID].count();
+											if(objectiveCount == 0)
+											{
+												kpiRows = KPI_KRA[Employee == input.Employee && Appraisal_Config == input.Appraisal_Config] range from 1 to 200;
+												for each  kpiRec in kpiRows
+												{
+													insertedObjectiveId = insert into Appraisal_Objectives
+													[
+														Appraisal_Form=input.ID
+														KPI_KRA=kpiRec.ID
+														Objective_Text=kpiRec.Objective
+														Added_User=zoho.loginuser
+													];
+												}
+											}
+											questionCount = Appraisal_Question_Response[Appraisal_Form == input.ID].count();
+											if(questionCount == 0)
+											{
+												questionRows = Appraisal_Basic_Questions[Appraisal_Config == input.Appraisal_Config] sort by Question_Order range from 1 to 200;
+												for each  questionRec in questionRows
+												{
+													insertedQuestionResponseId = insert into Appraisal_Question_Response
+													[
+														Appraisal_Form=input.ID
+														Question=questionRec.ID
+														Added_User=zoho.loginuser
+													];
+												}
+											}
+										}
+										statusForNotification = input.Status;
+										if(input.HR_Signoff == true && input.Status == "Manager_Reviewed")
+										{
+											statusForNotification = "HR_Approved";
+										}
+										tokenMap = Map();
+										tokenMap.put("employee",input.Employee);
+										tokenMap.put("status",statusForNotification);
+										tokenMap.put("manager",ifnull(input.Manager,""));
+										if(statusForNotification == "Submitted")
+										{
+											thisapp.Send_Configured_Notification("APPRAISAL_SUBMITTED",tokenMap,"Appraisal submitted","An appraisal form has been submitted for manager review.");
+										}
+										else if(statusForNotification == "Manager_Reviewed")
+										{
+											thisapp.Send_Configured_Notification("APPRAISAL_MANAGER_REVIEWED",tokenMap,"Appraisal manager review completed","An appraisal form has completed manager review and is ready for HR signoff.");
+										}
+										else if(statusForNotification == "HR_Approved")
+										{
+											thisapp.Send_Configured_Notification("APPRAISAL_HR_APPROVED",tokenMap,"Appraisal HR approved","An appraisal form has been approved by HR.");
+										}
+										thisapp.Add_Audit_Log("APPRAISAL_FORM_UPDATED","Performance","Appraisal_Form",input.ID,"Save",oldStatus,statusForNotification,"Appraisal form saved.",true,"");
+						)
+					}
+				}
+
+			
+}

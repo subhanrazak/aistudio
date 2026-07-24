@@ -1,0 +1,45 @@
+Job_Application_On_Load as "Job Application - On Load"
+{
+
+				type =  form
+				form = Job_Application
+
+				record event = on add or edit
+
+				on load
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											disable Application_Date;
+										disable Source_Of_Application;
+										disable Offer_Accepted_Date;
+										if(input.Current_Round == null || input.Current_Round < 1)
+										{
+											input.Current_Round = 1;
+										}
+										if(input.Candidate != null)
+										{
+											candidateRows = Candidate[ID == input.Candidate];
+											if(candidateRows.count() > 0)
+											{
+												input.Source_Of_Application = candidateRows.Source;
+											}
+										}
+										if(input.Status == "Offer_Accepted")
+										{
+											show Offer_Documents;
+											show Offer_Accepted_Date;
+										}
+										else
+										{
+											hide Offer_Documents;
+											hide Offer_Accepted_Date;
+										}
+						)
+					}
+				}
+
+			
+}

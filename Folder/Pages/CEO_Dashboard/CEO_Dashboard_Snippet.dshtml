@@ -1,0 +1,369 @@
+<%
+	loginEmail = zoho.loginuserid;
+	if(loginEmail == null || loginEmail == "")
+	{
+		loginEmail = zoho.loginuser;
+	}
+	loginRole = ifnull(thisapp.permissions.loginUserProfile(),"");
+	isAllowed = loginRole == "CEO" || loginRole == "Administrator" || loginRole == "Admin";
+	todayDate = zoho.currentdate;
+	todayDisplay = todayDate.toString("dd-MMM-yyyy");
+	currentYear = todayDate.getYear();
+	userName = ifnull(zoho.loginuser,"CEO");
+	userRows = Employee_Master[Official_Email == loginEmail || Official_Email == zoho.loginuser];
+	if(userRows.count() > 0)
+	{
+		userName = ifnull(userRows.Full_Name,userName);
+	}
+	pendingJobCount = 0;
+	pendingJobPositions = 0;
+	pendingTravelCount = 0;
+	pendingTravelCost = 0;
+	totalHeadcount = 0;
+	approvedJobsThisYear = 0;
+	approvedPositionsThisYear = 0;
+	filledPositionsThisYear = 0;
+	openPositionsThisYear = 0;
+	fillRatePct = 0;
+	maxDepartmentCount = 1;
+	if(isAllowed == true)
+	{
+		pendingJobRows = Job_Request[Status == "Pending_CEO"] sort by Job_Title asc;
+		pendingJobCount = pendingJobRows.count();
+		for each  jobSeed in pendingJobRows
+		{
+			pendingJobPositions = pendingJobPositions + ifnull(jobSeed.Number_Of_Positions,0);
+		}
+		pendingTravelRows = Travel_Request[Status == "Pending_CEO"] sort by Travel_From_Date asc;
+		pendingTravelCount = pendingTravelRows.count();
+		for each  travelSeed in pendingTravelRows
+		{
+			travelCostSeed = ifnull(travelSeed.Total_Estimated_Cost,0);
+			if(travelCostSeed == 0)
+			{
+				travelCostSeed = ifnull(travelSeed.Booking_Amount,0);
+			}
+			pendingTravelCost = pendingTravelCost + travelCostSeed;
+		}
+		activeEmployeeRows = Employee_Master[Employment_Status == "Active" || Employment_Status == "Probation"];
+		totalHeadcount = activeEmployeeRows.count();
+		departmentRows = Department_Config[Is_Active == true] sort by Department_Name asc;
+		for each  deptSeed in departmentRows
+		{
+			deptCountSeed = Employee_Master[Department == deptSeed.ID && Employment_Status == "Active" || Employment_Status == "Probation"].count();
+			if(deptCountSeed > maxDepartmentCount)
+			{
+				maxDepartmentCount = deptCountSeed;
+			}
+		}
+		approvedYearRows = Job_Request[Status == "Approved" && Approved_Date != null] sort by Approved_Date desc;
+		for each  recruitJobSeed in approvedYearRows
+		{
+			if(recruitJobSeed.Approved_Date.getYear() == currentYear)
+			{
+				approvedJobsThisYear = approvedJobsThisYear + 1;
+				approvedPositionsThisYear = approvedPositionsThisYear + ifnull(recruitJobSeed.Number_Of_Positions,0);
+				filledForJob = Job_Application[Job_Request == recruitJobSeed.ID && Status == "Joined"].count();
+				filledPositionsThisYear = filledPositionsThisYear + filledForJob;
+			}
+		}
+		openPositionsThisYear = approvedPositionsThisYear - filledPositionsThisYear;
+		if(openPositionsThisYear < 0)
+		{
+			openPositionsThisYear = 0;
+		}
+		if(approvedPositionsThisYear > 0)
+		{
+			fillRatePct = (filledPositionsThisYear * 100) / approvedPositionsThisYear;
+		}
+	}
+	%>
+<style>
+/* ===== zcs-global.css included once for CEO_Dashboard (utility subset used by this page) ===== */
+:root { --zcs-theme-brand-color: var(--zcs_brand_color, #2A6FFC); --zcs-light-bg-color: var(--zcs_brand_light_color, #E8EFFF); --zcs-primary-text-color: var(--zcs_primary_text_color, #1A1A1A); --zcs-secondary-text-color: var(--zcs_secondary_text_color, #55576B); --zcs-teritiary-text-color: var(--zcs_tertiary_text_color, #77798C); --zcs-border-color: var(--zcs_tertiary_border_color, #E6E8F0); --zcs-page-bg-color: #F5F7FB; --zcs-white-color: #FFFFFF; --zcs-brand-foreground: var(--zcs_brand_foreground_color, #FFFFFF); }
+a { text-decoration: none; }
+.zcs-flex { display: flex; } .zcs-inline-flex { display: inline-flex; } .zcs-row { display: flex; flex-wrap: wrap; } .zcs-direction-column { flex-direction: column; } .zcs-align-items-center { align-items: center; } .zcs-align-items-start { align-items: flex-start; } .zcs-justify-space-between { justify-content: space-between; } .zcs-justify-center { justify-content: center; } .zcs-gap-4 { gap: .25rem; } .zcs-gap-6 { gap: .375rem; } .zcs-gap-8 { gap: .5rem; } .zcs-gap-10 { gap: .625rem; } .zcs-gap-12 { gap: .75rem; } .zcs-gap-16 { gap: 1rem; } .zcs-gap-18 { gap: 1.125rem; } .zcs-gap-20 { gap: 1.25rem; } .zcs-gap-24 { gap: 1.5rem; }
+.zcs-p-0 { padding: 0; } .zcs-p-8 { padding: .5rem; } .zcs-p-10 { padding: .625rem; } .zcs-p-12 { padding: .75rem; } .zcs-p-14 { padding: .875rem; } .zcs-p-16 { padding: 1rem; } .zcs-p-18 { padding: 1.125rem; } .zcs-p-20 { padding: 1.25rem; } .zcs-p-24 { padding: 1.5rem; } .zcs-px-10 { padding-left: .625rem; padding-right: .625rem; } .zcs-px-12 { padding-left: .75rem; padding-right: .75rem; } .zcs-px-16 { padding-left: 1rem; padding-right: 1rem; } .zcs-px-24 { padding-left: 1.5rem; padding-right: 1.5rem; } .zcs-px-30 { padding-left: 1.875rem; padding-right: 1.875rem; } .zcs-py-2 { padding-top: .125rem; padding-bottom: .125rem; } .zcs-py-6 { padding-top: .375rem; padding-bottom: .375rem; } .zcs-py-8 { padding-top: .5rem; padding-bottom: .5rem; } .zcs-py-10 { padding-top: .625rem; padding-bottom: .625rem; } .zcs-py-12 { padding-top: .75rem; padding-bottom: .75rem; } .zcs-py-16 { padding-top: 1rem; padding-bottom: 1rem; } .zcs-py-24 { padding-top: 1.5rem; padding-bottom: 1.5rem; }
+.zcs-m-0 { margin: 0; } .zcs-mb-6 { margin-bottom: .375rem; } .zcs-mb-8 { margin-bottom: .5rem; } .zcs-mt-10 { margin-top: .625rem; } .zcs-w-full { width: 100%; } .zcs-box-border { box-sizing: border-box; } .zcs-rounded-sm { border-radius: .25rem; } .zcs-rounded-md { border-radius: .375rem; } .zcs-rounded-lg { border-radius: .5rem; } .zcs-rounded-xl { border-radius: .75rem; } .zcs-rounded-2xl { border-radius: 1rem; } .zcs-text-left { text-align: left; } .zcs-text-right { text-align: right; } .zcs-text-center { text-align: center; } .zcs-overflow-auto { overflow: auto; } .zcs-ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.zcs-font-11 { font-size: .6875rem; } .zcs-font-12 { font-size: .75rem; } .zcs-font-13 { font-size: .8125rem; } .zcs-font-14 { font-size: .875rem; } .zcs-font-15 { font-size: .9375rem; } .zcs-font-16 { font-size: 1rem; } .zcs-font-18 { font-size: 1.125rem; } .zcs-font-20 { font-size: 1.25rem; } .zcs-font-22 { font-size: 1.375rem; } .zcs-font-24 { font-size: 1.5rem; } .zcs-font-28 { font-size: 1.75rem; } .zcs-font-30 { font-size: 1.875rem; } .zcs-font-normal { font-weight: 400; } .zcs-font-medium { font-weight: 500; } .zcs-font-semibold { font-weight: 600; } .zcs-font-bold { font-weight: 700; } .zcs-lh-body { line-height: 1.5; } .zcs-lh-heading { line-height: 1.25; }
+.zcs-color-primary { color: var(--zcs-primary-text-color); } .zcs-color-secondary { color: var(--zcs-secondary-text-color); } .zcs-color-tertiary { color: var(--zcs-teritiary-text-color); } .zcs-color-theme { color: var(--zcs-theme-brand-color); } .zcs-color-white { color: var(--zcs-white-color); } .zcs-color-green { color: #179E6C; } .zcs-color-red { color: #FE455D; } .zcs-color-yellow { color: #B8770D; } .zcs-color-blue { color: #2A6FFC; }
+.zcs-card { background-color: var(--zcs-white-color); border: 1px solid var(--zcs-border-color); border-radius: 12px; box-shadow: 0 8px 24px rgba(18, 19, 43, .04); }
+/* ZCS component CSS: header-heading-with-actions */
+.zcs-page-header { background: var(--zcs-white-color); border: 1px solid var(--zcs-border-color); border-radius: 16px; box-shadow: 0 8px 24px rgba(18, 19, 43, .04); }
+/* ZCS component CSS: badge-filled-badge */
+.zcs-badge { width: auto; } .zcs-badge-filled { border: 1px solid transparent; } .zcs-badge-filled.zcs-badge-theme { background-color: var(--zcs-theme-brand-color); border-color: var(--zcs-theme-brand-color); color: var(--zcs-white-color); } .zcs-badge-filled.zcs-badge-green { background-color: #179E6C; border-color: #179E6C; color: var(--zcs-white-color); } .zcs-badge-filled.zcs-badge-red { background-color: #FE455D; border-color: #FE455D; color: var(--zcs-white-color); } .zcs-badge-filled.zcs-badge-grey { background-color: #242424; border-color: #242424; color: var(--zcs-white-color); } .zcs-badge-filled.zcs-badge-yellow { background-color: #FAAE13; border-color: #FAAE13; color: var(--zcs-white-color); } .zcs-badge-filled.zcs-badge-blue { background-color: #2A6FFC; border-color: #2A6FFC; color: var(--zcs-white-color); } .zcs-badge-filled.zcs-badge-orange { background-color: #F4660C; border-color: #F4660C; color: var(--zcs-white-color); }
+/* ZCS component CSS: progress-bar-range-bar-with-text */
+.zcs-progress-bar { height: 8px; background-color: var(--zcs_component_hover_color, #EEF2F7); overflow: hidden; } .zcs-progress-bar-indicator { height: inherit; border-radius: inherit; background-color: var(--zcs-theme-brand-color); }
+/* ZCS component CSS: table-simple-table */
+.zcs-table-wrapper { border: 1px solid var(--zcs-border-color); background-color: var(--zcs-white-color); overflow: auto; } .zcs-table-wrapper table { line-height: normal; border-collapse: collapse; min-width: 100%; } .zcs-table-wrapper table thead tr th { background-color: #F9FAFE; box-shadow: 0 -1px 0 0 var(--zcs-border-color) inset; white-space: nowrap; } .zcs-table-wrapper table tbody tr td { border-top: 1px solid var(--zcs-border-color); vertical-align: top; } .zcs-table-wrapper table tbody tr:hover td { background-color: #F9FAFE; }
+/* ZCS component CSS: button-primary-button and button-primary-outline-button */
+.zcs-button { width: auto; min-width: 5rem; min-height: 36px; } .zcs-primary-button { background-color: var(--zcs-theme-brand-color); color: var(--zcs-brand-foreground); } .zcs-primary-outline-button { border: 1px solid var(--zcs-theme-brand-color); background-color: var(--zcs-white-color); color: var(--zcs-theme-brand-color); } .zcs-button:hover { filter: brightness(.98); } .zcs-button-icon { width: 16px; max-height: 16px; }
+.ceodash-page { background: var(--zcs-page-bg-color); padding: 22px; box-sizing: border-box; font-family: Lato, Arial, sans-serif; }
+.ceo-hero { position: relative; overflow: hidden; color: var(--zcs-white-color); border-radius: 18px; padding: 24px; background: linear-gradient(135deg, var(--zcs-theme-brand-color), #1C1C40); }
+.ceo-hero:after { content: ""; position: absolute; right: -80px; top: -110px; width: 310px; height: 310px; border-radius: 50%; border: 42px solid rgba(255,255,255,.12); }
+.ceo-hero:before { content: ""; position: absolute; right: 170px; bottom: -88px; width: 190px; height: 190px; border-radius: 50%; border: 28px solid rgba(255,255,255,.10); }
+.ceo-hero-content { position: relative; z-index: 1; }
+.ceo-dash-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 18px; }
+.ceo-kpi { grid-column: span 3; } .ceo-card-4 { grid-column: span 4; } .ceo-card-5 { grid-column: span 5; } .ceo-card-6 { grid-column: span 6; } .ceo-card-7 { grid-column: span 7; } .ceo-card-8 { grid-column: span 8; } .ceo-card-12 { grid-column: span 12; }
+.ceo-mini-stat { border: 1px solid var(--zcs-border-color); border-radius: 12px; background: #FAFBFF; padding: 12px; }
+.ceo-bar-row { display: grid; grid-template-columns: 148px 1fr 60px; gap: 10px; align-items: center; }
+.ceo-segment { border-radius: 999px; background: #EEF2F7; height: 10px; overflow: hidden; }
+.ceo-segment span { display: block; height: 100%; background: var(--zcs-theme-brand-color); border-radius: inherit; }
+.ceo-nodata { min-height: 92px; border: 1px dashed var(--zcs-border-color); border-radius: 12px; background: #FAFBFF; }
+.ceo-note { border-left: 4px solid #FAAE13; background: #FFF9EA; border-radius: 10px; }
+.ceo-actions { flex-wrap: wrap; }
+@media (max-width: 1100px) { .ceo-kpi, .ceo-card-4, .ceo-card-5, .ceo-card-6, .ceo-card-7, .ceo-card-8 { grid-column: span 6; } }
+@media (max-width: 700px) { .ceodash-page { padding: 14px; } .ceo-kpi, .ceo-card-4, .ceo-card-5, .ceo-card-6, .ceo-card-7, .ceo-card-8, .ceo-card-12 { grid-column: span 12; } .ceo-bar-row { grid-template-columns: 1fr; } .zcs-page-header { padding: 14px; align-items: flex-start; flex-direction: column; } }
+</style>
+<div class="ceodash-page zcs-flex zcs-direction-column zcs-gap-20">
+<%
+	if(isAllowed == false)
+	{
+		%>
+<div class="zcs-card zcs-p-24 zcs-box-border">
+		<div class="zcs-nodata-wrapper zcs-flex zcs-align-items-center zcs-justify-center zcs-text-center ceo-nodata">
+			<div class="zcs-nodata-content zcs-p-20 zcs-box-border">
+				<h5 class="zcs-nodata-header zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-mt-10 zcs-mb-8">Access restricted</h5>
+				<p class="zcs-font-14 zcs-color-secondary zcs-m-0">CEO Dashboard is available to CEO and Administrator profiles.</p>
+			</div>
+		</div>
+	</div>
+<%
+	}
+	else
+	{
+		%>
+<div class="ceo-hero">
+		<div class="ceo-hero-content zcs-flex zcs-justify-space-between zcs-align-items-center zcs-gap-20">
+			<div class="zcs-flex zcs-direction-column zcs-gap-8">
+				<span class="zcs-font-13 zcs-font-medium zcs-lh-body">Executive HR command center</span>
+				<h3 class="zcs-font-30 zcs-font-semibold zcs-lh-heading zcs-m-0">Hello <%=userName%></h3>
+				<p class="zcs-font-14 zcs-lh-body zcs-m-0">Live approval queues, organisation headcount, and <%=currentYear%> recruitment position fulfilment.</p>
+			</div>
+			<div class="zcs-flex zcs-direction-column zcs-gap-6 zcs-text-right">
+				<span class="zcs-font-12 zcs-font-medium">Updated</span>
+				<strong class="zcs-font-18 zcs-lh-heading"><%=todayDisplay%></strong>
+			</div>
+		</div>
+	</div>
+
+	<div class="zcs-page-header zcs-w-full zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-8 zcs-px-30 zcs-py-24 zcs-box-border">
+		<div class="zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-ellipsis">
+			<i class="zcs-color-theme zcs-font-22 zc-li-outline business-chart-bar-32"></i>
+			<h5 class="zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-ellipsis zcs-m-0">CEO approvals and HR summary</h5>
+		</div>
+		<div class="zcs-flex zcs-align-items-center zcs-gap-12 ceo-actions">
+			<a class="zcs-button zcs-primary-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body" href="#Report:Pending_CEO_Job_Requests?zc_LoadIn=dialog&amp;zc_Header=true">
+				<i class="zcs-button-icon zc-li-outline ui-1-check-circle-08"></i><span class="zcs-button-text">Job approvals</span>
+			</a>
+			<a class="zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body" href="#Report:HR_All_Travel?Status=Pending_CEO&amp;zc_LoadIn=dialog&amp;zc_Header=true">
+				<i class="zcs-button-icon zc-li-outline transport_air-baloon"></i><span class="zcs-button-text">Travel queue</span>
+			</a>
+		</div>
+	</div>
+
+	<div class="ceo-dash-grid">
+		<div class="ceo-kpi zcs-card zcs-p-18 zcs-box-border zcs-flex zcs-direction-column zcs-gap-8">
+			<span class="zcs-font-13 zcs-color-secondary">Pending job requests</span>
+			<strong class="zcs-font-30 zcs-lh-heading zcs-color-primary"><%=pendingJobCount%></strong>
+			<span class="zcs-font-13 zcs-color-tertiary"><%=pendingJobPositions%> positions awaiting CEO decision</span>
+		</div>
+		<div class="ceo-kpi zcs-card zcs-p-18 zcs-box-border zcs-flex zcs-direction-column zcs-gap-8">
+			<span class="zcs-font-13 zcs-color-secondary">Pending travel approvals</span>
+			<strong class="zcs-font-30 zcs-lh-heading zcs-color-primary"><%=pendingTravelCount%></strong>
+			<span class="zcs-font-13 zcs-color-tertiary">Estimated INR <%=pendingTravelCost%></span>
+		</div>
+		<div class="ceo-kpi zcs-card zcs-p-18 zcs-box-border zcs-flex zcs-direction-column zcs-gap-8">
+			<span class="zcs-font-13 zcs-color-secondary">Current headcount</span>
+			<strong class="zcs-font-30 zcs-lh-heading zcs-color-primary"><%=totalHeadcount%></strong>
+			<span class="zcs-font-13 zcs-color-tertiary">Active and probation employees</span>
+		</div>
+		<div class="ceo-kpi zcs-card zcs-p-18 zcs-box-border zcs-flex zcs-direction-column zcs-gap-8">
+			<span class="zcs-font-13 zcs-color-secondary"><%=currentYear%> recruitment fill rate</span>
+			<strong class="zcs-font-30 zcs-lh-heading zcs-color-primary"><%=fillRatePct%>%</strong>
+			<div class="zcs-progress-bar-wrapper zcs-flex zcs-direction-column zcs-gap-6">
+				<div class="zcs-progress-bar zcs-rounded-sm"><div class="zcs-progress-bar-indicator" style="width:<%=fillRatePct%>%;"></div></div>
+				<p class="zcs-font-12 zcs-font-medium zcs-lh-body zcs-color-primary zcs-m-0"><strong class="zcs-color-theme"><%=filledPositionsThisYear%></strong> filled of <%=approvedPositionsThisYear%></p>
+			</div>
+		</div>
+
+		<div class="ceo-card-7 zcs-card zcs-p-20 zcs-box-border zcs-flex zcs-direction-column zcs-gap-16">
+			<div class="zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12">
+				<div>
+					<h5 class="zcs-font-18 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0">Pending Job Request approvals</h5>
+					<p class="zcs-font-13 zcs-color-secondary zcs-m-0">Open the approval report for CEO approve and reject actions.</p>
+				</div>
+				<a class="zcs-font-13 zcs-color-theme" href="#Report:Pending_CEO_Job_Requests?zc_LoadIn=dialog&amp;zc_Header=true">Open report</a>
+			</div>
+<%
+		if(pendingJobCount == 0)
+		{
+			%>
+<div class="zcs-nodata-wrapper zcs-flex zcs-align-items-center zcs-justify-center zcs-text-center ceo-nodata"><div class="zcs-nodata-content zcs-p-20 zcs-box-border"><h5 class="zcs-nodata-header zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-mt-10 zcs-mb-8">No pending job approvals</h5><p class="zcs-font-14 zcs-color-secondary zcs-m-0">Recruitment requests requiring CEO action will appear here.</p></div></div>
+<%
+		}
+		else
+		{
+			%>
+<div class="zcs-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative">
+					<table class="zcs-w-full">
+						<thead><tr><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Job title</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Department</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Positions</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Action</th></tr></thead>
+						<tbody>
+<%
+			shownJobs = 0;
+			for each  jobItem in pendingJobRows
+			{
+				if(shownJobs < 6)
+				{
+					jobReportUrl = "#Report:Pending_CEO_Job_Requests?ID=" + jobItem.ID + "&amp;zc_LoadIn=dialog&amp;zc_Header=true";
+					deptName = ifnull(jobItem.Department.Department_Name,"-");
+					%>
+<tr>
+									<td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"><%=jobItem.Job_Title%></td>
+									<td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-secondary"><%=deptName%></td>
+									<td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"><%=ifnull(jobItem.Number_Of_Positions,0)%></td>
+									<td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body"><a class="zcs-color-theme" href="<%=jobReportUrl%>">Open action report</a></td>
+								</tr>
+<%
+					shownJobs = shownJobs + 1;
+				}
+			}
+			%>
+</tbody>
+					</table>
+				</div>
+				<div class="ceo-note zcs-p-12 zcs-box-border zcs-font-13 zcs-color-secondary">Approval_Remarks is reachable from this page. The current Approval_Remarks form has Travel links but no linked Job_Request field, so Job_Request decisions use the existing Pending_CEO_Job_Requests report actions.</div>
+<%
+		}
+		%>
+</div>
+
+		<div class="ceo-card-5 zcs-card zcs-p-20 zcs-box-border zcs-flex zcs-direction-column zcs-gap-16">
+			<div class="zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12">
+				<div>
+					<h5 class="zcs-font-18 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0">Pending Travel Request approvals</h5>
+					<p class="zcs-font-13 zcs-color-secondary zcs-m-0">Approve or reject via Approval_Remarks.</p>
+				</div>
+				<a class="zcs-font-13 zcs-color-theme" href="#Report:HR_All_Travel?Status=Pending_CEO&amp;zc_LoadIn=dialog&amp;zc_Header=true">Open report</a>
+			</div>
+<%
+		if(pendingTravelCount == 0)
+		{
+			%>
+<div class="zcs-nodata-wrapper zcs-flex zcs-align-items-center zcs-justify-center zcs-text-center ceo-nodata"><div class="zcs-nodata-content zcs-p-20 zcs-box-border"><h5 class="zcs-nodata-header zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-mt-10 zcs-mb-8">No pending travel approvals</h5><p class="zcs-font-14 zcs-color-secondary zcs-m-0">Manager-approved travel requests will appear here for CEO review.</p></div></div>
+<%
+		}
+		else
+		{
+			%>
+<div class="zcs-flex zcs-direction-column zcs-gap-10">
+<%
+			shownTravel = 0;
+			for each  tripItem in pendingTravelRows
+			{
+				if(shownTravel < 5)
+				{
+					travelApproveUrl = "#Form:Approval_Remarks?Module=Travel&amp;Action=Approved&amp;Linked_Travel_Request=" + tripItem.ID + "&amp;Previous_Status=" + tripItem.Status + "&amp;zc_LoadIn=dialog&amp;zc_Header=false";
+					travelRejectUrl = "#Form:Approval_Remarks?Module=Travel&amp;Action=Rejected&amp;Linked_Travel_Request=" + tripItem.ID + "&amp;Previous_Status=" + tripItem.Status + "&amp;zc_LoadIn=dialog&amp;zc_Header=false";
+					travelDateText = "-";
+					if(tripItem.Travel_From_Date != null)
+					{
+						travelDateText = tripItem.Travel_From_Date.toString("dd-MMM-yyyy");
+					}
+					employeeName = ifnull(tripItem.Employee.Full_Name,"-");
+					%>
+<div class="ceo-mini-stat zcs-flex zcs-direction-column zcs-gap-8">
+							<div class="zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12">
+								<div class="zcs-flex zcs-direction-column zcs-gap-4 zcs-ellipsis">
+									<strong class="zcs-font-15 zcs-color-primary zcs-ellipsis"><%=tripItem.Destination%></strong>
+									<span class="zcs-font-13 zcs-color-secondary zcs-ellipsis"><%=employeeName%> \u00B7 <%=travelDateText%></span>
+								</div>
+								<div class="zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-orange"><span class="zcs-badge-text zcs-font-12 zcs-font-normal zcs-lh-body">Pending CEO</span></div>
+							</div>
+							<div class="zcs-flex zcs-align-items-center zcs-gap-8 ceo-actions">
+								<a class="zcs-button zcs-primary-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body" href="<%=travelApproveUrl%>"><i class="zcs-button-icon zc-li-outline ui-1-check-circle-08"></i><span>Approve</span></a>
+								<a class="zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body" href="<%=travelRejectUrl%>"><i class="zcs-button-icon zc-li-outline ui-1-simple-remove"></i><span>Reject</span></a>
+							</div>
+						</div>
+<%
+					shownTravel = shownTravel + 1;
+				}
+			}
+			%>
+</div>
+<%
+		}
+		%>
+</div>
+
+		<div class="ceo-card-6 zcs-card zcs-p-20 zcs-box-border zcs-flex zcs-direction-column zcs-gap-16">
+			<div class="zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12">
+				<div>
+					<h5 class="zcs-font-18 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0">Headcount by department</h5>
+					<p class="zcs-font-13 zcs-color-secondary zcs-m-0">Active and probation employees.</p>
+				</div>
+				<a class="zcs-font-13 zcs-color-theme" href="#Report:All_Employees?zc_LoadIn=dialog&amp;zc_Header=true">Open employees</a>
+			</div>
+<%
+		if(totalHeadcount == 0 || departmentRows.count() == 0)
+		{
+			%>
+<div class="zcs-nodata-wrapper zcs-flex zcs-align-items-center zcs-justify-center zcs-text-center ceo-nodata"><div class="zcs-nodata-content zcs-p-20 zcs-box-border"><h5 class="zcs-nodata-header zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-mt-10 zcs-mb-8">No headcount data</h5></div></div>
+<%
+		}
+		else
+		{
+			%>
+<div class="zcs-flex zcs-direction-column zcs-gap-10">
+<%
+			for each  deptItem in departmentRows
+			{
+				deptCount = Employee_Master[Department == deptItem.ID && Employment_Status == "Active" || Employment_Status == "Probation"].count();
+				deptPct = 0;
+				if(maxDepartmentCount > 0)
+				{
+					deptPct = (deptCount * 100) / maxDepartmentCount;
+				}
+				%>
+<div class="ceo-bar-row">
+							<span class="zcs-font-14 zcs-color-primary zcs-ellipsis"><%=deptItem.Department_Name%></span>
+							<div class="ceo-segment"><span style="width:<%=deptPct%>%;"></span></div>
+							<strong class="zcs-font-14 zcs-color-primary zcs-text-right"><%=deptCount%></strong>
+						</div>
+<%
+			}
+			%>
+</div>
+<%
+		}
+		%>
+</div>
+
+		<div class="ceo-card-6 zcs-card zcs-p-20 zcs-box-border zcs-flex zcs-direction-column zcs-gap-16">
+			<div class="zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12">
+				<div>
+					<h5 class="zcs-font-18 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0">Recruitment summary for <%=currentYear%></h5>
+					<p class="zcs-font-13 zcs-color-secondary zcs-m-0">Open versus filled approved positions.</p>
+				</div>
+				<a class="zcs-font-13 zcs-color-theme" href="#Report:Job_Request_List?zc_LoadIn=dialog&amp;zc_Header=true">Open jobs</a>
+			</div>
+			<div class="zcs-row zcs-gap-12">
+				<div class="ceo-mini-stat zcs-flex zcs-direction-column zcs-gap-4" style="flex:1; min-width:150px;"><span class="zcs-font-13 zcs-color-secondary">Approved jobs</span><strong class="zcs-font-24 zcs-color-primary"><%=approvedJobsThisYear%></strong></div>
+				<div class="ceo-mini-stat zcs-flex zcs-direction-column zcs-gap-4" style="flex:1; min-width:150px;"><span class="zcs-font-13 zcs-color-secondary">Approved positions</span><strong class="zcs-font-24 zcs-color-primary"><%=approvedPositionsThisYear%></strong></div>
+				<div class="ceo-mini-stat zcs-flex zcs-direction-column zcs-gap-4" style="flex:1; min-width:150px;"><span class="zcs-font-13 zcs-color-secondary">Filled positions</span><strong class="zcs-font-24 zcs-color-green"><%=filledPositionsThisYear%></strong></div>
+				<div class="ceo-mini-stat zcs-flex zcs-direction-column zcs-gap-4" style="flex:1; min-width:150px;"><span class="zcs-font-13 zcs-color-secondary">Open positions</span><strong class="zcs-font-24 zcs-color-yellow"><%=openPositionsThisYear%></strong></div>
+			</div>
+			<div class="zcs-progress-bar-wrapper zcs-flex zcs-direction-column zcs-gap-6">
+				<div class="zcs-progress-bar zcs-rounded-sm"><div class="zcs-progress-bar-indicator" style="width:<%=fillRatePct%>%;"></div></div>
+				<p class="zcs-font-12 zcs-font-medium zcs-lh-body zcs-color-primary zcs-m-0"><strong class="zcs-color-theme"><%=fillRatePct%>%</strong> position fill rate</p>
+			</div>
+			<div class="zcs-flex zcs-align-items-center zcs-gap-8 ceo-actions">
+				<a class="zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body" href="#Report:Active_Job_Applications?zc_LoadIn=dialog&amp;zc_Header=true"><i class="zcs-button-icon zc-li-outline users-single-01"></i><span>Applications</span></a>
+				<a class="zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body" href="#Report:Approval_Remarks_List?Module=Travel&amp;zc_LoadIn=dialog&amp;zc_Header=true"><i class="zcs-button-icon zc-li-outline files-paper"></i><span>Approval remarks</span></a>
+			</div>
+		</div>
+	</div>
+<%
+	}
+	%>
+</div>

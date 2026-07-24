@@ -1,0 +1,42 @@
+Travel_Request_On_Validate as "Travel Request - On Validate"
+{
+
+				type =  form
+				form = Travel_Request
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Travel_From_Date > input.Travel_To_Date)
+										{
+											alert "Travel from date cannot be after travel to date.";
+											cancel submit;
+										}
+										if(input.Employee == null)
+										{
+											employeeRows = Employee_Master[Official_Email == zoho.loginuserid || Official_Email == zoho.loginuser];
+											if(employeeRows.count() > 0)
+											{
+												input.Employee = employeeRows.ID;
+											}
+										}
+										if(input.ID != null)
+										{
+											requirementRows = Travel_Requirements[Travel_Request == input.ID];
+											if(input.Status != "Pending_Manager" && requirementRows.count() == 0)
+											{
+												alert "At least one travel requirement is required before submission progresses.";
+												cancel submit;
+											}
+										}
+						)
+					}
+				}
+
+			
+}

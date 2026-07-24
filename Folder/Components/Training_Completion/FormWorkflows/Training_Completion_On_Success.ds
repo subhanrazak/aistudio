@@ -1,0 +1,26 @@
+Training_Completion_On_Success as "Training Completion - On Success"
+{
+
+				type =  form
+				form = Training_Completion
+
+				record event = on add or edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											tokenMap = Map();
+										tokenMap.put("training_programme",input.Training_Programme);
+										tokenMap.put("employee",ifnull(input.Employee,""));
+										tokenMap.put("completion_date",input.Completion_Date);
+										thisapp.Send_Configured_Notification("TRAINING_COMPLETED",tokenMap,"Training completion submitted","A training completion certificate has been submitted.");
+										thisapp.Add_Audit_Log("TRAINING_COMPLETED","Training","Training_Completion",input.ID,"Completed","",input.Status,"Training completion certificate submitted.",true,"");
+						)
+					}
+				}
+
+			
+}

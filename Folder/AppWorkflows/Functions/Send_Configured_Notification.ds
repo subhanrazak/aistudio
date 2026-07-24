@@ -1,0 +1,46 @@
+void Send_Configured_Notification(string event_key, map token_map, string fallback_subject, string fallback_body)
+{
+
+                 	templateRecords = Notification_Config[Event_Key == event_key && Is_Active == true];
+                 	if(templateRecords.count() > 0)
+                 	{
+                 		templateRecord = templateRecords;
+                 		mailSubject = ifnull(templateRecord.Subject_Template,fallback_subject);
+                 		mailBody = ifnull(templateRecord.Body_Template,fallback_body);
+                 		if(token_map != null)
+                 		{
+                 			tokenKeys = token_map.keys();
+                 			for each  tokenName in tokenKeys
+                 			{
+                 				tokenValue = ifnull(token_map.get(tokenName),"");
+                 				mailSubject = mailSubject.replaceAll("{{" + tokenName + "}}",tokenValue,true);
+                 				mailBody = mailBody.replaceAll("{{" + tokenName + "}}",tokenValue,true);
+                 			}
+                 		}
+                 		sendmail
+                 		[
+                 			from :zoho.adminuserid
+                 			to :templateRecord.Recipient_Emails
+                 			subject :mailSubject
+                 			message :mailBody
+                 		]
+                 	}
+                 	else
+                 	{
+                 		adminTemplate = Notification_Config[Event_Key == "ADMIN_ALERT_TEMPLATE_MISSING" && Is_Active == true];
+                 		if(adminTemplate.count() > 0)
+                 		{
+                 			alertSubject = "Notification template missing: " + event_key;
+                 			alertBody = "Notification configuration is missing or inactive for event key: " + event_key + ". Please update Notification Config.";
+                 			sendmail
+                 			[
+                 				from :zoho.adminuserid
+                 				to :adminTemplate.Recipient_Emails
+                 				subject :alertSubject
+                 				message :alertBody
+                 			]
+                 		}
+                 		thisapp.Add_Audit_Log(event_key,"Notification","Notification_Config",0,"Template Missing","","","Notification template missing or inactive",false,"Missing Notification_Config");
+                 	}
+                 
+}

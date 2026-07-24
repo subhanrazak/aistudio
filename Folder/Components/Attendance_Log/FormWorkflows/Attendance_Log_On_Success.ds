@@ -1,0 +1,25 @@
+Attendance_Log_On_Success as "Attendance Log - On Success"
+{
+
+				type =  form
+				form = Attendance_Log
+
+				record event = on add or edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Attendance_Status == "Not_Marked" && input.Login_Time != null)
+										{
+											input.Attendance_Status = "Present";
+										}
+										thisapp.Add_Audit_Log("ATTENDANCE_LOG_SAVED","Attendance_Leave","Attendance_Log",input.ID,"Saved","",input.Attendance_Status,"Attendance log saved from " + input.Source + ".",true,"");
+						)
+					}
+				}
+
+			
+}

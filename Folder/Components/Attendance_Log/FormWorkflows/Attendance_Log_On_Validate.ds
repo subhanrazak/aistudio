@@ -1,0 +1,39 @@
+Attendance_Log_On_Validate as "Attendance Log - On Validate"
+{
+
+				type =  form
+				form = Attendance_Log
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											duplicateLogs = Attendance_Log[Employee == input.Employee && Attendance_Date == input.Attendance_Date && ID != input.ID];
+										if(duplicateLogs.count() > 0)
+										{
+											alert "Attendance is already recorded for this employee and date.";
+											cancel submit;
+										}
+										if(input.Login_Time != null && input.Logout_Time != null && input.Logout_Time < input.Login_Time)
+										{
+											alert "Logout time cannot be earlier than login time.";
+											cancel submit;
+										}
+										if(input.Login_Time != null && input.Logout_Time != null)
+										{
+											input.Working_Hours = (input.Logout_Time.toLong() - input.Login_Time.toLong()) / 3600000;
+										}
+										if(input.Working_Hours == null || input.Working_Hours < 0)
+										{
+											input.Working_Hours = 0;
+										}
+						)
+					}
+				}
+
+			
+}

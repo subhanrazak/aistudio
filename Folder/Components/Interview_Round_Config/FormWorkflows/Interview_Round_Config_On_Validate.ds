@@ -1,0 +1,37 @@
+Interview_Round_Config_On_Validate as "Interview Round Config - On Validate"
+{
+
+				type =  form
+				form = Interview_Round_Config
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(ifnull(input.Round_Number,0) <= 0)
+										{
+											alert "Round number must be greater than zero.";
+											cancel submit;
+										}
+										duplicateRounds = Interview_Round_Config[Job_Request == input.Job_Request && Round_Number == input.Round_Number && ID != input.ID];
+										if(duplicateRounds.count() > 0)
+										{
+											alert "Interview round already exists for this job request.";
+											cancel submit;
+										}
+										parentJobRequest = Job_Request[ID == input.Job_Request];
+										if(parentJobRequest.count() > 0 && parentJobRequest.Status != "Approved")
+										{
+											alert "Interview rounds can be configured only after the job request is approved.";
+											cancel submit;
+										}
+						)
+					}
+				}
+
+			
+}

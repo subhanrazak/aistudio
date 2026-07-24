@@ -1,0 +1,54 @@
+ID_Card_Request_On_Success as "ID Card Request - On Success"
+{
+
+				type =  form
+				form = ID_Card_Request
+
+				record event = on add or edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Request_Type == "Renewal" && input.Status == "Submitted")
+										{
+											input.Status = "Extension_ID_Updated";
+										}
+										if(input.Status == "Received")
+										{
+											if(input.Received_Date == null)
+											{
+												input.Received_Date = zoho.currentdate;
+											}
+											if(input.Valid_From == null)
+											{
+												input.Valid_From = zoho.currentdate;
+											}
+											if(input.Valid_Upto == null)
+											{
+												input.Valid_Upto = zoho.currentdate.addYear(3);
+											}
+										}
+										try 
+										{
+											tokenMap = Map();
+											tokenMap.put("recipient_name",input.Recipient_Name);
+											tokenMap.put("status",input.Status);
+											thisapp.Send_Configured_Notification("ID_CARD_STATUS",tokenMap,"ID card request update","ID card request for {{recipient_name}} is now {{status}}.");
+										}catch (notifyErr)
+										{
+										}
+										try 
+										{
+											thisapp.Add_Audit_Log("ID_CARD_SAVE","ID_Card","ID_Card_Request",input.ID,"Save","",input.Status,"ID card request saved",true,"");
+										}catch (auditErr)
+										{
+										}
+						)
+					}
+				}
+
+			
+}

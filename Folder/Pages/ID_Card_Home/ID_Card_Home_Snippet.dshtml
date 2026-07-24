@@ -1,0 +1,362 @@
+<%
+	loginEmail = zoho.loginuserid;
+	if(loginEmail == null || loginEmail == "")
+	{
+		loginEmail = zoho.loginuser;
+	}
+	loginRole = ifnull(thisapp.permissions.loginUserProfile(),"");
+	isAdmin = loginRole == "Administrator" || loginRole == "Admin";
+	isHR = loginRole == "HR_ADMIN" || isAdmin;
+	isASPIRE = loginRole == "ASPIRE_ADMIN" || isAdmin;
+	isPrivileged = isHR || isASPIRE;
+	userName = ifnull(zoho.loginuser,"Employee");
+	userSubtitle = "Internal employee workspace";
+	employeeRows = Employee_Master[Official_Email == loginEmail || Official_Email == zoho.loginuser];
+	if(employeeRows.count() > 0)
+	{
+		userName = ifnull(employeeRows.Full_Name,userName);
+		userSubtitle = ifnull(employeeRows.Designation,"Internal employee workspace");
+	}
+	todayDate = zoho.currentdate;
+	soonDate = todayDate.addDay(30);
+	myRequestsCount = ID_Card_Request[Employee_Requester.Official_Email == loginEmail || Employee_Requester.Official_Email == zoho.loginuser].count();
+	submittedCount = ID_Card_Request[Status == "Submitted"].count();
+	generatedCount = ID_Card_Request[Status == "Card_Generated"].count();
+	activeCardsCount = ID_Card_Request[Status == "Received" && Valid_Upto >= todayDate].count();
+	expiringCount = ID_Card_Request[Status == "Received" && Valid_Upto != null && Valid_Upto <= soonDate && Valid_Upto >= todayDate].count();
+	activeMembersCount = Member_Master[Is_Active == true].count();
+	requestFormUrl = "#Form:ID_Card_Request?zc_LoadIn=dialog&amp;zc_Header=true&amp;Requester_Type=Employee&amp;Request_Type=New";
+	%>
+<style>
+/* ===== zcs-global.css utility subset included once for ID_Card_Home ===== */
+:root { --zcs-theme-brand-color: var(--zcs_brand_color, #2A6FFC); --zcs-light-bg-color: var(--zcs_brand_light_color, #E8EFFF); --zcs-primary-text-color: var(--zcs_primary_text_color, #1A1A1A); --zcs-secondary-text-color: var(--zcs_secondary_text_color, #55576B); --zcs-teritiary-text-color: var(--zcs_tertiary_text_color, #77798C); --zcs-border-color: var(--zcs_tertiary_border_color, #E6E8F0); --zcs-page-bg-color: #F5F7FB; --zcs-white-color: #FFFFFF; --zcs-brand-foreground: var(--zcs_brand_foreground_color, #FFFFFF); }
+a { text-decoration: none; }
+.zcs-flex { display: flex; } .zcs-inline-flex { display: inline-flex; } .zcs-row { display: flex; flex-wrap: wrap; } .zcs-direction-column { flex-direction: column; } .zcs-align-items-center { align-items: center; } .zcs-align-items-start { align-items: flex-start; } .zcs-justify-space-between { justify-content: space-between; } .zcs-justify-center { justify-content: center; } .zcs-gap-4 { gap: .25rem; } .zcs-gap-6 { gap: .375rem; } .zcs-gap-8 { gap: .5rem; } .zcs-gap-10 { gap: .625rem; } .zcs-gap-12 { gap: .75rem; } .zcs-gap-16 { gap: 1rem; } .zcs-gap-18 { gap: 1.125rem; } .zcs-gap-20 { gap: 1.25rem; } .zcs-gap-24 { gap: 1.5rem; }
+.zcs-p-0 { padding: 0; } .zcs-p-8 { padding: .5rem; } .zcs-p-10 { padding: .625rem; } .zcs-p-12 { padding: .75rem; } .zcs-p-16 { padding: 1rem; } .zcs-p-18 { padding: 1.125rem; } .zcs-p-20 { padding: 1.25rem; } .zcs-p-24 { padding: 1.5rem; } .zcs-px-10 { padding-left: .625rem; padding-right: .625rem; } .zcs-px-12 { padding-left: .75rem; padding-right: .75rem; } .zcs-px-16 { padding-left: 1rem; padding-right: 1rem; } .zcs-px-20 { padding-left: 1.25rem; padding-right: 1.25rem; } .zcs-px-24 { padding-left: 1.5rem; padding-right: 1.5rem; } .zcs-px-30 { padding-left: 1.875rem; padding-right: 1.875rem; } .zcs-py-2 { padding-top: .125rem; padding-bottom: .125rem; } .zcs-py-6 { padding-top: .375rem; padding-bottom: .375rem; } .zcs-py-8 { padding-top: .5rem; padding-bottom: .5rem; } .zcs-py-10 { padding-top: .625rem; padding-bottom: .625rem; } .zcs-py-12 { padding-top: .75rem; padding-bottom: .75rem; } .zcs-py-16 { padding-top: 1rem; padding-bottom: 1rem; } .zcs-py-24 { padding-top: 1.5rem; padding-bottom: 1.5rem; }
+.zcs-m-0 { margin: 0; } .zcs-mt-4 { margin-top: .25rem; } .zcs-mt-8 { margin-top: .5rem; } .zcs-mt-12 { margin-top: .75rem; } .zcs-mb-4 { margin-bottom: .25rem; } .zcs-mb-8 { margin-bottom: .5rem; } .zcs-w-full { width: 100%; } .zcs-wh-full { width: 100%; height: 100%; } .zcs-col-common { flex: 1 1 0%; min-width: 0; } .zcs-no-shrink { flex-shrink: 0; } .zcs-box-border { box-sizing: border-box; } .zcs-rounded-sm { border-radius: .25rem; } .zcs-rounded-md { border-radius: .375rem; } .zcs-rounded-lg { border-radius: .5rem; } .zcs-rounded-xl { border-radius: .75rem; } .zcs-rounded-2xl { border-radius: 1rem; } .zcs-text-left { text-align: left; } .zcs-text-right { text-align: right; } .zcs-text-center { text-align: center; } .zcs-overflow-auto { overflow: auto; } .zcs-relative { position: relative; } .zcs-sticky { position: sticky; }
+.zcs-font-11 { font-size: .6875rem; } .zcs-font-12 { font-size: .75rem; } .zcs-font-13 { font-size: .8125rem; } .zcs-font-14 { font-size: .875rem; } .zcs-font-15 { font-size: .9375rem; } .zcs-font-16 { font-size: 1rem; } .zcs-font-18 { font-size: 1.125rem; } .zcs-font-20 { font-size: 1.25rem; } .zcs-font-22 { font-size: 1.375rem; } .zcs-font-24 { font-size: 1.5rem; } .zcs-font-30 { font-size: 1.875rem; } .zcs-font-normal { font-weight: 400; } .zcs-font-medium { font-weight: 500; } .zcs-font-semibold { font-weight: 600; } .zcs-font-bold { font-weight: 700; } .zcs-lh-body { line-height: 1.5; } .zcs-lh-heading { line-height: 1.25; } .zcs-ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.zcs-color-primary { color: var(--zcs-primary-text-color); } .zcs-color-secondary { color: var(--zcs-secondary-text-color); } .zcs-color-tertiary { color: var(--zcs-teritiary-text-color); } .zcs-color-theme { color: var(--zcs-theme-brand-color); } .zcs-color-white { color: var(--zcs-white-color); } .zcs-color-green { color: #179E6C; } .zcs-color-blue { color: #2A6FFC; } .zcs-color-orange { color: #F4660C; } .zcs-color-red { color: #FE455D; } .zcs-color-yellow { color: #b8770d; }
+.zcs-card { background-color: var(--zcs-white-color); border: 1px solid var(--zcs-border-color); border-radius: 12px; box-shadow: 0 8px 24px rgba(18, 19, 43, .04); }
+/* ZCS component CSS: header-heading-with-actions, button-primary-button, button-secondary-button */
+.zcs-button { width: auto; min-width: 5rem; min-height: 36px; } .zcs-primary-button { background-color: var(--zcs-theme-brand-color); color: var(--zcs-brand-foreground); } .zcs-primary-outline-button { border: 1px solid var(--zcs-theme-brand-color); background-color: var(--zcs-white-color); color: var(--zcs-theme-brand-color); } .zcs-secondary-button { border: 1px solid var(--zcs-border-color); background-color: #F6F7FA; color: var(--zcs-primary-text-color); } .zcs-primary-button.zcs-button:hover { background-color: var(--zcs_brand_dark_color, #1652BB); } .zcs-primary-outline-button:hover, .zcs-secondary-button:hover { background-color: var(--zcs_component_hover_color, #F2F7FF); } .zcs-button-icon { width: 16px; max-height: 16px; } .zcs-page-header { background: var(--zcs-white-color); border: 1px solid var(--zcs-border-color); border-radius: 16px; box-shadow: 0 8px 24px rgba(18,19,43,.04); }
+/* ZCS component CSS: horizontal-tab-horizontal-tab-with-icon */
+.zcs-horizontal-tabhead { box-shadow: 0px -1px 0px 0px var(--zcs-border-color) inset; overflow-x: auto; overflow-y: hidden; -ms-overflow-style: none; scrollbar-width: none; } .zcs-horizontal-tabhead::-webkit-scrollbar { display: none; } .zcs-horizontal-tabitem { list-style-type: none; border-bottom: 2px solid transparent; letter-spacing: .1px; } .zcs-horizontal-tabicon { width: 16px; height: 16px; } .zcs-horizontal-tabtext { text-wrap: nowrap; } .zcs-horizontal-tabitem:hover .zcs-horizontal-tablink { color: var(--zcs-theme-brand-color); } .zcs-horizontal-tabitem.zcs-horizontal-tabactive { border-bottom-color: var(--zcs-theme-brand-color); } .zcs-horizontal-tabitem.zcs-horizontal-tabactive .zcs-horizontal-tablink { color: var(--zcs-theme-brand-color); }
+/* ZCS component CSS: badge-filled-badge */
+.zcs-badge { width: auto; } .zcs-badge-filled { border: 1px solid transparent; } .zcs-badge-filled.zcs-badge-theme { background-color: var(--zcs-theme-brand-color); border-color: var(--zcs-theme-brand-color); color: var(--zcs-white-color); } .zcs-badge-filled.zcs-badge-green { background-color: #179E6C; border-color: #179E6C; color: var(--zcs-white-color); } .zcs-badge-filled.zcs-badge-blue { background-color: #2A6FFC; border-color: #2A6FFC; color: var(--zcs-white-color); } .zcs-badge-filled.zcs-badge-orange { background-color: #F4660C; border-color: #F4660C; color: var(--zcs-white-color); } .zcs-badge-filled.zcs-badge-grey { background-color: #242424; border-color: #242424; color: var(--zcs-white-color); } .zcs-badge-filled.zcs-badge-yellow { background-color: #FAAE13; border-color: #FAAE13; color: var(--zcs-white-color); }
+/* ZCS component CSS: table-simple-table */
+.zcs-table-wrapper { border: 1px solid var(--zcs-border-color); background-color: var(--zcs-white-color); overflow: auto; } .zcs-table-wrapper table { line-height: normal; border-collapse: collapse; } .zcs-table-wrapper table thead { top: 0px; } .zcs-table-wrapper table thead tr th { background-color: #F9FAFE; box-shadow: 0px -1px 0px 0px var(--zcs-border-color) inset; white-space: nowrap; } .zcs-table-wrapper table tbody tr td { border-top: 1px solid var(--zcs-border-color); } .zcs-table-wrapper table tbody tr:first-child td { border-color: transparent; } .zcs-table-wrapper table tbody tr:hover td { background-color: #F9FAFE; }
+/* ID Card Home layout */
+.idh-page { min-height: 100%; background: var(--zcs-page-bg-color); padding: 22px; box-sizing: border-box; font-family: Lato, Arial, sans-serif; color: var(--zcs-primary-text-color); }
+.idh-hero { position: relative; overflow: hidden; color: var(--zcs-white-color); border-radius: 18px; padding: 24px; background: linear-gradient(135deg, var(--zcs-theme-brand-color), #1328CD); }
+.idh-hero:after { content: ""; position: absolute; right: -90px; top: -110px; width: 300px; height: 300px; border-radius: 50%; border: 40px solid rgba(255,255,255,.13); }
+.idh-hero:before { content: ""; position: absolute; right: 190px; bottom: -86px; width: 180px; height: 180px; border-radius: 50%; border: 26px solid rgba(255,255,255,.10); }
+.idh-hero-content { position: relative; z-index: 1; }
+.idh-hero .zcs-primary-outline-button { background: rgba(255,255,255,.12); border-color: rgba(255,255,255,.72); color: #FFFFFF; }
+.idh-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 18px; }
+.idh-kpi { grid-column: span 3; min-height: 120px; }
+.idh-kpi-icon { width: 42px; height: 42px; border-radius: 12px; background: var(--zcs-light-bg-color); color: var(--zcs-theme-brand-color); }
+.idh-workspace { grid-column: span 9; }
+.idh-side { grid-column: span 3; }
+.idh-kpi-value { font-size: 30px; font-weight: 700; line-height: 1.1; }
+.idh-tabs-shell { overflow: hidden; }
+.idh-tab-input { display: none; }
+.idh-tabbar { overflow-x: auto; }
+.idh-tabbar label { cursor: pointer; }
+.idh-panel { display: none; padding: 18px; }
+#idh-tab-my:checked ~ .idh-tabbar label[for='idh-tab-my'], #idh-tab-manage:checked ~ .idh-tabbar label[for='idh-tab-manage'], #idh-tab-kanban:checked ~ .idh-tabbar label[for='idh-tab-kanban'], #idh-tab-members:checked ~ .idh-tabbar label[for='idh-tab-members'], #idh-tab-print:checked ~ .idh-tabbar label[for='idh-tab-print'] { color: var(--zcs-theme-brand-color); border-bottom-color: var(--zcs-theme-brand-color); }
+#idh-tab-my:checked ~ .idh-panels .idh-panel-my, #idh-tab-manage:checked ~ .idh-panels .idh-panel-manage, #idh-tab-kanban:checked ~ .idh-panels .idh-panel-kanban, #idh-tab-members:checked ~ .idh-panels .idh-panel-members, #idh-tab-print:checked ~ .idh-panels .idh-panel-print { display: block; }
+.idh-embed-card { border: 1px solid var(--zcs-border-color); border-radius: 14px; overflow: hidden; background: var(--zcs-white-color); }
+.idh-embed-header { border-bottom: 1px solid var(--zcs-border-color); background: #FAFBFF; }
+.idh-report-frame { min-height: 650px; }
+.idh-access-note { border: 1px dashed var(--zcs-border-color); background: #FAFBFF; border-radius: 12px; }
+.idh-print-card { border: 1px solid var(--zcs-border-color); border-radius: 12px; background: #FFFFFF; }
+.idh-quick-action-item { list-style-type: none; }
+.idh-quick-action-item.zcs-card:hover { border-color: var(--zcs-theme-brand-color); }
+.idh-quick-action-item:hover .idh-quick-action-link { color: var(--zcs-theme-brand-color); }
+@media (max-width: 1100px) { .idh-kpi { grid-column: span 6; } .idh-workspace, .idh-side { grid-column: span 12; } }
+@media (max-width: 680px) { .idh-page { padding: 14px; } .idh-kpi { grid-column: span 12; } .idh-hero { padding: 18px; } .idh-hero-content, .zcs-page-header { flex-direction: column; align-items: flex-start; } .zcs-page-header { padding: 16px; } .idh-panel { padding: 12px; } .idh-report-frame { min-height: 540px; } }
+</style>
+
+<div class="idh-page zcs-flex zcs-direction-column zcs-gap-18">
+	<div class="zcs-page-header zcs-w-full zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12 zcs-px-30 zcs-py-24 zcs-box-border">
+		<div class="zcs-flex zcs-direction-column zcs-gap-4 zcs-ellipsis">
+			<h5 class="zcs-font-20 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-ellipsis zcs-m-0">ID Card Home</h5>
+			<span class="zcs-font-14 zcs-color-secondary">Internal employee ID card requests and ASPIRE/admin review workspace</span>
+		</div>
+		<div class="zcs-flex zcs-align-items-center zcs-gap-12">
+			<a class="zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body" href="#Report:My_ID_Card_Requests?zc_LoadIn=dialog">
+				<i class="zcs-button-icon zc-li-outline files-2-doc"></i>
+				<span class="zcs-button-text">My Requests</span>
+			</a>
+			<a class="zcs-button zcs-primary-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body" href="<%=requestFormUrl%>">
+				<i class="zcs-button-icon zc-li-outline ui-1-simple-add"></i>
+				<span class="zcs-button-text">Request ID Card</span>
+			</a>
+		</div>
+	</div>
+
+	<section class="idh-hero zcs-box-border">
+		<div class="idh-hero-content zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-20">
+			<div class="zcs-flex zcs-direction-column zcs-gap-8">
+				<span class="zcs-font-13 zcs-font-medium">Signed in as <%=userName%></span>
+				<h2 class="zcs-font-30 zcs-font-bold zcs-lh-heading zcs-m-0">ID card workspace</h2>
+				<span class="zcs-font-15"><%=userSubtitle%></span>
+			</div>
+			<div class="zcs-flex zcs-align-items-center zcs-gap-10">
+				<div class="zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-theme"><span class="zcs-badge-text zcs-font-13">Employee flow</span></div>
+<%
+	if(isHR)
+	{
+		%>
+<div class="zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-green"><span class="zcs-badge-text zcs-font-13">HR review</span></div>
+<%
+	}
+	if(isASPIRE)
+	{
+		%>
+<div class="zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-orange"><span class="zcs-badge-text zcs-font-13">ASPIRE admin</span></div>
+<%
+	}
+	%>
+</div>
+		</div>
+	</section>
+
+	<div class="idh-grid">
+		<div class="idh-kpi zcs-card zcs-p-18 zcs-box-border zcs-flex zcs-direction-column zcs-gap-12">
+			<div class="zcs-flex zcs-justify-space-between zcs-align-items-start zcs-gap-12"><div class="idh-kpi-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline files-2-doc zcs-font-22"></i></div><span class="zcs-font-13 zcs-color-tertiary">My requests</span></div>
+			<div class="idh-kpi-value zcs-color-primary"><%=myRequestsCount%></div>
+			<div class="zcs-font-14 zcs-color-secondary">Requests tied to your employee record</div>
+		</div>
+		<div class="idh-kpi zcs-card zcs-p-18 zcs-box-border zcs-flex zcs-direction-column zcs-gap-12">
+			<div class="zcs-flex zcs-justify-space-between zcs-align-items-start zcs-gap-12"><div class="idh-kpi-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline arrows-4-restore zcs-font-22"></i></div><span class="zcs-font-13 zcs-color-tertiary">Submitted</span></div>
+			<div class="idh-kpi-value zcs-color-primary"><%=submittedCount%></div>
+			<div class="zcs-font-14 zcs-color-secondary">Awaiting extension ID update or card generation</div>
+		</div>
+		<div class="idh-kpi zcs-card zcs-p-18 zcs-box-border zcs-flex zcs-direction-column zcs-gap-12">
+			<div class="zcs-flex zcs-justify-space-between zcs-align-items-start zcs-gap-12"><div class="idh-kpi-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline design-print zcs-font-22"></i></div><span class="zcs-font-13 zcs-color-tertiary">Print ready</span></div>
+			<div class="idh-kpi-value zcs-color-primary"><%=generatedCount%></div>
+			<div class="zcs-font-14 zcs-color-secondary">Cards generated and ready for ID_Card_Layout</div>
+		</div>
+		<div class="idh-kpi zcs-card zcs-p-18 zcs-box-border zcs-flex zcs-direction-column zcs-gap-12">
+			<div class="zcs-flex zcs-justify-space-between zcs-align-items-start zcs-gap-12"><div class="idh-kpi-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline ui-1-check-circle-08 zcs-font-22"></i></div><span class="zcs-font-13 zcs-color-tertiary">Active cards</span></div>
+			<div class="idh-kpi-value zcs-color-primary"><%=activeCardsCount%></div>
+			<div class="zcs-font-14 zcs-color-secondary"><%=expiringCount%> expiring within 30 days</div>
+		</div>
+
+		<section class="idh-workspace idh-tabs-shell zcs-card zcs-box-border">
+			<input class="idh-tab-input" type="radio" name="idh-tabs" id="idh-tab-my" checked>
+<%
+	if(isPrivileged)
+	{
+		%>
+<input class="idh-tab-input" type="radio" name="idh-tabs" id="idh-tab-manage">
+<%
+	}
+	if(isPrivileged)
+	{
+		%>
+<input class="idh-tab-input" type="radio" name="idh-tabs" id="idh-tab-kanban">
+<%
+	}
+	if(isASPIRE)
+	{
+		%>
+<input class="idh-tab-input" type="radio" name="idh-tabs" id="idh-tab-members">
+<%
+	}
+	%>
+<input class="idh-tab-input" type="radio" name="idh-tabs" id="idh-tab-print">
+
+			<ul class="idh-tabbar zcs-horizontal-tabhead zcs-flex zcs-gap-12 zcs-px-10 zcs-py-0 zcs-m-0 zcs-box-border">
+				<li class="zcs-horizontal-tabitem"><label for="idh-tab-my" class="zcs-horizontal-tablink zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-10 zcs-py-12 zcs-box-border zcs-font-medium zcs-lh-body zcs-color-tertiary"><i class="zcs-horizontal-tabicon zcs-font-16 zc-li-outline files-2-doc"></i><span class="zcs-horizontal-tabtext zcs-font-15">My Requests</span></label></li>
+<%
+	if(isPrivileged)
+	{
+		%>
+<li class="zcs-horizontal-tabitem"><label for="idh-tab-manage" class="zcs-horizontal-tablink zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-10 zcs-py-12 zcs-box-border zcs-font-medium zcs-lh-body zcs-color-tertiary"><i class="zcs-horizontal-tabicon zcs-font-16 zc-li-outline ui-1-settings-gear-64"></i><span class="zcs-horizontal-tabtext zcs-font-15">HR Management</span></label></li>
+<%
+	}
+	if(isPrivileged)
+	{
+		%>
+<li class="zcs-horizontal-tabitem"><label for="idh-tab-kanban" class="zcs-horizontal-tablink zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-10 zcs-py-12 zcs-box-border zcs-font-medium zcs-lh-body zcs-color-tertiary"><i class="zcs-horizontal-tabicon zcs-font-16 zc-li-outline design-bullet-list-67"></i><span class="zcs-horizontal-tabtext zcs-font-15">Status Kanban</span></label></li>
+<%
+	}
+	if(isASPIRE)
+	{
+		%>
+<li class="zcs-horizontal-tabitem"><label for="idh-tab-members" class="zcs-horizontal-tablink zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-10 zcs-py-12 zcs-box-border zcs-font-medium zcs-lh-body zcs-color-tertiary"><i class="zcs-horizontal-tabicon zcs-font-16 zc-li-outline users-circle-10"></i><span class="zcs-horizontal-tabtext zcs-font-15">Members</span></label></li>
+<%
+	}
+	%>
+<li class="zcs-horizontal-tabitem"><label for="idh-tab-print" class="zcs-horizontal-tablink zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-10 zcs-py-12 zcs-box-border zcs-font-medium zcs-lh-body zcs-color-tertiary"><i class="zcs-horizontal-tabicon zcs-font-16 zc-li-outline design-print"></i><span class="zcs-horizontal-tabtext zcs-font-15">Print Layout</span></label></li>
+			</ul>
+
+			<div class="idh-panels">
+				<div class="idh-panel idh-panel-my">
+					<div class="idh-embed-card">
+						<div class="idh-embed-header zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12 zcs-px-20 zcs-py-16 zcs-box-border">
+							<div><h5 class="zcs-font-18 zcs-font-semibold zcs-m-0 zcs-color-primary">My ID Card Requests</h5><span class="zcs-font-13 zcs-color-secondary">Employee-scoped report filtered by official email</span></div>
+							<a class="zcs-button zcs-primary-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14" href="<%=requestFormUrl%>"><i class="zcs-button-icon zc-li-outline ui-1-simple-add"></i><span>New Request</span></a>
+						</div>
+						<div class="idh-report-frame" zc-component="report" zc-linkname="My_ID_Card_Requests" zc-height="650px"></div>
+					</div>
+				</div>
+<%
+	if(isPrivileged)
+	{
+		%>
+<div class="idh-panel idh-panel-manage">
+					<div class="idh-embed-card">
+						<div class="idh-embed-header zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12 zcs-px-20 zcs-py-16 zcs-box-border">
+							<div><h5 class="zcs-font-18 zcs-font-semibold zcs-m-0 zcs-color-primary">HR ID Card Management</h5><span class="zcs-font-13 zcs-color-secondary">Admin queue for extension ID, validity, receipt, and deactivation updates</span></div>
+							<a class="zcs-button zcs-secondary-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14" href="#Report:HR_ID_Card_Management?zc_LoadIn=dialog"><i class="zcs-button-icon zc-li-outline arrows-1-tail-right"></i><span>Open</span></a>
+						</div>
+						<div class="idh-report-frame" zc-component="report" zc-linkname="HR_ID_Card_Management" zc-height="650px"></div>
+					</div>
+				</div>
+
+				<div class="idh-panel idh-panel-kanban">
+					<div class="idh-embed-card">
+						<div class="idh-embed-header zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12 zcs-px-20 zcs-py-16 zcs-box-border">
+							<div><h5 class="zcs-font-18 zcs-font-semibold zcs-m-0 zcs-color-primary">ID Card Status Kanban</h5><span class="zcs-font-13 zcs-color-secondary">Status-board tracking across Submitted, Card_Generated, Received, and Deactivated states</span></div>
+							<a class="zcs-button zcs-secondary-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14" href="#Report:ID_Card_Status_Kanban?zc_LoadIn=dialog"><i class="zcs-button-icon zc-li-outline arrows-1-tail-right"></i><span>Open</span></a>
+						</div>
+						<div class="idh-report-frame" zc-component="report" zc-linkname="ID_Card_Status_Kanban" zc-height="650px"></div>
+					</div>
+				</div>
+<%
+	}
+	if(isASPIRE)
+	{
+		%>
+<div class="idh-panel idh-panel-members">
+					<div class="idh-embed-card">
+						<div class="idh-embed-header zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12 zcs-px-20 zcs-py-16 zcs-box-border">
+							<div><h5 class="zcs-font-18 zcs-font-semibold zcs-m-0 zcs-color-primary">Member Master List</h5><span class="zcs-font-13 zcs-color-secondary">ASPIRE/admin reference list for managed member records only</span></div>
+							<a class="zcs-button zcs-secondary-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14" href="#Report:Member_Master_List?zc_LoadIn=dialog"><i class="zcs-button-icon zc-li-outline arrows-1-tail-right"></i><span>Open</span></a>
+						</div>
+						<div class="idh-report-frame" zc-component="report" zc-linkname="Member_Master_List" zc-height="650px"></div>
+					</div>
+				</div>
+<%
+	}
+	%>
+<div class="idh-panel idh-panel-print">
+					<div class="idh-embed-card">
+						<div class="idh-embed-header zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12 zcs-px-20 zcs-py-16 zcs-box-border">
+							<div><h5 class="zcs-font-18 zcs-font-semibold zcs-m-0 zcs-color-primary">ID Card Layout link pattern</h5><span class="zcs-font-13 zcs-color-secondary">Open ID_Card_Layout with id_card_request_id for generated or received cards</span></div>
+							<a class="zcs-button zcs-secondary-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14" href="#Page:ID_Card_Layout?zc_LoadIn=dialog"><i class="zcs-button-icon zc-li-outline design-print"></i><span>Pattern</span></a>
+						</div>
+						<div class="zcs-p-18 zcs-box-border zcs-flex zcs-direction-column zcs-gap-16">
+							<div class="idh-access-note zcs-p-16 zcs-box-border zcs-flex zcs-direction-column zcs-gap-8">
+								<span class="zcs-font-13 zcs-color-tertiary">Navigation pattern</span>
+								<span class="zcs-font-14 zcs-color-secondary">Use #Page:ID_Card_Layout?id_card_request_id=&lt;ID_Card_Request.ID&gt;&amp;zc_LoadIn=dialog to preview or print a card.</span>
+							</div>
+							<div class="zcs-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative">
+								<table class="zcs-w-full">
+									<thead class="zcs-sticky">
+										<tr>
+											<th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Recipient</th>
+											<th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Extension ID</th>
+											<th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Status</th>
+											<th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Action</th>
+										</tr>
+									</thead>
+									<tbody>
+<%
+	if(isPrivileged)
+	{
+		printRows = ID_Card_Request[Status == "Card_Generated" || Status == "Received"];
+	}
+	else
+	{
+		printRows = ID_Card_Request[Employee_Requester.Official_Email == loginEmail || Employee_Requester.Official_Email == zoho.loginuser && Status == "Card_Generated" || Status == "Received"];
+	}
+	printIndex = 0;
+	for each  cardRec in printRows
+	{
+		if(printIndex < 6)
+		{
+			layoutUrl = "#Page:ID_Card_Layout?id_card_request_id=" + cardRec.ID + "&amp;zc_LoadIn=dialog&amp;zc_Header=false";
+			statusBadgeClass = "zcs-badge-blue";
+			if(cardRec.Status == "Received")
+			{
+				statusBadgeClass = "zcs-badge-green";
+			}
+			printIndex = printIndex + 1;
+			%>
+<tr>
+											<td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"><%=ifnull(cardRec.Recipient_Name,"ID card request")%></td>
+											<td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"><%=ifnull(cardRec.Extension_ID_Number,"Pending")%></td>
+											<td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body"><div class="zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border <%=statusBadgeClass%>"><span class="zcs-badge-text zcs-font-13"><%=cardRec.Status%></span></div></td>
+											<td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body"><a class="zcs-button zcs-secondary-button zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-12 zcs-py-6 zcs-rounded-md zcs-box-border zcs-font-13" href="<%=layoutUrl%>"><i class="zcs-button-icon zc-li-outline design-print"></i><span>Open Layout</span></a></td>
+										</tr>
+<%
+		}
+	}
+	if(printIndex == 0)
+	{
+		%>
+<tr>
+											<td colspan="4" class="zcs-px-16 zcs-py-24 zcs-box-border zcs-text-center zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-secondary">No print-ready cards are available for this profile.</td>
+										</tr>
+<%
+	}
+	%>
+</tbody>
+								</table>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<aside class="idh-side zcs-flex zcs-direction-column zcs-gap-16">
+			<div class="zcs-card zcs-flex zcs-direction-column zcs-gap-16 zcs-p-16 zcs-box-border">
+				<h5 class="zcs-font-18 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0">Quick actions</h5>
+				<ul class="zcs-flex zcs-direction-column zcs-gap-12 zcs-p-0 zcs-m-0">
+					<li class="idh-quick-action-item zcs-card zcs-px-12 zcs-py-8 zcs-box-border"><a class="idh-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary" href="<%=requestFormUrl%>"><i class="zcs-font-medium zc-li-outline ui-1-simple-add"></i><span>New employee request</span></a></li>
+					<li class="idh-quick-action-item zcs-card zcs-px-12 zcs-py-8 zcs-box-border"><a class="idh-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary" href="#Report:My_ID_Card_Requests?zc_LoadIn=dialog"><i class="zcs-font-medium zc-li-outline files-2-doc"></i><span>Open my requests</span></a></li>
+<%
+	if(isPrivileged)
+	{
+		%>
+<li class="idh-quick-action-item zcs-card zcs-px-12 zcs-py-8 zcs-box-border"><a class="idh-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary" href="#Report:HR_ID_Card_Management?zc_LoadIn=dialog"><i class="zcs-font-medium zc-li-outline ui-1-settings-gear-64"></i><span>Manage ID cards</span></a></li>
+					<li class="idh-quick-action-item zcs-card zcs-px-12 zcs-py-8 zcs-box-border"><a class="idh-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary" href="#Report:ID_Card_Status_Kanban?zc_LoadIn=dialog"><i class="zcs-font-medium zc-li-outline design-bullet-list-67"></i><span>Open status kanban</span></a></li>
+<%
+	}
+	if(isASPIRE)
+	{
+		%>
+<li class="idh-quick-action-item zcs-card zcs-px-12 zcs-py-8 zcs-box-border"><a class="idh-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary" href="#Report:Member_Master_List?zc_LoadIn=dialog"><i class="zcs-font-medium zc-li-outline users-circle-10"></i><span>Open member master</span></a></li>
+<%
+	}
+	%>
+</ul>
+			</div>
+
+			<div class="zcs-card zcs-flex zcs-direction-column zcs-gap-16 zcs-p-16 zcs-box-border">
+				<h5 class="zcs-font-18 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0">Access notes</h5>
+				<div class="idh-access-note zcs-p-16 zcs-box-border zcs-flex zcs-direction-column zcs-gap-8">
+					<div class="zcs-flex zcs-align-items-center zcs-gap-8"><i class="zc-li-outline ui-1-lock zcs-font-18 zcs-color-tertiary"></i><span class="zcs-font-15 zcs-color-primary zcs-font-medium">No member self-service</span></div>
+					<span class="zcs-font-14 zcs-color-secondary">This page intentionally exposes employee request flow and admin-managed member references only. Active MEMBER login UI is not surfaced here.</span>
+				</div>
+<%
+	if(isASPIRE)
+	{
+		%>
+<div class="idh-access-note zcs-p-16 zcs-box-border zcs-flex zcs-direction-column zcs-gap-8">
+					<span class="zcs-font-13 zcs-color-tertiary">Active member records</span>
+					<span class="zcs-font-24 zcs-font-bold zcs-color-primary"><%=activeMembersCount%></span>
+					<span class="zcs-font-14 zcs-color-secondary">Member_Master_List is visible for ASPIRE/admin review.</span>
+				</div>
+<%
+	}
+	%>
+</div>
+		</aside>
+	</div>
+</div>

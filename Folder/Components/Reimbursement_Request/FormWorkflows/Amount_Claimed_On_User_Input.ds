@@ -1,0 +1,35 @@
+Amount_Claimed_On_User_Input as "Amount Claimed - On User Input"
+{
+
+				type =  form
+				form = Reimbursement_Request
+
+				record event = on add or edit
+
+				on user input of Amount_Claimed
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Reimbursement_Type != null)
+										{
+											typeRows = Reimbursement_Type_Config[ID == input.Reimbursement_Type];
+											if(typeRows.count() > 0)
+											{
+												if(ifnull(input.Amount_Claimed,0) <= ifnull(typeRows.Limit_Amount,0) || ifnull(typeRows.Limit_Amount,0) == 0)
+												{
+													input.within_limit = true;
+												}
+												else
+												{
+													input.within_limit = false;
+												}
+											}
+										}
+						)
+					}
+				}
+
+			
+}

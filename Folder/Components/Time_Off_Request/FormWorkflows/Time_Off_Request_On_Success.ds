@@ -1,0 +1,81 @@
+Time_Off_Request_On_Success as "Time Off Request - On Success"
+{
+
+				type =  form
+				form = Time_Off_Request
+
+				record event = on add or edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											leaveTypeRows = Leave_Type_Config[ID == input.Leave_Type];
+										leaveTypeName = "";
+										if(leaveTypeRows.count() > 0)
+										{
+											leaveTypeName = leaveTypeRows.Leave_Type_Name;
+										}
+										if(input.Status == "Approved")
+										{
+											balanceRows = Leave_Balance[Employee == input.Employee && Leave_Type == input.Leave_Type];
+											for each  balanceRec in balanceRows
+											{
+												balanceRec.Balance_Days=ifnull(balanceRec.Balance_Days,0) - input.Number_Of_Days;
+												balanceRec.Used_Days=ifnull(balanceRec.Used_Days,0) + input.Number_Of_Days;
+											}
+											cursorDate = input.From_Date;
+											for each  countIndex in {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31}
+											{
+												if(cursorDate <= input.To_Date)
+												{
+													attendanceRows = Attendance_Log[Employee == input.Employee && Attendance_Date == cursorDate];
+													if(attendanceRows.count() == 0)
+													{
+														insertedAttendanceId = insert into Attendance_Log
+														[
+															Employee=input.Employee
+															Attendance_Date=cursorDate
+															Attendance_Status="Leave"
+															Source="System"
+															Added_User=zoho.loginuser
+														];
+													}
+													else
+													{
+														for each  attendanceRec in attendanceRows
+														{
+															if(attendanceRec.Source != "Manual" && attendanceRec.Source != "Regularised")
+															{
+																attendanceRec.Attendance_Status=if(leaveTypeName == "WFH","WFH","Leave");
+																attendanceRec.Source="System";
+															}
+														}
+													}
+													cursorDate = cursorDate.addDay(1);
+												}
+											}
+											thisapp.Add_Audit_Log("TIME_OFF_APPROVED","Attendance_Leave","Time_Off_Request",input.ID,"Approved","","Approved","Approved time-off request and updated balances/attendance.",true,"");
+										}
+										else if(input.Status == "Pending_Manager")
+										{
+											tokenMap = Map();
+											tokenMap.put("employee",input.Employee);
+											tokenMap.put("leave_type",leaveTypeName);
+											tokenMap.put("from_date",input.From_Date);
+											tokenMap.put("to_date",input.To_Date);
+											thisapp.Add_Audit_Log("TIME_OFF_SUBMITTED","Attendance_Leave","Time_Off_Request",input.ID,"Submitted","","Pending_Manager","Time-off request submitted for manager approval.",true,"");
+											thisapp.Send_Configured_Notification("TIME_OFF_SUBMITTED",tokenMap,"Time off request submitted","{{employee}} requested {{leave_type}} from {{from_date}} to {{to_date}}.");
+										}
+										else
+										{
+											thisapp.Add_Audit_Log("TIME_OFF_UPDATED","Attendance_Leave","Time_Off_Request",input.ID,"Updated","",input.Status,"Time-off request updated.",true,"");
+										}
+						)
+					}
+				}
+
+			
+}

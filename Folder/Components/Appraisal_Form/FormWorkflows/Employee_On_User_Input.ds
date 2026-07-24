@@ -1,0 +1,36 @@
+Employee_On_User_Input as "Appraisal Form Employee - On User Input"
+{
+
+				type =  form
+				form = Appraisal_Form
+
+				record event = on add or edit
+
+				on user input of Employee
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Employee != null)
+										{
+											selectedEmployees = Employee_Master[ID == input.Employee];
+											if(selectedEmployees.count() > 0 && selectedEmployees.Primary_Manager != null)
+											{
+												managerEmployees = Employee_Master[ID == selectedEmployees.Primary_Manager];
+												if(managerEmployees.count() > 0)
+												{
+													input.Manager = managerEmployees.Official_Email;
+												}
+											}
+											else
+											{
+												input.Manager = null;
+											}
+										}
+						)
+					}
+				}
+
+			
+}

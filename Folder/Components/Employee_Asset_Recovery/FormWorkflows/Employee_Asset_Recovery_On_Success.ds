@@ -1,0 +1,31 @@
+Employee_Asset_Recovery_On_Success as "Employee Asset Recovery - On Success"
+{
+
+				type =  form
+				form = Employee_Asset_Recovery
+
+				record event = on add or edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											// TODO: Future external asset-system PUT belongs here. This build intentionally does not call an external API.
+										if(input.Recovery_Status == "Recovered" || input.Recovery_Status == "Not_Found")
+										{
+											input.External_Sync_Status = "Pending_Sync";
+										}
+										try 
+										{
+											thisapp.Add_Audit_Log("ASSET_RECOVERY_SAVE","Offboarding","Employee_Asset_Recovery",input.ID,"Save","",input.Recovery_Status,"Asset recovery record saved; external sync is pending future integration.",true,"");
+										}catch (auditErr)
+										{
+										}
+						)
+					}
+				}
+
+			
+}

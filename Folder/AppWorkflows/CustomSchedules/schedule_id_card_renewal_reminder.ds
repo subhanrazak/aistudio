@@ -1,0 +1,26 @@
+schedule_id_card_renewal_reminder as "ID Card Renewal Reminder"
+{
+
+				type =  schedule
+				start = "2025-01-01 09:00:00"
+				frequency = daily
+				time zone = "Asia/Kolkata"
+				on start
+				{
+					actions 
+					{
+					on load
+					(
+						soonDate = zoho.currentdate.addDay(30);
+										expiringCards = ID_Card_Request[Status == "Received" && Valid_Upto <= soonDate && Valid_Upto >= zoho.currentdate];
+										if(expiringCards.count() > 0)
+										{
+											tokenMap = Map();
+											tokenMap.put("expiring_count",expiringCards.count());
+											thisapp.Send_Configured_Notification("ID_CARD_RENEWAL_REMINDER",tokenMap,"ID cards expiring soon","{{expiring_count}} ID cards expire within the next 30 days.");
+										}
+					)
+					}
+				}
+			
+}

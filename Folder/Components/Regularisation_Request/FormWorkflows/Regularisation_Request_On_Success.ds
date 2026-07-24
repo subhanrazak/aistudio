@@ -1,0 +1,46 @@
+Regularisation_Request_On_Success as "Regularisation Request - On Success"
+{
+
+				type =  form
+				form = Regularisation_Request
+
+				record event = on add or edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Status == "Pending_Manager")
+										{
+											tokenMap = Map();
+											tokenMap.put("employee",input.Employee);
+											tokenMap.put("regularisation_date",input.Regularisation_Date);
+											tokenMap.put("regularisation_type",input.Regularisation_Type);
+											thisapp.Add_Audit_Log("REGULARISATION_SUBMITTED","Attendance_Leave","Regularisation_Request",input.ID,"Submitted","","Pending_Manager","Regularisation request submitted for manager approval.",true,"");
+											thisapp.Send_Configured_Notification("REGULARISATION_SUBMITTED",tokenMap,"Regularisation request submitted","{{employee}} requested {{regularisation_type}} regularisation for {{regularisation_date}}.");
+										}
+										else if(input.Status == "Approved")
+										{
+											attendanceRows = Attendance_Log[Employee == input.Employee && Attendance_Date == input.Regularisation_Date];
+											if(attendanceRows.count() > 0)
+											{
+												for each  attendanceRec in attendanceRows
+												{
+													attendanceRec.Source="Regularised";
+													attendanceRec.Attendance_Status=if(input.Regularisation_Type == "WFH","WFH",if(input.Regularisation_Type == "On_Duty","On_Duty",if(input.Regularisation_Type == "Leave","Leave","Present")));
+												}
+											}
+											thisapp.Add_Audit_Log("REGULARISATION_APPROVED","Attendance_Leave","Regularisation_Request",input.ID,"Approved","","Approved","Regularisation approved and attendance updated.",true,"");
+										}
+										else
+										{
+											thisapp.Add_Audit_Log("REGULARISATION_UPDATED","Attendance_Leave","Regularisation_Request",input.ID,"Updated","",input.Status,"Regularisation request updated.",true,"");
+										}
+						)
+					}
+				}
+
+			
+}

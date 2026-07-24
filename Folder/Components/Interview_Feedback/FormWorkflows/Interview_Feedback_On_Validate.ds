@@ -1,0 +1,31 @@
+Interview_Feedback_On_Validate as "Interview Feedback - On Validate"
+{
+
+				type =  form
+				form = Interview_Feedback
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											appRows = Job_Application[ID == input.Job_Application];
+										if(appRows.count() == 0)
+										{
+											alert "Select a valid job application.";
+											cancel submit;
+										}
+										else if(appRows.Status == "Rejected" || appRows.Status == "Joined" || appRows.Status == "Offer_Accepted")
+										{
+											alert "Feedback cannot be added to rejected, joined, or offer accepted applications.";
+											cancel submit;
+										}
+						)
+					}
+				}
+
+			
+}

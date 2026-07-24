@@ -1,0 +1,44 @@
+Appraisal_Config_On_Validate as "Appraisal Config - On Validate"
+{
+
+				type =  form
+				form = Appraisal_Config
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Window_Start >= input.Window_End)
+										{
+											alert "Window start must be before window end.";
+											cancel submit;
+										}
+										if(input.Window_End > input.Manager_Scoring_Start)
+										{
+											alert "Window end must be on or before manager scoring start.";
+											cancel submit;
+										}
+										if(input.Manager_Scoring_Start >= input.Manager_Scoring_End)
+										{
+											alert "Manager scoring start must be before manager scoring end.";
+											cancel submit;
+										}
+										if(input.Is_Active == true)
+										{
+											activeCycles = Appraisal_Config[Is_Active == true && ID != input.ID];
+											if(activeCycles.count() > 0)
+											{
+												alert "Only one appraisal cycle can be active at a time.";
+												cancel submit;
+											}
+										}
+						)
+					}
+				}
+
+			
+}

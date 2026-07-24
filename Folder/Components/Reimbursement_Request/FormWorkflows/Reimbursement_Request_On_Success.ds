@@ -1,0 +1,58 @@
+Reimbursement_Request_On_Success as "Reimbursement Request - On Success"
+{
+
+				type =  form
+				form = Reimbursement_Request
+
+				record event = on add or edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											oldStatus = "";
+										if(input.ID != null)
+										{
+											if(input.Status == "Draft")
+											{
+												if(input.Source == "Direct")
+												{
+													if(input.Category == "Health_Insurance")
+													{
+														input.Status = "Pending_HR";
+													}
+													else
+													{
+														input.Status = "Pending_Manager";
+													}
+												}
+											}
+											if(input.Status == "Processed" && input.Processed_Date == null)
+											{
+												input.Processed_Date = zoho.currentdate;
+											}
+											try 
+											{
+												tokenMap = Map();
+												tokenMap.put("employee",input.Employee.toString());
+												tokenMap.put("status",input.Status);
+												tokenMap.put("amount",input.Amount_Claimed.toString());
+												thisapp.Send_Configured_Notification("REIMBURSEMENT_STATUS",tokenMap,"Reimbursement status updated","A reimbursement request is now " + input.Status + ".");
+											}	catch (notifyErr)
+											{
+											}
+											try 
+											{
+												thisapp.Add_Audit_Log("REIMBURSEMENT_SAVE","Reimbursement","Reimbursement_Request",input.ID,"Save",oldStatus,input.Status,"Reimbursement request saved",true,"");
+											}	catch (auditErr)
+											{
+											}
+										}
+						)
+					}
+				}
+
+			
+}
