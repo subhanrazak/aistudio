@@ -1,0 +1,57 @@
+Audit_Observations_On_Validate as "Audit Observations On Validate"
+{
+    type = form
+    form = Audit_Observations
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                template_requires_root = false;
+                template_requires_impact = false;
+                template_requires_recommendations = false;
+                template_requires_evidence = false;
+                if(input.Observation_Template != null)
+                {
+                    obs_template = Observation_Form_Templates[ID == input.Observation_Template];
+                    if(obs_template.count() > 0)
+                    {
+                        template_requires_root = obs_template.Require_Root_Cause_Analysis;
+                        template_requires_impact = obs_template.Impact_Assessment_Required;
+                        template_requires_recommendations = obs_template.Recommendations_Required;
+                        template_requires_evidence = obs_template.Require_Supporting_Evidence_Upload;
+                    }
+                }
+                severe_observation = input.Severity in {"High", "Critical"};
+                if((template_requires_root == true || severe_observation) && ifnull(input.Root_Cause_Analysis,"") == "")
+                {
+                    alert "Root cause analysis is required for this observation.";
+                    cancel submit;
+                }
+                if((template_requires_impact == true || severe_observation) && ifnull(input.Impact_Assessment,"") == "")
+                {
+                    alert "Impact assessment is required for this observation.";
+                    cancel submit;
+                }
+                if((template_requires_recommendations == true || severe_observation) && ifnull(input.Recommendations,"") == "")
+                {
+                    alert "Recommendations are required for this observation.";
+                    cancel submit;
+                }
+                if((template_requires_evidence == true || severe_observation) && input.Evidence_Upload == null)
+                {
+                    alert "Evidence upload is required for this observation.";
+                    cancel submit;
+                }
+                if(input.Action_Plan_Required == true && input.Target_Closure_Date == null)
+                {
+                    alert "Target closure date is required when an action plan is required.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}

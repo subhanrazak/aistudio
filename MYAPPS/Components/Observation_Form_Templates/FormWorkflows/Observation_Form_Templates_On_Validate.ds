@@ -1,0 +1,26 @@
+Observation_Form_Templates_On_Validate as "Observation Form Templates On Validate"
+{
+    type = form
+    form = Observation_Form_Templates
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(ifnull(input.Required_Fields_Count,0) > ifnull(input.Total_Fields_Count,0))
+                {
+                    alert "Required fields count cannot exceed total fields count.";
+                    cancel submit;
+                }
+                if(input.Enable_Approval_Workflow == true && input.Owner == null)
+                {
+                    alert "Owner is required when approval workflow is enabled.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}

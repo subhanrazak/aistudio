@@ -1,0 +1,42 @@
+Audit_Universe_On_Success as "Audit Universe On Success"
+{
+    type = form
+    form = Audit_Universe
+    record event = on add or edit
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                residual = ifnull(input.Inherent_Risk_Score,0) - (ifnull(input.Control_Effectiveness_Score,0) / 2.0);
+                if(residual < 1)
+                {
+                    residual = 1;
+                }
+                input.Residual_Risk_Score = residual.round(1);
+                if(input.Residual_Risk_Score <= 2)
+                {
+                    input.Risk_Level = "Low";
+                    input.Audit_Frequency = "Every 3 Years";
+                }
+                else if(input.Residual_Risk_Score <= 3)
+                {
+                    input.Risk_Level = "Medium";
+                    input.Audit_Frequency = "Every 2 Years";
+                }
+                else if(input.Residual_Risk_Score <= 4)
+                {
+                    input.Risk_Level = "High";
+                    input.Audit_Frequency = "Annual";
+                }
+                else
+                {
+                    input.Risk_Level = "Critical";
+                    input.Audit_Frequency = "Annual";
+                }
+            )
+        }
+    }
+}

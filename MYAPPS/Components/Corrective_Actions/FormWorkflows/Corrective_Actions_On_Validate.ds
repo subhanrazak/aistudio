@@ -1,0 +1,26 @@
+Corrective_Actions_On_Validate as "Corrective Actions On Validate"
+{
+    type = form
+    form = Corrective_Actions
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if((input.Action_Status == "Completed" || input.Action_Status == "Verified") && input.Completion_Date == null)
+                {
+                    alert "Completion date is required when an action is completed or verified.";
+                    cancel submit;
+                }
+                if(input.Action_Status == "Verified" && ifnull(input.Effectiveness_Review, "") == "")
+                {
+                    alert "Effectiveness review is required before verifying an action.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}

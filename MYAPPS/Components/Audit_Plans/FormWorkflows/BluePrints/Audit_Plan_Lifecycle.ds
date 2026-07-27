@@ -1,0 +1,108 @@
+Audit_Plan_Lifecycle as "Audit Plan Lifecycle"
+{
+    type = blueprint
+    form = Audit_Plans
+
+    start
+    {
+        start stage = "Draft"
+    }
+
+    stages
+    {
+        "Draft" { }
+        "Submitted" { }
+        "Approved" { }
+        "Rejected" { }
+        "Sent Back for Rework" { }
+        "Closed" { }
+    }
+
+    transitions
+    {
+        Submit_Plan as "Submit Plan"
+        {
+            type = normal
+            from stage = "Draft"
+            to stage = "Submitted"
+            before
+            {
+                transition owner
+                (
+                    permissions = {"Audit_Manager", "Auditor"}
+                )
+            }
+            after { }
+        }
+        Approve_Plan as "Approve Plan"
+        {
+            type = normal
+            from stage = "Submitted"
+            to stage = "Approved"
+            before
+            {
+                transition owner
+                (
+                    permissions = {"Audit_Manager"}
+                )
+            }
+            after { }
+        }
+        Send_Back_for_Rework as "Send Back for Rework"
+        {
+            type = normal
+            from stage = "Submitted"
+            to stage = "Sent Back for Rework"
+            before
+            {
+                transition owner
+                (
+                    permissions = {"Audit_Manager"}
+                )
+            }
+            after { }
+        }
+        Resubmit_Plan as "Resubmit Plan"
+        {
+            type = normal
+            from stage = "Sent Back for Rework"
+            to stage = "Submitted"
+            before
+            {
+                transition owner
+                (
+                    permissions = {"Audit_Manager", "Auditor"}
+                )
+            }
+            after { }
+        }
+        Reject_Plan as "Reject Plan"
+        {
+            type = normal
+            from stage = "Submitted"
+            to stage = "Rejected"
+            before
+            {
+                transition owner
+                (
+                    permissions = {"Audit_Manager"}
+                )
+            }
+            after { }
+        }
+        Close_Plan as "Close Plan"
+        {
+            type = normal
+            from stage = "Approved"
+            to stage = "Closed"
+            before
+            {
+                transition owner
+                (
+                    permissions = {"Audit_Manager"}
+                )
+            }
+            after { }
+        }
+    }
+}

@@ -1,0 +1,33 @@
+Disable_email as "Disable email"
+{
+    type =  form
+    form = Add_Users
+
+    record event = on edit
+
+    on load
+    {
+        actions
+        {
+            custom deluge script
+            (
+                disable User_Email;
+                existingProfile = input.Profile;
+                clear Profile;
+                userProfiles = thisapp.permissions.PROFILES().toList();
+                index = 0;
+                for each  elemnt in userProfiles
+                {
+                    if(elemnt == "Administrator")
+                    {
+                        userProfiles.remove(index);
+                    }
+                    index = index + 1;
+                }
+                input.Profile:ui.append(userProfiles);
+                input.Profile = existingProfile;
+            )
+        }
+    }
+
+}

@@ -1,0 +1,34 @@
+Audits_On_Success as "Audits On Success"
+{
+    type = form
+    form = Audits
+    record event = on add or edit
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Stage == "Execution" && input.Actual_Start == null)
+                {
+                    input.Actual_Start = zoho.currentdate;
+                }
+                if(input.Stage == "Closed" && input.Actual_End == null)
+                {
+                    input.Actual_End = zoho.currentdate;
+                    input.Progress_Percent = 100;
+                    input.Status = "Closed";
+                }
+                if(input.Stage == "Reporting" && ifnull(input.Progress_Percent,0) < 70)
+                {
+                    input.Progress_Percent = 70;
+                }
+                if(input.Stage == "Follow-up" && ifnull(input.Progress_Percent,0) < 90)
+                {
+                    input.Progress_Percent = 90;
+                }
+            )
+        }
+    }
+}

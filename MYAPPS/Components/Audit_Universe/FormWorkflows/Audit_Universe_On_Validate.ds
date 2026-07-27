@@ -1,0 +1,31 @@
+Audit_Universe_On_Validate as "Audit Universe On Validate"
+{
+    type = form
+    form = Audit_Universe
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(ifnull(input.Inherent_Risk_Score,0) < 1 || ifnull(input.Inherent_Risk_Score,0) > 5)
+                {
+                    alert "Inherent risk score must be between 1 and 5.";
+                    cancel submit;
+                }
+                if(ifnull(input.Control_Effectiveness_Score,0) < 1 || ifnull(input.Control_Effectiveness_Score,0) > 5)
+                {
+                    alert "Control effectiveness score must be between 1 and 5.";
+                    cancel submit;
+                }
+                if(ifnull(input.Effort_Days,0) < 0)
+                {
+                    alert "Effort days cannot be negative.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}

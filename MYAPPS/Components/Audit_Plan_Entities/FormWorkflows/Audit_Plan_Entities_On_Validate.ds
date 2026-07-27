@@ -1,0 +1,100 @@
+Audit_Plan_Entities_On_Validate as "Audit Plan Entities On Validate"
+{
+    type = form
+    form = Audit_Plan_Entities
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                duplicate_entities = Audit_Plan_Entities[Plan == input.Plan && Auditable_Entity == input.Auditable_Entity && ID != input.ID];
+                if(duplicate_entities.count() > 0)
+                {
+                    alert "This auditable entity is already included in the selected audit plan.";
+                    cancel submit;
+                }
+                if(ifnull(input.Residual_Risk,0) < 0 || ifnull(input.Residual_Risk,0) > 5)
+                {
+                    alert "Residual risk must be between 0 and 5.";
+                    cancel submit;
+                }
+                score = ifnull(input.Residual_Risk,0) * 20;
+                if(input.Process_Complexity != null)
+                {
+                    score = score + input.Process_Complexity.getPrefix("-").toNumber() * 5;
+                }
+                if(input.Automation_Level != null)
+                {
+                    score = score + (6 - input.Automation_Level.getPrefix("-").toNumber()) * 3;
+                }
+                if(input.Regulatory_Sensitivity != null)
+                {
+                    score = score + input.Regulatory_Sensitivity.getPrefix("-").toNumber() * 4;
+                }
+                if(input.Past_Issues != null)
+                {
+                    score = score + input.Past_Issues.getPrefix("-").toNumber() * 4;
+                }
+                if(input.Entity_Score == null || input.Entity_Score == 0)
+                {
+                    input.Entity_Score = score.round(0);
+                }
+                if(input.Priority == null || input.Priority == "")
+                {
+                    if(input.Entity_Score >= 120)
+                    {
+                        input.Priority = "Critical";
+                    }
+                    else if(input.Entity_Score >= 90)
+                    {
+                        input.Priority = "High";
+                    }
+                    else if(input.Entity_Score >= 60)
+                    {
+                        input.Priority = "Medium";
+                    }
+                    else
+                    {
+                        input.Priority = "Low";
+                    }
+                }
+                complexity_points = 0;
+                if(input.Process_Complexity != null)
+                {
+                    complexity_points = complexity_points + input.Process_Complexity.getPrefix("-").toNumber();
+                }
+                if(input.Regulatory_Sensitivity != null)
+                {
+                    complexity_points = complexity_points + input.Regulatory_Sensitivity.getPrefix("-").toNumber();
+                }
+                if(input.Past_Issues != null)
+                {
+                    complexity_points = complexity_points + input.Past_Issues.getPrefix("-").toNumber();
+                }
+                if(input.Entity_Score >= 130 || complexity_points >= 13)
+                {
+                    input.Audit_Size = "Extensive";
+                    input.Estimated_Days = ifnull(input.Estimated_Days,25);
+                }
+                else if(input.Entity_Score >= 95 || complexity_points >= 10)
+                {
+                    input.Audit_Size = "Large";
+                    input.Estimated_Days = ifnull(input.Estimated_Days,18);
+                }
+                else if(input.Entity_Score >= 60 || complexity_points >= 7)
+                {
+                    input.Audit_Size = "Medium";
+                    input.Estimated_Days = ifnull(input.Estimated_Days,10);
+                }
+                else
+                {
+                    input.Audit_Size = "Small";
+                    input.Estimated_Days = ifnull(input.Estimated_Days,5);
+                }
+            )
+        }
+    }
+}

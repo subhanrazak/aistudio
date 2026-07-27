@@ -1,0 +1,28 @@
+Remediation_Tasks_On_Success as "Remediation Tasks On Success"
+{
+    type = form
+    form = Remediation_Tasks
+    record event = on add or edit
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Due_Date != null && input.Due_Date < zoho.currentdate && input.Status != "Completed" && input.Status != "Cancelled")
+                {
+                    input.Status = "Overdue";
+                }
+                if(input.Status == "Completed")
+                {
+                    input.Completion_Percent = 100;
+                    if(input.Verified_By != null && input.Verified_Date == null)
+                    {
+                        input.Verified_Date = zoho.currentdate;
+                    }
+                }
+            )
+        }
+    }
+}

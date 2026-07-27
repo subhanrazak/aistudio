@@ -1,0 +1,32 @@
+Test_Result_On_User_Input as "Test Result On User Input"
+{
+    type = form
+    form = Audit_Test_Executions
+    record event = on add or edit
+
+    on user input of Test_Result
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Test_Result in {"Fail", "Exception"})
+                {
+                    show Exception_Details;
+                    enable Exception_Details;
+                    show Follow_Up_Required;
+                    enable Follow_Up_Required;
+                    input.Follow_Up_Required = true;
+                }
+                else
+                {
+                    hide Exception_Details;
+                    disable Exception_Details;
+                    hide Follow_Up_Required;
+                    disable Follow_Up_Required;
+                    input.Follow_Up_Required = false;
+                }
+            )
+        }
+    }
+}

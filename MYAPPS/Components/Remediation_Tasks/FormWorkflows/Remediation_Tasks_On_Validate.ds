@@ -1,0 +1,31 @@
+Remediation_Tasks_On_Validate as "Remediation Tasks On Validate"
+{
+    type = form
+    form = Remediation_Tasks
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Priority in {"High", "Critical"} && input.Due_Date == null)
+                {
+                    alert "Due date is required for High or Critical remediation tasks.";
+                    cancel submit;
+                }
+                if(ifnull(input.Completion_Percent,0) < 0 || ifnull(input.Completion_Percent,0) > 100)
+                {
+                    alert "Completion percent must be between 0 and 100.";
+                    cancel submit;
+                }
+                if(input.Status == "Completed" && input.Completion_Evidence == null)
+                {
+                    alert "Completion evidence is required before marking a remediation task completed.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}

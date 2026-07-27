@@ -1,0 +1,30 @@
+Audit_Plans_On_Validate as "Audit Plans On Validate"
+{
+    type = form
+    form = Audit_Plans
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Status == "Submitted" && ifnull(input.Selected_Entities_Count,0) <= 0)
+                {
+                    alert "At least one auditable entity must be selected before submitting the plan.";
+                    cancel submit;
+                }
+                if(input.Status == "Submitted" && input.Submitted_Date == null)
+                {
+                    input.Submitted_Date = zoho.currentdate;
+                }
+                if(input.Status == "Approved" && input.Approved_By == null)
+                {
+                    alert "Approved by is required before approving the plan.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}

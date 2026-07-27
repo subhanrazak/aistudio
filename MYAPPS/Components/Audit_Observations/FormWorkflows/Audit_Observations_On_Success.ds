@@ -1,0 +1,28 @@
+Audit_Observations_On_Success as "Audit Observations On Success"
+{
+    type = form
+    form = Audit_Observations
+    record event = on add or edit
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Status == "Accepted" && input.Accepted_Date == null)
+                {
+                    input.Accepted_Date = zoho.currentdate;
+                }
+                if(input.Status == "Closed" && input.Closed_Date == null)
+                {
+                    input.Closed_Date = zoho.currentdate;
+                }
+                if(input.Status == "Accepted" && input.Action_Plan_Required == true)
+                {
+                    input.Version_Notes = ifnull(input.Version_Notes,"") + "\nRemediation task required after observation acceptance.";
+                }
+            )
+        }
+    }
+}

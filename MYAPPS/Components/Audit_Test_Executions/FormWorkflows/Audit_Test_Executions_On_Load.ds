@@ -1,0 +1,30 @@
+Audit_Test_Executions_On_Load as "Audit Test Executions On Load"
+{
+    type = form
+    form = Audit_Test_Executions
+    record event = on add or edit
+
+    on load
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Test_Result in {"Fail", "Exception"})
+                {
+                    show Exception_Details;
+                    enable Exception_Details;
+                    show Follow_Up_Required;
+                    enable Follow_Up_Required;
+                }
+                else
+                {
+                    hide Exception_Details;
+                    disable Exception_Details;
+                    hide Follow_Up_Required;
+                    disable Follow_Up_Required;
+                }
+            )
+        }
+    }
+}

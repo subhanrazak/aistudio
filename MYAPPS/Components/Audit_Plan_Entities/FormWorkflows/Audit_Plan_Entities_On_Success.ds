@@ -1,0 +1,71 @@
+Audit_Plan_Entities_On_Success as "Audit Plan Entities On Success"
+{
+    type = form
+    form = Audit_Plan_Entities
+    record event = on add or edit
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                plan_records = Audit_Plans[ID == input.Plan];
+                if(plan_records.count() > 0)
+                {
+                    selected_count = Audit_Plan_Entities[Plan == input.Plan].count();
+                    total_days = Audit_Plan_Entities[Plan == input.Plan].sum(Estimated_Days);
+                    avg_score = Audit_Plan_Entities[Plan == input.Plan].avg(Entity_Score);
+                    q1_days = Audit_Plan_Entities[Plan == input.Plan && Planning_Quarter == "Q1"].sum(Estimated_Days);
+                    if(total_days == null)
+                    {
+                        total_days = 0;
+                    }
+                    if(avg_score == null)
+                    {
+                        avg_score = 0;
+                    }
+                    if(q1_days == null)
+                    {
+                        q1_days = 0;
+                    }
+                    plan_records.Selected_Entities_Count = selected_count;
+                    plan_records.Total_Audit_Days = total_days;
+                    plan_records.Average_Risk_Score = avg_score;
+                    if(total_days >= 120)
+                    {
+                        plan_records.Plan_Size = "Extensive";
+                    }
+                    else if(total_days >= 75)
+                    {
+                        plan_records.Plan_Size = "Large";
+                    }
+                    else if(total_days >= 35)
+                    {
+                        plan_records.Plan_Size = "Medium";
+                    }
+                    else
+                    {
+                        plan_records.Plan_Size = "Small";
+                    }
+                    if(selected_count > 0)
+                    {
+                        plan_records.Planned_Coverage_Percent = (selected_count * 100) / Audit_Universe[ID != 0].count();
+                    }
+                    else
+                    {
+                        plan_records.Planned_Coverage_Percent = 0;
+                    }
+                    if(total_days > 0)
+                    {
+                        plan_records.Q1_Intensity_Percent = (q1_days * 100) / total_days;
+                    }
+                    else
+                    {
+                        plan_records.Q1_Intensity_Percent = 0;
+                    }
+                }
+            )
+        }
+    }
+}

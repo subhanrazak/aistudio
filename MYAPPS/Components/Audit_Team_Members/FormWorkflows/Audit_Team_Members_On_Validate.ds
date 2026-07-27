@@ -1,0 +1,26 @@
+Audit_Team_Members_On_Validate as "Audit Team Members On Validate"
+{
+    type = form
+    form = Audit_Team_Members
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(ifnull(input.Capacity_Days_Per_Year,0) <= 0)
+                {
+                    alert "Capacity days per year must be greater than zero.";
+                    cancel submit;
+                }
+                if(ifnull(input.Utilization_Target_Percent,0) < 0 || ifnull(input.Utilization_Target_Percent,0) > 100)
+                {
+                    alert "Utilization target percent must be between 0 and 100.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}

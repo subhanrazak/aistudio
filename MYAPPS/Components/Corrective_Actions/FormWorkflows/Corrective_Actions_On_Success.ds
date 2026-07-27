@@ -1,0 +1,36 @@
+Corrective_Actions_On_Success as "Corrective Actions On Success"
+{
+    type = form
+    form = Corrective_Actions
+    record event = on add or edit
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                findingRec = Findings[ID == input.Finding];
+                if(findingRec.count() > 0)
+                {
+                    if(input.Action_Status == "Proposed")
+                    {
+                        findingRec.Finding_Status = "Action Proposed";
+                    }
+                    else if(input.Action_Status == "Approved" || input.Action_Status == "In Progress")
+                    {
+                        findingRec.Finding_Status = "In Progress";
+                    }
+                    else if(input.Action_Status == "Completed")
+                    {
+                        findingRec.Finding_Status = "Pending Verification";
+                    }
+                    else if(input.Action_Status == "Verified")
+                    {
+                        findingRec.Finding_Status = "Closed";
+                    }
+                }
+            )
+        }
+    }
+}

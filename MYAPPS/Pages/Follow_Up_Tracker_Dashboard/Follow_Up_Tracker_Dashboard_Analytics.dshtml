@@ -1,0 +1,595 @@
+<%
+  today = zoho.currentdate;
+  totalFollowUps = Follow_Ups[ID != 0].count();
+  completedOnly = Follow_Ups[Status == "Completed"].count();
+  closedOnly = Follow_Ups[Status == "Closed"].count();
+  completedFollowUps = completedOnly + closedOnly;
+  inProgressFollowUps = Follow_Ups[Status == "In Progress"].count();
+  pendingFollowUps = Follow_Ups[Status == "Pending"].count();
+  openFollowUps = Follow_Ups[Status == "Open"].count();
+  overdueFollowUps = Follow_Ups[(Status == "Overdue") || (Due_Date < today && Status != "Completed" && Status != "Closed")].count();
+
+  closureDaysTotal = 0;
+  closureDaysCount = 0;
+  for each closureRec in Follow_Ups[(Status == "Completed" || Status == "Closed") && Last_Updated != null]
+  {
+    if(closureRec.Added_Time != null)
+    {
+      recClosureDays = closureRec.Added_Time.toDate().daysBetween(closureRec.Last_Updated);
+      if(recClosureDays < 0)
+      {
+        recClosureDays = 0;
+      }
+      closureDaysTotal = closureDaysTotal + recClosureDays;
+      closureDaysCount = closureDaysCount + 1;
+    }
+  }
+  avgClosureTime = 0;
+  if(closureDaysCount > 0)
+  {
+    avgClosureTime = closureDaysTotal / closureDaysCount;
+  }
+
+  statusOpen = openFollowUps;
+  statusProgress = inProgressFollowUps;
+  statusPending = pendingFollowUps;
+  statusCompleted = completedOnly;
+  statusOverdue = overdueFollowUps;
+  statusClosed = closedOnly;
+  statusMax = statusOpen;
+  if(statusProgress > statusMax){statusMax = statusProgress;}
+  if(statusPending > statusMax){statusMax = statusPending;}
+  if(statusCompleted > statusMax){statusMax = statusCompleted;}
+  if(statusOverdue > statusMax){statusMax = statusOverdue;}
+  if(statusClosed > statusMax){statusMax = statusClosed;}
+  if(statusMax == 0){statusMax = 1;}
+  statusOpenPct = (statusOpen * 100) / statusMax;
+  statusProgressPct = (statusProgress * 100) / statusMax;
+  statusPendingPct = (statusPending * 100) / statusMax;
+  statusCompletedPct = (statusCompleted * 100) / statusMax;
+  statusOverduePct = (statusOverdue * 100) / statusMax;
+  statusClosedPct = (statusClosed * 100) / statusMax;
+
+  criticalPriority = Follow_Ups[Priority == "Critical"].count();
+  highPriority = Follow_Ups[Priority == "High"].count();
+  mediumPriority = Follow_Ups[Priority == "Medium"].count();
+  lowPriority = Follow_Ups[Priority == "Low"].count();
+  priorityTotal = criticalPriority + highPriority + mediumPriority + lowPriority;
+  criticalPct = 0;
+  highPct = 0;
+  mediumPct = 0;
+  lowPct = 0;
+  if(priorityTotal > 0)
+  {
+    criticalPct = (criticalPriority * 100) / priorityTotal;
+    highPct = (highPriority * 100) / priorityTotal;
+    mediumPct = (mediumPriority * 100) / priorityTotal;
+    lowPct = 100 - criticalPct - highPct - mediumPct;
+  }
+
+  notDueAging = Follow_Ups[Due_Date >= today && Status != "Completed" && Status != "Closed"].count();
+  age0to7 = Follow_Ups[Due_Date < today && Due_Date >= today.subDay(7) && Status != "Completed" && Status != "Closed"].count();
+  age8to30 = Follow_Ups[Due_Date < today.subDay(7) && Due_Date >= today.subDay(30) && Status != "Completed" && Status != "Closed"].count();
+  ageOver30 = Follow_Ups[Due_Date < today.subDay(30) && Status != "Completed" && Status != "Closed"].count();
+  agingTotal = notDueAging + age0to7 + age8to30 + ageOver30;
+  notDuePct = 0;
+  age0to7Pct = 0;
+  age8to30Pct = 0;
+  ageOver30Pct = 0;
+  if(agingTotal > 0)
+  {
+    notDuePct = (notDueAging * 100) / agingTotal;
+    age0to7Pct = (age0to7 * 100) / agingTotal;
+    age8to30Pct = (age8to30 * 100) / agingTotal;
+    ageOver30Pct = 100 - notDuePct - age0to7Pct - age8to30Pct;
+  }
+
+  trend1Start = today.subDay(150);
+  trend1End = today.subDay(121);
+  trend2Start = today.subDay(120);
+  trend2End = today.subDay(91);
+  trend3Start = today.subDay(90);
+  trend3End = today.subDay(61);
+  trend4Start = today.subDay(60);
+  trend4End = today.subDay(31);
+  trend5Start = today.subDay(30);
+  trend5End = today.subDay(8);
+  trend6Start = today.subDay(7);
+  trend6End = today;
+  trend1 = Follow_Ups[(Status == "Completed" || Status == "Closed") && Last_Updated >= trend1Start && Last_Updated <= trend1End].count();
+  trend2 = Follow_Ups[(Status == "Completed" || Status == "Closed") && Last_Updated >= trend2Start && Last_Updated <= trend2End].count();
+  trend3 = Follow_Ups[(Status == "Completed" || Status == "Closed") && Last_Updated >= trend3Start && Last_Updated <= trend3End].count();
+  trend4 = Follow_Ups[(Status == "Completed" || Status == "Closed") && Last_Updated >= trend4Start && Last_Updated <= trend4End].count();
+  trend5 = Follow_Ups[(Status == "Completed" || Status == "Closed") && Last_Updated >= trend5Start && Last_Updated <= trend5End].count();
+  trend6 = Follow_Ups[(Status == "Completed" || Status == "Closed") && Last_Updated >= trend6Start && Last_Updated <= trend6End].count();
+  trendMax = trend1;
+  if(trend2 > trendMax){trendMax = trend2;}
+  if(trend3 > trendMax){trendMax = trend3;}
+  if(trend4 > trendMax){trendMax = trend4;}
+  if(trend5 > trendMax){trendMax = trend5;}
+  if(trend6 > trendMax){trendMax = trend6;}
+  if(trendMax == 0){trendMax = 1;}
+  trendY1 = 92 - ((trend1 * 80) / trendMax);
+  trendY2 = 92 - ((trend2 * 80) / trendMax);
+  trendY3 = 92 - ((trend3 * 80) / trendMax);
+  trendY4 = 92 - ((trend4 * 80) / trendMax);
+  trendY5 = 92 - ((trend5 * 80) / trendMax);
+  trendY6 = 92 - ((trend6 * 80) / trendMax);
+  trendLabel1 = trend1Start.toString("MMM dd");
+  trendLabel2 = trend2Start.toString("MMM dd");
+  trendLabel3 = trend3Start.toString("MMM dd");
+  trendLabel4 = trend4Start.toString("MMM dd");
+  trendLabel5 = trend5Start.toString("MMM dd");
+  trendLabel6 = trend6Start.toString("MMM dd");
+
+  categoryList = {"Financial Control", "Operational Process", "IT & Data Security", "Compliance & Governance", "Regulatory"};
+  lastRefresh = today.toString("dd-MMM-yyyy");
+%>
+<style>
+/* ZCS global utility subset included once for this page; adapted from zcs-global. */
+:root {
+  --zcs-theme-brand-color: var(--zcs_brand_color);
+  --zcs-light-bg-color: var(--zcs_brand_light_color);
+  --zcs-primary-text-color: var(--zcs_primary_text_color);
+  --zcs-secondary-text-color: var(--zcs_secondary_text_color);
+  --zcs-teritiary-text-color: var(--zcs_tertiary_text_color);
+  --zcs-border-color: var(--zcs_tertiary_border_color);
+  --zcs-white-color: #FFFFFF;
+  --fu-green: #179E6C;
+  --fu-blue: #2A6FFC;
+  --fu-sky: #1094C5;
+  --fu-yellow: #FAAE13;
+  --fu-orange: #F4660C;
+  --fu-red: #FE455D;
+  --fu-purple: #6C5CE7;
+  --fu-ink: var(--zcs_primary_text_color);
+  --fu-muted: var(--zcs_secondary_text_color);
+  --fu-border: var(--zcs_tertiary_border_color);
+  --fu-panel: #FFFFFF;
+  --fu-soft: #F9FAFE;
+  font-size: 16px;
+  line-height: 1.5;
+}
+.zcs-row { display: flex; flex-wrap: wrap; }
+.zcs-flex { display: flex; }
+.zcs-inline-flex { display: inline-flex; }
+.zcs-direction-column { flex-direction: column; }
+.zcs-align-items-center { align-items: center; }
+.zcs-align-items-start { align-items: flex-start; }
+.zcs-justify-center { justify-content: center; }
+.zcs-justify-space-between { justify-content: space-between; }
+.zcs-justify-end { justify-content: flex-end; }
+.zcs-col-common { flex: 1 1 0%; }
+.zcs-gap-4 { gap: .25rem; }
+.zcs-gap-6 { gap: .375rem; }
+.zcs-gap-8 { gap: .5rem; }
+.zcs-gap-10 { gap: .625rem; }
+.zcs-gap-12 { gap: .75rem; }
+.zcs-gap-16 { gap: 1rem; }
+.zcs-gap-20 { gap: 1.25rem; }
+.zcs-p-0 { padding: 0; }
+.zcs-p-8 { padding: .5rem; }
+.zcs-p-12 { padding: .75rem; }
+.zcs-p-16 { padding: 1rem; }
+.zcs-p-20 { padding: 1.25rem; }
+.zcs-px-10 { padding-left: .625rem; padding-right: .625rem; }
+.zcs-px-12 { padding-left: .75rem; padding-right: .75rem; }
+.zcs-px-16 { padding-left: 1rem; padding-right: 1rem; }
+.zcs-px-20 { padding-left: 1.25rem; padding-right: 1.25rem; }
+.zcs-px-30 { padding-left: 1.875rem; padding-right: 1.875rem; }
+.zcs-py-4 { padding-top: .25rem; padding-bottom: .25rem; }
+.zcs-py-6 { padding-top: .375rem; padding-bottom: .375rem; }
+.zcs-py-8 { padding-top: .5rem; padding-bottom: .5rem; }
+.zcs-py-10 { padding-top: .625rem; padding-bottom: .625rem; }
+.zcs-py-12 { padding-top: .75rem; padding-bottom: .75rem; }
+.zcs-py-16 { padding-top: 1rem; padding-bottom: 1rem; }
+.zcs-py-24 { padding-top: 1.5rem; padding-bottom: 1.5rem; }
+.zcs-m-0 { margin: 0; }
+.zcs-mt-4 { margin-top: .25rem; }
+.zcs-mt-8 { margin-top: .5rem; }
+.zcs-mt-12 { margin-top: .75rem; }
+.zcs-mb-0 { margin-bottom: 0; }
+.zcs-w-full { width: 100%; }
+.zcs-rounded-sm { border-radius: .25rem; }
+.zcs-rounded-md { border-radius: .375rem; }
+.zcs-rounded-lg { border-radius: .5rem; }
+.zcs-rounded-xl { border-radius: .75rem; }
+.zcs-box-border { box-sizing: border-box; }
+.zcs-relative { position: relative; }
+.zcs-absolute { position: absolute; }
+.zcs-sticky { position: sticky; }
+.zcs-text-left { text-align: left; }
+.zcs-text-right { text-align: right; }
+.zcs-text-center { text-align: center; }
+.zcs-font-12 { font-size: .75rem; }
+.zcs-font-13 { font-size: .8125rem; }
+.zcs-font-14 { font-size: .875rem; }
+.zcs-font-16 { font-size: 1rem; }
+.zcs-font-18 { font-size: 1.125rem; }
+.zcs-font-20 { font-size: 1.25rem; }
+.zcs-font-24 { font-size: 1.5rem; }
+.zcs-font-30 { font-size: 1.875rem; }
+.zcs-font-normal { font-weight: 400; }
+.zcs-font-medium { font-weight: 500; }
+.zcs-font-semibold { font-weight: 600; }
+.zcs-font-bold { font-weight: 700; }
+.zcs-lh-body { line-height: 1.5; }
+.zcs-lh-heading { line-height: 1.25; }
+.zcs-color-primary { color: var(--zcs-primary-text-color); }
+.zcs-color-secondary { color: var(--zcs-secondary-text-color); }
+.zcs-color-tertiary { color: var(--zcs-teritiary-text-color); }
+.zcs-color-theme { color: var(--zcs-theme-brand-color); }
+.zcs-ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+a { text-decoration: none; }
+
+/* ZCS component CSS: button-primary-outline-button and header-heading-with-actions. */
+.zcs-button { width: auto; min-width: 5rem; min-height: 36px; border: 1px solid var(--zcs_brand_color); }
+.zcs-primary-outline-button { background-color: var(--zcs-white-color); color: var(--zcs_brand_color); }
+.zcs-primary-outline-button:hover { background-color: var(--zcs_component_hover_color); border-color: var(--zcs_brand_color); color: var(--zcs_brand_color); }
+.zcs-button-icon { width: 16px; max-height: 16px; }
+.zcs-page-header { background: linear-gradient(135deg, var(--zcs_brand_color), var(--fu-purple)); border-radius: 18px; color: var(--zcs_brand_foreground_color); box-shadow: 0 16px 38px rgba(34, 48, 92, .16); overflow: hidden; position: relative; }
+.zcs-page-header:after { content: ''; position: absolute; right: -90px; top: -120px; width: 280px; height: 280px; border-radius: 50%; border: 42px solid rgba(255,255,255,.12); }
+.zcs-page-header h5, .zcs-page-header .zcs-color-primary, .zcs-page-header .zcs-color-secondary { color: #FFFFFF; }
+.zcs-page-header .fu-header-subtitle { color: rgba(255,255,255,.82); }
+.zcs-page-header .zcs-button { position: relative; z-index: 1; border-color: rgba(255,255,255,.5); background: rgba(255,255,255,.14); color: #FFFFFF; backdrop-filter: blur(6px); }
+.zcs-page-header .zcs-button:hover { background: rgba(255,255,255,.22); color: #FFFFFF; }
+
+/* ZCS component CSS: label-value-key-value-with-icon. */
+.zcs-labelvalue-wrapper .zcs-labelvalue-color-yellow { color: #a06309; }
+.zcs-labelvalue-wrapper .zcs-labelvalue-color-green { color: #179e6c; }
+.zcs-labelvalue-wrapper .zcs-labelvalue-color-blue { color: #2a6ffc; }
+.zcs-labelvalue-wrapper .zcs-labelvalue-color-orange { color: #FF7E52; }
+.zcs-labelvalue-wrapper .zcs-labelvalue-color-red { color: #FE455D; }
+
+/* ZCS component CSS: table-simple-table. */
+:root { --zcs-thead-color: #F9FAFE; --zcs-tr-h-color: #F9FAFE; }
+.zcs-table-wrapper { border: 1px solid var(--zcs_tertiary_border_color); background-color: var(--zcs-white-color); overflow: auto; }
+.zcs-table-wrapper table { line-height: normal; border-collapse: collapse; }
+.zcs-table-wrapper table thead { top: 0px; z-index: 1; }
+.zcs-table-wrapper table thead tr th { background-color: var(--zcs-thead-color); box-shadow: 0px -1px 0px 0px var(--zcs_tertiary_border_color) inset; white-space: nowrap; }
+.zcs-table-wrapper table thead tr.zcs-tspace th { background-color: var(--zcs-white-color); box-shadow: none; }
+.zcs-table-wrapper table tbody tr td { border-top: 1px solid var(--zcs_tertiary_border_color); }
+.zcs-table-wrapper table tbody tr:first-child td { border-color: transparent; }
+.zcs-table-wrapper table tbody tr:hover td { background-color: var(--zcs-tr-h-color); }
+.zcs-table-wrapper table tbody tr td.zcs-green, .zcs-table-wrapper .zcs-green { color: #179e6c; }
+.zcs-table-wrapper table tbody tr td.zcs-red, .zcs-table-wrapper .zcs-red { color: #fe455d; }
+.zcs-table-wrapper table tbody tr td.zcs-yellow, .zcs-table-wrapper .zcs-yellow { color: #b8770d; }
+.zcs-table-wrapper table tbody tr td.zcs-l_blue, .zcs-table-wrapper .zcs-l_blue { color: #1094c5; }
+
+/* ZCS component CSS: chart-bar-chart, chart-area-chart, chart-donut-chart-with-text, chart-stack-column-chart. */
+.zcs-chart ul li, .zcs-legend-wrapper li { list-style-type: none; }
+.zcs-chart-y-axis-text { width: 42px; }
+.zcs-chart-y-axis-line { border-top: 1px dashed #EBECF0; }
+.zcs-scrollable-container { top: 10px; left: 42px; width: calc(100% - 42px); height: calc(100% + 12px); overflow: hidden; }
+.zcs-bar-value { width: 30px; border-radius: 6px 6px 0 0; background-color: #FF7300; }
+.zcs-area-value { background-image: linear-gradient(#3388FF, #FFF); clip-path: polygon(0% calc(100%*(1 - var(--start))), 100% calc(100%*(1 - var(--end))), 100% 100%, 0% 100%); }
+.zcs-stackedbarchart-wrapper .zcs-bar-value { border-radius: 0; }
+.zcs-donut-chart-wrapper .zcs-simple-donut-chart svg { width: var(--donut-donut_size); height: var(--donut-donut_size); overflow: hidden; }
+.zcs-donut-chart-wrapper .zcs-simple-donut-chart svg circle { cx: var(--donut-cx); cy: var(--donut-cy); stroke-width: var(--donut-stroke_width); fill: transparent; }
+.zcs-donut-chart-wrapper .zcs-simple-donut-chart svg circle:nth-child(1) { stroke: var(--fu-red); stroke-dasharray: calc(2 * var(--donut-pi) * var(--donut-r) * var(--donut-a1) / 100) calc(2 * var(--donut-pi) * var(--donut-r) * calc(1 - var(--donut-a1) / 100)); stroke-dashoffset: calc((2 * var(--donut-pi) * var(--donut-r)) / 4); }
+.zcs-donut-chart-wrapper .zcs-simple-donut-chart svg circle:nth-child(2) { stroke: var(--fu-orange); stroke-dasharray: calc(2 * var(--donut-pi) * var(--donut-r) * var(--donut-a2) / 100) calc(2 * var(--donut-pi) * var(--donut-r) * calc(1 - var(--donut-a2) / 100)); stroke-dashoffset: calc(((2 * var(--donut-pi) * var(--donut-r)) / 4) - (2 * var(--donut-pi) * var(--donut-r) * var(--donut-a1) / 100)); }
+.zcs-donut-chart-wrapper .zcs-simple-donut-chart svg circle:nth-child(3) { stroke: var(--fu-yellow); stroke-dasharray: calc(2 * var(--donut-pi) * var(--donut-r) * var(--donut-a3) / 100) calc(2 * var(--donut-pi) * var(--donut-r) * calc(1 - var(--donut-a3) / 100)); stroke-dashoffset: calc(((2 * var(--donut-pi) * var(--donut-r)) / 4) - (2 * var(--donut-pi) * var(--donut-r) * var(--donut-a1) / 100) - (2 * var(--donut-pi) * var(--donut-r) * var(--donut-a2) / 100)); }
+.zcs-donut-chart-wrapper .zcs-simple-donut-chart svg circle:nth-child(4) { stroke: var(--fu-green); stroke-dasharray: calc(2 * var(--donut-pi) * var(--donut-r) * var(--donut-a4) / 100) calc(2 * var(--donut-pi) * var(--donut-r) * calc(1 - var(--donut-a4) / 100)); stroke-dashoffset: calc(((2 * var(--donut-pi) * var(--donut-r)) / 4) - (2 * var(--donut-pi) * var(--donut-r) * var(--donut-a1) / 100) - (2 * var(--donut-pi) * var(--donut-r) * var(--donut-a2) / 100) - (2 * var(--donut-pi) * var(--donut-r) * var(--donut-a3) / 100)); }
+.zcs-legend-wrapper li label:before { content: ''; display: inline-block; vertical-align: top; width: 12px; height: 12px; margin: 4px 10px 4px 0; border-radius: 50%; }
+.zcs-legend-wrapper li:nth-child(1) label:before { background-color: var(--fu-red); }
+.zcs-legend-wrapper li:nth-child(2) label:before { background-color: var(--fu-orange); }
+.zcs-legend-wrapper li:nth-child(3) label:before { background-color: var(--fu-yellow); }
+.zcs-legend-wrapper li:nth-child(4) label:before { background-color: var(--fu-green); }
+
+.fu-page { min-height: 100%; background: #F3F4F8; padding: 18px; box-sizing: border-box; font-family: inherit; }
+.fu-grid { display: grid; gap: 16px; }
+.fu-kpi-grid { grid-template-columns: repeat(6, minmax(150px, 1fr)); }
+.fu-two-col { grid-template-columns: minmax(0, 1.2fr) minmax(320px, .8fr); }
+.fu-two-col-even { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.fu-card { background: var(--fu-panel); border: 1px solid var(--fu-border); border-radius: 16px; box-shadow: 0 10px 26px rgba(20, 35, 80, .06); overflow: hidden; }
+.fu-card-pad { padding: 18px; }
+.fu-card-title { margin: 0; color: var(--fu-ink); font-size: 16px; font-weight: 700; line-height: 1.25; }
+.fu-card-note { color: var(--fu-muted); font-size: 12px; margin-top: 4px; }
+.fu-kpi { min-height: 118px; position: relative; }
+.fu-kpi:before { content: ''; position: absolute; inset: 0 auto 0 0; width: 4px; background: var(--kpi-color); }
+.fu-kpi-icon { width: 38px; height: 38px; border-radius: 12px; background: color-mix(in srgb, var(--kpi-color) 12%, white); color: var(--kpi-color); font-size: 20px; }
+.fu-kpi-value { font-size: 28px; font-weight: 800; color: var(--fu-ink); line-height: 1; margin-top: 12px; }
+.fu-kpi-label { color: var(--fu-muted); font-size: 13px; margin-top: 6px; }
+.fu-pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 9px; border-radius: 999px; background: #F3F4F8; color: var(--fu-muted); font-size: 12px; }
+.fu-mini-link { color: var(--zcs_brand_color); font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
+.fu-status-list { display: grid; gap: 12px; margin-top: 18px; }
+.fu-status-row { display: grid; grid-template-columns: 132px 1fr 46px; gap: 10px; align-items: center; }
+.fu-track { height: 11px; border-radius: 999px; background: #EEF0F6; overflow: hidden; }
+.fu-fill { height: 100%; width: var(--bar-width); min-width: 2px; border-radius: 999px; background: var(--bar-color); }
+.fu-chart-frame { height: 250px; margin-top: 16px; border: 1px solid #EEF0F6; border-radius: 14px; background: linear-gradient(180deg, #FFFFFF, #FAFBFF); padding: 10px; }
+.fu-line-svg { width: 100%; height: 100%; overflow: visible; }
+.fu-line-grid { stroke: #E9ECF5; stroke-width: 1; stroke-dasharray: 4 4; }
+.fu-line-area { fill: url(#fuTrendGradient); opacity: .88; }
+.fu-line { fill: none; stroke: var(--zcs_brand_color); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.fu-line-dot { fill: #FFFFFF; stroke: var(--zcs_brand_color); stroke-width: 3; }
+.fu-axis-label { fill: var(--fu-muted); font-size: 11px; }
+.fu-axis-value { fill: var(--fu-ink); font-size: 11px; font-weight: 700; }
+.fu-donut-box { min-height: 260px; }
+.fu-donut-center { width: 116px; }
+.fu-legend-value { color: var(--fu-muted); margin-left: auto; font-weight: 600; }
+.fu-aging-stack { display: flex; height: 34px; border-radius: 12px; overflow: hidden; background: #EEF0F6; margin-top: 20px; }
+.fu-aging-segment { min-width: 2px; width: var(--aging-width); background: var(--aging-color); display: flex; align-items: center; justify-content: center; color: #FFFFFF; font-size: 12px; font-weight: 700; }
+.fu-aging-legend { display: grid; grid-template-columns: repeat(4, minmax(120px, 1fr)); gap: 10px; margin-top: 16px; }
+.fu-legend-chip { display: flex; align-items: center; gap: 8px; color: var(--fu-muted); font-size: 13px; }
+.fu-dot { width: 10px; height: 10px; border-radius: 999px; background: var(--dot-color); }
+.fu-table-titlebar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.fu-progress { height: 7px; min-width: 90px; border-radius: 999px; background: #EEF0F6; overflow: hidden; }
+.fu-progress span { display: block; height: 100%; width: var(--progress); background: var(--fu-green); border-radius: inherit; }
+.fu-nodata { padding: 22px; text-align: center; color: var(--fu-muted); }
+@media (max-width: 1280px) { .fu-kpi-grid { grid-template-columns: repeat(3, minmax(160px, 1fr)); } .fu-two-col, .fu-two-col-even { grid-template-columns: 1fr; } }
+@media (max-width: 680px) { .fu-page { padding: 12px; } .fu-kpi-grid { grid-template-columns: 1fr; } .zcs-page-header { align-items: flex-start; flex-direction: column; } .fu-status-row { grid-template-columns: 105px 1fr 36px; } .fu-aging-legend { grid-template-columns: 1fr; } }
+</style>
+<div class="fu-page">
+  <div class="zcs-page-header zcs-w-full zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-16 zcs-px-30 zcs-py-24 zcs-box-border">
+    <div class="zcs-flex zcs-direction-column zcs-gap-6 zcs-ellipsis" style="position:relative;z-index:1;">
+      <h5 class="zcs-font-24 zcs-font-bold zcs-lh-heading zcs-m-0">Follow-Up Tracker Dashboard</h5>
+      <div class="fu-header-subtitle zcs-font-14">Analytics across status, priority, aging, responsibility, and observation category. Refreshed <%=lastRefresh%>.</div>
+    </div>
+    <div class="zcs-flex zcs-align-items-center zcs-gap-12" style="position:relative;z-index:1;flex-wrap:wrap;">
+      <a class="zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body" href="#Report:Follow_Up_Schedule" target="same-window">
+        <i class="zcs-button-icon zc-li-outline design-todo"></i>
+        <span class="zcs-button-text">Follow Up Schedule</span>
+      </a>
+      <a class="zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body" href="#Report:Overdue_Follow_Ups" target="same-window">
+        <i class="zcs-button-icon zc-li-outline ui-2-time"></i>
+        <span class="zcs-button-text">Overdue Follow Ups</span>
+      </a>
+    </div>
+  </div>
+
+  <div class="fu-grid fu-kpi-grid zcs-mt-12">
+    <div class="fu-card fu-card-pad fu-kpi zcs-labelvalue-wrapper" style="--kpi-color:var(--fu-blue);">
+      <div class="zcs-flex zcs-align-items-center zcs-justify-space-between">
+        <span class="fu-pill">All records</span>
+        <span class="fu-kpi-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline design-todo"></i></span>
+      </div>
+      <div class="fu-kpi-value"><%=totalFollowUps%></div>
+      <div class="fu-kpi-label">Total Follow-ups</div>
+    </div>
+    <div class="fu-card fu-card-pad fu-kpi zcs-labelvalue-wrapper" style="--kpi-color:var(--fu-green);">
+      <div class="zcs-flex zcs-align-items-center zcs-justify-space-between">
+        <span class="fu-pill">Completed plus closed</span>
+        <span class="fu-kpi-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline ui-1-check-circle-08"></i></span>
+      </div>
+      <div class="fu-kpi-value"><%=completedFollowUps%></div>
+      <div class="fu-kpi-label">Completed</div>
+    </div>
+    <div class="fu-card fu-card-pad fu-kpi zcs-labelvalue-wrapper" style="--kpi-color:var(--fu-sky);">
+      <div class="zcs-flex zcs-align-items-center zcs-justify-space-between">
+        <span class="fu-pill">Active execution</span>
+        <span class="fu-kpi-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline arrows-1-refresh-69"></i></span>
+      </div>
+      <div class="fu-kpi-value"><%=inProgressFollowUps%></div>
+      <div class="fu-kpi-label">In Progress</div>
+    </div>
+    <div class="fu-card fu-card-pad fu-kpi zcs-labelvalue-wrapper" style="--kpi-color:var(--fu-yellow);">
+      <div class="zcs-flex zcs-align-items-center zcs-justify-space-between">
+        <span class="fu-pill">Awaiting update</span>
+        <span class="fu-kpi-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline ui-2-time-clock"></i></span>
+      </div>
+      <div class="fu-kpi-value"><%=pendingFollowUps%></div>
+      <div class="fu-kpi-label">Pending</div>
+    </div>
+    <div class="fu-card fu-card-pad fu-kpi zcs-labelvalue-wrapper" style="--kpi-color:var(--fu-red);">
+      <div class="zcs-flex zcs-align-items-center zcs-justify-space-between">
+        <span class="fu-pill">Past due</span>
+        <span class="fu-kpi-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline ui-2-time"></i></span>
+      </div>
+      <div class="fu-kpi-value"><%=overdueFollowUps%></div>
+      <div class="fu-kpi-label">Overdue</div>
+    </div>
+    <div class="fu-card fu-card-pad fu-kpi zcs-labelvalue-wrapper" style="--kpi-color:var(--fu-purple);">
+      <div class="zcs-flex zcs-align-items-center zcs-justify-space-between">
+        <span class="fu-pill">Days</span>
+        <span class="fu-kpi-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline business-chart-bar-32"></i></span>
+      </div>
+      <div class="fu-kpi-value"><%=avgClosureTime%></div>
+      <div class="fu-kpi-label">Avg Closure Time</div>
+    </div>
+  </div>
+
+  <div class="fu-grid fu-two-col zcs-mt-12">
+    <div class="fu-card fu-card-pad">
+      <div class="zcs-flex zcs-justify-space-between zcs-align-items-start zcs-gap-12">
+        <div>
+          <h3 class="fu-card-title">Follow-up Status Distribution</h3>
+          <div class="fu-card-note">Horizontal bar chart using Follow_Ups grouped by Status.</div>
+        </div>
+        <a class="fu-mini-link" href="#Report:Follow_Up_Schedule" target="same-window">Open schedule <i class="zc-li-outline arrows-1-tail-right"></i></a>
+      </div>
+      <div class="fu-status-list zcs-chart zcs-barchart-wrapper">
+        <div class="fu-status-row"><span class="zcs-font-13 zcs-color-primary">Open</span><div class="fu-track"><div class="fu-fill" style="--bar-width:<%=statusOpenPct%>%;--bar-color:var(--fu-blue);"></div></div><strong class="zcs-font-13 zcs-text-right"><%=statusOpen%></strong></div>
+        <div class="fu-status-row"><span class="zcs-font-13 zcs-color-primary">In Progress</span><div class="fu-track"><div class="fu-fill" style="--bar-width:<%=statusProgressPct%>%;--bar-color:var(--fu-sky);"></div></div><strong class="zcs-font-13 zcs-text-right"><%=statusProgress%></strong></div>
+        <div class="fu-status-row"><span class="zcs-font-13 zcs-color-primary">Pending</span><div class="fu-track"><div class="fu-fill" style="--bar-width:<%=statusPendingPct%>%;--bar-color:var(--fu-yellow);"></div></div><strong class="zcs-font-13 zcs-text-right"><%=statusPending%></strong></div>
+        <div class="fu-status-row"><span class="zcs-font-13 zcs-color-primary">Completed</span><div class="fu-track"><div class="fu-fill" style="--bar-width:<%=statusCompletedPct%>%;--bar-color:var(--fu-green);"></div></div><strong class="zcs-font-13 zcs-text-right"><%=statusCompleted%></strong></div>
+        <div class="fu-status-row"><span class="zcs-font-13 zcs-color-primary">Overdue</span><div class="fu-track"><div class="fu-fill" style="--bar-width:<%=statusOverduePct%>%;--bar-color:var(--fu-red);"></div></div><strong class="zcs-font-13 zcs-text-right"><%=statusOverdue%></strong></div>
+        <div class="fu-status-row"><span class="zcs-font-13 zcs-color-primary">Closed</span><div class="fu-track"><div class="fu-fill" style="--bar-width:<%=statusClosedPct%>%;--bar-color:var(--fu-purple);"></div></div><strong class="zcs-font-13 zcs-text-right"><%=statusClosed%></strong></div>
+      </div>
+    </div>
+
+    <div class="fu-card fu-card-pad">
+      <h3 class="fu-card-title">Follow-ups by Priority</h3>
+      <div class="fu-card-note">CSS/SVG donut approximation grouped by Priority.</div>
+      <div class="fu-donut-box zcs-donut-chart-wrapper zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-20 zcs-p-20 zcs-box-border" style="--donut-cx:100px;--donut-cy:100px;--donut-r:78;--donut-stroke_width:22;--donut-pi:3.14;--donut-a1:<%=criticalPct%>;--donut-a2:<%=highPct%>;--donut-a3:<%=mediumPct%>;--donut-a4:<%=lowPct%>;--donut-donut_size:200px;">
+        <div class="zcs-donut-chart zcs-simple-donut-chart zcs-flex zcs-align-items-center zcs-justify-center zcs-relative">
+          <svg class="zcs-rounded-full" viewBox="0 0 200 200">
+            <circle r="78"></circle>
+            <circle r="78"></circle>
+            <circle r="78"></circle>
+            <circle r="78"></circle>
+          </svg>
+          <h6 class="fu-donut-center zcs-donut-chart-name zcs-font-16 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0 zcs-absolute zcs-text-center"><%=priorityTotal%><br><span class="zcs-font-12 zcs-color-secondary">Priority total</span></h6>
+        </div>
+        <div class="zcs-legend-wrapper zcs-col-common">
+          <ul class="zcs-flex zcs-direction-column zcs-gap-12 zcs-p-0 zcs-m-0">
+            <li class="zcs-flex zcs-align-items-center zcs-gap-8"><label class="zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary">Critical</label><span class="fu-legend-value"><%=criticalPriority%></span></li>
+            <li class="zcs-flex zcs-align-items-center zcs-gap-8"><label class="zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary">High</label><span class="fu-legend-value"><%=highPriority%></span></li>
+            <li class="zcs-flex zcs-align-items-center zcs-gap-8"><label class="zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary">Medium</label><span class="fu-legend-value"><%=mediumPriority%></span></li>
+            <li class="zcs-flex zcs-align-items-center zcs-gap-8"><label class="zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary">Low</label><span class="fu-legend-value"><%=lowPriority%></span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="fu-grid fu-two-col zcs-mt-12">
+    <div class="fu-card fu-card-pad">
+      <h3 class="fu-card-title">Closure Timeline Trend</h3>
+      <div class="fu-card-note">Line and area chart based on Completed or Closed follow-ups by Last Updated date.</div>
+      <div class="fu-chart-frame zcs-chart zcs-areachart-wrapper zcs-relative">
+        <svg class="fu-line-svg" viewBox="0 0 560 140" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="fuTrendGradient" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stop-color="var(--zcs_brand_color)" stop-opacity="0.30"></stop>
+              <stop offset="100%" stop-color="var(--zcs_brand_color)" stop-opacity="0.02"></stop>
+            </linearGradient>
+          </defs>
+          <line class="fu-line-grid" x1="20" x2="540" y1="12" y2="12"></line>
+          <line class="fu-line-grid" x1="20" x2="540" y1="52" y2="52"></line>
+          <line class="fu-line-grid" x1="20" x2="540" y1="92" y2="92"></line>
+          <polygon class="fu-line-area" points="20,92 20,<%=trendY1%> 120,<%=trendY2%> 220,<%=trendY3%> 320,<%=trendY4%> 420,<%=trendY5%> 520,<%=trendY6%> 520,92"></polygon>
+          <polyline class="fu-line" points="20,<%=trendY1%> 120,<%=trendY2%> 220,<%=trendY3%> 320,<%=trendY4%> 420,<%=trendY5%> 520,<%=trendY6%>"></polyline>
+          <circle class="fu-line-dot" cx="20" cy="<%=trendY1%>" r="4"></circle><text class="fu-axis-value" x="20" y="<%=trendY1 - 7%>" text-anchor="middle"><%=trend1%></text>
+          <circle class="fu-line-dot" cx="120" cy="<%=trendY2%>" r="4"></circle><text class="fu-axis-value" x="120" y="<%=trendY2 - 7%>" text-anchor="middle"><%=trend2%></text>
+          <circle class="fu-line-dot" cx="220" cy="<%=trendY3%>" r="4"></circle><text class="fu-axis-value" x="220" y="<%=trendY3 - 7%>" text-anchor="middle"><%=trend3%></text>
+          <circle class="fu-line-dot" cx="320" cy="<%=trendY4%>" r="4"></circle><text class="fu-axis-value" x="320" y="<%=trendY4 - 7%>" text-anchor="middle"><%=trend4%></text>
+          <circle class="fu-line-dot" cx="420" cy="<%=trendY5%>" r="4"></circle><text class="fu-axis-value" x="420" y="<%=trendY5 - 7%>" text-anchor="middle"><%=trend5%></text>
+          <circle class="fu-line-dot" cx="520" cy="<%=trendY6%>" r="4"></circle><text class="fu-axis-value" x="520" y="<%=trendY6 - 7%>" text-anchor="middle"><%=trend6%></text>
+          <text class="fu-axis-label" x="20" y="127" text-anchor="middle"><%=trendLabel1%></text>
+          <text class="fu-axis-label" x="120" y="127" text-anchor="middle"><%=trendLabel2%></text>
+          <text class="fu-axis-label" x="220" y="127" text-anchor="middle"><%=trendLabel3%></text>
+          <text class="fu-axis-label" x="320" y="127" text-anchor="middle"><%=trendLabel4%></text>
+          <text class="fu-axis-label" x="420" y="127" text-anchor="middle"><%=trendLabel5%></text>
+          <text class="fu-axis-label" x="520" y="127" text-anchor="middle"><%=trendLabel6%></text>
+        </svg>
+      </div>
+    </div>
+
+    <div class="fu-card fu-card-pad">
+      <div class="zcs-flex zcs-justify-space-between zcs-align-items-start zcs-gap-12">
+        <div>
+          <h3 class="fu-card-title">Follow-ups Aging Analysis</h3>
+          <div class="fu-card-note">Stacked bar for open, pending, in-progress, and overdue follow-ups by due-date aging.</div>
+        </div>
+        <a class="fu-mini-link" href="#Report:Overdue_Follow_Ups" target="same-window">Review overdue <i class="zc-li-outline arrows-1-tail-right"></i></a>
+      </div>
+      <div class="zcs-chart zcs-stackedbarchart-wrapper">
+        <div class="fu-aging-stack">
+          <div class="fu-aging-segment" style="--aging-width:<%=notDuePct%>%;--aging-color:var(--fu-green);"><%=notDueAging%></div>
+          <div class="fu-aging-segment" style="--aging-width:<%=age0to7Pct%>%;--aging-color:var(--fu-yellow);"><%=age0to7%></div>
+          <div class="fu-aging-segment" style="--aging-width:<%=age8to30Pct%>%;--aging-color:var(--fu-orange);"><%=age8to30%></div>
+          <div class="fu-aging-segment" style="--aging-width:<%=ageOver30Pct%>%;--aging-color:var(--fu-red);"><%=ageOver30%></div>
+        </div>
+        <div class="fu-aging-legend">
+          <div class="fu-legend-chip"><span class="fu-dot" style="--dot-color:var(--fu-green);"></span>Not due <strong><%=notDueAging%></strong></div>
+          <div class="fu-legend-chip"><span class="fu-dot" style="--dot-color:var(--fu-yellow);"></span>0 to 7 days <strong><%=age0to7%></strong></div>
+          <div class="fu-legend-chip"><span class="fu-dot" style="--dot-color:var(--fu-orange);"></span>8 to 30 days <strong><%=age8to30%></strong></div>
+          <div class="fu-legend-chip"><span class="fu-dot" style="--dot-color:var(--fu-red);"></span>Over 30 days <strong><%=ageOver30%></strong></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="fu-grid fu-two-col-even zcs-mt-12">
+    <div class="fu-card fu-card-pad">
+      <div class="fu-table-titlebar">
+        <div>
+          <h3 class="fu-card-title">Follow-up Summary by Observation Category</h3>
+          <div class="fu-card-note">Grouped from Follow_Ups by Observation_Category.</div>
+        </div>
+      </div>
+      <div class="zcs-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative">
+        <table class="zcs-w-full">
+          <thead class="zcs-sticky">
+            <tr>
+              <th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Category</th>
+              <th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Total</th>
+              <th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Open</th>
+              <th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">In Progress</th>
+              <th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Completed</th>
+              <th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Overdue</th>
+            </tr>
+            <tr class="zcs-tspace"><th class="zcs-p-8 zcs-box-border" colspan="6"></th></tr>
+          </thead>
+          <tbody>
+          <%
+            for each cat in categoryList
+            {
+              catTotal = Follow_Ups[Observation_Category == cat].count();
+              catOpen = Follow_Ups[Observation_Category == cat && Status == "Open"].count();
+              catProgress = Follow_Ups[Observation_Category == cat && Status == "In Progress"].count();
+              catComplete = Follow_Ups[Observation_Category == cat && (Status == "Completed" || Status == "Closed")].count();
+              catOverdue = Follow_Ups[Observation_Category == cat && ((Status == "Overdue") || (Due_Date < today && Status != "Completed" && Status != "Closed"))].count();
+              %>
+            <tr>
+              <td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"><%=cat%></td>
+              <td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-semibold zcs-lh-body zcs-color-primary"><%=catTotal%></td>
+              <td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-l_blue"><%=catOpen%></td>
+              <td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-l_blue"><%=catProgress%></td>
+              <td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-green"><%=catComplete%></td>
+              <td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-red"><%=catOverdue%></td>
+            </tr>
+              <%
+            }
+          %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="fu-card fu-card-pad">
+      <div class="fu-table-titlebar">
+        <div>
+          <h3 class="fu-card-title">Follow-up Responsibility by Department</h3>
+          <div class="fu-card-note">Grouped from Follow_Ups by Responsible_Department.</div>
+        </div>
+      </div>
+      <div class="zcs-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative">
+        <table class="zcs-w-full">
+          <thead class="zcs-sticky">
+            <tr>
+              <th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Department</th>
+              <th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Total</th>
+              <th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">In Progress</th>
+              <th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Overdue</th>
+              <th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Completion</th>
+            </tr>
+            <tr class="zcs-tspace"><th class="zcs-p-8 zcs-box-border" colspan="5"></th></tr>
+          </thead>
+          <tbody>
+          <%
+            deptRows = 0;
+            for each dept in Departments[ID != 0] sort by Department_Name asc
+            {
+              deptTotal = Follow_Ups[Responsible_Department == dept.ID].count();
+              if(deptTotal > 0)
+              {
+                deptRows = deptRows + 1;
+                deptProgress = Follow_Ups[Responsible_Department == dept.ID && Status == "In Progress"].count();
+                deptComplete = Follow_Ups[Responsible_Department == dept.ID && (Status == "Completed" || Status == "Closed")].count();
+                deptOverdue = Follow_Ups[Responsible_Department == dept.ID && ((Status == "Overdue") || (Due_Date < today && Status != "Completed" && Status != "Closed"))].count();
+                deptCompletionRate = (deptComplete * 100) / deptTotal;
+                %>
+            <tr>
+              <td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"><%=dept.Department_Name%></td>
+              <td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-semibold zcs-lh-body zcs-color-primary"><%=deptTotal%></td>
+              <td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-l_blue"><%=deptProgress%></td>
+              <td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-red"><%=deptOverdue%></td>
+              <td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"><div class="zcs-flex zcs-align-items-center zcs-gap-8"><div class="fu-progress"><span style="--progress:<%=deptCompletionRate%>%;"></span></div><strong><%=deptCompletionRate%>%</strong></div></td>
+            </tr>
+                <%
+              }
+            }
+            if(deptRows == 0)
+            {
+              %>
+            <tr><td class="fu-nodata" colspan="5">No department responsibility data is available yet.</td></tr>
+              <%
+            }
+          %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

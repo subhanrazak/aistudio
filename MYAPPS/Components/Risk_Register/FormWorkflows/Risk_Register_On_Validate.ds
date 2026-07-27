@@ -1,0 +1,26 @@
+Risk_Register_On_Validate as "Risk Register On Validate"
+{
+    type = form
+    form = Risk_Register
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Impact_Level == null || input.Likelihood == null)
+                {
+                    alert "Impact level and likelihood are required for risk assessment.";
+                    cancel submit;
+                }
+                if(input.Review_Frequency != null && input.Next_Review_Date == null)
+                {
+                    alert "Next review date is required when review frequency is selected.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}

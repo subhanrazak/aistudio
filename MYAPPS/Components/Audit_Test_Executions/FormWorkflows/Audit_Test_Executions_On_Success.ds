@@ -1,0 +1,25 @@
+Audit_Test_Executions_On_Success as "Audit Test Executions On Success"
+{
+    type = form
+    form = Audit_Test_Executions
+    record event = on add or edit
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Test_Result in {"Fail", "Exception"})
+                {
+                    input.Follow_Up_Required = true;
+                    input.Test_Status = "Exception";
+                }
+                else if(input.Test_Result in {"Pass", "Not Applicable"})
+                {
+                    input.Test_Status = "Completed";
+                }
+            )
+        }
+    }
+}

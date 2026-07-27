@@ -1,0 +1,67 @@
+Risk_Register_On_Success as "Risk Register On Success"
+{
+    type = form
+    form = Risk_Register
+    record event = on add or edit
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                impactScore = 0;
+                likelihoodScore = 0;
+                if(input.Impact_Level != null)
+                {
+                    impactScore = input.Impact_Level.getPrefix("-").toDecimal();
+                }
+                if(input.Likelihood != null)
+                {
+                    likelihoodScore = input.Likelihood.getPrefix("-").toDecimal();
+                }
+                input.Inherent_Risk_Score = impactScore * likelihoodScore;
+                controlScore = 1;
+                if(input.Control_Effectiveness == "Effective")
+                {
+                    controlScore = 4;
+                }
+                else if(input.Control_Effectiveness == "Partial")
+                {
+                    controlScore = 2;
+                }
+                else if(input.Control_Effectiveness == "Ineffective")
+                {
+                    controlScore = 0;
+                }
+                else
+                {
+                    controlScore = 1;
+                }
+                input.Control_Effectiveness_Score = controlScore;
+                residual = input.Inherent_Risk_Score - controlScore;
+                if(residual < 1)
+                {
+                    residual = 1;
+                }
+                input.Residual_Risk_Score = residual.round(1);
+                if(input.Residual_Risk_Score <= 4)
+                {
+                    input.Residual_Risk_Rating = "Low";
+                }
+                else if(input.Residual_Risk_Score <= 14)
+                {
+                    input.Residual_Risk_Rating = "Medium";
+                }
+                else if(input.Residual_Risk_Score <= 20)
+                {
+                    input.Residual_Risk_Rating = "High";
+                }
+                else
+                {
+                    input.Residual_Risk_Rating = "Critical";
+                }
+            )
+        }
+    }
+}

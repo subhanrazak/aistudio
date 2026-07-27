@@ -1,0 +1,39 @@
+Follow_Ups_On_Validate as "Follow Ups On Validate"
+{
+    type = form
+    form = Follow_Ups
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Due_Date == null)
+                {
+                    alert "Due date is required for follow-up tracking.";
+                    cancel submit;
+                }
+                if(input.Responsible_Person == null)
+                {
+                    alert "Responsible person is required for follow-up tracking.";
+                    cancel submit;
+                }
+                if(ifnull(input.Completion_Percent,0) < 0 || ifnull(input.Completion_Percent,0) > 100)
+                {
+                    alert "Completion percent must be between 0 and 100.";
+                    cancel submit;
+                }
+                if(input.Revised_Due_Date != null)
+                {
+                    if(input.Due_Date != input.Revised_Due_Date && input.Original_Due_Date != null && input.Due_Date < input.Original_Due_Date)
+                    {
+                        alert "Due date must match the revised due date or be later than the original due date.";
+                        cancel submit;
+                    }
+                }
+            )
+        }
+    }
+}

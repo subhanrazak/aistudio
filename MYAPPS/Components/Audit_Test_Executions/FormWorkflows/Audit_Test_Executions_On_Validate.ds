@@ -1,0 +1,26 @@
+Audit_Test_Executions_On_Validate as "Audit Test Executions On Validate"
+{
+    type = form
+    form = Audit_Test_Executions
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Test_Result in {"Pass", "Fail", "Exception"} && input.Evidence_File == null)
+                {
+                    alert "Evidence file is required for Pass, Fail, or Exception results.";
+                    cancel submit;
+                }
+                if(input.Test_Result in {"Fail", "Exception"} && ifnull(input.Exception_Details,"") == "")
+                {
+                    alert "Exception details are required for Fail or Exception results.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}

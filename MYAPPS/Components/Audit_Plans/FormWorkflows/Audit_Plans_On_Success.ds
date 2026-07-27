@@ -1,0 +1,24 @@
+Audit_Plans_On_Success as "Audit Plans On Success"
+{
+    type = form
+    form = Audit_Plans
+    record event = on add or edit
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Status == "Submitted" && input.Submitted_Date == null)
+                {
+                    input.Submitted_Date = zoho.currentdate;
+                }
+                if(input.Status == "Approved" && input.Approved_Date == null)
+                {
+                    input.Approved_Date = zoho.currentdate;
+                }
+            )
+        }
+    }
+}

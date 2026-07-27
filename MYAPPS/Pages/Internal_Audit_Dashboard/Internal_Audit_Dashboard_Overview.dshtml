@@ -1,0 +1,277 @@
+<%
+  today = zoho.currentdate;
+  weekEnd = today.addDay(7);
+
+  totalAudits = Audits[ID != 0].count();
+  activeAudits = Audits[Status == "Active"].count();
+  completedAudits = Audits[Status == "Completed" || Status == "Closed"].count();
+  openObservations = Audit_Observations[Status != "Closed" && Status != "Rejected"].count();
+  followUpItems = Follow_Ups[ID != 0].count();
+  dueThisWeek = Follow_Ups[Due_Date >= today && Due_Date <= weekEnd && Status != "Completed" && Status != "Closed"].count();
+  testTotal = Audit_Test_Executions[ID != 0].count();
+
+  sampleMode = totalAudits == 0 && openObservations == 0 && followUpItems == 0 && testTotal == 0;
+  kpiTotalAudits = totalAudits;
+  kpiActiveAudits = activeAudits;
+  kpiCompletedAudits = completedAudits;
+  kpiOpenObservations = openObservations;
+  kpiFollowUpItems = followUpItems;
+  kpiDueThisWeek = dueThisWeek;
+  if(sampleMode)
+  {
+    kpiTotalAudits = 24;
+    kpiActiveAudits = 8;
+    kpiCompletedAudits = 13;
+    kpiOpenObservations = 17;
+    kpiFollowUpItems = 9;
+    kpiDueThisWeek = 4;
+  }
+
+  passTests = Audit_Test_Executions[Test_Result == "Pass"].count();
+  failTests = Audit_Test_Executions[Test_Result == "Fail"].count();
+  exceptionTests = Audit_Test_Executions[Test_Result == "Exception"].count();
+  notTestedTests = Audit_Test_Executions[Test_Result == "Not Tested" || Test_Result == "Not Applicable"].count();
+  completedTests = Audit_Test_Executions[Test_Status == "Completed"].count();
+  pendingReviewTests = Audit_Test_Executions[Review_Status == "Pending Review"].count();
+  if(testTotal == 0)
+  {
+    passTests = 18;
+    failTests = 3;
+    exceptionTests = 2;
+    notTestedTests = 5;
+    completedTests = 21;
+    pendingReviewTests = 4;
+    testTotal = 28;
+  }
+%>
+<style>
+/* zcs-global.css: shared utility subset included once for this page */
+:root {
+  --zcs-theme-brand-color: var(--zcs_brand_color, #ff2f3f);
+  --zcs-light-bg-color: var(--zcs_brand_light_color, #fff0f2);
+  --zcs-app-header-color: #141525;
+  --zcs-page-bg-color: #f3f3f6;
+  --zcs-primary-text-color: var(--zcs_primary_text_color, #171827);
+  --zcs-secondary-text-color: var(--zcs_secondary_text_color, #5f6375);
+  --zcs-teritiary-text-color: var(--zcs_tertiary_text_color, #878895);
+  --zcs-border-color: var(--zcs_tertiary_border_color, #e7e7ee);
+  --zcs-white-color: #ffffff;
+  --zcs-black-color: #000000;
+  --zcs-primary-btn-color: var(--zcs_brand_color, #ff2f3f);
+  --zcs-primary-btn-border-color: var(--zcs_brand_color, #ff2f3f);
+  --zcs-primary-btn-text-color: var(--zcs_brand_foreground_color, #ffffff);
+  --audit-accent: #ff2f3f;
+  --audit-dark: #111321;
+  --audit-dark-2: #1b1d30;
+  --audit-muted: #74798a;
+  --audit-soft: #f5f6fa;
+  font-size: 16px;
+  line-height: 1.5;
+}
+.zcs-row{display:flex;flex-wrap:wrap}.zcs-flex{display:flex}.zcs-inline-flex{display:inline-flex}.zcs-direction-column{flex-direction:column}.zcs-align-items-center{align-items:center}.zcs-align-items-start{align-items:flex-start}.zcs-justify-center{justify-content:center}.zcs-justify-space-between{justify-content:space-between}.zcs-col-common{flex:1 1 0%;min-width:0}.zcs-col-auto{flex:0 0 auto;width:auto}.zcs-no-shrink{flex-shrink:0}.zcs-w-full{width:100%}.zcs-h-full{height:100%}.zcs-wh-full{width:100%;height:100%}.zcs-box-border{box-sizing:border-box}.zcs-relative{position:relative}.zcs-sticky{position:sticky}.zcs-cursor-pointer{cursor:pointer}.zcs-overflow-hidden{overflow:hidden}.zcs-overflow-auto{overflow:auto}.zcs-ellipsis{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.zcs-text-left{text-align:left}.zcs-text-right{text-align:right}.zcs-text-center{text-align:center}.zcs-rounded-sm{border-radius:4px}.zcs-rounded-md{border-radius:6px}.zcs-rounded-lg{border-radius:8px}.zcs-rounded-xl{border-radius:12px}.zcs-rounded-2xl{border-radius:16px}.zcs-rounded-half{border-radius:50%}.zcs-rounded-full{border-radius:100%}.zcs-m-0{margin:0}.zcs-mt-4{margin-top:.25rem}.zcs-mt-8{margin-top:.5rem}.zcs-mt-12{margin-top:.75rem}.zcs-mt-16{margin-top:1rem}.zcs-mb-4{margin-bottom:.25rem}.zcs-mb-8{margin-bottom:.5rem}.zcs-mb-12{margin-bottom:.75rem}.zcs-mb-16{margin-bottom:1rem}.zcs-p-0{padding:0}.zcs-p-8{padding:.5rem}.zcs-p-12{padding:.75rem}.zcs-p-16{padding:1rem}.zcs-p-20{padding:1.25rem}.zcs-p-24{padding:1.5rem}.zcs-p-25{padding:1.5625rem}.zcs-px-8{padding-left:.5rem;padding-right:.5rem}.zcs-px-10{padding-left:.625rem;padding-right:.625rem}.zcs-px-12{padding-left:.75rem;padding-right:.75rem}.zcs-px-16{padding-left:1rem;padding-right:1rem}.zcs-py-2{padding-top:.125rem;padding-bottom:.125rem}.zcs-py-6{padding-top:.375rem;padding-bottom:.375rem}.zcs-py-8{padding-top:.5rem;padding-bottom:.5rem}.zcs-gap-4{gap:.25rem}.zcs-gap-6{gap:.375rem}.zcs-gap-8{gap:.5rem}.zcs-gap-10{gap:.625rem}.zcs-gap-12{gap:.75rem}.zcs-gap-16{gap:1rem}.zcs-gap-20{gap:1.25rem}.zcs-gap-24{gap:1.5rem}.zcs-font-10{font-size:.625rem}.zcs-font-11{font-size:.6875rem}.zcs-font-12{font-size:.75rem}.zcs-font-13{font-size:.8125rem}.zcs-font-14{font-size:.875rem}.zcs-font-15{font-size:.9375rem}.zcs-font-16{font-size:1rem}.zcs-font-18{font-size:1.125rem}.zcs-font-20{font-size:1.25rem}.zcs-font-24{font-size:1.5rem}.zcs-font-28{font-size:1.75rem}.zcs-font-30{font-size:1.875rem}.zcs-font-40{font-size:40px}.zcs-font-normal{font-weight:400}.zcs-font-medium{font-weight:500}.zcs-font-semibold{font-weight:600}.zcs-font-bold{font-weight:700}.zcs-uppercase{text-transform:uppercase}.zcs-lh-body{line-height:1.5}.zcs-lh-heading{line-height:1.25}.zcs-color-primary{color:var(--zcs-primary-text-color)}.zcs-color-secondary{color:var(--zcs-secondary-text-color)}.zcs-color-tertiary{color:var(--zcs-teritiary-text-color)}.zcs-color-white{color:#fff}.zcs-color-theme{color:var(--zcs-theme-brand-color)}.zcs-color-green{color:#179e6c}.zcs-color-red{color:#fe455d}.zcs-color-yellow{color:#b8770d}.zcs-color-blue{color:#09598e}.zcs-color-l_blue{color:#1094c5}a{text-decoration:none}.zcs-card{background-color:var(--zcs-white-color);border:1px solid var(--zcs-border-color);border-radius:12px}.zcs-list-none{list-style-type:none}
+/* ZCS button-primary-button */
+.zcs-button{width:auto;min-width:5rem;min-height:36px}.zcs-primary-button{background-color:var(--zcs_brand_color, #ff2f3f);color:var(--zcs_brand_foreground_color, #ffffff)}.zcs-primary-outline-button{border:1px solid var(--zcs_brand_color, #ff2f3f);background-color:var(--zcs-white-color);color:var(--zcs_brand_color, #ff2f3f)}.zcs-secondary-button{border:1px solid var(--zcs_primary_border_color, #dfe2eb);background-color:var(--zcs_light_grey_color, #f3f4f7);color:var(--zcs-primary-text-color)}.zcs-primary-button.zcs-custom-color{background-color:var(--zcs-button-color)}.zcs-primary-button.zcs-button:hover{background-color:var(--zcs_brand_dark_color, #d81f31)}.zcs-primary-outline-button:hover{background-color:var(--zcs_component_hover_color, #fff0f2);border-color:var(--zcs_brand_color, #ff2f3f);color:var(--zcs_brand_color, #ff2f3f)}.zcs-primary-button.zcs-button:active,.zcs-primary-button.zcs-button:focus{outline:2px solid var(--zcs_brand_color, #ff2f3f);outline-offset:2px}.zcs-button-icon{width:16px;max-height:16px}
+/* ZCS quick-actions-card-type-quick-actions */
+.zcs-quick-action-item{list-style-type:none}.zcs-quick-action-item.zcs-card:hover{border-color:var(--zcs_brand_color, #ff2f3f)}.zcs-quick-action-item:hover .zcs-quick-action-link{color:var(--zcs_brand_color, #ff2f3f)}.zcs-quick-action-item:hover .zcs-quick-action-text{text-decoration:none}
+/* ZCS filled-badge */
+.zcs-badge{width:auto}.zcs-badge-filled{border:1px solid transparent}.zcs-badge-filled.zcs-badge-theme{background-color:var(--zcs_brand_color, #ff2f3f);border-color:var(--zcs_brand_color, #ff2f3f);color:#fff}.zcs-badge-filled.zcs-badge-green{background-color:#179e6c;border-color:#179e6c;color:#fff}.zcs-badge-filled.zcs-badge-red{background-color:#fe455d;border-color:#fe455d;color:#fff}.zcs-badge-filled.zcs-badge-grey{background-color:#242424;border-color:#242424;color:#fff}.zcs-badge-filled.zcs-badge-yellow{background-color:#faae13;border-color:#faae13;color:#fff}.zcs-badge-filled.zcs-badge-blue{background-color:#2a6ffc;border-color:#2a6ffc;color:#fff}.zcs-badge-filled.zcs-badge-orange{background-color:#f4660c;border-color:#f4660c;color:#fff}
+/* ZCS table-simple-table */
+:root{--zcs-thead-color:#f9fafe;--zcs-tr-h-color:#f9fafe;--zcs-tgroup-color:#f1f2f8;--zcs-tgroup-h-color:#f1f2f8}.zcs-table-wrapper{border:1px solid var(--zcs_tertiary_border_color, #e7e7ee);background-color:#fff;overflow:auto}.zcs-table-wrapper table{line-height:normal;border-collapse:collapse}.zcs-table-wrapper table thead{top:0}.zcs-table-wrapper table thead tr th{background-color:var(--zcs-thead-color);box-shadow:0 -1px 0 0 var(--zcs_tertiary_border_color, #e7e7ee) inset;white-space:nowrap}.zcs-table-wrapper table thead tr.zcs-tspace th{background-color:#fff;box-shadow:none}.zcs-table-wrapper table tbody tr td{border-top:1px solid var(--zcs_tertiary_border_color, #e7e7ee)}.zcs-table-wrapper table tbody tr:first-child td{border-color:transparent}.zcs-table-wrapper table tbody tr:hover td{background-color:var(--zcs-tr-h-color)}.zcs-table-wrapper table thead tr th.zcs-green,.zcs-table-wrapper table tbody tr td.zcs-green,.zcs-table-wrapper table tbody tr td .zcs-green{color:#179e6c}.zcs-table-wrapper table thead tr th.zcs-red,.zcs-table-wrapper table tbody tr td.zcs-red,.zcs-table-wrapper table tbody tr td .zcs-red{color:#fe455d}.zcs-table-wrapper table thead tr th.zcs-yellow,.zcs-table-wrapper table tbody tr td.zcs-yellow,.zcs-table-wrapper table tbody tr td .zcs-yellow{color:#b8770d}.zcs-table-wrapper table thead tr th.zcs-blue,.zcs-table-wrapper table tbody tr td.zcs-blue,.zcs-table-wrapper table tbody tr td .zcs-blue{color:#09598e}.zcs-table-wrapper table thead tr th.zcs-l_blue,.zcs-table-wrapper table tbody tr td.zcs-l_blue,.zcs-table-wrapper table tbody tr td .zcs-l_blue{color:#1094c5}
+/* Audit dashboard layout */
+.audit-dashboard *{box-sizing:border-box}.audit-dashboard{min-height:100%;background:linear-gradient(180deg,var(--audit-dark) 0, var(--audit-dark) 220px, #f3f4f8 220px, #f3f4f8 100%);font-family:Inter,Arial,sans-serif;color:var(--zcs-primary-text-color);padding:22px}.audit-shell{max-width:1440px;margin:0 auto}.audit-hero{background:radial-gradient(circle at 88% 15%, rgba(255,47,63,.38) 0, rgba(255,47,63,0) 28%),linear-gradient(135deg,#171a2c 0,#111321 58%,#241725 100%);border:1px solid rgba(255,255,255,.08);border-radius:22px;padding:24px;color:#fff;box-shadow:0 18px 44px rgba(0,0,0,.18);position:relative;overflow:hidden}.audit-hero:after{content:"";position:absolute;right:-70px;top:-80px;width:240px;height:240px;border:1px solid rgba(255,255,255,.13);border-radius:50%;box-shadow:0 0 0 38px rgba(255,255,255,.035),0 0 0 78px rgba(255,255,255,.025)}.audit-hero-content{position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:18px}.audit-eyebrow{display:inline-flex;align-items:center;gap:8px;background:rgba(255,47,63,.16);border:1px solid rgba(255,47,63,.42);color:#ffd9dd;border-radius:999px;padding:6px 12px;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.08em}.audit-hero h1{font-size:30px;line-height:1.15;margin:12px 0 8px;font-weight:700}.audit-hero p{margin:0;color:#c7cad6;font-size:14px}.audit-hero-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}.audit-hero .zcs-button{background:#ff2f3f;color:#fff;border:0}.audit-hero .audit-secondary-link{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:#fff}.audit-kpi-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:14px;margin-top:18px}.audit-kpi-card{padding:16px;background:#fff;border:1px solid #ececf2;border-radius:16px;box-shadow:0 10px 24px rgba(25,28,45,.06);min-height:120px}.audit-kpi-icon{width:38px;height:38px;border-radius:12px;background:#fff0f2;color:#ff2f3f;display:flex;align-items:center;justify-content:center;font-size:19px}.audit-kpi-label{color:#6d7282;font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase}.audit-kpi-value{font-size:30px;font-weight:800;line-height:1;margin-top:12px;color:#151622}.audit-kpi-foot{margin-top:9px;color:#8a8f9e;font-size:12px}.audit-section{margin-top:18px}.audit-section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}.audit-section-title{display:flex;align-items:center;gap:10px;font-size:18px;font-weight:700;color:#171827;margin:0}.audit-section-title i{color:#ff2f3f}.audit-section-link{font-size:13px;font-weight:700;color:#ff2f3f}.audit-quick-actions-wrapper{background:#fff;border-radius:16px}.audit-quick-actions-wrapper ul{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.audit-quick-actions-wrapper .zcs-quick-action-item{border-radius:14px;transition:all .18s ease}.audit-quick-actions-wrapper .zcs-quick-action-link{min-height:58px}.audit-quick-actions-wrapper .zcs-quick-action-icon{width:34px;height:34px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:#fff0f2;color:#ff2f3f;font-size:18px}.audit-quick-count{margin-left:auto;background:#f3f4f8;color:#5f6375;border-radius:999px;padding:2px 8px;font-size:12px;font-weight:700}.audit-two-col{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(360px,.9fr);gap:18px}.audit-card-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.audit-record-card{border-radius:16px;padding:16px;position:relative;overflow:hidden}.audit-record-card:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:#ff2f3f}.audit-record-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.audit-record-code{font-size:12px;font-weight:800;color:#ff2f3f;letter-spacing:.04em;text-transform:uppercase}.audit-record-title{font-size:16px;font-weight:750;color:#171827;margin:6px 0 8px;line-height:1.3}.audit-record-meta{display:flex;flex-wrap:wrap;gap:8px 12px;color:#74798a;font-size:12px}.audit-record-meta span{display:inline-flex;align-items:center;gap:5px}.audit-progress-track{height:7px;background:#eef0f5;border-radius:999px;overflow:hidden;margin-top:14px}.audit-progress-bar{height:100%;background:linear-gradient(90deg,#ff2f3f,#ff7380);border-radius:999px}.audit-card-actions{display:flex;align-items:center;justify-content:space-between;margin-top:12px}.audit-mini-link{font-size:13px;font-weight:700;color:#ff2f3f;display:inline-flex;align-items:center;gap:6px}.audit-observation-card{border-radius:16px;padding:16px}.audit-observation-card .audit-record-title{margin-top:8px}.audit-severity-high{color:#fe455d}.audit-severity-medium{color:#b8770d}.audit-severity-low{color:#179e6c}.audit-table-card{border-radius:16px;padding:16px;background:#fff;border:1px solid #ececf2;box-shadow:0 10px 24px rgba(25,28,45,.05)}.audit-table-wrapper{border-radius:12px;max-height:420px}.audit-table-wrapper td,.audit-table-wrapper th{vertical-align:middle}.audit-status-pill{white-space:nowrap}.audit-empty{border:1px dashed #d9dce7;border-radius:14px;background:#fafbfe;padding:18px;text-align:center;color:#74798a}.audit-empty i{display:block;color:#ff2f3f;font-size:28px;margin-bottom:8px}.audit-subtle-note{display:inline-flex;align-items:center;gap:7px;background:#fff7f8;color:#b72634;border:1px solid #ffd7dc;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:700}.audit-source-strip{display:flex;align-items:center;gap:8px;color:#8a8f9e;font-size:12px}.audit-source-strip i{color:#ff2f3f}.audit-summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.audit-result-meter{height:9px;background:#eff1f6;border-radius:999px;overflow:hidden;min-width:92px}.audit-result-meter span{display:block;height:100%;border-radius:999px;background:#ff2f3f}.audit-result-meter.pass span{background:#179e6c}.audit-result-meter.fail span{background:#fe455d}.audit-result-meter.pending span{background:#2a6ffc}.audit-result-meter.exception span{background:#f4660c}@media(max-width:1200px){.audit-kpi-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.audit-two-col,.audit-summary-grid{grid-template-columns:1fr}.audit-quick-actions-wrapper ul{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:720px){.audit-dashboard{padding:14px}.audit-hero-content{flex-direction:column;align-items:flex-start}.audit-hero-actions{justify-content:flex-start}.audit-kpi-grid,.audit-card-grid,.audit-quick-actions-wrapper ul{grid-template-columns:1fr}.audit-hero h1{font-size:24px}}
+</style>
+
+<div class="audit-dashboard">
+  <div class="audit-shell">
+    <header class="audit-hero">
+      <div class="audit-hero-content">
+        <div>
+          <span class="audit-eyebrow"><i class="zc-li-outline business-board-30"></i> Internal Audit Command Center</span>
+          <h1>Internal Audit Dashboard</h1>
+          <p>Landing view for engagements, observations, follow-ups, approvals, and control test execution results.</p>
+        </div>
+        <div class="audit-hero-actions">
+          <a class="zcs-button zcs-primary-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body" href="#Report:All_Audits">
+            <i class="zcs-button-icon zc-li-outline files-2-doc"></i><span class="zcs-button-text">Audit Listings</span>
+          </a>
+          <a class="zcs-button zcs-primary-outline-button audit-secondary-link zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body" href="#Report:All_Audit_Plans">
+            <i class="zcs-button-icon zc-li-outline ui-1-simple-add"></i><span class="zcs-button-text">Audit Plans</span>
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <section class="audit-kpi-grid">
+      <div class="audit-kpi-card">
+        <div class="zcs-flex zcs-justify-space-between zcs-align-items-center"><span class="audit-kpi-label">Total Audits</span><span class="audit-kpi-icon"><i class="zc-li-outline files-2-doc"></i></span></div>
+        <div class="audit-kpi-value"><%=kpiTotalAudits%></div>
+        <div class="audit-kpi-foot">Audit records tracked</div>
+      </div>
+      <div class="audit-kpi-card">
+        <div class="zcs-flex zcs-justify-space-between zcs-align-items-center"><span class="audit-kpi-label">Active Audits</span><span class="audit-kpi-icon"><i class="zc-li-outline ui-2-time"></i></span></div>
+        <div class="audit-kpi-value"><%=kpiActiveAudits%></div>
+        <div class="audit-kpi-foot">Currently in progress</div>
+      </div>
+      <div class="audit-kpi-card">
+        <div class="zcs-flex zcs-justify-space-between zcs-align-items-center"><span class="audit-kpi-label">Completed Audits</span><span class="audit-kpi-icon"><i class="zc-li-outline ui-1-check-circle-08"></i></span></div>
+        <div class="audit-kpi-value"><%=kpiCompletedAudits%></div>
+        <div class="audit-kpi-foot">Closed or completed</div>
+      </div>
+      <div class="audit-kpi-card">
+        <div class="zcs-flex zcs-justify-space-between zcs-align-items-center"><span class="audit-kpi-label">Open Observations</span><span class="audit-kpi-icon"><i class="zc-li-outline ui-3-alert"></i></span></div>
+        <div class="audit-kpi-value"><%=kpiOpenObservations%></div>
+        <div class="audit-kpi-foot">Awaiting remediation</div>
+      </div>
+      <div class="audit-kpi-card">
+        <div class="zcs-flex zcs-justify-space-between zcs-align-items-center"><span class="audit-kpi-label">Follow-up Items</span><span class="audit-kpi-icon"><i class="zc-li-outline location-pin-copy"></i></span></div>
+        <div class="audit-kpi-value"><%=kpiFollowUpItems%></div>
+        <div class="audit-kpi-foot">Action tracking items</div>
+      </div>
+      <div class="audit-kpi-card">
+        <div class="zcs-flex zcs-justify-space-between zcs-align-items-center"><span class="audit-kpi-label">Due This Week</span><span class="audit-kpi-icon"><i class="zc-li-outline ui-2-time"></i></span></div>
+        <div class="audit-kpi-value"><%=kpiDueThisWeek%></div>
+        <div class="audit-kpi-foot">Next 7 calendar days</div>
+      </div>
+    </section>
+
+    <% if(sampleMode) { %>
+      <div class="audit-section audit-subtle-note"><i class="zc-li-outline ui-3-alert"></i> Showing sample placeholders because no audit dashboard data exists yet.</div>
+    <% } %>
+
+    <section class="audit-section">
+      <div class="zcs-quick-actions-wrapper audit-quick-actions-wrapper zcs-card zcs-flex zcs-direction-column zcs-gap-16 zcs-p-16 zcs-box-border">
+        <div class="audit-section-head zcs-m-0">
+          <h5 class="audit-section-title"><i class="zc-li-outline ui-1-simple-add"></i> Quick Actions</h5>
+          <span class="audit-source-strip"><i class="zc-li-outline files-2-doc"></i> Report links</span>
+        </div>
+        <ul class="zcs-flex zcs-p-0 zcs-m-0">
+          <li class="zcs-quick-action-item zcs-card zcs-px-12 zcs-py-8 zcs-box-border">
+            <a class="zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary zcs-cursor-pointer" href="#Report:All_Audits">
+              <i class="zcs-quick-action-icon zcs-font-medium zc-li-outline business-board-30"></i><span class="zcs-quick-action-text">My Audits</span><span class="audit-quick-count"><%=kpiActiveAudits%></span>
+            </a>
+          </li>
+          <li class="zcs-quick-action-item zcs-card zcs-px-12 zcs-py-8 zcs-box-border">
+            <a class="zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary zcs-cursor-pointer" href="#Report:Open_Observations">
+              <i class="zcs-quick-action-icon zcs-font-medium zc-li-outline ui-3-alert"></i><span class="zcs-quick-action-text">My Observations</span><span class="audit-quick-count"><%=kpiOpenObservations%></span>
+            </a>
+          </li>
+          <li class="zcs-quick-action-item zcs-card zcs-px-12 zcs-py-8 zcs-box-border">
+            <a class="zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary zcs-cursor-pointer" href="#Report:Follow_Up_Schedule">
+              <i class="zcs-quick-action-icon zcs-font-medium zc-li-outline ui-2-time"></i><span class="zcs-quick-action-text">My Follow-ups</span><span class="audit-quick-count"><%=kpiDueThisWeek%></span>
+            </a>
+          </li>
+          <li class="zcs-quick-action-item zcs-card zcs-px-12 zcs-py-8 zcs-box-border">
+            <a class="zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary zcs-cursor-pointer" href="#Report:All_Audit_Plans">
+              <i class="zcs-quick-action-icon zcs-font-medium zc-li-outline ui-1-check-circle-08"></i><span class="zcs-quick-action-text">My Approvals</span><span class="audit-quick-count"><%=Audit_Observations[Status == "Under Review"].count()%></span>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="audit-section audit-two-col">
+      <div>
+        <div class="audit-section-head">
+          <h2 class="audit-section-title"><i class="zc-li-outline business-board-30"></i> My Audit Engagements</h2>
+          <a class="audit-section-link" href="#Report:All_Audits">View all</a>
+        </div>
+        <div class="audit-card-grid">
+          <% if(totalAudits == 0) { %>
+            <div class="audit-record-card zcs-property-card zcs-card">
+              <div class="audit-record-top"><div><div class="audit-record-code">AUD-2025-014</div><div class="audit-record-title">Procurement Process Review</div></div><div class="zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-blue"><span class="zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body">Execution</span></div></div>
+              <div class="audit-record-meta"><span><i class="zc-li-outline ui-2-time"></i> 12-Aug-2025</span><span><i class="zc-li-outline ui-1-check-circle-08"></i> Lead: R. Mehta</span><span><i class="zc-li-outline ui-3-alert"></i> Risk: High</span></div>
+              <div class="audit-progress-track"><div class="audit-progress-bar" style="width:62%"></div></div><div class="audit-card-actions"><span class="zcs-font-12 zcs-color-tertiary">62% complete</span><a class="audit-mini-link" href="#Report:All_Audits">Open <i class="zc-li-outline arrows-1-tail-right"></i></a></div>
+            </div>
+            <div class="audit-record-card zcs-property-card zcs-card">
+              <div class="audit-record-top"><div><div class="audit-record-code">AUD-2025-009</div><div class="audit-record-title">IT Access Controls Audit</div></div><div class="zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-orange"><span class="zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body">Reporting</span></div></div>
+              <div class="audit-record-meta"><span><i class="zc-li-outline ui-2-time"></i> 22-Aug-2025</span><span><i class="zc-li-outline ui-1-check-circle-08"></i> Lead: A. Shah</span><span><i class="zc-li-outline ui-3-alert"></i> Risk: Critical</span></div>
+              <div class="audit-progress-track"><div class="audit-progress-bar" style="width:84%"></div></div><div class="audit-card-actions"><span class="zcs-font-12 zcs-color-tertiary">84% complete</span><a class="audit-mini-link" href="#Report:All_Audits">Open <i class="zc-li-outline arrows-1-tail-right"></i></a></div>
+            </div>
+          <% } else { auditShown = 0; for each a in Audits[ID != 0] sort by Planned_Start desc { if(auditShown < 4) { auditShown = auditShown + 1; auditTitle = ifnull(a.Audit_Title,"Untitled Audit"); auditCode = ifnull(a.Audit_Code,"AUD-" + a.ID); auditStatus = ifnull(a.Status,"Active"); auditStage = ifnull(a.Stage,"Planning"); auditRisk = ifnull(a.Risk_Rating,"Medium"); leadName = "Unassigned"; if(a.Lead_Auditor != null) { leadName = a.Lead_Auditor.Full_Name; } startText = "Not scheduled"; if(a.Planned_Start != null) { startText = a.Planned_Start.toString("dd-MMM-yyyy"); } progressValue = ifnull(a.Progress_Percent,0); if(progressValue > 100) { progressValue = 100; } if(progressValue < 0) { progressValue = 0; } stageClass = "zcs-badge-blue"; if(auditStage == "Closed" || auditStatus == "Completed" || auditStatus == "Closed") { stageClass = "zcs-badge-green"; } else if(auditStage == "Follow-up" || auditStage == "Reporting") { stageClass = "zcs-badge-orange"; } auditUrl = "#Report:All_Audits?ID=" + a.ID; %>
+            <div class="audit-record-card zcs-property-card zcs-card">
+              <div class="audit-record-top">
+                <div><div class="audit-record-code"><%=auditCode%></div><div class="audit-record-title"><%=auditTitle%></div></div>
+                <div class="zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border <%=stageClass%>"><span class="zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body"><%=auditStage%></span></div>
+              </div>
+              <div class="audit-record-meta"><span><i class="zc-li-outline ui-2-time"></i> <%=startText%></span><span><i class="zc-li-outline ui-1-check-circle-08"></i> Lead: <%=leadName%></span><span><i class="zc-li-outline ui-3-alert"></i> Risk: <%=auditRisk%></span></div>
+              <div class="audit-progress-track"><div class="audit-progress-bar" style="width:<%=progressValue%>%"></div></div>
+              <div class="audit-card-actions"><span class="zcs-font-12 zcs-color-tertiary"><%=progressValue%>% complete</span><a class="audit-mini-link" href="<%=auditUrl%>">Open <i class="zc-li-outline arrows-1-tail-right"></i></a></div>
+            </div>
+          <% } } } %>
+        </div>
+      </div>
+
+      <div>
+        <div class="audit-section-head">
+          <h2 class="audit-section-title"><i class="zc-li-outline ui-3-alert"></i> Observations & Findings</h2>
+          <a class="audit-section-link" href="#Report:Open_Observations">Open observations</a>
+        </div>
+        <div class="zcs-flex zcs-direction-column zcs-gap-12">
+          <% if(openObservations == 0) { %>
+            <div class="audit-observation-card zcs-card">
+              <div class="audit-record-top"><div class="zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-red"><span class="zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body">High</span></div><span class="zcs-font-12 zcs-color-tertiary">OBS-2025-031</span></div>
+              <div class="audit-record-title">Vendor onboarding documentation gaps</div>
+              <div class="audit-record-meta"><span><i class="zc-li-outline files-2-doc"></i> Procurement Process Review</span><span><i class="zc-li-outline ui-2-time"></i> Due 29-Aug-2025</span></div>
+            </div>
+            <div class="audit-observation-card zcs-card">
+              <div class="audit-record-top"><div class="zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-orange"><span class="zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body">Medium</span></div><span class="zcs-font-12 zcs-color-tertiary">OBS-2025-028</span></div>
+              <div class="audit-record-title">User access recertification delayed</div>
+              <div class="audit-record-meta"><span><i class="zc-li-outline files-2-doc"></i> IT Access Controls Audit</span><span><i class="zc-li-outline ui-2-time"></i> Due 05-Sep-2025</span></div>
+            </div>
+          <% } else { obsShown = 0; for each obs in Audit_Observations[Status != "Closed" && Status != "Rejected"] sort by Target_Closure_Date asc { if(obsShown < 4) { obsShown = obsShown + 1; obsCode = ifnull(obs.Observation_ID,"OBS-" + obs.ID); obsTitle = ifnull(obs.Observation_Title,"Untitled observation"); obsSeverity = ifnull(obs.Severity,"Medium"); obsStatus = ifnull(obs.Status,"Draft"); obsAuditTitle = "Unlinked audit"; if(obs.Audit != null) { obsAuditTitle = obs.Audit.Audit_Title; } closureText = "No due date"; if(obs.Target_Closure_Date != null) { closureText = obs.Target_Closure_Date.toString("dd-MMM-yyyy"); } severityClass = "zcs-badge-yellow"; if(obsSeverity == "Critical" || obsSeverity == "High") { severityClass = "zcs-badge-red"; } else if(obsSeverity == "Medium") { severityClass = "zcs-badge-orange"; } else if(obsSeverity == "Low") { severityClass = "zcs-badge-green"; } obsUrl = "#Report:Open_Observations?ID=" + obs.ID; %>
+            <div class="audit-observation-card zcs-card">
+              <div class="audit-record-top"><div class="zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border <%=severityClass%>"><span class="zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body"><%=obsSeverity%></span></div><span class="zcs-font-12 zcs-color-tertiary"><%=obsCode%></span></div>
+              <div class="audit-record-title"><a class="zcs-color-primary" href="<%=obsUrl%>"><%=obsTitle%></a></div>
+              <div class="audit-record-meta"><span><i class="zc-li-outline files-2-doc"></i> <%=obsAuditTitle%></span><span><i class="zc-li-outline ui-2-time"></i> Due <%=closureText%></span><span><i class="zc-li-outline ui-1-check-circle-08"></i> <%=obsStatus%></span></div>
+            </div>
+          <% } } } %>
+        </div>
+      </div>
+    </section>
+
+    <section class="audit-section audit-summary-grid">
+      <div class="audit-table-card">
+        <div class="audit-section-head">
+          <h2 class="audit-section-title"><i class="zc-li-outline ui-2-time"></i> Follow-up Status</h2>
+          <a class="audit-section-link" href="#Report:Follow_Up_Schedule">Schedule</a>
+        </div>
+        <div class="zcs-table-wrapper audit-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative">
+          <table class="zcs-w-full">
+            <thead class="zcs-sticky"><tr><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Item</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Owner</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Due</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Status</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Completion</th></tr><tr class="zcs-tspace"><th class="zcs-p-2 zcs-box-border" colspan="5"></th></tr></thead>
+            <tbody>
+              <% if(followUpItems == 0) { %>
+                <tr><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary">FU-2025-017<br><span class="zcs-font-12 zcs-color-tertiary">Update vendor approval matrix</span></td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary">S. Rao</td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary">29-Aug-2025</td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-yellow">In Progress</td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary">55%</td></tr>
+                <tr><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary">FU-2025-019<br><span class="zcs-font-12 zcs-color-tertiary">Evidence for access review</span></td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary">A. Shah</td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary">02-Sep-2025</td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-l_blue">Pending</td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary">20%</td></tr>
+              <% } else { fuShown = 0; for each fu in Follow_Ups[ID != 0] sort by Due_Date asc { if(fuShown < 6) { fuShown = fuShown + 1; fuCode = ifnull(fu.Follow_Up_ID,"FU-" + fu.ID); fuTitle = ifnull(fu.Observation_Finding,ifnull(fu.Action_Plan,"Follow-up action")); ownerName = "Unassigned"; if(fu.Responsible_Person != null) { ownerName = fu.Responsible_Person.Full_Name; } dueText = "No due date"; if(fu.Due_Date != null) { dueText = fu.Due_Date.toString("dd-MMM-yyyy"); } fuStatus = ifnull(fu.Status,"Open"); fuPct = ifnull(fu.Completion_Percent,0); statusTextClass = "zcs-l_blue"; if(fuStatus == "Completed" || fuStatus == "Closed") { statusTextClass = "zcs-green"; } else if(fuStatus == "Overdue") { statusTextClass = "zcs-red"; } else if(fuStatus == "In Progress") { statusTextClass = "zcs-yellow"; } fuUrl = "#Report:Follow_Up_Schedule?ID=" + fu.ID; %>
+                <tr><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"><a class="zcs-color-primary" href="<%=fuUrl%>"><%=fuCode%></a><br><span class="zcs-font-12 zcs-color-tertiary"><%=fuTitle%></span></td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"><%=ownerName%></td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"><%=dueText%></td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body <%=statusTextClass%>"><%=fuStatus%></td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"><%=fuPct%>%</td></tr>
+              <% } } } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="audit-table-card">
+        <div class="audit-section-head">
+          <h2 class="audit-section-title"><i class="zc-li-outline ui-1-check-circle-08"></i> Test Results Summary</h2>
+          <span class="audit-source-strip"><i class="zc-li-outline files-2-doc"></i> Audit Test Executions</span>
+        </div>
+        <div class="zcs-table-wrapper audit-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative">
+          <table class="zcs-w-full">
+            <thead class="zcs-sticky"><tr><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Result</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Count</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Share</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Signal</th></tr><tr class="zcs-tspace"><th class="zcs-p-2 zcs-box-border" colspan="4"></th></tr></thead>
+            <tbody>
+              <% passPct = 0; failPct = 0; exceptionPct = 0; notTestedPct = 0; if(testTotal > 0) { passPct = (passTests * 100) / testTotal; failPct = (failTests * 100) / testTotal; exceptionPct = (exceptionTests * 100) / testTotal; notTestedPct = (notTestedTests * 100) / testTotal; } %>
+              <tr><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-green">Pass</td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"><%=passTests%></td><td class="zcs-px-16 zcs-py-8 zcs-box-border"><div class="audit-result-meter pass"><span style="width:<%=passPct%>%"></span></div></td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left"><div class="zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-green"><span class="zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body">Effective</span></div></td></tr>
+              <tr><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-red">Fail</td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"><%=failTests%></td><td class="zcs-px-16 zcs-py-8 zcs-box-border"><div class="audit-result-meter fail"><span style="width:<%=failPct%>%"></span></div></td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left"><div class="zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-red"><span class="zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body">Exception</span></div></td></tr>
+              <tr><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-yellow">Exception</td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"><%=exceptionTests%></td><td class="zcs-px-16 zcs-py-8 zcs-box-border"><div class="audit-result-meter exception"><span style="width:<%=exceptionPct%>%"></span></div></td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left"><div class="zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-orange"><span class="zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body">Review</span></div></td></tr>
+              <tr><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-l_blue">Not Tested</td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"><%=notTestedTests%></td><td class="zcs-px-16 zcs-py-8 zcs-box-border"><div class="audit-result-meter pending"><span style="width:<%=notTestedPct%>%"></span></div></td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left"><div class="zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-blue"><span class="zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body">Pending</span></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="zcs-flex zcs-gap-12 zcs-mt-16 zcs-row-wrap">
+          <span class="audit-subtle-note"><i class="zc-li-outline ui-1-check-circle-08"></i> <%=completedTests%> completed tests</span>
+          <span class="audit-subtle-note"><i class="zc-li-outline ui-2-time"></i> <%=pendingReviewTests%> pending review</span>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>

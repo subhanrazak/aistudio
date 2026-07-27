@@ -1,0 +1,26 @@
+Findings_On_Success as "Findings On Success"
+{
+    type = form
+    form = Findings
+    record event = on add
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Severity in {"Critical", "Major"} && ifnull(input.Owner_Email, "") != "")
+                {
+                    sendmail
+                    (
+                        from : zoho.adminuserid
+                        to : input.Owner_Email
+                        subject : "New " + input.Severity + " audit finding: " + input.Finding_Title
+                        message : "A new audit finding has been assigned to you. Finding: " + input.Finding_Title + ". Severity: " + input.Severity + ". Due date: " + input.Due_Date + ". Please log corrective actions in the audit management app."
+                    )
+                }
+            )
+        }
+    }
+}

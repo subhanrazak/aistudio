@@ -1,0 +1,265 @@
+form Audit_Observations
+{
+    displayname = "Audit Observations"
+    success message = "Audit observation saved successfully"
+    Basic
+    (
+        type = section
+        displayname = "Basic Details"
+        row = 1
+        column = 0
+    )
+    must have unique Observation_ID
+    (
+        type = text
+        displayname = "Observation ID"
+        maxchar = 40
+        row = 1
+        column = 1
+        width = medium
+    )
+    must have Audit
+    (
+        type = picklist
+        values = Audits.ID
+        displayformat = [Audit_Title]
+        searchable = true
+        row = 1
+        column = 2
+        width = medium
+    )
+    Observation_Template
+    (
+        type = picklist
+        displayname = "Observation Template"
+        values = Observation_Form_Templates.ID
+        displayformat = [Form_Name]
+        searchable = true
+        row = 1
+        column = 1
+        width = medium
+    )
+    Related_Test_Execution
+    (
+        type = picklist
+        displayname = "Related Test Execution"
+        values = Audit_Test_Executions.ID
+        displayformat = [Execution_ID]
+        searchable = true
+        row = 1
+        column = 2
+        width = medium
+    )
+    must have Observation_Title
+    (
+        type = text
+        displayname = "Observation Title"
+        maxchar = 250
+        row = 1
+        column = 1
+        width = medium
+    )
+    must have Observation_Description
+    (
+        type = textarea
+        displayname = "Observation Description"
+        height = 160px
+        row = 1
+        column = 2
+        width = medium
+    )
+    Observation_Type
+    (
+        type = picklist
+        displayname = "Observation Type"
+        values = {"Control Deficiency", "Process Inefficiency", "Compliance Gap", "Security Finding", "Risk Event", "Improvement Opportunity"}
+        row = 1
+        column = 1
+        width = medium
+    )
+    Severity
+    (
+        type = picklist
+        values = {"Low", "Medium", "High", "Critical"}
+        row = 1
+        column = 2
+        width = medium
+    )
+    Risk_Category
+    (
+        type = picklist
+        displayname = "Risk Category"
+        values = {"Financial", "Operational", "Compliance", "IT", "Regulatory", "Security", "Privacy"}
+        row = 1
+        column = 1
+        width = medium
+    )
+    Department
+    (
+        type = picklist
+        values = Departments.ID
+        displayformat = [Department_Name]
+        searchable = true
+        row = 1
+        column = 2
+        width = medium
+    )
+    Observation_Owner
+    (
+        type = picklist
+        displayname = "Observation Owner"
+        values = Audit_Team_Members.ID
+        displayformat = [Full_Name]
+        searchable = true
+        row = 1
+        column = 1
+        width = medium
+    )
+    Analysis
+    (
+        type = section
+        displayname = "Analysis"
+        visibility = true
+        row = 2
+        column = 1
+    )
+    Root_Cause_Analysis
+    (
+        type = textarea
+        displayname = "Root Cause Analysis"
+        height = 160px
+        row = 2
+        column = 1
+        width = medium
+    )
+    Impact_Assessment
+    (
+        type = textarea
+        displayname = "Impact Assessment"
+        height = 160px
+        row = 2
+        column = 2
+        width = medium
+    )
+    Recommendations
+    (
+        type = textarea
+        height = 160px
+        row = 2
+        column = 1
+        width = medium
+    )
+    Evidence_Upload
+    (
+        type = upload file
+        displayname = "Evidence Upload"
+        browse = local_drive, google_docs, zoho_docs
+        row = 2
+        column = 2
+        width = medium
+    )
+    Action_Plan_Required
+    (
+        type = checkbox
+        displayname = "Action Plan Required"
+        initial value = true
+        row = 2
+        column = 1
+        width = medium
+    )
+    Target_Closure_Date
+    (
+        type = date
+        displayname = "Target Closure Date"
+        row = 2
+        column = 2
+        width = medium
+    )
+    Workflow
+    (
+        type = section
+        displayname = "Workflow"
+        visibility = true
+        row = 3
+        column = 1
+    )
+    Status
+    (
+        type = picklist
+        values = {"Draft", "Under Review", "Accepted", "Remediation", "Closed", "Rejected"}
+        initial value = "Draft"
+        row = 3
+        column = 1
+        width = medium
+    )
+    Reviewer
+    (
+        type = picklist
+        values = Audit_Team_Members.ID
+        displayformat = [Full_Name]
+        searchable = true
+        row = 3
+        column = 2
+        width = medium
+    )
+    Accepted_Date
+    (
+        type = date
+        displayname = "Accepted Date"
+        row = 3
+        column = 1
+        width = medium
+    )
+    Closed_Date
+    (
+        type = date
+        displayname = "Closed Date"
+        row = 3
+        column = 2
+        width = medium
+    )
+    Version_Notes
+    (
+        type = textarea
+        displayname = "Version Notes"
+        height = 140px
+        row = 3
+        column = 1
+        width = medium
+    )
+
+    actions
+    {
+        on add
+        {
+            Submit
+            (
+                type = submit
+                displayname = "Submit"
+            )
+            Reset
+            (
+                type = reset
+                displayname = "Reset"
+            )
+        }
+        on edit
+        {
+            Update
+            (
+                type = submit
+                displayname = "Update"
+            )
+            Cancel
+            (
+                type = cancel
+                displayname = "Cancel"
+            )
+        }
+    }
+
+    blueprint components
+    {
+        stages = {"Draft", "Under Review", "Accepted", "Remediation", "Closed", "Rejected"}
+    }
+}

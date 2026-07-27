@@ -1,0 +1,27 @@
+Follow_Ups_On_Success as "Follow Ups On Success"
+{
+    type = form
+    form = Follow_Ups
+    record event = on add or edit
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                input.Last_Updated = zoho.currentdate;
+                if(input.Due_Date != null && input.Due_Date < zoho.currentdate && input.Status != "Completed" && input.Status != "Closed")
+                {
+                    input.Status = "Overdue";
+                    input.Current_Status = "Overdue";
+                }
+                if(ifnull(input.Completion_Percent,0) >= 100)
+                {
+                    input.Status = "Completed";
+                    input.Current_Status = "Completed";
+                }
+            )
+        }
+    }
+}

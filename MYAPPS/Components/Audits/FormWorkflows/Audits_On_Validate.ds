@@ -1,0 +1,31 @@
+Audits_On_Validate as "Audits On Validate"
+{
+    type = form
+    form = Audits
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Planned_Start != null && input.Planned_End != null && input.Planned_End < input.Planned_Start)
+                {
+                    alert "Planned end date must be on or after planned start date.";
+                    cancel submit;
+                }
+                if(ifnull(input.Audit_Team_Size,0) <= 0)
+                {
+                    alert "Audit team size must be greater than zero.";
+                    cancel submit;
+                }
+                if(ifnull(input.Progress_Percent,0) < 0 || ifnull(input.Progress_Percent,0) > 100)
+                {
+                    alert "Progress percent must be between 0 and 100.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}

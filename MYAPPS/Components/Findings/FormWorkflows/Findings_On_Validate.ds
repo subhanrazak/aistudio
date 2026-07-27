@@ -1,0 +1,26 @@
+Findings_On_Validate as "Findings On Validate"
+{
+    type = form
+    form = Findings
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Due_Date != null && input.Due_Date < zoho.currentdate && input.Finding_Status != "Closed")
+                {
+                    alert "Due date cannot be in the past unless the finding is closed.";
+                    cancel submit;
+                }
+                if(input.Finding_Status == "Closed" && ifnull(input.Root_Cause, "") == "")
+                {
+                    alert "Root cause is required before closing a finding.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}

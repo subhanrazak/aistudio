@@ -1,0 +1,172 @@
+Observation_Lifecycle as "Observation Lifecycle"
+{
+    type = blueprint
+    form = Audit_Observations
+
+    start
+    {
+        start stage = "Draft"
+    }
+
+    stages
+    {
+        "Draft" { }
+        "Under Review" { }
+        "Accepted" { }
+        "Remediation" { }
+        "Closed" { }
+        "Rejected" { }
+    }
+
+    transitions
+    {
+        Submit_For_Review as "Submit For Review"
+        {
+            type = normal
+            from stage = "Draft"
+            to stage = "Under Review"
+            before
+            {
+                transition owner
+                (
+                    permissions = {"Auditor", "Audit_Manager"}
+                )
+            }
+            after
+            {
+                actions
+                {
+                    custom deluge script
+                    (
+                    Status = "Under Review";
+                    )
+                }
+            }
+        }
+        Accept_Observation as "Accept Observation"
+        {
+            type = normal
+            from stage = "Under Review"
+            to stage = "Accepted"
+            before
+            {
+                transition owner
+                (
+                    permissions = {"Audit_Manager"}
+                )
+            }
+            after
+            {
+                actions
+                {
+                    custom deluge script
+                    (
+                    Status = "Accepted";
+                    Accepted_Date = zoho.currentdate;
+                    )
+                }
+            }
+        }
+        Reject_Observation as "Reject Observation"
+        {
+            type = normal
+            from stage = "Under Review"
+            to stage = "Rejected"
+            before
+            {
+                transition owner
+                (
+                    permissions = {"Audit_Manager"}
+                )
+            }
+            after
+            {
+                actions
+                {
+                    custom deluge script
+                    (
+                    Status = "Rejected";
+                    )
+                }
+            }
+        }
+        Start_Remediation as "Start Remediation"
+        {
+            type = normal
+            from stage = "Accepted"
+            to stage = "Remediation"
+            before
+            {
+                transition owner
+                (
+                    permissions = {"Risk_Owner", "Audit_Manager"}
+                )
+            }
+            after
+            {
+                actions
+                {
+                    custom deluge script
+                    (
+                    Status = "Remediation";
+                    )
+                }
+            }
+        }
+        Close_Observation as "Close Observation"
+        {
+            type = normal
+            from stage = "Remediation"
+            to stage = "Closed"
+            before
+            {
+                transition owner
+                (
+                    permissions = {"Audit_Manager"}
+                )
+                confirmation before execution
+                (
+                    message = "Close this observation?"
+                    confirm button text = "Close"
+                    cancel button text = "Cancel"
+                )
+            }
+            after
+            {
+                actions
+                {
+                    custom deluge script
+                    (
+                    Status = "Closed";
+                    Closed_Date = zoho.currentdate;
+                    )
+                }
+            }
+        }
+        Rework_Observation as "Rework Observation"
+        {
+            type = common
+            from stage = "Under Review"
+            to stage = "Draft"
+            common stages = {"Accepted", "Remediation"}
+            before
+            {
+                transition owner
+                (
+                    permissions = {"Audit_Manager"}
+                )
+                tooltip message = "Return the observation to draft for rework"
+            }
+            after
+            {
+                actions
+                {
+                    custom deluge script
+                    (
+                    Status = "Draft";
+                    )
+                }
+            }
+        }
+    }
+}

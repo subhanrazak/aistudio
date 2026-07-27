@@ -1,0 +1,26 @@
+Workpaper_Templates_On_Validate as "Workpaper Templates On Validate"
+{
+    type = form
+    form = Workpaper_Templates
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Status == "Active" && (input.Reviewed_By == null || input.Approved_By == null))
+                {
+                    alert "Reviewed by and approved by are required before activating a workpaper template.";
+                    cancel submit;
+                }
+                if(input.Status == "Active" && input.Last_Review_Date == null)
+                {
+                    alert "Last review date is required for active workpaper templates.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}

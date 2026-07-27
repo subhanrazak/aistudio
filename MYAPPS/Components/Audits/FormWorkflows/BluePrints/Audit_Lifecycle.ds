@@ -1,0 +1,155 @@
+Audit_Lifecycle as "Audit Lifecycle"
+{
+    type = blueprint
+    form = Audits
+
+    start
+    {
+        start stage = "Planning"
+    }
+
+    stages
+    {
+        "Planning" { }
+        "Execution" { }
+        "Reporting" { }
+        "Follow-up" { }
+        "Closed" { }
+    }
+
+    transitions
+    {
+        Start_Execution as "Start Execution"
+        {
+            type = normal
+            from stage = "Planning"
+            to stage = "Execution"
+            before
+            {
+                transition owner
+                (
+                    permissions = {"Audit_Manager"}
+                )
+            }
+            after
+            {
+                actions
+                {
+                    custom deluge script
+                    (
+                    Stage = "Execution";
+                    Status = "Active";
+                    Actual_Start = zoho.currentdate;
+                    )
+                }
+            }
+        }
+        Move_To_Reporting as "Move To Reporting"
+        {
+            type = normal
+            from stage = "Execution"
+            to stage = "Reporting"
+            before
+            {
+                transition owner
+                (
+                    permissions = {"Audit_Manager"}
+                    userfields = {Lead_Auditor}
+                )
+            }
+            after
+            {
+                actions
+                {
+                    custom deluge script
+                    (
+                    Stage = "Reporting";
+                    Progress_Percent = 70;
+                    )
+                }
+            }
+        }
+        Move_To_Follow_Up as "Move To Follow-up"
+        {
+            type = normal
+            from stage = "Reporting"
+            to stage = "Follow-up"
+            before
+            {
+                transition owner
+                (
+                    permissions = {"Audit_Manager"}
+                )
+            }
+            after
+            {
+                actions
+                {
+                    custom deluge script
+                    (
+                    Stage = "Follow-up";
+                    Progress_Percent = 90;
+                    )
+                }
+            }
+        }
+        Close_Audit as "Close Audit"
+        {
+            type = normal
+            from stage = "Follow-up"
+            to stage = "Closed"
+            before
+            {
+                transition owner
+                (
+                    permissions = {"Audit_Manager"}
+                )
+                confirmation before execution
+                (
+                    message = "Close this audit engagement?"
+                    confirm button text = "Close"
+                    cancel button text = "Cancel"
+                )
+            }
+            after
+            {
+                actions
+                {
+                    custom deluge script
+                    (
+                    Stage = "Closed";
+                    Status = "Closed";
+                    Actual_End = zoho.currentdate;
+                    Progress_Percent = 100;
+                    )
+                }
+            }
+        }
+        Send_Back_For_Rework as "Send Back For Rework"
+        {
+            type = common
+            from stage = "Execution"
+            to stage = "Planning"
+            common stages = {"Reporting", "Follow-up"}
+            before
+            {
+                transition owner
+                (
+                    permissions = {"Audit_Manager"}
+                )
+                tooltip message = "Return this audit to planning for rework"
+            }
+            after
+            {
+                actions
+                {
+                    custom deluge script
+                    (
+                    Stage = "Planning";
+                    Status = "Active";
+                    )
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,26 @@
+Test_of_Controls_Library_On_Validate as "Test of Controls Library On Validate"
+{
+    type = form
+    form = Test_of_Controls_Library
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Sampling_Method != null && input.Sampling_Method != "Full Population" && ifnull(input.Sample_Size,0) <= 0)
+                {
+                    alert "Sample size must be greater than zero unless the sampling method is Full Population.";
+                    cancel submit;
+                }
+                if(input.Test_Result in {"Pass","Fail","Exception"} && (input.Expected_Evidence == null || input.Expected_Evidence == ""))
+                {
+                    alert "Expected evidence is required when a test result is recorded.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}

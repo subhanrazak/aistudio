@@ -1,0 +1,701 @@
+<%
+selectedPlanID = 0;
+selectedPlanName = "Latest available plan";
+selectedPlanCode = "-";
+selectedPlanYear = "All FY";
+selectedPlanDept = "All Departments";
+selectedPlanSize = "-";
+selectedPlanPriority = "-";
+selectedPlanStatus = "-";
+preparedByName = "-";
+resourceRequirement = "To be confirmed";
+submittedDateText = "Not submitted";
+validationMessage = "Workspace is generated from live plan and plan-entity records.";
+planFound = false;
+if(input.Plan_ID != null && input.Plan_ID > 0)
+{
+	planRecords = Audit_Plans[ID == input.Plan_ID];
+}
+else
+{
+	planRecords = Audit_Plans[ID != 0] sort by Created_Date desc;
+}
+for each planRec in planRecords
+{
+	selectedPlanID = planRec.ID;
+	selectedPlanName = ifnull(planRec.Plan_Name,"Untitled audit plan");
+	selectedPlanCode = ifnull(planRec.Plan_Code,"-");
+	selectedPlanYear = ifnull(planRec.Planning_Year,"All FY");
+	selectedPlanDept = ifnull(planRec.Department.Department_Name,"All Departments");
+	selectedPlanSize = ifnull(planRec.Plan_Size,"-");
+	selectedPlanPriority = ifnull(planRec.Priority_for_Implementation,"-");
+	selectedPlanStatus = ifnull(planRec.Status,"-");
+	preparedByName = ifnull(planRec.Prepared_By.Full_Name,"-");
+	resourceRequirement = ifnull(planRec.Resource_Requirement,"To be confirmed");
+	if(planRec.Submitted_Date != null)
+	{
+		submittedDateText = planRec.Submitted_Date.toString("dd-MMM-yyyy");
+	}
+	validationMessage = ifnull(planRec.Validation_Message,"Plan validation checks are ready for review.");
+	planFound = true;
+	break;
+}
+if(planFound == true && selectedPlanID > 0)
+{
+	entityCount = Audit_Plan_Entities[Plan == selectedPlanID].count();
+	totalAuditDays = Audit_Plan_Entities[Plan == selectedPlanID].sum(Estimated_Days);
+	fyPlanCount = Audit_Plans[Planning_Year == selectedPlanYear].count();
+	q1Days = Audit_Plan_Entities[Plan == selectedPlanID && Planning_Quarter == "Q1"].sum(Estimated_Days);
+	q2Days = Audit_Plan_Entities[Plan == selectedPlanID && Planning_Quarter == "Q2"].sum(Estimated_Days);
+	q3Days = Audit_Plan_Entities[Plan == selectedPlanID && Planning_Quarter == "Q3"].sum(Estimated_Days);
+	q4Days = Audit_Plan_Entities[Plan == selectedPlanID && Planning_Quarter == "Q4"].sum(Estimated_Days);
+	criticalCount = Audit_Plan_Entities[Plan == selectedPlanID && Priority == "Critical"].count();
+	highCount = Audit_Plan_Entities[Plan == selectedPlanID && Priority == "High"].count();
+	mediumCount = Audit_Plan_Entities[Plan == selectedPlanID && Priority == "Medium"].count();
+	lowCount = Audit_Plan_Entities[Plan == selectedPlanID && Priority == "Low"].count();
+	extensiveCount = Audit_Plan_Entities[Plan == selectedPlanID && Audit_Size == "Extensive"].count();
+	largeCount = Audit_Plan_Entities[Plan == selectedPlanID && Audit_Size == "Large"].count();
+	sizeMediumCount = Audit_Plan_Entities[Plan == selectedPlanID && Audit_Size == "Medium"].count();
+	smallCount = Audit_Plan_Entities[Plan == selectedPlanID && Audit_Size == "Small"].count();
+}
+else
+{
+	entityCount = Audit_Plan_Entities[ID != 0].count();
+	totalAuditDays = Audit_Plan_Entities[ID != 0].sum(Estimated_Days);
+	fyPlanCount = Audit_Plans[ID != 0].count();
+	q1Days = Audit_Plan_Entities[Planning_Quarter == "Q1"].sum(Estimated_Days);
+	q2Days = Audit_Plan_Entities[Planning_Quarter == "Q2"].sum(Estimated_Days);
+	q3Days = Audit_Plan_Entities[Planning_Quarter == "Q3"].sum(Estimated_Days);
+	q4Days = Audit_Plan_Entities[Planning_Quarter == "Q4"].sum(Estimated_Days);
+	criticalCount = Audit_Plan_Entities[Priority == "Critical"].count();
+	highCount = Audit_Plan_Entities[Priority == "High"].count();
+	mediumCount = Audit_Plan_Entities[Priority == "Medium"].count();
+	lowCount = Audit_Plan_Entities[Priority == "Low"].count();
+	extensiveCount = Audit_Plan_Entities[Audit_Size == "Extensive"].count();
+	largeCount = Audit_Plan_Entities[Audit_Size == "Large"].count();
+	sizeMediumCount = Audit_Plan_Entities[Audit_Size == "Medium"].count();
+	smallCount = Audit_Plan_Entities[Audit_Size == "Small"].count();
+}
+if(totalAuditDays == null)
+{
+	totalAuditDays = 0;
+}
+if(q1Days == null)
+{
+	q1Days = 0;
+}
+if(q2Days == null)
+{
+	q2Days = 0;
+}
+if(q3Days == null)
+{
+	q3Days = 0;
+}
+if(q4Days == null)
+{
+	q4Days = 0;
+}
+maxPriority = criticalCount;
+if(highCount > maxPriority)
+{
+	maxPriority = highCount;
+}
+if(mediumCount > maxPriority)
+{
+	maxPriority = mediumCount;
+}
+if(lowCount > maxPriority)
+{
+	maxPriority = lowCount;
+}
+criticalPct = 0;
+highPct = 0;
+mediumPct = 0;
+lowPct = 0;
+if(maxPriority > 0)
+{
+	criticalPct = (criticalCount * 100) / maxPriority;
+	highPct = (highCount * 100) / maxPriority;
+	mediumPct = (mediumCount * 100) / maxPriority;
+	lowPct = (lowCount * 100) / maxPriority;
+}
+maxSize = extensiveCount;
+if(largeCount > maxSize)
+{
+	maxSize = largeCount;
+}
+if(sizeMediumCount > maxSize)
+{
+	maxSize = sizeMediumCount;
+}
+if(smallCount > maxSize)
+{
+	maxSize = smallCount;
+}
+extensivePct = 0;
+largePct = 0;
+sizeMediumPct = 0;
+smallPct = 0;
+if(maxSize > 0)
+{
+	extensivePct = (extensiveCount * 100) / maxSize;
+	largePct = (largeCount * 100) / maxSize;
+	sizeMediumPct = (sizeMediumCount * 100) / maxSize;
+	smallPct = (smallCount * 100) / maxSize;
+}
+qTotalDays = q1Days + q2Days + q3Days + q4Days;
+q1Pct = 0;
+q2Pct = 0;
+q3Pct = 0;
+q4Pct = 0;
+if(qTotalDays > 0)
+{
+	q1Pct = (q1Days * 100) / qTotalDays;
+	q2Pct = (q2Days * 100) / qTotalDays;
+	q3Pct = (q3Days * 100) / qTotalDays;
+	q4Pct = (q4Days * 100) / qTotalDays;
+}
+%>
+<style>
+/* ===== zcs-global.css included once for this page ===== */
+:root { --zcs-theme-brand-color: var(--zcs_brand_color); --zcs-light-bg-color: var(--zcs_brand_light_color); --zcs-page-bg-color: #F3F3F4; --zcs-primary-text-color: var(--zcs_primary_text_color); --zcs-secondary-text-color: var(--zcs_secondary_text_color); --zcs-teritiary-text-color: var(--zcs_tertiary_text_color); --zcs-border-color: var(--zcs_tertiary_border_color); --zcs-white-color: #FFFFFF; --zcs-black-color: #000000; font-size: 16px; line-height: 1.5; --column-gap: 0px; }
+.zcs-row { display:flex; flex-wrap:wrap; }
+.zcs-flex { display:flex; }
+.zcs-inline-flex { display:inline-flex; }
+.zcs-direction-column { flex-direction:column; }
+.zcs-align-items-center { align-items:center; }
+.zcs-align-items-start { align-items:flex-start; }
+.zcs-justify-center { justify-content:center; }
+.zcs-justify-space-between { justify-content:space-between; }
+.zcs-gap-4 { gap:.25rem; }
+.zcs-gap-6 { gap:.375rem; }
+.zcs-gap-8 { gap:.5rem; }
+.zcs-gap-10 { gap:.625rem; }
+.zcs-gap-12 { gap:.75rem; }
+.zcs-gap-16 { gap:1rem; }
+.zcs-gap-20 { gap:1.25rem; }
+.zcs-gap-24 { gap:1.5rem; }
+.zcs-p-0 { padding:0; }
+.zcs-p-8 { padding:.5rem; }
+.zcs-p-12 { padding:.75rem; }
+.zcs-p-16 { padding:1rem; }
+.zcs-p-20 { padding:1.25rem; }
+.zcs-p-24 { padding:1.5rem; }
+.zcs-px-10 { padding-left:.625rem; padding-right:.625rem; }
+.zcs-px-12 { padding-left:.75rem; padding-right:.75rem; }
+.zcs-px-15 { padding-left:.9375rem; padding-right:.9375rem; }
+.zcs-px-16 { padding-left:1rem; padding-right:1rem; }
+.zcs-px-20 { padding-left:1.25rem; padding-right:1.25rem; }
+.zcs-px-24 { padding-left:1.5rem; padding-right:1.5rem; }
+.zcs-px-30 { padding-left:1.875rem; padding-right:1.875rem; }
+.zcs-py-0 { padding-top:0; padding-bottom:0; }
+.zcs-py-5 { padding-top:.3125rem; padding-bottom:.3125rem; }
+.zcs-py-8 { padding-top:.5rem; padding-bottom:.5rem; }
+.zcs-py-10 { padding-top:.625rem; padding-bottom:.625rem; }
+.zcs-py-12 { padding-top:.75rem; padding-bottom:.75rem; }
+.zcs-py-16 { padding-top:1rem; padding-bottom:1rem; }
+.zcs-py-20 { padding-top:1.25rem; padding-bottom:1.25rem; }
+.zcs-py-24 { padding-top:1.5rem; padding-bottom:1.5rem; }
+.zcs-m-0 { margin:0; }
+.zcs-mt-8 { margin-top:.5rem; }
+.zcs-mt-16 { margin-top:1rem; }
+.zcs-mb-12 { margin-bottom:.75rem; }
+.zcs-mb-16 { margin-bottom:1rem; }
+.zcs-w-full { width:100%; }
+.zcs-h-full { height:100%; }
+.zcs-wh-full { width:100%; height:100%; }
+.zcs-col-common { flex:1 1 0%; min-width:0; }
+.zcs-col-3 { flex:0 0 25%; max-width:25%; }
+.zcs-col-4 { flex:0 0 33.333%; max-width:33.333%; }
+.zcs-col-6 { flex:0 0 50%; max-width:50%; }
+.zcs-col-12 { flex:0 0 100%; max-width:100%; }
+.zcs-no-shrink { flex-shrink:0; }
+.zcs-box-border { box-sizing:border-box; }
+.zcs-rounded-sm { border-radius:4px; }
+.zcs-rounded-md { border-radius:6px; }
+.zcs-rounded-lg { border-radius:8px; }
+.zcs-rounded-xl { border-radius:12px; }
+.zcs-rounded-half { border-radius:50%; }
+.zcs-relative { position:relative; }
+.zcs-sticky { position:sticky; }
+.zcs-text-left { text-align:left; }
+.zcs-text-right { text-align:right; }
+.zcs-text-center { text-align:center; }
+.zcs-font-11 { font-size:.6875rem; }
+.zcs-font-12 { font-size:.75rem; }
+.zcs-font-13 { font-size:.8125rem; }
+.zcs-font-14 { font-size:.875rem; }
+.zcs-font-15 { font-size:.9375rem; }
+.zcs-font-16 { font-size:1rem; }
+.zcs-font-18 { font-size:1.125rem; }
+.zcs-font-20 { font-size:1.25rem; }
+.zcs-font-24 { font-size:1.5rem; }
+.zcs-font-30 { font-size:1.875rem; }
+.zcs-font-normal { font-weight:400; }
+.zcs-font-medium { font-weight:500; }
+.zcs-font-semibold { font-weight:600; }
+.zcs-font-bold { font-weight:700; }
+.zcs-lh-body { line-height:1.5; }
+.zcs-lh-heading { line-height:1.25; }
+.zcs-color-theme { color:var(--zcs-theme-brand-color); }
+.zcs-color-primary { color:var(--zcs-primary-text-color); }
+.zcs-color-secondary { color:var(--zcs-secondary-text-color); }
+.zcs-color-tertiary { color:var(--zcs-teritiary-text-color); }
+.zcs-color-white { color:#fff; }
+.zcs-card { background-color:var(--zcs-white-color); border:1px solid #e7e7ee; border-radius:12px; }
+a { text-decoration:none; }
+#splash-screen { display:none !important; }
+/* ===== ZCS component CSS: buttons, tabs, stepper, table, banner, progress, label-value ===== */
+.zcs-button { width:auto; min-width:5rem; min-height:36px; transition:all .2s ease; }
+.zcs-primary-button { background-color:var(--zcs_brand_color); color:var(--zcs_brand_foreground_color); }
+.zcs-primary-outline-button { border:1px solid var(--zcs_brand_color); background-color:var(--zcs-white-color); color:var(--zcs_brand_color); }
+.zcs-primary-button:hover { background-color:var(--zcs_brand_dark_color); }
+.zcs-primary-outline-button:hover { background-color:var(--zcs_component_hover_color); border-color:var(--zcs_brand_color); color:var(--zcs_brand_color); }
+.zcs-button-icon { width:16px; max-height:16px; }
+.zcs-horizontal-tabhead { box-shadow:0 -1px 0 0 var(--zcs_tertiary_border_color) inset; overflow-x:auto; overflow-y:hidden; scrollbar-width:none; }
+.zcs-horizontal-tabhead::-webkit-scrollbar { display:none; }
+.zcs-horizontal-tabitem { list-style-type:none; border-bottom:2px solid transparent; letter-spacing:.1px; }
+.zcs-horizontal-tabtext { white-space:nowrap; }
+.zcs-horizontal-tabitem:hover .zcs-horizontal-tablink, .zcs-horizontal-tabitem.zcs-horizontal-tabactive .zcs-horizontal-tablink { color:var(--zcs_brand_color); }
+.zcs-horizontal-tabitem.zcs-horizontal-tabactive { border-bottom-color:var(--zcs_brand_color); }
+.zcs-stepper-wrapper { overflow-x:auto; padding:10px 0; }
+.zcs-stepper-status { width:32px; height:32px; background-color:var(--zcs_brand_color); border:4px solid var(--zcs-white-color); box-shadow:0 0 0 1px var(--zcs_brand_color); }
+.zcs-stepper-count { display:none; }
+.zcs-stepper-icon.zcs-stepper-failed { display:none; }
+.zcs-stepper:not(:last-child):before { content:''; width:100%; height:1px; border-top:1px solid var(--zcs_brand_color); box-sizing:border-box; position:absolute; top:16px; left:50%; }
+.zcs-stepper-active .zcs-stepper-status { border:1px solid var(--zcs_brand_color); outline:4px solid var(--zcs-white-color); background-color:var(--zcs-white-color); }
+.zcs-stepper-active .zcs-stepper-count { display:flex; border-width:0; color:var(--zcs_brand_color); }
+.zcs-stepper-active .zcs-stepper-icon { display:none; }
+.zcs-stepper-active .zcs-stepper-text { font-weight:600; color:var(--zcs_brand_color); }
+.zcs-stepper.zcs-stepper-active:before, .zcs-stepper.zcs-stepper-active~.zcs-stepper:before { border-color:var(--zcs_tertiary_border_color); }
+.zcs-stepper-active~.zcs-stepper .zcs-stepper-status { background-color:var(--zcs-white-color); box-shadow:0 0 0 1px var(--zcs_tertiary_border_color); }
+.zcs-stepper-active~.zcs-stepper .zcs-stepper-count { display:flex; }
+.zcs-stepper-active~.zcs-stepper .zcs-stepper-icon { display:none; }
+.zcs-stepper-active~.zcs-stepper .zcs-stepper-text { color:var(--zcs_tertiary_text_color); }
+.zcs-table-wrapper { border:1px solid var(--zcs_tertiary_border_color); background-color:var(--zcs-white-color); overflow:auto; }
+.zcs-table-wrapper table { line-height:normal; border-collapse:collapse; min-width:840px; }
+.zcs-table-wrapper table thead { top:0; z-index:1; }
+.zcs-table-wrapper table thead tr th { background-color:#F9FAFE; box-shadow:0 -1px 0 0 var(--zcs_tertiary_border_color) inset; white-space:nowrap; }
+.zcs-table-wrapper table tbody tr td { border-top:1px solid var(--zcs_tertiary_border_color); vertical-align:top; }
+.zcs-table-wrapper table tbody tr.zcs-tgroup td { background-color:#F1F2F8; font-weight:600; }
+.zcs-table-wrapper table tbody tr:hover td { background-color:#F9FAFE; }
+.zcs-green { color:#179e6c; }
+.zcs-red { color:#fe455d; }
+.zcs-yellow { color:#b8770d; }
+.zcs-blue { color:#09598e; }
+.zcs-l_blue { color:#1094c5; }
+.zcs-toast { border:1px solid transparent; }
+.zcs-success-toast { background-color:#edf7ed; color:#1d4620; }
+.zcs-info-toast { background-color:#e4f6fd; color:#024361; }
+.zcs-warning-toast { background-color:#fef4e5; color:#663c01; }
+.zcs-progress-bar { height:8px; background-color:var(--zcs_component_hover_color); overflow:hidden; }
+.zcs-progress-bar-indicator { height:inherit; border-radius:inherit; background-color:var(--zcs_brand_color); }
+.zcs-labelvalue-wrapper .zcs-labelvalue-color-yellow { color:#a06309; }
+.zcs-labelvalue-wrapper .zcs-labelvalue-color-green { color:#179e6c; }
+.zcs-labelvalue-wrapper .zcs-labelvalue-color-blue { color:#2a6ffc; }
+.zcs-labelvalue-wrapper .zcs-labelvalue-color-red { color:#FE455D; }
+/* ===== Page-specific planning workspace ===== */
+.apw-page { min-height:100%; background:var(--zcs-page-bg-color); padding:24px; box-sizing:border-box; }
+.apw-shell { max-width:1480px; margin:0 auto; }
+.apw-header { background:linear-gradient(135deg, var(--zcs-white-color), var(--zcs_component_hover_color)); border:1px solid var(--zcs_tertiary_border_color); border-radius:16px; }
+.apw-eyebrow { text-transform:uppercase; letter-spacing:.08em; }
+.apw-kpi-grid { display:grid; grid-template-columns:repeat(4, minmax(180px, 1fr)); gap:16px; }
+.apw-kpi-card { position:relative; overflow:hidden; }
+.apw-kpi-card:after { content:''; position:absolute; width:86px; height:86px; border-radius:50%; right:-28px; bottom:-28px; background:var(--zcs_brand_light_color); opacity:.55; }
+.apw-kpi-icon { width:42px; height:42px; border-radius:12px; background:var(--zcs_brand_light_color); color:var(--zcs_brand_color); }
+.apw-section { margin-top:18px; }
+.apw-section-title { border-left:4px solid var(--zcs_brand_color); padding-left:12px; }
+.apw-two-col { display:grid; grid-template-columns:minmax(0, 1fr) minmax(0, 1fr); gap:18px; }
+.apw-three-col { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:18px; }
+.apw-chart-row { display:grid; grid-template-columns:120px minmax(0, 1fr) 48px; gap:12px; align-items:center; margin:12px 0; }
+.apw-bar-track { height:12px; background:var(--zcs_component_hover_color); border-radius:999px; overflow:hidden; }
+.apw-bar { height:100%; border-radius:999px; background:var(--zcs_brand_color); }
+.apw-bar-red { background:#fe455d; }
+.apw-bar-yellow { background:#b8770d; }
+.apw-bar-green { background:#179e6c; }
+.apw-bar-blue { background:#1094c5; }
+.apw-pill { display:inline-flex; align-items:center; gap:6px; border-radius:999px; padding:3px 9px; font-size:12px; font-weight:600; background:var(--zcs_component_hover_color); color:var(--zcs_primary_text_color); white-space:nowrap; }
+.apw-pill-critical { background:#feedec; color:#9f1239; }
+.apw-pill-high { background:#fef4e5; color:#8a4b00; }
+.apw-pill-medium { background:#e4f6fd; color:#024361; }
+.apw-pill-low { background:#edf7ed; color:#1d4620; }
+.apw-reference-embed { min-height:320px; border:1px dashed var(--zcs_tertiary_border_color); border-radius:12px; background:var(--zcs-white-color); overflow:auto; }
+.apw-quarter-strip { display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:12px; }
+.apw-muted { color:var(--zcs_tertiary_text_color); }
+.apw-empty { padding:20px; text-align:center; color:var(--zcs_tertiary_text_color); }
+@media (max-width:1100px) { .apw-kpi-grid, .apw-quarter-strip { grid-template-columns:repeat(2, minmax(0, 1fr)); } .apw-two-col, .apw-three-col { grid-template-columns:1fr; } }
+@media (max-width:680px) { .apw-page { padding:12px; } .apw-kpi-grid, .apw-quarter-strip { grid-template-columns:1fr; } .zcs-col-3, .zcs-col-4, .zcs-col-6 { flex-basis:100%; max-width:100%; } .zcs-stepper-wrapper ul { min-width:920px; } }
+</style>
+<div class="apw-page">
+  <div class="apw-shell zcs-flex zcs-direction-column zcs-gap-16">
+    <div class="apw-header zcs-p-24 zcs-box-border">
+      <div class="zcs-flex zcs-justify-space-between zcs-align-items-center zcs-gap-16 zcs-row">
+        <div class="zcs-flex zcs-direction-column zcs-gap-6 zcs-col-common">
+          <span class="apw-eyebrow zcs-font-12 zcs-font-bold zcs-color-theme">Audit planning workspace</span>
+          <h1 class="zcs-font-24 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0"><%=selectedPlanName%></h1>
+          <p class="zcs-font-14 zcs-lh-body zcs-color-secondary zcs-m-0">Plan <strong><%=selectedPlanCode%></strong> for <strong><%=selectedPlanYear%></strong>, owned by <strong><%=selectedPlanDept%></strong>. This workspace summarizes selected entities, prioritization, sizing, schedule, skills, and approval readiness.</p>
+        </div>
+        <div class="zcs-flex zcs-align-items-center zcs-gap-12">
+          <a class="zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body" href="#Report:All_Audit_Plans">
+            <i class="zcs-button-icon zc-li-outline files-single-folded-content"></i>
+            <span class="zcs-button-text">Audit Plans List</span>
+          </a>
+          <a class="zcs-button zcs-primary-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body" href="#Report:Plan_Entities_By_Department">
+            <i class="zcs-button-icon zc-li-outline design-todo"></i>
+            <span class="zcs-button-text">Plan Entities</span>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="zcs-card zcs-p-20 zcs-box-border">
+      <div class="zcs-stepper-wrapper">
+        <ul class="zcs-flex zcs-gap-8 zcs-p-0 zcs-m-0">
+          <li class="zcs-stepper zcs-col-common zcs-flex zcs-direction-column zcs-align-items-center zcs-gap-4 zcs-text-center zcs-relative"><div class="zcs-stepper-status zcs-flex zcs-direction-column zcs-align-items-center zcs-justify-center zcs-rounded-half zcs-text-center zcs-relative zcs-box-border"><h6 class="zcs-stepper-count zcs-w-full zcs-flex zcs-align-items-center zcs-justify-center zcs-rounded-half zcs-font-12 zcs-font-semibold zcs-lh-body zcs-color-tertiary zcs-m-0">1</h6><i class="zcs-stepper-icon zcs-stepper-passed zcs-font-18 zcs-color-white zc-li-outline ui-1-check-small"></i></div><span class="zcs-stepper-text zcs-font-14 zcs-lh-body zcs-color-primary">Basic Details</span></li>
+          <li class="zcs-stepper zcs-col-common zcs-flex zcs-direction-column zcs-align-items-center zcs-gap-4 zcs-text-center zcs-relative"><div class="zcs-stepper-status zcs-flex zcs-direction-column zcs-align-items-center zcs-justify-center zcs-rounded-half zcs-text-center zcs-relative zcs-box-border"><h6 class="zcs-stepper-count zcs-w-full zcs-flex zcs-align-items-center zcs-justify-center zcs-rounded-half zcs-font-12 zcs-font-semibold zcs-lh-body zcs-color-tertiary zcs-m-0">2</h6><i class="zcs-stepper-icon zcs-stepper-passed zcs-font-18 zcs-color-white zc-li-outline ui-1-check-small"></i></div><span class="zcs-stepper-text zcs-font-14 zcs-lh-body zcs-color-primary">Selection</span></li>
+          <li class="zcs-stepper zcs-col-common zcs-flex zcs-direction-column zcs-align-items-center zcs-gap-4 zcs-text-center zcs-relative"><div class="zcs-stepper-status zcs-flex zcs-direction-column zcs-align-items-center zcs-justify-center zcs-rounded-half zcs-text-center zcs-relative zcs-box-border"><h6 class="zcs-stepper-count zcs-w-full zcs-flex zcs-align-items-center zcs-justify-center zcs-rounded-half zcs-font-12 zcs-font-semibold zcs-lh-body zcs-color-tertiary zcs-m-0">3</h6><i class="zcs-stepper-icon zcs-stepper-passed zcs-font-18 zcs-color-white zc-li-outline ui-1-check-small"></i></div><span class="zcs-stepper-text zcs-font-14 zcs-lh-body zcs-color-primary">Priority & Frequency</span></li>
+          <li class="zcs-stepper zcs-col-common zcs-flex zcs-direction-column zcs-align-items-center zcs-gap-4 zcs-text-center zcs-relative"><div class="zcs-stepper-status zcs-flex zcs-direction-column zcs-align-items-center zcs-justify-center zcs-rounded-half zcs-text-center zcs-relative zcs-box-border"><h6 class="zcs-stepper-count zcs-w-full zcs-flex zcs-align-items-center zcs-justify-center zcs-rounded-half zcs-font-12 zcs-font-semibold zcs-lh-body zcs-color-tertiary zcs-m-0">4</h6><i class="zcs-stepper-icon zcs-stepper-passed zcs-font-18 zcs-color-white zc-li-outline ui-1-check-small"></i></div><span class="zcs-stepper-text zcs-font-14 zcs-lh-body zcs-color-primary">Audit Size</span></li>
+          <li class="zcs-stepper zcs-col-common zcs-flex zcs-direction-column zcs-align-items-center zcs-gap-4 zcs-text-center zcs-relative"><div class="zcs-stepper-status zcs-flex zcs-direction-column zcs-align-items-center zcs-justify-center zcs-rounded-half zcs-text-center zcs-relative zcs-box-border"><h6 class="zcs-stepper-count zcs-w-full zcs-flex zcs-align-items-center zcs-justify-center zcs-rounded-half zcs-font-12 zcs-font-semibold zcs-lh-body zcs-color-tertiary zcs-m-0">5</h6><i class="zcs-stepper-icon zcs-stepper-passed zcs-font-18 zcs-color-white zc-li-outline ui-1-check-small"></i></div><span class="zcs-stepper-text zcs-font-14 zcs-lh-body zcs-color-primary">Quarterly Planning</span></li>
+          <li class="zcs-stepper zcs-col-common zcs-flex zcs-direction-column zcs-align-items-center zcs-gap-4 zcs-text-center zcs-relative"><div class="zcs-stepper-status zcs-flex zcs-direction-column zcs-align-items-center zcs-justify-center zcs-rounded-half zcs-text-center zcs-relative zcs-box-border"><h6 class="zcs-stepper-count zcs-w-full zcs-flex zcs-align-items-center zcs-justify-center zcs-rounded-half zcs-font-12 zcs-font-semibold zcs-lh-body zcs-color-tertiary zcs-m-0">6</h6><i class="zcs-stepper-icon zcs-stepper-passed zcs-font-18 zcs-color-white zc-li-outline ui-1-check-small"></i></div><span class="zcs-stepper-text zcs-font-14 zcs-lh-body zcs-color-primary">Skill Mix Allocation</span></li>
+          <li class="zcs-stepper zcs-stepper-active zcs-col-common zcs-flex zcs-direction-column zcs-align-items-center zcs-gap-4 zcs-text-center zcs-relative"><div class="zcs-stepper-status zcs-flex zcs-direction-column zcs-align-items-center zcs-justify-center zcs-rounded-half zcs-text-center zcs-relative zcs-box-border"><h6 class="zcs-stepper-count zcs-w-full zcs-flex zcs-align-items-center zcs-justify-center zcs-rounded-half zcs-font-12 zcs-font-semibold zcs-lh-body zcs-color-tertiary zcs-m-0">7</h6><i class="zcs-stepper-icon zcs-stepper-passed zcs-font-18 zcs-color-white zc-li-outline ui-1-check-small"></i></div><span class="zcs-stepper-text zcs-font-14 zcs-lh-body zcs-color-primary">Review & Approve</span></li>
+        </ul>
+      </div>
+      <div class="zcs-horizontal-tabpanel zcs-flex zcs-direction-column zcs-w-full zcs-mt-16">
+        <ul class="zcs-horizontal-tabhead apw-section-tabs zcs-flex zcs-gap-12 zcs-px-10 zcs-py-0 zcs-m-0 zcs-box-border">
+          <li class="zcs-horizontal-tabitem zcs-horizontal-tabactive"><a class="zcs-horizontal-tablink zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-10 zcs-py-12 zcs-box-border zcs-font-medium zcs-lh-body zcs-color-tertiary" href="#basic-details"><i class="zc-li-outline files-single-folded-content"></i><span class="zcs-horizontal-tabtext zcs-font-15">Basic Details</span></a></li>
+          <li class="zcs-horizontal-tabitem"><a class="zcs-horizontal-tablink zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-10 zcs-py-12 zcs-box-border zcs-font-medium zcs-lh-body zcs-color-tertiary" href="#selection"><i class="zc-li-outline design-todo"></i><span class="zcs-horizontal-tabtext zcs-font-15">Selection</span></a></li>
+          <li class="zcs-horizontal-tabitem"><a class="zcs-horizontal-tablink zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-10 zcs-py-12 zcs-box-border zcs-font-medium zcs-lh-body zcs-color-tertiary" href="#priority-frequency"><i class="zc-li-outline ui-2-time"></i><span class="zcs-horizontal-tabtext zcs-font-15">Priority & Frequency</span></a></li>
+          <li class="zcs-horizontal-tabitem"><a class="zcs-horizontal-tablink zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-10 zcs-py-12 zcs-box-border zcs-font-medium zcs-lh-body zcs-color-tertiary" href="#audit-size"><i class="zc-li-outline design-measure-big"></i><span class="zcs-horizontal-tabtext zcs-font-15">Audit Size</span></a></li>
+          <li class="zcs-horizontal-tabitem"><a class="zcs-horizontal-tablink zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-10 zcs-py-12 zcs-box-border zcs-font-medium zcs-lh-body zcs-color-tertiary" href="#quarterly-planning"><i class="zc-li-outline ui-2-calendar-date"></i><span class="zcs-horizontal-tabtext zcs-font-15">Quarterly Planning</span></a></li>
+          <li class="zcs-horizontal-tabitem"><a class="zcs-horizontal-tablink zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-10 zcs-py-12 zcs-box-border zcs-font-medium zcs-lh-body zcs-color-tertiary" href="#skill-mix"><i class="zc-li-outline users-wm"></i><span class="zcs-horizontal-tabtext zcs-font-15">Skill Mix Allocation</span></a></li>
+          <li class="zcs-horizontal-tabitem"><a class="zcs-horizontal-tablink zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-10 zcs-py-12 zcs-box-border zcs-font-medium zcs-lh-body zcs-color-tertiary" href="#review"><i class="zc-li-outline ui-1-check-circle-08"></i><span class="zcs-horizontal-tabtext zcs-font-15">Review & Approve</span></a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="apw-kpi-grid">
+      <div class="apw-kpi-card zcs-card zcs-p-20 zcs-box-border zcs-flex zcs-justify-space-between zcs-gap-12">
+        <div><p class="zcs-font-13 zcs-color-tertiary zcs-m-0">Total entities</p><h2 class="zcs-font-30 zcs-color-primary zcs-m-0"><%=entityCount%></h2><span class="zcs-font-12 zcs-color-secondary">selected in plan scope</span></div>
+        <div class="apw-kpi-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline design-todo zcs-font-20"></i></div>
+      </div>
+      <div class="apw-kpi-card zcs-card zcs-p-20 zcs-box-border zcs-flex zcs-justify-space-between zcs-gap-12">
+        <div><p class="zcs-font-13 zcs-color-tertiary zcs-m-0">Total audit days</p><h2 class="zcs-font-30 zcs-color-primary zcs-m-0"><%=totalAuditDays%></h2><span class="zcs-font-12 zcs-color-secondary">estimated effort</span></div>
+        <div class="apw-kpi-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline ui-2-time zcs-font-20"></i></div>
+      </div>
+      <div class="apw-kpi-card zcs-card zcs-p-20 zcs-box-border zcs-flex zcs-justify-space-between zcs-gap-12">
+        <div><p class="zcs-font-13 zcs-color-tertiary zcs-m-0">FY plan counts</p><h2 class="zcs-font-30 zcs-color-primary zcs-m-0"><%=fyPlanCount%></h2><span class="zcs-font-12 zcs-color-secondary">plans in <%=selectedPlanYear%></span></div>
+        <div class="apw-kpi-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline business-agenda zcs-font-20"></i></div>
+      </div>
+      <div class="apw-kpi-card zcs-card zcs-p-20 zcs-box-border zcs-flex zcs-justify-space-between zcs-gap-12">
+        <div><p class="zcs-font-13 zcs-color-tertiary zcs-m-0">Resource requirement</p><h2 class="zcs-font-20 zcs-color-primary zcs-m-0"><%=resourceRequirement%></h2><span class="zcs-font-12 zcs-color-secondary">capacity and skill demand</span></div>
+        <div class="apw-kpi-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline users-wm zcs-font-20"></i></div>
+      </div>
+    </div>
+
+    <div id="basic-details" class="apw-section zcs-card zcs-p-20 zcs-box-border">
+      <div class="zcs-flex zcs-justify-space-between zcs-align-items-center zcs-gap-16 zcs-mb-16">
+        <div class="apw-section-title"><h2 class="zcs-font-18 zcs-font-semibold zcs-color-primary zcs-m-0">Basic Details</h2><p class="zcs-font-13 zcs-color-secondary zcs-m-0">Current audit plan header and approval routing.</p></div>
+        <span class="apw-pill"><i class="zc-li-outline ui-1-check-circle-08"></i><%=selectedPlanStatus%></span>
+      </div>
+      <div class="zcs-labelvalue-wrapper">
+        <ul class="zcs-row zcs-p-0 zcs-m-0">
+          <li class="zcs-flex zcs-direction-column zcs-gap-8 zcs-col-3 zcs-px-15 zcs-py-10 zcs-box-border"><label class="zcs-font-14 zcs-color-tertiary">Prepared by</label><div class="zcs-flex zcs-gap-8"><i class="zc-li-outline users-single-01 zcs-color-primary"></i><span class="zcs-font-14 zcs-font-medium zcs-color-primary"><%=preparedByName%></span></div></li>
+          <li class="zcs-flex zcs-direction-column zcs-gap-8 zcs-col-3 zcs-px-15 zcs-py-10 zcs-box-border"><label class="zcs-font-14 zcs-color-tertiary">Department</label><div class="zcs-flex zcs-gap-8"><i class="zc-li-outline business-building zcs-color-primary"></i><span class="zcs-font-14 zcs-font-medium zcs-color-primary"><%=selectedPlanDept%></span></div></li>
+          <li class="zcs-flex zcs-direction-column zcs-gap-8 zcs-col-3 zcs-px-15 zcs-py-10 zcs-box-border"><label class="zcs-font-14 zcs-color-tertiary">Plan size</label><div class="zcs-flex zcs-gap-8"><i class="zc-li-outline design-measure-big zcs-color-primary"></i><span class="zcs-font-14 zcs-font-medium zcs-color-primary"><%=selectedPlanSize%></span></div></li>
+          <li class="zcs-flex zcs-direction-column zcs-gap-8 zcs-col-3 zcs-px-15 zcs-py-10 zcs-box-border"><label class="zcs-font-14 zcs-color-tertiary">Implementation priority</label><div class="zcs-flex zcs-gap-8"><i class="zc-li-outline ui-2-time zcs-color-primary"></i><span class="zcs-font-14 zcs-font-medium zcs-color-primary"><%=selectedPlanPriority%></span></div></li>
+        </ul>
+      </div>
+    </div>
+
+    <div id="selection" class="apw-section zcs-card zcs-p-20 zcs-box-border">
+      <div class="apw-section-title zcs-mb-16"><h2 class="zcs-font-18 zcs-font-semibold zcs-color-primary zcs-m-0">Department-wise 3-year Plan Summary</h2><p class="zcs-font-13 zcs-color-secondary zcs-m-0">Counts are sourced from Audit_Plan_Entities by department and recommended FY.</p></div>
+      <div class="zcs-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative">
+        <table class="zcs-w-full">
+          <thead class="zcs-sticky"><tr><th class="zcs-px-16 zcs-py-8 zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Department</th><th class="zcs-px-16 zcs-py-8 zcs-text-right zcs-font-14 zcs-font-medium zcs-color-primary">FY2025</th><th class="zcs-px-16 zcs-py-8 zcs-text-right zcs-font-14 zcs-font-medium zcs-color-primary">FY2026</th><th class="zcs-px-16 zcs-py-8 zcs-text-right zcs-font-14 zcs-font-medium zcs-color-primary">FY2027</th><th class="zcs-px-16 zcs-py-8 zcs-text-right zcs-font-14 zcs-font-medium zcs-color-primary">Total</th></tr></thead>
+          <tbody>
+          <%
+          summaryRows = 0;
+          for each deptRec in Departments[ID != 0] sort by Department_Name asc
+          {
+            if(selectedPlanID > 0)
+            {
+              fy2025 = Audit_Plan_Entities[Plan == selectedPlanID && Department == deptRec.ID && Recommended_FY == "FY2025"].count();
+              fy2026 = Audit_Plan_Entities[Plan == selectedPlanID && Department == deptRec.ID && Recommended_FY == "FY2026"].count();
+              fy2027 = Audit_Plan_Entities[Plan == selectedPlanID && Department == deptRec.ID && Recommended_FY == "FY2027"].count();
+            }
+            else
+            {
+              fy2025 = Audit_Plan_Entities[Department == deptRec.ID && Recommended_FY == "FY2025"].count();
+              fy2026 = Audit_Plan_Entities[Department == deptRec.ID && Recommended_FY == "FY2026"].count();
+              fy2027 = Audit_Plan_Entities[Department == deptRec.ID && Recommended_FY == "FY2027"].count();
+            }
+            rowTotal = fy2025 + fy2026 + fy2027;
+            if(rowTotal > 0)
+            {
+              summaryRows = summaryRows + 1;
+              %><tr><td class="zcs-px-16 zcs-py-8 zcs-font-14 zcs-color-primary"><%=deptRec.Department_Name%></td><td class="zcs-px-16 zcs-py-8 zcs-text-right zcs-font-14 zcs-color-primary"><%=fy2025%></td><td class="zcs-px-16 zcs-py-8 zcs-text-right zcs-font-14 zcs-color-primary"><%=fy2026%></td><td class="zcs-px-16 zcs-py-8 zcs-text-right zcs-font-14 zcs-color-primary"><%=fy2027%></td><td class="zcs-px-16 zcs-py-8 zcs-text-right zcs-font-14 zcs-font-semibold zcs-color-primary"><%=rowTotal%></td></tr><%
+            }
+          }
+          if(summaryRows == 0)
+          {
+            %><tr><td colspan="5" class="apw-empty">No department summary records found for this plan.</td></tr><%
+          }
+          %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="apw-two-col">
+      <div id="priority-frequency" class="apw-section zcs-card zcs-p-20 zcs-box-border">
+        <div class="apw-section-title zcs-mb-16"><h2 class="zcs-font-18 zcs-font-semibold zcs-color-primary zcs-m-0">Priority & Frequency</h2><p class="zcs-font-13 zcs-color-secondary zcs-m-0">Grouped by Department.</p></div>
+        <div class="zcs-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative">
+          <table class="zcs-w-full"><thead class="zcs-sticky"><tr><th class="zcs-px-16 zcs-py-8 zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Entity</th><th class="zcs-px-16 zcs-py-8 zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Priority</th><th class="zcs-px-16 zcs-py-8 zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Frequency</th><th class="zcs-px-16 zcs-py-8 zcs-text-right zcs-font-14 zcs-font-medium zcs-color-primary">Score</th></tr></thead><tbody>
+          <%
+          currentDept = "";
+          pRows = 0;
+          if(selectedPlanID > 0)
+          {
+            pEntities = Audit_Plan_Entities[Plan == selectedPlanID];
+          }
+          else
+          {
+            pEntities = Audit_Plan_Entities[ID != 0];
+          }
+          for each ent in pEntities
+          {
+            deptName = ifnull(ent.Department.Department_Name,"No Department");
+            if(currentDept != deptName)
+            {
+              currentDept = deptName;
+              %><tr class="zcs-tgroup"><td colspan="4" class="zcs-px-16 zcs-py-5 zcs-font-14"><%=deptName%></td></tr><%
+            }
+            priorityClass = "apw-pill-medium";
+            if(ent.Priority == "Critical") { priorityClass = "apw-pill-critical"; }
+            else if(ent.Priority == "High") { priorityClass = "apw-pill-high"; }
+            else if(ent.Priority == "Low") { priorityClass = "apw-pill-low"; }
+            pRows = pRows + 1;
+            %><tr><td class="zcs-px-16 zcs-py-8 zcs-font-14 zcs-color-primary"><%=ifnull(ent.Auditable_Entity.Auditable_Entity_Name,"-")%></td><td class="zcs-px-16 zcs-py-8"><span class="apw-pill <%=priorityClass%>"><%=ifnull(ent.Priority,"-")%></span></td><td class="zcs-px-16 zcs-py-8 zcs-font-14 zcs-color-primary"><%=ifnull(ent.Audit_Frequency,"-")%></td><td class="zcs-px-16 zcs-py-8 zcs-text-right zcs-font-14 zcs-color-primary"><%=ifnull(ent.Entity_Score,0)%></td></tr><%
+          }
+          if(pRows == 0)
+          {
+            %><tr><td colspan="4" class="apw-empty">No priority and frequency rows found.</td></tr><%
+          }
+          %>
+          </tbody></table>
+        </div>
+      </div>
+
+      <div id="audit-size" class="apw-section zcs-card zcs-p-20 zcs-box-border">
+        <div class="apw-section-title zcs-mb-16"><h2 class="zcs-font-18 zcs-font-semibold zcs-color-primary zcs-m-0">Audit Size Scoring</h2><p class="zcs-font-13 zcs-color-secondary zcs-m-0">Grouped by Department with scoring factors.</p></div>
+        <div class="zcs-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative">
+          <table class="zcs-w-full"><thead class="zcs-sticky"><tr><th class="zcs-px-16 zcs-py-8 zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Entity</th><th class="zcs-px-16 zcs-py-8 zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Complexity</th><th class="zcs-px-16 zcs-py-8 zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Regulatory</th><th class="zcs-px-16 zcs-py-8 zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Size</th><th class="zcs-px-16 zcs-py-8 zcs-text-right zcs-font-14 zcs-font-medium zcs-color-primary">Days</th></tr></thead><tbody>
+          <%
+          currentDept = "";
+          sRows = 0;
+          if(selectedPlanID > 0)
+          {
+            sEntities = Audit_Plan_Entities[Plan == selectedPlanID];
+          }
+          else
+          {
+            sEntities = Audit_Plan_Entities[ID != 0];
+          }
+          for each ent in sEntities
+          {
+            deptName = ifnull(ent.Department.Department_Name,"No Department");
+            if(currentDept != deptName)
+            {
+              currentDept = deptName;
+              %><tr class="zcs-tgroup"><td colspan="5" class="zcs-px-16 zcs-py-5 zcs-font-14"><%=deptName%></td></tr><%
+            }
+            sRows = sRows + 1;
+            %><tr><td class="zcs-px-16 zcs-py-8 zcs-font-14 zcs-color-primary"><%=ifnull(ent.Auditable_Entity.Auditable_Entity_Name,"-")%></td><td class="zcs-px-16 zcs-py-8 zcs-font-14 zcs-color-primary"><%=ifnull(ent.Process_Complexity,"-")%></td><td class="zcs-px-16 zcs-py-8 zcs-font-14 zcs-color-primary"><%=ifnull(ent.Regulatory_Sensitivity,"-")%></td><td class="zcs-px-16 zcs-py-8"><span class="apw-pill"><%=ifnull(ent.Audit_Size,"-")%></span></td><td class="zcs-px-16 zcs-py-8 zcs-text-right zcs-font-14 zcs-color-primary"><%=ifnull(ent.Estimated_Days,0)%></td></tr><%
+          }
+          if(sRows == 0)
+          {
+            %><tr><td colspan="5" class="apw-empty">No audit size scoring rows found.</td></tr><%
+          }
+          %>
+          </tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <div id="quarterly-planning" class="apw-section zcs-card zcs-p-20 zcs-box-border">
+      <div class="apw-section-title zcs-mb-16"><h2 class="zcs-font-18 zcs-font-semibold zcs-color-primary zcs-m-0">Quarterly Planning</h2><p class="zcs-font-13 zcs-color-secondary zcs-m-0">Distribution grouped by Planning Quarter.</p></div>
+      <div class="apw-quarter-strip zcs-mb-16">
+        <div class="zcs-progress-bar-wrapper zcs-flex zcs-direction-column zcs-gap-6 zcs-p-16 zcs-card"><div class="zcs-flex zcs-justify-space-between"><span class="zcs-font-14 zcs-color-tertiary">Q1</span><strong class="zcs-color-primary"><%=q1Days%> days</strong></div><div class="zcs-progress-bar zcs-rounded-sm"><div class="zcs-progress-bar-indicator" style="width:<%=q1Pct%>%"></div></div></div>
+        <div class="zcs-progress-bar-wrapper zcs-flex zcs-direction-column zcs-gap-6 zcs-p-16 zcs-card"><div class="zcs-flex zcs-justify-space-between"><span class="zcs-font-14 zcs-color-tertiary">Q2</span><strong class="zcs-color-primary"><%=q2Days%> days</strong></div><div class="zcs-progress-bar zcs-rounded-sm"><div class="zcs-progress-bar-indicator" style="width:<%=q2Pct%>%"></div></div></div>
+        <div class="zcs-progress-bar-wrapper zcs-flex zcs-direction-column zcs-gap-6 zcs-p-16 zcs-card"><div class="zcs-flex zcs-justify-space-between"><span class="zcs-font-14 zcs-color-tertiary">Q3</span><strong class="zcs-color-primary"><%=q3Days%> days</strong></div><div class="zcs-progress-bar zcs-rounded-sm"><div class="zcs-progress-bar-indicator" style="width:<%=q3Pct%>%"></div></div></div>
+        <div class="zcs-progress-bar-wrapper zcs-flex zcs-direction-column zcs-gap-6 zcs-p-16 zcs-card"><div class="zcs-flex zcs-justify-space-between"><span class="zcs-font-14 zcs-color-tertiary">Q4</span><strong class="zcs-color-primary"><%=q4Days%> days</strong></div><div class="zcs-progress-bar zcs-rounded-sm"><div class="zcs-progress-bar-indicator" style="width:<%=q4Pct%>%"></div></div></div>
+      </div>
+      <div class="zcs-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative">
+        <table class="zcs-w-full"><thead class="zcs-sticky"><tr><th class="zcs-px-16 zcs-py-8 zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Entity</th><th class="zcs-px-16 zcs-py-8 zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Department</th><th class="zcs-px-16 zcs-py-8 zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Priority</th><th class="zcs-px-16 zcs-py-8 zcs-text-right zcs-font-14 zcs-font-medium zcs-color-primary">Days</th></tr></thead><tbody>
+        <%
+        qRows = 0;
+        currentQuarter = "";
+        if(selectedPlanID > 0)
+        {
+          qEntities = Audit_Plan_Entities[Plan == selectedPlanID] sort by Planning_Quarter asc;
+        }
+        else
+        {
+          qEntities = Audit_Plan_Entities[ID != 0] sort by Planning_Quarter asc;
+        }
+        for each ent in qEntities
+        {
+          quarterName = ifnull(ent.Planning_Quarter,"Unscheduled");
+          if(currentQuarter != quarterName)
+          {
+            currentQuarter = quarterName;
+            %><tr class="zcs-tgroup"><td colspan="4" class="zcs-px-16 zcs-py-5 zcs-font-14"><%=quarterName%></td></tr><%
+          }
+          qRows = qRows + 1;
+          %><tr><td class="zcs-px-16 zcs-py-8 zcs-font-14 zcs-color-primary"><%=ifnull(ent.Auditable_Entity.Auditable_Entity_Name,"-")%></td><td class="zcs-px-16 zcs-py-8 zcs-font-14 zcs-color-primary"><%=ifnull(ent.Department.Department_Name,"-")%></td><td class="zcs-px-16 zcs-py-8 zcs-font-14 zcs-color-primary"><%=ifnull(ent.Priority,"-")%></td><td class="zcs-px-16 zcs-py-8 zcs-text-right zcs-font-14 zcs-color-primary"><%=ifnull(ent.Estimated_Days,0)%></td></tr><%
+        }
+        if(qRows == 0)
+        {
+          %><tr><td colspan="4" class="apw-empty">No quarterly planning rows found.</td></tr><%
+        }
+        %>
+        </tbody></table>
+      </div>
+    </div>
+
+    <div id="skill-mix" class="apw-section zcs-card zcs-p-20 zcs-box-border">
+      <div class="apw-section-title zcs-mb-16"><h2 class="zcs-font-18 zcs-font-semibold zcs-color-primary zcs-m-0">Skill Mix Allocation</h2><p class="zcs-font-13 zcs-color-secondary zcs-m-0">Assignments grouped by Assigned Auditor.</p></div>
+      <div class="zcs-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative">
+        <table class="zcs-w-full"><thead class="zcs-sticky"><tr><th class="zcs-px-16 zcs-py-8 zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Entity</th><th class="zcs-px-16 zcs-py-8 zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Skill Required</th><th class="zcs-px-16 zcs-py-8 zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Quarter</th><th class="zcs-px-16 zcs-py-8 zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Assignment Status</th><th class="zcs-px-16 zcs-py-8 zcs-text-right zcs-font-14 zcs-font-medium zcs-color-primary">Days</th></tr></thead><tbody>
+        <%
+        aRows = 0;
+        currentAuditor = "";
+        if(selectedPlanID > 0)
+        {
+          aEntities = Audit_Plan_Entities[Plan == selectedPlanID];
+        }
+        else
+        {
+          aEntities = Audit_Plan_Entities[ID != 0];
+        }
+        for each ent in aEntities
+        {
+          auditorName = ifnull(ent.Assigned_Auditor.Full_Name,"Unassigned");
+          if(currentAuditor != auditorName)
+          {
+            currentAuditor = auditorName;
+            %><tr class="zcs-tgroup"><td colspan="5" class="zcs-px-16 zcs-py-5 zcs-font-14"><%=auditorName%></td></tr><%
+          }
+          aRows = aRows + 1;
+          %><tr><td class="zcs-px-16 zcs-py-8 zcs-font-14 zcs-color-primary"><%=ifnull(ent.Auditable_Entity.Auditable_Entity_Name,"-")%></td><td class="zcs-px-16 zcs-py-8 zcs-font-14 zcs-color-primary"><%=ifnull(ent.Skill_Required,"-")%></td><td class="zcs-px-16 zcs-py-8 zcs-font-14 zcs-color-primary"><%=ifnull(ent.Planning_Quarter,"-")%></td><td class="zcs-px-16 zcs-py-8"><span class="apw-pill"><%=ifnull(ent.Assignment_Status,"-")%></span></td><td class="zcs-px-16 zcs-py-8 zcs-text-right zcs-font-14 zcs-color-primary"><%=ifnull(ent.Estimated_Days,0)%></td></tr><%
+        }
+        if(aRows == 0)
+        {
+          %><tr><td colspan="5" class="apw-empty">No skill allocation rows found.</td></tr><%
+        }
+        %>
+        </tbody></table>
+      </div>
+    </div>
+
+    <div id="review" class="apw-section zcs-card zcs-p-20 zcs-box-border">
+      <div class="zcs-flex zcs-justify-space-between zcs-align-items-center zcs-gap-16 zcs-mb-16">
+        <div class="apw-section-title"><h2 class="zcs-font-18 zcs-font-semibold zcs-color-primary zcs-m-0">Review & Approve</h2><p class="zcs-font-13 zcs-color-secondary zcs-m-0">Readiness charts, schedule, assignments, resource utilization, and validation status.</p></div>
+        <span class="apw-pill"><i class="zc-li-outline ui-2-calendar-date"></i>Submitted: <%=submittedDateText%></span>
+      </div>
+      <div class="apw-two-col">
+        <div class="zcs-card zcs-p-20 zcs-box-border">
+          <h3 class="zcs-font-16 zcs-font-semibold zcs-color-primary zcs-m-0">Audits by priority</h3>
+          <div class="apw-chart-row"><span class="zcs-font-13 zcs-color-secondary">Critical</span><div class="apw-bar-track"><div class="apw-bar apw-bar-red" style="width:<%=criticalPct%>%"></div></div><strong class="zcs-font-13 zcs-text-right"><%=criticalCount%></strong></div>
+          <div class="apw-chart-row"><span class="zcs-font-13 zcs-color-secondary">High</span><div class="apw-bar-track"><div class="apw-bar apw-bar-yellow" style="width:<%=highPct%>%"></div></div><strong class="zcs-font-13 zcs-text-right"><%=highCount%></strong></div>
+          <div class="apw-chart-row"><span class="zcs-font-13 zcs-color-secondary">Medium</span><div class="apw-bar-track"><div class="apw-bar apw-bar-blue" style="width:<%=mediumPct%>%"></div></div><strong class="zcs-font-13 zcs-text-right"><%=mediumCount%></strong></div>
+          <div class="apw-chart-row"><span class="zcs-font-13 zcs-color-secondary">Low</span><div class="apw-bar-track"><div class="apw-bar apw-bar-green" style="width:<%=lowPct%>%"></div></div><strong class="zcs-font-13 zcs-text-right"><%=lowCount%></strong></div>
+        </div>
+        <div class="zcs-card zcs-p-20 zcs-box-border">
+          <h3 class="zcs-font-16 zcs-font-semibold zcs-color-primary zcs-m-0">Audits by size</h3>
+          <div class="apw-chart-row"><span class="zcs-font-13 zcs-color-secondary">Extensive</span><div class="apw-bar-track"><div class="apw-bar apw-bar-red" style="width:<%=extensivePct%>%"></div></div><strong class="zcs-font-13 zcs-text-right"><%=extensiveCount%></strong></div>
+          <div class="apw-chart-row"><span class="zcs-font-13 zcs-color-secondary">Large</span><div class="apw-bar-track"><div class="apw-bar apw-bar-yellow" style="width:<%=largePct%>%"></div></div><strong class="zcs-font-13 zcs-text-right"><%=largeCount%></strong></div>
+          <div class="apw-chart-row"><span class="zcs-font-13 zcs-color-secondary">Medium</span><div class="apw-bar-track"><div class="apw-bar apw-bar-blue" style="width:<%=sizeMediumPct%>%"></div></div><strong class="zcs-font-13 zcs-text-right"><%=sizeMediumCount%></strong></div>
+          <div class="apw-chart-row"><span class="zcs-font-13 zcs-color-secondary">Small</span><div class="apw-bar-track"><div class="apw-bar apw-bar-green" style="width:<%=smallPct%>%"></div></div><strong class="zcs-font-13 zcs-text-right"><%=smallCount%></strong></div>
+        </div>
+      </div>
+
+      <div class="apw-section zcs-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative">
+        <table class="zcs-w-full"><thead class="zcs-sticky"><tr><th class="zcs-px-16 zcs-py-8 zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Schedule & Assignment</th><th class="zcs-px-16 zcs-py-8 zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Quarter</th><th class="zcs-px-16 zcs-py-8 zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Auditor</th><th class="zcs-px-16 zcs-py-8 zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Status</th><th class="zcs-px-16 zcs-py-8 zcs-text-right zcs-font-14 zcs-font-medium zcs-color-primary">Days</th></tr></thead><tbody>
+        <%
+        schedRows = 0;
+        if(selectedPlanID > 0)
+        {
+          schedEntities = Audit_Plan_Entities[Plan == selectedPlanID] sort by Planning_Quarter asc;
+        }
+        else
+        {
+          schedEntities = Audit_Plan_Entities[ID != 0] sort by Planning_Quarter asc;
+        }
+        for each ent in schedEntities
+        {
+          schedRows = schedRows + 1;
+          %><tr><td class="zcs-px-16 zcs-py-8 zcs-font-14 zcs-color-primary"><%=ifnull(ent.Auditable_Entity.Auditable_Entity_Name,"-")%></td><td class="zcs-px-16 zcs-py-8 zcs-font-14 zcs-color-primary"><%=ifnull(ent.Planning_Quarter,"-")%></td><td class="zcs-px-16 zcs-py-8 zcs-font-14 zcs-color-primary"><%=ifnull(ent.Assigned_Auditor.Full_Name,"Unassigned")%></td><td class="zcs-px-16 zcs-py-8"><span class="apw-pill"><%=ifnull(ent.Assignment_Status,"-")%></span></td><td class="zcs-px-16 zcs-py-8 zcs-text-right zcs-font-14 zcs-color-primary"><%=ifnull(ent.Estimated_Days,0)%></td></tr><%
+        }
+        if(schedRows == 0)
+        {
+          %><tr><td colspan="5" class="apw-empty">No schedule and assignment rows found.</td></tr><%
+        }
+        %>
+        </tbody></table>
+      </div>
+
+      <div class="apw-section zcs-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative">
+        <table class="zcs-w-full"><thead class="zcs-sticky"><tr><th class="zcs-px-16 zcs-py-8 zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Auditor</th><th class="zcs-px-16 zcs-py-8 zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Skill Area</th><th class="zcs-px-16 zcs-py-8 zcs-text-right zcs-font-14 zcs-font-medium zcs-color-primary">Assigned Days</th><th class="zcs-px-16 zcs-py-8 zcs-text-right zcs-font-14 zcs-font-medium zcs-color-primary">Capacity</th><th class="zcs-px-16 zcs-py-8 zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Utilization</th></tr></thead><tbody>
+        <%
+        utilRows = 0;
+        for each auditor in Audit_Team_Members[Status == "Active"] sort by Full_Name asc
+        {
+          if(selectedPlanID > 0)
+          {
+            assignedDays = Audit_Plan_Entities[Plan == selectedPlanID && Assigned_Auditor == auditor.ID].sum(Estimated_Days);
+          }
+          else
+          {
+            assignedDays = Audit_Plan_Entities[Assigned_Auditor == auditor.ID].sum(Estimated_Days);
+          }
+          if(assignedDays == null)
+          {
+            assignedDays = 0;
+          }
+          capacityDays = ifnull(auditor.Capacity_Days_Per_Year,0);
+          utilPct = 0;
+          if(capacityDays > 0)
+          {
+            utilPct = (assignedDays * 100) / capacityDays;
+          }
+          if(assignedDays > 0 || selectedPlanID == 0)
+          {
+            utilRows = utilRows + 1;
+            %><tr><td class="zcs-px-16 zcs-py-8 zcs-font-14 zcs-color-primary"><%=auditor.Full_Name%></td><td class="zcs-px-16 zcs-py-8 zcs-font-14 zcs-color-primary"><%=ifnull(auditor.Skill_Area,"-")%></td><td class="zcs-px-16 zcs-py-8 zcs-text-right zcs-font-14 zcs-color-primary"><%=assignedDays%></td><td class="zcs-px-16 zcs-py-8 zcs-text-right zcs-font-14 zcs-color-primary"><%=capacityDays%></td><td class="zcs-px-16 zcs-py-8"><div class="zcs-progress-bar-wrapper zcs-flex zcs-direction-column zcs-gap-6"><div class="zcs-progress-bar zcs-rounded-sm"><div class="zcs-progress-bar-indicator" style="width:<%=utilPct%>%"></div></div><p class="zcs-font-12 zcs-color-primary zcs-m-0"><strong class="zcs-color-theme"><%=utilPct%>%</strong> utilized</p></div></td></tr><%
+          }
+        }
+        if(utilRows == 0)
+        {
+          %><tr><td colspan="5" class="apw-empty">No active auditor utilization rows found for assigned work.</td></tr><%
+        }
+        %>
+        </tbody></table>
+      </div>
+
+      <div class="zcs-toast zcs-success-toast zcs-w-full zcs-flex zcs-gap-8 zcs-px-16 zcs-py-12 zcs-rounded-sm zcs-box-border zcs-font-14 zcs-lh-body zcs-color-primary zcs-mt-16">
+        <i class="zcs-toast-icon zcs-no-shrink zcs-lh-body zc-li-outline ui-1-check-circle-08"></i>
+        <div class="zcs-toast-text"><p class="zcs-m-0"><strong>Validation readiness:</strong> <%=validationMessage%> Submitted date: <%=submittedDateText%>.</p></div>
+      </div>
+    </div>
+
+    <div class="apw-section zcs-card zcs-p-20 zcs-box-border">
+      <div class="apw-section-title zcs-mb-16"><h2 class="zcs-font-18 zcs-font-semibold zcs-color-primary zcs-m-0">Referenced Creator Reports</h2><p class="zcs-font-13 zcs-color-secondary zcs-m-0">The workspace links to and embeds the approved planning reports.</p></div>
+      <div class="apw-two-col">
+        <div class="apw-reference-embed zcs-p-12 zcs-box-border"><div zc-component="report" zc-linkname="Audit_Plans_List" zc-height="300px"></div></div>
+        <div class="apw-reference-embed zcs-p-12 zcs-box-border"><div zc-component="report" zc-linkname="Plan_Entities_By_Department" zc-height="300px"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
