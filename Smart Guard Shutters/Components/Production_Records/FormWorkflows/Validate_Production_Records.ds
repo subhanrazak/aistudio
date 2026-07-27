@@ -1,0 +1,50 @@
+Validate_Production_Records as "Validate Production Records"
+{
+
+				type =  form
+				form = Production_Records
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(ifnull(input.Quantity,0) < 0 || ifnull(input.Priority_Sequence,0) < 0 || ifnull(input.Powder_Qty_Used,0) < 0)
+										{
+											alert "Quantities, powder usage, and priority cannot be negative.";
+											cancel submit;
+										}
+										if(input.Requires_Powder_Coating == true && input.Powder == null)
+										{
+											alert "Powder is required for powder coating jobs.";
+											cancel submit;
+										}
+										if(input.Production_Status == "Ready for Installation" && input.Material_Consumption_Posted == false)
+										{
+											for each  usage_row in input.Materials_Usage
+											{
+												qty_to_use = ifnull(usage_row.Actual_Quantity,usage_row.Estimated_Quantity);
+												if(usage_row.Material != null && ifnull(usage_row.Material.Available_Quantity,0) < ifnull(qty_to_use,0))
+												{
+													alert "Insufficient stock for material: " + usage_row.Material.Material_Name;
+													cancel submit;
+												}
+											}
+										}
+										if(input.Powder_Coating_Status == "Completed" && input.Powder_Consumption_Posted == false && input.Requires_Powder_Coating == true)
+										{
+											if(input.Powder != null && ifnull(input.Powder.Available_Quantity,0) < ifnull(input.Powder_Qty_Used,0))
+											{
+												alert "Insufficient powder stock.";
+												cancel submit;
+											}
+										}
+						)
+					}
+				}
+
+			
+}

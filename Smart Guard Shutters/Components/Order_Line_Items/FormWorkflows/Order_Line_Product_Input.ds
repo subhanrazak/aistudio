@@ -1,0 +1,52 @@
+Order_Line_Product_Input as "Order Line Product Input"
+{
+
+				type =  form
+				form = Order_Line_Items
+
+				record event = on add or edit
+
+				on user input of Product
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Product != null)
+										{
+											prod = Product_Catalogue[ID == input.Product];
+											if(prod.count() > 0)
+											{
+												input.Product_Description = prod.Description;
+												input.Unit = prod.Default_Unit;
+												if(prod.Default_Manufacturing_Mode == "Purchase Finished Product")
+												{
+													input.Manufacturing_Mode = "Purchase Finished Product";
+												}
+												else
+												{
+													input.Manufacturing_Mode = "Manufacture";
+												}
+												input.Requires_Powder_Coating = prod.Requires_Powder_Coating;
+												input.Powder = prod.Default_Powder;
+												input.Permit_Required = prod.Requires_Permit_By_Default;
+												input.Estimated_Install_Hours = prod.Default_Install_Hours;
+												if(input.Requires_Powder_Coating == true)
+												{
+													show Powder;
+													show Estimated_Powder_Qty;
+												}
+												else
+												{
+													hide Powder;
+													hide Estimated_Powder_Qty;
+													clear Powder;
+												}
+											}
+										}
+						)
+					}
+				}
+
+			
+}

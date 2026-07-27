@@ -1,0 +1,29 @@
+Validate_Staff_Master as "Validate Staff Master"
+{
+
+				type =  form
+				form = Staff_Master
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.User_Email != null && input.User_Email != "")
+										{
+											duplicate_staff = Staff_Master[User_Email == input.User_Email && Active == true && ID != input.ID];
+											if(duplicate_staff.count() > 0)
+											{
+												alert "Another active staff member already uses this user email.";
+												cancel submit;
+											}
+										}
+						)
+					}
+				}
+
+			
+}

@@ -1,0 +1,44 @@
+Installation_Schedules_On_Success as "Installation Schedules On Success"
+{
+
+				type =  form
+				form = Installation_Schedules
+
+				record event = on add or edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											order_rec = Customer_Orders[ID == input.Customer_Order];
+										if(order_rec.count() > 0)
+										{
+											if(input.Installation_Status == "Scheduled")
+											{
+												order_rec.Order_Status="Installation Scheduled";
+											}
+											else if(input.Installation_Status == "Installed")
+											{
+												order_rec.Order_Status="Installed";
+											}
+											else if(input.Installation_Status == "Inspection Required")
+											{
+												order_rec.Order_Status="Inspection Required";
+											}
+											else if(input.Installation_Status == "Completed")
+											{
+												order_rec.Order_Status="Completed";
+											}
+										}
+										if(input.Installation_Status == "Inspection Completed" && input.Internal_QC_Date == null)
+										{
+											input.Internal_QC_Date = zoho.currentdate;
+										}
+						)
+					}
+				}
+
+			
+}

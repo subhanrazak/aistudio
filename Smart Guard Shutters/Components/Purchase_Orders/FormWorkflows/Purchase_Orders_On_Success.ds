@@ -1,0 +1,95 @@
+Purchase_Orders_On_Success as "Purchase Orders On Success"
+{
+
+				type =  form
+				form = Purchase_Orders
+
+				record event = on add or edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.PO_Status == "Approved")
+										{
+											if(input.Approved_Date == null)
+											{
+												input.Approved_Date = zoho.currentdate;
+											}
+											if(input.Approved_By == null)
+											{
+												staff_rec = Add_Employee[Email == zoho.loginuserid];
+												if(staff_rec.count() > 0)
+												{
+													input.Approved_By = staff_rec.ID;
+												}
+											}
+										}
+										if(input.PO_Status == "Partially Received" || input.PO_Status == "Received")
+										{
+											for each  line_rec in input.Lines
+											{
+												if(ifnull(line_rec.Received_Quantity,0) > 0 && line_rec.Stock_Posted == false)
+												{
+													if(line_rec.Line_Type == "Raw Material" || line_rec.Line_Type == "Service Part")
+													{
+														mat_rec = Material_Master[ID == line_rec.Material];
+														if(mat_rec.count() > 0)
+														{
+															mat_rec.Available_Quantity=ifnull(mat_rec.Available_Quantity,0) + ifnull(line_rec.Received_Quantity,0);
+															mat_rec.Last_Updated=zoho.currentdate;
+														}
+													}
+													else if(line_rec.Line_Type == "Powder")
+													{
+														powder_rec = Powder_Coating_Inventory[ID == line_rec.Powder];
+														if(powder_rec.count() > 0)
+														{
+															powder_rec.Available_Quantity=ifnull(powder_rec.Available_Quantity,0) + ifnull(line_rec.Received_Quantity,0);
+															powder_rec.Last_Updated=zoho.currentdate;
+														}
+													}
+													else if(line_rec.Line_Type == "Finished Product")
+													{
+														prod_rec = Production_Records[ID == line_rec.Linked_Production];
+														if(prod_rec.count() > 0 && ifnull(line_rec.Received_Quantity,0) >= ifnull(line_rec.Quantity,0))
+														{
+															prod_rec.Production_Status="Purchased and Received";
+															prod_rec.Ready_For_Installation_Date=zoho.currentdate;
+														}
+													}
+													line_rec.Stock_Posted=true;
+													if(line_rec.Received_Date == null)
+													{
+														line_rec.Received_Date=zoho.currentdate;
+													}
+												}
+											}
+											if(input.Linked_Production != null)
+											{
+												linked_prod = Production_Records[ID == input.Linked_Production];
+												if(linked_prod.count() > 0)
+												{
+													if(input.PO_Status == "Received")
+													{
+														linked_prod.Material_Status="Received";
+														if(linked_prod.Production_Status == "Material Ordered" || linked_prod.Production_Status == "Material Shortage")
+														{
+															linked_prod.Production_Status="Material Received";
+														}
+													}
+													else
+													{
+														linked_prod.Material_Status="Ordered";
+													}
+												}
+											}
+										}
+						)
+					}
+				}
+
+			
+}

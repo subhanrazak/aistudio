@@ -1,0 +1,41 @@
+Service_Requests_On_Success as "Service Requests On Success"
+{
+
+				type =  form
+				form = Service_Requests
+
+				record event = on add or edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Service_Status == "Completed" || input.Service_Status == "Closed" && input.Completion_Date == null)
+										{
+											input.Completion_Date = zoho.currentdate;
+										}
+										if(input.Service_Status == "Completed" || input.Service_Status == "Closed" && input.Stock_Consumption_Posted == false)
+										{
+											for each  part_row in input.Parts_Usage
+											{
+												if(part_row.Material != null && ifnull(part_row.Quantity_Used,0) > 0 && part_row.Stock_Deducted == false)
+												{
+													mat_rec = Material_Master[ID == part_row.Material];
+													if(mat_rec.count() > 0)
+													{
+														mat_rec.Available_Quantity=ifnull(mat_rec.Available_Quantity,0) - ifnull(part_row.Quantity_Used,0);
+														mat_rec.Last_Updated=zoho.currentdate;
+														part_row.Stock_Deducted=true;
+													}
+												}
+											}
+											input.Stock_Consumption_Posted = true;
+										}
+						)
+					}
+				}
+
+			
+}

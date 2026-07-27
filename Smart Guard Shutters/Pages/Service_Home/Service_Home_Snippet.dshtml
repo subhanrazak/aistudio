@@ -1,0 +1,641 @@
+<%
+	openServices = Service_Requests[Service_Status != "Closed" && Service_Status != "Cancelled"];
+	urgentServices = Service_Requests[Priority == "Urgent" && Service_Status != "Closed" && Service_Status != "Cancelled"];
+	assignedServices = Service_Requests[Technician.Email == zoho.loginuser && Service_Status != "Closed" && Service_Status != "Cancelled"];
+	upcomingVisits = Service_Requests[Scheduled_Start != null && Scheduled_Start >= zoho.currenttime && Service_Status != "Closed" && Service_Status != "Cancelled"];
+	partsRequiredServices = Service_Requests[Service_Status == "Parts Required"];
+	linkedServicePOs = Purchase_Orders[Linked_Service != null && PO_Status != "Received" && PO_Status != "Cancelled"];
+	recentCompletedServices = Service_Requests[Service_Status == "Completed" || Service_Status == "Closed" && Completion_Date != null];
+	closureServices = Service_Requests[Service_Status == "Repaired" || Service_Status == "Completed"];
+	pendingPartsUsage = Service_Parts_Usage[Stock_Deducted == false];
+	openCount = openServices.count();
+	urgentCount = urgentServices.count();
+	assignedCount = assignedServices.count();
+	upcomingCount = upcomingVisits.count();
+	partsRequiredCount = partsRequiredServices.count();
+	linkedPOCount = linkedServicePOs.count();
+	recentCompletedCount = recentCompletedServices.count();
+	closureCount = closureServices.count();
+	pendingPartsUsageCount = pendingPartsUsage.count();
+	returnUrl = "%23Page%3AService_Home";
+	%>
+<style>
+.zc-content-loader div { display: none !important; } .zc_live_adminbar .zc-container-wrapper { height: 100% !important; } div#zppagesLive, div#elementsContainer, .Layout.elemContainment, div#row_1, .zc-pb-formreport-placeholder { height: 100% !important; } .Layout.elemContainment, .zc-pb-page-content-wrapper .elemContainment, .column-container .zc-pb-tile-container { padding: unset !important; } .zpcontent-wrapper div.zpelement-wrapper { height: 100% !important; } .zc-pb-tile-card::-webkit-scrollbar { display: none !important; }
+:root { --zcs-theme-brand-color: var(--zcs_brand_color, var(--theme_brand_color, #2A6FFC)); --zcs-light-bg-color: var(--zcs_brand_light_color, #ECF3FF); --zcs-page-bg-color: #F7F8FC; --zcs-primary-text-color: var(--zcs_primary_text_color, #12132B); --zcs-secondary-text-color: var(--zcs_secondary_text_color, #4E5668); --zcs-teritiary-text-color: var(--zcs_tertiary_text_color, #7A8191); --zcs-border-color: var(--zcs_tertiary_border_color, #E5E8F0); --zcs-white-color: #FFFFFF; --zcs-brand-soft: rgba(42,111,252,.10); --zcs-danger-soft: #FFECEF; --zcs-warning-soft: #FFF6E3; --zcs-success-soft: #EAFBF4; --zcs-info-soft: #EAF7FF; --zcs-purple-soft: #F0ECFF; font-size: 16px; line-height: 1.5; }
+#splash-screen { display: none !important; }
+.zcs-row { display: flex; flex-wrap: wrap; }
+.zcs-flex { display: flex; }
+.zcs-inline-flex { display: inline-flex; }
+.zcs-direction-column { flex-direction: column; }
+.zcs-row-wrap { flex-wrap: wrap; }
+.zcs-col-common { flex: 1 1 0%; min-width: 0; }
+.zcs-no-shrink { flex-shrink: 0; }
+.zcs-align-items-center { align-items: center; }
+.zcs-align-items-start { align-items: flex-start; }
+.zcs-justify-center { justify-content: center; }
+.zcs-justify-space-between { justify-content: space-between; }
+.zcs-gap-4 { gap: .25rem; }
+.zcs-gap-6 { gap: .375rem; }
+.zcs-gap-8 { gap: .5rem; }
+.zcs-gap-10 { gap: .625rem; }
+.zcs-gap-12 { gap: .75rem; }
+.zcs-gap-14 { gap: .875rem; }
+.zcs-gap-16 { gap: 1rem; }
+.zcs-gap-20 { gap: 1.25rem; }
+.zcs-p-8 { padding: .5rem; }
+.zcs-p-10 { padding: .625rem; }
+.zcs-p-12 { padding: .75rem; }
+.zcs-p-14 { padding: .875rem; }
+.zcs-p-16 { padding: 1rem; }
+.zcs-p-20 { padding: 1.25rem; }
+.zcs-p-24 { padding: 1.5rem; }
+.zcs-px-8 { padding-left: .5rem; padding-right: .5rem; }
+.zcs-px-10 { padding-left: .625rem; padding-right: .625rem; }
+.zcs-px-12 { padding-left: .75rem; padding-right: .75rem; }
+.zcs-px-16 { padding-left: 1rem; padding-right: 1rem; }
+.zcs-py-2 { padding-top: .125rem; padding-bottom: .125rem; }
+.zcs-py-4 { padding-top: .25rem; padding-bottom: .25rem; }
+.zcs-py-6 { padding-top: .375rem; padding-bottom: .375rem; }
+.zcs-py-8 { padding-top: .5rem; padding-bottom: .5rem; }
+.zcs-py-10 { padding-top: .625rem; padding-bottom: .625rem; }
+.zcs-py-12 { padding-top: .75rem; padding-bottom: .75rem; }
+.zcs-m-0 { margin: 0; }
+.zcs-mt-4 { margin-top: .25rem; }
+.zcs-mt-6 { margin-top: .375rem; }
+.zcs-mt-8 { margin-top: .5rem; }
+.zcs-mt-10 { margin-top: .625rem; }
+.zcs-mt-12 { margin-top: .75rem; }
+.zcs-mt-16 { margin-top: 1rem; }
+.zcs-mb-0 { margin-bottom: 0; }
+.zcs-mx-0 { margin-left: 0; margin-right: 0; }
+.zcs-font-11 { font-size: .6875rem; }
+.zcs-font-12 { font-size: .75rem; }
+.zcs-font-13 { font-size: .8125rem; }
+.zcs-font-14 { font-size: .875rem; }
+.zcs-font-15 { font-size: .9375rem; }
+.zcs-font-16 { font-size: 1rem; }
+.zcs-font-18 { font-size: 1.125rem; }
+.zcs-font-20 { font-size: 1.25rem; }
+.zcs-font-24 { font-size: 1.5rem; }
+.zcs-font-normal { font-weight: 400; }
+.zcs-font-medium { font-weight: 500; }
+.zcs-font-semibold { font-weight: 600; }
+.zcs-font-bold { font-weight: 700; }
+.zcs-lh-body { line-height: 1.5; }
+.zcs-lh-heading { line-height: 1.25; }
+.zcs-uppercase { text-transform: uppercase; }
+.zcs-text-left { text-align: left; }
+.zcs-text-right { text-align: right; }
+.zcs-text-center { text-align: center; }
+.zcs-rounded-sm { border-radius: .25rem; }
+.zcs-rounded-md { border-radius: .375rem; }
+.zcs-rounded-lg { border-radius: .5rem; }
+.zcs-rounded-xl { border-radius: .75rem; }
+.zcs-rounded-2xl { border-radius: 1rem; }
+.zcs-box-border { box-sizing: border-box; }
+.zcs-relative { position: relative; }
+.zcs-absolute { position: absolute; }
+.zcs-sticky { position: sticky; }
+.zcs-w-full { width: 100%; }
+.zcs-color-theme { color: var(--zcs-theme-brand-color); }
+.zcs-color-primary { color: var(--zcs-primary-text-color); }
+.zcs-color-secondary { color: var(--zcs-secondary-text-color); }
+.zcs-color-tertiary { color: var(--zcs-teritiary-text-color); }
+.zcs-color-white { color: #fff; }
+.zcs-ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+a { text-decoration: none; }
+.zcs-card { background-color: var(--zcs-white-color); border: 1px solid var(--zcs-border-color); border-radius: 16px; box-shadow: 0 10px 30px rgba(16,24,40,.05); }
+.zcs-template-card { width: 260px; height: 250px; overflow: hidden; }
+.zcs-card-header { border-bottom: 1px solid var(--zcs-border-color); }
+.zcs-badge { width: auto; }
+.zcs-badge-filled-outline, .zcs-badge-outline { border: 1px solid; }
+.zcs-badge-filled-outline.zcs-badge-theme { background-color: var(--zcs-brand-soft); border-color: var(--zcs-theme-brand-color); color: var(--zcs-theme-brand-color); }
+.zcs-badge-filled-outline.zcs-badge-green { background-color: #E4FCF3; border-color: #179E6C; color: #179E6C; }
+.zcs-badge-filled-outline.zcs-badge-red { background-color: #FDE3E6; border-color: #FE455D; color: #FE455D; }
+.zcs-badge-filled-outline.zcs-badge-grey { background-color: #E8E8E8; border-color: #5D6372; color: #5D6372; }
+.zcs-badge-filled-outline.zcs-badge-yellow { background-color: #FCF4E6; border-color: #FAAE13; color: #B8770D; }
+.zcs-badge-filled-outline.zcs-badge-blue { background-color: #E8EFFF; border-color: #2A6FFC; color: #2A6FFC; }
+.zcs-badge-filled-outline.zcs-badge-orange { background-color: #F8F0EB; border-color: #F4660C; color: #F4660C; }
+.zcs-button { width: auto; min-width: 5rem; min-height: 36px; transition: all .18s ease; }
+.zcs-primary-outline-button { border: 1px solid var(--zcs-theme-brand-color); background-color: var(--zcs-white-color); color: var(--zcs-theme-brand-color); }
+.zcs-primary-outline-button:hover { background-color: var(--zcs-brand-soft); border-color: var(--zcs-theme-brand-color); color: var(--zcs-theme-brand-color); }
+.zcs-button-icon { width: 16px; max-height: 16px; }
+.zcs-table-wrapper { border: 1px solid var(--zcs-border-color); background-color: #fff; overflow: auto; border-radius: 14px; }
+.zcs-table-wrapper table { line-height: normal; border-collapse: collapse; min-width: 920px; }
+.zcs-table-wrapper table thead { top: 0; z-index: 1; }
+.zcs-table-wrapper table thead tr th { background-color: #F9FAFE; box-shadow: 0 -1px 0 0 var(--zcs-border-color) inset; white-space: nowrap; }
+.zcs-table-wrapper table tbody tr td { border-top: 1px solid var(--zcs-border-color); vertical-align: top; }
+.zcs-table-wrapper table tbody tr:first-child td { border-color: transparent; }
+.zcs-table-wrapper table tbody tr:hover td { background-color: #F9FAFE; }
+.zcs-nodata-wrapper { min-height: 94px; border: 1px dashed var(--zcs-border-color); border-radius: 14px; background: #FBFCFF; }
+.service-home-shell { min-height: 100%; background: radial-gradient(circle at top left, var(--zcs-light-bg-color), transparent 34%), var(--zcs-page-bg-color); color: var(--zcs-primary-text-color); font-family: var(--zcs_font_family, Poppins, ZohoPuvi, Arial, sans-serif); padding: 22px; box-sizing: border-box; overflow: auto; }
+.service-hero { border: 1px solid rgba(255,255,255,.55); border-radius: 24px; padding: 24px; background: linear-gradient(135deg, var(--zcs-theme-brand-color), #18335C); color: #fff; position: relative; overflow: hidden; box-shadow: 0 20px 45px rgba(31,54,112,.18); }
+.service-hero:after { content: ''; position: absolute; width: 330px; height: 330px; right: -90px; top: -120px; border-radius: 50%; background: rgba(255,255,255,.13); box-shadow: -70px 90px 0 rgba(255,255,255,.08); }
+.service-hero-content { position: relative; z-index: 1; display: flex; justify-content: space-between; align-items: flex-start; gap: 18px; }
+.service-eyebrow { letter-spacing: .08em; opacity: .78; }
+.service-title { font-size: clamp(24px, 3vw, 38px); line-height: 1.1; margin: 4px 0 8px; }
+.service-subtitle { max-width: 860px; color: rgba(255,255,255,.82); margin: 0; }
+.service-hero-meta { background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.22); border-radius: 16px; padding: 12px 14px; min-width: 230px; backdrop-filter: blur(10px); }
+.service-kpi-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-top: 16px; }
+.service-kpi-card.zcs-template-card { width: auto; height: auto; min-height: 142px; overflow: hidden; padding: 0; transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
+.service-kpi-card:hover { transform: translateY(-2px); border-color: rgba(42,111,252,.25); box-shadow: 0 14px 34px rgba(16,24,40,.09); }
+.service-kpi-card:before { content: ''; position: absolute; width: 92px; height: 92px; border-radius: 50%; right: -30px; bottom: -35px; background: var(--kpi-soft, var(--zcs-brand-soft)); }
+.service-kpi-icon { width: 42px; height: 42px; border-radius: 14px; background: var(--kpi-soft, var(--zcs-brand-soft)); color: var(--kpi-color, var(--zcs-theme-brand-color)); }
+.service-kpi-value { font-size: 30px; line-height: 1; margin-top: 12px; }
+.service-kpi-label { color: var(--zcs-secondary-text-color); min-height: 38px; }
+.service-kpi-link, .service-row-link, .service-panel-link { color: var(--zcs-theme-brand-color); font-size: 13px; font-weight: 600; text-decoration: none; position: relative; z-index: 1; }
+.service-section-grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(320px, .75fr); gap: 16px; margin-top: 16px; }
+.service-two-col { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 16px; }
+.service-panel { padding: 18px; }
+.service-panel-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.service-panel-title { margin: 0; font-size: 18px; }
+.service-note { color: var(--zcs-teritiary-text-color); }
+.service-action-group { display: flex; flex-wrap: wrap; gap: 6px; }
+.service-action { min-width: auto; min-height: 30px; padding: 5px 9px; border-radius: 8px; font-size: 12px; line-height: 1.2; }
+.service-action-triage { --action-soft:#F0ECFF; border-color:#7656D6; color:#7656D6; }
+.service-action-scheduled { --action-soft:#E8EFFF; border-color:#2A6FFC; color:#2A6FFC; }
+.service-action-progress { --action-soft:#EAF7FF; border-color:#1094C5; color:#1094C5; }
+.service-action-parts { --action-soft:#FCF4E6; border-color:#B8770D; color:#B8770D; }
+.service-action-repaired { --action-soft:#E4FCF3; border-color:#179E6C; color:#179E6C; }
+.service-action-completed { --action-soft:#EAFBF4; border-color:#007943; color:#007943; }
+.service-action-closed { --action-soft:#EEF1F7; border-color:#5D6372; color:#5D6372; }
+.service-action-cancelled { --action-soft:#FDE3E6; border-color:#FE455D; color:#FE455D; }
+.service-action:hover { background: var(--action-soft, var(--zcs-brand-soft)); }
+.service-linked-card { padding: 14px; border: 1px solid var(--zcs-border-color); border-radius: 14px; background: #FBFCFF; }
+.service-status-strip { width: 4px; border-radius: 8px; background: var(--strip-color, var(--zcs-theme-brand-color)); align-self: stretch; }
+.service-quick-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.service-quick-card { padding: 14px; border-radius: 14px; border: 1px solid var(--zcs-border-color); background: #fff; text-decoration: none; color: var(--zcs-primary-text-color); transition: border-color .18s ease, background .18s ease; }
+.service-quick-card:hover { border-color: var(--zcs-theme-brand-color); background: #F9FBFF; }
+.service-quick-icon { width: 34px; height: 34px; border-radius: 12px; background: var(--zcs-brand-soft); color: var(--zcs-theme-brand-color); }
+.service-muted-line { color: var(--zcs-teritiary-text-color); font-size: 12px; margin-top: 4px; }
+.service-issue { --zcs-line-clamp-count: 2; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+@media (max-width: 1240px) { .service-kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .service-section-grid { grid-template-columns: 1fr; } }
+@media (max-width: 900px) { .service-two-col { grid-template-columns: 1fr; } .service-hero-content { flex-direction: column; } .service-hero-meta { width: 100%; box-sizing: border-box; } }
+@media (max-width: 640px) { .service-home-shell { padding: 12px; } .service-hero { padding: 18px; border-radius: 18px; } .service-kpi-grid { grid-template-columns: 1fr; } .service-panel { padding: 14px; } .service-quick-grid { grid-template-columns: 1fr; } .service-panel-header { align-items: flex-start; flex-direction: column; } .service-responsive-table table, .service-responsive-table thead, .service-responsive-table tbody, .service-responsive-table th, .service-responsive-table td, .service-responsive-table tr { display: block; min-width: 0; width: 100%; } .service-responsive-table thead { display: none; } .service-responsive-table tbody tr { border-top: 1px solid var(--zcs-border-color); padding: 10px 0; } .service-responsive-table tbody tr:first-child { border-top: none; } .service-responsive-table tbody tr td { border-top: none; display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 8px; padding: 6px 12px; } .service-responsive-table tbody tr td:before { content: attr(data-label); color: var(--zcs-teritiary-text-color); font-size: 12px; font-weight: 600; } .service-responsive-table tbody tr td[colspan]:before { content: ''; display:none; } .service-action-group { margin-top: 4px; } }
+</style>
+<div class="service-home-shell">
+		<section class="service-hero">
+				<div class="service-hero-content">
+						<div>
+								<div class="service-eyebrow zcs-font-12 zcs-uppercase zcs-font-semibold">Service team workspace</div>
+								<h1 class="service-title zcs-font-bold">Service Home</h1>
+								<p class="service-subtitle zcs-font-15">Open requests, assigned work, upcoming visits, parts needs, linked POs, and closure follow-up in one focused mobile-ready view.</p>
+						</div>
+						<div class="service-hero-meta">
+								<div class="zcs-font-12 zcs-uppercase zcs-font-semibold" style="color:rgba(255,255,255,.72);">Signed in</div>
+								<div class="zcs-font-16 zcs-font-semibold zcs-mt-4"><%=zoho.loginuser%></div>
+								<div class="zcs-font-12 zcs-mt-4" style="color:rgba(255,255,255,.72);"><%=zoho.currentdate%></div>
+						</div>
+				</div>
+		</section>
+
+		<section class="service-kpi-grid">
+				<div class="service-kpi-card zcs-template-card zcs-card zcs-flex zcs-direction-column zcs-relative" style="--kpi-soft:#ECF3FF;--kpi-color:#2A6FFC;">
+						<div class="zcs-card-content zcs-col-common zcs-p-16 zcs-box-border">
+								<div class="service-kpi-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline ui-2-list zcs-font-20"></i></div>
+								<div class="service-kpi-value zcs-font-bold"><%=openCount%></div>
+								<div class="service-kpi-label zcs-font-13">Open service requests</div>
+								<a class="service-kpi-link" href="#Report:Open_Service_Requests">Open service report</a>
+						</div>
+				</div>
+				<div class="service-kpi-card zcs-template-card zcs-card zcs-flex zcs-direction-column zcs-relative" style="--kpi-soft:#FFECEF;--kpi-color:#FE455D;">
+						<div class="zcs-card-content zcs-col-common zcs-p-16 zcs-box-border">
+								<div class="service-kpi-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline ui-3-alert zcs-font-20"></i></div>
+								<div class="service-kpi-value zcs-font-bold"><%=urgentCount%></div>
+								<div class="service-kpi-label zcs-font-13">Urgent open requests</div>
+								<a class="service-kpi-link" href="#Report:All_Service_Requests">Review urgent queue</a>
+						</div>
+				</div>
+				<div class="service-kpi-card zcs-template-card zcs-card zcs-flex zcs-direction-column zcs-relative" style="--kpi-soft:#F0ECFF;--kpi-color:#7656D6;">
+						<div class="zcs-card-content zcs-col-common zcs-p-16 zcs-box-border">
+								<div class="service-kpi-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline users-single-03 zcs-font-20"></i></div>
+								<div class="service-kpi-value zcs-font-bold"><%=assignedCount%></div>
+								<div class="service-kpi-label zcs-font-13">Assigned to me</div>
+								<a class="service-kpi-link" href="#Report:Open_Service_Requests">Assigned work list</a>
+						</div>
+				</div>
+				<div class="service-kpi-card zcs-template-card zcs-card zcs-flex zcs-direction-column zcs-relative" style="--kpi-soft:#EAF7FF;--kpi-color:#1094C5;">
+						<div class="zcs-card-content zcs-col-common zcs-p-16 zcs-box-border">
+								<div class="service-kpi-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline ui-1-calendar-60 zcs-font-20"></i></div>
+								<div class="service-kpi-value zcs-font-bold"><%=upcomingCount%></div>
+								<div class="service-kpi-label zcs-font-13">Upcoming scheduled visits</div>
+								<a class="service-kpi-link" href="#Report:Service_Calendar">Service calendar</a>
+						</div>
+				</div>
+				<div class="service-kpi-card zcs-template-card zcs-card zcs-flex zcs-direction-column zcs-relative" style="--kpi-soft:#FFF6E3;--kpi-color:#B8770D;">
+						<div class="zcs-card-content zcs-col-common zcs-p-16 zcs-box-border">
+								<div class="service-kpi-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline shopping-tag zcs-font-20"></i></div>
+								<div class="service-kpi-value zcs-font-bold"><%=partsRequiredCount%></div>
+								<div class="service-kpi-label zcs-font-13">Parts required requests</div>
+								<a class="service-kpi-link" href="#Report:All_Service_Parts_Usage">Parts usage rows</a>
+						</div>
+				</div>
+				<div class="service-kpi-card zcs-template-card zcs-card zcs-flex zcs-direction-column zcs-relative" style="--kpi-soft:#EAFBF4;--kpi-color:#179E6C;">
+						<div class="zcs-card-content zcs-col-common zcs-p-16 zcs-box-border">
+								<div class="service-kpi-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline ui-1-check-circle-08 zcs-font-20"></i></div>
+								<div class="service-kpi-value zcs-font-bold"><%=closureCount%></div>
+								<div class="service-kpi-label zcs-font-13">Repair or completion closure tasks</div>
+								<a class="service-kpi-link" href="#Report:All_Service_Requests">Review closures</a>
+						</div>
+				</div>
+				<div class="service-kpi-card zcs-template-card zcs-card zcs-flex zcs-direction-column zcs-relative" style="--kpi-soft:#EEF1F7;--kpi-color:#5D6372;">
+						<div class="zcs-card-content zcs-col-common zcs-p-16 zcs-box-border">
+								<div class="service-kpi-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline shopping-cart-simple zcs-font-20"></i></div>
+								<div class="service-kpi-value zcs-font-bold"><%=linkedPOCount%></div>
+								<div class="service-kpi-label zcs-font-13">Open service-linked POs</div>
+								<a class="service-kpi-link" href="#Report:Open_Purchase_Orders">Linked PO list</a>
+						</div>
+				</div>
+				<div class="service-kpi-card zcs-template-card zcs-card zcs-flex zcs-direction-column zcs-relative" style="--kpi-soft:#F8F0EB;--kpi-color:#F4660C;">
+						<div class="zcs-card-content zcs-col-common zcs-p-16 zcs-box-border">
+								<div class="service-kpi-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline files-2-doc zcs-font-20"></i></div>
+								<div class="service-kpi-value zcs-font-bold"><%=pendingPartsUsageCount%></div>
+								<div class="service-kpi-label zcs-font-13">Parts usage not stock-posted</div>
+								<a class="service-kpi-link" href="#Report:All_Service_Parts_Usage">Usage report</a>
+						</div>
+				</div>
+		</section>
+
+		<section class="service-panel zcs-card zcs-mt-16">
+				<div class="service-panel-header">
+						<div>
+								<h2 class="service-panel-title zcs-font-semibold">Open and urgent service focus</h2>
+								<p class="service-note zcs-font-13 zcs-mt-4 zcs-mb-0">Use Add Comments popup links for service status changes. Financial fields are intentionally excluded.</p>
+						</div>
+						<a class="service-panel-link" href="#Report:Open_Service_Requests">Full open service list</a>
+				</div>
+				<div class="service-responsive-table zcs-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative">
+						<table class="zcs-w-full">
+								<thead class="zcs-sticky">
+										<tr>
+												<th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Service</th>
+												<th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Customer / issue</th>
+												<th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Priority</th>
+												<th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Schedule / technician</th>
+												<th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Status</th>
+												<th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Service actions</th>
+										</tr>
+								</thead>
+								<tbody>
+<%
+	openRows = 0;
+	for each  svc in Service_Requests[Service_Status != "Closed" && Service_Status != "Cancelled"] sort by Request_Date desc
+	{
+		if(openRows < 10)
+		{
+			openRows = openRows + 1;
+			serviceDetailUrl = "#Page:Service_Detail?Service_ID=" + svc.ID;
+			statusClass = "zcs-badge-grey";
+			if(svc.Service_Status == "Triage" || svc.Service_Status == "New")
+			{
+				statusClass = "zcs-badge-orange";
+			}
+			else if(svc.Service_Status == "Scheduled")
+			{
+				statusClass = "zcs-badge-blue";
+			}
+			else if(svc.Service_Status == "In Progress")
+			{
+				statusClass = "zcs-badge-theme";
+			}
+			else if(svc.Service_Status == "Parts Required")
+			{
+				statusClass = "zcs-badge-yellow";
+			}
+			else if(svc.Service_Status == "Repaired" || svc.Service_Status == "Completed")
+			{
+				statusClass = "zcs-badge-green";
+			}
+			priorityClass = "zcs-badge-blue";
+			if(svc.Priority == "Urgent")
+			{
+				priorityClass = "zcs-badge-red";
+			}
+			else if(svc.Priority == "High")
+			{
+				priorityClass = "zcs-badge-orange";
+			}
+			else if(svc.Priority == "Low")
+			{
+				priorityClass = "zcs-badge-grey";
+			}
+			triageUrl = "#Form:Action_Comments?Target_Module=Service_Requests&Lookup_ID=" + svc.ID + "&New_Status=Triage&Return_Page=Service_Home&Return_URL=" + returnUrl + "&zc_LoadIn=dialog";
+			scheduledUrl = "#Form:Action_Comments?Target_Module=Service_Requests&Lookup_ID=" + svc.ID + "&New_Status=Scheduled&Return_Page=Service_Home&Return_URL=" + returnUrl + "&zc_LoadIn=dialog";
+			inProgressUrl = "#Form:Action_Comments?Target_Module=Service_Requests&Lookup_ID=" + svc.ID + "&New_Status=In%20Progress&Return_Page=Service_Home&Return_URL=" + returnUrl + "&zc_LoadIn=dialog";
+			partsRequiredUrl = "#Form:Action_Comments?Target_Module=Service_Requests&Lookup_ID=" + svc.ID + "&New_Status=Parts%20Required&Return_Page=Service_Home&Return_URL=" + returnUrl + "&zc_LoadIn=dialog";
+			repairedUrl = "#Form:Action_Comments?Target_Module=Service_Requests&Lookup_ID=" + svc.ID + "&New_Status=Repaired&Return_Page=Service_Home&Return_URL=" + returnUrl + "&zc_LoadIn=dialog";
+			completedUrl = "#Form:Action_Comments?Target_Module=Service_Requests&Lookup_ID=" + svc.ID + "&New_Status=Completed&Return_Page=Service_Home&Return_URL=" + returnUrl + "&zc_LoadIn=dialog";
+			closedUrl = "#Form:Action_Comments?Target_Module=Service_Requests&Lookup_ID=" + svc.ID + "&New_Status=Closed&Return_Page=Service_Home&Return_URL=" + returnUrl + "&zc_LoadIn=dialog";
+			cancelledUrl = "#Form:Action_Comments?Target_Module=Service_Requests&Lookup_ID=" + svc.ID + "&New_Status=Cancelled&Return_Page=Service_Home&Return_URL=" + returnUrl + "&zc_LoadIn=dialog";
+			%>
+<tr>
+																<td data-label="Service" class="zcs-px-16 zcs-py-10 zcs-box-border zcs-font-14 zcs-color-primary"><a class="service-row-link" href="<%=serviceDetailUrl%>"><strong><%=svc.Service_Code%></strong></a><br><span class="zcs-font-12 zcs-color-tertiary">Requested: <%=ifnull(svc.Request_Date,"Not set")%></span></td>
+																<td data-label="Customer / issue" class="zcs-px-16 zcs-py-10 zcs-box-border zcs-font-14 zcs-color-primary"><strong><%=ifnull(svc.Customer_Name,"Customer pending")%></strong><br><span class="zcs-font-12 zcs-color-tertiary"><%=ifnull(svc.Phone,"No phone")%></span><div class="service-issue zcs-font-12 zcs-color-secondary zcs-mt-4"><%=ifnull(svc.Issue_Description,"Issue description pending")%></div></td>
+																<td data-label="Priority" class="zcs-px-16 zcs-py-10 zcs-box-border"><span class="zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border <%=priorityClass%>"><span class="zcs-badge-text zcs-font-12"><%=ifnull(svc.Priority,"Not set")%></span></span></td>
+																<td data-label="Schedule / technician" class="zcs-px-16 zcs-py-10 zcs-box-border zcs-font-14"><%=ifnull(svc.Scheduled_Start,"Schedule pending")%><br><span class="zcs-font-12 zcs-color-tertiary"><%=ifnull(svc.Technician.Employee_Name,"Technician pending")%></span></td>
+																<td data-label="Status" class="zcs-px-16 zcs-py-10 zcs-box-border"><span class="zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border <%=statusClass%>"><span class="zcs-badge-text zcs-font-12"><%=svc.Service_Status%></span></span></td>
+																<td data-label="Service actions" class="zcs-px-16 zcs-py-10 zcs-box-border"><div class="service-action-group"><a class="zcs-button zcs-primary-outline-button service-action service-action-triage zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-6 zcs-box-border" href="<%=triageUrl%>">Triage</a><a class="zcs-button zcs-primary-outline-button service-action service-action-scheduled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-6 zcs-box-border" href="<%=scheduledUrl%>">Scheduled</a><a class="zcs-button zcs-primary-outline-button service-action service-action-progress zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-6 zcs-box-border" href="<%=inProgressUrl%>">In Progress</a><a class="zcs-button zcs-primary-outline-button service-action service-action-parts zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-6 zcs-box-border" href="<%=partsRequiredUrl%>">Parts Required</a><a class="zcs-button zcs-primary-outline-button service-action service-action-repaired zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-6 zcs-box-border" href="<%=repairedUrl%>">Repaired</a><a class="zcs-button zcs-primary-outline-button service-action service-action-completed zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-6 zcs-box-border" href="<%=completedUrl%>">Completed</a><a class="zcs-button zcs-primary-outline-button service-action service-action-closed zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-6 zcs-box-border" href="<%=closedUrl%>">Closed</a><a class="zcs-button zcs-primary-outline-button service-action service-action-cancelled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-6 zcs-box-border" href="<%=cancelledUrl%>">Cancelled</a></div></td>
+														</tr>
+<%
+		}
+	}
+	if(openRows == 0)
+	{
+		%>
+<tr><td class="zcs-px-16 zcs-py-12 zcs-box-border zcs-font-14 zcs-color-tertiary" colspan="6">No open service requests are waiting.</td></tr>
+<%
+	}
+	%>
+</tbody>
+						</table>
+				</div>
+		</section>
+
+		<section class="service-section-grid">
+				<div class="service-panel zcs-card">
+						<div class="service-panel-header">
+								<div>
+										<h2 class="service-panel-title zcs-font-semibold">Assigned to me</h2>
+										<p class="service-note zcs-font-13 zcs-mt-4 zcs-mb-0">Filtered where Technician email equals the signed-in user.</p>
+								</div>
+								<a class="service-panel-link" href="#Report:Open_Service_Requests">Open service requests</a>
+						</div>
+						<div class="service-responsive-table zcs-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative">
+								<table class="zcs-w-full">
+										<thead class="zcs-sticky"><tr><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Service</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Customer</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Schedule</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Status</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Next actions</th></tr></thead>
+										<tbody>
+<%
+	assignedRows = 0;
+	for each  mySvc in Service_Requests[Technician.Email == zoho.loginuser && Service_Status != "Closed" && Service_Status != "Cancelled"] sort by Scheduled_Start asc
+	{
+		if(assignedRows < 8)
+		{
+			assignedRows = assignedRows + 1;
+			myDetailUrl = "#Page:Service_Detail?Service_ID=" + mySvc.ID;
+			myProgressUrl = "#Form:Action_Comments?Target_Module=Service_Requests&Lookup_ID=" + mySvc.ID + "&New_Status=In%20Progress&Return_Page=Service_Home&Return_URL=" + returnUrl + "&zc_LoadIn=dialog";
+			myPartsUrl = "#Form:Action_Comments?Target_Module=Service_Requests&Lookup_ID=" + mySvc.ID + "&New_Status=Parts%20Required&Return_Page=Service_Home&Return_URL=" + returnUrl + "&zc_LoadIn=dialog";
+			myRepairedUrl = "#Form:Action_Comments?Target_Module=Service_Requests&Lookup_ID=" + mySvc.ID + "&New_Status=Repaired&Return_Page=Service_Home&Return_URL=" + returnUrl + "&zc_LoadIn=dialog";
+			myCompletedUrl = "#Form:Action_Comments?Target_Module=Service_Requests&Lookup_ID=" + mySvc.ID + "&New_Status=Completed&Return_Page=Service_Home&Return_URL=" + returnUrl + "&zc_LoadIn=dialog";
+			myClosedUrl = "#Form:Action_Comments?Target_Module=Service_Requests&Lookup_ID=" + mySvc.ID + "&New_Status=Closed&Return_Page=Service_Home&Return_URL=" + returnUrl + "&zc_LoadIn=dialog";
+			%>
+<tr><td data-label="Service" class="zcs-px-16 zcs-py-10 zcs-box-border zcs-font-14"><a class="service-row-link" href="<%=myDetailUrl%>"><strong><%=mySvc.Service_Code%></strong></a><br><span class="zcs-font-12 zcs-color-tertiary"><%=ifnull(mySvc.Priority,"Priority pending")%></span></td><td data-label="Customer" class="zcs-px-16 zcs-py-10 zcs-box-border zcs-font-14"><%=ifnull(mySvc.Customer_Name,"Customer pending")%><br><span class="zcs-font-12 zcs-color-tertiary"><%=ifnull(mySvc.Phone,"No phone")%></span></td><td data-label="Schedule" class="zcs-px-16 zcs-py-10 zcs-box-border zcs-font-14"><%=ifnull(mySvc.Scheduled_Start,"Schedule pending")%></td><td data-label="Status" class="zcs-px-16 zcs-py-10 zcs-box-border zcs-font-14"><%=mySvc.Service_Status%></td><td data-label="Next actions" class="zcs-px-16 zcs-py-10 zcs-box-border"><div class="service-action-group"><a class="zcs-button zcs-primary-outline-button service-action service-action-progress zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-6 zcs-box-border" href="<%=myProgressUrl%>">In Progress</a><a class="zcs-button zcs-primary-outline-button service-action service-action-parts zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-6 zcs-box-border" href="<%=myPartsUrl%>">Parts Required</a><a class="zcs-button zcs-primary-outline-button service-action service-action-repaired zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-6 zcs-box-border" href="<%=myRepairedUrl%>">Repaired</a><a class="zcs-button zcs-primary-outline-button service-action service-action-completed zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-6 zcs-box-border" href="<%=myCompletedUrl%>">Completed</a><a class="zcs-button zcs-primary-outline-button service-action service-action-closed zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-6 zcs-box-border" href="<%=myClosedUrl%>">Closed</a></div></td></tr>
+<%
+		}
+	}
+	if(assignedRows == 0)
+	{
+		%>
+<tr><td class="zcs-px-16 zcs-py-12 zcs-box-border zcs-font-14 zcs-color-tertiary" colspan="5">No open service requests are assigned to this login.</td></tr>
+<%
+	}
+	%>
+</tbody>
+								</table>
+						</div>
+				</div>
+
+				<div class="service-panel zcs-card">
+						<div class="service-panel-header">
+								<div>
+										<h2 class="service-panel-title zcs-font-semibold">Upcoming service schedule</h2>
+										<p class="service-note zcs-font-13 zcs-mt-4 zcs-mb-0">Future scheduled visits by date, customer, area, and technician.</p>
+								</div>
+								<a class="service-panel-link" href="#Report:Service_Calendar">Calendar</a>
+						</div>
+						<div class="zcs-flex zcs-direction-column zcs-gap-12">
+<%
+	visitRows = 0;
+	for each  visit in Service_Requests[Scheduled_Start != null && Scheduled_Start >= zoho.currenttime && Service_Status != "Closed" && Service_Status != "Cancelled"] sort by Scheduled_Start asc
+	{
+		if(visitRows < 8)
+		{
+			visitRows = visitRows + 1;
+			visitDetailUrl = "#Page:Service_Detail?Service_ID=" + visit.ID;
+			visitStartUrl = "#Form:Action_Comments?Target_Module=Service_Requests&Lookup_ID=" + visit.ID + "&New_Status=In%20Progress&Return_Page=Service_Home&Return_URL=" + returnUrl + "&zc_LoadIn=dialog";
+			visitCancelUrl = "#Form:Action_Comments?Target_Module=Service_Requests&Lookup_ID=" + visit.ID + "&New_Status=Cancelled&Return_Page=Service_Home&Return_URL=" + returnUrl + "&zc_LoadIn=dialog";
+			%>
+<div class="service-linked-card"><div class="zcs-flex zcs-gap-12 zcs-align-items-start"><span class="service-status-strip" style="--strip-color:#1094C5;"></span><div class="zcs-col-common"><div class="zcs-flex zcs-justify-space-between zcs-gap-10 zcs-align-items-start"><div><a class="service-row-link" href="<%=visitDetailUrl%>"><strong><%=visit.Service_Code%></strong></a><div class="zcs-font-13 zcs-color-secondary zcs-mt-4"><%=ifnull(visit.Customer_Name,"Customer pending")%></div><div class="zcs-font-12 zcs-color-tertiary zcs-mt-4"><%=ifnull(visit.Scheduled_Start,"Start pending")%> to <%=ifnull(visit.Scheduled_End,"End pending")%></div><div class="zcs-font-12 zcs-color-tertiary zcs-mt-4">Technician: <%=ifnull(visit.Technician.Employee_Name,"Not assigned")%></div></div><span class="zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-blue"><span class="zcs-badge-text zcs-font-12"><%=visit.Service_Status%></span></span></div><div class="service-action-group zcs-mt-10"><a class="zcs-button zcs-primary-outline-button service-action service-action-progress zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-6 zcs-box-border" href="<%=visitStartUrl%>">In Progress</a><a class="zcs-button zcs-primary-outline-button service-action service-action-cancelled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-6 zcs-box-border" href="<%=visitCancelUrl%>">Cancelled</a></div></div></div></div>
+<%
+		}
+	}
+	if(visitRows == 0)
+	{
+		%>
+<div class="zcs-nodata-wrapper zcs-flex zcs-align-items-center zcs-justify-center zcs-text-center"><div class="zcs-nodata-content zcs-p-20 zcs-box-border"><h5 class="zcs-nodata-header zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-mt-10 zcs-mx-0 zcs-mb-0">No upcoming service visits are scheduled.</h5></div></div>
+<%
+	}
+	%>
+</div>
+				</div>
+		</section>
+
+		<section class="service-two-col">
+				<div class="service-panel zcs-card">
+						<div class="service-panel-header">
+								<div>
+										<h2 class="service-panel-title zcs-font-semibold">Parts-required list</h2>
+										<p class="service-note zcs-font-13 zcs-mt-4 zcs-mb-0">Requests waiting for parts decisions or linked PO follow-up.</p>
+								</div>
+								<a class="service-panel-link" href="#Report:All_Service_Requests">Service report</a>
+						</div>
+						<div class="zcs-flex zcs-direction-column zcs-gap-12">
+<%
+	partsRows = 0;
+	for each  prSvc in Service_Requests[Service_Status == "Parts Required"] sort by Request_Date asc
+	{
+		if(partsRows < 8)
+		{
+			partsRows = partsRows + 1;
+			prDetailUrl = "#Page:Service_Detail?Service_ID=" + prSvc.ID;
+			prRepairedUrl = "#Form:Action_Comments?Target_Module=Service_Requests&Lookup_ID=" + prSvc.ID + "&New_Status=Repaired&Return_Page=Service_Home&Return_URL=" + returnUrl + "&zc_LoadIn=dialog";
+			prCompletedUrl = "#Form:Action_Comments?Target_Module=Service_Requests&Lookup_ID=" + prSvc.ID + "&New_Status=Completed&Return_Page=Service_Home&Return_URL=" + returnUrl + "&zc_LoadIn=dialog";
+			%>
+<div class="service-linked-card"><div class="zcs-flex zcs-justify-space-between zcs-gap-10 zcs-align-items-start"><div><a class="service-row-link" href="<%=prDetailUrl%>"><strong><%=prSvc.Service_Code%></strong></a><div class="zcs-font-13 zcs-color-secondary zcs-mt-4"><%=ifnull(prSvc.Customer_Name,"Customer pending")%> \u00B7 <%=ifnull(prSvc.Priority,"Priority pending")%></div><div class="zcs-font-12 zcs-color-tertiary zcs-mt-4">Linked PO: <%=ifnull(prSvc.Linked_PO.PO_Number,"None")%> \u00B7 Technician: <%=ifnull(prSvc.Technician.Employee_Name,"Not assigned")%></div></div><span class="zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-yellow"><span class="zcs-badge-text zcs-font-12"><%=prSvc.Service_Status%></span></span></div><div class="service-action-group zcs-mt-10"><a class="zcs-button zcs-primary-outline-button service-action service-action-repaired zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-6 zcs-box-border" href="<%=prRepairedUrl%>">Repaired</a><a class="zcs-button zcs-primary-outline-button service-action service-action-completed zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-6 zcs-box-border" href="<%=prCompletedUrl%>">Completed</a><a class="zcs-button zcs-primary-outline-button service-action service-action-parts zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-6 zcs-box-border" href="#Report:All_Service_Parts_Usage">Usage rows</a></div></div>
+<%
+		}
+	}
+	if(partsRows == 0)
+	{
+		%>
+<div class="zcs-nodata-wrapper zcs-flex zcs-align-items-center zcs-justify-center zcs-text-center"><div class="zcs-nodata-content zcs-p-20 zcs-box-border"><h5 class="zcs-nodata-header zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-mt-10 zcs-mx-0 zcs-mb-0">No services are currently marked Parts Required.</h5></div></div>
+<%
+	}
+	%>
+</div>
+				</div>
+
+				<div class="service-panel zcs-card">
+						<div class="service-panel-header">
+								<div>
+										<h2 class="service-panel-title zcs-font-semibold">Linked service PO list</h2>
+										<p class="service-note zcs-font-13 zcs-mt-4 zcs-mb-0">Open purchase orders linked to service requests. PO status and due dates only.</p>
+								</div>
+								<a class="service-panel-link" href="#Report:Open_Purchase_Orders">Open PO report</a>
+						</div>
+						<div class="zcs-flex zcs-direction-column zcs-gap-12">
+<%
+	poRows = 0;
+	for each  spo in Purchase_Orders[Linked_Service != null && PO_Status != "Received" && PO_Status != "Cancelled"] sort by Expected_Delivery_Date asc
+	{
+		if(poRows < 8)
+		{
+			poRows = poRows + 1;
+			linkedServiceUrl = "#Page:Service_Detail?Service_ID=" + spo.Linked_Service.ID;
+			poStatusClass = "zcs-badge-blue";
+			if(spo.PO_Status == "Submitted for Approval")
+			{
+				poStatusClass = "zcs-badge-orange";
+			}
+			else if(spo.PO_Status == "Partially Received")
+			{
+				poStatusClass = "zcs-badge-yellow";
+			}
+			else if(spo.PO_Status == "Draft")
+			{
+				poStatusClass = "zcs-badge-grey";
+			}
+			%>
+<div class="service-linked-card"><div class="zcs-flex zcs-justify-space-between zcs-gap-10 zcs-align-items-start"><div><strong><%=spo.PO_Number%></strong><div class="zcs-font-13 zcs-color-secondary zcs-mt-4"><%=ifnull(spo.Vendor.Vendor_Name,"Vendor pending")%></div><div class="zcs-font-12 zcs-color-tertiary zcs-mt-4">Expected: <%=ifnull(spo.Expected_Delivery_Date,"Not set")%> \u00B7 Linked service: <a class="service-row-link" href="<%=linkedServiceUrl%>"><%=ifnull(spo.Linked_Service.Service_Code,"Service pending")%></a></div></div><span class="zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border <%=poStatusClass%>"><span class="zcs-badge-text zcs-font-12"><%=spo.PO_Status%></span></span></div></div>
+<%
+		}
+	}
+	if(poRows == 0)
+	{
+		%>
+<div class="zcs-nodata-wrapper zcs-flex zcs-align-items-center zcs-justify-center zcs-text-center"><div class="zcs-nodata-content zcs-p-20 zcs-box-border"><h5 class="zcs-nodata-header zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-mt-10 zcs-mx-0 zcs-mb-0">No open service-linked purchase orders.</h5></div></div>
+<%
+	}
+	%>
+</div>
+				</div>
+		</section>
+
+		<section class="service-two-col">
+				<div class="service-panel zcs-card">
+						<div class="service-panel-header">
+								<div>
+										<h2 class="service-panel-title zcs-font-semibold">Parts usage watch</h2>
+										<p class="service-note zcs-font-13 zcs-mt-4 zcs-mb-0">Usage rows not yet stock-posted for completion or closure follow-through.</p>
+								</div>
+								<a class="service-panel-link" href="#Report:All_Service_Parts_Usage">Usage report</a>
+						</div>
+						<div class="service-responsive-table zcs-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative">
+								<table class="zcs-w-full">
+										<thead class="zcs-sticky"><tr><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Service</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Material</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-color-primary">Qty</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Stock posted</th></tr></thead>
+										<tbody>
+<%
+	usageRows = 0;
+	for each  usage in Service_Parts_Usage[Stock_Deducted == false] sort by Service_Request asc
+	{
+		if(usageRows < 8)
+		{
+			usageRows = usageRows + 1;
+			usageDetailUrl = "#Page:Service_Detail?Service_ID=" + usage.Service_Request.ID;
+			%>
+<tr><td data-label="Service" class="zcs-px-16 zcs-py-10 zcs-box-border zcs-font-14"><a class="service-row-link" href="<%=usageDetailUrl%>"><%=ifnull(usage.Service_Request.Service_Code,"Service pending")%></a></td><td data-label="Material" class="zcs-px-16 zcs-py-10 zcs-box-border zcs-font-14"><%=ifnull(usage.Material.Material_Name,"Material pending")%><br><span class="zcs-font-12 zcs-color-tertiary"><%=ifnull(usage.Notes,"No notes")%></span></td><td data-label="Qty" class="zcs-px-16 zcs-py-10 zcs-box-border zcs-font-14 zcs-text-right"><%=ifnull(usage.Quantity_Used,0)%> <%=ifnull(usage.Unit.Unit_Name,"")%></td><td data-label="Stock posted" class="zcs-px-16 zcs-py-10 zcs-box-border"><span class="zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-orange"><span class="zcs-badge-text zcs-font-12">Pending</span></span></td></tr>
+<%
+		}
+	}
+	if(usageRows == 0)
+	{
+		%>
+<tr><td class="zcs-px-16 zcs-py-12 zcs-box-border zcs-font-14 zcs-color-tertiary" colspan="4">No unposted service parts usage rows.</td></tr>
+<%
+	}
+	%>
+</tbody>
+								</table>
+						</div>
+				</div>
+
+				<div class="service-panel zcs-card">
+						<div class="service-panel-header">
+								<div>
+										<h2 class="service-panel-title zcs-font-semibold">Closure tasks</h2>
+										<p class="service-note zcs-font-13 zcs-mt-4 zcs-mb-0">Repaired or completed work that still needs final closure comments.</p>
+								</div>
+								<a class="service-panel-link" href="#Report:All_Service_Requests">All service requests</a>
+						</div>
+						<div class="zcs-flex zcs-direction-column zcs-gap-12">
+<%
+	closureRows = 0;
+	for each  closeSvc in Service_Requests[Service_Status == "Repaired" || Service_Status == "Completed"] sort by Completion_Date desc
+	{
+		if(closureRows < 8)
+		{
+			closureRows = closureRows + 1;
+			closureDetailUrl = "#Page:Service_Detail?Service_ID=" + closeSvc.ID;
+			closeUrl = "#Form:Action_Comments?Target_Module=Service_Requests&Lookup_ID=" + closeSvc.ID + "&New_Status=Closed&Return_Page=Service_Home&Return_URL=" + returnUrl + "&zc_LoadIn=dialog";
+			cancelCloseUrl = "#Form:Action_Comments?Target_Module=Service_Requests&Lookup_ID=" + closeSvc.ID + "&New_Status=Cancelled&Return_Page=Service_Home&Return_URL=" + returnUrl + "&zc_LoadIn=dialog";
+			%>
+<div class="service-linked-card"><div class="zcs-flex zcs-justify-space-between zcs-gap-10 zcs-align-items-start"><div><a class="service-row-link" href="<%=closureDetailUrl%>"><strong><%=closeSvc.Service_Code%></strong></a><div class="zcs-font-13 zcs-color-secondary zcs-mt-4"><%=ifnull(closeSvc.Customer_Name,"Customer pending")%></div><div class="zcs-font-12 zcs-color-tertiary zcs-mt-4">Completion date: <%=ifnull(closeSvc.Completion_Date,"Not set")%> \u00B7 Technician notes: <%=ifnull(closeSvc.Technician_Notes,"Pending")%></div></div><span class="zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-green"><span class="zcs-badge-text zcs-font-12"><%=closeSvc.Service_Status%></span></span></div><div class="service-action-group zcs-mt-10"><a class="zcs-button zcs-primary-outline-button service-action service-action-closed zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-6 zcs-box-border" href="<%=closeUrl%>">Closed</a><a class="zcs-button zcs-primary-outline-button service-action service-action-cancelled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-6 zcs-box-border" href="<%=cancelCloseUrl%>">Cancelled</a></div></div>
+<%
+		}
+	}
+	if(closureRows == 0)
+	{
+		%>
+<div class="zcs-nodata-wrapper zcs-flex zcs-align-items-center zcs-justify-center zcs-text-center"><div class="zcs-nodata-content zcs-p-20 zcs-box-border"><h5 class="zcs-nodata-header zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-mt-10 zcs-mx-0 zcs-mb-0">No closure tasks are waiting.</h5></div></div>
+<%
+	}
+	%>
+</div>
+				</div>
+		</section>
+
+		<section class="service-section-grid">
+				<div class="service-panel zcs-card">
+						<div class="service-panel-header">
+								<div>
+										<h2 class="service-panel-title zcs-font-semibold">Recently completed services</h2>
+										<p class="service-note zcs-font-13 zcs-mt-4 zcs-mb-0">Latest completed or closed service work for field reference.</p>
+								</div>
+								<a class="service-panel-link" href="#Report:All_Service_Requests">All service requests</a>
+						</div>
+						<div class="service-responsive-table zcs-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative">
+								<table class="zcs-w-full">
+										<thead class="zcs-sticky"><tr><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Service</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Customer</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Technician</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Completion</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Status</th></tr></thead>
+										<tbody>
+<%
+	completedRows = 0;
+	for each  doneSvc in Service_Requests[Service_Status == "Completed" || Service_Status == "Closed" && Completion_Date != null] sort by Completion_Date desc
+	{
+		if(completedRows < 8)
+		{
+			completedRows = completedRows + 1;
+			doneDetailUrl = "#Page:Service_Detail?Service_ID=" + doneSvc.ID;
+			doneClass = "zcs-badge-green";
+			if(doneSvc.Service_Status == "Closed")
+			{
+				doneClass = "zcs-badge-grey";
+			}
+			%>
+<tr><td data-label="Service" class="zcs-px-16 zcs-py-10 zcs-box-border zcs-font-14"><a class="service-row-link" href="<%=doneDetailUrl%>"><strong><%=doneSvc.Service_Code%></strong></a><br><span class="zcs-font-12 zcs-color-tertiary"><%=ifnull(doneSvc.Request_Date,"Request date pending")%></span></td><td data-label="Customer" class="zcs-px-16 zcs-py-10 zcs-box-border zcs-font-14"><%=ifnull(doneSvc.Customer_Name,"Customer pending")%></td><td data-label="Technician" class="zcs-px-16 zcs-py-10 zcs-box-border zcs-font-14"><%=ifnull(doneSvc.Technician.Employee_Name,"Not assigned")%></td><td data-label="Completion" class="zcs-px-16 zcs-py-10 zcs-box-border zcs-font-14"><%=ifnull(doneSvc.Completion_Date,"Not set")%></td><td data-label="Status" class="zcs-px-16 zcs-py-10 zcs-box-border"><span class="zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border <%=doneClass%>"><span class="zcs-badge-text zcs-font-12"><%=doneSvc.Service_Status%></span></span></td></tr>
+<%
+		}
+	}
+	if(completedRows == 0)
+	{
+		%>
+<tr><td class="zcs-px-16 zcs-py-12 zcs-box-border zcs-font-14 zcs-color-tertiary" colspan="5">No completed service records are available yet.</td></tr>
+<%
+	}
+	%>
+</tbody>
+								</table>
+						</div>
+				</div>
+
+				<div class="zcs-quick-actions-wrapper zcs-card zcs-flex zcs-direction-column zcs-gap-16 zcs-p-16 zcs-box-border">
+						<h2 class="service-panel-title zcs-font-semibold">Service quick links</h2>
+						<div class="service-quick-grid">
+								<a class="service-quick-card zcs-flex zcs-align-items-center zcs-gap-10" href="#Form:Service_Requests?zc_LoadIn=dialog"><span class="service-quick-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline ui-1-simple-add"></i></span><span><strong>Add service request</strong><br><span class="zcs-font-12 zcs-color-tertiary">Create or log a new request</span></span></a>
+								<a class="service-quick-card zcs-flex zcs-align-items-center zcs-gap-10" href="#Report:Open_Service_Requests"><span class="service-quick-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline ui-2-list"></i></span><span><strong>Open service requests</strong><br><span class="zcs-font-12 zcs-color-tertiary">Filtered open list</span></span></a>
+								<a class="service-quick-card zcs-flex zcs-align-items-center zcs-gap-10" href="#Report:Service_Calendar"><span class="service-quick-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline ui-1-calendar-60"></i></span><span><strong>Service calendar</strong><br><span class="zcs-font-12 zcs-color-tertiary">Visit schedule</span></span></a>
+								<a class="service-quick-card zcs-flex zcs-align-items-center zcs-gap-10" href="#Report:Service_Status_Board"><span class="service-quick-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline design-bullet-list-67"></i></span><span><strong>Status board</strong><br><span class="zcs-font-12 zcs-color-tertiary">Kanban by service status</span></span></a>
+								<a class="service-quick-card zcs-flex zcs-align-items-center zcs-gap-10" href="#Report:All_Service_Parts_Usage"><span class="service-quick-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline shopping-tag"></i></span><span><strong>Parts usage</strong><br><span class="zcs-font-12 zcs-color-tertiary">Material consumption rows</span></span></a>
+								<a class="service-quick-card zcs-flex zcs-align-items-center zcs-gap-10" href="#Report:All_Materials"><span class="service-quick-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline business-box"></i></span><span><strong>Material stock</strong><br><span class="zcs-font-12 zcs-color-tertiary">Check available service parts</span></span></a>
+						</div>
+				</div>
+		</section>
+</div>
