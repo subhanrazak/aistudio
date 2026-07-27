@@ -1,0 +1,83 @@
+Action_Comments_On_Validate as "Action Comments On Validate"
+{
+
+				type =  form
+				form = Action_Comments
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Comments == null || input.Comments.trim().length() < 3)
+										{
+											alert "Enter meaningful comments before applying this status change.";
+											cancel submit;
+										}
+										valid_status = false;
+										target_exists = false;
+										if(input.Target_Module == "Customer_Orders")
+										{
+											valid_status = input.New_Status in {"Green Light","On Hold","Cancelled"};
+											order_rec = Customer_Orders[ID == input.Lookup_ID];
+											target_exists = order_rec.count() > 0;
+											if(target_exists && input.New_Status == "Green Light" && order_rec.Order_Status != "Awaiting Green Light" && order_rec.Order_Status != "On Hold")
+											{
+												alert "Green Light is valid only from Awaiting Green Light or On Hold.";
+												cancel submit;
+											}
+										}
+										else if(input.Target_Module == "Production_Records")
+										{
+											valid_status = input.New_Status in {"Queued","Material Shortage","Material Ordered","Material Received","Manufacturing","Powder Coating","Ready for Installation","Final Product Purchase","Purchased and Received","On Hold","Cancelled"};
+											prod_rec = Production_Records[ID == input.Lookup_ID];
+											target_exists = prod_rec.count() > 0;
+										}
+										else if(input.Target_Module == "Purchase_Orders")
+										{
+											valid_status = input.New_Status in {"Submitted for Approval","Approved","Ordered","Partially Received","Received","Cancelled"};
+											po_rec = Purchase_Orders[ID == input.Lookup_ID];
+											target_exists = po_rec.count() > 0;
+											if(target_exists && input.New_Status == "Ordered" || input.New_Status == "Partially Received" || input.New_Status == "Received" && po_rec.PO_Status != "Approved" && po_rec.Approved_Date == null)
+											{
+												alert "Purchase orders must be Approved before ordering or receiving.";
+												cancel submit;
+											}
+										}
+										else if(input.Target_Module == "Installation_Schedules")
+										{
+											valid_status = input.New_Status in {"Ready to Schedule","Scheduled","In Progress","Installed","Inspection Required","Inspection Completed","Completed","On Hold","Cancelled"};
+											inst_rec = Installation_Schedules[ID == input.Lookup_ID];
+											target_exists = inst_rec.count() > 0;
+										}
+										else if(input.Target_Module == "Permit_Records")
+										{
+											valid_status = input.New_Status in {"Preparing","Submitted","Approved","Rejected","Expired","Not Required"};
+											permit_rec = Permit_Records[ID == input.Lookup_ID];
+											target_exists = permit_rec.count() > 0;
+										}
+										else if(input.Target_Module == "Service_Requests")
+										{
+											valid_status = input.New_Status in {"Triage","Scheduled","In Progress","Parts Required","Repaired","Completed","Closed","Cancelled"};
+											service_rec = Service_Requests[ID == input.Lookup_ID];
+											target_exists = service_rec.count() > 0;
+										}
+										if(valid_status == false)
+										{
+											alert "Selected status is not valid for the target module.";
+											cancel submit;
+										}
+										if(target_exists == false)
+										{
+											alert "Target record was not found for the selected module and ID.";
+											cancel submit;
+										}
+						)
+					}
+				}
+
+			
+}

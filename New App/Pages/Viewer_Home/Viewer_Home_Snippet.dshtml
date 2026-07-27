@@ -1,0 +1,624 @@
+<%
+	readonlyParams = "?zc_AddRec=false&amp;zc_EditRec=false&amp;zc_DelRec=false&amp;zc_DuplRec=false&amp;zc_MoreAction=false&amp;zc_RecSelect=false";
+	allOrdersCount = Customer_Orders[ID != 0].count();
+	activeOrdersCount = Customer_Orders[Order_Status != "Completed" && Order_Status != "Cancelled"].count();
+	completedOrdersCount = Customer_Orders[Order_Status == "Completed"].count();
+	cancelledOrdersCount = Customer_Orders[Order_Status == "Cancelled"].count();
+	awaitingGreenCount = Customer_Orders[Order_Status == "Awaiting Green Light"].count();
+	readyOrderCount = Customer_Orders[Order_Status == "Ready for Installation" || Order_Status == "Installation Scheduled" || Order_Status == "Installed" || Order_Status == "Inspection Required"].count();
+	orderAwaitingCount = Customer_Orders[Order_Status == "Awaiting Green Light"].count();
+	orderGreenCount = Customer_Orders[Order_Status == "Green Light"].count();
+	orderProductionCount = Customer_Orders[Order_Status == "In Production"].count();
+	orderMaterialHoldCount = Customer_Orders[Order_Status == "Material Hold"].count();
+	orderReadyInstallCount = Customer_Orders[Order_Status == "Ready for Installation"].count();
+	orderInstallScheduledCount = Customer_Orders[Order_Status == "Installation Scheduled"].count();
+	orderInstalledCount = Customer_Orders[Order_Status == "Installed"].count();
+	orderInspectionCount = Customer_Orders[Order_Status == "Inspection Required"].count();
+	orderOnHoldCount = Customer_Orders[Order_Status == "On Hold"].count();
+	allProductionCount = Production_Records[ID != 0].count();
+	productionAwaitingCount = Production_Records[Production_Status == "Awaiting Green Light"].count();
+	productionQueuedCount = Production_Records[Production_Status == "Queued"].count();
+	productionShortageCount = Production_Records[Production_Status == "Material Shortage" || Material_Status == "Shortage Identified"].count();
+	productionOrderedCount = Production_Records[Production_Status == "Material Ordered" || Material_Status == "Ordered"].count();
+	productionManufacturingCount = Production_Records[Production_Status == "Manufacturing"].count();
+	productionPowderCount = Production_Records[Production_Status == "Powder Coating" || Powder_Coating_Status == "In Progress" || Powder_Coating_Status == "Pending"].count();
+	productionReadyCount = Production_Records[Production_Status == "Ready for Installation" || Production_Status == "Purchased and Received"].count();
+	productionFinalPurchaseCount = Production_Records[Production_Status == "Final Product Purchase"].count();
+	allInstallCount = Installation_Schedules[ID != 0].count();
+	installForecastCount = Installation_Schedules[Installation_Status == "Forecast"].count();
+	installWaitingProductionCount = Installation_Schedules[Installation_Status == "Waiting for Production" || Production_Readiness_Status == "Not Ready" || Production_Readiness_Status == "Partially Ready"].count();
+	installReadyCount = Installation_Schedules[Installation_Status == "Ready to Schedule"].count();
+	installScheduledCount = Installation_Schedules[Installation_Status == "Scheduled"].count();
+	installInProgressCount = Installation_Schedules[Installation_Status == "In Progress"].count();
+	installInstalledCount = Installation_Schedules[Installation_Status == "Installed"].count();
+	installInspectionCount = Installation_Schedules[Installation_Status == "Inspection Required" || Installation_Status == "Inspection Completed"].count();
+	installCompletedCount = Installation_Schedules[Installation_Status == "Completed"].count();
+	installBlockedPermitCount = Installation_Schedules[Permit_Clearance_Status == "Blocked" || Permit_Clearance_Status == "Required" || Permit_Clearance_Status == "Submitted"].count();
+	allPermitCount = Permit_Records[ID != 0].count();
+	permitRequiredCount = Permit_Records[Permit_Status == "Required"].count();
+	permitPreparingCount = Permit_Records[Permit_Status == "Preparing"].count();
+	permitSubmittedCount = Permit_Records[Permit_Status == "Submitted"].count();
+	permitApprovedCount = Permit_Records[Permit_Status == "Approved"].count();
+	permitRejectedCount = Permit_Records[Permit_Status == "Rejected"].count();
+	permitExpiredCount = Permit_Records[Permit_Status == "Expired"].count();
+	permitActiveCount = Permit_Records[Permit_Status != "Approved" && Permit_Status != "Not Required" && Permit_Status != "Expired"].count();
+	allServiceCount = Service_Requests[ID != 0].count();
+	serviceOpenCount = Service_Requests[Service_Status != "Closed" && Service_Status != "Cancelled"].count();
+	serviceNewCount = Service_Requests[Service_Status == "New"].count();
+	serviceTriageCount = Service_Requests[Service_Status == "Triage"].count();
+	serviceScheduledCount = Service_Requests[Service_Status == "Scheduled"].count();
+	serviceInProgressCount = Service_Requests[Service_Status == "In Progress"].count();
+	servicePartsCount = Service_Requests[Service_Status == "Parts Required"].count();
+	serviceRepairedCount = Service_Requests[Service_Status == "Repaired"].count();
+	serviceCompletedCount = Service_Requests[Service_Status == "Completed" || Service_Status == "Closed"].count();
+	serviceUrgentCount = Service_Requests[Priority == "Urgent" && Service_Status != "Closed" && Service_Status != "Cancelled"].count();
+	lowMaterials = Material_Master[Available_Quantity <= Reorder_Level && Active == true];
+	lowPowders = Powder_Coating_Inventory[Available_Quantity <= Reorder_Level && Active == true];
+	lowMaterialsCount = lowMaterials.count();
+	lowPowdersCount = lowPowders.count();
+	lowStockTotal = lowMaterialsCount + lowPowdersCount;
+	openPOCount = Purchase_Orders[PO_Status != "Received" && PO_Status != "Cancelled"].count();
+	readyInstallPct = 0;
+	if(allInstallCount > 0)
+	{
+		readyInstallPct = (installReadyCount * 100) / allInstallCount;
+	}
+	productionReadyPct = 0;
+	if(allProductionCount > 0)
+	{
+		productionReadyPct = (productionReadyCount * 100) / allProductionCount;
+	}
+	orderActivePct = 0;
+	if(allOrdersCount > 0)
+	{
+		orderActivePct = (activeOrdersCount * 100) / allOrdersCount;
+	}
+	serviceOpenPct = 0;
+	if(allServiceCount > 0)
+	{
+		serviceOpenPct = (serviceOpenCount * 100) / allServiceCount;
+	}
+	%>
+<style>
+.zc-content-loader div { display: none !important; } .zc_live_adminbar .zc-container-wrapper { height: 100% !important; } div#zppagesLive, div#elementsContainer, .Layout.elemContainment, div#row_1, .zc-pb-formreport-placeholder { height: 100% !important; } .Layout.elemContainment, .zc-pb-page-content-wrapper .elemContainment, .column-container .zc-pb-tile-container { padding: unset !important; } .zpcontent-wrapper div.zpelement-wrapper { height: 100% !important; } .zc-pb-tile-card::-webkit-scrollbar { display: none !important; }
+:root { --zcs-theme-brand-color: var(--zcs_brand_color, var(--theme_brand_color, #2A6FFC)); --zcs-light-bg-color: var(--zcs_brand_light_color, #ECF3FF); --zcs-page-bg-color: #F7F8FC; --zcs-primary-text-color: var(--zcs_primary_text_color, #12132B); --zcs-secondary-text-color: var(--zcs_secondary_text_color, #4E5668); --zcs-teritiary-text-color: var(--zcs_tertiary_text_color, #7A8191); --zcs-border-color: var(--zcs_tertiary_border_color, #E5E8F0); --zcs-white-color: #FFFFFF; --zcs-brand-soft: rgba(42,111,252,.10); --zcs-warning-soft: #FFF6E3; --zcs-danger-soft: #FFECEF; --zcs-success-soft: #EAFBF4; --zcs-info-soft: #EAF7FF; font-size: 16px; line-height: 1.5; }
+#splash-screen { display: none !important; }
+.zcs-row { display: flex; flex-wrap: wrap; }
+.zcs-flex { display: flex; }
+.zcs-inline-flex { display: inline-flex; }
+.zcs-direction-column { flex-direction: column; }
+.zcs-col-common { flex: 1 1 0%; min-width: 0; }
+.zcs-align-items-center { align-items: center; }
+.zcs-align-items-start { align-items: flex-start; }
+.zcs-justify-center { justify-content: center; }
+.zcs-justify-space-between { justify-content: space-between; }
+.zcs-gap-4 { gap: .25rem; }
+.zcs-gap-6 { gap: .375rem; }
+.zcs-gap-8 { gap: .5rem; }
+.zcs-gap-10 { gap: .625rem; }
+.zcs-gap-12 { gap: .75rem; }
+.zcs-gap-16 { gap: 1rem; }
+.zcs-gap-20 { gap: 1.25rem; }
+.zcs-p-8 { padding: .5rem; }
+.zcs-p-10 { padding: .625rem; }
+.zcs-p-12 { padding: .75rem; }
+.zcs-p-16 { padding: 1rem; }
+.zcs-p-20 { padding: 1.25rem; }
+.zcs-px-8 { padding-left: .5rem; padding-right: .5rem; }
+.zcs-px-10 { padding-left: .625rem; padding-right: .625rem; }
+.zcs-px-12 { padding-left: .75rem; padding-right: .75rem; }
+.zcs-px-16 { padding-left: 1rem; padding-right: 1rem; }
+.zcs-py-2 { padding-top: .125rem; padding-bottom: .125rem; }
+.zcs-py-4 { padding-top: .25rem; padding-bottom: .25rem; }
+.zcs-py-8 { padding-top: .5rem; padding-bottom: .5rem; }
+.zcs-py-10 { padding-top: .625rem; padding-bottom: .625rem; }
+.zcs-py-12 { padding-top: .75rem; padding-bottom: .75rem; }
+.zcs-m-0 { margin: 0; }
+.zcs-mt-4 { margin-top: .25rem; }
+.zcs-mt-6 { margin-top: .375rem; }
+.zcs-mt-8 { margin-top: .5rem; }
+.zcs-mt-10 { margin-top: .625rem; }
+.zcs-mt-12 { margin-top: .75rem; }
+.zcs-mt-16 { margin-top: 1rem; }
+.zcs-mb-0 { margin-bottom: 0; }
+.zcs-font-11 { font-size: .6875rem; }
+.zcs-font-12 { font-size: .75rem; }
+.zcs-font-13 { font-size: .8125rem; }
+.zcs-font-14 { font-size: .875rem; }
+.zcs-font-15 { font-size: .9375rem; }
+.zcs-font-16 { font-size: 1rem; }
+.zcs-font-18 { font-size: 1.125rem; }
+.zcs-font-20 { font-size: 1.25rem; }
+.zcs-font-24 { font-size: 1.5rem; }
+.zcs-font-28 { font-size: 1.75rem; }
+.zcs-font-normal { font-weight: 400; }
+.zcs-font-medium { font-weight: 500; }
+.zcs-font-semibold { font-weight: 600; }
+.zcs-font-bold { font-weight: 700; }
+.zcs-lh-body { line-height: 1.5; }
+.zcs-lh-heading { line-height: 1.25; }
+.zcs-uppercase { text-transform: uppercase; }
+.zcs-text-left { text-align: left; }
+.zcs-text-right { text-align: right; }
+.zcs-text-center { text-align: center; }
+.zcs-rounded-sm { border-radius: .25rem; }
+.zcs-rounded-md { border-radius: .375rem; }
+.zcs-rounded-lg { border-radius: .5rem; }
+.zcs-rounded-xl { border-radius: .75rem; }
+.zcs-rounded-2xl { border-radius: 1rem; }
+.zcs-box-border { box-sizing: border-box; }
+.zcs-relative { position: relative; }
+.zcs-sticky { position: sticky; }
+.zcs-w-full { width: 100%; }
+.zcs-color-theme { color: var(--zcs-theme-brand-color); }
+.zcs-color-primary { color: var(--zcs-primary-text-color); }
+.zcs-color-secondary { color: var(--zcs-secondary-text-color); }
+.zcs-color-tertiary { color: var(--zcs-teritiary-text-color); }
+.zcs-color-white { color: #fff; }
+.zcs-ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.zcs-card { background-color: var(--zcs-white-color); border: 1px solid var(--zcs-border-color); border-radius: 16px; box-shadow: 0 10px 30px rgba(16,24,40,.05); }
+.zcs-template-card { width: 260px; height: 250px; overflow: hidden; }
+.zcs-card-header { border-bottom: 1px solid var(--zcs-border-color); }
+.zcs-card-content { box-sizing: border-box; }
+.zcs-badge { width: auto; }
+.zcs-badge-filled { border: 1px solid transparent; }
+.zcs-badge-filled-outline { border: 1px solid; }
+.zcs-badge-filled.zcs-badge-theme { background-color: var(--zcs-theme-brand-color); border-color: var(--zcs-theme-brand-color); color: #fff; }
+.zcs-badge-filled.zcs-badge-green { background-color: #179E6C; border-color: #179E6C; color: #fff; }
+.zcs-badge-filled.zcs-badge-red { background-color: #FE455D; border-color: #FE455D; color: #fff; }
+.zcs-badge-filled.zcs-badge-grey { background-color: #5D6372; border-color: #5D6372; color: #fff; }
+.zcs-badge-filled.zcs-badge-yellow { background-color: #FAAE13; border-color: #FAAE13; color: #fff; }
+.zcs-badge-filled.zcs-badge-blue { background-color: #2A6FFC; border-color: #2A6FFC; color: #fff; }
+.zcs-badge-filled.zcs-badge-orange { background-color: #F4660C; border-color: #F4660C; color: #fff; }
+.zcs-badge-filled-outline.zcs-badge-theme { background-color: var(--zcs-brand-soft); border-color: var(--zcs-theme-brand-color); color: var(--zcs-theme-brand-color); }
+.zcs-badge-filled-outline.zcs-badge-green { background-color: #E4FCF3; border-color: #179E6C; color: #179E6C; }
+.zcs-badge-filled-outline.zcs-badge-red { background-color: #FDE3E6; border-color: #FE455D; color: #FE455D; }
+.zcs-badge-filled-outline.zcs-badge-grey { background-color: #E8E8E8; border-color: #5D6372; color: #5D6372; }
+.zcs-badge-filled-outline.zcs-badge-yellow { background-color: #FCF4E6; border-color: #FAAE13; color: #B8770D; }
+.zcs-badge-filled-outline.zcs-badge-blue { background-color: #E8EFFF; border-color: #2A6FFC; color: #2A6FFC; }
+.zcs-badge-filled-outline.zcs-badge-orange { background-color: #F8F0EB; border-color: #F4660C; color: #F4660C; }
+.zcs-table-wrapper { border: 1px solid var(--zcs-border-color); background-color: #fff; overflow: auto; border-radius: 14px; }
+.zcs-table-wrapper table { line-height: normal; border-collapse: collapse; min-width: 760px; }
+.zcs-table-wrapper table thead { top: 0; z-index: 1; }
+.zcs-table-wrapper table thead tr th { background-color: #F9FAFE; box-shadow: 0 -1px 0 0 var(--zcs-border-color) inset; white-space: nowrap; }
+.zcs-table-wrapper table tbody tr td { border-top: 1px solid var(--zcs-border-color); vertical-align: top; }
+.zcs-table-wrapper table tbody tr:first-child td { border-color: transparent; }
+.zcs-table-wrapper table tbody tr:hover td { background-color: #F9FAFE; }
+a { text-decoration: none; }
+.viewer-home-shell { min-height: 100%; background: radial-gradient(circle at top left, var(--zcs-light-bg-color), transparent 34%), var(--zcs-page-bg-color); color: var(--zcs-primary-text-color); font-family: var(--zcs_font_family, Poppins, ZohoPuvi, Arial, sans-serif); padding: 22px; box-sizing: border-box; overflow: auto; }
+.viewer-hero { border: 1px solid rgba(255,255,255,.55); border-radius: 24px; padding: 24px; background: linear-gradient(135deg, var(--zcs-theme-brand-color), #172B55); color: #fff; position: relative; overflow: hidden; box-shadow: 0 20px 45px rgba(31,54,112,.18); }
+.viewer-hero:after { content: ''; position: absolute; width: 340px; height: 340px; right: -92px; top: -128px; border-radius: 50%; background: rgba(255,255,255,.13); box-shadow: -74px 96px 0 rgba(255,255,255,.08); }
+.viewer-hero-content { position: relative; z-index: 1; display: flex; justify-content: space-between; align-items: flex-start; gap: 18px; }
+.viewer-eyebrow { letter-spacing: .08em; opacity: .78; }
+.viewer-title { font-size: clamp(24px, 3vw, 38px); line-height: 1.1; margin: 4px 0 8px; }
+.viewer-subtitle { max-width: 920px; color: rgba(255,255,255,.82); margin: 0; }
+.viewer-hero-meta { background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.22); border-radius: 16px; padding: 12px 14px; min-width: 230px; backdrop-filter: blur(10px); }
+.viewer-kpi-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-top: 16px; }
+.viewer-kpi-card.zcs-template-card { width: auto; height: auto; min-height: 142px; overflow: hidden; padding: 0; position: relative; transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
+.viewer-kpi-card:hover { transform: translateY(-2px); border-color: rgba(42,111,252,.25); box-shadow: 0 14px 34px rgba(16,24,40,.09); }
+.viewer-kpi-card:before { content: ''; position: absolute; width: 92px; height: 92px; border-radius: 50%; right: -30px; bottom: -35px; background: var(--kpi-soft, var(--zcs-brand-soft)); }
+.viewer-kpi-icon { width: 42px; height: 42px; border-radius: 14px; background: var(--kpi-soft, var(--zcs-brand-soft)); color: var(--kpi-color, var(--zcs-theme-brand-color)); }
+.viewer-kpi-value { font-size: 30px; line-height: 1; margin-top: 12px; }
+.viewer-kpi-label { color: var(--zcs-secondary-text-color); min-height: 38px; }
+.viewer-link, .viewer-panel-link, .viewer-row-link { color: var(--zcs-theme-brand-color); font-size: 13px; font-weight: 600; text-decoration: none; position: relative; z-index: 1; }
+.viewer-link:hover, .viewer-panel-link:hover, .viewer-row-link:hover { text-decoration: underline; }
+.viewer-section-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 16px; }
+.viewer-wide-grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(320px, .75fr); gap: 16px; margin-top: 16px; }
+.viewer-panel { padding: 18px; }
+.viewer-panel-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.viewer-panel-title { margin: 0; font-size: 18px; }
+.viewer-note { color: var(--zcs-teritiary-text-color); }
+.viewer-status-list { display: grid; gap: 9px; }
+.viewer-status-row { display: grid; grid-template-columns: minmax(150px, .85fr) minmax(0, 1.35fr) 54px; gap: 10px; align-items: center; padding: 8px 0; border-bottom: 1px solid #EEF1F7; }
+.viewer-status-row:last-child { border-bottom: none; }
+.viewer-progress { height: 8px; background: #EEF2FA; overflow: hidden; border-radius: 99px; }
+.viewer-progress-fill { height: inherit; border-radius: inherit; background: var(--bar-color, var(--zcs-theme-brand-color)); min-width: 2px; }
+.viewer-chip-list { display: flex; flex-wrap: wrap; gap: 8px; }
+.viewer-readonly-banner { background: #FBFCFF; border: 1px dashed var(--zcs-border-color); border-radius: 14px; padding: 12px; }
+.viewer-low-stock-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.viewer-stock-card { padding: 14px; border: 1px solid var(--zcs-border-color); border-radius: 14px; background: #fff; }
+.viewer-stock-icon { width: 34px; height: 34px; border-radius: 12px; background: var(--zcs-warning-soft); color: #B8770D; }
+.viewer-muted-line { color: var(--zcs-teritiary-text-color); font-size: 12px; margin-top: 4px; }
+@media (max-width: 1240px) { .viewer-kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .viewer-wide-grid { grid-template-columns: 1fr; } }
+@media (max-width: 900px) { .viewer-section-grid { grid-template-columns: 1fr; } .viewer-hero-content { flex-direction: column; } .viewer-hero-meta { width: 100%; box-sizing: border-box; } }
+@media (max-width: 640px) { .viewer-home-shell { padding: 12px; } .viewer-hero { padding: 18px; border-radius: 18px; } .viewer-kpi-grid { grid-template-columns: 1fr; } .viewer-panel { padding: 14px; } .viewer-panel-header { align-items: flex-start; flex-direction: column; } .viewer-status-row { grid-template-columns: 1fr; gap: 6px; } .viewer-low-stock-grid { grid-template-columns: 1fr; } .viewer-responsive-table table, .viewer-responsive-table thead, .viewer-responsive-table tbody, .viewer-responsive-table th, .viewer-responsive-table td, .viewer-responsive-table tr { display: block; min-width: 0; width: 100%; } .viewer-responsive-table thead { display: none; } .viewer-responsive-table tbody tr { border-top: 1px solid var(--zcs-border-color); padding: 10px 0; } .viewer-responsive-table tbody tr:first-child { border-top: none; } .viewer-responsive-table tbody tr td { border-top: none; display: grid; grid-template-columns: 116px minmax(0, 1fr); gap: 8px; padding: 6px 12px; } .viewer-responsive-table tbody tr td:before { content: attr(data-label); color: var(--zcs-teritiary-text-color); font-size: 12px; font-weight: 600; } .viewer-responsive-table tbody tr td[colspan]:before { content: ''; display: none; } }
+</style>
+<div class="viewer-home-shell">
+		<section class="viewer-hero">
+				<div class="viewer-hero-content">
+						<div>
+								<div class="viewer-eyebrow zcs-font-12 zcs-uppercase zcs-font-semibold">Read-only operations view</div>
+								<h1 class="viewer-title zcs-font-bold">Viewer Home</h1>
+								<p class="viewer-subtitle zcs-font-15">Operational counts, status summaries, production and installation readiness, permit visibility, service status, and stock alerts without action controls or financial values.</p>
+						</div>
+						<div class="viewer-hero-meta">
+								<div class="zcs-font-12 zcs-uppercase zcs-font-semibold" style="color:rgba(255,255,255,.72);">Signed in</div>
+								<div class="zcs-font-16 zcs-font-semibold zcs-mt-4"><%=zoho.loginuser%></div>
+								<div class="zcs-font-12 zcs-mt-4" style="color:rgba(255,255,255,.72);"><%=zoho.currentdate%></div>
+						</div>
+				</div>
+		</section>
+
+		<section class="viewer-kpi-grid">
+				<div class="viewer-kpi-card zcs-template-card zcs-card zcs-flex zcs-direction-column zcs-relative" style="--kpi-soft:#ECF3FF;--kpi-color:#2A6FFC;">
+						<div class="zcs-card-content zcs-col-common zcs-p-16 zcs-box-border">
+								<div class="viewer-kpi-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline files-2-doc zcs-font-20"></i></div>
+								<div class="viewer-kpi-value zcs-font-bold"><%=activeOrdersCount%></div>
+								<div class="viewer-kpi-label zcs-font-13">Active orders</div>
+								<a class="viewer-link" href="#Report:Active_Orders<%=readonlyParams%>">Open read-only report</a>
+						</div>
+				</div>
+				<div class="viewer-kpi-card zcs-template-card zcs-card zcs-flex zcs-direction-column zcs-relative" style="--kpi-soft:#FFF6E3;--kpi-color:#B8770D;">
+						<div class="zcs-card-content zcs-col-common zcs-p-16 zcs-box-border">
+								<div class="viewer-kpi-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline ui-2-time zcs-font-20"></i></div>
+								<div class="viewer-kpi-value zcs-font-bold"><%=awaitingGreenCount%></div>
+								<div class="viewer-kpi-label zcs-font-13">Awaiting green light</div>
+								<a class="viewer-link" href="#Report:Orders_Awaiting_Green_Light<%=readonlyParams%>">View queue</a>
+						</div>
+				</div>
+				<div class="viewer-kpi-card zcs-template-card zcs-card zcs-flex zcs-direction-column zcs-relative" style="--kpi-soft:#EAFBF4;--kpi-color:#179E6C;">
+						<div class="zcs-card-content zcs-col-common zcs-p-16 zcs-box-border">
+								<div class="viewer-kpi-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline ui-1-check-circle-08 zcs-font-20"></i></div>
+								<div class="viewer-kpi-value zcs-font-bold"><%=productionReadyCount%></div>
+								<div class="viewer-kpi-label zcs-font-13">Production ready or received</div>
+								<a class="viewer-link" href="#Report:Ready_For_Installation_Items<%=readonlyParams%>">Ready items</a>
+						</div>
+				</div>
+				<div class="viewer-kpi-card zcs-template-card zcs-card zcs-flex zcs-direction-column zcs-relative" style="--kpi-soft:#F0ECFF;--kpi-color:#7656D6;">
+						<div class="zcs-card-content zcs-col-common zcs-p-16 zcs-box-border">
+								<div class="viewer-kpi-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline ui-1-calendar-60 zcs-font-20"></i></div>
+								<div class="viewer-kpi-value zcs-font-bold"><%=installReadyCount%></div>
+								<div class="viewer-kpi-label zcs-font-13">Ready-to-schedule installs</div>
+								<a class="viewer-link" href="#Report:Ready_To_Schedule_Installations<%=readonlyParams%>">Installation queue</a>
+						</div>
+				</div>
+				<div class="viewer-kpi-card zcs-template-card zcs-card zcs-flex zcs-direction-column zcs-relative" style="--kpi-soft:#EAF7FF;--kpi-color:#1094C5;">
+						<div class="zcs-card-content zcs-col-common zcs-p-16 zcs-box-border">
+								<div class="viewer-kpi-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline files-2-paper zcs-font-20"></i></div>
+								<div class="viewer-kpi-value zcs-font-bold"><%=permitActiveCount%></div>
+								<div class="viewer-kpi-label zcs-font-13">Active permits</div>
+								<a class="viewer-link" href="#Report:Active_Permits<%=readonlyParams%>">Permit report</a>
+						</div>
+				</div>
+				<div class="viewer-kpi-card zcs-template-card zcs-card zcs-flex zcs-direction-column zcs-relative" style="--kpi-soft:#FFECEF;--kpi-color:#FE455D;">
+						<div class="zcs-card-content zcs-col-common zcs-p-16 zcs-box-border">
+								<div class="viewer-kpi-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline ui-3-alert zcs-font-20"></i></div>
+								<div class="viewer-kpi-value zcs-font-bold"><%=serviceUrgentCount%></div>
+								<div class="viewer-kpi-label zcs-font-13">Urgent open service</div>
+								<a class="viewer-link" href="#Report:Open_Service_Requests<%=readonlyParams%>">Service list</a>
+						</div>
+				</div>
+				<div class="viewer-kpi-card zcs-template-card zcs-card zcs-flex zcs-direction-column zcs-relative" style="--kpi-soft:#FFF6E3;--kpi-color:#B8770D;">
+						<div class="zcs-card-content zcs-col-common zcs-p-16 zcs-box-border">
+								<div class="viewer-kpi-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline shopping-tag zcs-font-20"></i></div>
+								<div class="viewer-kpi-value zcs-font-bold"><%=lowStockTotal%></div>
+								<div class="viewer-kpi-label zcs-font-13">Low-stock raw material and powder items</div>
+								<a class="viewer-link" href="#low-stock-summary">Review counts</a>
+						</div>
+				</div>
+				<div class="viewer-kpi-card zcs-template-card zcs-card zcs-flex zcs-direction-column zcs-relative" style="--kpi-soft:#EEF1F7;--kpi-color:#5D6372;">
+						<div class="zcs-card-content zcs-col-common zcs-p-16 zcs-box-border">
+								<div class="viewer-kpi-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline shopping-cart-simple zcs-font-20"></i></div>
+								<div class="viewer-kpi-value zcs-font-bold"><%=openPOCount%></div>
+								<div class="viewer-kpi-label zcs-font-13">Open purchase orders without amounts</div>
+								<a class="viewer-link" href="#Report:Open_Purchase_Orders<%=readonlyParams%>">Read-only PO list</a>
+						</div>
+				</div>
+		</section>
+
+		<section class="viewer-panel zcs-card zcs-mt-16">
+				<div class="viewer-panel-header">
+						<div>
+								<h2 class="viewer-panel-title zcs-font-semibold">Viewer access scope</h2>
+								<p class="viewer-note zcs-font-13 zcs-mt-4 zcs-mb-0">This page is intentionally read-only. It surfaces report and detail navigation only; no popup status forms, edit links, delete links, or invoice/PO amounts are rendered.</p>
+						</div>
+						<div class="viewer-chip-list">
+								<span class="zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-6 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-theme"><i class="zc-li-outline ui-1-eye-17"></i><span class="zcs-badge-text zcs-font-12">Read-only</span></span>
+								<span class="zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-6 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-grey"><i class="zc-li-outline ui-1-lock"></i><span class="zcs-badge-text zcs-font-12">No action controls</span></span>
+						</div>
+				</div>
+		</section>
+
+		<section class="viewer-section-grid">
+				<div class="viewer-panel zcs-card">
+						<div class="viewer-panel-header">
+								<div>
+										<h2 class="viewer-panel-title zcs-font-semibold">Order status summary</h2>
+										<p class="viewer-note zcs-font-13 zcs-mt-4 zcs-mb-0">Operational order stages only; invoice financial values are excluded.</p>
+								</div>
+								<a class="viewer-panel-link" href="#Report:All_Customer_Orders<%=readonlyParams%>">All orders</a>
+						</div>
+						<div class="viewer-status-list">
+								<div class="viewer-status-row"><div class="zcs-font-14 zcs-font-medium">Awaiting green light</div><div class="viewer-progress"><div class="viewer-progress-fill" style="--bar-color:#B8770D;width:<%=if(activeOrdersCount > 0,(orderAwaitingCount * 100) / activeOrdersCount,0)%>%"></div></div><div class="zcs-font-14 zcs-font-semibold zcs-text-right"><%=orderAwaitingCount%></div></div>
+								<div class="viewer-status-row"><div class="zcs-font-14 zcs-font-medium">Green light</div><div class="viewer-progress"><div class="viewer-progress-fill" style="--bar-color:#179E6C;width:<%=if(activeOrdersCount > 0,(orderGreenCount * 100) / activeOrdersCount,0)%>%"></div></div><div class="zcs-font-14 zcs-font-semibold zcs-text-right"><%=orderGreenCount%></div></div>
+								<div class="viewer-status-row"><div class="zcs-font-14 zcs-font-medium">In production</div><div class="viewer-progress"><div class="viewer-progress-fill" style="--bar-color:#2A6FFC;width:<%=if(activeOrdersCount > 0,(orderProductionCount * 100) / activeOrdersCount,0)%>%"></div></div><div class="zcs-font-14 zcs-font-semibold zcs-text-right"><%=orderProductionCount%></div></div>
+								<div class="viewer-status-row"><div class="zcs-font-14 zcs-font-medium">Material hold</div><div class="viewer-progress"><div class="viewer-progress-fill" style="--bar-color:#FE455D;width:<%=if(activeOrdersCount > 0,(orderMaterialHoldCount * 100) / activeOrdersCount,0)%>%"></div></div><div class="zcs-font-14 zcs-font-semibold zcs-text-right"><%=orderMaterialHoldCount%></div></div>
+								<div class="viewer-status-row"><div class="zcs-font-14 zcs-font-medium">Ready for installation</div><div class="viewer-progress"><div class="viewer-progress-fill" style="--bar-color:#179E6C;width:<%=if(activeOrdersCount > 0,(orderReadyInstallCount * 100) / activeOrdersCount,0)%>%"></div></div><div class="zcs-font-14 zcs-font-semibold zcs-text-right"><%=orderReadyInstallCount%></div></div>
+								<div class="viewer-status-row"><div class="zcs-font-14 zcs-font-medium">Installation scheduled</div><div class="viewer-progress"><div class="viewer-progress-fill" style="--bar-color:#7656D6;width:<%=if(activeOrdersCount > 0,(orderInstallScheduledCount * 100) / activeOrdersCount,0)%>%"></div></div><div class="zcs-font-14 zcs-font-semibold zcs-text-right"><%=orderInstallScheduledCount%></div></div>
+								<div class="viewer-status-row"><div class="zcs-font-14 zcs-font-medium">Installed or inspection</div><div class="viewer-progress"><div class="viewer-progress-fill" style="--bar-color:#1094C5;width:<%=if(activeOrdersCount > 0,((orderInstalledCount + orderInspectionCount) * 100) / activeOrdersCount,0)%>%"></div></div><div class="zcs-font-14 zcs-font-semibold zcs-text-right"><%=orderInstalledCount + orderInspectionCount%></div></div>
+								<div class="viewer-status-row"><div class="zcs-font-14 zcs-font-medium">On hold</div><div class="viewer-progress"><div class="viewer-progress-fill" style="--bar-color:#F4660C;width:<%=if(activeOrdersCount > 0,(orderOnHoldCount * 100) / activeOrdersCount,0)%>%"></div></div><div class="zcs-font-14 zcs-font-semibold zcs-text-right"><%=orderOnHoldCount%></div></div>
+						</div>
+				</div>
+
+				<div class="viewer-panel zcs-card">
+						<div class="viewer-panel-header">
+								<div>
+										<h2 class="viewer-panel-title zcs-font-semibold">Production pipeline summary</h2>
+										<p class="viewer-note zcs-font-13 zcs-mt-4 zcs-mb-0">Queue, shortage, manufacturing, powder, purchase-finished-product, and readiness counts.</p>
+								</div>
+								<a class="viewer-panel-link" href="#Report:All_Production_Records<%=readonlyParams%>">All production</a>
+						</div>
+						<div class="viewer-status-list">
+								<div class="viewer-status-row"><div class="zcs-font-14 zcs-font-medium">Awaiting green light</div><div class="viewer-progress"><div class="viewer-progress-fill" style="--bar-color:#5D6372;width:<%=if(allProductionCount > 0,(productionAwaitingCount * 100) / allProductionCount,0)%>%"></div></div><div class="zcs-font-14 zcs-font-semibold zcs-text-right"><%=productionAwaitingCount%></div></div>
+								<div class="viewer-status-row"><div class="zcs-font-14 zcs-font-medium">Queued</div><div class="viewer-progress"><div class="viewer-progress-fill" style="--bar-color:#2A6FFC;width:<%=if(allProductionCount > 0,(productionQueuedCount * 100) / allProductionCount,0)%>%"></div></div><div class="zcs-font-14 zcs-font-semibold zcs-text-right"><%=productionQueuedCount%></div></div>
+								<div class="viewer-status-row"><div class="zcs-font-14 zcs-font-medium">Material shortage</div><div class="viewer-progress"><div class="viewer-progress-fill" style="--bar-color:#FE455D;width:<%=if(allProductionCount > 0,(productionShortageCount * 100) / allProductionCount,0)%>%"></div></div><div class="zcs-font-14 zcs-font-semibold zcs-text-right"><%=productionShortageCount%></div></div>
+								<div class="viewer-status-row"><div class="zcs-font-14 zcs-font-medium">Material ordered</div><div class="viewer-progress"><div class="viewer-progress-fill" style="--bar-color:#B8770D;width:<%=if(allProductionCount > 0,(productionOrderedCount * 100) / allProductionCount,0)%>%"></div></div><div class="zcs-font-14 zcs-font-semibold zcs-text-right"><%=productionOrderedCount%></div></div>
+								<div class="viewer-status-row"><div class="zcs-font-14 zcs-font-medium">Manufacturing</div><div class="viewer-progress"><div class="viewer-progress-fill" style="--bar-color:#1094C5;width:<%=if(allProductionCount > 0,(productionManufacturingCount * 100) / allProductionCount,0)%>%"></div></div><div class="zcs-font-14 zcs-font-semibold zcs-text-right"><%=productionManufacturingCount%></div></div>
+								<div class="viewer-status-row"><div class="zcs-font-14 zcs-font-medium">Powder coating</div><div class="viewer-progress"><div class="viewer-progress-fill" style="--bar-color:#7656D6;width:<%=if(allProductionCount > 0,(productionPowderCount * 100) / allProductionCount,0)%>%"></div></div><div class="zcs-font-14 zcs-font-semibold zcs-text-right"><%=productionPowderCount%></div></div>
+								<div class="viewer-status-row"><div class="zcs-font-14 zcs-font-medium">Final product purchase</div><div class="viewer-progress"><div class="viewer-progress-fill" style="--bar-color:#F4660C;width:<%=if(allProductionCount > 0,(productionFinalPurchaseCount * 100) / allProductionCount,0)%>%"></div></div><div class="zcs-font-14 zcs-font-semibold zcs-text-right"><%=productionFinalPurchaseCount%></div></div>
+								<div class="viewer-status-row"><div class="zcs-font-14 zcs-font-medium">Ready or received</div><div class="viewer-progress"><div class="viewer-progress-fill" style="--bar-color:#179E6C;width:<%=productionReadyPct%>%"></div></div><div class="zcs-font-14 zcs-font-semibold zcs-text-right"><%=productionReadyCount%></div></div>
+						</div>
+				</div>
+		</section>
+
+		<section class="viewer-section-grid">
+				<div class="viewer-panel zcs-card">
+						<div class="viewer-panel-header">
+								<div>
+										<h2 class="viewer-panel-title zcs-font-semibold">Installation schedule summary</h2>
+										<p class="viewer-note zcs-font-13 zcs-mt-4 zcs-mb-0">Forecast, blocked, ready, scheduled, field progress, QC, and completion counts.</p>
+								</div>
+								<a class="viewer-panel-link" href="#Report:All_Installation_Schedules<%=readonlyParams%>">All schedules</a>
+						</div>
+						<div class="viewer-chip-list">
+								<span class="zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-6 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-blue"><span class="zcs-badge-text zcs-font-12">Forecast: <%=installForecastCount%></span></span>
+								<span class="zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-6 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-yellow"><span class="zcs-badge-text zcs-font-12">Waiting production: <%=installWaitingProductionCount%></span></span>
+								<span class="zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-6 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-green"><span class="zcs-badge-text zcs-font-12">Ready to schedule: <%=installReadyCount%></span></span>
+								<span class="zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-6 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-theme"><span class="zcs-badge-text zcs-font-12">Scheduled: <%=installScheduledCount%></span></span>
+								<span class="zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-6 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-blue"><span class="zcs-badge-text zcs-font-12">In progress: <%=installInProgressCount%></span></span>
+								<span class="zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-6 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-orange"><span class="zcs-badge-text zcs-font-12">Inspection: <%=installInspectionCount%></span></span>
+								<span class="zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-6 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-green"><span class="zcs-badge-text zcs-font-12">Completed: <%=installCompletedCount%></span></span>
+								<span class="zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-6 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-red"><span class="zcs-badge-text zcs-font-12">Permit blocked: <%=installBlockedPermitCount%></span></span>
+						</div>
+				</div>
+
+				<div class="viewer-panel zcs-card">
+						<div class="viewer-panel-header">
+								<div>
+										<h2 class="viewer-panel-title zcs-font-semibold">Permit status summary</h2>
+										<p class="viewer-note zcs-font-13 zcs-mt-4 zcs-mb-0">Order-level permit visibility without document editing controls.</p>
+								</div>
+								<a class="viewer-panel-link" href="#Report:All_Permit_Records<%=readonlyParams%>">All permits</a>
+						</div>
+						<div class="viewer-status-list">
+								<div class="viewer-status-row"><div class="zcs-font-14 zcs-font-medium">Required</div><div class="viewer-progress"><div class="viewer-progress-fill" style="--bar-color:#B8770D;width:<%=if(allPermitCount > 0,(permitRequiredCount * 100) / allPermitCount,0)%>%"></div></div><div class="zcs-font-14 zcs-font-semibold zcs-text-right"><%=permitRequiredCount%></div></div>
+								<div class="viewer-status-row"><div class="zcs-font-14 zcs-font-medium">Preparing</div><div class="viewer-progress"><div class="viewer-progress-fill" style="--bar-color:#F4660C;width:<%=if(allPermitCount > 0,(permitPreparingCount * 100) / allPermitCount,0)%>%"></div></div><div class="zcs-font-14 zcs-font-semibold zcs-text-right"><%=permitPreparingCount%></div></div>
+								<div class="viewer-status-row"><div class="zcs-font-14 zcs-font-medium">Submitted</div><div class="viewer-progress"><div class="viewer-progress-fill" style="--bar-color:#2A6FFC;width:<%=if(allPermitCount > 0,(permitSubmittedCount * 100) / allPermitCount,0)%>%"></div></div><div class="zcs-font-14 zcs-font-semibold zcs-text-right"><%=permitSubmittedCount%></div></div>
+								<div class="viewer-status-row"><div class="zcs-font-14 zcs-font-medium">Approved</div><div class="viewer-progress"><div class="viewer-progress-fill" style="--bar-color:#179E6C;width:<%=if(allPermitCount > 0,(permitApprovedCount * 100) / allPermitCount,0)%>%"></div></div><div class="zcs-font-14 zcs-font-semibold zcs-text-right"><%=permitApprovedCount%></div></div>
+								<div class="viewer-status-row"><div class="zcs-font-14 zcs-font-medium">Rejected or expired</div><div class="viewer-progress"><div class="viewer-progress-fill" style="--bar-color:#FE455D;width:<%=if(allPermitCount > 0,((permitRejectedCount + permitExpiredCount) * 100) / allPermitCount,0)%>%"></div></div><div class="zcs-font-14 zcs-font-semibold zcs-text-right"><%=permitRejectedCount + permitExpiredCount%></div></div>
+						</div>
+				</div>
+		</section>
+
+		<section class="viewer-wide-grid">
+				<div class="viewer-panel zcs-card">
+						<div class="viewer-panel-header">
+								<div>
+										<h2 class="viewer-panel-title zcs-font-semibold">Service summary and current open requests</h2>
+										<p class="viewer-note zcs-font-13 zcs-mt-4 zcs-mb-0">Customer service visibility without closure or status action links.</p>
+								</div>
+								<a class="viewer-panel-link" href="#Report:All_Service_Requests<%=readonlyParams%>">All services</a>
+						</div>
+						<div class="viewer-chip-list zcs-mt-8">
+								<span class="zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-6 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-theme"><span class="zcs-badge-text zcs-font-12">Open: <%=serviceOpenCount%></span></span>
+								<span class="zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-6 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-orange"><span class="zcs-badge-text zcs-font-12">New/Triage: <%=serviceNewCount + serviceTriageCount%></span></span>
+								<span class="zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-6 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-blue"><span class="zcs-badge-text zcs-font-12">Scheduled: <%=serviceScheduledCount%></span></span>
+								<span class="zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-6 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-theme"><span class="zcs-badge-text zcs-font-12">In progress: <%=serviceInProgressCount%></span></span>
+								<span class="zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-6 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-yellow"><span class="zcs-badge-text zcs-font-12">Parts required: <%=servicePartsCount%></span></span>
+								<span class="zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-6 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-green"><span class="zcs-badge-text zcs-font-12">Repaired/closed: <%=serviceRepairedCount + serviceCompletedCount%></span></span>
+						</div>
+						<div class="viewer-responsive-table zcs-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative zcs-mt-16">
+								<table class="zcs-w-full">
+										<thead class="zcs-sticky">
+												<tr>
+														<th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Service</th>
+														<th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Customer / issue</th>
+														<th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Priority</th>
+														<th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Schedule / technician</th>
+														<th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Status</th>
+												</tr>
+										</thead>
+										<tbody>
+<%
+	serviceRows = 0;
+	for each  svc in Service_Requests[Service_Status != "Closed" && Service_Status != "Cancelled"] sort by Request_Date desc
+	{
+		if(serviceRows < 8)
+		{
+			serviceRows = serviceRows + 1;
+			statusClass = "zcs-badge-grey";
+			if(svc.Service_Status == "New" || svc.Service_Status == "Triage")
+			{
+				statusClass = "zcs-badge-orange";
+			}
+			else if(svc.Service_Status == "Scheduled")
+			{
+				statusClass = "zcs-badge-blue";
+			}
+			else if(svc.Service_Status == "In Progress")
+			{
+				statusClass = "zcs-badge-theme";
+			}
+			else if(svc.Service_Status == "Parts Required")
+			{
+				statusClass = "zcs-badge-yellow";
+			}
+			else if(svc.Service_Status == "Repaired" || svc.Service_Status == "Completed")
+			{
+				statusClass = "zcs-badge-green";
+			}
+			priorityClass = "zcs-badge-blue";
+			if(svc.Priority == "Urgent")
+			{
+				priorityClass = "zcs-badge-red";
+			}
+			else if(svc.Priority == "High")
+			{
+				priorityClass = "zcs-badge-orange";
+			}
+			else if(svc.Priority == "Low")
+			{
+				priorityClass = "zcs-badge-grey";
+			}
+			%>
+<tr>
+																		<td data-label="Service" class="zcs-px-16 zcs-py-10 zcs-box-border zcs-font-14"><strong><a class="viewer-row-link" href="#Page:Service_Detail?Service_ID=<%=svc.ID%>"><%=svc.Service_Code%></a></strong><br><span class="viewer-muted-line">Requested <%=ifnull(svc.Request_Date,"Not set")%></span></td>
+																		<td data-label="Customer / issue" class="zcs-px-16 zcs-py-10 zcs-box-border zcs-font-14"><%=ifnull(svc.Customer.Customer_Name,ifnull(svc.Customer_Name,"Customer pending"))%><br><span class="viewer-muted-line"><%=ifnull(svc.Issue_Description,"Issue not entered")%></span></td>
+																		<td data-label="Priority" class="zcs-px-16 zcs-py-10 zcs-box-border"><span class="zcs-badge zcs-badge-filled <%=priorityClass%> zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border"><span class="zcs-badge-text zcs-font-12"><%=ifnull(svc.Priority,"Normal")%></span></span></td>
+																		<td data-label="Schedule / technician" class="zcs-px-16 zcs-py-10 zcs-box-border zcs-font-14"><%=ifnull(svc.Scheduled_Start,"Not scheduled")%><br><span class="viewer-muted-line"><%=ifnull(svc.Technician.Employee_Name,"Technician unassigned")%></span></td>
+																		<td data-label="Status" class="zcs-px-16 zcs-py-10 zcs-box-border"><span class="zcs-badge zcs-badge-filled <%=statusClass%> zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border"><span class="zcs-badge-text zcs-font-12"><%=ifnull(svc.Service_Status,"Not set")%></span></span></td>
+																</tr>
+<%
+		}
+	}
+	if(serviceRows == 0)
+	{
+		%>
+<tr><td colspan="5" class="zcs-px-16 zcs-py-12 zcs-box-border zcs-font-14 zcs-color-tertiary">No open service requests are currently visible.</td></tr>
+<%
+	}
+	%>
+</tbody>
+								</table>
+						</div>
+				</div>
+
+				<div class="viewer-panel zcs-card" id="low-stock-summary">
+						<div class="viewer-panel-header">
+								<div>
+										<h2 class="viewer-panel-title zcs-font-semibold">Low-stock counts</h2>
+										<p class="viewer-note zcs-font-13 zcs-mt-4 zcs-mb-0">Counts only; purchasing amounts are not displayed.</p>
+								</div>
+						</div>
+						<div class="viewer-low-stock-grid">
+								<div class="viewer-stock-card">
+										<div class="zcs-flex zcs-align-items-center zcs-gap-10">
+												<div class="viewer-stock-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline shopping-tag zcs-font-18"></i></div>
+												<div>
+														<div class="zcs-font-24 zcs-font-bold"><%=lowMaterialsCount%></div>
+														<div class="zcs-font-13 zcs-color-secondary">Raw materials below reorder level</div>
+												</div>
+										</div>
+										<a class="viewer-link zcs-inline-flex zcs-mt-10" href="#Report:Low_Material_Stock<%=readonlyParams%>">Low material report</a>
+								</div>
+								<div class="viewer-stock-card">
+										<div class="zcs-flex zcs-align-items-center zcs-gap-10">
+												<div class="viewer-stock-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline design-paint-37 zcs-font-18"></i></div>
+												<div>
+														<div class="zcs-font-24 zcs-font-bold"><%=lowPowdersCount%></div>
+														<div class="zcs-font-13 zcs-color-secondary">Powders below reorder level</div>
+												</div>
+										</div>
+										<a class="viewer-link zcs-inline-flex zcs-mt-10" href="#Report:Low_Powder_Stock<%=readonlyParams%>">Low powder report</a>
+								</div>
+						</div>
+						<div class="viewer-readonly-banner zcs-mt-16">
+								<div class="zcs-flex zcs-align-items-start zcs-gap-10">
+										<i class="zc-li-outline ui-1-lock zcs-font-18 zcs-color-tertiary"></i>
+										<div>
+												<div class="zcs-font-14 zcs-font-semibold">Stock visibility only</div>
+												<div class="zcs-font-13 zcs-color-tertiary zcs-mt-4">Use Inventory Detail links from item-level reports only when that detail page is available. No receiving or stock-update controls are exposed here.</div>
+										</div>
+								</div>
+						</div>
+				</div>
+		</section>
+
+		<section class="viewer-panel zcs-card zcs-mt-16">
+				<div class="viewer-panel-header">
+						<div>
+								<h2 class="viewer-panel-title zcs-font-semibold">Recent operational records</h2>
+								<p class="viewer-note zcs-font-13 zcs-mt-4 zcs-mb-0">Read-only detail navigation is provided for operational context where detail pages exist.</p>
+						</div>
+						<div class="viewer-chip-list">
+								<a class="viewer-panel-link" href="#Report:All_Customer_Orders<%=readonlyParams%>">Orders</a>
+								<a class="viewer-panel-link" href="#Report:All_Production_Records<%=readonlyParams%>">Production</a>
+								<a class="viewer-panel-link" href="#Report:All_Installation_Schedules<%=readonlyParams%>">Installation</a>
+						</div>
+				</div>
+				<div class="viewer-responsive-table zcs-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative">
+						<table class="zcs-w-full">
+								<thead class="zcs-sticky">
+										<tr>
+												<th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Type</th>
+												<th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Record</th>
+												<th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Customer / item</th>
+												<th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Status</th>
+												<th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Date / sequence</th>
+										</tr>
+								</thead>
+								<tbody>
+<%
+	orderRows = 0;
+	for each  ord in Customer_Orders[Order_Status != "Completed" && Order_Status != "Cancelled"] sort by Order_Placement_Date desc
+	{
+		if(orderRows < 4)
+		{
+			orderRows = orderRows + 1;
+			%>
+<tr>
+																<td data-label="Type" class="zcs-px-16 zcs-py-10 zcs-box-border zcs-font-14"><span class="zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-blue"><span class="zcs-badge-text zcs-font-12">Order</span></span></td>
+																<td data-label="Record" class="zcs-px-16 zcs-py-10 zcs-box-border zcs-font-14"><strong><a class="viewer-row-link" href="#Page:Order_Detail?Order_ID=<%=ord.ID%>"><%=ord.Order_Code%></a></strong><br><span class="viewer-muted-line">Invoice ref hidden from financial context</span></td>
+																<td data-label="Customer / item" class="zcs-px-16 zcs-py-10 zcs-box-border zcs-font-14"><%=ifnull(ord.Customer.Customer_Name,ifnull(ord.Customer_Name_Snapshot,"Customer pending"))%><br><span class="viewer-muted-line"><%=ifnull(ord.Area_or_City,"Area not set")%></span></td>
+																<td data-label="Status" class="zcs-px-16 zcs-py-10 zcs-box-border zcs-font-14"><%=ifnull(ord.Order_Status,"Not set")%><br><span class="viewer-muted-line">Permit: <%=ifnull(ord.Permit_Status,"Not set")%></span></td>
+																<td data-label="Date / sequence" class="zcs-px-16 zcs-py-10 zcs-box-border zcs-font-14"><%=ifnull(ord.Order_Placement_Date,"Not set")%><br><span class="viewer-muted-line">Expected: <%=ifnull(ord.Expected_Delivery_Date,"Not set")%></span></td>
+														</tr>
+<%
+		}
+	}
+	prodRows = 0;
+	for each  prod in Production_Records[Production_Status != "Ready for Installation" && Production_Status != "Purchased and Received" && Production_Status != "Cancelled"] sort by Priority_Sequence asc
+	{
+		if(prodRows < 4)
+		{
+			prodRows = prodRows + 1;
+			%>
+<tr>
+																<td data-label="Type" class="zcs-px-16 zcs-py-10 zcs-box-border zcs-font-14"><span class="zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-theme"><span class="zcs-badge-text zcs-font-12">Production</span></span></td>
+																<td data-label="Record" class="zcs-px-16 zcs-py-10 zcs-box-border zcs-font-14"><strong><a class="viewer-row-link" href="#Page:Production_Detail?Production_ID=<%=prod.ID%>"><%=prod.Production_Code%></a></strong><br><span class="viewer-muted-line">Order <%=ifnull(prod.Customer_Order.Order_Code,"Not linked")%></span></td>
+																<td data-label="Customer / item" class="zcs-px-16 zcs-py-10 zcs-box-border zcs-font-14"><%=ifnull(prod.Product.Product_Name,ifnull(prod.Product_Description,"Product pending"))%><br><span class="viewer-muted-line"><%=ifnull(prod.Colour,"Colour not set")%> \u00B7 Qty <%=ifnull(prod.Quantity,"Not set")%></span></td>
+																<td data-label="Status" class="zcs-px-16 zcs-py-10 zcs-box-border zcs-font-14"><%=ifnull(prod.Production_Status,"Not set")%><br><span class="viewer-muted-line">Material: <%=ifnull(prod.Material_Status,"Not set")%></span></td>
+																<td data-label="Date / sequence" class="zcs-px-16 zcs-py-10 zcs-box-border zcs-font-14">Priority <%=ifnull(prod.Priority_Sequence,"Not set")%><br><span class="viewer-muted-line">Group <%=ifnull(prod.Manufacturing_Group.Group_Name,"Not grouped")%></span></td>
+														</tr>
+<%
+		}
+	}
+	instRows = 0;
+	for each  inst in Installation_Schedules[Installation_Status != "Completed" && Installation_Status != "Cancelled"] sort by Priority_Sequence asc
+	{
+		if(instRows < 4)
+		{
+			instRows = instRows + 1;
+			%>
+<tr>
+																<td data-label="Type" class="zcs-px-16 zcs-py-10 zcs-box-border zcs-font-14"><span class="zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-green"><span class="zcs-badge-text zcs-font-12">Installation</span></span></td>
+																<td data-label="Record" class="zcs-px-16 zcs-py-10 zcs-box-border zcs-font-14"><strong><a class="viewer-row-link" href="#Page:Installation_Detail?Installation_ID=<%=inst.ID%>"><%=inst.Installation_Code%></a></strong><br><span class="viewer-muted-line">Order <%=ifnull(inst.Customer_Order.Order_Code,"Not linked")%></span></td>
+																<td data-label="Customer / item" class="zcs-px-16 zcs-py-10 zcs-box-border zcs-font-14"><%=ifnull(inst.Customer.Customer_Name,ifnull(inst.Customer_Name_Snapshot,"Customer pending"))%><br><span class="viewer-muted-line"><%=ifnull(inst.Area_or_City,"Area not set")%></span></td>
+																<td data-label="Status" class="zcs-px-16 zcs-py-10 zcs-box-border zcs-font-14"><%=ifnull(inst.Installation_Status,"Not set")%><br><span class="viewer-muted-line">Production <%=ifnull(inst.Production_Readiness_Status,"Not set")%> \u00B7 Permit <%=ifnull(inst.Permit_Clearance_Status,"Not set")%></span></td>
+																<td data-label="Date / sequence" class="zcs-px-16 zcs-py-10 zcs-box-border zcs-font-14"><%=ifnull(inst.Scheduled_Start,"Not scheduled")%><br><span class="viewer-muted-line">Priority <%=ifnull(inst.Priority_Sequence,"Not set")%></span></td>
+														</tr>
+<%
+		}
+	}
+	if(orderRows + prodRows + instRows == 0)
+	{
+		%>
+<tr><td colspan="5" class="zcs-px-16 zcs-py-12 zcs-box-border zcs-font-14 zcs-color-tertiary">No active operational records are currently visible.</td></tr>
+<%
+	}
+	%>
+</tbody>
+						</table>
+				</div>
+		</section>
+</div>

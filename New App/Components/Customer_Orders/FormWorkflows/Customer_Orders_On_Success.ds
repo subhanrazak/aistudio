@@ -1,0 +1,110 @@
+Customer_Orders_On_Success as "Customer Orders On Success"
+{
+
+				type =  form
+				form = Customer_Orders
+
+				record event = on add
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											products_summary = "";
+										permit_needed = input.Requires_Permit;
+										priority_base = ifnull(input.Order_Code,0);
+										for each  line_row in input.Line_Items
+										{
+											if(line_row.Product != null)
+											{
+												products_summary = products_summary + line_row.Product.Product_Name + " x " + ifnull(line_row.Quantity,0).toString() + "\n";
+											}
+											if(line_row.Permit_Required == true)
+											{
+												permit_needed = true;
+											}
+											group_key = "";
+											if(line_row.Product != null)
+											{
+												group_key = line_row.Product.Product_Name;
+											}
+											if(line_row.Colour != null && line_row.Colour != "")
+											{
+												group_key = group_key + " - " + line_row.Colour;
+											}
+											prod_id = insert into Production_Records
+											[
+												Customer_Order=input.ID
+												Order_Line=line_row.ID
+												Product=line_row.Product
+												Product_Description=line_row.Product_Description
+												Colour=line_row.Colour
+												Quantity=line_row.Quantity
+												Unit=line_row.Unit
+												Dimensions=ifnull(line_row.Width,0).toString() + " x " + ifnull(line_row.Height,0).toString()
+												Manufacturing_Mode=line_row.Manufacturing_Mode
+												Production_Status="Awaiting Green Light"
+												Priority_Sequence=priority_base * 100 + ifnull(line_row.Line_Number,0)
+												Suggested_Group_Key=group_key
+												Requires_Powder_Coating=line_row.Requires_Powder_Coating
+												Powder=line_row.Powder
+												Powder_Qty_Used=line_row.Estimated_Powder_Qty
+												Powder_Coating_Status=if(line_row.Requires_Powder_Coating == true,"Pending","Not Required")
+												Material_Status="Not Checked"
+												Added_User=zoho.loginuser
+											];
+											bom_rows = Product_BOM_Items[Product == line_row.Product && Active == true];
+											for each  bom in bom_rows
+											{
+												est_qty = ifnull(bom.Quantity_Per_Unit,0) * ifnull(line_row.Quantity,0);
+												if(ifnull(bom.Wastage_Percent,0) > 0)
+												{
+													est_qty = est_qty + est_qty * ifnull(bom.Wastage_Percent,0) / 100;
+												}
+												insert into Production_Material_Usage
+												[
+													Production_Record=prod_id
+													Material=bom.Material
+													Estimated_Quantity=est_qty
+													Actual_Quantity=est_qty
+													Unit=bom.Unit
+													Stock_Deducted=false
+													Added_User=zoho.loginuser
+												]
+											}
+										}
+										insert into Installation_Schedules
+										[
+											Customer_Order=input.ID
+											Customer=input.Customer
+											Customer_Name_Snapshot=input.Customer_Name_Snapshot
+											Installation_Address=input.Installation_Address
+											Area_or_City=input.Area_or_City
+											Products_Summary=products_summary
+											Forecast_Date=input.Expected_Delivery_Date
+											Estimated_Hours=0
+											Installation_Status="Forecast"
+											Production_Readiness_Status="Not Ready"
+											Permit_Clearance_Status=if(permit_needed == true,"Required","Not Required")
+											Priority_Sequence=priority_base
+											Added_User=zoho.loginuser
+										]
+										if(permit_needed == true)
+										{
+											insert into Permit_Records
+											[
+												Customer_Order=input.ID
+												Customer=input.Customer
+												Permit_Required=true
+												Permit_Status="Required"
+												Added_User=zoho.loginuser
+											]
+										}
+						)
+					}
+				}
+
+			
+}

@@ -1,0 +1,41 @@
+Installation_Schedules_On_Validate as "Installation Schedules On Validate"
+{
+
+				type =  form
+				form = Installation_Schedules
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											scheduled_or_later = input.Installation_Status == "Scheduled" || input.Installation_Status == "In Progress" || input.Installation_Status == "Installed" || input.Installation_Status == "Inspection Required" || input.Installation_Status == "Inspection Completed" || input.Installation_Status == "Completed";
+										if(scheduled_or_later && input.Scheduled_Start == null || input.Scheduled_End == null || input.Crew_Lead == null)
+										{
+											alert "Scheduled start, scheduled end, and crew lead are required once installation is scheduled.";
+											cancel submit;
+										}
+										if(input.Scheduled_Start != null && input.Scheduled_End != null && input.Scheduled_End <= input.Scheduled_Start)
+										{
+											alert "Scheduled end must be after scheduled start.";
+											cancel submit;
+										}
+										if(ifnull(input.Estimated_Hours,0) < 0 || ifnull(input.Priority_Sequence,0) < 0)
+										{
+											alert "Estimated hours and priority cannot be negative.";
+											cancel submit;
+										}
+										if(input.Installation_Status == "Completed" && input.Internal_QC_Required == true && input.Internal_QC_Status != "Passed")
+										{
+											alert "Internal QC must be passed before completing this installation.";
+											cancel submit;
+										}
+						)
+					}
+				}
+
+			
+}
