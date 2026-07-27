@@ -1,0 +1,43 @@
+Validate_Customer_Orders as "Validate Customer Orders"
+{
+
+				type =  form
+				form = Customer_Orders
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Invoice_Date == null)
+										{
+											alert "Invoice date is required.";
+											cancel submit;
+										}
+										if(input.Line_Items == null || input.Line_Items.count() == 0)
+										{
+											alert "At least one invoice line item is required.";
+											cancel submit;
+										}
+										if(ifnull(input.Subtotal,0) < 0 || ifnull(input.Discount_Total,0) < 0 || ifnull(input.Tax_Total,0) < 0 || ifnull(input.Total_Amount,0) < 0)
+										{
+											alert "Invoice amounts cannot be negative.";
+											cancel submit;
+										}
+										if(input.Requires_Permit == true)
+										{
+											input.Permit_Status = "Required";
+										}
+										if(input.Requires_Permit == false && input.Permit_Status == null)
+										{
+											input.Permit_Status = "Not Required";
+										}
+						)
+					}
+				}
+
+			
+}

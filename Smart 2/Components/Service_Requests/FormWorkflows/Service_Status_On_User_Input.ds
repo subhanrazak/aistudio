@@ -1,0 +1,55 @@
+Service_Status_On_User_Input as "Service Status On User Input"
+{
+
+				type =  form
+				form = Service_Requests
+
+				record event = on add or edit
+
+				on user input of Service_Status
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											schedule_stage = input.Service_Status == "Scheduled" || input.Service_Status == "In Progress" || input.Service_Status == "Parts Required" || input.Service_Status == "Repaired" || input.Service_Status == "Completed" || input.Service_Status == "Closed";
+										parts_stage = input.Service_Status == "Parts Required" || input.Service_Status == "Repaired" || input.Service_Status == "Completed" || input.Service_Status == "Closed";
+										completion_stage = input.Service_Status == "Completed" || input.Service_Status == "Closed";
+										if(schedule_stage)
+										{
+											show Scheduled_Start;
+											show Scheduled_End;
+											show Technician;
+										}
+										else
+										{
+											hide Scheduled_Start;
+											hide Scheduled_End;
+											hide Technician;
+										}
+										if(parts_stage)
+										{
+											show Parts_Usage;
+											show Linked_PO;
+										}
+										else
+										{
+											hide Parts_Usage;
+											hide Linked_PO;
+										}
+										if(completion_stage)
+										{
+											show Completion_Date;
+											show Service_Photos;
+										}
+										else
+										{
+											hide Completion_Date;
+											hide Service_Photos;
+										}
+						)
+					}
+				}
+
+			
+}

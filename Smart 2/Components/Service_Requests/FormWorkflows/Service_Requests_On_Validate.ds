@@ -1,0 +1,47 @@
+Service_Requests_On_Validate as "Service Requests On Validate"
+{
+
+				type =  form
+				form = Service_Requests
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											scheduled_or_active = input.Service_Status == "Scheduled" || input.Service_Status == "In Progress" || input.Service_Status == "Parts Required" || input.Service_Status == "Repaired" || input.Service_Status == "Completed" || input.Service_Status == "Closed";
+										if(scheduled_or_active && input.Scheduled_Start == null || input.Technician == null)
+										{
+											alert "Scheduled start and technician are required once service is scheduled.";
+											cancel submit;
+										}
+										if(input.Scheduled_Start != null && input.Scheduled_End != null && input.Scheduled_End <= input.Scheduled_Start)
+										{
+											alert "Scheduled end must be after scheduled start.";
+											cancel submit;
+										}
+										if(input.Service_Status == "Completed" || input.Service_Status == "Closed" && input.Technician_Notes == null || input.Technician_Notes == "" || input.Completion_Date == null)
+										{
+											alert "Technician notes and completion date are required before completing or closing service.";
+											cancel submit;
+										}
+										if(input.Service_Status == "Completed" || input.Service_Status == "Closed" && input.Stock_Consumption_Posted == false)
+										{
+											for each  part_row in input.Parts_Usage
+											{
+												if(part_row.Material != null && ifnull(part_row.Quantity_Used,0) > ifnull(part_row.Material.Available_Quantity,0) && part_row.Stock_Deducted == false)
+												{
+													alert "Insufficient stock for service part: " + part_row.Material.Material_Name;
+													cancel submit;
+												}
+											}
+										}
+						)
+					}
+				}
+
+			
+}

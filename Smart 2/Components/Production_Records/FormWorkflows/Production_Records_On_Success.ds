@@ -1,0 +1,75 @@
+Production_Records_On_Success as "Production Records On Success"
+{
+
+				type =  form
+				form = Production_Records
+
+				record event = on add or edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Production_Status == "Material Shortage")
+										{
+											input.Material_Status = "Shortage Identified";
+										}
+										if(input.Production_Status == "Ready for Installation" && input.Ready_For_Installation_Date == null)
+										{
+											input.Ready_For_Installation_Date = zoho.currentdate;
+										}
+										if(input.Production_Status == "Ready for Installation" && input.Material_Consumption_Posted == false)
+										{
+											for each  usage_row in input.Materials_Usage
+											{
+												qty_to_use = ifnull(usage_row.Actual_Quantity,usage_row.Estimated_Quantity);
+												if(usage_row.Material != null && ifnull(qty_to_use,0) > 0 && usage_row.Stock_Deducted == false)
+												{
+													mat = Material_Master[ID == usage_row.Material];
+													if(mat.count() > 0)
+													{
+														mat.Available_Quantity=ifnull(mat.Available_Quantity,0) - qty_to_use;
+														mat.Last_Updated=zoho.currentdate;
+														usage_row.Stock_Deducted=true;
+													}
+												}
+											}
+											input.Material_Consumption_Posted = true;
+										}
+										if(input.Powder_Coating_Status == "Completed" && input.Powder_Consumption_Posted == false && input.Requires_Powder_Coating == true)
+										{
+											pwd = Powder_Coating_Inventory[ID == input.Powder];
+											if(pwd.count() > 0)
+											{
+												pwd.Available_Quantity=ifnull(pwd.Available_Quantity,0) - ifnull(input.Powder_Qty_Used,0);
+												pwd.Last_Updated=zoho.currentdate;
+												input.Powder_Consumption_Posted = true;
+											}
+										}
+										ready_count = Production_Records[Customer_Order == input.Customer_Order && Production_Status == "Ready for Installation" || Production_Status == "Purchased and Received"].count();
+										total_count = Production_Records[Customer_Order == input.Customer_Order && Production_Status != "Cancelled"].count();
+										if(total_count > 0 && ready_count == total_count)
+										{
+											order_rec = Customer_Orders[ID == input.Customer_Order];
+											if(order_rec.count() > 0)
+											{
+												order_rec.Order_Status="Ready for Installation";
+											}
+											install_rec = Installation_Schedules[Customer_Order == input.Customer_Order];
+											if(install_rec.count() > 0)
+											{
+												install_rec.Production_Readiness_Status="Ready";
+												if(install_rec.Permit_Clearance_Status == "Approved" || install_rec.Permit_Clearance_Status == "Not Required")
+												{
+													install_rec.Installation_Status="Ready to Schedule";
+												}
+											}
+										}
+						)
+					}
+				}
+
+			
+}

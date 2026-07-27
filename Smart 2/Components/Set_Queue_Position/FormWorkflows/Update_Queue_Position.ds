@@ -1,0 +1,46 @@
+Update_Queue_Position as "Update Queue Position"
+{
+
+				type =  form
+				form = Set_Queue_Position
+				button = Submit_Queue
+				on click
+				{
+					actions 
+					{
+					on click
+					(
+						if(input.Line_Item_ID == null)
+										{
+											alert "No order line was selected.";
+										}
+										else if(input.Queue_Number == null || input.Queue_Number < 0)
+										{
+											alert "Enter a valid queue number.";
+										}
+										else
+										{
+											line_rec = Order_Line_Items[ID == input.Line_Item_ID];
+											if(line_rec.count() == 0)
+											{
+												alert "Selected order line was not found.";
+											}
+											else
+											{
+												if(input.Queue_Type == "Production")
+												{
+													line_rec.Production_Queue_No=input.Queue_Number;
+												}
+												else if(input.Queue_Type == "Installation")
+												{
+													line_rec.Installation_Queue_No=input.Queue_Number;
+												}
+												alert "Queue position updated.";
+												openUrl("#Script:page.parent.refresh","same window");
+											}
+										}
+					)
+					}
+				}
+			
+}

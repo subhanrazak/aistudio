@@ -1,0 +1,628 @@
+<%
+	activeOrders = Customer_Orders[Order_Status != "Completed" && Order_Status != "Cancelled"];
+	awaitingGreen = Customer_Orders[Order_Status == "Awaiting Green Light"];
+	productionQueued = Production_Records[Production_Status == "Queued"];
+	materialShortages = Production_Records[Production_Status == "Material Shortage" || Material_Status == "Shortage Identified"];
+	pendingPOApprovals = Purchase_Orders[PO_Status == "Submitted for Approval"];
+	openPOs = Purchase_Orders[PO_Status != "Received" && PO_Status != "Cancelled"];
+	readyInstallations = Installation_Schedules[Installation_Status == "Ready to Schedule"];
+	activePermits = Permit_Records[Permit_Status != "Approved" && Permit_Status != "Not Required" && Permit_Status != "Expired"];
+	openServices = Service_Requests[Service_Status != "Closed" && Service_Status != "Cancelled"];
+	lowMaterials = Material_Master[Available_Quantity <= Reorder_Level && Active == true];
+	lowPowders = Powder_Coating_Inventory[Available_Quantity <= Reorder_Level && Active == true];
+	activeOrdersCount = activeOrders.count();
+	awaitingGreenCount = awaitingGreen.count();
+	productionQueuedCount = productionQueued.count();
+	materialShortagesCount = materialShortages.count();
+	pendingPOApprovalsCount = pendingPOApprovals.count();
+	openPOsCount = openPOs.count();
+	readyInstallationsCount = readyInstallations.count();
+	activePermitsCount = activePermits.count();
+	openServicesCount = openServices.count();
+	lowMaterialsCount = lowMaterials.count();
+	lowPowdersCount = lowPowders.count();
+	totalOrdersCount = Customer_Orders[ID != 0].count();
+	totalProductionCount = Production_Records[ID != 0].count();
+	totalInstallationsCount = Installation_Schedules[ID != 0].count();
+	totalServicesCount = Service_Requests[ID != 0].count();
+	ordersInProductionCount = Customer_Orders[Order_Status == "In Production" || Order_Status == "Material Hold"].count();
+	ordersReadyCount = Customer_Orders[Order_Status == "Ready for Installation" || Order_Status == "Installation Scheduled" || Order_Status == "Installed" || Order_Status == "Inspection Required"].count();
+	ordersCompletedCount = Customer_Orders[Order_Status == "Completed"].count();
+	prodInMotionCount = Production_Records[Production_Status == "Manufacturing" || Production_Status == "Powder Coating" || Production_Status == "Material Ordered" || Production_Status == "Material Received"].count();
+	prodReadyCount = Production_Records[Production_Status == "Ready for Installation" || Production_Status == "Purchased and Received"].count();
+	installScheduledCount = Installation_Schedules[Installation_Status == "Scheduled" || Installation_Status == "In Progress"].count();
+	serviceUrgentCount = Service_Requests[Priority == "Urgent" && Service_Status != "Closed" && Service_Status != "Cancelled"].count();
+	orderReadyPct = 0;
+	if(activeOrdersCount > 0)
+	{
+		orderReadyPct = (ordersReadyCount * 100) / activeOrdersCount;
+	}
+	if(orderReadyPct > 100)
+	{
+		orderReadyPct = 100;
+	}
+	prodReadyPct = 0;
+	if(totalProductionCount > 0)
+	{
+		prodReadyPct = (prodReadyCount * 100) / totalProductionCount;
+	}
+	if(prodReadyPct > 100)
+	{
+		prodReadyPct = 100;
+	}
+	installScheduledPct = 0;
+	if(totalInstallationsCount > 0)
+	{
+		installScheduledPct = (installScheduledCount * 100) / totalInstallationsCount;
+	}
+	if(installScheduledPct > 100)
+	{
+		installScheduledPct = 100;
+	}
+	%>
+<style>
+.zc-content-loader div { display: none !important; } .zc_live_adminbar .zc-container-wrapper { height: 100% !important; } div#zppagesLive, div#elementsContainer, .Layout.elemContainment, div#row_1, .zc-pb-formreport-placeholder { height: 100% !important; } .Layout.elemContainment, .zc-pb-page-content-wrapper .elemContainment, .column-container .zc-pb-tile-container { padding: unset !important; } .zpcontent-wrapper div.zpelement-wrapper { height: 100% !important; } .zc-pb-tile-card::-webkit-scrollbar { display: none !important; }
+:root {
+		--zcs-theme-brand-color: var(--zcs_brand_color, var(--theme_brand_color, #2A6FFC));
+		--zcs-light-bg-color: var(--zcs_brand_light_color, #ECF3FF);
+		--zcs-page-bg-color: #F7F8FC;
+		--zcs-primary-text-color: var(--zcs_primary_text_color, #12132B);
+		--zcs-secondary-text-color: var(--zcs_secondary_text_color, #4E5668);
+		--zcs-teritiary-text-color: var(--zcs_tertiary_text_color, #7A8191);
+		--zcs-border-color: var(--zcs_tertiary_border_color, #E5E8F0);
+		--zcs-white-color: #FFFFFF;
+		--zcs-brand-soft: rgba(42, 111, 252, 0.10);
+		--zcs-warning-soft: #FFF6E3;
+		--zcs-danger-soft: #FFECEF;
+		--zcs-success-soft: #EAFBF4;
+		--zcs-info-soft: #EAF7FF;
+		font-size: 16px;
+		line-height: 1.5;
+}
+#splash-screen { display: none !important; }
+.zcs-row { display: flex; flex-wrap: wrap; }
+.zcs-flex { display: flex; }
+.zcs-inline-flex { display: inline-flex; }
+.zcs-direction-column { flex-direction: column; }
+.zcs-row-wrap { flex-wrap: wrap; }
+.zcs-col-common { flex: 1 1 0%; min-width: 0; }
+.zcs-no-shrink { flex-shrink: 0; }
+.zcs-align-items-center { align-items: center; }
+.zcs-align-items-start { align-items: flex-start; }
+.zcs-justify-center { justify-content: center; }
+.zcs-justify-space-between { justify-content: space-between; }
+.zcs-gap-4 { gap: .25rem; }
+.zcs-gap-6 { gap: .375rem; }
+.zcs-gap-8 { gap: .5rem; }
+.zcs-gap-10 { gap: .625rem; }
+.zcs-gap-12 { gap: .75rem; }
+.zcs-gap-16 { gap: 1rem; }
+.zcs-gap-20 { gap: 1.25rem; }
+.zcs-gap-24 { gap: 1.5rem; }
+.zcs-gap-32 { gap: 2rem; }
+.zcs-p-0 { padding: 0; }
+.zcs-p-8 { padding: .5rem; }
+.zcs-p-12 { padding: .75rem; }
+.zcs-p-16 { padding: 1rem; }
+.zcs-p-20 { padding: 1.25rem; }
+.zcs-p-24 { padding: 1.5rem; }
+.zcs-px-10 { padding-left: .625rem; padding-right: .625rem; }
+.zcs-px-12 { padding-left: .75rem; padding-right: .75rem; }
+.zcs-px-16 { padding-left: 1rem; padding-right: 1rem; }
+.zcs-px-24 { padding-left: 1.5rem; padding-right: 1.5rem; }
+.zcs-py-2 { padding-top: .125rem; padding-bottom: .125rem; }
+.zcs-py-8 { padding-top: .5rem; padding-bottom: .5rem; }
+.zcs-py-10 { padding-top: .625rem; padding-bottom: .625rem; }
+.zcs-py-12 { padding-top: .75rem; padding-bottom: .75rem; }
+.zcs-m-0 { margin: 0; }
+.zcs-mt-4 { margin-top: .25rem; }
+.zcs-mt-8 { margin-top: .5rem; }
+.zcs-mt-12 { margin-top: .75rem; }
+.zcs-mt-16 { margin-top: 1rem; }
+.zcs-mb-0 { margin-bottom: 0; }
+.zcs-mx-0 { margin-left: 0; margin-right: 0; }
+.zcs-font-11 { font-size: .6875rem; }
+.zcs-font-12 { font-size: .75rem; }
+.zcs-font-13 { font-size: .8125rem; }
+.zcs-font-14 { font-size: .875rem; }
+.zcs-font-15 { font-size: .9375rem; }
+.zcs-font-16 { font-size: 1rem; }
+.zcs-font-18 { font-size: 1.125rem; }
+.zcs-font-20 { font-size: 1.25rem; }
+.zcs-font-28 { font-size: 1.75rem; }
+.zcs-font-normal { font-weight: 400; }
+.zcs-font-medium { font-weight: 500; }
+.zcs-font-semibold { font-weight: 600; }
+.zcs-font-bold { font-weight: 700; }
+.zcs-lh-body { line-height: 1.5; }
+.zcs-lh-heading { line-height: 1.25; }
+.zcs-uppercase { text-transform: uppercase; }
+.zcs-text-left { text-align: left; }
+.zcs-text-right { text-align: right; }
+.zcs-rounded-sm { border-radius: .25rem; }
+.zcs-rounded-md { border-radius: .375rem; }
+.zcs-rounded-lg { border-radius: .5rem; }
+.zcs-rounded-xl { border-radius: .75rem; }
+.zcs-rounded-2xl { border-radius: 1rem; }
+.zcs-rounded-half { border-radius: 50%; }
+.zcs-box-border { box-sizing: border-box; }
+.zcs-relative { position: relative; }
+.zcs-absolute { position: absolute; }
+.zcs-sticky { position: sticky; }
+.zcs-w-full { width: 100%; }
+.zcs-h-full { height: 100%; }
+.zcs-color-theme { color: var(--zcs-theme-brand-color); }
+.zcs-color-primary { color: var(--zcs-primary-text-color); }
+.zcs-color-secondary { color: var(--zcs-secondary-text-color); }
+.zcs-color-tertiary { color: var(--zcs-teritiary-text-color); }
+.zcs-color-white { color: #fff; }
+.zcs-ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.zcs-card { background-color: var(--zcs-white-color); border: 1px solid var(--zcs-border-color); border-radius: 16px; box-shadow: 0 10px 30px rgba(16, 24, 40, .05); }
+.zcs-badge { width: auto; }
+.zcs-badge-filled { border: 1px solid transparent; }
+.zcs-badge-filled.zcs-badge-theme { background-color: var(--zcs-theme-brand-color); border-color: var(--zcs-theme-brand-color); color: #fff; }
+.zcs-badge-filled.zcs-badge-green { background-color: #179E6C; border-color: #179E6C; color: #fff; }
+.zcs-badge-filled.zcs-badge-red { background-color: #FE455D; border-color: #FE455D; color: #fff; }
+.zcs-badge-filled.zcs-badge-grey { background-color: #242424; border-color: #242424; color: #fff; }
+.zcs-badge-filled.zcs-badge-yellow { background-color: #FAAE13; border-color: #FAAE13; color: #fff; }
+.zcs-badge-filled.zcs-badge-blue { background-color: #2A6FFC; border-color: #2A6FFC; color: #fff; }
+.zcs-badge-filled.zcs-badge-orange { background-color: #F4660C; border-color: #F4660C; color: #fff; }
+.zcs-table-wrapper { border: 1px solid var(--zcs-border-color); background-color: #fff; overflow: auto; border-radius: 14px; }
+.zcs-table-wrapper table { line-height: normal; border-collapse: collapse; min-width: 720px; }
+.zcs-table-wrapper table thead { top: 0; z-index: 1; }
+.zcs-table-wrapper table thead tr th { background-color: #F9FAFE; box-shadow: 0 -1px 0 0 var(--zcs-border-color) inset; white-space: nowrap; }
+.zcs-table-wrapper table tbody tr td { border-top: 1px solid var(--zcs-border-color); }
+.zcs-table-wrapper table tbody tr:first-child td { border-color: transparent; }
+.zcs-table-wrapper table tbody tr:hover td { background-color: #F9FAFE; }
+.zcs-table-wrapper table tbody tr td.zcs-green, .zcs-green { color: #179E6C; }
+.zcs-table-wrapper table tbody tr td.zcs-red, .zcs-red { color: #FE455D; }
+.zcs-table-wrapper table tbody tr td.zcs-yellow, .zcs-yellow { color: #B8770D; }
+.zcs-table-wrapper table tbody tr td.zcs-blue, .zcs-blue { color: #2A6FFC; }
+.zcs-quick-action-item { list-style-type: none; }
+.zcs-quick-action-item:hover .zcs-quick-action-link { color: var(--zcs-theme-brand-color); }
+.zcs-quick-action-item:hover .zcs-quick-action-text { text-decoration: underline; }
+.zcs-progress-bar { height: 8px; background-color: var(--zcs-brand-soft); overflow: hidden; }
+.zcs-progress-bar-indicator { height: inherit; border-radius: inherit; background-color: var(--zcs-theme-brand-color); }
+.zcs-tl-indicator { width: 24px; left: 0; top: 0; }
+.zcs-tl-dot { width: 12px; height: 12px; background-color: var(--zcs-theme-brand-color); border: 2px solid #fff; box-shadow: 0 2px 6px rgba(42,111,252,.28); }
+.zcs-tl-li:not(:last-child) .zcs-tl-indicator:before { content: ''; position: absolute; width: 1px; height: calc(100% + 28px); background-color: #E1E5EE; top: 10px; }
+.admin-home-shell { min-height: 100%; background: radial-gradient(circle at top left, var(--zcs-light-bg-color), transparent 30%), var(--zcs-page-bg-color); color: var(--zcs-primary-text-color); font-family: var(--zcs_font_family, Poppins, ZohoPuvi, Arial, sans-serif); padding: 22px; box-sizing: border-box; overflow: auto; }
+.admin-hero { border: 1px solid rgba(255,255,255,.55); border-radius: 24px; padding: 24px; background: linear-gradient(135deg, var(--zcs-theme-brand-color), #1B2E5F); color: #fff; position: relative; overflow: hidden; box-shadow: 0 20px 45px rgba(31, 54, 112, .18); }
+.admin-hero:after { content: ''; position: absolute; width: 330px; height: 330px; right: -90px; top: -120px; border-radius: 50%; background: rgba(255,255,255,.13); box-shadow: -70px 90px 0 rgba(255,255,255,.08); }
+.admin-hero-content { position: relative; z-index: 1; display: flex; justify-content: space-between; align-items: flex-start; gap: 18px; }
+.admin-eyebrow { letter-spacing: .08em; opacity: .78; }
+.admin-title { font-size: clamp(24px, 3vw, 38px); line-height: 1.1; margin: 4px 0 8px; }
+.admin-subtitle { max-width: 820px; color: rgba(255,255,255,.82); margin: 0; }
+.admin-hero-meta { background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.22); border-radius: 16px; padding: 12px 14px; min-width: 210px; backdrop-filter: blur(10px); }
+.admin-kpi-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-top: 16px; }
+.admin-kpi-card { padding: 16px; min-height: 128px; position: relative; overflow: hidden; transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
+.admin-kpi-card:hover { transform: translateY(-2px); border-color: rgba(42,111,252,.25); box-shadow: 0 14px 34px rgba(16,24,40,.09); }
+.admin-kpi-card:before { content: ''; position: absolute; width: 92px; height: 92px; border-radius: 50%; right: -30px; bottom: -35px; background: var(--kpi-soft, var(--zcs-brand-soft)); }
+.admin-kpi-icon { width: 42px; height: 42px; border-radius: 14px; background: var(--kpi-soft, var(--zcs-brand-soft)); color: var(--kpi-color, var(--zcs-theme-brand-color)); }
+.admin-kpi-value { font-size: 30px; line-height: 1; margin-top: 12px; }
+.admin-kpi-label { color: var(--zcs-secondary-text-color); min-height: 40px; }
+.admin-kpi-link { color: var(--zcs-theme-brand-color); font-size: 13px; font-weight: 600; text-decoration: none; position: relative; z-index: 1; }
+.admin-section-grid { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(320px, .8fr); gap: 16px; margin-top: 16px; }
+.admin-panel { padding: 18px; }
+.admin-panel-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.admin-panel-title { margin: 0; font-size: 18px; }
+.admin-panel-link { color: var(--zcs-theme-brand-color); font-size: 13px; text-decoration: none; font-weight: 600; white-space: nowrap; }
+.admin-status-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.admin-status-card { background: #F9FAFE; border: 1px solid var(--zcs-border-color); border-radius: 14px; padding: 14px; }
+.admin-status-value { font-size: 24px; line-height: 1.1; margin: 8px 0 8px; }
+.admin-two-col { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 16px; }
+.admin-pill { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 4px 9px; background: #F5F7FB; color: var(--zcs-secondary-text-color); font-size: 12px; }
+.admin-row-link { color: var(--zcs-theme-brand-color); text-decoration: none; font-weight: 600; }
+.admin-empty { border: 1px dashed var(--zcs-border-color); border-radius: 14px; padding: 18px; background: #FBFCFF; color: var(--zcs-teritiary-text-color); }
+.admin-quick-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.admin-quick-card { padding: 14px; border-radius: 14px; border: 1px solid var(--zcs-border-color); background: #fff; text-decoration: none; color: var(--zcs-primary-text-color); transition: border-color .18s ease, background .18s ease; }
+.admin-quick-card:hover { border-color: var(--zcs-theme-brand-color); background: #F9FBFF; }
+.admin-quick-icon { width: 34px; height: 34px; border-radius: 12px; background: var(--zcs-brand-soft); color: var(--zcs-theme-brand-color); }
+.admin-audit-list { max-height: 470px; overflow: auto; padding-right: 4px; }
+.admin-audit-body { padding-left: 34px; }
+.admin-line-clamp { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.admin-badge-soft { border-radius: 999px; padding: 3px 9px; font-size: 12px; font-weight: 600; background: var(--zcs-brand-soft); color: var(--zcs-theme-brand-color); }
+.admin-mobile-card-list { display: none; }
+@media (max-width: 1240px) { .admin-kpi-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } .admin-section-grid { grid-template-columns: 1fr; } }
+@media (max-width: 900px) { .admin-kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .admin-two-col { grid-template-columns: 1fr; } .admin-status-grid { grid-template-columns: 1fr; } .admin-hero-content { flex-direction: column; } .admin-hero-meta { width: 100%; box-sizing: border-box; } }
+@media (max-width: 640px) { .admin-home-shell { padding: 12px; } .admin-hero { padding: 18px; border-radius: 18px; } .admin-kpi-grid { grid-template-columns: 1fr; } .admin-kpi-card { min-height: auto; } .admin-panel { padding: 14px; } .admin-quick-grid { grid-template-columns: 1fr; } .admin-table-wrap { display: none; } .admin-mobile-card-list { display: grid; gap: 10px; } .admin-mobile-record { padding: 12px; border: 1px solid var(--zcs-border-color); border-radius: 14px; background: #fff; } .admin-panel-header { align-items: flex-start; flex-direction: column; } }
+</style>
+<div class="admin-home-shell">
+		<section class="admin-hero">
+				<div class="admin-hero-content">
+						<div>
+								<div class="admin-eyebrow zcs-font-12 zcs-uppercase zcs-font-semibold">Administrator workspace</div>
+								<h1 class="admin-title zcs-font-bold">Admin Home</h1>
+								<p class="admin-subtitle zcs-font-15">Cross-business overview for orders, production, purchasing, inventory, permits, installation, and service. Data is fetched in this single dashboard snippet.</p>
+						</div>
+						<div class="admin-hero-meta">
+								<div class="zcs-font-12 zcs-uppercase zcs-font-semibold" style="color:rgba(255,255,255,.72);">Signed in</div>
+								<div class="zcs-font-16 zcs-font-semibold zcs-mt-4"><%=zoho.loginuser%></div>
+								<div class="zcs-font-12 zcs-mt-4" style="color:rgba(255,255,255,.72);"><%=zoho.currentdate%></div>
+						</div>
+				</div>
+		</section>
+
+		<section class="admin-kpi-grid">
+				<div class="admin-kpi-card zcs-card" style="--kpi-soft:#ECF3FF;--kpi-color:#2A6FFC;">
+						<div class="admin-kpi-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline files-2-doc zcs-font-20"></i></div>
+						<div class="admin-kpi-value zcs-font-bold"><%=activeOrdersCount%></div>
+						<div class="admin-kpi-label zcs-font-13">Active orders</div>
+						<a class="admin-kpi-link" href="#Report:Active_Orders">Open report</a>
+				</div>
+				<div class="admin-kpi-card zcs-card" style="--kpi-soft:#FFF6E3;--kpi-color:#B8770D;">
+						<div class="admin-kpi-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline ui-2-time zcs-font-20"></i></div>
+						<div class="admin-kpi-value zcs-font-bold"><%=awaitingGreenCount%></div>
+						<div class="admin-kpi-label zcs-font-13">Awaiting green light</div>
+						<a class="admin-kpi-link" href="#Report:Orders_Awaiting_Green_Light">Review orders</a>
+				</div>
+				<div class="admin-kpi-card zcs-card" style="--kpi-soft:#EAF7FF;--kpi-color:#1094C5;">
+						<div class="admin-kpi-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline ui-1-settings-gear-64 zcs-font-20"></i></div>
+						<div class="admin-kpi-value zcs-font-bold"><%=productionQueuedCount%></div>
+						<div class="admin-kpi-label zcs-font-13">Production queued</div>
+						<a class="admin-kpi-link" href="#Report:Production_Priority_Planner">Planner</a>
+				</div>
+				<div class="admin-kpi-card zcs-card" style="--kpi-soft:#FFECEF;--kpi-color:#FE455D;">
+						<div class="admin-kpi-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline ui-3-alert zcs-font-20"></i></div>
+						<div class="admin-kpi-value zcs-font-bold"><%=materialShortagesCount%></div>
+						<div class="admin-kpi-label zcs-font-13">Material shortages</div>
+						<a class="admin-kpi-link" href="#Report:All_Production_Records?Production_Status=Material%20Shortage">Inspect</a>
+				</div>
+				<div class="admin-kpi-card zcs-card" style="--kpi-soft:#FFF6E3;--kpi-color:#F4660C;">
+						<div class="admin-kpi-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline ui-1-check-circle-08 zcs-font-20"></i></div>
+						<div class="admin-kpi-value zcs-font-bold"><%=pendingPOApprovalsCount%></div>
+						<div class="admin-kpi-label zcs-font-13">Pending PO approvals</div>
+						<a class="admin-kpi-link" href="#Report:Pending_PO_Approvals">Approve flow</a>
+				</div>
+				<div class="admin-kpi-card zcs-card" style="--kpi-soft:#ECF3FF;--kpi-color:#2A6FFC;">
+						<div class="admin-kpi-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline e-commerce-shopping-cart-simple zcs-font-20"></i></div>
+						<div class="admin-kpi-value zcs-font-bold"><%=openPOsCount%></div>
+						<div class="admin-kpi-label zcs-font-13">Open purchase orders</div>
+						<a class="admin-kpi-link" href="#Report:Open_Purchase_Orders">Track POs</a>
+				</div>
+				<div class="admin-kpi-card zcs-card" style="--kpi-soft:#EAFBF4;--kpi-color:#179E6C;">
+						<div class="admin-kpi-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline ui-1-calendar-60 zcs-font-20"></i></div>
+						<div class="admin-kpi-value zcs-font-bold"><%=readyInstallationsCount%></div>
+						<div class="admin-kpi-label zcs-font-13">Ready-to-schedule installations</div>
+						<a class="admin-kpi-link" href="#Report:Ready_To_Schedule_Installations">Schedule</a>
+				</div>
+				<div class="admin-kpi-card zcs-card" style="--kpi-soft:#F0ECFF;--kpi-color:#7656D6;">
+						<div class="admin-kpi-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline files-2-paper zcs-font-20"></i></div>
+						<div class="admin-kpi-value zcs-font-bold"><%=activePermitsCount%></div>
+						<div class="admin-kpi-label zcs-font-13">Active permits</div>
+						<a class="admin-kpi-link" href="#Report:Active_Permits">Permit queue</a>
+				</div>
+				<div class="admin-kpi-card zcs-card" style="--kpi-soft:#EAF7FF;--kpi-color:#1094C5;">
+						<div class="admin-kpi-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline ui-2-chat-round-content zcs-font-20"></i></div>
+						<div class="admin-kpi-value zcs-font-bold"><%=openServicesCount%></div>
+						<div class="admin-kpi-label zcs-font-13">Open service requests</div>
+						<a class="admin-kpi-link" href="#Report:Open_Service_Requests">Service desk</a>
+				</div>
+				<div class="admin-kpi-card zcs-card" style="--kpi-soft:#FFECEF;--kpi-color:#FE455D;">
+						<div class="admin-kpi-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline shopping-box zcs-font-20"></i></div>
+						<div class="admin-kpi-value zcs-font-bold"><%=lowMaterialsCount%></div>
+						<div class="admin-kpi-label zcs-font-13">Low raw material stock</div>
+						<a class="admin-kpi-link" href="#Report:Low_Material_Stock">Stock list</a>
+				</div>
+				<div class="admin-kpi-card zcs-card" style="--kpi-soft:#FFECEF;--kpi-color:#FE455D;">
+						<div class="admin-kpi-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline design-palette zcs-font-20"></i></div>
+						<div class="admin-kpi-value zcs-font-bold"><%=lowPowdersCount%></div>
+						<div class="admin-kpi-label zcs-font-13">Low powder stock</div>
+						<a class="admin-kpi-link" href="#Report:Low_Powder_Stock">Powder list</a>
+				</div>
+		</section>
+
+		<section class="admin-section-grid">
+				<div class="admin-panel zcs-card">
+						<div class="admin-panel-header">
+								<h2 class="admin-panel-title zcs-font-semibold">Pipeline and readiness</h2>
+								<a class="admin-panel-link" href="#Report:All_Customer_Orders">All customer orders</a>
+						</div>
+						<div class="admin-status-grid">
+								<div class="admin-status-card">
+										<div class="zcs-flex zcs-justify-space-between zcs-align-items-center">
+												<span class="zcs-font-13 zcs-color-secondary">Orders ready path</span>
+												<span class="admin-badge-soft"><%=orderReadyPct%>%</span>
+										</div>
+										<div class="admin-status-value zcs-font-bold"><%=ordersReadyCount%></div>
+										<div class="zcs-progress-bar-wrapper zcs-flex zcs-direction-column zcs-gap-6">
+												<div class="zcs-progress-bar zcs-rounded-sm"><div class="zcs-progress-bar-indicator" style="width:<%=orderReadyPct%>%;"></div></div>
+												<p class="zcs-font-12 zcs-font-medium zcs-lh-body zcs-color-secondary zcs-m-0">Ready, scheduled, installed, or in inspection out of active orders</p>
+										</div>
+								</div>
+								<div class="admin-status-card">
+										<div class="zcs-flex zcs-justify-space-between zcs-align-items-center">
+												<span class="zcs-font-13 zcs-color-secondary">Production ready</span>
+												<span class="admin-badge-soft"><%=prodReadyPct%>%</span>
+										</div>
+										<div class="admin-status-value zcs-font-bold"><%=prodReadyCount%></div>
+										<div class="zcs-progress-bar-wrapper zcs-flex zcs-direction-column zcs-gap-6">
+												<div class="zcs-progress-bar zcs-rounded-sm"><div class="zcs-progress-bar-indicator" style="width:<%=prodReadyPct%>%;"></div></div>
+												<p class="zcs-font-12 zcs-font-medium zcs-lh-body zcs-color-secondary zcs-m-0">Ready for installation or purchased and received</p>
+										</div>
+								</div>
+								<div class="admin-status-card">
+										<div class="zcs-flex zcs-justify-space-between zcs-align-items-center">
+												<span class="zcs-font-13 zcs-color-secondary">Installations active</span>
+												<span class="admin-badge-soft"><%=installScheduledPct%>%</span>
+										</div>
+										<div class="admin-status-value zcs-font-bold"><%=installScheduledCount%></div>
+										<div class="zcs-progress-bar-wrapper zcs-flex zcs-direction-column zcs-gap-6">
+												<div class="zcs-progress-bar zcs-rounded-sm"><div class="zcs-progress-bar-indicator" style="width:<%=installScheduledPct%>%;"></div></div>
+												<p class="zcs-font-12 zcs-font-medium zcs-lh-body zcs-color-secondary zcs-m-0">Scheduled or in progress out of installation records</p>
+										</div>
+								</div>
+						</div>
+						<div class="zcs-flex zcs-row-wrap zcs-gap-10 zcs-mt-16">
+								<span class="admin-pill"><i class="zc-li-outline files-2-doc"></i> Total orders <strong><%=totalOrdersCount%></strong></span>
+								<span class="admin-pill"><i class="zc-li-outline ui-1-settings-gear-64"></i> In production <strong><%=ordersInProductionCount%></strong></span>
+								<span class="admin-pill"><i class="zc-li-outline ui-2-time"></i> Production in motion <strong><%=prodInMotionCount%></strong></span>
+								<span class="admin-pill"><i class="zc-li-outline ui-3-alert"></i> Urgent services <strong><%=serviceUrgentCount%></strong></span>
+						</div>
+				</div>
+
+				<div class="zcs-quick-actions-wrapper zcs-card zcs-flex zcs-direction-column zcs-gap-16 zcs-p-16 zcs-box-border">
+						<h2 class="admin-panel-title zcs-font-semibold">Quick links</h2>
+						<div class="admin-quick-grid">
+								<a class="admin-quick-card zcs-flex zcs-align-items-center zcs-gap-10" href="#Report:All_Customer_Orders"><span class="admin-quick-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline files-2-doc"></i></span><span><strong>Orders</strong><br><span class="zcs-font-12 zcs-color-tertiary">All orders and invoices</span></span></a>
+								<a class="admin-quick-card zcs-flex zcs-align-items-center zcs-gap-10" href="#Report:Production_Status_Board"><span class="admin-quick-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline ui-1-settings-gear-64"></i></span><span><strong>Production board</strong><br><span class="zcs-font-12 zcs-color-tertiary">Status by production item</span></span></a>
+								<a class="admin-quick-card zcs-flex zcs-align-items-center zcs-gap-10" href="#Report:Open_Purchase_Orders"><span class="admin-quick-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline e-commerce-shopping-cart-simple"></i></span><span><strong>Purchasing</strong><br><span class="zcs-font-12 zcs-color-tertiary">Open purchase orders</span></span></a>
+								<a class="admin-quick-card zcs-flex zcs-align-items-center zcs-gap-10" href="#Report:Low_Material_Stock"><span class="admin-quick-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline shopping-box"></i></span><span><strong>Raw stock</strong><br><span class="zcs-font-12 zcs-color-tertiary">Low material stock</span></span></a>
+								<a class="admin-quick-card zcs-flex zcs-align-items-center zcs-gap-10" href="#Report:Low_Powder_Stock"><span class="admin-quick-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline design-palette"></i></span><span><strong>Powder stock</strong><br><span class="zcs-font-12 zcs-color-tertiary">Low powder list</span></span></a>
+								<a class="admin-quick-card zcs-flex zcs-align-items-center zcs-gap-10" href="#Report:Installation_Status_Board"><span class="admin-quick-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline ui-1-calendar-60"></i></span><span><strong>Installation</strong><br><span class="zcs-font-12 zcs-color-tertiary">Status board</span></span></a>
+								<a class="admin-quick-card zcs-flex zcs-align-items-center zcs-gap-10" href="#Report:Active_Permits"><span class="admin-quick-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline files-2-paper"></i></span><span><strong>Permits</strong><br><span class="zcs-font-12 zcs-color-tertiary">Active permit queue</span></span></a>
+								<a class="admin-quick-card zcs-flex zcs-align-items-center zcs-gap-10" href="#Report:Open_Service_Requests"><span class="admin-quick-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline ui-2-chat-round-content"></i></span><span><strong>Service</strong><br><span class="zcs-font-12 zcs-color-tertiary">Open service requests</span></span></a>
+						</div>
+				</div>
+		</section>
+
+		<section class="admin-two-col">
+				<div class="admin-panel zcs-card">
+						<div class="admin-panel-header">
+								<h2 class="admin-panel-title zcs-font-semibold">Attention queue</h2>
+								<a class="admin-panel-link" href="#Report:All_Production_Records">All production records</a>
+						</div>
+						<div class="admin-table-wrap zcs-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative">
+								<table class="zcs-w-full">
+										<thead class="zcs-sticky">
+												<tr>
+														<th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Type</th>
+														<th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Reference</th>
+														<th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Status</th>
+														<th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Open</th>
+												</tr>
+										</thead>
+										<tbody>
+<%
+	attentionRows = 0;
+	for each  ord in Customer_Orders[Order_Status == "Awaiting Green Light"] sort by Order_Placement_Date asc
+	{
+		if(attentionRows < 4)
+		{
+			attentionRows = attentionRows + 1;
+			%>
+<tr>
+																		<td class="zcs-px-16 zcs-py-10 zcs-box-border zcs-font-14 zcs-color-primary">Order</td>
+																		<td class="zcs-px-16 zcs-py-10 zcs-box-border zcs-font-14 zcs-color-primary"><%=ord.Order_Code%><br><span class="zcs-font-12 zcs-color-tertiary"><%=ifnull(ord.Customer_Name_Snapshot,"Customer pending")%></span></td>
+																		<td class="zcs-px-16 zcs-py-10 zcs-box-border"><span class="zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-yellow"><span class="zcs-badge-text zcs-font-12">Awaiting Green Light</span></span></td>
+																		<td class="zcs-px-16 zcs-py-10 zcs-box-border zcs-text-right"><a class="admin-row-link" href="#Page:Order_Detail?Order_ID=<%=ord.ID%>">Details</a></td>
+																</tr>
+<%
+		}
+	}
+	for each  prod in Production_Records[Production_Status == "Material Shortage" || Material_Status == "Shortage Identified"] sort by Priority_Sequence asc
+	{
+		if(attentionRows < 8)
+		{
+			attentionRows = attentionRows + 1;
+			%>
+<tr>
+																		<td class="zcs-px-16 zcs-py-10 zcs-box-border zcs-font-14 zcs-color-primary">Production</td>
+																		<td class="zcs-px-16 zcs-py-10 zcs-box-border zcs-font-14 zcs-color-primary"><%=prod.Production_Code%><br><span class="zcs-font-12 zcs-color-tertiary"><%=ifnull(prod.Product.Product_Name,"Production item")%></span></td>
+																		<td class="zcs-px-16 zcs-py-10 zcs-box-border"><span class="zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-red"><span class="zcs-badge-text zcs-font-12"><%=prod.Production_Status%></span></span></td>
+																		<td class="zcs-px-16 zcs-py-10 zcs-box-border zcs-text-right"><a class="admin-row-link" href="#Page:Production_Detail?Production_ID=<%=prod.ID%>">Details</a></td>
+																</tr>
+<%
+		}
+	}
+	for each  po in Purchase_Orders[PO_Status == "Submitted for Approval"] sort by PO_Date asc
+	{
+		if(attentionRows < 10)
+		{
+			attentionRows = attentionRows + 1;
+			%>
+<tr>
+																		<td class="zcs-px-16 zcs-py-10 zcs-box-border zcs-font-14 zcs-color-primary">PO</td>
+																		<td class="zcs-px-16 zcs-py-10 zcs-box-border zcs-font-14 zcs-color-primary"><%=po.PO_Number%><br><span class="zcs-font-12 zcs-color-tertiary"><%=ifnull(po.Vendor.Vendor_Name,"Vendor pending")%></span></td>
+																		<td class="zcs-px-16 zcs-py-10 zcs-box-border"><span class="zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-orange"><span class="zcs-badge-text zcs-font-12">Submitted for Approval</span></span></td>
+																		<td class="zcs-px-16 zcs-py-10 zcs-box-border zcs-text-right"><a class="admin-row-link" href="#Page:Purchase_Order_Detail?PO_ID=<%=po.ID%>">Details</a></td>
+																</tr>
+<%
+		}
+	}
+	if(attentionRows == 0)
+	{
+		%>
+<tr><td class="zcs-px-16 zcs-py-12 zcs-box-border zcs-font-14 zcs-color-tertiary" colspan="4">No current high-priority attention items.</td></tr>
+<%
+	}
+	%>
+</tbody>
+								</table>
+						</div>
+						<div class="admin-mobile-card-list">
+<%
+	mobileRows = 0;
+	for each  mord in Customer_Orders[Order_Status == "Awaiting Green Light"] sort by Order_Placement_Date asc
+	{
+		if(mobileRows < 3)
+		{
+			mobileRows = mobileRows + 1;
+			%>
+<div class="admin-mobile-record"><div class="zcs-flex zcs-justify-space-between zcs-gap-8"><strong>Order <%=mord.Order_Code%></strong><span class="zcs-yellow zcs-font-12">Awaiting</span></div><div class="zcs-font-12 zcs-color-tertiary zcs-mt-4"><%=ifnull(mord.Customer_Name_Snapshot,"Customer pending")%></div><a class="admin-row-link zcs-font-13" href="#Page:Order_Detail?Order_ID=<%=mord.ID%>">Details</a></div>
+<%
+		}
+	}
+	for each  mprod in Production_Records[Production_Status == "Material Shortage" || Material_Status == "Shortage Identified"] sort by Priority_Sequence asc
+	{
+		if(mobileRows < 6)
+		{
+			mobileRows = mobileRows + 1;
+			%>
+<div class="admin-mobile-record"><div class="zcs-flex zcs-justify-space-between zcs-gap-8"><strong>Production <%=mprod.Production_Code%></strong><span class="zcs-red zcs-font-12">Shortage</span></div><div class="zcs-font-12 zcs-color-tertiary zcs-mt-4"><%=ifnull(mprod.Product.Product_Name,"Production item")%></div><a class="admin-row-link zcs-font-13" href="#Page:Production_Detail?Production_ID=<%=mprod.ID%>">Details</a></div>
+<%
+		}
+	}
+	if(mobileRows == 0)
+	{
+		%>
+<div class="admin-empty">No current high-priority attention items.</div>
+<%
+	}
+	%>
+</div>
+				</div>
+
+				<div class="admin-panel zcs-card">
+						<div class="admin-panel-header">
+								<h2 class="admin-panel-title zcs-font-semibold">Ready and blocked work</h2>
+								<a class="admin-panel-link" href="#Report:Ready_To_Schedule_Installations">Ready installations</a>
+						</div>
+						<div class="zcs-flex zcs-direction-column zcs-gap-12">
+<%
+	readyRows = 0;
+	for each  inst in Installation_Schedules[Installation_Status == "Ready to Schedule"] sort by Priority_Sequence asc
+	{
+		if(readyRows < 4)
+		{
+			readyRows = readyRows + 1;
+			%>
+<div class="admin-status-card">
+														<div class="zcs-flex zcs-justify-space-between zcs-gap-8">
+																<strong><%=inst.Installation_Code%></strong>
+																<span class="zcs-green zcs-font-12 zcs-font-semibold">Ready to Schedule</span>
+														</div>
+														<div class="zcs-font-13 zcs-color-secondary zcs-mt-4"><%=ifnull(inst.Customer_Name_Snapshot,"Customer pending")%> - <%=ifnull(inst.Area_or_City,"Area pending")%></div>
+														<div class="zcs-font-12 zcs-color-tertiary zcs-mt-4">Production: <%=inst.Production_Readiness_Status%> - Permit: <%=inst.Permit_Clearance_Status%></div>
+														<a class="admin-row-link zcs-font-13" href="#Page:Installation_Detail?Installation_ID=<%=inst.ID%>">Open installation detail</a>
+												</div>
+<%
+		}
+	}
+	if(readyRows == 0)
+	{
+		%>
+<div class="admin-empty">No installation records are currently ready to schedule.</div>
+<%
+	}
+	%>
+</div>
+				</div>
+		</section>
+
+		<section class="admin-two-col">
+				<div class="admin-panel zcs-card">
+						<div class="admin-panel-header">
+								<h2 class="admin-panel-title zcs-font-semibold">Low stock watch</h2>
+								<a class="admin-panel-link" href="#Report:All_Materials">All materials</a>
+						</div>
+						<div class="admin-table-wrap zcs-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative">
+								<table class="zcs-w-full">
+										<thead class="zcs-sticky"><tr><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Item</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-color-primary">Available</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-color-primary">Reorder</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-color-primary">Open</th></tr></thead>
+										<tbody>
+<%
+	stockRows = 0;
+	for each  mat in Material_Master[Available_Quantity <= Reorder_Level && Active == true] sort by Material_Name asc
+	{
+		if(stockRows < 5)
+		{
+			stockRows = stockRows + 1;
+			%>
+<tr><td class="zcs-px-16 zcs-py-10 zcs-box-border zcs-font-14 zcs-color-primary"><%=mat.Material_Name%><br><span class="zcs-font-12 zcs-color-tertiary">Raw material</span></td><td class="zcs-px-16 zcs-py-10 zcs-box-border zcs-text-right zcs-font-14 zcs-red"><%=mat.Available_Quantity%></td><td class="zcs-px-16 zcs-py-10 zcs-box-border zcs-text-right zcs-font-14"><%=mat.Reorder_Level%></td><td class="zcs-px-16 zcs-py-10 zcs-box-border zcs-text-right"><a class="admin-row-link" href="#Page:Inventory_Detail?Item_Type=Material&Item_ID=<%=mat.ID%>">Details</a></td></tr>
+<%
+		}
+	}
+	for each  pow in Powder_Coating_Inventory[Available_Quantity <= Reorder_Level && Active == true] sort by Powder_Name asc
+	{
+		if(stockRows < 10)
+		{
+			stockRows = stockRows + 1;
+			%>
+<tr><td class="zcs-px-16 zcs-py-10 zcs-box-border zcs-font-14 zcs-color-primary"><%=pow.Powder_Name%><br><span class="zcs-font-12 zcs-color-tertiary">Powder - <%=pow.Colour_Family%></span></td><td class="zcs-px-16 zcs-py-10 zcs-box-border zcs-text-right zcs-font-14 zcs-red"><%=pow.Available_Quantity%></td><td class="zcs-px-16 zcs-py-10 zcs-box-border zcs-text-right zcs-font-14"><%=pow.Reorder_Level%></td><td class="zcs-px-16 zcs-py-10 zcs-box-border zcs-text-right"><a class="admin-row-link" href="#Page:Inventory_Detail?Item_Type=Powder&Item_ID=<%=pow.ID%>">Details</a></td></tr>
+<%
+		}
+	}
+	if(stockRows == 0)
+	{
+		%>
+<tr><td class="zcs-px-16 zcs-py-12 zcs-box-border zcs-font-14 zcs-color-tertiary" colspan="4">No material or powder stock is below reorder level.</td></tr>
+<%
+	}
+	%>
+</tbody>
+								</table>
+						</div>
+						<div class="admin-mobile-card-list">
+<%
+	stockMobileRows = 0;
+	for each  smat in Material_Master[Available_Quantity <= Reorder_Level && Active == true] sort by Material_Name asc
+	{
+		if(stockMobileRows < 4)
+		{
+			stockMobileRows = stockMobileRows + 1;
+			%>
+<div class="admin-mobile-record"><strong><%=smat.Material_Name%></strong><div class="zcs-font-12 zcs-color-tertiary">Available <%=smat.Available_Quantity%> - Reorder <%=smat.Reorder_Level%></div><a class="admin-row-link zcs-font-13" href="#Page:Inventory_Detail?Item_Type=Material&Item_ID=<%=smat.ID%>">Details</a></div>
+<%
+		}
+	}
+	if(stockMobileRows == 0)
+	{
+		%>
+<div class="admin-empty">No low stock items.</div>
+<%
+	}
+	%>
+</div>
+				</div>
+
+				<div class="admin-panel zcs-card">
+						<div class="admin-panel-header">
+								<h2 class="admin-panel-title zcs-font-semibold">Recent audit feed</h2>
+								<a class="admin-panel-link" href="#Report:All_Action_Comments">All comments</a>
+						</div>
+						<div class="admin-audit-list zcs-timeline-wrapper">
+								<ul class="zcs-flex zcs-direction-column zcs-gap-24 zcs-p-0 zcs-m-0">
+<%
+	auditRows = 0;
+	for each  note in Action_Comments[ID != 0] sort by Action_Date desc
+	{
+		if(auditRows < 7)
+		{
+			auditRows = auditRows + 1;
+			%>
+<li class="zcs-tl-li zcs-relative" style="list-style:none; min-height:72px;">
+																<div class="zcs-tl-indicator zcs-h-full zcs-flex zcs-justify-center zcs-absolute"><span class="zcs-tl-dot zcs-rounded-half zcs-mt-4 zcs-box-border zcs-relative"></span></div>
+																<div class="admin-audit-body">
+																		<div class="zcs-flex zcs-align-items-center zcs-row-wrap zcs-gap-8">
+																				<strong class="zcs-font-14 zcs-color-primary"><%=note.Target_Module%></strong>
+																				<span class="zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-theme"><span class="zcs-badge-text zcs-font-12"><%=note.New_Status%></span></span>
+																		</div>
+																		<div class="zcs-font-12 zcs-color-tertiary zcs-mt-4"><%=note.Action_Date%> - <%=note.Submitted_By%> - Record <%=note.Lookup_ID%></div>
+																		<p class="admin-line-clamp zcs-font-13 zcs-color-secondary zcs-mt-4 zcs-mx-0 zcs-mb-0"><%=note.Comments%></p>
+																</div>
+														</li>
+<%
+		}
+	}
+	if(auditRows == 0)
+	{
+		%>
+<li class="admin-empty" style="list-style:none;">No Action Comments have been submitted yet.</li>
+<%
+	}
+	%>
+</ul>
+						</div>
+				</div>
+		</section>
+</div>

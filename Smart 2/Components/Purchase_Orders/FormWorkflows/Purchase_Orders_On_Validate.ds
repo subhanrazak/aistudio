@@ -1,0 +1,51 @@
+Purchase_Orders_On_Validate as "Purchase Orders On Validate"
+{
+
+				type =  form
+				form = Purchase_Orders
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Vendor == null)
+										{
+											alert "Vendor is required for a purchase order.";
+											cancel submit;
+										}
+										line_count = 0;
+										for each  line_rec in input.Lines
+										{
+											line_count = line_count + 1;
+										}
+										if(line_count == 0)
+										{
+											alert "At least one purchase order line is required.";
+											cancel submit;
+										}
+										if(ifnull(input.Subtotal,0) < 0 || ifnull(input.Discount_Total,0) < 0 || ifnull(input.Tax_Total,0) < 0 || ifnull(input.Total_Amount,0) < 0)
+										{
+											alert "Purchase order amounts cannot be negative.";
+											cancel submit;
+										}
+										if(input.PO_Status == "Ordered" || input.PO_Status == "Partially Received" || input.PO_Status == "Received" && input.Approved_Date == null)
+										{
+											alert "Purchase orders must be approved before ordering or receiving.";
+											cancel submit;
+										}
+										currentProfile = thisapp.permissions.loginUserProfile();
+										if(input.PO_Status == "Ordered" || input.PO_Status == "Partially Received" || input.PO_Status == "Received" && input.Approved_Date == null && currentProfile not in {"Administrator","Office_Staff","Purchase_Stores"})
+										{
+											alert "Only authorized purchase users can move a purchase order beyond approval.";
+											cancel submit;
+										}
+						)
+					}
+				}
+
+			
+}

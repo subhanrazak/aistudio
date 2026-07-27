@@ -1,0 +1,56 @@
+Permit_Records_On_Success as "Permit Records On Success"
+{
+
+				type =  form
+				form = Permit_Records
+
+				record event = on add or edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											order_rec = Customer_Orders[ID == input.Customer_Order];
+										if(order_rec.count() > 0)
+										{
+											order_rec.Permit_Status=input.Permit_Status;
+										}
+										install_rec = Installation_Schedules[Customer_Order == input.Customer_Order];
+										if(install_rec.count() > 0)
+										{
+											if(input.Permit_Status == "Approved")
+											{
+												install_rec.Permit_Clearance_Status="Approved";
+											}
+											else if(input.Permit_Status == "Not Required")
+											{
+												install_rec.Permit_Clearance_Status="Not Required";
+											}
+											else if(input.Permit_Status == "Submitted")
+											{
+												install_rec.Permit_Clearance_Status="Submitted";
+											}
+											else if(input.Permit_Status == "Rejected" || input.Permit_Status == "Expired")
+											{
+												install_rec.Permit_Clearance_Status="Blocked";
+											}
+											else
+											{
+												install_rec.Permit_Clearance_Status="Required";
+											}
+											ready_count = Production_Records[Customer_Order == input.Customer_Order && Production_Status == "Ready for Installation" || Production_Status == "Purchased and Received"].count();
+											total_count = Production_Records[Customer_Order == input.Customer_Order && Production_Status != "Cancelled"].count();
+											if(input.Permit_Status == "Approved" || input.Permit_Status == "Not Required" && total_count > 0 && ready_count == total_count)
+											{
+												install_rec.Production_Readiness_Status="Ready";
+												install_rec.Installation_Status="Ready to Schedule";
+											}
+										}
+						)
+					}
+				}
+
+			
+}

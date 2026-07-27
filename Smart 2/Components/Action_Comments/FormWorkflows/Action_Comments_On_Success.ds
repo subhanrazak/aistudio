@@ -1,0 +1,226 @@
+Action_Comments_On_Success as "Action Comments On Success"
+{
+
+				type =  form
+				form = Action_Comments
+
+				record event = on add
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Target_Module == "Customer_Orders")
+										{
+											order_rec = Customer_Orders[ID == input.Lookup_ID];
+											if(order_rec.count() > 0)
+											{
+												if(input.New_Status == "Green Light")
+												{
+													order_rec.Order_Status="Green Light";
+													order_rec.Admin_Green_Light_Date=zoho.currentdate;
+												}
+												else
+												{
+													order_rec.Order_Status=input.New_Status;
+												}
+											}
+										}
+										else if(input.Target_Module == "Production_Records")
+										{
+											prod_rec = Production_Records[ID == input.Lookup_ID];
+											if(prod_rec.count() > 0)
+											{
+												prod_rec.Production_Status=input.New_Status;
+												if(input.New_Status == "Material Shortage")
+												{
+													prod_rec.Material_Status="Shortage Identified";
+												}
+												if(input.New_Status == "Ready for Installation" || input.New_Status == "Purchased and Received")
+												{
+													prod_rec.Ready_For_Installation_Date=zoho.currentdate;
+													ready_count = Production_Records[Customer_Order == prod_rec.Customer_Order && Production_Status == "Ready for Installation" || Production_Status == "Purchased and Received"].count();
+													total_count = Production_Records[Customer_Order == prod_rec.Customer_Order && Production_Status != "Cancelled"].count();
+													install_rec = Installation_Schedules[Customer_Order == prod_rec.Customer_Order];
+													if(install_rec.count() > 0)
+													{
+														if(total_count > 0 && ready_count == total_count)
+														{
+															install_rec.Production_Readiness_Status="Ready";
+															if(install_rec.Permit_Clearance_Status == "Approved" || install_rec.Permit_Clearance_Status == "Not Required")
+															{
+																install_rec.Installation_Status="Ready to Schedule";
+															}
+														}
+														else
+														{
+															install_rec.Production_Readiness_Status="Partially Ready";
+														}
+													}
+												}
+											}
+										}
+										else if(input.Target_Module == "Purchase_Orders")
+										{
+											po_rec = Purchase_Orders[ID == input.Lookup_ID];
+											if(po_rec.count() > 0)
+											{
+												po_rec.PO_Status=input.New_Status;
+												if(input.New_Status == "Approved")
+												{
+													po_rec.Approved_Date=zoho.currentdate;
+													staff_rec = Add_Employee[Email == zoho.loginuserid];
+													if(staff_rec.count() > 0)
+													{
+														po_rec.Approved_By=staff_rec.ID;
+													}
+												}
+												if(input.New_Status == "Partially Received" || input.New_Status == "Received")
+												{
+													for each  line_rec in po_rec.Lines
+													{
+														if(ifnull(line_rec.Received_Quantity,0) > 0 && line_rec.Stock_Posted == false)
+														{
+															if(line_rec.Line_Type == "Raw Material" || line_rec.Line_Type == "Service Part")
+															{
+																mat_rec = Material_Master[ID == line_rec.Material];
+																if(mat_rec.count() > 0)
+																{
+																	mat_rec.Available_Quantity=ifnull(mat_rec.Available_Quantity,0) + ifnull(line_rec.Received_Quantity,0);
+																	mat_rec.Last_Updated=zoho.currentdate;
+																}
+															}
+															else if(line_rec.Line_Type == "Powder")
+															{
+																powder_rec = Powder_Coating_Inventory[ID == line_rec.Powder];
+																if(powder_rec.count() > 0)
+																{
+																	powder_rec.Available_Quantity=ifnull(powder_rec.Available_Quantity,0) + ifnull(line_rec.Received_Quantity,0);
+																	powder_rec.Last_Updated=zoho.currentdate;
+																}
+															}
+															else if(line_rec.Line_Type == "Finished Product")
+															{
+																prod_po_rec = Production_Records[ID == line_rec.Linked_Production];
+																if(prod_po_rec.count() > 0 && ifnull(line_rec.Received_Quantity,0) >= ifnull(line_rec.Quantity,0))
+																{
+																	prod_po_rec.Production_Status="Purchased and Received";
+																	prod_po_rec.Ready_For_Installation_Date=zoho.currentdate;
+																}
+															}
+															line_rec.Stock_Posted=true;
+															if(line_rec.Received_Date == null)
+															{
+																line_rec.Received_Date=zoho.currentdate;
+															}
+														}
+													}
+												}
+											}
+										}
+										else if(input.Target_Module == "Installation_Schedules")
+										{
+											inst_rec = Installation_Schedules[ID == input.Lookup_ID];
+											if(inst_rec.count() > 0)
+											{
+												inst_rec.Installation_Status=input.New_Status;
+												order_for_inst = Customer_Orders[ID == inst_rec.Customer_Order];
+												if(order_for_inst.count() > 0)
+												{
+													if(input.New_Status == "Scheduled")
+													{
+														order_for_inst.Order_Status="Installation Scheduled";
+													}
+													else if(input.New_Status == "Installed")
+													{
+														order_for_inst.Order_Status="Installed";
+													}
+													else if(input.New_Status == "Inspection Required")
+													{
+														order_for_inst.Order_Status="Inspection Required";
+													}
+													else if(input.New_Status == "Completed")
+													{
+														order_for_inst.Order_Status="Completed";
+													}
+												}
+											}
+										}
+										else if(input.Target_Module == "Permit_Records")
+										{
+											permit_rec = Permit_Records[ID == input.Lookup_ID];
+											if(permit_rec.count() > 0)
+											{
+												permit_rec.Permit_Status=input.New_Status;
+												order_for_permit = Customer_Orders[ID == permit_rec.Customer_Order];
+												if(order_for_permit.count() > 0)
+												{
+													order_for_permit.Permit_Status=input.New_Status;
+												}
+												install_for_permit = Installation_Schedules[Customer_Order == permit_rec.Customer_Order];
+												if(install_for_permit.count() > 0)
+												{
+													if(input.New_Status == "Approved")
+													{
+														install_for_permit.Permit_Clearance_Status="Approved";
+													}
+													else if(input.New_Status == "Not Required")
+													{
+														install_for_permit.Permit_Clearance_Status="Not Required";
+													}
+													else if(input.New_Status == "Submitted")
+													{
+														install_for_permit.Permit_Clearance_Status="Submitted";
+													}
+													else if(input.New_Status == "Rejected" || input.New_Status == "Expired")
+													{
+														install_for_permit.Permit_Clearance_Status="Blocked";
+													}
+													else
+													{
+														install_for_permit.Permit_Clearance_Status="Required";
+													}
+												}
+											}
+										}
+										else if(input.Target_Module == "Service_Requests")
+										{
+											service_rec = Service_Requests[ID == input.Lookup_ID];
+											if(service_rec.count() > 0)
+											{
+												service_rec.Service_Status=input.New_Status;
+												if(input.New_Status == "Completed" || input.New_Status == "Closed" && service_rec.Completion_Date == null)
+												{
+													service_rec.Completion_Date=zoho.currentdate;
+												}
+												if(input.New_Status == "Completed" || input.New_Status == "Closed" && service_rec.Stock_Consumption_Posted == false)
+												{
+													for each  part_row in service_rec.Parts_Usage
+													{
+														if(part_row.Material != null && ifnull(part_row.Quantity_Used,0) > 0 && part_row.Stock_Deducted == false)
+														{
+															service_mat = Material_Master[ID == part_row.Material];
+															if(service_mat.count() > 0)
+															{
+																service_mat.Available_Quantity=ifnull(service_mat.Available_Quantity,0) - ifnull(part_row.Quantity_Used,0);
+																service_mat.Last_Updated=zoho.currentdate;
+																part_row.Stock_Deducted=true;
+															}
+														}
+													}
+													service_rec.Stock_Consumption_Posted=true;
+												}
+											}
+										}
+										if(input.Return_URL != null && input.Return_URL != "")
+										{
+											openURL(input.Return_URL,"same window");
+										}
+						)
+					}
+				}
+
+			
+}

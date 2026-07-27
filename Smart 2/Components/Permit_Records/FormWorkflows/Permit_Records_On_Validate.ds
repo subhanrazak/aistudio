@@ -1,0 +1,35 @@
+Permit_Records_On_Validate as "Permit Records On Validate"
+{
+
+				type =  form
+				form = Permit_Records
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Permit_Status == "Submitted" || input.Permit_Status == "Approved" && input.Submitted_Date == null)
+										{
+											alert "Submitted date is required for submitted or approved permits.";
+											cancel submit;
+										}
+										if(input.Permit_Status == "Approved" && input.Approved_Date == null)
+										{
+											alert "Approved date is required when permit status is Approved.";
+											cancel submit;
+										}
+										if(input.Expiry_Date != null && input.Approved_Date != null && input.Expiry_Date < input.Approved_Date)
+										{
+											alert "Expiry date cannot be before approved date.";
+											cancel submit;
+										}
+						)
+					}
+				}
+
+			
+}

@@ -1,0 +1,35 @@
+Validate_Order_Line_Items as "Validate Order Line Items"
+{
+
+				type =  form
+				form = Order_Line_Items
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(ifnull(input.Quantity,0) < 0 || ifnull(input.Width,0) < 0 || ifnull(input.Height,0) < 0)
+										{
+											alert "Quantity, width, and height cannot be negative.";
+											cancel submit;
+										}
+										if(ifnull(input.Unit_Rate,0) < 0 || ifnull(input.Line_Discount,0) < 0 || ifnull(input.Line_Tax,0) < 0 || ifnull(input.Line_Total,0) < 0)
+										{
+											alert "Invoice line amounts cannot be negative.";
+											cancel submit;
+										}
+										if(input.Requires_Powder_Coating == true && input.Powder == null)
+										{
+											alert "Powder is required when powder coating is selected.";
+											cancel submit;
+										}
+						)
+					}
+				}
+
+			
+}
