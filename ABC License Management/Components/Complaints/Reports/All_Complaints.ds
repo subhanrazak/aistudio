@@ -1,0 +1,88 @@
+default list All_Complaints
+{
+	displayName = "All Complaints"
+	show all rows from Complaints
+	(
+		Complaint_Number as "Complaint Number"
+		Intake_Date as "Intake Date"
+		Complaint_Source as "Complaint Source"
+		Premises
+		License
+		Nature_of_Violation as "Nature of Violation"
+		Priority
+		Screening_Decision as "Screening Decision"
+		Created_Case as "Created Case"
+		custom action "Accept Complaint"
+		(
+			workflow = Accept_Complaint
+			show action for each record = true
+			show action in edit record menu = true
+			column header = "Accept Complaint"
+			success message = "Complaint accepted"
+			condition = (Screening_Decision == "New" || Screening_Decision == "Need More Information")
+			confirmation before execution
+			(
+				message for individual record = "Accept this complaint for enforcement handling?"
+				confirm button text = "Accept Complaint"
+				cancel button text = "Cancel"
+			)
+		)
+		custom action "Reject Complaint"
+		(
+			workflow = Reject_Complaint
+			show action for each record = true
+			show action in edit record menu = true
+			column header = "Reject Complaint"
+			success message = "Complaint rejected"
+			condition = (Screening_Decision == "New" || Screening_Decision == "Need More Information")
+			confirmation before execution
+			(
+				message for individual record = "Reject this complaint?"
+				confirm button text = "Reject Complaint"
+				cancel button text = "Cancel"
+			)
+		)
+		custom action "Escalate Priority"
+		(
+			workflow = Escalate_Priority
+			show action for each record = true
+			show action in edit record menu = true
+			column header = "Escalate Priority"
+			success message = "Complaint priority escalated"
+			condition = (Priority != "High" && Screening_Decision != "Rejected" && Screening_Decision != "Closed")
+			confirmation before execution
+			(
+				message for individual record = "Escalate this complaint to High priority?"
+				confirm button text = "Escalate"
+				cancel button text = "Cancel"
+			)
+		)
+		custom action "Create Case"
+		(
+			workflow = Create_Case
+			show action for each record = true
+			show action in edit record menu = true
+			column header = "Create Case"
+			success message = "Case created"
+			condition = (Screening_Decision == "Accepted" && Created_Case is null)
+			confirmation before execution
+			(
+				message for individual record = "Create an enforcement case for this accepted complaint?"
+				confirm button text = "Create Case"
+				cancel button text = "Cancel"
+			)
+		)
+	)
+	filters
+	(
+		Intake_Date
+		Complaint_Source
+		Nature_of_Violation
+		Priority
+		Screening_Decision
+	)
+	sort by
+	(
+		Intake_Date descending
+	)
+}

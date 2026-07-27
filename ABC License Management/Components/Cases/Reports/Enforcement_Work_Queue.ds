@@ -1,0 +1,80 @@
+list Enforcement_Work_Queue
+{
+	displayName = "Enforcement Work Queue"
+	show all rows from Cases [Case_Status != "Closed"]
+	(
+		Case_Number as "Case Number"
+		Originating_Complaint as "Originating Complaint"
+		License
+		Premises
+		Priority
+		Assigned_Agent_Email as "Assigned Agent Email"
+		Supervising_Agent_Email as "Supervising Agent Email"
+		Case_Status as "Case Status"
+		Initial_Visit_Due_Date as "Initial Visit Due Date"
+		Visit_Count as "Visit Count"
+		Last_Visit_Date as "Last Visit Date"
+		Violations_Observed as "Violations Observed"
+		Recommend_Accusation as "Recommend Accusation"
+		RFA_Status as "RFA Status"
+		custom action "Assign Case"
+		(
+			workflow = Case_Assign_Case
+			show action for each record = true
+			show action in edit record menu = true
+			column header = "Assign Case"
+			success message = "Case assigned."
+			condition = (Case_Status == "New")
+			confirmation before execution
+			(
+				message for individual record = "Assign this case to yourself?"
+				confirm button text = "Assign Case"
+				cancel button text = "Cancel"
+			)
+		)
+		custom action "Refer to Legal"
+		(
+			workflow = Case_Refer_to_Legal
+			show action for each record = true
+			show action in edit record menu = true
+			column header = "Refer to Legal"
+			success message = "Case referred to legal review."
+			condition = (Case_Status == "Assigned" || Case_Status == "Preliminary Investigation" || Case_Status == "Field Investigation" || Case_Status == "Report Preparation")
+			confirmation before execution
+			(
+				message for individual record = "Refer this case to OLS/legal review?"
+				confirm button text = "Refer to Legal"
+				cancel button text = "Cancel"
+			)
+		)
+		custom action "Close Case"
+		(
+			workflow = Case_Close_Case
+			show action for each record = true
+			show action in edit record menu = true
+			column header = "Close Case"
+			success message = "Case closed."
+			condition = (Case_Status != "Closed")
+			confirmation before execution
+			(
+				message for individual record = "Close this case?"
+				confirm button text = "Close Case"
+				cancel button text = "Cancel"
+			)
+		)
+	)
+	filters
+	(
+		Priority
+		Assigned_Agent_Email
+		Supervising_Agent_Email
+		Case_Status
+		Initial_Visit_Due_Date
+		RFA_Status
+	)
+	sort by
+	(
+		Priority custom
+		Initial_Visit_Due_Date ascending
+	)
+}

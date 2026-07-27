@@ -1,0 +1,36 @@
+DBA_On_Load as "Default DBA Applicant Profile"
+{
+
+				type =  form
+				form = DBA
+
+				record event = on add or edit
+
+				on load
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Applicant_Profile == null)
+										{
+											profileRec = Applicant_Profile[Profile_Email == zoho.loginuserid];
+											if(profileRec.count() > 0)
+											{
+												input.Applicant_Profile = profileRec.ID;
+											}
+										}
+										if(input.Primary_DBA in {""," ","null"})
+										{
+											input.Primary_DBA = "No";
+										}
+										if(input.DBA_Status in {""," ","null"})
+										{
+											input.DBA_Status = "Active";
+										}
+						)
+					}
+				}
+
+			
+}

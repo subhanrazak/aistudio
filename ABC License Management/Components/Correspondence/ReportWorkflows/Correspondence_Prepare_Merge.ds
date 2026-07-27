@@ -1,0 +1,29 @@
+Correspondence_Prepare_Merge as "Prepare Merge"
+{
+	type = functions
+	form = Correspondence
+	execution type = for each record
+	description = "Marks correspondence ready for manual merge from correspondence report queues."
+
+	on start
+	{
+		actions
+		{
+			on click
+			(
+				actorEmail = zoho.loginuserid;
+				if(input.Merge_Status == "Draft" || input.Merge_Status == "Failed")
+				{
+					input.Merge_Status = "Ready for Manual Merge";
+					input.Generated_Date = zoho.currentdate;
+					input.Body_or_Merge_Notes = ifnull(input.Body_or_Merge_Notes,"") + "\nPrepared for manual merge by " + actorEmail + " on " + zoho.currentdate + ".";
+					thisapp.Write_Audit_Log("Correspondence","Correspondence",input.ID,"Prepare merge","Correspondence prepared for manual merge by " + actorEmail + ".");
+				}
+				else
+				{
+					thisapp.Write_Audit_Log("Correspondence","Correspondence",input.ID,"Prepare merge action skipped","Prepare Merge clicked by " + actorEmail + " but merge status was " + input.Merge_Status + ".");
+				}
+			)
+		}
+	}
+}

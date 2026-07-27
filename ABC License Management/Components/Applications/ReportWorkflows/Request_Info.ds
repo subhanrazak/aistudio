@@ -1,0 +1,22 @@
+Request_Info as "Request Info"
+{
+	type = functions
+	form = Applications
+	execution type = for each record
+
+	on start
+	{
+		actions
+		{
+			on click
+			(
+				if(input.Application_Status == "Submitted" || input.Application_Status == "In-progress")
+				{
+					input.Application_Status = "On-hold";
+					input.Tracking_Url_or_Note = "Information requested by " + zoho.loginuserid + " on " + zoho.currentdate;
+					thisapp.Write_Audit_Log("New License Application","Applications",input.ID,"Information requested","Information requested from application queue by " + zoho.loginuserid + ".");
+				}
+			)
+		}
+	}
+}

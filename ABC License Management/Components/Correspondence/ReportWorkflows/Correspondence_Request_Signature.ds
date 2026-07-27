@@ -1,0 +1,28 @@
+Correspondence_Request_Signature as "Request Signature"
+{
+	type = functions
+	form = Correspondence
+	execution type = for each record
+	description = "Flags a correspondence document for manual signature follow-up from report queues."
+
+	on start
+	{
+		actions
+		{
+			on click
+			(
+				actorEmail = zoho.loginuserid;
+				if(input.Sign_Status == "Not Required" || input.Sign_Status == "Declined")
+				{
+					input.Sign_Status = "Pending Manual Sign";
+					input.Body_or_Merge_Notes = ifnull(input.Body_or_Merge_Notes,"") + "\nManual signature requested by " + actorEmail + " on " + zoho.currentdate + ".";
+					thisapp.Write_Audit_Log("Correspondence","Correspondence",input.ID,"Signature requested","Manual signature requested by " + actorEmail + ".");
+				}
+				else
+				{
+					thisapp.Write_Audit_Log("Correspondence","Correspondence",input.ID,"Request signature action skipped","Request Signature clicked by " + actorEmail + " but sign status was " + input.Sign_Status + ".");
+				}
+			)
+		}
+	}
+}

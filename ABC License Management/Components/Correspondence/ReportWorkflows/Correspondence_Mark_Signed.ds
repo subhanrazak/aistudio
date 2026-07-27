@@ -1,0 +1,32 @@
+Correspondence_Mark_Signed as "Mark Signed"
+{
+	type = functions
+	form = Correspondence
+	execution type = for each record
+	description = "Marks a correspondence document as signed from correspondence report queues."
+
+	on start
+	{
+		actions
+		{
+			on click
+			(
+				actorEmail = zoho.loginuserid;
+				if(input.Sign_Status == "Pending Manual Sign")
+				{
+					input.Sign_Status = "Signed";
+					if(input.Generated_Date == null)
+					{
+						input.Generated_Date = zoho.currentdate;
+					}
+					input.Body_or_Merge_Notes = ifnull(input.Body_or_Merge_Notes,"") + "\nMarked signed by " + actorEmail + " on " + zoho.currentdate + ".";
+					thisapp.Write_Audit_Log("Correspondence","Correspondence",input.ID,"Document signed","Document marked signed manually by " + actorEmail + ".");
+				}
+				else
+				{
+					thisapp.Write_Audit_Log("Correspondence","Correspondence",input.ID,"Mark signed action skipped","Mark Signed clicked by " + actorEmail + " but sign status was " + input.Sign_Status + ".");
+				}
+			)
+		}
+	}
+}

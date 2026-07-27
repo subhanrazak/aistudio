@@ -1,0 +1,287 @@
+<%
+	supervisorEmail = ifnull(zoho.loginuserid,"");
+	if(supervisorEmail == "" || supervisorEmail == null)
+	{
+		supervisorEmail = "Current user";
+	}
+	supervisorName = supervisorEmail;
+	supervisorRole = "Enforcement Supervisor";
+	agentRow = Add_Agents[Agent_Email == supervisorEmail && Active == true];
+	if(agentRow.count() > 0)
+	{
+		firstName = ifnull(agentRow.Agent_Name.first_name,"");
+		lastName = ifnull(agentRow.Agent_Name.last_name,"");
+		fullName = (firstName + " " + lastName).trim();
+		if(fullName != "")
+		{
+			supervisorName = fullName;
+		}
+		supervisorRole = ifnull(agentRow.Agent_Role,"Enforcement Supervisor");
+	}
+
+	screeningQueue = Complaints[Screening_Decision == "New" || Screening_Decision == "Need More Information"] sort by Intake_Date asc;
+	highPriorityComplaints = Complaints[Priority == "High" && Screening_Decision != "Rejected" && Screening_Decision != "Closed"] sort by Intake_Date asc;
+	openCases = Cases[Case_Status != "Closed"] sort by Initial_Visit_Due_Date asc;
+	unassignedOpenCases = Cases[(Assigned_Agent_Email == null || Assigned_Agent_Email == "") && Case_Status != "Closed"] sort by Initial_Visit_Due_Date asc;
+	overdueFieldVisits = Field_Visits[Visit_Date_Time < zoho.currentdate && FSM_Status != "Synced Manually"] sort by Visit_Date_Time asc;
+	legalReviewQueue = Cases[Case_Status == "Referred to OLS" || Case_Status == "Legal Review" || Case_Status == "Hearing Status" || Legal_Review_Status == "Pending OLS Review" || Legal_Review_Status == "Accusation Drafted" || Legal_Review_Status == "Hearing Scheduled"] sort by Initial_Visit_Due_Date asc;
+	legalReferralCandidates = Cases[Case_Status != "Closed" && Recommend_Accusation == true] sort by Initial_Visit_Due_Date asc;
+	evidenceDispositionQueue = Evidence[Chain_of_Custody_Status == "Disposed" || Disposition_Level != "Not Ready"] sort by Date_Collected asc;
+	evidenceReadyForAction = Evidence[Disposition_Level != "Not Ready" && Chain_of_Custody_Status != "Disposed" && Chain_of_Custody_Status != "Released to Owner"] sort by Date_Collected asc;
+	correspondenceQueue = Correspondence[Merge_Status == "Draft" || Merge_Status == "Ready for Manual Merge"] sort by Generated_Date asc;
+	pendingMerge = Correspondence[Merge_Status == "Draft"].count();
+	pendingSignature = Correspondence[Sign_Status == "Not Required" || Sign_Status == "Declined"].count();
+
+	screeningCount = screeningQueue.count();
+	highPriorityCount = highPriorityComplaints.count();
+	openCaseCount = openCases.count();
+	unassignedCaseCount = unassignedOpenCases.count();
+	overdueVisitCount = overdueFieldVisits.count();
+	legalReviewCount = legalReviewQueue.count();
+	legalReferralCount = legalReferralCandidates.count();
+	evidenceDispositionCount = evidenceDispositionQueue.count();
+	evidenceReadyCount = evidenceReadyForAction.count();
+	pendingCorrespondenceCount = correspondenceQueue.count();
+	totalActionLoad = screeningCount + highPriorityCount + unassignedCaseCount + overdueVisitCount + legalReviewCount + evidenceDispositionCount + pendingCorrespondenceCount;
+	openCaseLabel = if(openCaseCount == 1,"open case","open cases");
+%>
+<style>
+/* ZCS component ids used: zcs-global, header-heading-with-actions, card-sample-1, badge-badge-with-icon, button-primary-button, table-table-with-custom-action-button-icon. */
+:root{--zcs-theme-brand-color:var(--zcs_brand_color,#2563eb);--zcs-light-bg-color:var(--zcs_brand_light_color,#eaf2ff);--zcs-page-bg-color:#f5f7fb;--zcs-primary-text-color:var(--zcs_primary_text_color,#111827);--zcs-secondary-text-color:var(--zcs_secondary_text_color,#4b5563);--zcs-teritiary-text-color:var(--zcs_tertiary_text_color,#8a94a6);--zcs-border-color:var(--zcs_tertiary_border_color,#e5e7eb);--zcs-white-color:#fff;--zcs-black-color:#000;--zcs-thead-color:#f9fafe;--zcs-tr-h-color:#f6f8ff;--column-gap:0px;font-size:16px;line-height:1.5}.zcs-row{display:flex;flex-wrap:wrap}.zcs-flex{display:flex}.zcs-inline-flex{display:inline-flex}.zcs-direction-column{flex-direction:column}.zcs-align-items-center{align-items:center}.zcs-align-items-start{align-items:flex-start}.zcs-justify-center{justify-content:center}.zcs-justify-space-between{justify-content:space-between}.zcs-col-common{flex:1 1 0}.zcs-no-shrink{flex-shrink:0}.zcs-relative{position:relative}.zcs-sticky{position:sticky}.zcs-gap-4{gap:.25rem}.zcs-gap-6{gap:.375rem}.zcs-gap-8{gap:.5rem}.zcs-gap-10{gap:.625rem}.zcs-gap-12{gap:.75rem}.zcs-gap-16{gap:1rem}.zcs-gap-20{gap:1.25rem}.zcs-gap-24{gap:1.5rem}.zcs-p-0{padding:0}.zcs-p-8{padding:.5rem}.zcs-p-10{padding:.625rem}.zcs-p-12{padding:.75rem}.zcs-p-16{padding:1rem}.zcs-p-20{padding:1.25rem}.zcs-p-24{padding:1.5rem}.zcs-p-25{padding:1.5625rem}.zcs-px-10{padding-left:.625rem;padding-right:.625rem}.zcs-px-12{padding-left:.75rem;padding-right:.75rem}.zcs-px-16{padding-left:1rem;padding-right:1rem}.zcs-px-20{padding-left:1.25rem;padding-right:1.25rem}.zcs-px-30{padding-left:1.875rem;padding-right:1.875rem}.zcs-py-2{padding-top:.125rem;padding-bottom:.125rem}.zcs-py-4{padding-top:.25rem;padding-bottom:.25rem}.zcs-py-6{padding-top:.375rem;padding-bottom:.375rem}.zcs-py-8{padding-top:.5rem;padding-bottom:.5rem}.zcs-py-10{padding-top:.625rem;padding-bottom:.625rem}.zcs-py-12{padding-top:.75rem;padding-bottom:.75rem}.zcs-py-24{padding-top:1.5rem;padding-bottom:1.5rem}.zcs-m-0{margin:0}.zcs-mt-4{margin-top:.25rem}.zcs-mt-8{margin-top:.5rem}.zcs-mt-10{margin-top:.625rem}.zcs-mt-12{margin-top:.75rem}.zcs-mt-16{margin-top:1rem}.zcs-mb-8{margin-bottom:.5rem}.zcs-mb-12{margin-bottom:.75rem}.zcs-mb-16{margin-bottom:1rem}.zcs-w-full{width:100%}.zcs-rounded-sm{border-radius:.25rem}.zcs-rounded-md{border-radius:.375rem}.zcs-rounded-lg{border-radius:.5rem}.zcs-rounded-xl{border-radius:.75rem}.zcs-rounded-2xl{border-radius:1rem}.zcs-rounded-half{border-radius:50%}.zcs-box-border{box-sizing:border-box}.zcs-font-11{font-size:.6875rem}.zcs-font-12{font-size:.75rem}.zcs-font-13{font-size:.8125rem}.zcs-font-14{font-size:.875rem}.zcs-font-15{font-size:.9375rem}.zcs-font-16{font-size:1rem}.zcs-font-18{font-size:1.125rem}.zcs-font-20{font-size:1.25rem}.zcs-font-22{font-size:1.375rem}.zcs-font-24{font-size:1.5rem}.zcs-font-28{font-size:1.75rem}.zcs-font-30{font-size:1.875rem}.zcs-font-normal{font-weight:400}.zcs-font-medium{font-weight:500}.zcs-font-semibold{font-weight:600}.zcs-font-bold{font-weight:700}.zcs-lh-body{line-height:1.5}.zcs-lh-heading{line-height:1.25}.zcs-uppercase{text-transform:uppercase}.zcs-text-left{text-align:left}.zcs-text-right{text-align:right}.zcs-text-center{text-align:center}.zcs-color-theme{color:var(--zcs-theme-brand-color)}.zcs-color-primary{color:var(--zcs-primary-text-color)}.zcs-color-secondary{color:var(--zcs-secondary-text-color)}.zcs-color-tertiary{color:var(--zcs-teritiary-text-color)}.zcs-color-white{color:#fff}.zcs-card{background:var(--zcs-white-color);border:1px solid var(--zcs-border-color);border-radius:12px}.zcs-ellipsis{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.zcs-cursor-pointer{cursor:pointer}a{text-decoration:none;color:inherit}.zcs-list-none{list-style-type:none}
+.zcs-button{width:auto;min-width:5rem;min-height:36px}.zcs-primary-button{background:var(--zcs_brand_color,#2563eb);color:var(--zcs_brand_foreground_color,#fff)}.zcs-primary-outline-button{border:1px solid var(--zcs_brand_color,#2563eb);background:#fff;color:var(--zcs_brand_color,#2563eb)}.zcs-secondary-button{border:1px solid var(--zcs-border-color);background:#f8fafc;color:var(--zcs-primary-text-color)}.zcs-primary-button.zcs-button:hover{background:var(--zcs_brand_dark_color,#1d4ed8)}.zcs-primary-outline-button:hover,.zcs-secondary-button:hover{background:var(--zcs_component_hover_color,#eff6ff);border-color:var(--zcs_brand_color,#2563eb);color:var(--zcs_brand_color,#2563eb)}.zcs-button-icon{width:16px;max-height:16px}.zcs-badge{width:auto}.zcs-badge-filled-outline{border:1px solid}.zcs-badge-filled-outline.zcs-badge-theme{background:var(--zcs_component_hover_color,#eff6ff);border-color:var(--zcs_brand_color,#2563eb);color:var(--zcs_brand_color,#2563eb)}.zcs-badge-filled-outline.zcs-badge-green{background:#e4fcf3;border-color:#179e6c;color:#179e6c}.zcs-badge-filled-outline.zcs-badge-red{background:#fde3e6;border-color:#fe455d;color:#fe455d}.zcs-badge-filled-outline.zcs-badge-grey{background:#eef2f7;border-color:#667085;color:#344054}.zcs-badge-filled-outline.zcs-badge-yellow{background:#fcf4e6;border-color:#faae13;color:#9a6509}.zcs-badge-filled-outline.zcs-badge-blue{background:#e8efff;border-color:#2a6ffc;color:#2a6ffc}.zcs-badge-filled-outline.zcs-badge-orange{background:#f8f0eb;border-color:#f4660c;color:#c44d08}.zcs-badge-icon{font-size:13px;line-height:1}.zcs-table-wrapper{border:1px solid var(--zcs-border-color);background:#fff;overflow:auto}.zcs-table-wrapper table{line-height:normal;border-collapse:collapse}.zcs-table-wrapper table thead{top:0;z-index:1}.zcs-table-wrapper table thead tr th{background:var(--zcs-thead-color);box-shadow:0 -1px 0 0 var(--zcs-border-color) inset;white-space:nowrap}.zcs-table-wrapper table thead tr.zcs-tspace th{background:#fff;box-shadow:none}.zcs-table-wrapper table tbody tr td{border-top:1px solid var(--zcs-border-color);vertical-align:top}.zcs-table-wrapper table tbody tr:first-child td{border-color:transparent}.zcs-table-wrapper table tbody tr:hover td{background:var(--zcs-tr-h-color)}.zcs-table-wrapper table tbody tr.zcs-tnodata:hover td{background:transparent}.zcs-table-wrapper table tbody tr td .zcs-approve-icon{color:#179e6c}.zcs-table-wrapper table tbody tr td .zcs-reject-icon{color:#fe455d}.zcs-custom-action-icon{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px}.zcs-custom-action-icon:hover{background:var(--zcs_component_hover_color,#eff6ff)}
+div#zppagesLive,div#elementsContainer,.Layout.elemContainment,div#row_1,.zc-pb-formreport-placeholder{height:100%!important}.Layout.elemContainment,.zc-pb-page-content-wrapper .elemContainment,.column-container .zc-pb-tile-container{padding:0!important}.zc-page-content-wrapper .zc-pb-page-content-wrapper .zc-pb-tile-card{box-shadow:none!important}.esac{min-height:100%;background:radial-gradient(circle at 80% -10%,rgba(37,99,235,.16),transparent 30%),linear-gradient(180deg,#f6f8fc 0,#fff 92%);font-family:Inter,Arial,sans-serif;color:var(--zcs-primary-text-color);padding:28px;box-sizing:border-box}.esac *{box-sizing:border-box}.esac-shell{max-width:1540px;margin:0 auto;display:flex;flex-direction:column;gap:18px}.esac-hero{position:relative;overflow:hidden;border-radius:28px;padding:30px;background:radial-gradient(circle at 86% 10%,rgba(255,255,255,.24),transparent 28%),radial-gradient(circle at 5% 22%,rgba(248,113,113,.20),transparent 26%),linear-gradient(135deg,#0f172a 0%,var(--zcs_brand_color,#2563eb) 56%,#0f766e 132%);color:#fff;box-shadow:0 24px 60px rgba(37,99,235,.18)}.esac-hero:after{content:"";position:absolute;right:-130px;bottom:-160px;width:380px;height:380px;border-radius:50%;border:1px solid rgba(255,255,255,.20);box-shadow:0 0 0 54px rgba(255,255,255,.08),0 0 0 108px rgba(255,255,255,.04)}.esac-hero-grid{position:relative;z-index:1;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(360px,.85fr);gap:24px;align-items:center}.esac-eyebrow{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.26);background:rgba(255,255,255,.15);border-radius:999px;padding:7px 12px;font-size:12px;font-weight:800;letter-spacing:.5px;text-transform:uppercase}.esac-hero h1{font-size:clamp(31px,4vw,50px);line-height:1.03;letter-spacing:-.7px;margin:14px 0 10px;color:#fff}.esac-hero p{max-width:850px;color:rgba(255,255,255,.86);font-size:15px;line-height:1.65;margin:0}.esac-hero-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}.esac-hero-actions .zcs-button{box-shadow:0 10px 22px rgba(0,0,0,.14)}.esac-profile{border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.12);border-radius:20px;padding:18px;backdrop-filter:blur(4px)}.esac-avatar{width:58px;height:58px;border-radius:18px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;color:#fff;font-size:28px}.esac-profile h2{font-size:20px;line-height:1.2;margin:0;color:#fff}.esac-profile-line{font-size:13px;color:rgba(255,255,255,.82);display:flex;align-items:center;gap:8px;margin-top:6px}.esac-profile-kv{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}.esac-kv{border:1px solid rgba(255,255,255,.18);border-radius:14px;padding:10px;background:rgba(255,255,255,.08)}.esac-kv span{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.55px;color:rgba(255,255,255,.64)}.esac-kv strong{display:block;font-size:14px;margin-top:4px;color:#fff}.esac-section-title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:8px 4px -2px}.esac-section-title h2{font-size:11px;font-weight:800;color:#8a94a6;text-transform:uppercase;letter-spacing:1.1px;margin:0;display:flex;align-items:center;gap:8px}.esac-section-title h2:before{content:"";width:4px;height:15px;border-radius:4px;background:linear-gradient(180deg,var(--zcs_brand_color,#2563eb),#14b8a6)}.esac-section-sub{font-size:12px;color:#8a94a6}.esac-kpis{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:14px}.esac-kpi{position:relative;overflow:hidden;background:#fff;border:1px solid #e9edf5;border-radius:18px;padding:16px;box-shadow:0 1px 2px rgba(15,23,42,.04);min-height:142px}.esac-kpi:after{content:"";position:absolute;right:-42px;top:-42px;width:120px;height:120px;border-radius:50%;background:var(--soft)}.esac-kpi-icon{position:relative;z-index:1;width:40px;height:40px;border-radius:14px;background:var(--soft);color:var(--tone);display:flex;align-items:center;justify-content:center;font-size:20px}.esac-kpi-value{position:relative;z-index:1;font-size:31px;line-height:1;font-weight:800;color:#111827;margin-top:15px;letter-spacing:-.5px}.esac-kpi-label{position:relative;z-index:1;font-size:12px;color:#475569;margin-top:5px;font-weight:700}.esac-kpi-note{position:relative;z-index:1;font-size:11px;color:#8a94a6;margin-top:6px}.esac-grid-two{display:grid;grid-template-columns:minmax(0,1fr) minmax(360px,.52fr);gap:14px}.esac-card{background:#fff;border:1px solid #e9edf5;border-radius:18px;box-shadow:0 1px 2px rgba(15,23,42,.04);overflow:hidden}.esac-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:16px 18px;border-bottom:1px solid #eef1f6;background:#fbfcff}.esac-card-title{display:flex;gap:12px;align-items:flex-start}.esac-card-icon{width:40px;height:40px;border-radius:13px;background:var(--zcs_component_hover_color,#eff6ff);color:var(--zcs_brand_color,#2563eb);display:flex;align-items:center;justify-content:center;font-size:19px;flex:0 0 auto}.esac-card h3{font-size:16px;line-height:1.25;margin:0;color:#111827}.esac-card p{font-size:12px;color:#64748b;line-height:1.5;margin:4px 0 0}.esac-card-body{padding:18px}.esac-command-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.esac-command{border:1px solid #e9edf5;border-radius:16px;background:#fff;padding:14px;display:flex;flex-direction:column;gap:12px;min-height:176px}.esac-command.hot{border-color:rgba(254,69,93,.35);background:linear-gradient(180deg,#fff,#fff5f6)}.esac-command.warn{border-color:rgba(250,174,19,.38);background:linear-gradient(180deg,#fff,#fffaf0)}.esac-command-title{display:flex;align-items:center;justify-content:space-between;gap:10px}.esac-command-title h4{font-size:15px;margin:0;color:#111827}.esac-command-copy{font-size:12px;color:#64748b;line-height:1.5;margin:0}.esac-command-links{display:flex;flex-wrap:wrap;gap:8px;margin-top:auto}.esac-chip{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 9px;font-size:11px;font-weight:800;line-height:1;border:1px solid transparent;white-space:nowrap}.chip-ok{background:#ecfdf5;color:#0f8f61;border-color:#bbf7d0}.chip-info{background:#eff6ff;color:#1d4ed8;border-color:#bfdbfe}.chip-warn{background:#fffbeb;color:#b45309;border-color:#fde68a}.chip-bad{background:#fff1f2;color:#be123c;border-color:#fecdd3}.chip-neutral{background:#f1f5f9;color:#64748b;border-color:#e2e8f0}.chip-theme{background:var(--zcs_component_hover_color,#eff6ff);color:var(--zcs_brand_color,#2563eb);border-color:rgba(37,99,235,.26)}.esac-link{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:800;color:var(--zcs_brand_color,#2563eb)}.esac-link:hover{text-decoration:underline}.esac-quick{display:flex;flex-direction:column;gap:10px}.esac-quick-item{border:1px solid #e9edf5;border-radius:14px;padding:12px;background:#fff}.esac-quick-title{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}.esac-quick-title h4{font-size:14px;margin:0;color:#111827}.esac-quick-meta{font-size:12px;color:#64748b;margin-top:4px;line-height:1.45}.esac-empty{display:flex;align-items:center;gap:12px;border:1px dashed #d7deea;background:#fbfcff;border-radius:14px;padding:16px;color:#64748b;font-size:13px}.esac-empty-icon{width:38px;height:38px;border-radius:12px;background:var(--zcs_component_hover_color,#eff6ff);color:var(--zcs_brand_color,#2563eb);display:flex;align-items:center;justify-content:center;font-size:19px;flex:0 0 auto}.esac-table-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.esac-table-card.wide{grid-column:1/-1}.esac-table-caption{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px}.esac-table-link{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:800;color:var(--zcs_brand_color,#2563eb);white-space:nowrap}.esac-table-wrap{max-height:410px;overflow:auto}.esac-table-wrap table{min-width:900px}.esac-report-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.esac-report-card.wide{grid-column:1/-1}.esac-embed{border-top:1px solid #eef1f6;background:#fff;padding:8px}.esac-embed[zc-component="report"]{min-height:360px;border:1px dashed #d7deea;border-radius:12px;overflow:hidden}.esac-foot-space{height:12px}@media(max-width:1360px){.esac-kpis{grid-template-columns:repeat(4,minmax(0,1fr))}.esac-command-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:1080px){.esac-hero-grid,.esac-grid-two{grid-template-columns:1fr}.esac-table-grid,.esac-report-grid{grid-template-columns:1fr}.esac-report-card.wide,.esac-table-card.wide{grid-column:auto}}@media(max-width:720px){.esac{padding:14px}.esac-hero{padding:22px;border-radius:20px}.esac-kpis,.esac-command-grid{grid-template-columns:1fr}.esac-profile-kv{grid-template-columns:1fr}.esac-section-title,.esac-card-head,.esac-table-caption{align-items:flex-start;flex-direction:column}.esac-hero-actions .zcs-button{width:100%}}
+</style>
+<div class="esac">
+	<div class="esac-shell">
+		<section class="esac-hero">
+			<div class="esac-hero-grid">
+				<div>
+					<div class="esac-eyebrow"><i class="zc-li-outline business-shield"></i><span>Enforcement supervisor action center</span></div>
+					<h1>Command view for screening, assignment, and escalations</h1>
+					<p>Action-first supervisor workspace for complaint intake decisions, high-priority work, case assignment, overdue field activity, legal referrals, evidence disposition, and pending correspondence. Embedded reports preserve row-level custom actions.</p>
+					<div class="esac-hero-actions">
+						<a class="zcs-button zcs-primary-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body" href="#Report:Supervisor_Screening_Queue"><i class="zcs-button-icon zc-li-outline business-business-contact-89"></i><span class="zcs-button-text">Screen complaints</span></a>
+						<a class="zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body" href="#Report:Enforcement_Work_Queue"><i class="zcs-button-icon zc-li-outline business-briefcase-24"></i><span class="zcs-button-text">Assign cases</span></a>
+						<a class="zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body" href="#Page:Enforcement_Command_Center"><i class="zcs-button-icon zc-li-outline business-board-30"></i><span class="zcs-button-text">Open command center</span></a>
+					</div>
+				</div>
+				<aside class="esac-profile">
+					<div class="zcs-flex zcs-align-items-center zcs-gap-12">
+						<div class="esac-avatar"><i class="zc-li-outline users-police"></i></div>
+						<div class="zcs-col-common">
+							<h2><%=supervisorName%></h2>
+							<div class="esac-profile-line"><i class="zc-li-outline ui-1-email-85"></i><span><%=supervisorEmail%></span></div>
+							<div class="esac-profile-line"><i class="zc-li-outline business-badge"></i><span><%=supervisorRole%></span></div>
+						</div>
+					</div>
+					<div class="esac-profile-kv">
+						<div class="esac-kv"><span>Total action load</span><strong><%=totalActionLoad%> queue items</strong></div>
+						<div class="esac-kv"><span>Case inventory</span><strong><%=openCaseCount%> <%=openCaseLabel%></strong></div>
+						<div class="esac-kv"><span>Needs assignment</span><strong><%=unassignedCaseCount%> unassigned</strong></div>
+						<div class="esac-kv"><span>Legal exposure</span><strong><%=legalReviewCount%> active review</strong></div>
+					</div>
+				</aside>
+			</div>
+		</section>
+
+		<div class="esac-section-title"><h2>Supervisor queue snapshot</h2><span class="esac-section-sub">Counts update from live records at page load.</span></div>
+		<section class="esac-kpis">
+			<div class="esac-kpi" style="--soft:#eff6ff;--tone:#2563eb"><div class="esac-kpi-icon"><i class="zc-li-outline business-business-contact-89"></i></div><div class="esac-kpi-value"><%=screeningCount%></div><div class="esac-kpi-label">Screening queue</div><div class="esac-kpi-note">New or more information</div></div>
+			<div class="esac-kpi" style="--soft:#fff1f2;--tone:#e11d48"><div class="esac-kpi-icon"><i class="zc-li-outline ui-3-alert"></i></div><div class="esac-kpi-value"><%=highPriorityCount%></div><div class="esac-kpi-label">High priority complaints</div><div class="esac-kpi-note">Active non-rejected intake</div></div>
+			<div class="esac-kpi" style="--soft:#f0f9ff;--tone:#0284c7"><div class="esac-kpi-icon"><i class="zc-li-outline business-briefcase-24"></i></div><div class="esac-kpi-value"><%=openCaseCount%></div><div class="esac-kpi-label">Open cases</div><div class="esac-kpi-note">All non-closed cases</div></div>
+			<div class="esac-kpi" style="--soft:#fffbeb;--tone:#b45309"><div class="esac-kpi-icon"><i class="zc-li-outline business-agenda"></i></div><div class="esac-kpi-value"><%=unassignedCaseCount%></div><div class="esac-kpi-label">Unassigned cases</div><div class="esac-kpi-note">Assignment action needed</div></div>
+			<div class="esac-kpi" style="--soft:#fff1f2;--tone:#be123c"><div class="esac-kpi-icon"><i class="zc-li-outline ui-2-time"></i></div><div class="esac-kpi-value"><%=overdueVisitCount%></div><div class="esac-kpi-label">Overdue visits</div><div class="esac-kpi-note">Not synced manually</div></div>
+			<div class="esac-kpi" style="--soft:#f5f3ff;--tone:#7c3aed"><div class="esac-kpi-icon"><i class="zc-li-outline business-law"></i></div><div class="esac-kpi-value"><%=legalReviewCount%></div><div class="esac-kpi-label">Legal review</div><div class="esac-kpi-note"><%=legalReferralCount%> referral candidates</div></div>
+			<div class="esac-kpi" style="--soft:#ecfdf5;--tone:#059669"><div class="esac-kpi-icon"><i class="zc-li-outline files-archive-content"></i></div><div class="esac-kpi-value"><%=evidenceDispositionCount%></div><div class="esac-kpi-label">Evidence disposition</div><div class="esac-kpi-note"><%=evidenceReadyCount%> ready for action</div></div>
+			<div class="esac-kpi" style="--soft:#eef2ff;--tone:#4338ca"><div class="esac-kpi-icon"><i class="zc-li-outline files-2-doc"></i></div><div class="esac-kpi-value"><%=pendingCorrespondenceCount%></div><div class="esac-kpi-label">Correspondence</div><div class="esac-kpi-note"><%=pendingMerge%> draft merge items</div></div>
+		</section>
+
+		<div class="esac-grid-two">
+			<section class="esac-card">
+				<div class="esac-card-head">
+					<div class="esac-card-title"><div class="esac-card-icon"><i class="zc-li-outline ui-1-check-circle-08"></i></div><div><h3>Supervisor command actions</h3><p>Open the report that owns the row-level action; the embedded reports below keep the same custom buttons available.</p></div></div>
+					<a class="esac-link" href="#Page:Enforcement_Command_Center">Command Center <i class="zc-li-outline arrows-1-tail-right"></i></a>
+				</div>
+				<div class="esac-card-body">
+					<div class="esac-command-grid">
+						<div class="esac-command hot"><div class="esac-command-title"><h4>Complaint screening</h4><span class="esac-chip chip-bad"><i class="zc-li-outline business-business-contact-89"></i><%=screeningCount%></span></div><p class="esac-command-copy">Accept, reject, or escalate complaints from the supervisor screening queue.</p><div class="esac-command-links"><a class="esac-link" href="#Report:Supervisor_Screening_Queue">Open queue</a><a class="esac-link" href="#Report:High_Priority_Complaints">High priority</a></div></div>
+						<div class="esac-command warn"><div class="esac-command-title"><h4>Case assignment</h4><span class="esac-chip chip-warn"><i class="zc-li-outline business-agenda"></i><%=unassignedCaseCount%></span></div><p class="esac-command-copy">Use the enforcement work queue to assign new cases and balance open work.</p><div class="esac-command-links"><a class="esac-link" href="#Report:Enforcement_Work_Queue">Open work queue</a><a class="esac-link" href="#Report:Case_Status_Board">Status board</a></div></div>
+						<div class="esac-command"><div class="esac-command-title"><h4>Field visit oversight</h4><span class="esac-chip chip-bad"><i class="zc-li-outline ui-2-time"></i><%=overdueVisitCount%></span></div><p class="esac-command-copy">Identify overdue visit records and follow up on mobile capture synchronization.</p><div class="esac-command-links"><a class="esac-link" href="#Report:Mobile_Field_Capture">Mobile capture</a><a class="esac-link" href="#Report:Field_Visit_Calendar">Calendar</a></div></div>
+						<div class="esac-command"><div class="esac-command-title"><h4>Legal escalations</h4><span class="esac-chip chip-theme"><i class="zc-li-outline business-law"></i><%=legalReviewCount%></span></div><p class="esac-command-copy">Refer qualifying cases, monitor OLS acceptance, and track hearing or accusation stages.</p><div class="esac-command-links"><a class="esac-link" href="#Report:Legal_Review_View">Legal review</a><a class="esac-link" href="#Report:Enforcement_Work_Queue">Referral candidates</a></div></div>
+						<div class="esac-command"><div class="esac-command-title"><h4>Evidence disposition</h4><span class="esac-chip chip-ok"><i class="zc-li-outline files-archive-content"></i><%=evidenceDispositionCount%></span></div><p class="esac-command-copy">Log custody, mark reviewed, dispose, or return evidence from evidence queues.</p><div class="esac-command-links"><a class="esac-link" href="#Report:Disposition_Queue">Disposition</a><a class="esac-link" href="#Report:Chain_Of_Custody_Log">Custody log</a></div></div>
+						<div class="esac-command"><div class="esac-command-title"><h4>Pending correspondence</h4><span class="esac-chip chip-info"><i class="zc-li-outline files-2-doc"></i><%=pendingCorrespondenceCount%></span></div><p class="esac-command-copy">Prepare merges, mark sent, and request signatures for enforcement documents.</p><div class="esac-command-links"><a class="esac-link" href="#Report:Pending_Correspondence">Pending queue</a><a class="esac-link" href="#Report:Enforcement_Documents">Documents</a></div></div>
+					</div>
+				</div>
+			</section>
+			<section class="esac-card">
+				<div class="esac-card-head"><div class="esac-card-title"><div class="esac-card-icon"><i class="zc-li-outline business-board-30"></i></div><div><h3>Priority lane</h3><p>Fast scan of the queues most likely to block enforcement progress.</p></div></div></div>
+				<div class="esac-card-body">
+					<div class="esac-quick">
+						<div class="esac-quick-item"><div class="esac-quick-title"><h4>Screening decisions</h4><span class="esac-chip chip-bad"><%=screeningCount%></span></div><div class="esac-quick-meta">Accept, reject, or escalate complaints before case creation.</div><div class="zcs-mt-10"><a class="esac-link" href="#Report:Supervisor_Screening_Queue">Open screening queue</a></div></div>
+						<div class="esac-quick-item"><div class="esac-quick-title"><h4>High priority complaints</h4><span class="esac-chip chip-warn"><%=highPriorityCount%></span></div><div class="esac-quick-meta">High priority complaints that are not rejected or closed.</div><div class="zcs-mt-10"><a class="esac-link" href="#Report:High_Priority_Complaints">Open high priority report</a></div></div>
+						<div class="esac-quick-item"><div class="esac-quick-title"><h4>Legal referrals</h4><span class="esac-chip chip-theme"><%=legalReferralCount%></span></div><div class="esac-quick-meta">Open cases marked Recommend Accusation plus current legal review work.</div><div class="zcs-mt-10"><a class="esac-link" href="#Report:Legal_Review_View">Open legal review</a></div></div>
+						<div class="esac-quick-item"><div class="esac-quick-title"><h4>Correspondence follow-up</h4><span class="esac-chip chip-info"><%=pendingSignature%></span></div><div class="esac-quick-meta">Signature or manual-merge work awaiting staff action.</div><div class="zcs-mt-10"><a class="esac-link" href="#Report:Pending_Correspondence">Open correspondence queue</a></div></div>
+					</div>
+				</div>
+			</section>
+		</div>
+
+		<div class="esac-section-title"><h2>Action tables</h2><span class="esac-section-sub">Top records are shown for command scanning; open the linked report for full row actions.</span></div>
+		<div class="esac-table-grid">
+			<section class="esac-card esac-table-card zcs-card zcs-p-20 zcs-box-border">
+				<div class="esac-table-caption"><div><h2 class="zcs-font-18 zcs-font-semibold zcs-m-0">Supervisor screening queue</h2><p class="zcs-font-13 zcs-color-tertiary zcs-m-0 zcs-mt-8">Accept, reject, or escalate complaint priority.</p></div><a class="esac-table-link" href="#Report:Supervisor_Screening_Queue">Open action report <i class="zc-li-outline arrows-1-tail-right"></i></a></div>
+				<div class="zcs-table-wrapper esac-table-wrap zcs-rounded-sm zcs-box-border zcs-relative"><table class="zcs-w-full"><thead class="zcs-sticky"><tr><th class="zcs-px-16 zcs-py-8 zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Complaint</th><th class="zcs-px-16 zcs-py-8 zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Priority</th><th class="zcs-px-16 zcs-py-8 zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Decision</th><th class="zcs-px-16 zcs-py-8 zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Intake</th><th class="zcs-px-16 zcs-py-8 zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Nature</th><th class="zcs-px-16 zcs-py-8 zcs-text-center zcs-font-14 zcs-font-medium zcs-color-primary">Open</th></tr></thead><tbody>
+					<%
+						shown = 0;
+						for each cp in screeningQueue
+						{
+							if(shown < 8)
+							{
+								shown = shown + 1;
+								priorityBadge = if(cp.Priority == "High","zcs-badge-red",if(cp.Priority == "Medium","zcs-badge-yellow","zcs-badge-grey"));
+								decisionBadge = if(cp.Screening_Decision == "Need More Information","zcs-badge-yellow","zcs-badge-blue");
+								%><tr><td class="zcs-px-16 zcs-py-8 zcs-font-14 zcs-color-primary"><%=ifnull(cp.Complaint_Number,"Complaint")%></td><td class="zcs-px-16 zcs-py-8"><span class="zcs-badge zcs-badge-filled-outline <%=priorityBadge%> zcs-inline-flex zcs-align-items-center zcs-gap-6 zcs-rounded-sm zcs-px-10 zcs-py-2"><i class="zcs-badge-icon zc-li-outline ui-3-alert"></i><span class="zcs-font-12"><%=ifnull(cp.Priority,"Not set")%></span></span></td><td class="zcs-px-16 zcs-py-8"><span class="zcs-badge zcs-badge-filled-outline <%=decisionBadge%> zcs-inline-flex zcs-align-items-center zcs-gap-6 zcs-rounded-sm zcs-px-10 zcs-py-2"><i class="zcs-badge-icon zc-li-outline loader-dots-06"></i><span class="zcs-font-12"><%=ifnull(cp.Screening_Decision,"New")%></span></span></td><td class="zcs-px-16 zcs-py-8 zcs-font-14 zcs-color-secondary"><%=ifnull(cp.Intake_Date,"Not set")%></td><td class="zcs-px-16 zcs-py-8 zcs-font-14 zcs-color-secondary"><%=ifnull(cp.Nature_of_Violation,"Not set")%></td><td class="zcs-px-16 zcs-py-8 zcs-text-center"><a class="zcs-custom-action-icon zcs-approve-icon zcs-rounded-half" href="#Report:Supervisor_Screening_Queue"><i class="zcs-font-20 zc-li-outline arrows-1-tail-right"></i></a></td></tr><%
+							}
+						}
+						if(shown == 0)
+						{
+							%><tr class="zcs-tnodata"><td colspan="6"><div class="esac-empty"><span class="esac-empty-icon"><i class="zc-li-outline ui-1-check-circle-08"></i></span>No complaints are waiting for screening decisions.</div></td></tr><%
+						}
+					%></tbody></table></div>
+			</section>
+
+			<section class="esac-card esac-table-card zcs-card zcs-p-20 zcs-box-border">
+				<div class="esac-table-caption"><div><h2 class="zcs-font-18 zcs-font-semibold zcs-m-0">Unassigned and open cases</h2><p class="zcs-font-13 zcs-color-tertiary zcs-m-0 zcs-mt-8">Cases needing assignment or queue review.</p></div><a class="esac-table-link" href="#Report:Enforcement_Work_Queue">Open work queue <i class="zc-li-outline arrows-1-tail-right"></i></a></div>
+				<div class="zcs-table-wrapper esac-table-wrap zcs-rounded-sm zcs-box-border zcs-relative"><table class="zcs-w-full"><thead class="zcs-sticky"><tr><th class="zcs-px-16 zcs-py-8 zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Case</th><th class="zcs-px-16 zcs-py-8 zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Priority</th><th class="zcs-px-16 zcs-py-8 zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Status</th><th class="zcs-px-16 zcs-py-8 zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Assigned agent</th><th class="zcs-px-16 zcs-py-8 zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Visit due</th></tr></thead><tbody>
+					<%
+						caseShown = 0;
+						for each c in unassignedOpenCases
+						{
+							if(caseShown < 8)
+							{
+								caseShown = caseShown + 1;
+								casePriorityBadge = if(c.Priority == "High","zcs-badge-red",if(c.Priority == "Medium","zcs-badge-yellow","zcs-badge-grey"));
+								statusBadge = if(c.Case_Status == "New","zcs-badge-blue",if(c.Case_Status == "Referred to OLS" || c.Case_Status == "Legal Review","zcs-badge-theme","zcs-badge-orange"));
+								agentLabel = ifnull(c.Assigned_Agent_Email,"Unassigned");
+								if(agentLabel == "")
+								{
+									agentLabel = "Unassigned";
+								}
+								%><tr><td class="zcs-px-16 zcs-py-8 zcs-font-14 zcs-color-primary"><%=ifnull(c.Case_Number,"Case")%></td><td class="zcs-px-16 zcs-py-8"><span class="zcs-badge zcs-badge-filled-outline <%=casePriorityBadge%> zcs-inline-flex zcs-align-items-center zcs-gap-6 zcs-rounded-sm zcs-px-10 zcs-py-2"><i class="zcs-badge-icon zc-li-outline ui-3-alert"></i><span class="zcs-font-12"><%=ifnull(c.Priority,"Not set")%></span></span></td><td class="zcs-px-16 zcs-py-8"><span class="zcs-badge zcs-badge-filled-outline <%=statusBadge%> zcs-inline-flex zcs-align-items-center zcs-gap-6 zcs-rounded-sm zcs-px-10 zcs-py-2"><i class="zcs-badge-icon zc-li-outline loader-dots-06"></i><span class="zcs-font-12"><%=ifnull(c.Case_Status,"New")%></span></span></td><td class="zcs-px-16 zcs-py-8 zcs-font-14 zcs-color-secondary"><%=agentLabel%></td><td class="zcs-px-16 zcs-py-8 zcs-font-14 zcs-color-secondary"><%=ifnull(c.Initial_Visit_Due_Date,"Not set")%></td></tr><%
+							}
+						}
+						if(caseShown == 0)
+						{
+							%><tr class="zcs-tnodata"><td colspan="5"><div class="esac-empty"><span class="esac-empty-icon"><i class="zc-li-outline ui-1-check-circle-08"></i></span>No unassigned open cases were found. Open the work queue for all active cases.</div></td></tr><%
+						}
+					%></tbody></table></div>
+			</section>
+
+			<section class="esac-card esac-table-card zcs-card zcs-p-20 zcs-box-border">
+				<div class="esac-table-caption"><div><h2 class="zcs-font-18 zcs-font-semibold zcs-m-0">Overdue field visits</h2><p class="zcs-font-13 zcs-color-tertiary zcs-m-0 zcs-mt-8">Past visit date and not synced manually.</p></div><a class="esac-table-link" href="#Report:Mobile_Field_Capture">Open field capture <i class="zc-li-outline arrows-1-tail-right"></i></a></div>
+				<div class="zcs-table-wrapper esac-table-wrap zcs-rounded-sm zcs-box-border zcs-relative"><table class="zcs-w-full"><thead class="zcs-sticky"><tr><th class="zcs-px-16 zcs-py-8 zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Visit</th><th class="zcs-px-16 zcs-py-8 zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Case</th><th class="zcs-px-16 zcs-py-8 zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Agent</th><th class="zcs-px-16 zcs-py-8 zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Visit date</th><th class="zcs-px-16 zcs-py-8 zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">FSM status</th></tr></thead><tbody>
+					<%
+						visitShown = 0;
+						for each fv in overdueFieldVisits
+						{
+							if(visitShown < 8)
+							{
+								visitShown = visitShown + 1;
+								visitCase = "Case not linked";
+								if(fv.Case != null)
+								{
+									visitCase = ifnull(fv.Case.Case_Number,"Case linked");
+								}
+								%><tr><td class="zcs-px-16 zcs-py-8 zcs-font-14 zcs-color-primary"><%=ifnull(fv.Visit_Number,"Visit")%></td><td class="zcs-px-16 zcs-py-8 zcs-font-14 zcs-color-secondary"><%=visitCase%></td><td class="zcs-px-16 zcs-py-8 zcs-font-14 zcs-color-secondary"><%=ifnull(fv.Agent_Email,"Unassigned")%></td><td class="zcs-px-16 zcs-py-8 zcs-font-14 zcs-color-secondary"><%=ifnull(fv.Visit_Date_Time,"Not scheduled")%></td><td class="zcs-px-16 zcs-py-8"><span class="zcs-badge zcs-badge-filled-outline zcs-badge-red zcs-inline-flex zcs-align-items-center zcs-gap-6 zcs-rounded-sm zcs-px-10 zcs-py-2"><i class="zcs-badge-icon zc-li-outline ui-2-time"></i><span class="zcs-font-12"><%=ifnull(fv.FSM_Status,"Not sent")%></span></span></td></tr><%
+							}
+						}
+						if(visitShown == 0)
+						{
+							%><tr class="zcs-tnodata"><td colspan="5"><div class="esac-empty"><span class="esac-empty-icon"><i class="zc-li-outline ui-1-check-circle-08"></i></span>No overdue field visits are currently queued.</div></td></tr><%
+						}
+					%></tbody></table></div>
+			</section>
+
+			<section class="esac-card esac-table-card zcs-card zcs-p-20 zcs-box-border">
+				<div class="esac-table-caption"><div><h2 class="zcs-font-18 zcs-font-semibold zcs-m-0">Legal review and referral queue</h2><p class="zcs-font-13 zcs-color-tertiary zcs-m-0 zcs-mt-8">OLS, accusation draft, hearing, and referred cases.</p></div><a class="esac-table-link" href="#Report:Legal_Review_View">Open legal report <i class="zc-li-outline arrows-1-tail-right"></i></a></div>
+				<div class="zcs-table-wrapper esac-table-wrap zcs-rounded-sm zcs-box-border zcs-relative"><table class="zcs-w-full"><thead class="zcs-sticky"><tr><th class="zcs-px-16 zcs-py-8 zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Case</th><th class="zcs-px-16 zcs-py-8 zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Status</th><th class="zcs-px-16 zcs-py-8 zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Legal status</th><th class="zcs-px-16 zcs-py-8 zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">RFA</th><th class="zcs-px-16 zcs-py-8 zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Attorney</th></tr></thead><tbody>
+					<%
+						legalShown = 0;
+						for each lc in legalReviewQueue
+						{
+							if(legalShown < 8)
+							{
+								legalShown = legalShown + 1;
+								%><tr><td class="zcs-px-16 zcs-py-8 zcs-font-14 zcs-color-primary"><%=ifnull(lc.Case_Number,"Case")%></td><td class="zcs-px-16 zcs-py-8"><span class="zcs-badge zcs-badge-filled-outline zcs-badge-theme zcs-inline-flex zcs-align-items-center zcs-gap-6 zcs-rounded-sm zcs-px-10 zcs-py-2"><i class="zcs-badge-icon zc-li-outline business-law"></i><span class="zcs-font-12"><%=ifnull(lc.Case_Status,"Not set")%></span></span></td><td class="zcs-px-16 zcs-py-8 zcs-font-14 zcs-color-secondary"><%=ifnull(lc.Legal_Review_Status,"Not set")%></td><td class="zcs-px-16 zcs-py-8 zcs-font-14 zcs-color-secondary"><%=ifnull(lc.RFA_Status,"Not set")%></td><td class="zcs-px-16 zcs-py-8 zcs-font-14 zcs-color-secondary"><%=ifnull(lc.OLS_Assigned_Attorney_Email,"Not assigned")%></td></tr><%
+							}
+						}
+						if(legalShown == 0)
+						{
+							%><tr class="zcs-tnodata"><td colspan="5"><div class="esac-empty"><span class="esac-empty-icon"><i class="zc-li-outline ui-1-check-circle-08"></i></span>No cases are currently in legal review.</div></td></tr><%
+						}
+					%></tbody></table></div>
+			</section>
+
+			<section class="esac-card esac-table-card zcs-card zcs-p-20 zcs-box-border">
+				<div class="esac-table-caption"><div><h2 class="zcs-font-18 zcs-font-semibold zcs-m-0">Evidence disposition queue</h2><p class="zcs-font-13 zcs-color-tertiary zcs-m-0 zcs-mt-8">Custody and disposition actions.</p></div><a class="esac-table-link" href="#Report:Disposition_Queue">Open disposition <i class="zc-li-outline arrows-1-tail-right"></i></a></div>
+				<div class="zcs-table-wrapper esac-table-wrap zcs-rounded-sm zcs-box-border zcs-relative"><table class="zcs-w-full"><thead class="zcs-sticky"><tr><th class="zcs-px-16 zcs-py-8 zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Evidence</th><th class="zcs-px-16 zcs-py-8 zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Case</th><th class="zcs-px-16 zcs-py-8 zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Custody</th><th class="zcs-px-16 zcs-py-8 zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Disposition</th><th class="zcs-px-16 zcs-py-8 zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Custodian</th></tr></thead><tbody>
+					<%
+						evShown = 0;
+						for each ev in evidenceDispositionQueue
+						{
+							if(evShown < 8)
+							{
+								evShown = evShown + 1;
+								evCase = "Case not linked";
+								if(ev.Case != null)
+								{
+									evCase = ifnull(ev.Case.Case_Number,"Case linked");
+								}
+								custodyBadge = if(ev.Chain_of_Custody_Status == "Disposed" || ev.Chain_of_Custody_Status == "Released to Owner","zcs-badge-grey","zcs-badge-green");
+								dispositionBadge = if(ev.Disposition_Level == "Not Ready","zcs-badge-yellow","zcs-badge-blue");
+								%><tr><td class="zcs-px-16 zcs-py-8 zcs-font-14 zcs-color-primary"><%=ifnull(ev.Evidence_Number,"Evidence")%></td><td class="zcs-px-16 zcs-py-8 zcs-font-14 zcs-color-secondary"><%=evCase%></td><td class="zcs-px-16 zcs-py-8"><span class="zcs-badge zcs-badge-filled-outline <%=custodyBadge%> zcs-inline-flex zcs-align-items-center zcs-gap-6 zcs-rounded-sm zcs-px-10 zcs-py-2"><i class="zcs-badge-icon zc-li-outline files-archive-content"></i><span class="zcs-font-12"><%=ifnull(ev.Chain_of_Custody_Status,"Collected")%></span></span></td><td class="zcs-px-16 zcs-py-8"><span class="zcs-badge zcs-badge-filled-outline <%=dispositionBadge%> zcs-inline-flex zcs-align-items-center zcs-gap-6 zcs-rounded-sm zcs-px-10 zcs-py-2"><i class="zcs-badge-icon zc-li-outline loader-dots-06"></i><span class="zcs-font-12"><%=ifnull(ev.Disposition_Level,"Not Ready")%></span></span></td><td class="zcs-px-16 zcs-py-8 zcs-font-14 zcs-color-secondary"><%=ifnull(ev.Current_Custodian,"Not set")%></td></tr><%
+							}
+						}
+						if(evShown == 0)
+						{
+							%><tr class="zcs-tnodata"><td colspan="5"><div class="esac-empty"><span class="esac-empty-icon"><i class="zc-li-outline ui-1-check-circle-08"></i></span>No evidence disposition records are currently queued.</div></td></tr><%
+						}
+					%></tbody></table></div>
+			</section>
+
+			<section class="esac-card esac-table-card zcs-card zcs-p-20 zcs-box-border">
+				<div class="esac-table-caption"><div><h2 class="zcs-font-18 zcs-font-semibold zcs-m-0">Pending correspondence</h2><p class="zcs-font-13 zcs-color-tertiary zcs-m-0 zcs-mt-8">Manual merge, sent, and signature actions.</p></div><a class="esac-table-link" href="#Report:Pending_Correspondence">Open correspondence <i class="zc-li-outline arrows-1-tail-right"></i></a></div>
+				<div class="zcs-table-wrapper esac-table-wrap zcs-rounded-sm zcs-box-border zcs-relative"><table class="zcs-w-full"><thead class="zcs-sticky"><tr><th class="zcs-px-16 zcs-py-8 zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Correspondence</th><th class="zcs-px-16 zcs-py-8 zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Module</th><th class="zcs-px-16 zcs-py-8 zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Template</th><th class="zcs-px-16 zcs-py-8 zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Merge</th><th class="zcs-px-16 zcs-py-8 zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Signature</th></tr></thead><tbody>
+					<%
+						corrShown = 0;
+						for each co in correspondenceQueue
+						{
+							if(corrShown < 8)
+							{
+								corrShown = corrShown + 1;
+								mergeBadge = if(co.Merge_Status == "Draft","zcs-badge-yellow","zcs-badge-blue");
+								signBadge = if(co.Sign_Status == "Signed","zcs-badge-green",if(co.Sign_Status == "Declined","zcs-badge-red","zcs-badge-grey"));
+								%><tr><td class="zcs-px-16 zcs-py-8 zcs-font-14 zcs-color-primary"><%=ifnull(co.Correspondence_Number,"Correspondence")%></td><td class="zcs-px-16 zcs-py-8 zcs-font-14 zcs-color-secondary"><%=ifnull(co.Module,"Not set")%></td><td class="zcs-px-16 zcs-py-8 zcs-font-14 zcs-color-secondary"><%=ifnull(co.Template_Code,"Not set")%></td><td class="zcs-px-16 zcs-py-8"><span class="zcs-badge zcs-badge-filled-outline <%=mergeBadge%> zcs-inline-flex zcs-align-items-center zcs-gap-6 zcs-rounded-sm zcs-px-10 zcs-py-2"><i class="zcs-badge-icon zc-li-outline files-2-doc"></i><span class="zcs-font-12"><%=ifnull(co.Merge_Status,"Draft")%></span></span></td><td class="zcs-px-16 zcs-py-8"><span class="zcs-badge zcs-badge-filled-outline <%=signBadge%> zcs-inline-flex zcs-align-items-center zcs-gap-6 zcs-rounded-sm zcs-px-10 zcs-py-2"><i class="zcs-badge-icon zc-li-outline ui-1-check-circle-08"></i><span class="zcs-font-12"><%=ifnull(co.Sign_Status,"Not Required")%></span></span></td></tr><%
+							}
+						}
+						if(corrShown == 0)
+						{
+							%><tr class="zcs-tnodata"><td colspan="5"><div class="esac-empty"><span class="esac-empty-icon"><i class="zc-li-outline ui-1-check-circle-08"></i></span>No pending correspondence records are queued.</div></td></tr><%
+						}
+					%></tbody></table></div>
+			</section>
+		</div>
+
+		<div class="esac-section-title"><h2>Embedded action-enabled reports</h2><span class="esac-section-sub">Use embedded report controls for approved row workflows and full queue filtering.</span></div>
+		<section class="esac-report-grid">
+			<div class="esac-report-card zcs-card zcs-p-20 zcs-box-border"><div class="esac-table-caption"><div><h2 class="zcs-font-18 zcs-font-semibold zcs-m-0">Supervisor screening queue</h2><p class="zcs-font-13 zcs-color-tertiary zcs-m-0 zcs-mt-8">Accept, reject, and escalate complaint priority.</p></div></div><div class="esac-embed" zc-component="report" zc-linkname="Supervisor_Screening_Queue" zc-height="380px"></div></div>
+			<div class="esac-report-card zcs-card zcs-p-20 zcs-box-border"><div class="esac-table-caption"><div><h2 class="zcs-font-18 zcs-font-semibold zcs-m-0">High priority complaints</h2><p class="zcs-font-13 zcs-color-tertiary zcs-m-0 zcs-mt-8">High priority complaint screening and case creation actions.</p></div></div><div class="esac-embed" zc-component="report" zc-linkname="High_Priority_Complaints" zc-height="380px"></div></div>
+			<div class="esac-report-card zcs-card zcs-p-20 zcs-box-border"><div class="esac-table-caption"><div><h2 class="zcs-font-18 zcs-font-semibold zcs-m-0">Enforcement work queue</h2><p class="zcs-font-13 zcs-color-tertiary zcs-m-0 zcs-mt-8">Assign Case, Refer to Legal, and Close Case actions.</p></div></div><div class="esac-embed" zc-component="report" zc-linkname="Enforcement_Work_Queue" zc-height="380px"></div></div>
+			<div class="esac-report-card zcs-card zcs-p-20 zcs-box-border"><div class="esac-table-caption"><div><h2 class="zcs-font-18 zcs-font-semibold zcs-m-0">Mobile field capture</h2><p class="zcs-font-13 zcs-color-tertiary zcs-m-0 zcs-mt-8">Overdue and scheduled field visits.</p></div></div><div class="esac-embed" zc-component="report" zc-linkname="Mobile_Field_Capture" zc-height="380px"></div></div>
+			<div class="esac-report-card zcs-card zcs-p-20 zcs-box-border"><div class="esac-table-caption"><div><h2 class="zcs-font-18 zcs-font-semibold zcs-m-0">Legal review view</h2><p class="zcs-font-13 zcs-color-tertiary zcs-m-0 zcs-mt-8">Accept review, draft accusation, schedule hearing, and close case actions.</p></div></div><div class="esac-embed" zc-component="report" zc-linkname="Legal_Review_View" zc-height="380px"></div></div>
+			<div class="esac-report-card zcs-card zcs-p-20 zcs-box-border"><div class="esac-table-caption"><div><h2 class="zcs-font-18 zcs-font-semibold zcs-m-0">Evidence disposition queue</h2><p class="zcs-font-13 zcs-color-tertiary zcs-m-0 zcs-mt-8">Log custody, mark reviewed, dispose, and return evidence actions.</p></div></div><div class="esac-embed" zc-component="report" zc-linkname="Disposition_Queue" zc-height="380px"></div></div>
+			<div class="esac-report-card wide zcs-card zcs-p-20 zcs-box-border"><div class="esac-table-caption"><div><h2 class="zcs-font-18 zcs-font-semibold zcs-m-0">Pending correspondence</h2><p class="zcs-font-13 zcs-color-tertiary zcs-m-0 zcs-mt-8">Prepare Merge, Mark Sent, and Request Signature actions.</p></div><a class="esac-link" href="#Report:Enforcement_Documents">Open enforcement documents <i class="zc-li-outline arrows-1-tail-right"></i></a></div><div class="esac-embed" zc-component="report" zc-linkname="Pending_Correspondence" zc-height="380px"></div></div>
+		</section>
+		<div class="esac-foot-space"></div>
+	</div>
+</div>

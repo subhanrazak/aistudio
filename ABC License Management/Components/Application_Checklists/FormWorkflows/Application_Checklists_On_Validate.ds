@@ -1,0 +1,28 @@
+Application_Checklists_On_Validate as "Validate Application Checklist"
+{
+
+				type =  form
+				form = Application_Checklists
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Checklist_Status == "Complete")
+										{
+											if(input.Public_Posting_30_Day != true || input.Public_Posting_Date == null || input.Resident_500_Foot_Notification != true || input.Resident_Notification_Date == null || input.Local_Agency_Notification != true || input.Local_Agency_Notification_Date == null)
+											{
+												alert "All posting and notification steps with dates are required before marking the checklist complete.";
+												cancel submit;
+											}
+										}
+						)
+					}
+				}
+
+			
+}

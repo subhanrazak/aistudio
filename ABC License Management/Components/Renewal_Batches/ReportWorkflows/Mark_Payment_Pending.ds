@@ -1,0 +1,32 @@
+Mark_Payment_Pending as "Mark Payment Pending"
+{
+	type = functions
+	form = Renewal_Batches
+	execution type = for each record
+	description = "Marks a renewal batch as waiting for payment from renewal reports."
+
+	on start
+	{
+		actions
+		{
+			on click
+			(
+				actorEmail = zoho.loginuserid;
+				if(input.Batch_Status == "Submitted" || input.Batch_Status == "Draft")
+				{
+					input.Batch_Status = "Payment Pending";
+					input.Payment_Status = "Pending";
+					if(input.Submitted_Date == null)
+					{
+						input.Submitted_Date = zoho.currentdate;
+					}
+					thisapp.Write_Audit_Log("Renewal","Renewal_Batches",input.ID,"Payment pending","Renewal batch marked Payment Pending from report by " + actorEmail + ".");
+				}
+				else
+				{
+					thisapp.Write_Audit_Log("Renewal","Renewal_Batches",input.ID,"Payment pending action skipped","Mark Payment Pending clicked by " + actorEmail + " but the renewal batch was not Draft or Submitted.");
+				}
+			)
+		}
+	}
+}

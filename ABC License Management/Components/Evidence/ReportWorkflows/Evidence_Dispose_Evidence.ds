@@ -1,0 +1,31 @@
+Evidence_Dispose_Evidence as "Dispose Evidence"
+{
+	type = functions
+	form = Evidence
+	execution type = for each record
+	description = "Disposes eligible evidence from evidence reports."
+
+	on start
+	{
+		actions
+		{
+			on click
+			(
+				actorEmail = zoho.loginuserid;
+				if(input.Disposition_Level != "Not Ready" && input.Chain_of_Custody_Status != "Disposed" && input.Chain_of_Custody_Status != "Released to Owner")
+				{
+					oldStatus = input.Chain_of_Custody_Status;
+					input.Chain_of_Custody_Status = "Disposed";
+					input.Current_Custodian = actorEmail;
+					input.Release_Authorization = ifnull(input.Release_Authorization,"") + "\nDisposition authorized from report by " + actorEmail + " on " + zoho.currentdate + ". Level: " + input.Disposition_Level + ".";
+					input.Notes = ifnull(input.Notes,"") + "\nEvidence disposed by " + actorEmail + " on " + zoho.currentdate + ". Previous status: " + oldStatus + ".";
+					thisapp.Write_Audit_Log("Enforcement","Evidence",input.ID,"Evidence disposed","Evidence disposed from report by " + actorEmail + ". Previous status: " + oldStatus + "; disposition level: " + input.Disposition_Level + ".");
+				}
+				else
+				{
+					thisapp.Write_Audit_Log("Enforcement","Evidence",input.ID,"Dispose evidence action skipped","Dispose Evidence clicked by " + actorEmail + " but disposition/custody status did not allow disposal.");
+				}
+			)
+		}
+	}
+}

@@ -1,0 +1,30 @@
+Escalate_Priority as "Escalate Priority"
+{
+	type = functions
+	form = Complaints
+	execution type = for each record
+	description = "Escalates a non-closed complaint to High priority from complaint reports."
+
+	on start
+	{
+		actions
+		{
+			on click
+			(
+				actorEmail = zoho.loginuserid;
+				if(input.Priority != "High" && input.Screening_Decision != "Rejected" && input.Screening_Decision != "Closed")
+				{
+					oldPriority = input.Priority;
+					input.Priority = "High";
+					input.Assigned_Supervisor_Email = actorEmail;
+					input.Screening_Notes = "Priority escalated from " + oldPriority + " to High by " + actorEmail + " on " + zoho.currentdate + ".";
+					thisapp.Write_Audit_Log("Enforcement","Complaints",input.ID,"Complaint priority escalated","Priority escalated from " + oldPriority + " to High from complaint report by " + actorEmail + ".");
+				}
+				else
+				{
+					thisapp.Write_Audit_Log("Enforcement","Complaints",input.ID,"Escalate priority action skipped","Escalate Priority clicked by " + actorEmail + " but priority/status did not allow escalation.");
+				}
+			)
+		}
+	}
+}

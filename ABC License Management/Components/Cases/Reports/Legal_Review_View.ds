@@ -1,0 +1,91 @@
+list Legal_Review_View
+{
+	displayName = "Legal Review View"
+	show all rows from Cases [Case_Status == "Referred to OLS" || Case_Status == "Legal Review" || Case_Status == "Hearing Status"]
+	(
+		Case_Number as "Case Number"
+		License
+		Premises
+		Priority
+		Supervising_Agent_Email as "Supervising Agent Email"
+		OLS_Assigned_Attorney_Email as "OLS Assigned Attorney Email"
+		Case_Status as "Case Status"
+		RFA_Status as "RFA Status"
+		Legal_Review_Status as "Legal Review Status"
+		Legal_Notes as "Legal Notes"
+		Closure_Outcome as "Closure Outcome"
+		Closure_Date as "Closure Date"
+		custom action "Accept Legal Review"
+		(
+			workflow = Case_Accept_Legal_Review
+			show action for each record = true
+			show action in edit record menu = true
+			column header = "Accept Legal Review"
+			success message = "Legal review accepted."
+			condition = (Case_Status == "Referred to OLS" && Legal_Review_Status == "Pending OLS Review")
+			confirmation before execution
+			(
+				message for individual record = "Accept legal review for this case?"
+				confirm button text = "Accept Review"
+				cancel button text = "Cancel"
+			)
+		)
+		custom action "Draft Accusation"
+		(
+			workflow = Case_Draft_Accusation
+			show action for each record = true
+			show action in edit record menu = true
+			column header = "Draft Accusation"
+			success message = "Accusation draft status recorded."
+			condition = (Case_Status == "Legal Review" && (Legal_Review_Status == "Pending OLS Review" || Legal_Review_Status == "Returned"))
+			confirmation before execution
+			(
+				message for individual record = "Mark accusation drafted for this case?"
+				confirm button text = "Draft Accusation"
+				cancel button text = "Cancel"
+			)
+		)
+		custom action "Schedule Hearing"
+		(
+			workflow = Case_Schedule_Hearing
+			show action for each record = true
+			show action in edit record menu = true
+			column header = "Schedule Hearing"
+			success message = "Hearing scheduled status recorded."
+			condition = (Case_Status == "Legal Review" && Legal_Review_Status == "Accusation Drafted")
+			confirmation before execution
+			(
+				message for individual record = "Move this case to hearing scheduled status?"
+				confirm button text = "Schedule Hearing"
+				cancel button text = "Cancel"
+			)
+		)
+		custom action "Close Case"
+		(
+			workflow = Case_Close_Case
+			show action for each record = true
+			show action in edit record menu = true
+			column header = "Close Case"
+			success message = "Case closed."
+			condition = (Case_Status != "Closed")
+			confirmation before execution
+			(
+				message for individual record = "Close this case?"
+				confirm button text = "Close Case"
+				cancel button text = "Cancel"
+			)
+		)
+	)
+	filters
+	(
+		Priority
+		OLS_Assigned_Attorney_Email
+		Case_Status
+		RFA_Status
+		Legal_Review_Status
+	)
+	sort by
+	(
+		Case_Number descending
+	)
+}

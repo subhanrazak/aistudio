@@ -1,0 +1,282 @@
+Case_Status_Lifecycle as "Case Status Lifecycle"
+{
+
+        			type = Blueprint
+        			form = Cases
+        			start
+        			{
+            			start stage = "New"
+        			}
+        			stages
+        			{
+           			"New"
+           			{
+           			}
+           			"Assigned"
+           			{
+           			}
+           			"Preliminary Investigation"
+           			{
+           			}
+           			"Field Investigation"
+           			{
+           			}
+           			"Report Preparation"
+           			{
+           			}
+           			"Referred to OLS"
+           			{
+           			}
+           			"Legal Review"
+           			{
+           			}
+           			"Hearing Status"
+           			{
+           			}
+           			"Closed"
+           			{
+           			}
+        			}
+        			transitions
+        			{
+    				Assign_Case as "Assign Case"
+    				{
+         				type = normal
+         				from stage = "New"
+         				to stage = "Assigned"
+         				before
+         				{
+            				transition owner
+            				(
+                				permissions = {"Enforcement_Supervisor"}
+             				)
+            				transition criteria = (Supervising_Agent_Email is not null)
+         				}
+         				during
+         				{
+            				action = update_fields
+            				workflow status = true
+            				visible fields = [Assigned_Agent_Email,Supervising_Agent_Email,Priority,Initial_Visit_Due_Date]
+         				}
+         				after
+         				{
+							actions 
+							{
+								custom deluge script
+								(
+															input.Case_Status = "Assigned";
+								)
+							}
+         				}
+  				}
+    				Begin_Legal_Review as "Begin Legal Review"
+    				{
+         				type = normal
+         				from stage = "Referred to OLS"
+         				to stage = "Legal Review"
+         				before
+         				{
+            				transition owner
+            				(
+                				permissions = {"OLS_Attorney", "Enforcement_Supervisor"}
+             				)
+         				}
+         				during
+         				{
+            				action = update_fields
+            				workflow status = true
+            				visible fields = [Legal_Review_Status,Legal_Notes,OLS_Assigned_Attorney_Email]
+         				}
+         				after
+         				{
+							actions 
+							{
+								custom deluge script
+								(
+															input.Case_Status = "Legal Review";
+								)
+							}
+         				}
+  				}
+    				Close_Case as "Close Case"
+    				{
+         				type = common
+         				from stage = "Assigned"
+         				to stage = "Closed"
+         				common stages = {"Legal Review", "Report Preparation", "Field Investigation", "Referred to OLS", "Hearing Status", "Preliminary Investigation"}
+         				before
+         				{
+            				transition owner
+            				(
+                				permissions = {"Enforcement_Supervisor"}
+             				)
+         				}
+         				during
+         				{
+            				action = update_fields
+            				workflow status = true
+            				visible fields = [Closure_Outcome,Closure_Date,Closure_Documents_Filed,Investigation_Summary,Legal_Notes]
+         				}
+         				after
+         				{
+							actions 
+							{
+								custom deluge script
+								(
+															input.Case_Status = "Closed";
+														input.Supervisor_Lock = true;
+								)
+							}
+         				}
+  				}
+    				Move_To_Hearing_Status as "Move to Hearing Status"
+    				{
+         				type = normal
+         				from stage = "Legal Review"
+         				to stage = "Hearing Status"
+         				before
+         				{
+            				transition owner
+            				(
+                				permissions = {"OLS_Attorney", "Enforcement_Supervisor"}
+             				)
+            				transition criteria = (Legal_Review_Status == "Hearing Scheduled" || Legal_Review_Status == "Hearing Held")
+         				}
+         				during
+         				{
+            				action = update_fields
+            				workflow status = true
+            				visible fields = [Legal_Review_Status,Legal_Notes]
+         				}
+         				after
+         				{
+							actions 
+							{
+								custom deluge script
+								(
+															input.Case_Status = "Hearing Status";
+								)
+							}
+         				}
+  				}
+    				Open_Field_Investigation as "Open Field Investigation"
+    				{
+         				type = normal
+         				from stage = "Preliminary Investigation"
+         				to stage = "Field Investigation"
+         				before
+         				{
+            				transition owner
+            				(
+                				permissions = {"Enforcement_Agent", "Enforcement_Supervisor"}
+             				)
+         				}
+         				during
+         				{
+            				action = update_fields
+            				workflow status = true
+            				visible fields = [Last_Visit_Date,Visit_Count,Violations_Observed,Investigation_Summary]
+         				}
+         				after
+         				{
+							actions 
+							{
+								custom deluge script
+								(
+															input.Case_Status = "Field Investigation";
+								)
+							}
+         				}
+  				}
+    				Prepare_Report as "Prepare Report"
+    				{
+         				type = normal
+         				from stage = "Field Investigation"
+         				to stage = "Report Preparation"
+         				before
+         				{
+            				transition owner
+            				(
+                				permissions = {"Enforcement_Agent", "Enforcement_Supervisor"}
+             				)
+         				}
+         				during
+         				{
+            				action = update_fields
+            				workflow status = true
+            				visible fields = [Investigation_Summary,Recommend_Accusation,RFA_Status]
+         				}
+         				after
+         				{
+							actions 
+							{
+								custom deluge script
+								(
+															input.Case_Status = "Report Preparation";
+								)
+							}
+         				}
+  				}
+    				Refer_To_OLS as "Refer to OLS"
+    				{
+         				type = normal
+         				from stage = "Report Preparation"
+         				to stage = "Referred to OLS"
+         				before
+         				{
+            				transition owner
+            				(
+                				permissions = {"Enforcement_Supervisor"}
+             				)
+            				transition criteria = (RFA_Status == "Submitted to Division/OLS" || RFA_Status == "Approved")
+         				}
+         				during
+         				{
+            				action = update_fields
+            				workflow status = true
+            				visible fields = [OLS_Assigned_Attorney_Email,Legal_Review_Status,Legal_Notes]
+         				}
+         				after
+         				{
+							actions 
+							{
+								custom deluge script
+								(
+															input.Case_Status = "Referred to OLS";
+														input.Legal_Review_Status = "Pending OLS Review";
+								)
+							}
+         				}
+  				}
+    				Start_Preliminary_Investigation as "Start Preliminary Investigation"
+    				{
+         				type = normal
+         				from stage = "Assigned"
+         				to stage = "Preliminary Investigation"
+         				before
+         				{
+            				transition owner
+            				(
+                				permissions = {"Enforcement_Agent", "Enforcement_Supervisor"}
+             				)
+         				}
+         				during
+         				{
+            				action = update_fields
+            				workflow status = true
+            				visible fields = [Investigation_Summary,Last_Visit_Date,Visit_Count]
+         				}
+         				after
+         				{
+							actions 
+							{
+								custom deluge script
+								(
+															input.Case_Status = "Preliminary Investigation";
+								)
+							}
+         				}
+  				}
+        			}
+    			
+}

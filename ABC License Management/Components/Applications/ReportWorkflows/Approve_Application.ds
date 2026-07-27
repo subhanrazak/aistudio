@@ -1,0 +1,22 @@
+Approve_Application as "Approve Application"
+{
+	type = functions
+	form = Applications
+	execution type = for each record
+
+	on start
+	{
+		actions
+		{
+			on click
+			(
+				if(input.Application_Status == "In-progress" || input.Application_Status == "Ready for Approval")
+				{
+					input.Application_Status = "Approved";
+					input.Checklist_Complete = true;
+					thisapp.Write_Audit_Log("New License Application","Applications",input.ID,"Application approved","Application approved from application queue by " + zoho.loginuserid + ".");
+				}
+			)
+		}
+	}
+}

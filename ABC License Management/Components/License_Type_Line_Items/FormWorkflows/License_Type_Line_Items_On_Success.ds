@@ -1,0 +1,36 @@
+License_Type_Line_Items_On_Success as "Update Application Line Item Total"
+{
+
+				type =  form
+				form = License_Type_Line_Items
+
+				record event = on add or edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.License_Application != null)
+										{
+											appRec = Applications[ID == input.License_Application];
+											if(appRec.count() > 0)
+											{
+												baseCharge = 0;
+												lineTotal = 0;
+												relatedLines = License_Type_Line_Items[License_Application == appRec.ID];
+												for each  line in relatedLines
+												{
+													lineTotal = lineTotal + ifnull(line.Line_Item_Fee,0);
+												}
+												appRec.Total_Fee=baseCharge + lineTotal;
+											}
+											thisapp.Write_Audit_Log("New License Application","License_Type_Line_Items",input.ID,"Line item saved","Line item " + input.Primary_LT_Name.Primary_LT_Name + " was saved or updated.");
+										}
+						)
+					}
+				}
+
+			
+}

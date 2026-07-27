@@ -1,0 +1,41 @@
+Evidence_On_Validate as "Validate Evidence Custody"
+{
+
+				type =  form
+				form = Evidence
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Case == null)
+										{
+											alert "A case is required for every evidence item.";
+											cancel submit;
+										}
+										if(input.Chain_of_Custody_Status == "Collected" || input.Chain_of_Custody_Status == "Booked")
+										{
+											if(input.Date_Collected == null || input.Collected_By_Email == null)
+											{
+												alert "Date collected and collected by email are required when evidence is collected or booked.";
+												cancel submit;
+											}
+										}
+										if(input.Chain_of_Custody_Status == "Released Temporarily" || input.Chain_of_Custody_Status == "Returned" || input.Chain_of_Custody_Status == "Disposed" || input.Chain_of_Custody_Status == "Released to Owner")
+										{
+											if(ifnull(input.Release_Authorization,"") == "")
+											{
+												alert "Release authorization is required for released, returned, or disposed evidence.";
+												cancel submit;
+											}
+										}
+						)
+					}
+				}
+
+			
+}

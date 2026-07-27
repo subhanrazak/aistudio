@@ -1,0 +1,51 @@
+list Daily_Reconciliation
+{
+	displayName = "Daily Reconciliation"
+	show all rows from Payments [Payment_Date is not null]
+	(
+		Payment_Reference as "Payment Reference"
+		Payment_Module as "Payment Module"
+		Entity
+		Payment_Method as "Payment Method"
+		Payment_Status as "Payment Status"
+		Amount_Due as "Amount Due"
+		Amount_Paid as "Amount Paid"
+		Payment_Date as "Payment Date"
+		Reconciled
+		Reconciliation_Date as "Reconciliation Date"
+		custom action "Reconcile Payment"
+		(
+			workflow = Payment_Reconcile_Payment
+			show action for each record = true
+			show action in edit record menu = true
+			column header = "Reconcile Payment"
+			success message = "Payment reconciled."
+			condition = (Reconciled != true && (Payment_Status == "Complete" || Payment_Status == "Refunded" || Payment_Status == "Void"))
+			confirmation before execution
+			(
+				message for individual record = "Reconcile this payment?"
+				confirm button text = "Reconcile Payment"
+				cancel button text = "Cancel"
+			)
+		)
+	)
+	filters
+	(
+		Payment_Date
+		Payment_Status
+		Reconciled
+		Payment_Method
+	)
+	group by
+	(
+		properties
+		(
+			display record count = true
+		)
+		Payment_Date descending
+	)
+	sort by
+	(
+		Payment_Date descending
+	)
+}

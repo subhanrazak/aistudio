@@ -1,0 +1,38 @@
+Evidence_Log_Custody as "Log Custody"
+{
+	type = functions
+	form = Evidence
+	execution type = for each record
+	description = "Logs a custody touch from evidence reports."
+
+	on start
+	{
+		actions
+		{
+			on click
+			(
+				actorEmail = zoho.loginuserid;
+				if(input.Chain_of_Custody_Status != "Disposed" && input.Chain_of_Custody_Status != "Released to Owner")
+				{
+					oldStatus = input.Chain_of_Custody_Status;
+					input.Chain_of_Custody_Status = "Booked";
+					input.Current_Custodian = actorEmail;
+					if(input.Date_Collected == null)
+					{
+						input.Date_Collected = zoho.currenttime;
+					}
+					if(input.Collected_By_Email == null)
+					{
+						input.Collected_By_Email = actorEmail;
+					}
+					input.Notes = ifnull(input.Notes,"") + "\nCustody logged by " + actorEmail + " on " + zoho.currenttime + ". Previous status: " + oldStatus + ".";
+					thisapp.Write_Audit_Log("Enforcement","Evidence",input.ID,"Evidence custody logged","Custody logged from evidence report by " + actorEmail + ". Previous status: " + oldStatus + ".");
+				}
+				else
+				{
+					thisapp.Write_Audit_Log("Enforcement","Evidence",input.ID,"Log custody action skipped","Log Custody clicked by " + actorEmail + " but custody status was " + input.Chain_of_Custody_Status + ".");
+				}
+			)
+		}
+	}
+}

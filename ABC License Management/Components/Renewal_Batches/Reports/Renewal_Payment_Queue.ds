@@ -1,0 +1,65 @@
+list Renewal_Payment_Queue
+{
+	displayName = "Renewal Payment Queue"
+	show all rows from Renewal_Batches  [Payment_Status == "Pending"]
+	(
+		Renewal_Batch_Number as "Renewal Batch Number"
+		Entity
+		Licensee_Email as "Licensee Email"
+		Batch_Status as "Batch Status"
+		Payment_Status as "Payment Status"
+		Total_Amount_Due as "Total Amount Due"
+		Submitted_Date as "Submitted Date"
+		Payment
+		custom action "Mark Renewal Paid"
+		(
+			workflow = Mark_Renewal_Paid
+			show action for each record = true
+			show action in edit record menu = true
+			column header = "Mark Renewal Paid"
+			success message = "Renewal marked paid."
+			condition = (Payment_Status == "Pending" && Batch_Status != "Cancelled")
+		)
+		custom action "Complete Renewal"
+		(
+			workflow = Complete_Renewal
+			show action for each record = true
+			show action in edit record menu = true
+			column header = "Complete Renewal"
+			success message = "Renewal completed."
+			condition = (Batch_Status == "Paid")
+			confirmation before execution
+			(
+				message for individual record = "Complete this renewal batch?"
+				confirm button text = "Complete Renewal"
+				cancel button text = "Cancel"
+			)
+		)
+		custom action "Cancel Renewal"
+		(
+			workflow = Cancel_Renewal
+			show action for each record = true
+			show action in edit record menu = true
+			column header = "Cancel Renewal"
+			success message = "Renewal cancelled."
+			condition = (Batch_Status != "Completed" && Batch_Status != "Cancelled")
+			confirmation before execution
+			(
+				message for individual record = "Cancel this renewal batch?"
+				confirm button text = "Cancel Renewal"
+				cancel button text = "Keep Renewal"
+			)
+		)
+	)
+	filters
+	(
+		Entity
+		Batch_Status
+		Payment_Status
+		Submitted_Date
+	)
+	sort by
+	(
+		Submitted_Date ascending
+	)
+}

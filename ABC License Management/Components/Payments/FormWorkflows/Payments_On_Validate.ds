@@ -1,0 +1,35 @@
+Payments_On_Validate as "Validate Payment"
+{
+
+				type =  form
+				form = Payments
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(ifnull(input.Amount_Paid,0) < 0 || ifnull(input.Amount_Due,0) < 0)
+										{
+											alert "Payment amounts cannot be negative.";
+											cancel submit;
+										}
+										if(input.Payment_Status == "Complete" && input.Payment_Date == null || ifnull(input.Amount_Paid,0) <= 0)
+										{
+											alert "Completed payments require Payment Date and Amount Paid greater than zero.";
+											cancel submit;
+										}
+										if(input.Refund_Requested == true && ifnull(input.Refund_Amount,0) <= 0 || input.Refund_Reason == null || input.Refund_Reason.trim() == "")
+										{
+											alert "Refund Amount and Refund Reason are required when a refund is requested.";
+											cancel submit;
+										}
+						)
+					}
+				}
+
+			
+}

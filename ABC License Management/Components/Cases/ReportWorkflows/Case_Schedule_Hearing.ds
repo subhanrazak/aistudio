@@ -1,0 +1,28 @@
+Case_Schedule_Hearing as "Schedule Hearing"
+{
+	type = functions
+	form = Cases
+	execution type = for each record
+	description = "Moves an accusation-drafted legal case to hearing scheduled status from reports."
+
+	on start
+	{
+		actions
+		{
+			on click
+			(
+				actorEmail = zoho.loginuserid;
+				if(input.Case_Status == "Legal Review" && input.Legal_Review_Status == "Accusation Drafted")
+				{
+					input.Case_Status = "Hearing Status";
+					input.Legal_Review_Status = "Hearing Scheduled";
+					thisapp.Write_Audit_Log("Enforcement","Cases",input.ID,"Hearing scheduled","Hearing scheduled status recorded from report by " + actorEmail + ".");
+				}
+				else
+				{
+					thisapp.Write_Audit_Log("Enforcement","Cases",input.ID,"Schedule hearing action skipped","Schedule Hearing clicked by " + actorEmail + " but case/legal status was " + input.Case_Status + " / " + input.Legal_Review_Status + ".");
+				}
+			)
+		}
+	}
+}

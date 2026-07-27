@@ -1,0 +1,27 @@
+Violation_Mark_Citation_Issued as "Mark Citation Issued"
+{
+	type = functions
+	form = Violations
+	execution type = for each record
+	description = "Marks a violation citation as issued from violation reports."
+
+	on start
+	{
+		actions
+		{
+			on click
+			(
+				actorEmail = zoho.loginuserid;
+				if(input.Citation_Issued != true)
+				{
+					input.Citation_Issued = true;
+					thisapp.Write_Audit_Log("Enforcement","Violations",input.ID,"Citation issued","Citation marked issued from report by " + actorEmail + ".");
+				}
+				else
+				{
+					thisapp.Write_Audit_Log("Enforcement","Violations",input.ID,"Mark citation action skipped","Mark Citation Issued clicked by " + actorEmail + " but citation was already issued.");
+				}
+			)
+		}
+	}
+}

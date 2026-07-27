@@ -1,0 +1,137 @@
+<%
+currentUser = zoho.loginuserid;
+if(currentUser == null)
+{
+	currentUser = "";
+}
+assignedCount = Cases[OLS_Assigned_Attorney_Email == currentUser].count();
+referredCount = Cases[Case_Status == "Referred to OLS"].count();
+legalReviewCount = Cases[Case_Status == "Legal Review"].count();
+hearingStatusCount = Cases[Case_Status == "Hearing Status"].count();
+pendingReviewCount = Cases[Legal_Review_Status == "Pending OLS Review"].count();
+accusationCount = Cases[Legal_Review_Status == "Accusation Drafted"].count();
+hearingScheduledCount = Cases[Legal_Review_Status == "Hearing Scheduled"].count();
+hearingHeldCount = Cases[Legal_Review_Status == "Hearing Held"].count();
+proposedDecisionCount = Cases[Legal_Review_Status == "Proposed Decision"].count();
+directorActionCount = Cases[Legal_Review_Status == "Director Action"].count();
+appealStatusCount = Cases[Legal_Review_Status == "Appeal Status"].count();
+hearingCount = hearingScheduledCount + hearingHeldCount + hearingStatusCount;
+decisionCount = proposedDecisionCount + directorActionCount + appealStatusCount;
+openLegalCount = referredCount + legalReviewCount + hearingStatusCount;
+draftDocCount = Correspondence[Module == "Enforcement" && Merge_Status == "Draft"].count();
+failedDocCount = Correspondence[Module == "Enforcement" && Merge_Status == "Failed"].count();
+readyMergeDocCount = Correspondence[Module == "Enforcement" && Merge_Status == "Ready for Manual Merge"].count();
+pendingSignCount = Correspondence[Module == "Enforcement" && Sign_Status == "Pending Manual Sign"].count();
+documentActionCount = draftDocCount + failedDocCount + readyMergeDocCount + pendingSignCount;
+totalQueueCount = openLegalCount + pendingReviewCount + accusationCount + hearingCount + decisionCount + documentActionCount;
+scopeLabel = "Full legal queue";
+if(assignedCount > 0)
+{
+	scopeLabel = "My assigned legal queue";
+}
+%>
+<style>
+:root{--ols-brand:var(--zcs_brand_color,#2563eb);--ols-light:var(--zcs_brand_light_color,#eef4ff);--ols-text:var(--zcs_primary_text_color,#111827);--ols-muted:var(--zcs_secondary_text_color,#64748b);--ols-border:#e7e7ee}.ols-page,.ols-page *{box-sizing:border-box}.ols-page{min-height:100%;padding:28px;background:linear-gradient(180deg,#f8fbff 0%,#f4f6fb 70%,#fff 100%);font-family:Inter,Arial,sans-serif;color:var(--ols-text)}.ols-shell{max-width:1480px;margin:0 auto;display:flex;flex-direction:column;gap:18px}.ols-hero{border-radius:26px;padding:28px;background:linear-gradient(135deg,#0f2748 0%,var(--ols-brand) 65%,#0f766e 130%);color:#fff;box-shadow:0 24px 58px rgba(37,99,235,.18)}.ols-hero-grid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(320px,.8fr);gap:22px;align-items:center}.ols-eyebrow{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.26);background:rgba(255,255,255,.14);border-radius:999px;padding:7px 12px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}.ols-hero h1{font-size:clamp(30px,4vw,48px);line-height:1.05;margin:14px 0 10px;color:#fff}.ols-hero p{max-width:850px;margin:0;color:rgba(255,255,255,.86);font-size:15px;line-height:1.6}.ols-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}.ols-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:38px;padding:9px 14px;border-radius:8px;font-size:14px;text-decoration:none;border:1px solid rgba(255,255,255,.45);color:#fff;background:rgba(255,255,255,.14)}.ols-btn.primary{background:#fff;color:var(--ols-brand);border-color:#fff}.ols-profile{border:1px solid rgba(255,255,255,.24);background:rgba(255,255,255,.12);border-radius:18px;padding:18px}.ols-profile-line{display:flex;align-items:center;gap:8px;margin-top:7px;color:rgba(255,255,255,.85);font-size:13px}.ols-kv-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}.ols-kv{border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:10px;background:rgba(255,255,255,.08)}.ols-kv span{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.64)}.ols-kv strong{display:block;margin-top:4px;font-size:15px;color:#fff}.ols-section-title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:4px 2px -4px}.ols-section-title h2{margin:0;font-size:11px;text-transform:uppercase;letter-spacing:1.1px;color:#8a94a6}.ols-section-title span{font-size:12px;color:#8a94a6}.ols-grid{display:grid;gap:14px}.ols-kpis{grid-template-columns:repeat(6,minmax(0,1fr))}.ols-card{background:#fff;border:1px solid var(--ols-border);border-radius:18px;box-shadow:0 1px 2px rgba(15,23,42,.04);overflow:hidden}.ols-kpi{min-height:144px;padding:18px}.ols-kpi-icon{width:42px;height:42px;border-radius:14px;background:var(--tone-soft);color:var(--tone);display:flex;align-items:center;justify-content:center;font-size:21px}.ols-kpi-value{margin-top:14px;font-size:31px;line-height:1;font-weight:800;color:#111827}.ols-kpi-label{margin-top:5px;font-size:12px;font-weight:650;color:#64748b}.ols-kpi-note{margin-top:6px;font-size:11px;color:#8a94a6}.ols-two{grid-template-columns:minmax(0,1.15fr) minmax(360px,.85fr)}.ols-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:16px 18px;border-bottom:1px solid #eef1f6;background:#fbfcff}.ols-card-head h3{font-size:17px;margin:0;color:#111827}.ols-card-head p{font-size:12px;line-height:1.5;color:#64748b;margin:4px 0 0}.ols-card-body{padding:18px}.ols-mini-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.ols-mini{border:1px solid #e9edf5;border-radius:14px;padding:14px;background:#fff}.ols-mini strong{font-size:26px;display:block;color:#111827}.ols-mini span{font-size:12px;color:#64748b}.ols-chip{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 10px;font-size:12px;font-weight:700;border:1px solid transparent;text-decoration:none}.chip-ok{background:#ecfdf5;color:#0f8f61;border-color:#bbf7d0}.chip-info{background:#eff6ff;color:#1d4ed8;border-color:#bfdbfe}.chip-warn{background:#fffbeb;color:#b45309;border-color:#fde68a}.chip-theme{background:var(--ols-light);color:var(--ols-brand);border-color:rgba(37,99,235,.22)}.ols-links{display:flex;flex-direction:column;gap:10px}.ols-link-card{display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid #e9edf5;border-radius:14px;background:#fff;padding:13px 14px;text-decoration:none;color:#111827}.ols-link-card:hover{border-color:var(--ols-brand);background:var(--ols-light)}.ols-link-card small{display:block;margin-top:3px;color:#64748b}.ols-table-wrap{overflow:auto;border:1px solid var(--ols-border);border-radius:12px}.ols-table{width:100%;border-collapse:collapse;min-width:720px;background:#fff}.ols-table th{background:#f9fafe;text-align:left;font-size:13px;color:#111827;padding:10px 12px;border-bottom:1px solid var(--ols-border)}.ols-table td{font-size:13px;color:#334155;padding:10px 12px;border-top:1px solid #eef1f6;vertical-align:top}.ols-report-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.ols-embed{min-height:420px;border:1px dashed #d7deea;border-radius:12px;background:#fff;overflow:hidden}.ols-foot-space{height:12px}@media(max-width:1180px){.ols-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.ols-hero-grid,.ols-two,.ols-report-grid{grid-template-columns:1fr}}@media(max-width:720px){.ols-page{padding:14px}.ols-kpis,.ols-mini-grid{grid-template-columns:1fr}.ols-card-head,.ols-section-title{flex-direction:column;align-items:flex-start}.ols-actions .ols-btn{width:100%}}
+</style>
+<div class="ols-page">
+	<div class="ols-shell">
+		<section class="ols-hero">
+			<div class="ols-hero-grid">
+				<div>
+					<div class="ols-eyebrow"><i class="zc-li-outline business-law"></i><span>OLS legal workspace</span></div>
+					<h1>OLS Attorney Action Center</h1>
+					<p>Review legal matters, monitor accusation and hearing stages, and open the legal and correspondence reports from one focused workspace.</p>
+					<div class="ols-actions">
+						<a class="ols-btn primary" href="#Report:Legal_Review_View?zc_LoadIn=dialog&amp;zc_Header=true"><i class="zc-li-outline files-search"></i><span>Open legal review</span></a>
+						<a class="ols-btn" href="#Report:Pending_Correspondence?zc_LoadIn=dialog&amp;zc_Header=true"><i class="zc-li-outline loader-dots-06"></i><span>Open pending correspondence</span></a>
+						<a class="ols-btn" href="#Report:Enforcement_Documents?zc_LoadIn=dialog&amp;zc_Header=true"><i class="zc-li-outline files-single-copy-04"></i><span>Open enforcement documents</span></a>
+					</div>
+				</div>
+				<aside class="ols-profile">
+					<div class="ols-eyebrow"><i class="zc-li-outline users-single-01"></i><span><%=scopeLabel%></span></div>
+					<div class="ols-profile-line"><i class="zc-li-outline ui-1-email-83"></i><span><%=currentUser%></span></div>
+					<div class="ols-profile-line"><i class="zc-li-outline business-progress"></i><span><%=totalQueueCount%> legal and document signals</span></div>
+					<div class="ols-kv-grid">
+						<div class="ols-kv"><span>Assigned to me</span><strong><%=assignedCount%></strong></div>
+						<div class="ols-kv"><span>Open legal cases</span><strong><%=openLegalCount%></strong></div>
+						<div class="ols-kv"><span>Document actions</span><strong><%=documentActionCount%></strong></div>
+						<div class="ols-kv"><span>Hearings</span><strong><%=hearingCount%></strong></div>
+					</div>
+				</aside>
+			</div>
+		</section>
+
+		<div class="ols-section-title"><h2>Legal review snapshot</h2><span>Counts use simple direct criteria for upload safety.</span></div>
+		<section class="ols-grid ols-kpis">
+			<div class="ols-card ols-kpi" style="--tone:#2a6ffc;--tone-soft:#e8efff;"><div class="ols-kpi-icon"><i class="zc-li-outline files-search"></i></div><div class="ols-kpi-value"><%=assignedCount%></div><div class="ols-kpi-label">Assigned to current user</div><div class="ols-kpi-note">OLS assigned attorney email</div></div>
+			<div class="ols-card ols-kpi" style="--tone:#b8770d;--tone-soft:#fcf4e6;"><div class="ols-kpi-icon"><i class="zc-li-outline loader-dots-06"></i></div><div class="ols-kpi-value"><%=pendingReviewCount%></div><div class="ols-kpi-label">Pending OLS review</div><div class="ols-kpi-note">Legal review status</div></div>
+			<div class="ols-card ols-kpi" style="--tone:#7c3aed;--tone-soft:#f1eaff;"><div class="ols-kpi-icon"><i class="zc-li-outline ui-1-edit-72"></i></div><div class="ols-kpi-value"><%=accusationCount%></div><div class="ols-kpi-label">Accusation drafted</div><div class="ols-kpi-note">Drafting stage</div></div>
+			<div class="ols-card ols-kpi" style="--tone:#f4660c;--tone-soft:#fff0e4;"><div class="ols-kpi-icon"><i class="zc-li-outline ui-2-time"></i></div><div class="ols-kpi-value"><%=hearingCount%></div><div class="ols-kpi-label">Hearing work</div><div class="ols-kpi-note">Hearing status or stage</div></div>
+			<div class="ols-card ols-kpi" style="--tone:#179e6c;--tone-soft:#e4fcf3;"><div class="ols-kpi-icon"><i class="zc-li-outline ui-1-check-circle-08"></i></div><div class="ols-kpi-value"><%=decisionCount%></div><div class="ols-kpi-label">Decision or appeal</div><div class="ols-kpi-note">Post-hearing stages</div></div>
+			<div class="ols-card ols-kpi" style="--tone:#09598e;--tone-soft:#e4f6fd;"><div class="ols-kpi-icon"><i class="zc-li-outline files-single-copy-04"></i></div><div class="ols-kpi-value"><%=documentActionCount%></div><div class="ols-kpi-label">Document actions</div><div class="ols-kpi-note">Merge, failure, or signature work</div></div>
+		</section>
+
+		<section class="ols-grid ols-two">
+			<div class="ols-card">
+				<div class="ols-card-head"><div><h3>Priority legal actions</h3><p>Use the linked native reports for row-level actions.</p></div><span class="ols-chip chip-theme"><%=scopeLabel%></span></div>
+				<div class="ols-card-body">
+					<div class="ols-mini-grid">
+						<div class="ols-mini"><strong><%=referredCount%></strong><span>Referred to OLS cases</span></div>
+						<div class="ols-mini"><strong><%=legalReviewCount%></strong><span>Legal Review status cases</span></div>
+						<div class="ols-mini"><strong><%=hearingScheduledCount%></strong><span>Hearing scheduled</span></div>
+						<div class="ols-mini"><strong><%=hearingHeldCount%></strong><span>Hearing held</span></div>
+					</div>
+					<div class="ols-table-wrap" style="margin-top:14px;">
+						<table class="ols-table">
+							<thead><tr><th>Stage</th><th>Count</th><th>Primary report</th><th>Next action</th></tr></thead>
+							<tbody>
+								<tr><td><span class="ols-chip chip-warn">Pending review</span></td><td><%=pendingReviewCount%></td><td>Legal Review View</td><td>Accept review or return for more work</td></tr>
+								<tr><td><span class="ols-chip chip-info">Accusation draft</span></td><td><%=accusationCount%></td><td>Legal Review View</td><td>Draft accusation and prepare hearing path</td></tr>
+								<tr><td><span class="ols-chip chip-warn">Hearing</span></td><td><%=hearingCount%></td><td>Legal Review View</td><td>Schedule, monitor, or update hearing status</td></tr>
+								<tr><td><span class="ols-chip chip-ok">Decision or appeal</span></td><td><%=decisionCount%></td><td>Legal Review View</td><td>Track proposed decision, director action, or appeal</td></tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+			<div class="ols-card">
+				<div class="ols-card-head"><div><h3>Related report shortcuts</h3><p>Open the Creator reports that own the legal review and correspondence workflows.</p></div></div>
+				<div class="ols-card-body">
+					<div class="ols-links">
+						<a class="ols-link-card" href="#Report:Legal_Review_View?zc_LoadIn=dialog&amp;zc_Header=true"><span><strong>Legal Review View</strong><small>Legal matters and row-level case actions.</small></span><i class="zc-li-outline arrows-1-tail-right"></i></a>
+						<a class="ols-link-card" href="#Report:Pending_Correspondence?zc_LoadIn=dialog&amp;zc_Header=true"><span><strong>Pending Correspondence</strong><small>Draft, merge, send, and signature follow-up.</small></span><i class="zc-li-outline arrows-1-tail-right"></i></a>
+						<a class="ols-link-card" href="#Report:Enforcement_Documents?zc_LoadIn=dialog&amp;zc_Header=true"><span><strong>Enforcement Documents</strong><small>Document archive and enforcement correspondence.</small></span><i class="zc-li-outline arrows-1-tail-right"></i></a>
+						<a class="ols-link-card" href="#Report:Correspondence_Log?zc_LoadIn=dialog&amp;zc_Header=true"><span><strong>Correspondence Log</strong><small>Full correspondence history and audit trail.</small></span><i class="zc-li-outline arrows-1-tail-right"></i></a>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<div class="ols-section-title"><h2>Document workload</h2><span>Enforcement correspondence requiring legal or staff follow-up.</span></div>
+		<section class="ols-card">
+			<div class="ols-card-head"><div><h3>Correspondence and document signals</h3><p>These counts use direct status fields only and link to the native reports for processing.</p></div><span class="ols-chip chip-info"><%=documentActionCount%> open signals</span></div>
+			<div class="ols-card-body">
+				<div class="ols-table-wrap">
+					<table class="ols-table">
+						<thead><tr><th>Document signal</th><th>Count</th><th>Report</th><th>Action route</th></tr></thead>
+						<tbody>
+							<tr><td>Draft merge</td><td><%=draftDocCount%></td><td>Pending Correspondence</td><td>Prepare merge</td></tr>
+							<tr><td>Failed merge</td><td><%=failedDocCount%></td><td>Pending Correspondence</td><td>Review failure and retry manually</td></tr>
+							<tr><td>Ready for manual merge</td><td><%=readyMergeDocCount%></td><td>Pending Correspondence</td><td>Mark generated or sent</td></tr>
+							<tr><td>Pending manual sign</td><td><%=pendingSignCount%></td><td>Enforcement Documents</td><td>Request or confirm signature</td></tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</section>
+
+		<div class="ols-section-title"><h2>Embedded action reports</h2><span>Native reports remain embedded for search and row actions.</span></div>
+		<section class="ols-grid ols-report-grid">
+			<div class="ols-card"><div class="ols-card-head"><div><h3>Legal Review View</h3><p>Use this report for legal review row actions and complete case detail.</p></div><a class="ols-chip chip-theme" href="#Report:Legal_Review_View?zc_LoadIn=dialog&amp;zc_Header=true">Open</a></div><div class="ols-card-body"><div class="ols-embed" zc-component="report" zc-linkname="Legal_Review_View" zc-height="430px"></div></div></div>
+			<div class="ols-card"><div class="ols-card-head"><div><h3>Pending Correspondence</h3><p>Draft and merge-related correspondence tasks.</p></div><a class="ols-chip chip-theme" href="#Report:Pending_Correspondence?zc_LoadIn=dialog&amp;zc_Header=true">Open</a></div><div class="ols-card-body"><div class="ols-embed" zc-component="report" zc-linkname="Pending_Correspondence" zc-height="430px"></div></div></div>
+			<div class="ols-card"><div class="ols-card-head"><div><h3>Enforcement Documents</h3><p>Enforcement document status, signature, and archive actions.</p></div><a class="ols-chip chip-theme" href="#Report:Enforcement_Documents?zc_LoadIn=dialog&amp;zc_Header=true">Open</a></div><div class="ols-card-body"><div class="ols-embed" zc-component="report" zc-linkname="Enforcement_Documents" zc-height="430px"></div></div></div>
+			<div class="ols-card"><div class="ols-card-head"><div><h3>Correspondence Log</h3><p>Full correspondence history for review and audit context.</p></div><a class="ols-chip chip-theme" href="#Report:Correspondence_Log?zc_LoadIn=dialog&amp;zc_Header=true">Open</a></div><div class="ols-card-body"><div class="ols-embed" zc-component="report" zc-linkname="Correspondence_Log" zc-height="430px"></div></div></div>
+		</section>
+		<div class="ols-foot-space"></div>
+	</div>
+</div>

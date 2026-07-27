@@ -1,0 +1,45 @@
+list Approved_Applications
+{
+	displayName = "Approved Applications"
+	show all rows from Applications [Application_Status == "Approved" || Application_Status == "License Issued"]
+	(
+		Application_Number as "Application Number"
+		Applicant_Profile as "Applicant Profile"
+		Application_Type as "Application Type"
+		DBA
+		License as "Existing License"
+		License_Type as "Primary License Type"
+		Total_Fee as "Total Fee"
+		Application_Status as "Application Status"
+		Issued_License as "Issued License"
+		Issued_Date as "Issued Date"
+		Application_Submitted_Date as "Application Submitted Date"
+		custom action "Issue License"
+		(
+			workflow = Issue_License
+			show action for each record = true
+			show action in edit record menu = true
+			column header = "Issue License"
+			success message = "License issuance processed"
+			condition = (Application_Status == "Approved" && Issued_License is null)
+			confirmation before execution
+			(
+				message for individual record = "Issue the license for this approved application?"
+				confirm button text = "Issue License"
+				cancel button text = "Cancel"
+			)
+		)
+	)
+	filters
+	(
+		Applicant_Profile
+		Application_Type
+		Application_Status
+		Issued_Date
+	)
+	sort by
+	(
+		Issued_Date descending
+		Application_Submitted_Date descending
+	)
+}

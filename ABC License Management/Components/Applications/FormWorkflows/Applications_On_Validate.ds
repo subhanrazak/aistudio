@@ -1,0 +1,63 @@
+Applications_On_Validate as "Validate New License Application"
+{
+
+				type =  form
+				form = Applications
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+										if(input.Applicant_Profile == null || input.Application_Type in {""," ","null"} || input.Application_Type == null || input.Legal_Entity == null || input.Premise_Address == null)
+										{
+											alert "Applicant Profile, Application Type, Legal Entity, and Premise Address are required.";
+											cancel submit;
+										}
+										if((input.Application_Type == "Transfer" || input.Application_Type == "Change") && input.License == null)
+										{
+											alert "Existing License is required for Transfer and Change applications.";
+											cancel submit;
+										}
+										if(input.Application_Type == "Original")
+										{
+											input.License = null;
+										}
+										if(input.Felony in {""," ","null"} || input.Violation in {""," ","null"} || input.Fingerprints in {""," ","null"} || input.Application_Submitted_Date == null)
+										{
+											alert "Felony, Violation, Fingerprints, and Application Submitted Date are required.";
+											cancel submit;
+										}
+										if(input.Total_Fee < 0 || input.Total_Fee_Due < 0)
+										{
+											alert "Total Fee cannot be negative.";
+											cancel submit;
+										}
+										if(input.Application_Status == "Rejected" && (input.Denial_Reason == null || input.Denial_Reason.trim() == ""))
+										{
+											alert "Denial Reason is required when rejecting an application.";
+											cancel submit;
+										}
+										if(input.Application_Status == "License Issued" && (input.Application_Type == "Original" || input.Application_Type == "Transfer") && input.License_Type == null)
+										{
+											alert "A primary License Type is required before issuing Original or Transfer applications.";
+											cancel submit;
+										}
+										if(input.Application_Status == "License Issued" && input.Application_Type == "Change" && input.License == null)
+										{
+											alert "Existing License is required before issuing a Change application.";
+											cancel submit;
+										}
+										if(input.Felony == "Yes" || input.Violation == "Yes")
+										{
+											input.Investigator_Review_Flag = true;
+										}
+						)
+					}
+				}
+
+			
+}

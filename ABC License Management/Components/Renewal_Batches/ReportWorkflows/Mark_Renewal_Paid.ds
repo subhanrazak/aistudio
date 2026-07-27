@@ -1,0 +1,28 @@
+Mark_Renewal_Paid as "Mark Renewal Paid"
+{
+	type = functions
+	form = Renewal_Batches
+	execution type = for each record
+	description = "Marks a renewal batch payment complete from renewal reports."
+
+	on start
+	{
+		actions
+		{
+			on click
+			(
+				actorEmail = zoho.loginuserid;
+				if(input.Payment_Status == "Pending" && input.Batch_Status != "Cancelled")
+				{
+					input.Payment_Status = "Complete";
+					input.Batch_Status = "Paid";
+					thisapp.Write_Audit_Log("Renewal","Renewal_Batches",input.ID,"Renewal paid","Renewal batch marked paid from report by " + actorEmail + ".");
+				}
+				else
+				{
+					thisapp.Write_Audit_Log("Renewal","Renewal_Batches",input.ID,"Mark renewal paid action skipped","Mark Renewal Paid clicked by " + actorEmail + " but payment was not Pending or the batch was Cancelled.");
+				}
+			)
+		}
+	}
+}

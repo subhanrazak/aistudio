@@ -1,0 +1,22 @@
+Assign_Review as "Assign Review"
+{
+	type = functions
+	form = Applications
+	execution type = for each record
+
+	on start
+	{
+		actions
+		{
+			on click
+			(
+				if(input.Application_Status == "Submitted" || input.Application_Status == "In-progress")
+				{
+					input.Application_Status = "In-progress";
+					input.Assigned_Licensing_Rep = zoho.loginuserid;
+					thisapp.Write_Audit_Log("New License Application","Applications",input.ID,"Review assigned","Review assigned to " + zoho.loginuserid + " from application queue.");
+				}
+			)
+		}
+	}
+}

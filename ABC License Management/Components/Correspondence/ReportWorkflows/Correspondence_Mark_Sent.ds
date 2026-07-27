@@ -1,0 +1,29 @@
+Correspondence_Mark_Sent as "Mark Sent"
+{
+	type = functions
+	form = Correspondence
+	execution type = for each record
+	description = "Marks manually delivered correspondence as sent from correspondence report queues."
+
+	on start
+	{
+		actions
+		{
+			on click
+			(
+				actorEmail = zoho.loginuserid;
+				if(input.Sent_Date == null && (input.Merge_Status == "Generated Manually" || input.Merge_Status == "Ready for Manual Merge" || input.Merge_Status == "Sent Manually"))
+				{
+					input.Merge_Status = "Sent Manually";
+					input.Sent_Date = zoho.currentdate;
+					input.Body_or_Merge_Notes = ifnull(input.Body_or_Merge_Notes,"") + "\nMarked sent by " + actorEmail + " on " + zoho.currentdate + ".";
+					thisapp.Write_Audit_Log("Correspondence","Correspondence",input.ID,"Correspondence sent","Correspondence marked sent manually by " + actorEmail + ".");
+				}
+				else
+				{
+					thisapp.Write_Audit_Log("Correspondence","Correspondence",input.ID,"Mark sent action skipped","Mark Sent clicked by " + actorEmail + " but record was not eligible for send marking.");
+				}
+			)
+		}
+	}
+}

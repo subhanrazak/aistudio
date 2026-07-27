@@ -1,0 +1,28 @@
+Reject_Complaint as "Reject Complaint"
+{
+	type = functions
+	form = Complaints
+	execution type = for each record
+	description = "Rejects a complaint from complaint screening reports."
+
+	on start
+	{
+		actions
+		{
+			on click
+			(
+				actorEmail = zoho.loginuserid;
+				if(input.Screening_Decision == "New" || input.Screening_Decision == "Need More Information")
+				{
+					input.Screening_Decision = "Rejected";
+					input.Screening_Notes = "Rejected from complaint report by " + actorEmail + " on " + zoho.currentdate + ".";
+					thisapp.Write_Audit_Log("Enforcement","Complaints",input.ID,"Complaint rejected","Complaint rejected from complaint report by " + actorEmail + ".");
+				}
+				else
+				{
+					thisapp.Write_Audit_Log("Enforcement","Complaints",input.ID,"Reject complaint action skipped","Reject Complaint clicked by " + actorEmail + " but complaint status was " + input.Screening_Decision + ".");
+				}
+			)
+		}
+	}
+}

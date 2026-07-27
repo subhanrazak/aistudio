@@ -1,0 +1,232 @@
+<%
+	licenseeEmail = ifnull(zoho.loginuserid,"");
+	emailParam = encodeURL(licenseeEmail);
+
+	licenseeEntities = Entities[Licensee_Portal_Email == licenseeEmail || Contact_Email == licenseeEmail];
+	entityCount = licenseeEntities.count();
+
+	activeLicenses = Licenses[(Licensee_Email == licenseeEmail || Entity.Licensee_Portal_Email == licenseeEmail || Entity.Contact_Email == licenseeEmail) && (License_Status == "Active" || License_Status == "Renewed")];
+	renewableLicenses = Licenses[(Licensee_Email == licenseeEmail || Entity.Licensee_Portal_Email == licenseeEmail || Entity.Contact_Email == licenseeEmail) && (License_Status == "Renewal Due" || License_Status == "50% Penalty" || License_Status == "100% Penalty" || Penalty_Stage == "50%" || Penalty_Stage == "100%" || (Expiration_Date >= zoho.currentdate && Expiration_Date <= zoho.currentdate.addDay(60)))];
+	allLicenseCount = Licenses[Licensee_Email == licenseeEmail || Entity.Licensee_Portal_Email == licenseeEmail || Entity.Contact_Email == licenseeEmail].count();
+	activeCount = activeLicenses.count();
+	renewableCount = renewableLicenses.count();
+	penaltyCount = Licenses[(Licensee_Email == licenseeEmail || Entity.Licensee_Portal_Email == licenseeEmail || Entity.Contact_Email == licenseeEmail) && (License_Status == "50% Penalty" || License_Status == "100% Penalty" || Penalty_Stage == "50%" || Penalty_Stage == "100%")].count();
+
+	pendingBatches = Renewal_Batches[(Licensee_Email == licenseeEmail || Entity.Licensee_Portal_Email == licenseeEmail || Entity.Contact_Email == licenseeEmail) && (Batch_Status == "Draft" || Batch_Status == "Submitted" || Batch_Status == "Payment Pending" || Payment_Status == "Pending")];
+	pendingItems = Renewal_Items[(Renewal_Batch.Licensee_Email == licenseeEmail || License.Licensee_Email == licenseeEmail) && (Item_Status == "Selected" || Item_Status == "Payment Pending")];
+	pendingBatchCount = pendingBatches.count();
+	pendingItemCount = pendingItems.count();
+
+	pendingBatchPayments = Renewal_Batches[(Licensee_Email == licenseeEmail || Entity.Licensee_Portal_Email == licenseeEmail || Entity.Contact_Email == licenseeEmail) && Payment_Status == "Pending"];
+	pendingPaymentRecords = Payments[(Renewal_Batch.Licensee_Email == licenseeEmail || Entity.Licensee_Portal_Email == licenseeEmail || Entity.Contact_Email == licenseeEmail) && (Payment_Status == "Pending" || Payment_Status == "Failed")];
+	pendingPaymentCount = pendingBatchPayments.count() + pendingPaymentRecords.count();
+	pendingBatchAmount = ifnull(pendingBatchPayments.sum(Total_Amount_Due),0);
+	pendingPaymentAmount = ifnull(pendingPaymentRecords.sum(Amount_Due),0);
+	pendingAmount = pendingBatchAmount + pendingPaymentAmount;
+
+	submittedCorrespondence = Correspondence[Recipient_Email == licenseeEmail && (Merge_Status == "Ready for Manual Merge" || Merge_Status == "Generated Manually" || Merge_Status == "Sent Manually" || Sign_Status == "Pending Manual Sign" || Sign_Status == "Signed")];
+	submittedNotices = Renewal_Notices[Recipient_Email == licenseeEmail && Delivery_Status != "Draft"];
+	correspondenceCount = submittedCorrespondence.count();
+	noticeCount = submittedNotices.count();
+	failedCorrespondence = Correspondence[Recipient_Email == licenseeEmail && Merge_Status == "Failed"].count();
+	failedNotices = Renewal_Notices[Recipient_Email == licenseeEmail && Delivery_Status == "Failed"].count();
+
+	totalAttention = renewableCount + pendingBatchCount + pendingItemCount + pendingPaymentCount + failedCorrespondence + failedNotices;
+	statusGoodCount = activeCount;
+	if(totalAttention == 0 && statusGoodCount > 0)
+	{
+		workspaceStatus = "Current";
+		workspaceBadge = "zcs-badge-green";
+		workspaceIcon = "ui-1-check-circle-08";
+	}
+	else if(totalAttention > 0)
+	{
+		workspaceStatus = "Action needed";
+		workspaceBadge = "zcs-badge-yellow";
+		workspaceIcon = "ui-2-time";
+	}
+	else
+	{
+		workspaceStatus = "No records found";
+		workspaceBadge = "zcs-badge-grey";
+		workspaceIcon = "travel-info";
+	}
+%>
+<style>
+/* ZCS global utility styles included once for this page from zcs-global; scoped subset covers utility classes used below. */
+:root{--zcs-theme-brand-color:var(--zcs_brand_color);--zcs-light-bg-color:var(--zcs_brand_light_color);--zcs-page-bg-color:#F3F3F4;--zcs-primary-text-color:var(--zcs_primary_text_color);--zcs-secondary-text-color:var(--zcs_secondary_text_color);--zcs-teritiary-text-color:var(--zcs_tertiary_text_color);--zcs-border-color:var(--zcs_tertiary_border_color);--zcs-white-color:#FFFFFF;--zcs-black-color:#000000;font-size:16px;line-height:1.5;--column-gap:0px}.zcs-row{display:flex;flex-wrap:wrap}.zcs-flex{display:flex}.zcs-inline-flex{display:inline-flex}.zcs-direction-column{flex-direction:column}.zcs-align-items-center{align-items:center}.zcs-align-items-start{align-items:flex-start}.zcs-justify-center{justify-content:center}.zcs-justify-space-between{justify-content:space-between}.zcs-gap-4{gap:.25rem}.zcs-gap-6{gap:.375rem}.zcs-gap-8{gap:.5rem}.zcs-gap-10{gap:.625rem}.zcs-gap-12{gap:.75rem}.zcs-gap-14{gap:.875rem}.zcs-gap-16{gap:1rem}.zcs-gap-20{gap:1.25rem}.zcs-gap-24{gap:1.5rem}.zcs-gap-28{gap:1.75rem}.zcs-p-0{padding:0}.zcs-p-8{padding:.5rem}.zcs-p-10{padding:.625rem}.zcs-p-12{padding:.75rem}.zcs-p-16{padding:1rem}.zcs-p-20{padding:1.25rem}.zcs-p-24{padding:1.5rem}.zcs-px-10{padding-left:.625rem;padding-right:.625rem}.zcs-px-12{padding-left:.75rem;padding-right:.75rem}.zcs-px-16{padding-left:1rem;padding-right:1rem}.zcs-px-20{padding-left:1.25rem;padding-right:1.25rem}.zcs-px-24{padding-left:1.5rem;padding-right:1.5rem}.zcs-px-30{padding-left:1.875rem;padding-right:1.875rem}.zcs-py-2{padding-top:.125rem;padding-bottom:.125rem}.zcs-py-4{padding-top:.25rem;padding-bottom:.25rem}.zcs-py-8{padding-top:.5rem;padding-bottom:.5rem}.zcs-py-10{padding-top:.625rem;padding-bottom:.625rem}.zcs-py-12{padding-top:.75rem;padding-bottom:.75rem}.zcs-py-16{padding-top:1rem;padding-bottom:1rem}.zcs-py-24{padding-top:1.5rem;padding-bottom:1.5rem}.zcs-m-0{margin:0}.zcs-mt-8{margin-top:.5rem}.zcs-mt-10{margin-top:.625rem}.zcs-mt-12{margin-top:.75rem}.zcs-mt-16{margin-top:1rem}.zcs-mt-20{margin-top:1.25rem}.zcs-mb-0{margin-bottom:0}.zcs-mb-8{margin-bottom:.5rem}.zcs-mb-12{margin-bottom:.75rem}.zcs-mb-16{margin-bottom:1rem}.zcs-w-full{width:100%}.zcs-h-full{height:100%}.zcs-wh-full{width:100%;height:100%}.zcs-col-common{flex:1 1 0}.zcs-no-shrink{flex-shrink:0}.zcs-box-border{box-sizing:border-box}.zcs-rounded-sm{border-radius:.25rem}.zcs-rounded-md{border-radius:.375rem}.zcs-rounded-lg{border-radius:.5rem}.zcs-rounded-xl{border-radius:.75rem}.zcs-rounded-2xl{border-radius:1rem}.zcs-rounded-half{border-radius:50%}.zcs-font-11{font-size:.6875rem}.zcs-font-12{font-size:.75rem}.zcs-font-13{font-size:.8125rem}.zcs-font-14{font-size:.875rem}.zcs-font-15{font-size:.9375rem}.zcs-font-16{font-size:1rem}.zcs-font-18{font-size:1.125rem}.zcs-font-20{font-size:1.25rem}.zcs-font-22{font-size:1.375rem}.zcs-font-24{font-size:1.5rem}.zcs-font-28{font-size:1.75rem}.zcs-font-30{font-size:1.875rem}.zcs-font-normal{font-weight:400}.zcs-font-medium{font-weight:500}.zcs-font-semibold{font-weight:600}.zcs-font-bold{font-weight:700}.zcs-lh-body{line-height:1.5}.zcs-lh-heading{line-height:1.25}.zcs-uppercase{text-transform:uppercase}.zcs-ellipsis{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.zcs-text-left{text-align:left}.zcs-text-right{text-align:right}.zcs-text-center{text-align:center}.zcs-color-theme{color:var(--zcs-theme-brand-color)}.zcs-color-primary{color:var(--zcs-primary-text-color)}.zcs-color-secondary{color:var(--zcs-secondary-text-color)}.zcs-color-tertiary{color:var(--zcs-teritiary-text-color)}.zcs-color-white{color:#fff}.zcs-overflow-auto{overflow:auto}.zcs-card{background:var(--zcs-white-color);border:1px solid #e7e7ee;border-radius:12px}a{text-decoration:none}
+/* ZCS component CSS used: header-heading-with-actions, button-primary-button, badge-badge-with-icon, quick-actions-card-type-quick-actions, card-fleets-performance-metrics, table-simple-table, banner-outline-banner-with-icon, no-data-no-data-with-button. */
+.zcs-button{width:auto;min-width:5rem;min-height:36px}.zcs-primary-button{background-color:var(--zcs_brand_color);color:var(--zcs_brand_foreground_color)}.zcs-primary-outline-button{border:1px solid var(--zcs_brand_color);background-color:#fff;color:var(--zcs_brand_color)}.zcs-primary-button.zcs-button:hover{background-color:var(--zcs_brand_dark_color)}.zcs-primary-outline-button:hover{background-color:var(--zcs_component_hover_color);border-color:var(--zcs_brand_color);color:var(--zcs_brand_color)}.zcs-button-icon{width:16px;max-height:16px}.zcs-badge{width:auto}.zcs-badge-filled-outline{border:1px solid}.zcs-badge-filled-outline.zcs-badge-theme{background-color:var(--zcs_component_hover_color);border-color:var(--zcs_brand_color);color:var(--zcs_brand_color)}.zcs-badge-filled-outline.zcs-badge-green{background:#E4FCF3;border-color:#179E6C;color:#179E6C}.zcs-badge-filled-outline.zcs-badge-red{background:#FDE3E6;border-color:#FE455D;color:#FE455D}.zcs-badge-filled-outline.zcs-badge-grey{background:#e8e8e8;border-color:#242424;color:#242424}.zcs-badge-filled-outline.zcs-badge-yellow{background:#FCF4E6;border-color:#FAAE13;color:#b8770d}.zcs-badge-filled-outline.zcs-badge-blue{background:#E8EFFF;border-color:#2A6FFC;color:#2A6FFC}.zcs-badge-filled-outline.zcs-badge-orange{background:#F8F0EB;border-color:#F4660C;color:#F4660C}.zcs-quick-action-item{list-style-type:none}.zcs-quick-action-item.zcs-card:hover{border-color:var(--zcs_brand_color)}.zcs-quick-action-item:hover .zcs-quick-action-link{color:var(--zcs_brand_color)}.zcs-progress-bar{height:8px;background-color:var(--zcs_component_hover_color);overflow:hidden}.zcs-progress-bar-indicator{height:inherit;border-radius:inherit;background-color:var(--zcs_brand_color)}.zcs-table-wrapper{border:1px solid var(--zcs_tertiary_border_color);background-color:#fff;overflow:auto}.zcs-table-wrapper table{line-height:normal;border-collapse:collapse}.zcs-table-wrapper table thead{top:0}.zcs-table-wrapper table thead tr th{background-color:#F9FAFE;box-shadow:0 -1px 0 0 var(--zcs_tertiary_border_color) inset;white-space:nowrap}.zcs-table-wrapper table tbody tr td{border-top:1px solid var(--zcs_tertiary_border_color)}.zcs-table-wrapper table tbody tr:first-child td{border-color:transparent}.zcs-table-wrapper table tbody tr:hover td{background-color:#F9FAFE}.zcs-green{color:#179e6c}.zcs-red{color:#fe455d}.zcs-yellow{color:#b8770d}.zcs-blue{color:#09598e}.zcs-l_blue{color:#1094c5}.zcs-outline-toast{border:1px solid}.zcs-theme-toast{background-color:var(--zcs_component_hover_color)}.zcs-outline-toast.zcs-theme-toast{border:1px solid var(--zcs_brand_color)}.zcs-warning-toast{background:#fef4e5;color:#663c01}.zcs-info-toast{background:#e4f6fd;color:#024361}.zcs-nodata-wrapper{min-height:220px}.zcs-page-header .zcs-button{white-space:nowrap}
+/* Licensee Action Center layout. */
+.lac-page{background:linear-gradient(180deg,#f7fbff 0%,var(--zcs-page-bg-color) 100%);color:var(--zcs-primary-text-color);font-family:Inter,Arial,sans-serif;min-height:100%;padding:28px;box-sizing:border-box}.lac-shell{max-width:1480px;margin:0 auto}.lac-page-header{background:rgba(255,255,255,.94);border:1px solid #e7e7ee;border-radius:20px;box-shadow:0 12px 34px rgba(20,44,84,.08);padding:22px 24px}.lac-head-icon{width:48px;height:48px;border-radius:16px;background:var(--zcs_component_hover_color);color:var(--zcs_brand_color);display:flex;align-items:center;justify-content:center;font-size:24px}.lac-subtitle{margin-top:4px;color:var(--zcs-teritiary-text-color)}.lac-hero{position:relative;overflow:hidden;margin-top:18px;border-radius:28px;background:radial-gradient(circle at 85% 8%,rgba(255,255,255,.24),transparent 30%),radial-gradient(circle at 10% 8%,rgba(20,184,166,.30),transparent 31%),linear-gradient(135deg,#0b2f5f 0%,var(--zcs_brand_color) 58%,#14b8a6 130%);color:#fff;padding:30px;box-shadow:0 24px 64px rgba(15,108,201,.23)}.lac-hero h1{font-size:34px;line-height:1.12;margin:0}.lac-hero p{max-width:880px;color:rgba(255,255,255,.86);margin:10px 0 0}.lac-hero-pills{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}.lac-hero-pill{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.14);color:#fff;border-radius:999px;padding:7px 12px;font-size:13px}.lac-grid{display:grid;gap:16px}.lac-section{margin-top:18px}.lac-kpis{grid-template-columns:repeat(4,minmax(0,1fr))}.lac-kpi{position:relative;overflow:hidden;min-height:150px}.lac-kpi:after{content:"";position:absolute;right:-32px;top:-32px;width:100px;height:100px;border-radius:50%;background:var(--lac-soft)}.lac-icon{width:46px;height:46px;border-radius:14px;background:var(--lac-soft);color:var(--lac-color);display:flex;align-items:center;justify-content:center;font-size:22px}.lac-kpi-value{font-size:32px;font-weight:800;line-height:1.1;color:var(--zcs-primary-text-color);margin-top:14px}.lac-kpi-label{font-size:13px;color:var(--zcs-teritiary-text-color);margin-top:4px}.lac-kpi-note{font-size:12px;color:var(--zcs-secondary-text-color);margin-top:8px}.lac-two{grid-template-columns:minmax(0,1.1fr) minmax(360px,.9fr)}.lac-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px}.lac-card-head h2{font-size:18px;line-height:1.25;margin:0;color:var(--zcs-primary-text-color)}.lac-card-head p{font-size:13px;color:var(--zcs-teritiary-text-color);margin:4px 0 0}.lac-todo-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.lac-todo{border-left:4px solid var(--lac-color);background:linear-gradient(90deg,var(--lac-soft),#fff);border-radius:14px;padding:16px}.lac-todo strong{display:block;font-size:26px;line-height:1;color:var(--zcs-primary-text-color)}.lac-todo span{display:block;margin-top:5px;font-size:13px;color:var(--zcs-secondary-text-color)}.lac-action-panel{height:100%}.lac-status-list{list-style:none}.lac-table-card{overflow:hidden}.lac-table-scroll{max-height:360px}.lac-row-action{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:8px;border:1px solid var(--zcs_brand_color);color:var(--zcs_brand_color);background:#fff}.lac-row-action:hover{background:var(--zcs_component_hover_color)}.lac-split{grid-template-columns:repeat(2,minmax(0,1fr))}.lac-mini-note{border-left:4px solid var(--zcs_brand_color);background:linear-gradient(90deg,var(--zcs_component_hover_color),#fff);border-radius:14px;padding:16px}.lac-empty-icon{width:70px;height:70px;border-radius:22px;background:var(--zcs_component_hover_color);color:var(--zcs_brand_color);display:flex;align-items:center;justify-content:center;font-size:34px;margin:0 auto}.lac-muted{color:var(--zcs-teritiary-text-color)}@media(max-width:1180px){.lac-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.lac-two,.lac-split{grid-template-columns:1fr}}@media(max-width:720px){.lac-page{padding:14px}.lac-page-header{padding:18px}.lac-hero{padding:22px;border-radius:20px}.lac-hero h1{font-size:28px}.lac-kpis,.lac-todo-grid{grid-template-columns:1fr}.lac-card-head,.lac-page-header{flex-direction:column;align-items:flex-start}.lac-table-scroll{overflow:auto}}
+</style>
+<div class="lac-page">
+	<div class="lac-shell">
+		<div class="zcs-page-header lac-page-header zcs-w-full zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-16 zcs-box-border">
+			<div class="zcs-flex zcs-align-items-center zcs-gap-12 zcs-ellipsis">
+				<div class="lac-head-icon zcs-no-shrink"><i class="zc-li-outline business-badge"></i></div>
+				<div class="zcs-flex zcs-direction-column zcs-gap-4 zcs-ellipsis">
+					<h5 class="zcs-font-20 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-ellipsis zcs-m-0">Licensee Action Center</h5>
+					<p class="lac-subtitle zcs-font-14 zcs-font-normal zcs-lh-body zcs-m-0">Renewal, payment, correspondence, and license-status actions for <%=licenseeEmail%></p>
+				</div>
+			</div>
+			<div class="zcs-flex zcs-align-items-center zcs-gap-12">
+				<a class="zcs-button zcs-primary-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body" href="#Page:Renewal_Portal"><i class="zcs-button-icon zc-li-outline arrows-1-tail-right"></i><span class="zcs-button-text">Open Renewal Portal</span></a>
+				<a class="zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body" href="#Report:Licensee_Portal_Licenses?Licensee_Email=<%=emailParam%>"><i class="zcs-button-icon zc-li-outline ui-1-eye-17"></i><span class="zcs-button-text">My licenses</span></a>
+			</div>
+		</div>
+
+		<section class="lac-hero">
+			<span class="lac-hero-pill"><i class="zc-li-outline ui-1-dashboard-29"></i> Workspace summary</span>
+			<h1>Your licensing tasks at a glance</h1>
+			<p>Counts and tables on this page are filtered to your login user ID and licensee email fields across licenses, renewal batches, renewal items, payments, renewal notices, and correspondence.</p>
+			<div class="lac-hero-pills">
+				<span class="lac-hero-pill"><i class="zc-li-outline ui-1-email-83"></i> <%=licenseeEmail%></span>
+				<span class="lac-hero-pill"><i class="zc-li-outline business-contact-86"></i> Entities: <%=entityCount%></span>
+				<span class="lac-hero-pill"><i class="zc-li-outline business-badge"></i> Licenses: <%=allLicenseCount%></span>
+				<span class="lac-hero-pill"><i class="zc-li-outline ui-2-time"></i> Attention items: <%=totalAttention%></span>
+			</div>
+		</section>
+
+		<section class="lac-section lac-grid lac-kpis">
+			<div class="zcs-card zcs-flex zcs-direction-column zcs-p-24 zcs-box-border lac-kpi" style="--lac-color:#179E6C;--lac-soft:#E4FCF3;">
+				<div class="lac-icon"><i class="zc-li-outline ui-1-check-circle-08"></i></div>
+				<div class="lac-kpi-value"><%=activeCount%></div>
+				<div class="lac-kpi-label">Active licenses</div>
+				<div class="lac-kpi-note">Active or renewed records currently tied to your email.</div>
+			</div>
+			<div class="zcs-card zcs-flex zcs-direction-column zcs-p-24 zcs-box-border lac-kpi" style="--lac-color:#b8770d;--lac-soft:#FCF4E6;">
+				<div class="lac-icon"><i class="zc-li-outline ui-2-time"></i></div>
+				<div class="lac-kpi-value"><%=renewableCount%></div>
+				<div class="lac-kpi-label">Renewable or penalty licenses</div>
+				<div class="lac-kpi-note">Includes Renewal Due, penalty status, penalty stage, or expiring in 60 days.</div>
+			</div>
+			<div class="zcs-card zcs-flex zcs-direction-column zcs-p-24 zcs-box-border lac-kpi" style="--lac-color:#09598e;--lac-soft:#e4f6fd;">
+				<div class="lac-icon"><i class="zc-li-outline files-folder-15"></i></div>
+				<div class="lac-kpi-value"><%=pendingBatchCount + pendingItemCount%></div>
+				<div class="lac-kpi-label">Pending renewals</div>
+				<div class="lac-kpi-note">Batches: <%=pendingBatchCount%> | Items: <%=pendingItemCount%></div>
+			</div>
+			<div class="zcs-card zcs-flex zcs-direction-column zcs-p-24 zcs-box-border lac-kpi" style="--lac-color:#F4660C;--lac-soft:#F8F0EB;">
+				<div class="lac-icon"><i class="zc-li-outline business-payment"></i></div>
+				<div class="lac-kpi-value"><%=pendingPaymentCount%></div>
+				<div class="lac-kpi-label">Pending payments</div>
+				<div class="lac-kpi-note">Amount flagged due: $<%=pendingAmount%></div>
+			</div>
+		</section>
+
+		<section class="lac-section lac-grid lac-two">
+			<div class="zcs-card zcs-p-24 zcs-box-border">
+				<div class="lac-card-head">
+					<div><h2>What needs your attention</h2><p>Use these to-do cards to prioritize your next renewal or payment action.</p></div>
+					<span class="zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border <%=workspaceBadge%>"><i class="zcs-badge-icon zcs-no-shrink zc-li-outline <%=workspaceIcon%>"></i><span class="zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body"><%=workspaceStatus%></span></span>
+				</div>
+				<div class="lac-grid lac-todo-grid">
+					<div class="lac-todo" style="--lac-color:#b8770d;--lac-soft:#FCF4E6;"><strong><%=renewableCount%></strong><span>Licenses ready for renewal or already in penalty status</span></div>
+					<div class="lac-todo" style="--lac-color:#09598e;--lac-soft:#e4f6fd;"><strong><%=pendingBatchCount%></strong><span>Renewal batches not completed or cancelled</span></div>
+					<div class="lac-todo" style="--lac-color:#F4660C;--lac-soft:#F8F0EB;"><strong><%=pendingPaymentCount%></strong><span>Payment entries or batches still pending</span></div>
+					<div class="lac-todo" style="--lac-color:#FE455D;--lac-soft:#FDE3E6;"><strong><%=failedCorrespondence + failedNotices%></strong><span>Failed correspondence or renewal notices needing follow-up</span></div>
+				</div>
+				<ul class="zcs-flex zcs-direction-column zcs-gap-16 zcs-p-0 zcs-m-0 zcs-mt-20 lac-status-list">
+					<li class="zcs-progress-bar-wrapper zcs-flex zcs-direction-column zcs-gap-10"><p class="zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-8 zcs-font-14 zcs-font-normal zcs-lh-body zcs-m-0"><span class="zcs-color-tertiary">Active license coverage</span><span class="zcs-color-tertiary"><%=activeCount%> of <%=allLicenseCount%></span></p><div class="zcs-progress-bar zcs-rounded-sm"><div class="zcs-progress-bar-indicator" style="width:<%=if(allLicenseCount == 0,0,(activeCount * 100) / allLicenseCount)%>%;background:#179E6C;"></div></div></li>
+					<li class="zcs-progress-bar-wrapper zcs-flex zcs-direction-column zcs-gap-10"><p class="zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-8 zcs-font-14 zcs-font-normal zcs-lh-body zcs-m-0"><span class="zcs-color-tertiary">Renewal action load</span><span class="zcs-color-tertiary"><%=renewableCount%></span></p><div class="zcs-progress-bar zcs-rounded-sm"><div class="zcs-progress-bar-indicator" style="width:<%=if(allLicenseCount == 0,0,(renewableCount * 100) / allLicenseCount)%>%;background:#FAAE13;"></div></div></li>
+				</ul>
+			</div>
+
+			<div class="zcs-quick-actions-wrapper zcs-card zcs-flex zcs-direction-column zcs-gap-16 zcs-p-16 zcs-box-border lac-action-panel">
+				<h5 class="zcs-font-18 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0">Quick actions and reports</h5>
+				<ul class="zcs-flex zcs-direction-column zcs-gap-16 zcs-p-0 zcs-m-0">
+					<li class="zcs-quick-action-item zcs-card zcs-px-12 zcs-py-8 zcs-box-border"><a class="zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary" href="#Page:Renewal_Portal"><i class="zcs-quick-action-icon zcs-font-medium zc-li-outline arrows-1-tail-right"></i><span class="zcs-quick-action-text">Open Renewal Portal</span></a></li>
+					<li class="zcs-quick-action-item zcs-card zcs-px-12 zcs-py-8 zcs-box-border"><a class="zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary" href="#Report:Renewable_Licenses?Licensee_Email=<%=emailParam%>"><i class="zcs-quick-action-icon zcs-font-medium zc-li-outline ui-2-time"></i><span class="zcs-quick-action-text">Review Renewable Licenses report</span></a></li>
+					<li class="zcs-quick-action-item zcs-card zcs-px-12 zcs-py-8 zcs-box-border"><a class="zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary" href="#Report:Licensee_Renewal_Batches?Licensee_Email=<%=emailParam%>"><i class="zcs-quick-action-icon zcs-font-medium zc-li-outline files-folder-15"></i><span class="zcs-quick-action-text">Open Licensee Renewal Batches report</span></a></li>
+					<li class="zcs-quick-action-item zcs-card zcs-px-12 zcs-py-8 zcs-box-border"><a class="zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary" href="#Report:Renewal_Payment_Queue?Licensee_Email=<%=emailParam%>"><i class="zcs-quick-action-icon zcs-font-medium zc-li-outline business-payment"></i><span class="zcs-quick-action-text">Open Renewal Payment Queue report</span></a></li>
+					<li class="zcs-quick-action-item zcs-card zcs-px-12 zcs-py-8 zcs-box-border"><a class="zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary" href="#Report:Correspondence_Log?Recipient_Email=<%=emailParam%>"><i class="zcs-quick-action-icon zcs-font-medium zc-li-outline files-single-copy-04"></i><span class="zcs-quick-action-text">Open Correspondence Log report</span></a></li>
+				</ul>
+			</div>
+		</section>
+
+		<% if(allLicenseCount == 0 && pendingBatchCount == 0 && pendingPaymentCount == 0 && correspondenceCount == 0 && noticeCount == 0) { %>
+		<section class="lac-section">
+			<div class="zcs-nodata-wrapper zcs-card zcs-wh-full zcs-flex zcs-align-items-center zcs-justify-center zcs-text-center">
+				<div class="zcs-nodata-content zcs-p-24 zcs-box-border">
+					<div class="lac-empty-icon"><i class="zc-li-outline travel-info"></i></div>
+					<h5 class="zcs-nodata-header zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-mt-16 zcs-mb-0">No licensee records found</h5>
+					<p class="zcs-nodata-desc zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-mt-12 zcs-mb-0">No records matched <%=licenseeEmail%>. If this is unexpected, confirm that your licensee portal email is stored on the entity, license, renewal batch, or notice record.</p>
+					<div class="zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-16 zcs-mt-20"><a class="zcs-button zcs-primary-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body" href="#Page:Renewal_Portal"><i class="zcs-button-icon zc-li-outline arrows-1-tail-right"></i><span class="zcs-button-text">Go to Renewal Portal</span></a></div>
+				</div>
+			</div>
+		</section>
+		<% } %>
+
+		<section class="lac-section lac-grid lac-split">
+			<div class="zcs-card zcs-box-border lac-table-card">
+				<div class="lac-card-head zcs-p-20 zcs-mb-0"><div><h2>Active licenses</h2><p>License records currently active or renewed for your email.</p></div><span class="zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-green"><i class="zcs-badge-icon zcs-no-shrink zc-li-outline ui-1-check-circle-08"></i><span class="zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body"><%=activeCount%></span></span></div>
+				<div class="zcs-table-wrapper zcs-rounded-sm zcs-box-border lac-table-scroll"><table class="zcs-w-full"><thead><tr><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">License</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Entity</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Status</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Expires</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Open</th></tr></thead><tbody>
+					<% rowCount = 0; for each lic in Licenses[(Licensee_Email == licenseeEmail || Entity.Licensee_Portal_Email == licenseeEmail || Entity.Contact_Email == licenseeEmail) && (License_Status == "Active" || License_Status == "Renewed")] sort by Expiration_Date asc { if(rowCount < 6) { rowCount = rowCount + 1; %>
+					<tr><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"><%=ifnull(lic.License_Number,"")%></td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"><%=ifnull(lic.Entity,"")%></td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-green"><%=ifnull(lic.License_Status,"")%></td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"><%=ifnull(lic.Expiration_Date,"")%></td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right"><a class="lac-row-action" href="#Report:Licensee_Portal_Licenses?ID=<%=lic.ID%>"><i class="zc-li-outline ui-1-eye-17"></i></a></td></tr>
+					<% } } if(rowCount == 0) { %><tr><td class="zcs-px-16 zcs-py-12 zcs-box-border zcs-text-center zcs-font-14 zcs-color-tertiary" colspan="5">No active licenses matched this login email.</td></tr><% } %>
+				</tbody></table></div>
+			</div>
+
+			<div class="zcs-card zcs-box-border lac-table-card">
+				<div class="lac-card-head zcs-p-20 zcs-mb-0"><div><h2>Renewable and penalty licenses</h2><p>Expiring, renewal due, or penalty-stage licenses that may need action.</p></div><span class="zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-yellow"><i class="zcs-badge-icon zcs-no-shrink zc-li-outline ui-2-time"></i><span class="zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body"><%=renewableCount%></span></span></div>
+				<div class="zcs-table-wrapper zcs-rounded-sm zcs-box-border lac-table-scroll"><table class="zcs-w-full"><thead><tr><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">License</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Status</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Penalty</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Expires</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Action</th></tr></thead><tbody>
+					<% rowCount = 0; for each lic in Licenses[(Licensee_Email == licenseeEmail || Entity.Licensee_Portal_Email == licenseeEmail || Entity.Contact_Email == licenseeEmail) && (License_Status == "Renewal Due" || License_Status == "50% Penalty" || License_Status == "100% Penalty" || Penalty_Stage == "50%" || Penalty_Stage == "100%" || (Expiration_Date >= zoho.currentdate && Expiration_Date <= zoho.currentdate.addDay(60)))] sort by Expiration_Date asc { if(rowCount < 6) { rowCount = rowCount + 1; %>
+					<tr><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"><%=ifnull(lic.License_Number,"")%></td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-yellow"><%=ifnull(lic.License_Status,"")%></td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"><%=ifnull(lic.Penalty_Stage,"None")%></td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"><%=ifnull(lic.Expiration_Date,"")%></td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right"><a class="lac-row-action" href="#Page:Renewal_Portal"><i class="zc-li-outline arrows-1-tail-right"></i></a></td></tr>
+					<% } } if(rowCount == 0) { %><tr><td class="zcs-px-16 zcs-py-12 zcs-box-border zcs-text-center zcs-font-14 zcs-color-tertiary" colspan="5">No renewable or penalty licenses are currently flagged.</td></tr><% } %>
+				</tbody></table></div>
+			</div>
+		</section>
+
+		<section class="lac-section lac-grid lac-split">
+			<div class="zcs-card zcs-box-border lac-table-card">
+				<div class="lac-card-head zcs-p-20 zcs-mb-0"><div><h2>Pending renewal batches and items</h2><p>Submitted, payment pending, selected, or payment-pending renewal records.</p></div><span class="zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-blue"><i class="zcs-badge-icon zcs-no-shrink zc-li-outline files-folder-15"></i><span class="zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body"><%=pendingBatchCount + pendingItemCount%></span></span></div>
+				<div class="zcs-table-wrapper zcs-rounded-sm zcs-box-border lac-table-scroll"><table class="zcs-w-full"><thead><tr><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Type</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Reference</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Status</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Amount</th></tr></thead><tbody>
+					<% rowCount = 0; for each batch in Renewal_Batches[(Licensee_Email == licenseeEmail || Entity.Licensee_Portal_Email == licenseeEmail || Entity.Contact_Email == licenseeEmail) && (Batch_Status == "Draft" || Batch_Status == "Submitted" || Batch_Status == "Payment Pending" || Payment_Status == "Pending")] sort by Submitted_Date desc { if(rowCount < 4) { rowCount = rowCount + 1; %>
+					<tr><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary">Batch</td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary"><%=ifnull(batch.Renewal_Batch_Number,"")%></td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-l_blue"><%=ifnull(batch.Batch_Status,"")%> / <%=ifnull(batch.Payment_Status,"")%></td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-color-primary">$<%=ifnull(batch.Total_Amount_Due,0)%></td></tr>
+					<% } } for each item in Renewal_Items[(Renewal_Batch.Licensee_Email == licenseeEmail || License.Licensee_Email == licenseeEmail) && (Item_Status == "Selected" || Item_Status == "Payment Pending")] { if(rowCount < 8) { rowCount = rowCount + 1; %>
+					<tr><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary">Item</td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary"><%=ifnull(item.License.License_Number,"")%></td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-yellow"><%=ifnull(item.Item_Status,"")%></td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-color-primary">$<%=ifnull(item.Total_Item_Amount,0)%></td></tr>
+					<% } } if(rowCount == 0) { %><tr><td class="zcs-px-16 zcs-py-12 zcs-box-border zcs-text-center zcs-font-14 zcs-color-tertiary" colspan="4">No pending renewal batches or items found.</td></tr><% } %>
+				</tbody></table></div>
+			</div>
+
+			<div class="zcs-card zcs-box-border lac-table-card">
+				<div class="lac-card-head zcs-p-20 zcs-mb-0"><div><h2>Pending payments</h2><p>Renewal batches and payment records waiting for completion.</p></div><span class="zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-orange"><i class="zcs-badge-icon zcs-no-shrink zc-li-outline business-payment"></i><span class="zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body">$<%=pendingAmount%></span></span></div>
+				<div class="zcs-table-wrapper zcs-rounded-sm zcs-box-border lac-table-scroll"><table class="zcs-w-full"><thead><tr><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Source</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Reference</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Status</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Due</th></tr></thead><tbody>
+					<% rowCount = 0; for each batch in Renewal_Batches[(Licensee_Email == licenseeEmail || Entity.Licensee_Portal_Email == licenseeEmail || Entity.Contact_Email == licenseeEmail) && Payment_Status == "Pending"] sort by Submitted_Date desc { if(rowCount < 4) { rowCount = rowCount + 1; %>
+					<tr><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary">Renewal batch</td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary"><%=ifnull(batch.Renewal_Batch_Number,"")%></td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-yellow"><%=ifnull(batch.Payment_Status,"")%></td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-color-primary">$<%=ifnull(batch.Total_Amount_Due,0)%></td></tr>
+					<% } } for each pay in Payments[(Renewal_Batch.Licensee_Email == licenseeEmail || Entity.Licensee_Portal_Email == licenseeEmail || Entity.Contact_Email == licenseeEmail) && (Payment_Status == "Pending" || Payment_Status == "Failed")] sort by Payment_Date desc { if(rowCount < 8) { rowCount = rowCount + 1; %>
+					<tr><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary">Payment</td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary"><%=ifnull(pay.Payment_Reference,"")%></td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-red"><%=ifnull(pay.Payment_Status,"")%></td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-color-primary">$<%=ifnull(pay.Amount_Due,0)%></td></tr>
+					<% } } if(rowCount == 0) { %><tr><td class="zcs-px-16 zcs-py-12 zcs-box-border zcs-text-center zcs-font-14 zcs-color-tertiary" colspan="4">No pending payments found.</td></tr><% } %>
+				</tbody></table></div>
+			</div>
+		</section>
+
+		<section class="lac-section lac-grid lac-split">
+			<div class="zcs-card zcs-box-border lac-table-card">
+				<div class="lac-card-head zcs-p-20 zcs-mb-0"><div><h2>Submitted correspondence</h2><p>Generated, signed, or sent correspondence for your email.</p></div><span class="zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-blue"><i class="zcs-badge-icon zcs-no-shrink zc-li-outline files-single-copy-04"></i><span class="zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body"><%=correspondenceCount%></span></span></div>
+				<div class="zcs-table-wrapper zcs-rounded-sm zcs-box-border lac-table-scroll"><table class="zcs-w-full"><thead><tr><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Number</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Subject</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Merge</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Sign</th></tr></thead><tbody>
+					<% rowCount = 0; for each cor in Correspondence[Recipient_Email == licenseeEmail && (Merge_Status == "Ready for Manual Merge" || Merge_Status == "Generated Manually" || Merge_Status == "Sent Manually" || Sign_Status == "Pending Manual Sign" || Sign_Status == "Signed")] sort by Generated_Date desc { if(rowCount < 6) { rowCount = rowCount + 1; %>
+					<tr><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary"><%=ifnull(cor.Correspondence_Number,"")%></td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary"><%=ifnull(cor.Subject,"")%></td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-l_blue"><%=ifnull(cor.Merge_Status,"")%></td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary"><%=ifnull(cor.Sign_Status,"")%></td></tr>
+					<% } } if(rowCount == 0) { %><tr><td class="zcs-px-16 zcs-py-12 zcs-box-border zcs-text-center zcs-font-14 zcs-color-tertiary" colspan="4">No submitted correspondence found.</td></tr><% } %>
+				</tbody></table></div>
+			</div>
+
+			<div class="zcs-card zcs-box-border lac-table-card">
+				<div class="lac-card-head zcs-p-20 zcs-mb-0"><div><h2>Submitted renewal notices</h2><p>Renewal notices and penalty notices generated for your email.</p></div><span class="zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-green"><i class="zcs-badge-icon zcs-no-shrink zc-li-outline ui-1-email-83"></i><span class="zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body"><%=noticeCount%></span></span></div>
+				<div class="zcs-table-wrapper zcs-rounded-sm zcs-box-border lac-table-scroll"><table class="zcs-w-full"><thead><tr><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Notice</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Type</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Due date</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Delivery</th></tr></thead><tbody>
+					<% rowCount = 0; for each notice in Renewal_Notices[Recipient_Email == licenseeEmail && Delivery_Status != "Draft"] sort by Notice_Date desc { if(rowCount < 6) { rowCount = rowCount + 1; %>
+					<tr><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary"><%=ifnull(notice.Notice_Number,"")%></td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary"><%=ifnull(notice.Notice_Type,"")%></td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary"><%=ifnull(notice.Due_Date,"")%></td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-l_blue"><%=ifnull(notice.Delivery_Status,"")%></td></tr>
+					<% } } if(rowCount == 0) { %><tr><td class="zcs-px-16 zcs-py-12 zcs-box-border zcs-text-center zcs-font-14 zcs-color-tertiary" colspan="4">No submitted renewal notices found.</td></tr><% } %>
+				</tbody></table></div>
+			</div>
+		</section>
+
+		<section class="lac-section">
+			<div class="zcs-toast zcs-outline-toast zcs-theme-toast zcs-w-full zcs-flex zcs-gap-12 zcs-px-16 zcs-py-12 zcs-rounded-sm zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary">
+				<i class="zcs-toast-icon zcs-no-shrink zcs-lh-body zc-li-outline travel-info"></i>
+				<div class="zcs-toast-text"><p class="zcs-m-0">For payment or renewal questions, open the Renewal Portal first, then use the linked Creator reports above to view the underlying filtered records.</p></div>
+			</div>
+		</section>
+	</div>
+</div>

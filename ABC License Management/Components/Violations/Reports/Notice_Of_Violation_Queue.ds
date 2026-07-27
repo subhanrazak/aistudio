@@ -1,0 +1,84 @@
+list Notice_Of_Violation_Queue
+{
+	displayName = "Notice Of Violation Queue"
+	show all rows from Violations [Notice_of_Violation_Issued == true]
+	(
+		Violation_Number as "Violation Number"
+		Case
+		Field_Visit as "Field Visit"
+		License
+		Violation_Date as "Violation Date"
+		Violation_Type as "Violation Type"
+		Code_Section as "Code Section"
+		Citation_Issued as "Citation Issued"
+		Arrest_Made as "Arrest Made"
+		Notice_of_Violation_Issued as "Notice of Violation Issued"
+		NOV_Correspondence as "NOV Correspondence"
+		Recommended_Action as "Recommended Action"
+		custom action "Issue NOV"
+		(
+			workflow = Violation_Issue_NOV
+			show action for each record = true
+			show action in edit record menu = true
+			column header = "Issue NOV"
+			success message = "Notice of violation issued."
+			condition = (Notice_of_Violation_Issued != true && Recommended_Action != "No Further Action")
+			confirmation before execution
+			(
+				message for individual record = "Issue a notice of violation for this record?"
+				confirm button text = "Issue NOV"
+				cancel button text = "Cancel"
+			)
+		)
+		custom action "Mark Citation Issued"
+		(
+			workflow = Violation_Mark_Citation_Issued
+			show action for each record = true
+			show action in edit record menu = true
+			column header = "Mark Citation Issued"
+			success message = "Citation marked as issued."
+			condition = (Citation_Issued != true && Recommended_Action != "No Further Action")
+			confirmation before execution
+			(
+				message for individual record = "Mark citation issued for this violation?"
+				confirm button text = "Mark Issued"
+				cancel button text = "Cancel"
+			)
+		)
+		custom action "Recommend Action"
+		(
+			workflow = Violation_Recommend_Action
+			show action for each record = true
+			show action in edit record menu = true
+			column header = "Recommend Action"
+			success message = "Recommended action recorded."
+			condition = (Recommended_Action is null || Recommended_Action == "")
+		)
+		custom action "Clear Violation"
+		(
+			workflow = Violation_Clear_Violation
+			show action for each record = true
+			show action in edit record menu = true
+			column header = "Clear Violation"
+			success message = "Violation outcome cleared."
+			condition = (Recommended_Action != "No Further Action")
+			confirmation before execution
+			(
+				message for individual record = "Clear this violation with no further action?"
+				confirm button text = "Clear Violation"
+				cancel button text = "Cancel"
+			)
+		)
+	)
+	filters
+	(
+		Case
+		Violation_Date
+		Violation_Type
+		Recommended_Action
+	)
+	sort by
+	(
+		Violation_Date descending
+	)
+}

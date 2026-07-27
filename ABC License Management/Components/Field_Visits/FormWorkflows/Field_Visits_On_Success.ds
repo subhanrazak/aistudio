@@ -1,0 +1,35 @@
+Field_Visits_On_Success as "Update Case From Field Visit"
+{
+
+				type =  form
+				form = Field_Visits
+
+				record event = on add or edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											caseRows = Cases[ID == input.Case];
+										if(caseRows.count() > 0)
+										{
+											caseRows.Visit_Count=ifnull(caseRows.Visit_Count,0) + 1;
+											caseRows.Last_Visit_Date=input.Visit_Date_Time;
+											if(caseRows.Case_Status == "Assigned" || caseRows.Case_Status == "Preliminary Investigation")
+											{
+												caseRows.Case_Status="Field Investigation";
+											}
+											if(input.Violations_Observed == true)
+											{
+												caseRows.Violations_Observed=true;
+											}
+										}
+										thisapp.Write_Audit_Log("Enforcement","Field_Visits",input.ID,"Field visit saved","Visit logged and linked case updated.");
+						)
+					}
+				}
+
+			
+}

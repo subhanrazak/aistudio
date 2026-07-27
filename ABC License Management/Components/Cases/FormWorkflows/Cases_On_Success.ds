@@ -1,0 +1,49 @@
+Cases_On_Success as "Audit Case Lifecycle"
+{
+
+				type =  form
+				form = Cases
+
+				record event = on add or edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Priority == "High" && input.Initial_Visit_Due_Date == null)
+										{
+											input.Initial_Visit_Due_Date = zoho.currentdate.addDay(30);
+										}
+										if(input.Case_Status == "Report Preparation")
+										{
+											thisapp.Create_Correspondence_Stub("Enforcement",input.ID,"ABC-333",input.Supervising_Agent_Email,"Not Required");
+											thisapp.Write_Audit_Log("Enforcement","Cases",input.ID,"Report preparation","ABC-333 correspondence stub created.");
+										}
+										else if(input.Case_Status == "Referred to OLS")
+										{
+											input.Legal_Review_Status = "Pending OLS Review";
+											thisapp.Create_Correspondence_Stub("Enforcement",input.ID,"ABC-300",input.OLS_Assigned_Attorney_Email,"Not Required");
+											thisapp.Write_Audit_Log("Enforcement","Cases",input.ID,"Referred to OLS","ABC-300 correspondence stub created.");
+										}
+										else if(input.Case_Status == "Closed")
+										{
+											input.Supervisor_Lock = true;
+											input.Legal_Review_Status = "Closed";
+											if(input.Closure_Documents_Filed != true)
+											{
+												thisapp.Create_Correspondence_Stub("Enforcement",input.ID,"Other",input.Supervising_Agent_Email,"Not Required");
+											}
+											thisapp.Write_Audit_Log("Enforcement","Cases",input.ID,"Case closed","Outcome: " + input.Closure_Outcome);
+										}
+										else
+										{
+											thisapp.Write_Audit_Log("Enforcement","Cases",input.ID,"Case saved","Status: " + input.Case_Status);
+										}
+						)
+					}
+				}
+
+			
+}

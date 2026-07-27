@@ -1,0 +1,194 @@
+Application_Status_Blueprint as "Application Status Workflow"
+{
+
+        			type = blueprint
+        			form = Applications
+        			start
+        			{
+            			start stage = "Draft"
+        			}
+        			stages
+        			{
+           			"Draft"
+           			{
+           			}
+           			"Submitted"
+           			{
+           			}
+           			"In-progress"
+           			{
+           			}
+           			"Ready for Approval"
+           			{
+           			}
+           			"On-hold"
+           			{
+           			}
+           			"Rejected"
+           			{
+           			}
+           			"Approved"
+           			{
+           			}
+           			"License Issued"
+           			{
+           			}
+        			}
+        			transitions
+        			{
+    				Approve_Application as "Approve Application"
+    				{
+         				type = normal
+         				from stage = "In-progress"
+         				to stage = "Approved"
+         				before
+         				{
+            				transition owner
+            				(
+                				permissions = {"Licensing_Supervisor"}
+             				)
+         				}
+         				after
+         				{
+							actions 
+							{
+								custom deluge script
+								(
+															thisapp.Write_Audit_Log("New License Application","Applications",input.ID,"Application approved","Supervisor approved the application.");
+								)
+							}
+         				}
+  				}
+    				Issue_License as "Issue License"
+    				{
+         				type = normal
+         				from stage = "Approved"
+         				to stage = "License Issued"
+         				before
+         				{
+            				transition owner
+            				(
+                				permissions = {"Licensing_Supervisor"}
+             				)
+            				transition criteria = (License_Type is not null)
+            				confirmation before execution
+            				(
+                				message = "Issue this license and create the license record?"
+                				confirm button text = "Issue"
+                				cancel button text = "Cancel"
+            				)
+         				}
+         				after
+         				{
+							actions 
+							{
+								custom deluge script
+								(
+															thisapp.Write_Audit_Log("New License Application","Applications",input.ID,"Issue transition executed","Issuance gate passed.");
+								)
+							}
+         				}
+  				}
+    				Place_On_Hold as "Place On Hold"
+    				{
+         				type = normal
+         				from stage = "In-progress"
+         				to stage = "On-hold"
+         				before
+         				{
+            				transition owner
+            				(
+                				permissions = {"Licensing_Staff", "Licensing_Supervisor"}
+             				)
+         				}
+         				after
+         				{
+							actions 
+							{
+								custom deluge script
+								(
+															thisapp.Write_Audit_Log("New License Application","Applications",input.ID,"Application placed on hold","Hold management continues in Application Holds.");
+								)
+							}
+         				}
+  				}
+    				Reject_Application as "Reject Application"
+    				{
+         				type = common
+         				from stage = "Submitted"
+         				to stage = "Rejected"
+         				common stages = {"On-hold", "In-progress", "Approved"}
+         				before
+         				{
+            				transition owner
+            				(
+                				permissions = {"Licensing_Supervisor"}
+             				)
+            				transition criteria = (Denial_Reason is not null)
+            				confirmation before execution
+            				(
+                				message = "Reject this application?"
+                				confirm button text = "Reject"
+                				cancel button text = "Cancel"
+            				)
+         				}
+         				after
+         				{
+							actions 
+							{
+								custom deluge script
+								(
+															thisapp.Write_Audit_Log("New License Application","Applications",input.ID,"Reject transition executed","Application rejection transition completed.");
+								)
+							}
+         				}
+  				}
+    				Resume_Review as "Resume Review"
+    				{
+         				type = normal
+         				from stage = "On-hold"
+         				to stage = "In-progress"
+         				before
+         				{
+            				transition owner
+            				(
+                				permissions = {"Licensing_Staff", "Licensing_Supervisor"}
+             				)
+         				}
+         				after
+         				{
+							actions 
+							{
+								custom deluge script
+								(
+															thisapp.Write_Audit_Log("New License Application","Applications",input.ID,"Application resumed","Review resumed after hold.");
+								)
+							}
+         				}
+  				}
+    				Start_Review as "Start Review"
+    				{
+         				type = normal
+         				from stage = "Submitted"
+         				to stage = "In-progress"
+         				before
+         				{
+            				transition owner
+            				(
+                				permissions = {"Licensing_Staff", "Licensing_Supervisor"}
+             				)
+         				}
+         				after
+         				{
+							actions 
+							{
+								custom deluge script
+								(
+															thisapp.Write_Audit_Log("New License Application","Applications",input.ID,"Application in progress","Staff review started.");
+								)
+							}
+         				}
+  				}
+        			}
+    			
+}

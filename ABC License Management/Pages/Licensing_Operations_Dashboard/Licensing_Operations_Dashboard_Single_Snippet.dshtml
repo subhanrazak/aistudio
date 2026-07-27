@@ -1,0 +1,279 @@
+<%
+	userName = zoho.loginuserid;
+	if(userName == null || userName == "")
+	{
+		userName = zoho.loginuserid;
+	}
+	snapshotDate = zoho.currentdate;
+	submittedApps = Applications[Application_Status == "Submitted"].count();
+	inProgressApps = Applications[Application_Status == "In-progress"].count();
+	onHoldApps = Applications[Application_Status == "On-hold"].count();
+	approvedApps = Applications[Application_Status == "Approved"].count();
+	licenseIssuedApps = Applications[Application_Status == "License Issued"].count();
+	rejectedApps = Applications[Application_Status == "Rejected"].count();
+	totalStatusApps = submittedApps + inProgressApps + onHoldApps + approvedApps + licenseIssuedApps + rejectedApps;
+	submittedPct = 0;
+	inProgressPct = 0;
+	onHoldPct = 0;
+	approvedPct = 0;
+	issuedPct = 0;
+	rejectedPct = 0;
+	if(totalStatusApps > 0)
+	{
+		submittedPct = (submittedApps * 100.0) / totalStatusApps;
+		inProgressPct = (inProgressApps * 100.0) / totalStatusApps;
+		onHoldPct = (onHoldApps * 100.0) / totalStatusApps;
+		approvedPct = (approvedApps * 100.0) / totalStatusApps;
+		issuedPct = (licenseIssuedApps * 100.0) / totalStatusApps;
+		rejectedPct = (rejectedApps * 100.0) / totalStatusApps;
+	}
+	originalApps = Applications[Application_Type == "Original"].count();
+	transferApps = Applications[Application_Type == "Transfer"].count();
+	changeApps = Applications[Application_Type == "Change"].count();
+	approvedOriginalReady = Applications[Application_Type == "Original" && Application_Status == "Approved" && (Payment_Status == "Complete" || Payment_Status == "Waived") && Checklist_Complete == true].count();
+	approvedTransferReady = Applications[Application_Type == "Transfer" && Application_Status == "Approved" && (Payment_Status == "Complete" || Payment_Status == "Waived") && Checklist_Complete == true].count();
+	approvedChangeReady = Applications[Application_Type == "Change" && Application_Status == "Approved" && (Payment_Status == "Complete" || Payment_Status == "Waived") && Checklist_Complete == true].count();
+	transferWithExisting = Applications[Application_Type == "Transfer" && Application_Status == "Approved" && License != null].count();
+	changeWithExisting = Applications[Application_Type == "Change" && Application_Status == "Approved" && License != null].count();
+	readyToIssue = approvedOriginalReady + approvedTransferReady + approvedChangeReady;
+	feeReady = Applications[Application_Status == "Approved" && (Payment_Status == "Complete" || Payment_Status == "Waived")].count();
+	checklistReady = Applications[Application_Status == "Approved" && Checklist_Complete == true].count();
+	notReady = approvedApps - readyToIssue;
+	if(notReady < 0)
+	{
+		notReady = 0;
+	}
+	readinessPct = 0;
+	if(approvedApps > 0)
+	{
+		readinessPct = (readyToIssue * 100.0) / approvedApps;
+	}
+	activeHolds = Application_Holds[Hold_Released == false].count();
+	recentDocketNotes = Docket_Notes[Event_Date >= zoho.currentdate.subDay(14)].count();
+	allDocketNotes = Docket_Notes[ID != 0].count();
+	pendingFeeApps = Applications[Application_Status != "Rejected" && Application_Status != "License Issued" && Payment_Status != "Complete" && Payment_Status != "Waived"].count();
+	pendingFeeTotal = ifnull(Applications[Application_Status != "Rejected" && Application_Status != "License Issued" && Payment_Status != "Complete" && Payment_Status != "Waived"].sum(Total_Fee_Due),0);
+	if(pendingFeeTotal == 0)
+	{
+		pendingFeeTotal = ifnull(Applications[Application_Status != "Rejected" && Application_Status != "License Issued" && Payment_Status != "Complete" && Payment_Status != "Waived"].sum(Total_Fee),0);
+	}
+	pendingPaymentCount = Payments[Payment_Status == "Pending"].count();
+	pendingPaymentDue = ifnull(Payments[Payment_Status == "Pending"].sum(Amount_Due),0);
+	queueCount = submittedApps + inProgressApps + onHoldApps;
+	allLicenses = Licenses[ID != 0].count();
+	activeLicenses = Licenses[License_Status == "Active"].count();
+	terminatedLicenses = Licenses[License_Status == "Terminated"].count();
+%>
+<style>
+/* ===== zcs-global.css: utility classes used by this page ===== */
+:root { --zcs-theme-brand-color: var(--zcs_brand_color); --zcs-light-bg-color: var(--zcs_brand_light_color); --zcs-page-bg-color: #F3F3F4; --zcs-primary-text-color: var(--zcs_primary_text_color); --zcs-secondary-text-color: var(--zcs_secondary_text_color); --zcs-teritiary-text-color: var(--zcs_tertiary_text_color); --zcs-border-color: var(--zcs_tertiary_border_color); --zcs-white-color: #FFFFFF; --zcs-black-color: #000000; }
+.zcs-row{display:flex;flex-wrap:wrap}.zcs-flex{display:flex}.zcs-inline-flex{display:inline-flex}.zcs-direction-column{flex-direction:column}.zcs-align-items-center{align-items:center}.zcs-align-items-start{align-items:flex-start}.zcs-justify-center{justify-content:center}.zcs-justify-space-between{justify-content:space-between}.zcs-col-common{flex:1 1 0}.zcs-no-shrink{flex-shrink:0}.zcs-gap-4{gap:.25rem}.zcs-gap-6{gap:.375rem}.zcs-gap-8{gap:.5rem}.zcs-gap-10{gap:.625rem}.zcs-gap-12{gap:.75rem}.zcs-gap-16{gap:1rem}.zcs-gap-20{gap:1.25rem}.zcs-p-0{padding:0}.zcs-p-2{padding:.125rem}.zcs-p-16{padding:1rem}.zcs-p-20{padding:1.25rem}.zcs-p-24{padding:1.5rem}.zcs-px-8{padding-left:.5rem;padding-right:.5rem}.zcs-px-10{padding-left:.625rem;padding-right:.625rem}.zcs-px-16{padding-left:1rem;padding-right:1rem}.zcs-px-24{padding-left:1.5rem;padding-right:1.5rem}.zcs-py-2{padding-top:.125rem;padding-bottom:.125rem}.zcs-py-8{padding-top:.5rem;padding-bottom:.5rem}.zcs-py-16{padding-top:1rem;padding-bottom:1rem}.zcs-m-0{margin:0}.zcs-font-12{font-size:.75rem}.zcs-font-13{font-size:.8125rem}.zcs-font-14{font-size:.875rem}.zcs-font-16{font-size:1rem}.zcs-font-18{font-size:1.125rem}.zcs-font-20{font-size:1.25rem}.zcs-font-24{font-size:1.5rem}.zcs-font-30{font-size:1.875rem}.zcs-font-normal{font-weight:400}.zcs-font-medium{font-weight:500}.zcs-font-semibold{font-weight:600}.zcs-font-bold{font-weight:700}.zcs-lh-body{line-height:1.5}.zcs-lh-heading{line-height:1.25}.zcs-rounded-sm{border-radius:.25rem}.zcs-rounded-md{border-radius:.375rem}.zcs-rounded-lg{border-radius:.5rem}.zcs-rounded-xl{border-radius:.75rem}.zcs-rounded-2xl{border-radius:1rem}.zcs-rounded-full{border-radius:100%}.zcs-box-border{box-sizing:border-box}.zcs-color-primary{color:var(--zcs-primary-text-color)}.zcs-color-secondary{color:var(--zcs-secondary-text-color)}.zcs-color-tertiary{color:var(--zcs-teritiary-text-color)}.zcs-color-theme{color:var(--zcs-theme-brand-color)}.zcs-color-white{color:var(--zcs-white-color)}.zcs-w-full{width:100%}.zcs-text-left{text-align:left}.zcs-text-right{text-align:right}.zcs-text-center{text-align:center}.zcs-relative{position:relative}.zcs-absolute{position:absolute}.zcs-sticky{position:sticky}.zcs-overflow-auto{overflow:auto}.zcs-card{background-color:var(--zcs-white-color);border:1px solid #e7e7ee;border-radius:12px}a{text-decoration:none}
+/* ===== card-sample-6 ===== */
+.zcs-card-header{border-bottom:1px solid var(--zcs_tertiary_border_color)}.zcs-card-header-count{background-color:#F5F6FA}
+/* ===== badge-badge-with-icon ===== */
+.zcs-badge{width:auto}.zcs-badge-filled-outline,.zcs-badge-outline{border:1px solid}.zcs-badge-filled-outline.zcs-badge-theme{background-color:var(--zcs_component_hover_color);border-color:var(--zcs_brand_color);color:var(--zcs_brand_color)}.zcs-badge-filled-outline.zcs-badge-green{background-color:#E4FCF3;border-color:#179E6C;color:#179E6C}.zcs-badge-filled-outline.zcs-badge-red{background-color:#FDE3E6;border-color:#FE455D;color:#FE455D}.zcs-badge-filled-outline.zcs-badge-grey{background-color:#E8E8E8;border-color:#64748B;color:#475569}.zcs-badge-filled-outline.zcs-badge-yellow{background-color:#FCF4E6;border-color:#FAAE13;color:#A96800}.zcs-badge-filled-outline.zcs-badge-blue{background-color:#E8EFFF;border-color:#2A6FFC;color:#2A6FFC}.zcs-badge-filled-outline.zcs-badge-orange{background-color:#F8F0EB;border-color:#F4660C;color:#F4660C}
+/* ===== button-primary-button ===== */
+.zcs-button{width:auto;min-width:5rem;min-height:36px}.zcs-primary-button{background-color:var(--zcs_brand_color);color:var(--zcs_brand_foreground_color)}.zcs-primary-button.zcs-button:hover{background-color:var(--zcs_brand_dark_color)}.zcs-button-icon{width:16px;max-height:16px}
+/* ===== table-simple-table ===== */
+:root{--zcs-thead-color:#F9FAFE;--zcs-tr-h-color:#F9FAFE}.zcs-table-wrapper{border:1px solid var(--zcs_tertiary_border_color);background-color:var(--zcs-white-color);overflow:auto}.zcs-table-wrapper table{line-height:normal;border-collapse:collapse}.zcs-table-wrapper table thead{top:0}.zcs-table-wrapper table thead tr th{background-color:var(--zcs-thead-color);box-shadow:0 -1px 0 0 var(--zcs_tertiary_border_color) inset;white-space:nowrap}.zcs-table-wrapper table tbody tr td{border-top:1px solid var(--zcs_tertiary_border_color)}.zcs-table-wrapper table tbody tr:first-child td{border-color:transparent}.zcs-table-wrapper table tbody tr:hover td{background-color:var(--zcs-tr-h-color)}.zcs-table-wrapper table tbody tr td.zcs-green,.zcs-table-wrapper table tbody tr td .zcs-green{color:#179e6c}.zcs-table-wrapper table tbody tr td.zcs-yellow,.zcs-table-wrapper table tbody tr td .zcs-yellow{color:#b8770d}.zcs-table-wrapper table tbody tr td.zcs-blue,.zcs-table-wrapper table tbody tr td .zcs-blue{color:#09598e}
+/* ===== progress-bar-range-bar-with-texts ===== */
+.zcs-progress-bar{height:8px;background-color:var(--zcs_component_hover_color)}.zcs-progress-bar-indicator{height:inherit;border-radius:inherit;background-color:var(--zcs_brand_color)}
+/* ===== dashboard styling ===== */
+.abc-ops{min-height:100%;background:linear-gradient(180deg,var(--zcs-page-bg-color) 0%,#fff 100%);padding:24px;color:var(--zcs-primary-text-color);font-family:Inter,Arial,sans-serif}.abc-hero{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(320px,.65fr);gap:16px;margin-bottom:16px}.abc-panel{background:var(--zcs-white-color);border:1px solid var(--zcs-border-color,#E7E7EE);border-radius:16px;box-shadow:0 14px 34px rgba(15,23,42,.06);overflow:hidden}.abc-hero-title{padding:28px;background:linear-gradient(135deg,var(--zcs_brand_color),#102A43);color:var(--zcs_brand_foreground_color);position:relative}.abc-hero-title h1{font-size:clamp(26px,3vw,36px);margin:12px 0 8px;line-height:1.15}.abc-hero-title p{max-width:950px;margin:0;opacity:.92}.abc-hero-title:after{content:'';position:absolute;right:-60px;top:-90px;width:260px;height:260px;border-radius:50%;border:32px solid rgba(255,255,255,.11)}.abc-hero-context{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px;position:relative;z-index:1}.abc-hero-side{padding:22px}.abc-stack{display:flex;height:34px;border-radius:12px;overflow:hidden;background:#E8EDF5}.abc-stack span{display:block;min-width:2px}.abc-muted{color:var(--zcs-secondary-text-color)}.abc-fee-note{font-size:13px;color:var(--zcs-secondary-text-color);margin-top:8px}.abc-kpis{display:grid;grid-template-columns:repeat(6,minmax(150px,1fr));gap:14px;margin-bottom:16px}.abc-kpi{min-height:132px;position:relative;overflow:hidden}.abc-kpi:after{content:'';position:absolute;width:76px;height:76px;border-radius:50%;right:-22px;top:-24px;background:var(--metric-color);opacity:.13}.abc-kpi-icon{width:42px;height:42px;border-radius:14px;background:var(--metric-bg);color:var(--metric-color);font-size:20px}.abc-kpi-value{font-size:28px;font-weight:700;margin-top:14px;color:var(--zcs-primary-text-color)}.abc-kpi-label{color:var(--zcs-secondary-text-color);font-size:13px}.abc-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.abc-wide{grid-column:1/-1}.abc-section-head{padding:18px 20px 12px;border-bottom:1px solid var(--zcs-border-color,#E7E7EE)}.abc-section-head h2{font-size:19px;margin:0;color:var(--zcs-primary-text-color)}.abc-section-head p{font-size:13px;margin:4px 0 0;color:var(--zcs-secondary-text-color)}.abc-report-embed{min-height:420px;padding:8px;background:#FBFCFE}.abc-report-embed.tall{min-height:560px}.abc-report-embed.compact{min-height:360px}.abc-actions{display:grid;grid-template-columns:repeat(6,minmax(150px,1fr));gap:10px}.abc-actions .zcs-button{justify-content:flex-start;min-height:42px}.abc-readiness{display:grid;grid-template-columns:minmax(300px,.9fr) minmax(0,1.1fr);gap:16px;padding:20px}.abc-meter{height:12px;background:#E8EDF5;border-radius:999px;overflow:hidden}.abc-meter-fill{height:100%;width:<%=readinessPct%>%;background:linear-gradient(90deg,var(--zcs_brand_color),#28CC97);border-radius:999px}.abc-ready-list{display:grid;gap:10px}.abc-ready-row{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--zcs-border-color,#E7E7EE);border-radius:12px;padding:12px;background:#fff}.abc-docket-count{font-weight:700;color:var(--zcs_brand_color)}.abc-type-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;padding:20px}.abc-type-card{border:1px solid var(--zcs-border-color,#E7E7EE);border-radius:14px;padding:16px;background:#fff}.abc-type-card h3{margin:0 0 8px;font-size:16px}.abc-type-count{font-size:28px;font-weight:700;color:var(--zcs-primary-text-color)}.abc-type-note{font-size:13px;color:var(--zcs-secondary-text-color);margin-top:6px}.abc-license-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:20px}.abc-license-stat{border:1px solid var(--zcs-border-color,#E7E7EE);border-radius:14px;padding:16px;background:#fff}.abc-license-stat strong{display:block;font-size:26px}.abc-note-box{margin:0 20px 20px;border:1px dashed var(--zcs-border-color,#E7E7EE);border-radius:12px;padding:12px;color:var(--zcs-secondary-text-color);font-size:13px;background:#FBFCFE}.zcs-legend-wrapper li{list-style-type:none}.zcs-legend-wrapper li label{min-width:145px}.zcs-legend-wrapper li label:before{content:'';display:inline-block;vertical-align:top;width:12px;height:12px;margin:4px 12px;border-radius:50%}.zcs-legend-wrapper li:nth-child(1) label:before{background-color:#2A6FFC}.zcs-legend-wrapper li:nth-child(2) label:before{background-color:#36A2EB}.zcs-legend-wrapper li:nth-child(3) label:before{background-color:#FAAE13}.zcs-legend-wrapper li:nth-child(4) label:before{background-color:#28CC97}.zcs-legend-wrapper li:nth-child(5) label:before{background-color:#179E6C}.zcs-legend-wrapper li:nth-child(6) label:before{background-color:#FE455D}.zcs-donut-chart-wrapper{--donut-cx:100px;--donut-cy:100px;--donut-r:80;--donut-stroke_width:20;--donut-pi:3.14;--donut-donut_size:calc(var(--donut-cx) + var(--donut-cy));--donut-a1:<%=submittedPct%>;--donut-a2:<%=inProgressPct%>;--donut-a3:<%=onHoldPct%>;--donut-a4:<%=approvedPct%>;--donut-a5:<%=issuedPct%>;--donut-a6:<%=rejectedPct%>}.zcs-donut-chart-wrapper .zcs-simple-donut-chart svg{width:var(--donut-donut_size);height:var(--donut-donut_size);overflow:hidden}.zcs-donut-chart-wrapper .zcs-simple-donut-chart svg circle{cx:var(--donut-cx);cy:var(--donut-cy);r:var(--donut-r);stroke-width:var(--donut-stroke_width);fill:transparent}.zcs-donut-chart-wrapper .zcs-simple-donut-chart svg circle:nth-child(1){stroke:#2A6FFC;stroke-dasharray:calc(2 * var(--donut-pi) * var(--donut-r) * var(--donut-a1) / 100) calc(2 * var(--donut-pi) * var(--donut-r));stroke-dashoffset:calc((2 * var(--donut-pi) * var(--donut-r)) / 4)}.zcs-donut-chart-wrapper .zcs-simple-donut-chart svg circle:nth-child(2){stroke:#36A2EB;stroke-dasharray:calc(2 * var(--donut-pi) * var(--donut-r) * var(--donut-a2) / 100) calc(2 * var(--donut-pi) * var(--donut-r));stroke-dashoffset:calc(((2 * var(--donut-pi) * var(--donut-r)) / 4) - (2 * var(--donut-pi) * var(--donut-r) * var(--donut-a1) / 100))}.zcs-donut-chart-wrapper .zcs-simple-donut-chart svg circle:nth-child(3){stroke:#FAAE13;stroke-dasharray:calc(2 * var(--donut-pi) * var(--donut-r) * var(--donut-a3) / 100) calc(2 * var(--donut-pi) * var(--donut-r));stroke-dashoffset:calc(((2 * var(--donut-pi) * var(--donut-r)) / 4) - (2 * var(--donut-pi) * var(--donut-r) * (var(--donut-a1) + var(--donut-a2)) / 100))}.zcs-donut-chart-wrapper .zcs-simple-donut-chart svg circle:nth-child(4){stroke:#28CC97;stroke-dasharray:calc(2 * var(--donut-pi) * var(--donut-r) * var(--donut-a4) / 100) calc(2 * var(--donut-pi) * var(--donut-r));stroke-dashoffset:calc(((2 * var(--donut-pi) * var(--donut-r)) / 4) - (2 * var(--donut-pi) * var(--donut-r) * (var(--donut-a1) + var(--donut-a2) + var(--donut-a3)) / 100))}.zcs-donut-chart-wrapper .zcs-simple-donut-chart svg circle:nth-child(5){stroke:#179E6C;stroke-dasharray:calc(2 * var(--donut-pi) * var(--donut-r) * var(--donut-a5) / 100) calc(2 * var(--donut-pi) * var(--donut-r));stroke-dashoffset:calc(((2 * var(--donut-pi) * var(--donut-r)) / 4) - (2 * var(--donut-pi) * var(--donut-r) * (var(--donut-a1) + var(--donut-a2) + var(--donut-a3) + var(--donut-a4)) / 100))}.zcs-donut-chart-wrapper .zcs-simple-donut-chart svg circle:nth-child(6){stroke:#FE455D;stroke-dasharray:calc(2 * var(--donut-pi) * var(--donut-r) * var(--donut-a6) / 100) calc(2 * var(--donut-pi) * var(--donut-r));stroke-dashoffset:calc(((2 * var(--donut-pi) * var(--donut-r)) / 4) - (2 * var(--donut-pi) * var(--donut-r) * (var(--donut-a1) + var(--donut-a2) + var(--donut-a3) + var(--donut-a4) + var(--donut-a5)) / 100))}@media(max-width:1320px){.abc-kpis{grid-template-columns:repeat(4,1fr)}.abc-actions{grid-template-columns:repeat(3,1fr)}.abc-hero,.abc-grid{grid-template-columns:1fr}.abc-readiness{grid-template-columns:1fr}}@media(max-width:760px){.abc-ops{padding:12px}.abc-kpis,.abc-actions,.abc-type-cards,.abc-license-summary{grid-template-columns:1fr}.zcs-donut-chart-wrapper{flex-direction:column}.abc-hero-title h1{font-size:25px}}
+</style>
+<div class="abc-ops">
+	<div class="abc-hero">
+		<section class="abc-panel abc-hero-title">
+			<div class="zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-theme">
+				<i class="zcs-badge-icon zcs-no-shrink zc-li-outline business-chart-bar-33"></i>
+				<span class="zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body">Licensing staff workspace</span>
+			</div>
+			<h1>Licensing Operations Dashboard</h1>
+			<p>Hello <%=userName%>. Current snapshot for intake queues, issuance readiness, transfer and change workload, active holds, fee exposure, and docket activity.</p>
+			<div class="abc-hero-context">
+				<div class="zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-blue"><i class="zcs-badge-icon zcs-no-shrink zc-li-outline ui-2-time"></i><span class="zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body">As of <%=snapshotDate%></span></div>
+				<div class="zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-green"><i class="zcs-badge-icon zcs-no-shrink zc-li-outline ui-1-check-circle-08"></i><span class="zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body"><%=readyToIssue%> issue-ready</span></div>
+				<div class="zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-yellow"><i class="zcs-badge-icon zcs-no-shrink zc-li-outline ui-2-time"></i><span class="zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body"><%=activeHolds%> active holds</span></div>
+			</div>
+		</section>
+		<section class="abc-panel abc-hero-side">
+			<div class="zcs-flex zcs-justify-space-between zcs-align-items-start zcs-gap-12">
+				<div>
+					<div class="zcs-font-14 zcs-color-secondary">Active staff queue</div>
+					<div class="zcs-font-30 zcs-font-bold zcs-color-primary"><%=queueCount%></div>
+					<div class="abc-muted zcs-font-13">Submitted, in-progress, and on-hold applications</div>
+				</div>
+				<div class="zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-orange">
+					<i class="zcs-badge-icon zcs-no-shrink zc-li-outline business-payment"></i>
+					<span class="zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body"><%=pendingFeeApps%> fee-pending</span>
+				</div>
+			</div>
+			<div class="abc-stack" style="margin-top:18px">
+				<span style="width:<%=submittedPct%>%;background:#2A6FFC"></span>
+				<span style="width:<%=inProgressPct%>%;background:#36A2EB"></span>
+				<span style="width:<%=onHoldPct%>%;background:#FAAE13"></span>
+				<span style="width:<%=approvedPct%>%;background:#28CC97"></span>
+				<span style="width:<%=issuedPct%>%;background:#179E6C"></span>
+				<span style="width:<%=rejectedPct%>%;background:#FE455D"></span>
+			</div>
+			<div class="abc-fee-note">Application fee exposure: <strong>$<%=pendingFeeTotal%></strong>. Payment report due: <strong>$<%=pendingPaymentDue%></strong>.</div>
+			<div class="abc-fee-note">Docket activity in the last 14 days: <strong><%=recentDocketNotes%></strong> notes.</div>
+		</section>
+	</div>
+
+	<section class="abc-kpis">
+		<div class="abc-kpi zcs-card zcs-p-20 zcs-box-border" style="--metric-color:#2A6FFC;--metric-bg:#E8EFFF"><div class="abc-kpi-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline files-add"></i></div><div class="abc-kpi-value"><%=submittedApps%></div><div class="abc-kpi-label">Submitted</div></div>
+		<div class="abc-kpi zcs-card zcs-p-20 zcs-box-border" style="--metric-color:#36A2EB;--metric-bg:#EAF7FF"><div class="abc-kpi-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline loader-dots-06"></i></div><div class="abc-kpi-value"><%=inProgressApps%></div><div class="abc-kpi-label">In-progress</div></div>
+		<div class="abc-kpi zcs-card zcs-p-20 zcs-box-border" style="--metric-color:#FAAE13;--metric-bg:#FCF4E6"><div class="abc-kpi-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline ui-2-time"></i></div><div class="abc-kpi-value"><%=onHoldApps%></div><div class="abc-kpi-label">On-hold</div></div>
+		<div class="abc-kpi zcs-card zcs-p-20 zcs-box-border" style="--metric-color:#28CC97;--metric-bg:#E4FCF3"><div class="abc-kpi-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline ui-1-check-circle-08"></i></div><div class="abc-kpi-value"><%=approvedApps%></div><div class="abc-kpi-label">Approved</div></div>
+		<div class="abc-kpi zcs-card zcs-p-20 zcs-box-border" style="--metric-color:#179E6C;--metric-bg:#E4FCF3"><div class="abc-kpi-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline business-badge"></i></div><div class="abc-kpi-value"><%=licenseIssuedApps%></div><div class="abc-kpi-label">License issued</div></div>
+		<div class="abc-kpi zcs-card zcs-p-20 zcs-box-border" style="--metric-color:#FE455D;--metric-bg:#FDE3E6"><div class="abc-kpi-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline ui-1-circle-remove"></i></div><div class="abc-kpi-value"><%=rejectedApps%></div><div class="abc-kpi-label">Rejected</div></div>
+		<div class="abc-kpi zcs-card zcs-p-20 zcs-box-border" style="--metric-color:#09598E;--metric-bg:#E8F4FC"><div class="abc-kpi-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline files-paper"></i></div><div class="abc-kpi-value"><%=originalApps%></div><div class="abc-kpi-label">Original applications</div></div>
+		<div class="abc-kpi zcs-card zcs-p-20 zcs-box-border" style="--metric-color:#7C3AED;--metric-bg:#F2ECFF"><div class="abc-kpi-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline arrows-1-tail-right"></i></div><div class="abc-kpi-value"><%=transferApps%></div><div class="abc-kpi-label">Transfer applications</div></div>
+		<div class="abc-kpi zcs-card zcs-p-20 zcs-box-border" style="--metric-color:#F4660C;--metric-bg:#F8F0EB"><div class="abc-kpi-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline arrows-1-refresh-69"></i></div><div class="abc-kpi-value"><%=changeApps%></div><div class="abc-kpi-label">Change applications</div></div>
+		<div class="abc-kpi zcs-card zcs-p-20 zcs-box-border" style="--metric-color:var(--zcs_brand_color);--metric-bg:var(--zcs_component_hover_color)"><div class="abc-kpi-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline business-payment"></i></div><div class="abc-kpi-value">$<%=pendingFeeTotal%></div><div class="abc-kpi-label">Pending fees</div></div>
+		<div class="abc-kpi zcs-card zcs-p-20 zcs-box-border" style="--metric-color:#B8770D;--metric-bg:#FCF4E6"><div class="abc-kpi-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline ui-2-time"></i></div><div class="abc-kpi-value"><%=activeHolds%></div><div class="abc-kpi-label">Active holds</div></div>
+	</section>
+
+	<div class="abc-grid">
+		<section class="abc-panel">
+			<div class="abc-section-head">
+				<h2>Status distribution</h2>
+				<p>Application status mix across submission, review, hold, approval, issuance, and rejection.</p>
+			</div>
+			<div class="zcs-donut-chart-wrapper zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-12 zcs-p-20 zcs-box-border">
+				<div class="zcs-donut-chart zcs-simple-donut-chart zcs-flex zcs-align-items-center zcs-justify-center zcs-relative">
+					<svg class="zcs-rounded-full"><circle></circle><circle></circle><circle></circle><circle></circle><circle></circle><circle></circle></svg>
+					<h6 class="zcs-donut-chart-name zcs-font-16 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0 zcs-absolute zcs-text-center">Total<br><%=totalStatusApps%></h6>
+				</div>
+				<div class="zcs-legend-wrapper">
+					<ul class="zcs-flex zcs-direction-column zcs-gap-10 zcs-p-0 zcs-m-0">
+						<li class="zcs-flex zcs-align-items-center zcs-gap-8"><label class="zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary">Submitted: <%=submittedApps%></label></li>
+						<li class="zcs-flex zcs-align-items-center zcs-gap-8"><label class="zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary">In-progress: <%=inProgressApps%></label></li>
+						<li class="zcs-flex zcs-align-items-center zcs-gap-8"><label class="zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary">On-hold: <%=onHoldApps%></label></li>
+						<li class="zcs-flex zcs-align-items-center zcs-gap-8"><label class="zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary">Approved: <%=approvedApps%></label></li>
+						<li class="zcs-flex zcs-align-items-center zcs-gap-8"><label class="zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary">License issued: <%=licenseIssuedApps%></label></li>
+						<li class="zcs-flex zcs-align-items-center zcs-gap-8"><label class="zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary">Rejected: <%=rejectedApps%></label></li>
+					</ul>
+				</div>
+			</div>
+		</section>
+
+		<section class="abc-panel">
+			<div class="abc-section-head">
+				<h2>Issue-readiness</h2>
+				<p>Approved applications ready for the license action after payment and checklist completion.</p>
+			</div>
+			<div class="abc-readiness">
+				<div>
+					<div class="zcs-flex zcs-justify-space-between zcs-align-items-center zcs-gap-12">
+						<strong class="zcs-font-24 zcs-color-primary"><%=readyToIssue%> ready</strong>
+						<span class="zcs-font-14 zcs-color-secondary"><%=readinessPct%>% of approved</span>
+					</div>
+					<div class="abc-meter" style="margin:14px 0 10px"><div class="abc-meter-fill"></div></div>
+					<div class="abc-muted zcs-font-13"><%=notReady%> approved applications still need fee clearance, checklist completion, hold release, or final supervisory action.</div>
+				</div>
+				<div class="abc-ready-list">
+					<div class="abc-ready-row"><span>Payment cleared or waived</span><strong><%=feeReady%></strong></div>
+					<div class="abc-ready-row"><span>Checklist complete</span><strong><%=checklistReady%></strong></div>
+					<div class="abc-ready-row"><span>Open holds to clear</span><strong><%=activeHolds%></strong></div>
+					<div class="abc-ready-row"><span>Recent docket notes</span><strong class="abc-docket-count"><%=recentDocketNotes%></strong></div>
+				</div>
+			</div>
+		</section>
+
+		<section class="abc-panel abc-wide">
+			<div class="abc-section-head">
+				<h2>Issuance action by application type</h2>
+				<p>Clear routing for Original, Transfer, and Change applications before staff performs the license action.</p>
+			</div>
+			<div class="abc-type-cards">
+				<div class="abc-type-card"><h3>Original</h3><div class="abc-type-count"><%=approvedOriginalReady%></div><div class="abc-type-note">Creates a new license from the approved application.</div></div>
+				<div class="abc-type-card"><h3>Transfer</h3><div class="abc-type-count"><%=approvedTransferReady%></div><div class="abc-type-note">Creates a new license and terminates the existing license. Approved transfers with an existing license selected: <strong><%=transferWithExisting%></strong>.</div></div>
+				<div class="abc-type-card"><h3>Change</h3><div class="abc-type-count"><%=approvedChangeReady%></div><div class="abc-type-note">Updates the existing license record. Approved changes with an existing license selected: <strong><%=changeWithExisting%></strong>.</div></div>
+			</div>
+			<div class="zcs-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative" style="margin:0 20px 20px">
+				<table class="zcs-w-full">
+					<thead class="zcs-sticky">
+						<tr>
+							<th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Application type</th>
+							<th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">License operation</th>
+							<th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Ready count</th>
+							<th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Staff check</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary">Original</td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary">Create new license</td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-green"><%=approvedOriginalReady%></td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary">Confirm entity, premise, DBA, and license type line items.</td></tr>
+						<tr><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary">Transfer</td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary">Create new and terminate existing</td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-yellow"><%=approvedTransferReady%></td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary">Verify the existing active license is selected before termination.</td></tr>
+						<tr><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary">Change</td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary">Update existing license</td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-blue"><%=approvedChangeReady%></td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary">Verify license continuity and docket note summary.</td></tr>
+					</tbody>
+				</table>
+			</div>
+		</section>
+
+		<section class="abc-panel abc-wide">
+			<div class="abc-section-head">
+				<h2>Quick links</h2>
+				<p>Primary forms used by licensing staff, supervisors, and accounting during the licensing process.</p>
+			</div>
+			<div class="abc-actions zcs-p-20">
+				<a class="zcs-button zcs-primary-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body" href="#Form:Applications"><i class="zcs-button-icon zc-li-outline files-add"></i><span class="zcs-button-text">Applications</span></a>
+				<a class="zcs-button zcs-primary-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body" href="#Form:Application_Holds"><i class="zcs-button-icon zc-li-outline ui-2-time"></i><span class="zcs-button-text">Application Holds</span></a>
+				<a class="zcs-button zcs-primary-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body" href="#Form:Docket_Notes"><i class="zcs-button-icon zc-li-outline files-paper"></i><span class="zcs-button-text">Docket Notes</span></a>
+				<a class="zcs-button zcs-primary-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body" href="#Form:Licenses"><i class="zcs-button-icon zc-li-outline business-badge"></i><span class="zcs-button-text">Licenses</span></a>
+				<a class="zcs-button zcs-primary-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body" href="#Form:License_Type_Line_Items"><i class="zcs-button-icon zc-li-outline files-list-bullet"></i><span class="zcs-button-text">License Type Line Items</span></a>
+				<a class="zcs-button zcs-primary-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body" href="#Form:Legal_Entities"><i class="zcs-button-icon zc-li-outline business-building"></i><span class="zcs-button-text">Legal Entities</span></a>
+			</div>
+		</section>
+
+		<section class="abc-panel abc-wide">
+			<div class="abc-section-head"><h2>New license application queue</h2><p>Submitted, in-progress, and on-hold application workload for licensing staff.</p></div>
+			<div class="abc-report-embed tall" zc-component="report" zc-linkname="New_License_Application_Queue" zc-height="560px"></div>
+		</section>
+
+		<section class="abc-panel">
+			<div class="abc-section-head"><h2>Active holds</h2><p>Open hold records requiring staff follow-up or release action.</p></div>
+			<div class="abc-report-embed" zc-component="report" zc-linkname="Active_Holds" zc-height="420px"></div>
+		</section>
+
+		<section class="abc-panel">
+			<div class="abc-section-head"><h2>Recent docket notes</h2><p>Application history and staff comments. Total docket notes on file: <strong><%=allDocketNotes%></strong>.</p></div>
+			<div class="abc-report-embed" zc-component="report" zc-linkname="Docket_Notes_By_Application" zc-height="420px"></div>
+		</section>
+
+		<section class="abc-panel abc-wide">
+			<div class="abc-section-head"><h2>Approved applications</h2><p>Supervisor-approved applications waiting for issuance action or final queue review.</p></div>
+			<div class="abc-report-embed" zc-component="report" zc-linkname="Approved_Applications" zc-height="460px"></div>
+		</section>
+
+		<section class="abc-panel abc-wide">
+			<div class="abc-section-head"><h2>License register</h2><p>Useful license context for issuance verification, transfer termination, and change updates.</p></div>
+			<div class="abc-license-summary">
+				<div class="abc-license-stat"><span class="zcs-font-13 zcs-color-secondary">All licenses</span><strong><%=allLicenses%></strong></div>
+				<div class="abc-license-stat"><span class="zcs-font-13 zcs-color-secondary">Active licenses</span><strong><%=activeLicenses%></strong></div>
+				<div class="abc-license-stat"><span class="zcs-font-13 zcs-color-secondary">Terminated licenses</span><strong><%=terminatedLicenses%></strong></div>
+			</div>
+			<div class="abc-note-box"><i class="zc-li-outline ui-1-check-circle-08"></i> Terminated license counts are summarized from Licenses because a Terminated_Licenses report is not present in this app folder.</div>
+		</section>
+
+		<section class="abc-panel">
+			<div class="abc-section-head"><h2>Active licenses</h2><p>Current licenses for transfer/change validation.</p></div>
+			<div class="abc-report-embed compact" zc-component="report" zc-linkname="Active_Licenses" zc-height="360px"></div>
+		</section>
+
+		<section class="abc-panel">
+			<div class="abc-section-head"><h2>All licenses</h2><p>Full license history for lookup and audit support.</p></div>
+			<div class="abc-report-embed compact" zc-component="report" zc-linkname="All_Licenses" zc-height="360px"></div>
+		</section>
+
+		<section class="abc-panel">
+			<div class="abc-section-head"><h2>Pending payments</h2><p>Accounting visibility retained. Pending payment records: <strong><%=pendingPaymentCount%></strong>, amount due: <strong>$<%=pendingPaymentDue%></strong>.</p></div>
+			<div class="abc-report-embed compact" zc-component="report" zc-linkname="Pending_Payments" zc-height="360px"></div>
+		</section>
+
+		<section class="abc-panel">
+			<div class="abc-section-head"><h2>Daily reconciliation</h2><p>Existing reconciliation view retained while the licensing queue remains the dashboard focus.</p></div>
+			<div class="abc-report-embed compact" zc-component="report" zc-linkname="Daily_Reconciliation" zc-height="360px"></div>
+		</section>
+	</div>
+</div>

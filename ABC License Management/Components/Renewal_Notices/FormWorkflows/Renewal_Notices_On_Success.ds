@@ -1,0 +1,33 @@
+Renewal_Notices_On_Success as "Generate Renewal Notice Stub"
+{
+
+				type =  form
+				form = Renewal_Notices
+
+				record event = on add
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Notice_Date == null)
+										{
+											input.Notice_Date = zoho.currentdate;
+										}
+										if(input.Fee_Amount == null && input.License != null)
+										{
+											input.Fee_Amount = thisapp.Calculate_Renewal_Fee(input.License,input.Penalty_Stage);
+										}
+										templateCode = input.Notice_Type;
+										corrId = thisapp.Create_Correspondence_Stub("Renewal",input.ID,templateCode,input.Recipient_Email,"Not Required");
+										input.Correspondence = corrId;
+										input.Delivery_Status = "Generated";
+										thisapp.Write_Audit_Log("Renewal","Renewal_Notices",input.ID,"Renewal notice generated","Notice type: " + input.Notice_Type);
+						)
+					}
+				}
+
+			
+}

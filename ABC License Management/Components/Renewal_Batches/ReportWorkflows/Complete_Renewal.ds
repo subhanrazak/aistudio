@@ -1,0 +1,29 @@
+Complete_Renewal as "Complete Renewal"
+{
+	type = functions
+	form = Renewal_Batches
+	execution type = for each record
+	description = "Completes a paid renewal batch from renewal reports."
+
+	on start
+	{
+		actions
+		{
+			on click
+			(
+				actorEmail = zoho.loginuserid;
+				if(input.Batch_Status == "Paid")
+				{
+					input.Batch_Status = "Completed";
+					input.Payment_Status = "Complete";
+					input.Completed_Date = zoho.currentdate;
+					thisapp.Write_Audit_Log("Renewal","Renewal_Batches",input.ID,"Renewal completed","Renewal batch completed from report by " + actorEmail + ".");
+				}
+				else
+				{
+					thisapp.Write_Audit_Log("Renewal","Renewal_Batches",input.ID,"Complete renewal action skipped","Complete Renewal clicked by " + actorEmail + " but the renewal batch was not paid or was Cancelled.");
+				}
+			)
+		}
+	}
+}

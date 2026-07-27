@@ -1,0 +1,100 @@
+default list All_Licenses
+{
+	displayName = "All Licenses"
+	show all rows from Licenses
+	(
+		License_Number as "License Number"
+		License_Type as "License Type"
+		Entity
+		Premises
+		Source_New_Application as "Source New Application"
+		Applicant_Profile as "Applicant Profile"
+		Legal_Entity_New as "Legal Entity New"
+		DBA_New as "DBA New"
+		Premise_Address_New as "Premise Address New"
+		Issue_Date as "Issue Date"
+		Expiration_Date as "Expiration Date"
+		License_Status as "License Status"
+		Terminated_Date as "Terminated Date"
+		Termination_Reason as "Termination Reason"
+		Replaced_By_License as "Replaced By License"
+		Penalty_Stage as "Penalty Stage"
+		Renewal_Notice_Generated as "Renewal Notice Generated"
+		Last_Renewal_Date as "Last Renewal Date"
+		Licensee_Email as "Licensee Email"
+		custom action "Mark Renewal Due"
+		(
+			workflow = License_Mark_Renewal_Due
+			show action for each record = true
+			show action in edit record menu = true
+			column header = "Mark Renewal Due"
+			success message = "License marked renewal due."
+			condition = ((License_Status == "Active" || License_Status == "Renewed") && Expiration_Date in next 60 days)
+			confirmation before execution
+			(
+				message for individual record = "Mark this license as Renewal Due?"
+				confirm button text = "Mark Renewal Due"
+				cancel button text = "Cancel"
+			)
+		)
+		custom action "Renew License"
+		(
+			workflow = License_Renew_License
+			show action for each record = true
+			show action in edit record menu = true
+			column header = "Renew License"
+			success message = "License renewed."
+			condition = (License_Status == "Renewal Due" || License_Status == "50% Penalty" || License_Status == "100% Penalty")
+			confirmation before execution
+			(
+				message for individual record = "Renew this license now?"
+				confirm button text = "Renew License"
+				cancel button text = "Cancel"
+			)
+		)
+		custom action "Terminate License"
+		(
+			workflow = License_Terminate_License
+			show action for each record = true
+			show action in edit record menu = true
+			column header = "Terminate License"
+			success message = "License terminated."
+			condition = (License_Status != "Terminated")
+			confirmation before execution
+			(
+				message for individual record = "Terminate this license?"
+				confirm button text = "Terminate License"
+				cancel button text = "Cancel"
+			)
+		)
+		custom action "Reinstate License"
+		(
+			workflow = License_Reinstate_License
+			show action for each record = true
+			show action in edit record menu = true
+			column header = "Reinstate License"
+			success message = "License reinstated."
+			condition = (License_Status == "Terminated")
+			confirmation before execution
+			(
+				message for individual record = "Reinstate this terminated license?"
+				confirm button text = "Reinstate License"
+				cancel button text = "Cancel"
+			)
+		)
+	)
+	filters
+	(
+		License_Type
+		Entity
+		Applicant_Profile
+		License_Status
+		Terminated_Date
+		Penalty_Stage
+		Expiration_Date
+	)
+	sort by
+	(
+		Expiration_Date ascending
+	)
+}

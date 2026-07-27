@@ -1,0 +1,67 @@
+Licenses_On_Success as "License Post Save Automation"
+{
+
+				type =  form
+				form = Licenses
+
+				record event = on add or edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Source_New_Application == null && input.Source_Application != null)
+										{
+											input.Source_New_Application = input.Source_Application;
+										}
+										if(input.Source_New_Application != null)
+										{
+											appRows = Applications[ID == input.Source_New_Application];
+											if(appRows.count() > 0)
+											{
+												if(input.Applicant_Profile == null)
+												{
+													input.Applicant_Profile = appRows.Applicant_Profile;
+												}
+												if(input.Legal_Entity_New == null)
+												{
+													input.Legal_Entity_New = appRows.Legal_Entity;
+												}
+												if(input.DBA_New == null)
+												{
+													input.DBA_New = appRows.DBA;
+												}
+												if(input.Premise_Address_New == null)
+												{
+													input.Premise_Address_New = appRows.Premise_Address;
+												}
+												if(input.Licensee_Email in {""," ","null"})
+												{
+													input.Licensee_Email = appRows.Applicant_Email;
+												}
+											}
+										}
+										if(input.Issue_Date != null && input.Expiration_Date == null)
+										{
+											input.Expiration_Date = input.Issue_Date.addYear(1);
+										}
+										if(input.License_Status == "Renewed")
+										{
+											input.Last_Renewal_Date = zoho.currentdate;
+											input.Expiration_Date = zoho.currentdate.addYear(1);
+											input.Penalty_Stage = "None";
+											input.Renewal_Notice_Generated = false;
+											thisapp.Write_Audit_Log("Renewal","Licenses",input.ID,"License renewed","Expiration date advanced after renewal.");
+										}
+										else
+										{
+											thisapp.Write_Audit_Log("Licensing","Licenses",input.ID,"License saved","License record saved or updated.");
+										}
+						)
+					}
+				}
+
+			
+}

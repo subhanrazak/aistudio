@@ -1,0 +1,58 @@
+list Signed_Documents
+{
+
+			displayName = "Signed Documents"
+			show all rows from Correspondence  [Sign_Status == "Signed"]  
+			(
+				Correspondence_Number as "Correspondence Number"
+				Module
+				Template_Code as "Template Code"
+				Recipient_Email as "Recipient Email"
+				Generated_File as "Generated File"
+				Merge_Status as "Merge Status"
+				Sign_Status as "Sign Status"
+				Generated_Date as "Generated Date"
+				Sent_Date as "Sent Date"
+				custom action "Mark Sent"
+				(
+					workflow = Correspondence_Mark_Sent
+					show action for each record = true
+					show action in edit record menu = true
+					column header = "Mark Sent"
+					success message = "Correspondence marked sent."
+					condition = (Sent_Date is null && (Merge_Status == "Generated Manually" || Merge_Status == "Ready for Manual Merge" || Merge_Status == "Sent Manually"))
+					confirmation before execution
+					(
+						message for individual record = "Mark this correspondence as sent?"
+						confirm button text = "Mark Sent"
+						cancel button text = "Cancel"
+					)
+				)
+				custom action "Archive Document"
+				(
+					workflow = Correspondence_Archive_Document
+					show action for each record = true
+					show action in edit record menu = true
+					column header = "Archive Document"
+					success message = "Document archived."
+					condition = (Merge_Status != "Failed" && (Sent_Date is not null || Sign_Status == "Signed"))
+					confirmation before execution
+					(
+						message for individual record = "Archive this completed document?"
+						confirm button text = "Archive Document"
+						cancel button text = "Cancel"
+					)
+				)
+			)
+			filters
+			(
+				Module
+				Template_Code
+				Generated_Date
+			)
+			sort by
+			(
+				Generated_Date descending
+			)
+		
+}

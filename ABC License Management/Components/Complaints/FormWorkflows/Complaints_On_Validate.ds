@@ -1,0 +1,30 @@
+Complaints_On_Validate as "Validate Complaint Screening"
+{
+
+				type =  form
+				form = Complaints
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Screening_Decision == "Rejected" || input.Screening_Decision == "Closed" && input.Screening_Notes == null || input.Screening_Notes.trim() == "")
+										{
+											alert "Screening Notes are required when rejecting or closing a complaint.";
+											cancel submit;
+										}
+										if(input.Screening_Decision == "Accepted" && input.Information_Sufficient != true || input.Jurisdictional != true)
+										{
+											alert "Accepted complaints must be marked information sufficient and jurisdictional.";
+											cancel submit;
+										}
+						)
+					}
+				}
+
+			
+}

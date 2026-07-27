@@ -1,0 +1,27 @@
+Violation_Recommend_Action as "Recommend Action"
+{
+	type = functions
+	form = Violations
+	execution type = for each record
+	description = "Records the default report-driven violation recommendation when no recommendation is present."
+
+	on start
+	{
+		actions
+		{
+			on click
+			(
+				actorEmail = zoho.loginuserid;
+				if(input.Recommended_Action == null || input.Recommended_Action == "")
+				{
+					input.Recommended_Action = "Other Follow-up";
+					thisapp.Write_Audit_Log("Enforcement","Violations",input.ID,"Action recommended","Recommended action set to Other Follow-up from report by " + actorEmail + ".");
+				}
+				else
+				{
+					thisapp.Write_Audit_Log("Enforcement","Violations",input.ID,"Recommend action skipped","Recommend Action clicked by " + actorEmail + " but recommended action was already " + input.Recommended_Action + ".");
+				}
+			)
+		}
+	}
+}

@@ -1,0 +1,106 @@
+list Investigator_Review_Queue
+{
+	displayName = "Investigator Review Queue"
+	show all rows from Applications [Investigator_Review_Flag == true]
+	(
+		Application_Number as "Application Number"
+		Applicant_Profile as "Applicant Profile"
+		Applicant_Email as "Applicant Email"
+		Felony
+		Violation
+		Application_Status as "Application Status"
+		Assigned_Licensing_Rep as "Assigned Licensing Rep"
+		Application_Submitted_Date as "Application Submitted Date"
+		custom action "Verify Intake"
+		(
+			workflow = Verify_Intake
+			show action for each record = true
+			show action in edit record menu = true
+			column header = "Verify Intake"
+			success message = "Intake verified"
+			condition = (Application_Status == "Submitted")
+		)
+		custom action "Request Info"
+		(
+			workflow = Request_Info
+			show action for each record = true
+			show action in edit record menu = true
+			column header = "Request Info"
+			success message = "Information request recorded"
+			condition = (Application_Status == "Submitted" || Application_Status == "In-progress")
+		)
+		custom action "Place Hold"
+		(
+			workflow = Place_Hold
+			show action for each record = true
+			show action in edit record menu = true
+			column header = "Place Hold"
+			success message = "Application placed on hold"
+			condition = (Application_Status == "Submitted" || Application_Status == "In-progress")
+			confirmation before execution
+			(
+				message for individual record = "Place this application on hold?"
+				confirm button text = "Place Hold"
+				cancel button text = "Cancel"
+			)
+		)
+		custom action "Release Hold"
+		(
+			workflow = Release_Hold
+			show action for each record = true
+			show action in edit record menu = true
+			column header = "Release Hold"
+			success message = "Application hold released"
+			condition = (Application_Status == "On-hold")
+		)
+		custom action "Assign Review"
+		(
+			workflow = Assign_Review
+			show action for each record = true
+			show action in edit record menu = true
+			column header = "Assign Review"
+			success message = "Review assigned"
+			condition = (Application_Status == "Submitted" || Application_Status == "In-progress")
+		)
+		custom action "Approve Application"
+		(
+			workflow = Approve_Application
+			show action for each record = true
+			show action in edit record menu = true
+			column header = "Approve Application"
+			success message = "Application approved"
+			condition = (Application_Status == "In-progress" || Application_Status == "Ready for Approval")
+			confirmation before execution
+			(
+				message for individual record = "Approve this application?"
+				confirm button text = "Approve"
+				cancel button text = "Cancel"
+			)
+		)
+		custom action "Reject Application"
+		(
+			workflow = Reject_Application
+			show action for each record = true
+			show action in edit record menu = true
+			column header = "Reject Application"
+			success message = "Application rejected"
+			condition = (Application_Status == "Submitted" || Application_Status == "In-progress" || Application_Status == "Ready for Approval")
+			confirmation before execution
+			(
+				message for individual record = "Reject this application? This action changes the application lifecycle."
+				confirm button text = "Reject"
+				cancel button text = "Cancel"
+			)
+		)
+	)
+	filters
+	(
+		Application_Status
+		Assigned_Licensing_Rep
+		Application_Submitted_Date
+	)
+	sort by
+	(
+		Application_Submitted_Date ascending
+	)
+}

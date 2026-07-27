@@ -1,0 +1,33 @@
+map Calculate_Application_Fees(int licenseTypeId, int ownerCount)
+{
+
+                 	fees = Map();
+                 	annualFee = 0.0;
+                 	processingFee = 0.0;
+                 	federalFee = 0.0;
+                 	stateFee = 0.0;
+                 	owners = ifnull(ownerCount,0);
+                 	if(owners < 0)
+                 	{
+                 		owners = 0;
+                 	}
+                 	licenseRows = License_Types[ID == licenseTypeId];
+                 	if(licenseRows.count() > 0)
+                 	{
+                 		annualFee = ifnull(licenseRows.Annual_Fee_ANN,0.0);
+                 		processingFee = ifnull(licenseRows.Processing_Fee_Default,0.0);
+                 		federalFee = ifnull(licenseRows.Federal_Fingerprint_Fee,0.0) * owners;
+                 		stateFee = ifnull(licenseRows.State_Fingerprint_Fee,0.0) * owners;
+                 	}
+                 	totalFingerprintFee = federalFee + stateFee;
+                 	totalDue = annualFee + processingFee + totalFingerprintFee;
+                 	fees.put("annual_fee",annualFee);
+                 	fees.put("processing_fee",processingFee);
+                 	fees.put("federal_fingerprint_fee",federalFee);
+                 	fees.put("state_fingerprint_fee",stateFee);
+                 	fees.put("owner_count",owners);
+                 	fees.put("total_fingerprint_fee",totalFingerprintFee);
+                 	fees.put("total_due",totalDue);
+                 	return fees;
+                 
+}

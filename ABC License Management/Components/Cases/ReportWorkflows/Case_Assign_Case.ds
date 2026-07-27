@@ -1,0 +1,28 @@
+Case_Assign_Case as "Assign Case"
+{
+	type = functions
+	form = Cases
+	execution type = for each record
+	description = "Assigns a new enforcement case to the current user from case reports."
+
+	on start
+	{
+		actions
+		{
+			on click
+			(
+				actorEmail = zoho.loginuserid;
+				if(input.Case_Status == "New")
+				{
+					input.Assigned_Agent_Email = actorEmail;
+					input.Case_Status = "Assigned";
+					thisapp.Write_Audit_Log("Enforcement","Cases",input.ID,"Case assigned","Case assigned from report to " + actorEmail + ".");
+				}
+				else
+				{
+					thisapp.Write_Audit_Log("Enforcement","Cases",input.ID,"Assign case action skipped","Assign Case clicked by " + actorEmail + " but case status was " + input.Case_Status + ".");
+				}
+			)
+		}
+	}
+}

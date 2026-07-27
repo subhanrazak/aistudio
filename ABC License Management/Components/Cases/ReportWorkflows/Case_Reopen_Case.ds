@@ -1,0 +1,32 @@
+Case_Reopen_Case as "Reopen Case"
+{
+	type = functions
+	form = Cases
+	execution type = for each record
+	description = "Reopens a closed enforcement case from case reports."
+
+	on start
+	{
+		actions
+		{
+			on click
+			(
+				actorEmail = zoho.loginuserid;
+				if(input.Case_Status == "Closed")
+				{
+					input.Case_Status = "Assigned";
+					input.Closure_Date = null;
+					if(input.Legal_Review_Status == "Closed")
+					{
+						input.Legal_Review_Status = "Returned";
+					}
+					thisapp.Write_Audit_Log("Enforcement","Cases",input.ID,"Case reopened","Case reopened from report by " + actorEmail + ".");
+				}
+				else
+				{
+					thisapp.Write_Audit_Log("Enforcement","Cases",input.ID,"Reopen case action skipped","Reopen Case clicked by " + actorEmail + " but case status was " + input.Case_Status + ".");
+				}
+			)
+		}
+	}
+}

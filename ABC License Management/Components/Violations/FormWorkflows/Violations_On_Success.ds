@@ -1,0 +1,35 @@
+Violations_On_Success as "Update Case From Violation"
+{
+
+				type =  form
+				form = Violations
+
+				record event = on add or edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											caseRows = Cases[ID == input.Case];
+										if(caseRows.count() > 0)
+										{
+											caseRows.Violations_Observed=true;
+											if(input.Recommended_Action == "Accusation")
+											{
+												caseRows.Recommend_Accusation=true;
+											}
+										}
+										if(input.Notice_of_Violation_Issued == true && input.NOV_Correspondence == null)
+										{
+											novId = thisapp.Create_Correspondence_Stub("Enforcement",input.ID,"ABC-756","","Not Required");
+											input.NOV_Correspondence = novId;
+										}
+										thisapp.Write_Audit_Log("Enforcement","Violations",input.ID,"Violation saved","Violation linked to case and NOV queue updated.");
+						)
+					}
+				}
+
+			
+}

@@ -1,0 +1,30 @@
+License_Reinstate_License as "Reinstate License"
+{
+	type = functions
+	form = Licenses
+	execution type = for each record
+	description = "Reinstates a terminated license from license reports."
+
+	on start
+	{
+		actions
+		{
+			on click
+			(
+				actorEmail = zoho.loginuserid;
+				if(input.License_Status == "Terminated")
+				{
+					input.License_Status = "Active";
+					input.Terminated_Date = null;
+					input.Termination_Reason = "Reinstated from report by " + actorEmail + ".";
+					input.Replaced_By_License = null;
+					thisapp.Write_Audit_Log("Licensing","Licenses",input.ID,"License reinstated","Terminated license reinstated from report by " + actorEmail + ".");
+				}
+				else
+				{
+					thisapp.Write_Audit_Log("Licensing","Licenses",input.ID,"Reinstate license action skipped","Reinstate License clicked by " + actorEmail + " but the license was not Terminated.");
+				}
+			)
+		}
+	}
+}

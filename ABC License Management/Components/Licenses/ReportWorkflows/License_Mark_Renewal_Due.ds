@@ -1,0 +1,27 @@
+License_Mark_Renewal_Due as "Mark Renewal Due"
+{
+	type = functions
+	form = Licenses
+	execution type = for each record
+	description = "Marks a license as Renewal Due from license reports."
+
+	on start
+	{
+		actions
+		{
+			on click
+			(
+				actorEmail = zoho.loginuserid;
+				if((input.License_Status == "Active" || input.License_Status == "Renewed") && input.Expiration_Date != null && input.Expiration_Date <= zoho.currentdate.addDay(60))
+				{
+					input.License_Status = "Renewal Due";
+					thisapp.Write_Audit_Log("Renewal","Licenses",input.ID,"Marked renewal due","License marked Renewal Due from report by " + actorEmail + ".");
+				}
+				else
+				{
+					thisapp.Write_Audit_Log("Renewal","Licenses",input.ID,"Renewal due action skipped","Mark Renewal Due clicked by " + actorEmail + " but the license was not Active/Renewed within the renewal window.");
+				}
+			)
+		}
+	}
+}

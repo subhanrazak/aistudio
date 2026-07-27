@@ -1,0 +1,27 @@
+License_Type_Line_Items_Fee_On_User_Input as "Recalculate Fee From Line Item"
+{
+
+				type =  form
+				form = Applications
+
+				record event = on add or edit
+
+				on user input of License_Type_Line_Items.Line_Item_Fee
+				{
+					actions 
+					{
+						custom deluge script
+						(
+										lineTotal = 0;
+										for each  rowLine in input.License_Type_Line_Items
+										{
+											lineTotal = lineTotal + ifnull(rowLine.Line_Item_Fee,0);
+										}
+										input.Total_Fee = lineTotal;
+										input.Total_Fee_Due = input.Total_Fee;
+						)
+					}
+				}
+
+			
+}

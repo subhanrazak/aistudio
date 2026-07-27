@@ -1,0 +1,45 @@
+list Public_Application_Status
+{
+	displayName = "Public Application Status"
+	show all rows from Applications
+	(
+		Application_Number as "Tracking Reference"
+		Applicant_Profile as "Applicant Profile"
+		Application_Type as "Application Type"
+		DBA
+		License as "Existing License"
+		Issued_License as "Issued License"
+		Application_Status as "Application Status"
+		Payment_Status as "Payment Status"
+		Signature_Status as "Signature Status"
+		Total_Fee as "Total Fee"
+		Application_Submitted_Date as "Application Submitted Date"
+		custom action "Submit Application"
+		(
+			workflow = Submit_Application
+			show action for each record = true
+			show action in edit record menu = true
+			column header = "Submit Application"
+			success message = "Application submitted successfully"
+			condition = (Application_Status == "Draft" || Application_Status is null || Application_Status == "")
+			confirmation before execution
+			(
+				message for individual record = "Submit this application for staff intake?"
+				confirm button text = "Submit"
+				cancel button text = "Cancel"
+			)
+		)
+	)
+	filters
+	(
+		Applicant_Profile
+		Application_Type
+		Application_Status
+		Payment_Status
+		Application_Submitted_Date
+	)
+	sort by
+	(
+		Application_Submitted_Date descending
+	)
+}

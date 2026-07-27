@@ -1,0 +1,28 @@
+Payment_Reconcile_Payment as "Reconcile Payment"
+{
+	type = functions
+	form = Payments
+	execution type = for each record
+	description = "Reconciles complete/refunded/voided payments from payment reports."
+
+	on start
+	{
+		actions
+		{
+			on click
+			(
+				actorEmail = zoho.loginuserid;
+				if(input.Reconciled != true && (input.Payment_Status == "Complete" || input.Payment_Status == "Refunded" || input.Payment_Status == "Void"))
+				{
+					input.Reconciled = true;
+					input.Reconciliation_Date = zoho.currentdate;
+					thisapp.Write_Audit_Log("Payment","Payments",input.ID,"Payment reconciled","Payment reconciled from report by " + actorEmail + ".");
+				}
+				else
+				{
+					thisapp.Write_Audit_Log("Payment","Payments",input.ID,"Reconcile payment action skipped","Reconcile Payment clicked by " + actorEmail + " but payment was already reconciled or not in a reconcilable status.");
+				}
+			)
+		}
+	}
+}

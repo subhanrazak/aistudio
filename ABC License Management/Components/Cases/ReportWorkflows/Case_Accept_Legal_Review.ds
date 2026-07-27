@@ -1,0 +1,28 @@
+Case_Accept_Legal_Review as "Accept Legal Review"
+{
+	type = functions
+	form = Cases
+	execution type = for each record
+	description = "Accepts a referred case for OLS/legal review and assigns it to the current attorney."
+
+	on start
+	{
+		actions
+		{
+			on click
+			(
+				actorEmail = zoho.loginuserid;
+				if(input.Case_Status == "Referred to OLS" && input.Legal_Review_Status == "Pending OLS Review")
+				{
+					input.Case_Status = "Legal Review";
+					input.OLS_Assigned_Attorney_Email = actorEmail;
+					thisapp.Write_Audit_Log("Enforcement","Cases",input.ID,"Legal review accepted","Legal review accepted from report by " + actorEmail + ".");
+				}
+				else
+				{
+					thisapp.Write_Audit_Log("Enforcement","Cases",input.ID,"Accept legal review action skipped","Accept Legal Review clicked by " + actorEmail + " but case/legal status was " + input.Case_Status + " / " + input.Legal_Review_Status + ".");
+				}
+			)
+		}
+	}
+}

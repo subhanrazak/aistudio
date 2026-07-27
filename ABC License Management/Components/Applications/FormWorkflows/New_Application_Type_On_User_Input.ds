@@ -1,0 +1,54 @@
+New_Application_Type_On_User_Input as "Apply Application Type Rules"
+{
+
+				type =  form
+				form = Applications
+
+				record event = on add or edit
+
+				on user input of Application_Type
+				{
+					actions 
+					{
+						custom deluge script
+						(
+										if(input.From_Page == true)
+										{
+											guidedStage = ifnull(input.Current_Stage,"0");
+											if(input.Show_Value != null && input.Show_Value.trim() != "")
+											{
+												guidedStage = input.Show_Value;
+												input.Current_Stage = guidedStage;
+											}
+											if(guidedStage == "1" && (input.Application_Type == "Transfer" || input.Application_Type == "Change"))
+											{
+												show License;
+											}
+											else
+											{
+												input.License = null;
+												hide License;
+											}
+										}
+										else if(input.Application_Type == "Transfer" || input.Application_Type == "Change")
+										{
+											show License;
+										}
+										else
+										{
+											input.License = null;
+											hide License;
+										}
+										lineTotal = 0;
+										for each  rowLine in input.License_Type_Line_Items
+										{
+											lineTotal = lineTotal + ifnull(rowLine.Line_Item_Fee,0);
+										}
+										input.Total_Fee = lineTotal;
+										input.Total_Fee_Due = input.Total_Fee;
+						)
+					}
+				}
+
+			
+}

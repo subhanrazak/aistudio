@@ -1,0 +1,70 @@
+Renewal_Items_On_Success as "Roll Up Renewal Item"
+{
+
+				type =  form
+				form = Renewal_Items
+
+				record event = on add or edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Renewal_Batch != null)
+										{
+											items = Renewal_Items[Renewal_Batch == input.Renewal_Batch && Item_Status != "Cancelled"];
+											totalFees = 0.0;
+											totalPenalties = 0.0;
+											totalDue = 0.0;
+											stageSeen = "None";
+											mixed = false;
+											for each  rItem in items
+											{
+												totalFees = totalFees + ifnull(rItem.Renewal_Fee,0.0);
+												totalPenalties = totalPenalties + ifnull(rItem.Penalty_Amount,0.0);
+												totalDue = totalDue + ifnull(rItem.Total_Item_Amount,0.0);
+												if(stageSeen == "None")
+												{
+													stageSeen = rItem.Penalty_Stage;
+												}
+												else if(stageSeen != rItem.Penalty_Stage)
+												{
+													mixed = true;
+												}
+											}
+											batchRows = Renewal_Batches[ID == input.Renewal_Batch];
+											if(batchRows.count() > 0)
+											{
+												batchRows.Total_Renewal_Fees=totalFees;
+												batchRows.Total_Penalties=totalPenalties;
+												batchRows.Total_Amount_Due=totalDue;
+												if(mixed == true)
+												{
+													batchRows.Penalty_Stage_Applied="Mixed";
+												}
+												else
+												{
+													batchRows.Penalty_Stage_Applied=stageSeen;
+												}
+											}
+										}
+										if(input.Item_Status == "Renewed" && input.License != null)
+										{
+											licRows = Licenses[ID == input.License];
+											if(licRows.count() > 0)
+											{
+												licRows.License_Status="Renewed";
+												licRows.Last_Renewal_Date=zoho.currentdate;
+												licRows.Expiration_Date=zoho.currentdate.addYear(1);
+												licRows.Penalty_Stage="None";
+											}
+										}
+										thisapp.Write_Audit_Log("Renewal","Renewal_Items",input.ID,"Renewal item saved","Renewal item totals rolled up to batch.");
+						)
+					}
+				}
+
+			
+}

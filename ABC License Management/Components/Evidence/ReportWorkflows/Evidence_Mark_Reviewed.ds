@@ -1,0 +1,28 @@
+Evidence_Mark_Reviewed as "Mark Reviewed"
+{
+	type = functions
+	form = Evidence
+	execution type = for each record
+	description = "Marks evidence disposition review complete from evidence reports."
+
+	on start
+	{
+		actions
+		{
+			on click
+			(
+				actorEmail = zoho.loginuserid;
+				if(input.Disposition_Level != "Not Ready" && input.Chain_of_Custody_Status != "Disposed" && input.Chain_of_Custody_Status != "Released to Owner")
+				{
+					input.Current_Custodian = actorEmail;
+					input.Notes = ifnull(input.Notes,"") + "\nDisposition reviewed by " + actorEmail + " on " + zoho.currentdate + ". Level: " + input.Disposition_Level + ".";
+					thisapp.Write_Audit_Log("Enforcement","Evidence",input.ID,"Evidence disposition reviewed","Evidence reviewed from report by " + actorEmail + ". Disposition level: " + input.Disposition_Level + ".");
+				}
+				else
+				{
+					thisapp.Write_Audit_Log("Enforcement","Evidence",input.ID,"Mark reviewed action skipped","Mark Reviewed clicked by " + actorEmail + " but disposition/custody status did not allow review.");
+				}
+			)
+		}
+	}
+}

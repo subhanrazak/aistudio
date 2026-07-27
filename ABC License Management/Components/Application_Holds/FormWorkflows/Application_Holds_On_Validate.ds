@@ -1,0 +1,37 @@
+Application_Holds_On_Validate as "Validate Application Hold"
+{
+
+				type =  form
+				form = Application_Holds
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Application == null || input.Hold_Placed_By == null || input.Hold_Type in {""," ","null"} || input.Hold_Comment in {""," ","null"})
+										{
+											alert "Application, Hold Placed By, Hold Type, and Hold Comment are required.";
+											cancel submit;
+										}
+										if(input.Hold_Released == true)
+										{
+											if(input.Released_By == null)
+											{
+												alert "Released By is required when releasing a hold.";
+												cancel submit;
+											}
+											if(input.Released_Date == null)
+											{
+												input.Released_Date = zoho.currentdate;
+											}
+										}
+						)
+					}
+				}
+
+			
+}

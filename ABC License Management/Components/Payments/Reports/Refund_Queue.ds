@@ -1,0 +1,57 @@
+list Refund_Queue
+{
+	displayName = "Refund Queue"
+	show all rows from Payments [Refund_Requested == true && Refund_Status != "Completed"]
+	(
+		Payment_Reference as "Payment Reference"
+		Payment_Module as "Payment Module"
+		Entity
+		Payment_Status as "Payment Status"
+		Amount_Paid as "Amount Paid"
+		Refund_Requested as "Refund Requested"
+		Refund_Amount as "Refund Amount"
+		Refund_Status as "Refund Status"
+		Refund_Reason as "Refund Reason"
+		Payment_Date as "Payment Date"
+		custom action "Approve Refund"
+		(
+			workflow = Payment_Approve_Refund
+			show action for each record = true
+			show action in edit record menu = true
+			column header = "Approve Refund"
+			success message = "Refund approved."
+			condition = (Refund_Requested == true && Refund_Status == "Requested")
+			confirmation before execution
+			(
+				message for individual record = "Approve and complete this refund?"
+				confirm button text = "Approve Refund"
+				cancel button text = "Cancel"
+			)
+		)
+		custom action "Reject Refund"
+		(
+			workflow = Payment_Reject_Refund
+			show action for each record = true
+			show action in edit record menu = true
+			column header = "Reject Refund"
+			success message = "Refund rejected."
+			condition = (Refund_Requested == true && (Refund_Status == "Requested" || Refund_Status == "Approved"))
+			confirmation before execution
+			(
+				message for individual record = "Reject this refund request?"
+				confirm button text = "Reject Refund"
+				cancel button text = "Cancel"
+			)
+		)
+	)
+	filters
+	(
+		Refund_Status
+		Payment_Module
+		Payment_Date
+	)
+	sort by
+	(
+		Payment_Date ascending
+	)
+}

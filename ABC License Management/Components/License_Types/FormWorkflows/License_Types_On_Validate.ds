@@ -1,0 +1,43 @@
+License_Types_On_Validate as "Validate License Type Fees"
+{
+
+				type =  form
+				form = License_Types
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Code in {""," ","null"})
+										{
+											alert "Code is required.";
+											cancel submit;
+										}
+										if(input.Primary_LT_Name in {""," ","null"})
+										{
+											alert "Primary LT Name is required.";
+											cancel submit;
+										}
+										if(input.License_Code == null || input.License_Code.trim() == "")
+										{
+											input.License_Code = input.Code;
+										}
+										if(input.Full_License_Type_Name == null || input.Full_License_Type_Name.trim() == "")
+										{
+											input.Full_License_Type_Name = input.Primary_LT_Name;
+										}
+										if(ifnull(input.Base_License_Fee,0) < 0 || ifnull(input.Base_License_Fee_CPI,0) < 0 || ifnull(input.Appeals_Board_Surcharge,0) < 0 || ifnull(input.CHP_Surcharge,0) < 0 || ifnull(input.BPU24_Fee,0) < 0 || ifnull(input.BU52_Fee,0) < 0 || ifnull(input.Total_Surcharges,0) < 0 || ifnull(input.Annual_Fee_ANN,0) < 0 || ifnull(input.Renewal_Fee_REN,0) < 0 || ifnull(input.Renewal_Duplicate_DOR,0) < 0 || ifnull(input.Renewal_50_REN50,0) < 0 || ifnull(input.Renewal_100_REN100,0) < 0 || ifnull(input.ANN_or_DOR,0) < 0 || ifnull(input.Processing_Fee_Default,0) < 0 || ifnull(input.Federal_Fingerprint_Fee,0) < 0 || ifnull(input.State_Fingerprint_Fee,0) < 0)
+										{
+											alert "Fee amounts cannot be negative.";
+											cancel submit;
+										}
+						)
+					}
+				}
+
+			
+}

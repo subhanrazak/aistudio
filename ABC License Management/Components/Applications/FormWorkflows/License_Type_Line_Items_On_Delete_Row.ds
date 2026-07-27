@@ -1,0 +1,27 @@
+License_Type_Line_Items_On_Delete_Row as "Recalculate Fee When Line Item Deleted"
+{
+
+				type =  form
+				form = Applications
+
+				record event = on add or edit
+
+				on delete row of License_Type_Line_Items
+				{
+					actions 
+					{
+						custom deluge script
+						(
+										lineTotal = 0;
+										for each  rowLine in input.License_Type_Line_Items
+										{
+											lineTotal = lineTotal + ifnull(rowLine.Line_Item_Fee,0);
+										}
+										input.Total_Fee = lineTotal;
+										input.Total_Fee_Due = input.Total_Fee;
+						)
+					}
+				}
+
+			
+}

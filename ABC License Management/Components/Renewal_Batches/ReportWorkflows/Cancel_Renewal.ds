@@ -1,0 +1,27 @@
+Cancel_Renewal as "Cancel Renewal"
+{
+	type = functions
+	form = Renewal_Batches
+	execution type = for each record
+	description = "Cancels an open renewal batch from renewal reports."
+
+	on start
+	{
+		actions
+		{
+			on click
+			(
+				actorEmail = zoho.loginuserid;
+				if(input.Batch_Status != "Completed" && input.Batch_Status != "Cancelled")
+				{
+					input.Batch_Status = "Cancelled";
+					thisapp.Write_Audit_Log("Renewal","Renewal_Batches",input.ID,"Renewal cancelled","Renewal batch cancelled from report by " + actorEmail + ".");
+				}
+				else
+				{
+					thisapp.Write_Audit_Log("Renewal","Renewal_Batches",input.ID,"Cancel renewal action skipped","Cancel Renewal clicked by " + actorEmail + " but the renewal batch was already Completed or Cancelled.");
+				}
+			)
+		}
+	}
+}

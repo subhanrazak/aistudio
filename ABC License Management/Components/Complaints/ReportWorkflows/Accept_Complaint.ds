@@ -1,0 +1,31 @@
+Accept_Complaint as "Accept Complaint"
+{
+	type = functions
+	form = Complaints
+	execution type = for each record
+	description = "Accepts or re-opens a complaint from complaint reports."
+
+	on start
+	{
+		actions
+		{
+			on click
+			(
+				actorEmail = zoho.loginuserid;
+				if(input.Screening_Decision != "Accepted")
+				{
+					input.Screening_Decision = "Accepted";
+					input.Information_Sufficient = true;
+					input.Jurisdictional = true;
+					input.Assigned_Supervisor_Email = actorEmail;
+					input.Screening_Notes = "Accepted from complaint report by " + actorEmail + " on " + zoho.currentdate + ".";
+					thisapp.Write_Audit_Log("Enforcement","Complaints",input.ID,"Complaint accepted","Complaint accepted from complaint report by " + actorEmail + ".");
+				}
+				else
+				{
+					thisapp.Write_Audit_Log("Enforcement","Complaints",input.ID,"Accept complaint action skipped","Accept Complaint clicked by " + actorEmail + " but complaint was already Accepted.");
+				}
+			)
+		}
+	}
+}

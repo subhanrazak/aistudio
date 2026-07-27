@@ -1,0 +1,28 @@
+Submit_Renewal as "Submit Renewal"
+{
+	type = functions
+	form = Renewal_Batches
+	execution type = for each record
+	description = "Submits a draft renewal batch from renewal reports."
+
+	on start
+	{
+		actions
+		{
+			on click
+			(
+				actorEmail = zoho.loginuserid;
+				if(input.Batch_Status == "Draft")
+				{
+					input.Batch_Status = "Submitted";
+					input.Submitted_Date = zoho.currentdate;
+					thisapp.Write_Audit_Log("Renewal","Renewal_Batches",input.ID,"Renewal submitted","Renewal batch submitted from report by " + actorEmail + ".");
+				}
+				else
+				{
+					thisapp.Write_Audit_Log("Renewal","Renewal_Batches",input.ID,"Submit renewal action skipped","Submit Renewal clicked by " + actorEmail + " but the renewal batch was not Draft.");
+				}
+			)
+		}
+	}
+}

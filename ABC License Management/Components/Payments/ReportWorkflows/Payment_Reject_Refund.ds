@@ -1,0 +1,32 @@
+Payment_Reject_Refund as "Reject Refund"
+{
+	type = functions
+	form = Payments
+	execution type = for each record
+	description = "Rejects requested refunds from payment reports."
+
+	on start
+	{
+		actions
+		{
+			on click
+			(
+				actorEmail = zoho.loginuserid;
+				if(input.Refund_Requested == true && (input.Refund_Status == "Requested" || input.Refund_Status == "Approved"))
+				{
+					input.Refund_Status = "Denied";
+					input.Refund_Requested = false;
+					if(input.Payment_Status == "Refund Requested")
+					{
+						input.Payment_Status = "Complete";
+					}
+					thisapp.Write_Audit_Log("Payment","Payments",input.ID,"Refund rejected","Refund rejected from report by " + actorEmail + ".");
+				}
+				else
+				{
+					thisapp.Write_Audit_Log("Payment","Payments",input.ID,"Reject refund action skipped","Reject Refund clicked by " + actorEmail + " but refund was not in a rejectable state.");
+				}
+			)
+		}
+	}
+}

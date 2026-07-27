@@ -1,0 +1,249 @@
+Applications_On_Load as "Prepare New License Application"
+{
+
+				type =  form
+				form = Applications
+
+				record event = on add or edit
+
+				on load
+				{
+					actions 
+					{
+						custom deluge script
+						(
+										if(input.Applicant_Profile == null)
+										{
+											profileRec = Applicant_Profile[Profile_Email == zoho.loginuserid];
+											if(profileRec.count() > 0)
+											{
+												input.Applicant_Profile = profileRec.ID;
+												input.Applicant_Email = profileRec.Profile_Email;
+											}
+										}
+										if(input.Application_Type in {""," ","null"} || input.Application_Type == null)
+										{
+											input.Application_Type = "Original";
+										}
+										if(input.Application_Submitted_Date == null)
+										{
+											input.Application_Submitted_Date = zoho.currentdate;
+										}
+										if(input.Submitted_Date == null)
+										{
+											input.Submitted_Date = input.Application_Submitted_Date;
+										}
+										if(input.Application_Status == null)
+										{
+											input.Application_Status = "Draft";
+										}
+										if(input.Payment_Status == null)
+										{
+											input.Payment_Status = "Pending";
+										}
+										if(input.Signature_Status == null)
+										{
+											input.Signature_Status = "Not Started";
+										}
+										if(input.Books_Invoice_Status == null)
+										{
+											input.Books_Invoice_Status = "Not Created";
+										}
+										lineTotal = 0;
+										if(input.ID != null)
+										{
+											relatedLines = License_Type_Line_Items[License_Application == input.ID];
+											for each  line in relatedLines
+											{
+												lineTotal = lineTotal + ifnull(line.Line_Item_Fee,0);
+											}
+										}
+										input.Total_Fee = lineTotal;
+										input.Total_Fee_Due = input.Total_Fee;
+										disable Total_Fee;
+										disable Total_Fee_Due;
+										disable Issued_License;
+										disable Issued_Date;
+										disable Submitted_Date;
+										hide Month_field;
+										hide Year_field;
+										hide loadIn;
+										hide Current_Stage;
+										hide Show_Value;
+										hide From_Page;
+										guidedStage = ifnull(input.Current_Stage,"0");
+										if(input.Show_Value != null && input.Show_Value.trim() != "")
+										{
+											guidedStage = input.Show_Value;
+											input.Current_Stage = guidedStage;
+										}
+										else
+										{
+											input.Show_Value = guidedStage;
+										}
+										if(input.From_Page == true)
+										{
+											hide Applicant_Profile;
+											hide Legal_Entity;
+											hide Premise_Address;
+											hide Attorney;
+											hide License;
+											hide Application_Type;
+											hide DBA;
+											hide Mailing_Address;
+											hide Total_Fee;
+											hide License_Type_Line_Items;
+											hide Felony;
+											hide Violation;
+											hide Copies_Mailed;
+											hide Sent_INS;
+											hide Cleared_Date;
+											hide New_Beer_Price_Posting_Email;
+											hide Section_23826_8;
+											hide Application_Submitted_Date;
+											hide Estimated_Issue_Date;
+											hide Fingerprints;
+											hide See_211_Signature_Page;
+											hide Applicant_Email;
+											hide Entity;
+											hide Payment_Status;
+											hide Denial_Reason;
+											hide Issued_Date;
+											hide Total_Fee_Due;
+											hide Books_Invoice_Status;
+											hide Investigator_Review_Flag;
+											hide Application_Status;
+											hide Business_DBA_Name;
+											hide License_Type;
+											hide Premises;
+											hide Checklist_Complete;
+											hide Issued_License;
+											hide Submitted_Date;
+											hide Signature_Status;
+											hide Assigned_Licensing_Rep;
+											hide Tracking_Url_or_Note;
+											if(guidedStage == "0")
+											{
+												show Applicant_Profile;
+												show Legal_Entity;
+												show Applicant_Email;
+												show Entity;
+											}
+											else if(guidedStage == "1")
+											{
+												show Application_Type;
+												if(input.Application_Type == "Transfer" || input.Application_Type == "Change")
+												{
+													show License;
+												}
+											}
+											else if(guidedStage == "2")
+											{
+												show DBA;
+												show Premise_Address;
+												show Mailing_Address;
+												show Attorney;
+												show Business_DBA_Name;
+												show Premises;
+											}
+											else if(guidedStage == "3")
+											{
+												show License_Type_Line_Items;
+												show License_Type;
+												show Total_Fee;
+												show Total_Fee_Due;
+												show Books_Invoice_Status;
+											}
+											else if(guidedStage == "4")
+											{
+												show Felony;
+												show Violation;
+												show Copies_Mailed;
+												show Sent_INS;
+												show Cleared_Date;
+												show New_Beer_Price_Posting_Email;
+												show Section_23826_8;
+												show Fingerprints;
+												show See_211_Signature_Page;
+												show Checklist_Complete;
+												show Investigator_Review_Flag;
+											}
+											else if(guidedStage == "5")
+											{
+												show Application_Submitted_Date;
+												show Estimated_Issue_Date;
+												show Payment_Status;
+												show Signature_Status;
+												show Application_Status;
+												show Denial_Reason;
+												show Assigned_Licensing_Rep;
+												show Total_Fee;
+												show Total_Fee_Due;
+											}
+											else if(guidedStage == "6")
+											{
+												show Submitted_Date;
+												show Application_Status;
+												show Issued_License;
+												show Issued_Date;
+												show Tracking_Url_or_Note;
+												show Payment_Status;
+												show Signature_Status;
+											}
+										}
+										else
+										{
+											show Applicant_Profile;
+											show Legal_Entity;
+											show Premise_Address;
+											show Attorney;
+											show Application_Type;
+											show DBA;
+											show Mailing_Address;
+											show Total_Fee;
+											show License_Type_Line_Items;
+											show Felony;
+											show Violation;
+											show Copies_Mailed;
+											show Sent_INS;
+											show Cleared_Date;
+											show New_Beer_Price_Posting_Email;
+											show Section_23826_8;
+											show Application_Submitted_Date;
+											show Estimated_Issue_Date;
+											show Fingerprints;
+											show See_211_Signature_Page;
+											show Applicant_Email;
+											show Entity;
+											show Payment_Status;
+											show Denial_Reason;
+											show Issued_Date;
+											show Total_Fee_Due;
+											show Books_Invoice_Status;
+											show Investigator_Review_Flag;
+											show Application_Status;
+											show Business_DBA_Name;
+											show License_Type;
+											show Premises;
+											show Checklist_Complete;
+											show Issued_License;
+											show Submitted_Date;
+											show Signature_Status;
+											show Assigned_Licensing_Rep;
+											show Tracking_Url_or_Note;
+											if(input.Application_Type == "Transfer" || input.Application_Type == "Change")
+											{
+												show License;
+											}
+											else
+											{
+												input.License = null;
+												hide License;
+											}
+										}
+						)
+					}
+				}
+
+			
+}

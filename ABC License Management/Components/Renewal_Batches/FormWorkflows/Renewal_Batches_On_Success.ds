@@ -1,0 +1,65 @@
+Renewal_Batches_On_Success as "Renewal Batch Automation"
+{
+
+				type =  form
+				form = Renewal_Batches
+
+				record event = on add or edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Batch_Status == "Submitted" || input.Batch_Status == "Payment Pending" && input.Submitted_Date == null)
+										{
+											input.Submitted_Date = zoho.currentdate;
+										}
+										if(input.Batch_Status == "Submitted" || input.Batch_Status == "Payment Pending" && input.Payment == null)
+										{
+											paymentId = insert into Payments
+											[
+												Payment_Module="Renewal"
+												Renewal_Batch=input.ID
+												Entity=input.Entity
+												Payment_Method="Manual Adjustment"
+												Payment_Status="Pending"
+												Amount_Due=input.Total_Amount_Due
+												Amount_Paid=0.0
+												Added_User=zoho.loginuser
+											];
+											input.Payment = paymentId;
+											input.Payment_Status = "Pending";
+											input.Batch_Status = "Payment Pending";
+											thisapp.Write_Audit_Log("Renewal","Renewal_Batches",input.ID,"Renewal payment created","Manual payment record created for renewal batch.");
+										}
+										if(input.Payment_Status == "Complete" || input.Batch_Status == "Completed")
+										{
+											input.Completed_Date = zoho.currentdate;
+											input.Batch_Status = "Completed";
+											itemRows = Renewal_Items[Renewal_Batch == input.ID];
+											for each  itemRow in itemRows
+											{
+												itemRow.Item_Status="Renewed";
+												if(itemRow.License != null)
+												{
+													licRows = Licenses[ID == itemRow.License];
+													if(licRows.count() > 0)
+													{
+														licRows.License_Status="Renewed";
+														licRows.Last_Renewal_Date=zoho.currentdate;
+														licRows.Expiration_Date=zoho.currentdate.addYear(1);
+														licRows.Penalty_Stage="None";
+													}
+												}
+											}
+											thisapp.Create_Correspondence_Stub("Renewal",input.ID,"Renewed Certificate",input.Licensee_Email,"Not Required");
+											thisapp.Write_Audit_Log("Renewal","Renewal_Batches",input.ID,"Renewal batch completed","All related renewal items marked renewed.");
+										}
+						)
+					}
+				}
+
+			
+}

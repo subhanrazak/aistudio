@@ -1,0 +1,57 @@
+Application_Holds_On_Success as "Apply Application Hold Status"
+{
+
+				type =  form
+				form = Application_Holds
+
+				record event = on add or edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											appRows = Applications[ID == input.Application];
+										if(appRows.count() > 0)
+										{
+											if(input.Hold_Released == false)
+											{
+												appRows.Application_Status="On-hold";
+												insert into Docket_Notes
+												[
+													Application=input.Application
+													Event_Date=ifnull(input.Created_Date,zoho.currentdate)
+													Event_Code="HOLD_PLACED"
+													Event_Description="Application hold placed"
+													Comments=input.Hold_Type + ": " + input.Hold_Comment
+													User=zoho.loginuserid
+													Added_User=zoho.loginuser
+												]
+												thisapp.Write_Audit_Log("New License Application","Application_Holds",input.ID,"Hold placed","Application moved to On-hold.");
+											}
+											else
+											{
+												if(appRows.Application_Status == "On-hold")
+												{
+													appRows.Application_Status="In-progress";
+												}
+												insert into Docket_Notes
+												[
+													Application=input.Application
+													Event_Date=ifnull(input.Released_Date,zoho.currentdate)
+													Event_Code="HOLD_RELEASED"
+													Event_Description="Application hold released"
+													Comments=input.Hold_Type + " hold released."
+													User=zoho.loginuserid
+													Added_User=zoho.loginuser
+												]
+												thisapp.Write_Audit_Log("New License Application","Application_Holds",input.ID,"Hold released","Application hold released.");
+											}
+										}
+						)
+					}
+				}
+
+			
+}

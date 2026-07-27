@@ -1,0 +1,27 @@
+Violation_Clear_Violation as "Clear Violation"
+{
+	type = functions
+	form = Violations
+	execution type = for each record
+	description = "Clears a violation outcome by setting the recommendation to No Further Action."
+
+	on start
+	{
+		actions
+		{
+			on click
+			(
+				actorEmail = zoho.loginuserid;
+				if(input.Recommended_Action != "No Further Action")
+				{
+					input.Recommended_Action = "No Further Action";
+					thisapp.Write_Audit_Log("Enforcement","Violations",input.ID,"Violation cleared","Violation cleared with No Further Action from report by " + actorEmail + ".");
+				}
+				else
+				{
+					thisapp.Write_Audit_Log("Enforcement","Violations",input.ID,"Clear violation skipped","Clear Violation clicked by " + actorEmail + " but violation was already marked No Further Action.");
+				}
+			)
+		}
+	}
+}

@@ -1,0 +1,84 @@
+list Evidence_By_Case
+{
+	displayName = "Evidence By Case"
+	show all rows from Evidence
+	(
+		Evidence_Number as "Evidence Number"
+		Case
+		Field_Visit as "Field Visit"
+		Evidence_Type as "Evidence Type"
+		Description
+		Date_Collected as "Date Collected"
+		Chain_of_Custody_Status as "Chain of Custody Status"
+		Current_Custodian as "Current Custodian"
+		Disposition_Level as "Disposition Level"
+		custom action "Log Custody"
+		(
+			workflow = Evidence_Log_Custody
+			show action for each record = true
+			show action in edit record menu = true
+			column header = "Log Custody"
+			success message = "Evidence custody logged"
+			condition = (Chain_of_Custody_Status != "Disposed" && Chain_of_Custody_Status != "Released to Owner")
+		)
+		custom action "Mark Reviewed"
+		(
+			workflow = Evidence_Mark_Reviewed
+			show action for each record = true
+			show action in edit record menu = true
+			column header = "Mark Reviewed"
+			success message = "Evidence marked reviewed"
+			condition = (Disposition_Level != "Not Ready" && Chain_of_Custody_Status != "Disposed" && Chain_of_Custody_Status != "Released to Owner")
+		)
+		custom action "Dispose Evidence"
+		(
+			workflow = Evidence_Dispose_Evidence
+			show action for each record = true
+			show action in edit record menu = true
+			column header = "Dispose Evidence"
+			success message = "Evidence disposed"
+			condition = (Disposition_Level != "Not Ready" && Chain_of_Custody_Status != "Disposed" && Chain_of_Custody_Status != "Released to Owner")
+			confirmation before execution
+			(
+				message for individual record = "Dispose this evidence item?"
+				confirm button text = "Dispose Evidence"
+				cancel button text = "Cancel"
+			)
+		)
+		custom action "Return Evidence"
+		(
+			workflow = Evidence_Return_Evidence
+			show action for each record = true
+			show action in edit record menu = true
+			column header = "Return Evidence"
+			success message = "Evidence returned"
+			condition = (Chain_of_Custody_Status != "Returned" && Chain_of_Custody_Status != "Released to Owner" && Chain_of_Custody_Status != "Disposed")
+			confirmation before execution
+			(
+				message for individual record = "Return this evidence item?"
+				confirm button text = "Return Evidence"
+				cancel button text = "Cancel"
+			)
+		)
+	)
+	filters
+	(
+		Case
+		Evidence_Type
+		Date_Collected
+		Chain_of_Custody_Status
+		Disposition_Level
+	)
+	group by
+	(
+		properties
+		(
+			display record count = true
+		)
+		Case ascending
+	)
+	sort by
+	(
+		Date_Collected descending
+	)
+}

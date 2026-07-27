@@ -1,0 +1,275 @@
+Applications_On_Success as "Application Post Submit Automation"
+{
+
+				type =  form
+				form = Applications
+
+				record event = on add or edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Submitted_Date == null)
+										{
+											input.Submitted_Date = ifnull(input.Application_Submitted_Date,zoho.currentdate);
+										}
+										if(input.Applicant_Profile != null)
+										{
+											profileRows = Applicant_Profile[ID == input.Applicant_Profile];
+											if(profileRows.count() > 0 && input.Applicant_Email in {""," ","null"})
+											{
+												input.Applicant_Email = profileRows.Profile_Email;
+											}
+										}
+										if(input.DBA != null)
+										{
+											dbaRows = DBA[ID == input.DBA];
+											if(dbaRows.count() > 0)
+											{
+												input.Business_DBA_Name = dbaRows.DBA_Name;
+											}
+										}
+										else if(input.Legal_Entity != null)
+										{
+											entityRows = Legal_Entities[ID == input.Legal_Entity];
+											if(entityRows.count() > 0)
+											{
+												if(entityRows.Entity_Type == "Company")
+												{
+													input.Business_DBA_Name = entityRows.Company_Name;
+												}
+												else
+												{
+													input.Business_DBA_Name = entityRows.Person_Name.first_name + " " + entityRows.Person_Name.last_name;
+												}
+											}
+										}
+										if(input.Business_DBA_Name in {""," ","null"})
+										{
+											input.Business_DBA_Name = "Application " + input.ID;
+										}
+										input.Total_Fee_Due = input.Total_Fee;
+										if(input.Signature_Status == null || input.Signature_Status == "Not Started")
+										{
+											input.Signature_Status = "Pending Manual Sign";
+										}
+										if(input.Books_Invoice_Status == null || input.Books_Invoice_Status == "Not Created")
+										{
+											input.Books_Invoice_Status = "Manual Invoice Created";
+										}
+										if(input.Payment_Status == null)
+										{
+											input.Payment_Status = "Pending";
+										}
+										if(input.Entity == null)
+										{
+											legacyKind = "Other";
+											legalRows = Legal_Entities[ID == input.Legal_Entity];
+											if(legalRows.count() > 0)
+											{
+												if(legalRows.Entity_Type == "Company")
+												{
+													legacyKind = "Corporation";
+												}
+												else
+												{
+													legacyKind = "Individual";
+												}
+											}
+											entityId = insert into Entities
+											[
+												Entity_Name=input.Business_DBA_Name
+												Entity_Kind=legacyKind
+												Contact_Email=input.Applicant_Email
+												Licensee_Portal_Email=input.Applicant_Email
+												Active=true
+												Added_User=zoho.loginuser
+											];
+											input.Entity = entityId;
+										}
+										if(input.Premises == null && input.Premise_Address != null)
+										{
+											addrRows = Address_Records[ID == input.Premise_Address];
+											if(addrRows.count() > 0)
+											{
+												premisesId = insert into Premises
+												[
+													DBA_Name=input.Business_DBA_Name
+													Premises_Address=addrRows.Address
+													County=ifnull(addrRows.Address.district_city,"Unknown")
+													Inside_City_Limits="Unknown"
+													Active=true
+													Added_User=zoho.loginuser
+												];
+												input.Premises = premisesId;
+											}
+										}
+										if(input.License_Type == null)
+										{
+											relatedLines = License_Type_Line_Items[License_Application == input.ID] sort by Added_Time;
+											for each  line in relatedLines
+											{
+												if(input.License_Type == null && line.Primary_LT_Name != null)
+												{
+													input.License_Type = line.Primary_LT_Name;
+												}
+											}
+										}
+										if(input.Application_Status == "License Issued" && input.Application_Type == "Original" && input.Issued_License == null && input.License_Type != null && input.Entity != null && input.Premises != null)
+										{
+											issueDate = zoho.currentdate;
+											licenseId = insert into Licenses
+											[
+												License_Type=input.License_Type
+												Entity=input.Entity
+												Premises=input.Premises
+												Source_Application=input.ID
+												Source_New_Application=input.ID
+												Applicant_Profile=input.Applicant_Profile
+												Legal_Entity_New=input.Legal_Entity
+												DBA_New=input.DBA
+												Premise_Address_New=input.Premise_Address
+												Issue_Date=issueDate
+												Expiration_Date=issueDate.addYear(1)
+												License_Status="Active"
+												Penalty_Stage="None"
+												Licensee_Email=input.Applicant_Email
+												Added_User=zoho.loginuser
+											];
+											input.Issued_License = licenseId;
+											input.Issued_Date = issueDate;
+											insert into Docket_Notes
+											[
+												Application=input.ID
+												Event_Date=issueDate
+												Event_Code="ORIGINAL_LICENSE_ISSUED"
+												Event_Description="Original application issued"
+												Comments="New active license created from Original application."
+												User=zoho.loginuserid
+												Added_User=zoho.loginuser
+											]
+											thisapp.Write_Audit_Log("New License Application","Applications",input.ID,"Original license issued","New active license created from Original application.");
+										}
+										else if(input.Application_Status == "License Issued" && input.Application_Type == "Transfer" && input.License != null && input.License_Type != null && input.Entity != null && input.Premises != null)
+										{
+											issueDate = zoho.currentdate;
+											if(input.Issued_License == null)
+											{
+												licenseId = insert into Licenses
+												[
+													License_Type=input.License_Type
+													Entity=input.Entity
+													Premises=input.Premises
+													Source_Application=input.ID
+													Source_New_Application=input.ID
+													Applicant_Profile=input.Applicant_Profile
+													Legal_Entity_New=input.Legal_Entity
+													DBA_New=input.DBA
+													Premise_Address_New=input.Premise_Address
+													Issue_Date=issueDate
+													Expiration_Date=issueDate.addYear(1)
+													License_Status="Active"
+													Penalty_Stage="None"
+													Licensee_Email=input.Applicant_Email
+													Added_User=zoho.loginuser
+												];
+												input.Issued_License = licenseId;
+											}
+											input.Issued_Date = issueDate;
+											existingLicense = Licenses[ID == input.License];
+											if(existingLicense.count() > 0)
+											{
+												existingLicense.License_Status = "Terminated";
+												existingLicense.Terminated_Date = issueDate;
+												existingLicense.Termination_Reason = "Terminated by transfer application " + input.Application_Number;
+												existingLicense.Replaced_By_License = input.Issued_License;
+											}
+											insert into Docket_Notes
+											[
+												Application=input.ID
+												Event_Date=issueDate
+												Event_Code="TRANSFER_LICENSE_ISSUED"
+												Event_Description="Transfer application issued"
+												Comments="New active license created and selected existing license terminated."
+												User=zoho.loginuserid
+												Added_User=zoho.loginuser
+											]
+											thisapp.Write_Audit_Log("New License Application","Applications",input.ID,"Transfer license issued","New active license created and selected existing license terminated.");
+										}
+										else if(input.Application_Status == "License Issued" && input.Application_Type == "Change" && input.License != null)
+										{
+											issueDate = zoho.currentdate;
+											existingLicense = Licenses[ID == input.License];
+											if(existingLicense.count() > 0)
+											{
+												if(input.License_Type != null)
+												{
+													existingLicense.License_Type = input.License_Type;
+												}
+												if(input.Entity != null)
+												{
+													existingLicense.Entity = input.Entity;
+												}
+												if(input.Premises != null)
+												{
+													existingLicense.Premises = input.Premises;
+												}
+												existingLicense.Source_New_Application = input.ID;
+												existingLicense.Applicant_Profile = input.Applicant_Profile;
+												existingLicense.Legal_Entity_New = input.Legal_Entity;
+												existingLicense.DBA_New = input.DBA;
+												existingLicense.Premise_Address_New = input.Premise_Address;
+												existingLicense.License_Status = "Active";
+												existingLicense.Licensee_Email = input.Applicant_Email;
+											}
+											input.Issued_License = input.License;
+											input.Issued_Date = issueDate;
+											insert into Docket_Notes
+											[
+												Application=input.ID
+												Event_Date=issueDate
+												Event_Code="CHANGE_LICENSE_UPDATED"
+												Event_Description="Change application issued"
+												Comments="Selected existing license updated from Change application; no new license created."
+												User=zoho.loginuserid
+												Added_User=zoho.loginuser
+											]
+											thisapp.Write_Audit_Log("New License Application","Applications",input.ID,"Change application issued","Selected existing license updated; no new license created.");
+										}
+										else if(input.Application_Status == "Rejected")
+										{
+											insert into Docket_Notes
+											[
+												Application=input.ID
+												Event_Date=zoho.currentdate
+												Event_Code="REJECTED"
+												Event_Description="Application rejected"
+												Comments=input.Denial_Reason
+												User=zoho.loginuserid
+												Added_User=zoho.loginuser
+											]
+											thisapp.Write_Audit_Log("New License Application","Applications",input.ID,"Application rejected",input.Denial_Reason);
+										}
+										else
+										{
+											insert into Docket_Notes
+											[
+												Application=input.ID
+												Event_Date=zoho.currentdate
+												Event_Code="SAVED"
+												Event_Description="Application saved or updated"
+												Comments="Application status: " + input.Application_Status
+												User=zoho.loginuserid
+												Added_User=zoho.loginuser
+											]
+											thisapp.Write_Audit_Log("New License Application","Applications",input.ID,"Application saved","Application submission/update completed.");
+										}
+						)
+					}
+				}
+
+			
+}

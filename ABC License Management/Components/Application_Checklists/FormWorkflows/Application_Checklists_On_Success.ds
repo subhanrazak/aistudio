@@ -1,0 +1,42 @@
+Application_Checklists_On_Success as "Update Application Checklist Gate"
+{
+
+				type =  form
+				form = Application_Checklists
+
+				record event = on add or edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											appRows = Applications[ID == input.Application];
+										if(appRows.count() > 0)
+										{
+											if(input.Checklist_Status == "Complete")
+											{
+												appRows.Checklist_Complete=true;
+												if(input.Completed_Date == null)
+												{
+													input.Completed_Date = zoho.currentdate;
+												}
+												if(input.Completed_By == null || input.Completed_By.trim() == "")
+												{
+													input.Completed_By = zoho.loginuserid;
+												}
+												thisapp.Write_Audit_Log("Licensing Application","Application_Checklists",input.ID,"Checklist completed","Application checklist completed and issuance gate updated.");
+											}
+											else
+											{
+												appRows.Checklist_Complete=false;
+												thisapp.Write_Audit_Log("Licensing Application","Application_Checklists",input.ID,"Checklist reopened","Application checklist is not complete.");
+											}
+										}
+						)
+					}
+				}
+
+			
+}

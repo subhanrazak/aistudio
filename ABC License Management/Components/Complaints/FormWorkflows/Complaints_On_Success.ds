@@ -1,0 +1,45 @@
+Complaints_On_Success as "Create Case From Complaint"
+{
+
+				type =  form
+				form = Complaints
+
+				record event = on add or edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Screening_Decision == "Accepted" && input.Created_Case == null)
+										{
+											caseId = insert into Cases
+											[
+												Originating_Complaint=input.ID
+												License=input.License
+												Premises=input.Premises
+												Case_Source=input.Complaint_Source
+												Priority=input.Priority
+												Supervising_Agent_Email=input.Assigned_Supervisor_Email
+												Case_Status="Assigned"
+												Added_User=zoho.loginuser
+											];
+											input.Created_Case = caseId;
+											thisapp.Create_Correspondence_Stub("Enforcement",caseId,"ABC-61",input.Assigned_Supervisor_Email,"Not Required");
+											thisapp.Write_Audit_Log("Enforcement","Complaints",input.ID,"Complaint accepted","Case and ABC-61 assignment stub created.");
+										}
+										else if(input.Screening_Decision == "Rejected" || input.Screening_Decision == "Closed")
+										{
+											thisapp.Write_Audit_Log("Enforcement","Complaints",input.ID,"Complaint closed",input.Screening_Notes);
+										}
+										else
+										{
+											thisapp.Write_Audit_Log("Enforcement","Complaints",input.ID,"Complaint saved","Complaint intake saved or updated.");
+										}
+						)
+					}
+				}
+
+			
+}

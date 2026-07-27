@@ -1,0 +1,314 @@
+<%
+	containerName = ifnull(input.loadIn,"");
+	if(containerName == null || containerName.trim() == "")
+	{
+		containerName = "PublicApplicationWizardBody";
+	}
+	applicationFound = false;
+	applicationIdUrl = "";
+	appNumber = "New application";
+	appStatus = "Draft";
+	appPaymentStatus = "Pending";
+	appSignatureStatus = "Not Started";
+	appType = "Not selected";
+	recordStageRaw = "0";
+	recordShowValue = "";
+	if(input.Application_ID != null)
+	{
+		applicationIdUrl = ifnull(input.Application_ID,"");
+		applicationRows = Applications[ID == input.Application_ID && Applicant_Profile.Profile_Email == zoho.loginuserid];
+		if(applicationRows.count() > 0)
+		{
+			applicationFound = true;
+			appNumber = ifnull(applicationRows.Application_Number,ifnull(applicationRows.Application_Reference,"Application " + input.Application_ID));
+			appStatus = ifnull(applicationRows.Application_Status,"Draft");
+			appPaymentStatus = ifnull(applicationRows.Payment_Status,"Pending");
+			appSignatureStatus = ifnull(applicationRows.Signature_Status,"Not Started");
+			appType = ifnull(applicationRows.Application_Type,"Not selected");
+			recordStageRaw = ifnull(applicationRows.Current_Stage,"0");
+			recordShowValue = ifnull(applicationRows.Show_Value,"");
+			if(recordShowValue != null && recordShowValue.trim() != "")
+			{
+				recordStageRaw = recordShowValue;
+			}
+		}
+	}
+	selectedStep = 0;
+	if(input.checkNum != null)
+	{
+		selectedStep = input.checkNum;
+	}
+	else
+	{
+		if(recordStageRaw == "1")
+		{
+			selectedStep = 1;
+		}
+		else if(recordStageRaw == "2")
+		{
+			selectedStep = 2;
+		}
+		else if(recordStageRaw == "3")
+		{
+			selectedStep = 3;
+		}
+		else if(recordStageRaw == "4")
+		{
+			selectedStep = 4;
+		}
+		else if(recordStageRaw == "5")
+		{
+			selectedStep = 5;
+		}
+		else if(recordStageRaw == "6")
+		{
+			selectedStep = 6;
+		}
+	}
+	if(selectedStep < 0 || selectedStep > 6)
+	{
+		selectedStep = 0;
+	}
+	selectedStepLabel = "Applicant";
+	if(selectedStep == 1)
+	{
+		selectedStepLabel = "License";
+	}
+	else if(selectedStep == 2)
+	{
+		selectedStepLabel = "Business";
+	}
+	else if(selectedStep == 3)
+	{
+		selectedStepLabel = "Fees";
+	}
+	else if(selectedStep == 4)
+	{
+		selectedStepLabel = "Compliance";
+	}
+	else if(selectedStep == 5)
+	{
+		selectedStepLabel = "Review";
+	}
+	else if(selectedStep == 6)
+	{
+		selectedStepLabel = "Submit";
+	}
+	progressPct = (selectedStep * 100) / 6;
+	if(appStatus == "Submitted" || appStatus == "In-progress" || appStatus == "Ready for Approval" || appStatus == "Approved" || appStatus == "License Issued")
+	{
+		progressPct = 100;
+	}
+	statusLower = appStatus.toLowerCase();
+	statusBadgeClass = "zcs-badge-yellow";
+	statusIcon = "ui-2-time";
+	if(statusLower.contains("submitted") || statusLower.contains("progress") || statusLower.contains("ready"))
+	{
+		statusBadgeClass = "zcs-badge-blue";
+		statusIcon = "loader-dots-06";
+	}
+	else if(statusLower.contains("approved") || statusLower.contains("issued"))
+	{
+		statusBadgeClass = "zcs-badge-green";
+		statusIcon = "ui-1-check-circle-08";
+	}
+	else if(statusLower.contains("reject") || statusLower.contains("denied"))
+	{
+		statusBadgeClass = "zcs-badge-red";
+		statusIcon = "ui-1-circle-remove";
+	}
+	if(applicationFound == true)
+	{
+		formParams = "recLinkID=" + applicationIdUrl + "&viewLinkName=All_Applications&From_Page=true&Show_Value=" + selectedStep + "&loadIn=" + containerName + "&zc_Header=false";
+	}
+	else
+	{
+		formParams = "zc_SubmitVal=Save&zc_Header=false&From_Page=true&Show_Value=0&loadIn=" + containerName;
+	}
+%>
+<style>
+/* Public Application Wizard scoped styles. ZCS component ids adapted: zcs-global, vertical-tab-vertical-tab-simple, layout-wizard-sample-1, header-heading-with-back, badge-badge-with-icon, button-primary-button. */
+.paw,.paw *{box-sizing:border-box}.paw{--paw-bg:#f5f7fb;--paw-card:#fff;--paw-border:var(--zcs_tertiary_border_color,#e5e7eb);--paw-primary:var(--zcs_primary_text_color,#111827);--paw-secondary:var(--zcs_secondary_text_color,#4b5563);--paw-tertiary:var(--zcs_tertiary_text_color,#8a94a6);--paw-brand:var(--zcs_brand_color,#2563eb);--paw-brand-light:var(--zcs_brand_light_color,#eff6ff);font-family:Inter,Arial,sans-serif;color:var(--paw-primary);background:linear-gradient(180deg,#f7f9ff 0%,var(--paw-bg) 58%,#fff 100%);min-height:100%;padding:24px}.paw a{text-decoration:none}.paw .zcs-flex{display:flex}.paw .zcs-inline-flex{display:inline-flex}.paw .zcs-direction-column{flex-direction:column}.paw .zcs-align-items-center{align-items:center}.paw .zcs-align-items-start{align-items:flex-start}.paw .zcs-justify-center{justify-content:center}.paw .zcs-justify-space-between{justify-content:space-between}.paw .zcs-col-common{flex:1 1 0}.paw .zcs-no-shrink{flex-shrink:0}.paw .zcs-relative{position:relative}.paw .zcs-absolute{position:absolute}.paw .zcs-w-full{width:100%}.paw .zcs-wh-full{width:100%;height:100%}.paw .zcs-overflow-auto{overflow:auto}.paw .zcs-overflow-hidden{overflow:hidden}.paw .zcs-box-border{box-sizing:border-box}.paw .zcs-gap-4{gap:.25rem}.paw .zcs-gap-6{gap:.375rem}.paw .zcs-gap-8{gap:.5rem}.paw .zcs-gap-10{gap:.625rem}.paw .zcs-gap-12{gap:.75rem}.paw .zcs-gap-16{gap:1rem}.paw .zcs-gap-20{gap:1.25rem}.paw .zcs-gap-24{gap:1.5rem}.paw .zcs-p-0{padding:0}.paw .zcs-p-8{padding:.5rem}.paw .zcs-p-10{padding:.625rem}.paw .zcs-p-12{padding:.75rem}.paw .zcs-p-16{padding:1rem}.paw .zcs-p-20{padding:1.25rem}.paw .zcs-p-24{padding:1.5rem}.paw .zcs-px-10{padding-left:.625rem;padding-right:.625rem}.paw .zcs-px-12{padding-left:.75rem;padding-right:.75rem}.paw .zcs-px-16{padding-left:1rem;padding-right:1rem}.paw .zcs-px-24{padding-left:1.5rem;padding-right:1.5rem}.paw .zcs-px-30{padding-left:1.875rem;padding-right:1.875rem}.paw .zcs-py-2{padding-top:.125rem;padding-bottom:.125rem}.paw .zcs-py-4{padding-top:.25rem;padding-bottom:.25rem}.paw .zcs-py-8{padding-top:.5rem;padding-bottom:.5rem}.paw .zcs-py-10{padding-top:.625rem;padding-bottom:.625rem}.paw .zcs-py-12{padding-top:.75rem;padding-bottom:.75rem}.paw .zcs-py-16{padding-top:1rem;padding-bottom:1rem}.paw .zcs-py-24{padding-top:1.5rem;padding-bottom:1.5rem}.paw .zcs-m-0{margin:0}.paw .zcs-mt-0{margin-top:0}.paw .zcs-mb-8{margin-bottom:.5rem}.paw .zcs-mb-12{margin-bottom:.75rem}.paw .zcs-mb-16{margin-bottom:1rem}.paw .zcs-mb-20{margin-bottom:1.25rem}.paw .zcs-mx-0{margin-left:0;margin-right:0}.paw .zcs-rounded-sm{border-radius:.25rem}.paw .zcs-rounded-md{border-radius:.375rem}.paw .zcs-rounded-lg{border-radius:.5rem}.paw .zcs-rounded-xl{border-radius:.75rem}.paw .zcs-rounded-2xl{border-radius:1rem}.paw .zcs-rounded-half{border-radius:50%}.paw .zcs-font-11{font-size:.6875rem}.paw .zcs-font-12{font-size:.75rem}.paw .zcs-font-13{font-size:.8125rem}.paw .zcs-font-14{font-size:.875rem}.paw .zcs-font-15{font-size:.9375rem}.paw .zcs-font-16{font-size:1rem}.paw .zcs-font-18{font-size:1.125rem}.paw .zcs-font-20{font-size:1.25rem}.paw .zcs-font-22{font-size:1.375rem}.paw .zcs-font-24{font-size:1.5rem}.paw .zcs-font-normal{font-weight:400}.paw .zcs-font-medium{font-weight:500}.paw .zcs-font-semibold{font-weight:600}.paw .zcs-font-bold{font-weight:700}.paw .zcs-lh-body{line-height:1.5}.paw .zcs-lh-heading{line-height:1.25}.paw .zcs-uppercase{text-transform:uppercase}.paw .zcs-text-center{text-align:center}.paw .zcs-ellipsis{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.paw .zcs-color-primary{color:var(--paw-primary)}.paw .zcs-color-secondary{color:var(--paw-secondary)}.paw .zcs-color-tertiary{color:var(--paw-tertiary)}.paw .zcs-color-white{color:#fff}.paw .zcs-card{background:var(--paw-card);border:1px solid var(--paw-border);border-radius:16px}.paw-shell{max-width:1500px;margin:0 auto;min-height:calc(100vh - 48px);display:flex;flex-direction:column;gap:16px}.paw .zcs-page-header{border:1px solid rgba(255,255,255,.2);border-radius:24px;background:radial-gradient(circle at 88% 12%,rgba(255,255,255,.25),transparent 28%),linear-gradient(135deg,#0f2f66 0%,var(--paw-brand) 62%,#14b8a6 126%);color:#fff;box-shadow:0 20px 45px rgba(37,99,235,.18)}.paw .zcs-page-header h5{color:#fff;font-size:24px}.paw .zcs-page-header .paw-header-copy{margin:4px 0 0;color:rgba(255,255,255,.84);font-size:13px;line-height:1.5}.paw .zcs-back{width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center}.paw .zcs-back:hover{background:rgba(255,255,255,.24)}.paw .zcs-back-icon{color:#fff}.paw-header-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.paw .zcs-button{width:auto;min-width:5rem;min-height:36px;border:0}.paw .zcs-primary-button{background:var(--paw-brand);color:var(--zcs_brand_foreground_color,#fff)}.paw .zcs-primary-button:hover{background:var(--zcs_brand_dark_color,#1d4ed8)}.paw .zcs-primary-outline-button{border:1px solid var(--paw-brand);background:#fff;color:var(--paw-brand)}.paw .zcs-primary-outline-button:hover{background:var(--paw-brand-light)}.paw .zcs-button-icon{width:16px;max-height:16px}.paw .zcs-badge{width:auto}.paw .zcs-badge-filled-outline{border:1px solid}.paw .zcs-badge-green{background:#e4fcf3;border-color:#179e6c;color:#179e6c}.paw .zcs-badge-red{background:#fde3e6;border-color:#fe455d;color:#fe455d}.paw .zcs-badge-yellow{background:#fcf4e6;border-color:#faae13;color:#b8770d}.paw .zcs-badge-blue{background:#e8efff;border-color:#2a6ffc;color:#2a6ffc}.paw .zcs-badge-theme{background:var(--zcs_component_hover_color,#eff6ff);border-color:var(--paw-brand);color:var(--paw-brand)}.paw-summary{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;align-items:center;padding:16px 18px;background:#fff;border:1px solid #e9edf5;border-radius:18px;box-shadow:0 1px 2px rgba(15,23,42,.04)}.paw-summary-title{display:flex;align-items:center;gap:12px}.paw-summary-icon{width:44px;height:44px;border-radius:14px;background:var(--paw-brand-light);color:var(--paw-brand);display:flex;align-items:center;justify-content:center;font-size:22px}.paw-summary h2{font-size:18px;margin:0;color:var(--paw-primary)}.paw-summary p{font-size:12px;color:var(--paw-secondary);line-height:1.5;margin:4px 0 0}.paw-summary-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}.paw-progress{height:8px;border-radius:999px;background:#eef2f7;overflow:hidden;margin-top:10px;max-width:460px}.paw-progress span{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--paw-brand),#14b8a6)}.paw .zcs-vertical-tabpanel{background:#fff;border:1px solid #e9edf5;border-radius:18px;box-shadow:0 1px 2px rgba(15,23,42,.04);overflow:hidden;min-height:720px}.paw .zcs-mobile-vertical-tabinput,.paw .zcs-vertical-tabinput{display:none}.paw .zcs-vertical-tabhead{width:285px;flex:0 0 285px;border-right:1px solid var(--paw-border);background:#fbfcff;list-style:none}.paw .zcs-vertical-tabbody{width:calc(100% - 285px);min-width:0;background:#fff}.paw .zcs-vertical-tabitem{list-style-type:none}.paw .zcs-vertical-tablink{position:relative;color:var(--paw-primary);border:1px solid transparent;text-decoration:none;transition:background-color .15s ease,color .15s ease,border-color .15s ease}.paw .zcs-vertical-tablink:hover{background:var(--paw-brand-light);color:var(--paw-brand)}.paw .zcs-vertical-tabitem.zcs-vertical-tabactive .zcs-vertical-tablink{background:var(--paw-brand);font-weight:700;color:#fff}.paw .zcs-vertical-tabitem.zcs-vertical-tabcomplete .zcs-vertical-tablink{border-color:#bbf7d0;background:#ecfdf5;color:#0f8f61}.paw .zcs-vertical-tabitem.zcs-vertical-tabcomplete.zcs-vertical-tabactive .zcs-vertical-tablink{background:var(--paw-brand);border-color:var(--paw-brand);color:#fff}.paw .paw-step-disabled .zcs-vertical-tablink{cursor:not-allowed;opacity:.52;background:#f8fafc;color:var(--paw-tertiary)}.paw-step-num{width:26px;height:26px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;background:#f1f5f9;color:#64748b;font-size:12px;font-weight:800;flex:0 0 auto}.paw .zcs-vertical-tabactive .paw-step-num{background:rgba(255,255,255,.18);color:#fff}.paw .zcs-vertical-tabcomplete .paw-step-num{background:#bbf7d0;color:#0f8f61}.paw .zcs-vertical-tabcomplete.zcs-vertical-tabactive .paw-step-num{background:rgba(255,255,255,.18);color:#fff}.paw-step-text{display:flex;flex-direction:column;min-width:0}.paw-step-title{font-size:14px;line-height:1.2}.paw-step-sub{font-size:11px;line-height:1.3;opacity:.78;margin-top:2px}.paw-body-head{padding:20px 24px;border-bottom:1px solid #eef1f6;background:#fff;display:flex;align-items:flex-start;justify-content:space-between;gap:16px}.paw-body-head h3{font-size:20px;line-height:1.25;margin:0;color:var(--paw-primary)}.paw-body-head p{font-size:13px;line-height:1.5;color:var(--paw-secondary);margin:5px 0 0}.paw-content-loadslot{min-height:620px}.paw-form-wrap{padding:18px 24px 24px}.paw-form-card{border:1px solid #e9edf5;border-radius:16px;overflow:hidden;background:#fff}.paw-form-card-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;border-bottom:1px solid #eef1f6;background:#fbfcff}.paw-form-card-head h4{font-size:15px;margin:0;color:var(--paw-primary)}.paw-form-card-head p{font-size:12px;margin:3px 0 0;color:var(--paw-secondary)}.paw-form-embed{min-height:620px;background:#fff}.paw .paw-form-embed .zc-form-fullheight,.paw .paw-form-embed .row,.paw .paw-form-embed .form-outer-wrapper form.form-table{width:100%;height:100%}.paw .paw-form-embed .zc-form-fullheight .form-outer-wrapper{height:100%!important;border-width:0}.paw .paw-form-embed .form-outer-wrapper .zc-mobile-scroll-ctr{min-height:580px}.paw .paw-form-embed form .zc-form-scroll-wrapper{padding:0}.paw .paw-form-embed .formContainer{padding:20px 24px!important}.paw .paw-form-embed form .zc-footer-wrapper .zc-form-footer .formbutton{padding:16px 24px!important}.paw-callout{display:flex;align-items:flex-start;gap:12px;border-radius:16px;padding:14px 16px;margin:0 0 14px;border:1px solid #bfdbfe;background:#eff6ff;color:#1d4ed8}.paw-callout.success{border-color:#bbf7d0;background:#ecfdf5;color:#0f8f61}.paw-callout.warn{border-color:#fde68a;background:#fffbeb;color:#b45309}.paw-callout .paw-callout-icon{width:36px;height:36px;border-radius:12px;background:rgba(255,255,255,.65);display:flex;align-items:center;justify-content:center;font-size:18px;flex:0 0 auto}.paw-callout h4{font-size:14px;margin:0;color:inherit}.paw-callout p{font-size:12px;line-height:1.5;margin:3px 0 0;color:inherit}.paw-empty{padding:28px;display:flex;align-items:flex-start;gap:14px;border:1px dashed #d7deea;background:#fbfcff;border-radius:16px;color:var(--paw-secondary)}.paw-empty-icon{width:44px;height:44px;border-radius:14px;background:var(--paw-brand-light);color:var(--paw-brand);display:flex;align-items:center;justify-content:center;font-size:22px;flex:0 0 auto}.paw-empty h3{font-size:16px;margin:0;color:var(--paw-primary)}.paw-empty p{font-size:13px;line-height:1.5;margin:5px 0 0}.paw-mobile-step-title{display:none}@media(max-width:980px){.paw{padding:14px}.paw-shell{min-height:calc(100vh - 28px)}.paw .zcs-page-header{border-radius:18px;padding:18px 20px}.paw .zcs-page-header h5{font-size:20px}.paw-summary{grid-template-columns:1fr}.paw-summary-meta{justify-content:flex-start}.paw .zcs-vertical-tabpanel{flex-direction:column;min-height:auto}.paw .zcs-vertical-tabhead{width:100%;flex:auto;border-right:0;border-bottom:1px solid var(--paw-border);display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.paw .zcs-vertical-tabhead .zcs-mobile-vertical-tabheader{grid-column:1/-1}.paw .zcs-vertical-tabbody{width:100%}.paw-body-head{flex-direction:column}.paw-form-wrap{padding:14px}.paw-form-embed{min-height:680px}}@media(max-width:600px){.paw .zcs-vertical-tabhead{grid-template-columns:1fr}.paw .zcs-page-header{align-items:flex-start;flex-direction:column}.paw-header-actions{width:100%}.paw-header-actions .zcs-button{width:100%}.paw-summary-title{align-items:flex-start}.paw-body-head,.paw-form-card-head{padding:14px}.paw .zcs-vertical-tabhead{padding:14px}.paw-mobile-step-title{display:block}}
+</style>
+<div class="paw">
+	<div class="paw-shell">
+		<div class="zcs-page-header zcs-w-full zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-16 zcs-px-30 zcs-py-24 zcs-box-border">
+			<div class="zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-12 zcs-ellipsis">
+				<a href="#Page:Public_Applicant_Action_Center" class="zcs-back" title="Back to action center"><i class="zcs-back-icon zcs-font-22 zc-li-outline arrows-1-minimal-left"></i></a>
+				<div>
+					<h5 class="zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-ellipsis zcs-m-0">Public Application Wizard</h5>
+					<p class="paw-header-copy">Guided intake for applicant, license, business, fees, compliance, review, and submission details.</p>
+				</div>
+			</div>
+			<div class="paw-header-actions">
+				<a class="zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body" href="#Page:Public_Applicant_Action_Center"><i class="zcs-button-icon zc-li-outline arrows-1-minimal-left"></i><span class="zcs-button-text">Action center</span></a>
+			</div>
+		</div>
+
+		<section class="paw-summary">
+			<div>
+				<div class="paw-summary-title">
+					<div class="paw-summary-icon"><i class="zc-li-outline files-single-content-03"></i></div>
+					<div>
+						<h2><%=appNumber%></h2>
+						<p><%=if(applicationFound == true,"Application type: " + appType + " | Current wizard section: " + selectedStepLabel,"Start with the Applicant section. Save the form to create a draft application before moving through later sections.")%></p>
+					</div>
+				</div>
+				<div class="paw-progress"><span style="width:<%=progressPct%>%;"></span></div>
+			</div>
+			<div class="paw-summary-meta">
+				<span class="zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border <%=statusBadgeClass%>"><i class="zcs-badge-icon zcs-no-shrink zc-li-outline <%=statusIcon%>"></i><span class="zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body"><%=appStatus%></span></span>
+				<span class="zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-theme"><i class="zcs-badge-icon zcs-no-shrink zc-li-outline business-payment"></i><span class="zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body"><%=appPaymentStatus%></span></span>
+				<span class="zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-theme"><i class="zcs-badge-icon zcs-no-shrink zc-li-outline design-pen-23"></i><span class="zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body"><%=appSignatureStatus%></span></span>
+			</div>
+		</section>
+
+		<section class="zcs-vertical-tabpanel zcs-flex zcs-wh-full zcs-relative">
+			<ul class="zcs-vertical-tabhead zcs-w-full zcs-flex zcs-direction-column zcs-gap-8 zcs-p-20 zcs-m-0 zcs-box-border zcs-overflow-auto">
+				<h6 class="zcs-mobile-vertical-tabheader zcs-font-16 zcs-font-normal zcs-lh-heading zcs-color-primary zcs-mt-0 zcs-mx-0 zcs-mb-12 zcs-box-border">Application steps</h6>
+<%
+	stepLabels = {"Applicant","License","Business","Fees","Compliance","Review","Submit"};
+	stepIndex = 0;
+	for each stepLabel in stepLabels
+	{
+		stepSub = "Applicant and entity details";
+		stepIcon = "users-single-01";
+		if(stepIndex == 1)
+		{
+			stepSub = "Application type and license";
+			stepIcon = "business-badge";
+		}
+		else if(stepIndex == 2)
+		{
+			stepSub = "DBA, premises, mailing";
+			stepIcon = "business-building";
+		}
+		else if(stepIndex == 3)
+		{
+			stepSub = "Line items and totals";
+			stepIcon = "business-money-time";
+		}
+		else if(stepIndex == 4)
+		{
+			stepSub = "Declarations and checks";
+			stepIcon = "ui-1-check-circle-08";
+		}
+		else if(stepIndex == 5)
+		{
+			stepSub = "Status, payment, signature";
+			stepIcon = "files-search";
+		}
+		else if(stepIndex == 6)
+		{
+			stepSub = "Confirmation and submit";
+			stepIcon = "arrows-1-tail-right";
+		}
+		stepClass = "zcs-vertical-tabitem zcs-relative";
+		if(applicationFound == true && stepIndex < selectedStep)
+		{
+			stepClass = stepClass + " zcs-vertical-tabcomplete";
+		}
+		if(stepIndex == selectedStep)
+		{
+			stepClass = stepClass + " zcs-vertical-tabactive";
+		}
+		if(applicationFound == false && stepIndex > 0)
+		{
+			stepClass = stepClass + " paw-step-disabled";
+		}
+		targetStep = stepIndex;
+		if(applicationFound == false)
+		{
+			targetStep = 0;
+		}
+		stepHref = "#Page:Public_Application_Wizard?Application_ID=" + applicationIdUrl + "&amp;checkNum=" + targetStep + "&amp;loadIn=" + containerName + "&amp;zc_LoadIn=embed-" + containerName;
+%>
+				<li class="<%=stepClass%>">
+					<input class="zcs-vertical-tabinput" id="paw-step-<%=stepIndex%>" name="paw-step" type="checkbox">
+					<label class="zcs-vertical-tablabel" for="paw-step-<%=stepIndex%>">
+						<a class="zcs-vertical-tablink zcs-w-full zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-8 zcs-rounded-sm zcs-px-12 zcs-py-10 zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body zcs-ellipsis zcs-cursor-pointer" href="<%=stepHref%>">
+							<span class="zcs-flex zcs-align-items-center zcs-gap-8 zcs-ellipsis"><span class="paw-step-num"><%=stepIndex + 1%></span><span class="paw-step-text"><span class="paw-step-title"><i class="zc-li-outline <%=stepIcon%>"></i> <%=stepLabel%></span><span class="paw-step-sub"><%=stepSub%></span></span></span>
+							<i class="zc-li-outline arrows-1-minimal-right"></i>
+						</a>
+					</label>
+				</li>
+<%
+		stepIndex = stepIndex + 1;
+	}
+%>
+			</ul>
+			<div class="zcs-vertical-tabbody zcs-w-full zcs-col-common zcs-flex zcs-direction-column zcs-overflow-auto">
+				<div class="paw-body-head">
+					<div>
+						<h3><span class="paw-mobile-step-title zcs-font-12 zcs-font-semibold zcs-uppercase zcs-color-tertiary zcs-mb-8">Step <%=selectedStep + 1%> of 7</span><%=selectedStepLabel%></h3>
+						<p>The embedded Applications form receives From_Page=true, Show_Value=<%=selectedStep%>, and loadIn=<%=containerName%>. The Applications form workflows use Current_Stage and Show_Value to display only the fields for this step.</p>
+					</div>
+					<div class="zcs-flex zcs-align-items-center zcs-gap-8">
+						<span class="zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-theme"><i class="zcs-badge-icon zcs-no-shrink zc-li-outline ui-1-settings-gear-63"></i><span class="zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body">Show_Value <%=selectedStep%></span></span>
+					</div>
+				</div>
+				<div class="paw-content-loadslot" name="<%=containerName%>" elName="zc-component" pageLinkName="">
+					<div class="paw-form-wrap">
+<%
+	if(input.Application_ID != null && applicationFound == false)
+	{
+%>
+						<div class="paw-empty">
+							<div class="paw-empty-icon"><i class="zc-li-outline ui-1-circle-remove"></i></div>
+							<div>
+								<h3>Application not available</h3>
+								<p>The requested application could not be found for the current login. Return to the action center and open one of your draft applications, or start a new application.</p>
+								<div class="zcs-flex zcs-align-items-center zcs-gap-8 zcs-mt-16">
+									<a class="zcs-button zcs-primary-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body" href="#Page:Public_Applicant_Action_Center"><i class="zcs-button-icon zc-li-outline arrows-1-minimal-left"></i><span class="zcs-button-text">Back to action center</span></a>
+									<a class="zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body" href="#Page:Public_Application_Wizard?Application_ID=&amp;checkNum=0&amp;loadIn=<%=containerName%>&amp;zc_LoadIn=embed-<%=containerName%>"><i class="zcs-button-icon zc-li-outline ui-1-simple-add"></i><span class="zcs-button-text">Start new application</span></a>
+								</div>
+							</div>
+						</div>
+<%
+	}
+	else
+	{
+		if(applicationFound == false)
+		{
+%>
+						<div class="paw-callout warn">
+							<div class="paw-callout-icon"><i class="zc-li-outline ui-2-time"></i></div>
+							<div><h4>Create the draft first</h4><p>Complete and save the Applicant section. After the Applications record is created, reopen the draft from Public Applicant Action Center to continue License, Business, Fees, Compliance, Review, and Submit.</p></div>
+						</div>
+<%
+		}
+		else if(selectedStep == 6 && (appStatus == "Submitted" || appStatus == "In-progress" || appStatus == "Ready for Approval" || appStatus == "Approved" || appStatus == "License Issued"))
+		{
+%>
+						<div class="paw-callout success">
+							<div class="paw-callout-icon"><i class="zc-li-outline ui-1-check-circle-08"></i></div>
+							<div><h4>Application submitted</h4><p>This application has reached Submitted. Use the action center to track status, holds, payment, and signature follow-up.</p><div class="zcs-flex zcs-align-items-center zcs-gap-8 zcs-mt-16"><a class="zcs-button zcs-primary-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body" href="#Page:Public_Applicant_Action_Center"><i class="zcs-button-icon zc-li-outline arrows-1-minimal-left"></i><span class="zcs-button-text">Return to action center</span></a></div></div>
+						</div>
+<%
+		}
+		else if(selectedStep == 6)
+		{
+%>
+						<div class="paw-callout">
+							<div class="paw-callout-icon"><i class="zc-li-outline arrows-1-tail-right"></i></div>
+							<div><h4>Final review and submit</h4><p>Save this final section, then use the Submit Application action from My New License Applications when the draft is complete. After the status changes to Submitted, this step will show the return link to Public Applicant Action Center.</p><div class="zcs-flex zcs-align-items-center zcs-gap-8 zcs-mt-16"><a class="zcs-button zcs-primary-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body" href="#Report:My_New_License_Applications?ID=<%=applicationIdUrl%>&amp;zc_LoadIn=dialog&amp;zc_Header=true"><i class="zcs-button-icon zc-li-outline files-search"></i><span class="zcs-button-text">Open submit action</span></a><a class="zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body" href="#Page:Public_Applicant_Action_Center"><i class="zcs-button-icon zc-li-outline arrows-1-minimal-left"></i><span class="zcs-button-text">Action center</span></a></div></div>
+						</div>
+<%
+		}
+%>
+						<div class="paw-form-card">
+							<div class="paw-form-card-head">
+								<div><h4>Applications form section</h4><p><%=if(applicationFound == true,"Edit mode through All_Applications using recLinkID " + applicationIdUrl,"Add mode with Save submit label")%></p></div>
+								<span class="zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-theme"><i class="zcs-badge-icon zcs-no-shrink zc-li-outline files-single-content-03"></i><span class="zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body">Applications</span></span>
+							</div>
+							<div class="paw-form-embed" elName="zc-component" zc-component="form" zc-linkname="Applications" formLinkName="Applications" params="<%=formParams%>" zc_MobileView="inline" zc-height="700px"></div>
+						</div>
+<%
+	}
+%>
+					</div>
+				</div>
+			</div>
+		</section>
+	</div>
+</div>

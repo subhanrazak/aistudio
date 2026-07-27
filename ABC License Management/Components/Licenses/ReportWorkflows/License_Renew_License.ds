@@ -1,0 +1,31 @@
+License_Renew_License as "Renew License"
+{
+	type = functions
+	form = Licenses
+	execution type = for each record
+	description = "Renews a license from license reports."
+
+	on start
+	{
+		actions
+		{
+			on click
+			(
+				actorEmail = zoho.loginuserid;
+				if(input.License_Status == "Renewal Due" || input.License_Status == "50% Penalty" || input.License_Status == "100% Penalty")
+				{
+					input.License_Status = "Renewed";
+					input.Last_Renewal_Date = zoho.currentdate;
+					input.Expiration_Date = zoho.currentdate.addYear(1);
+					input.Penalty_Stage = "None";
+					input.Renewal_Notice_Generated = false;
+					thisapp.Write_Audit_Log("Renewal","Licenses",input.ID,"License renewed","License renewed from report by " + actorEmail + ". Expiration date advanced one year.");
+				}
+				else
+				{
+					thisapp.Write_Audit_Log("Renewal","Licenses",input.ID,"Renew license action skipped","Renew License clicked by " + actorEmail + " but the license was not in a renewable status.");
+				}
+			)
+		}
+	}
+}

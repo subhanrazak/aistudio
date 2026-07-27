@@ -1,0 +1,29 @@
+Case_Refer_to_Legal as "Refer to Legal"
+{
+	type = functions
+	form = Cases
+	execution type = for each record
+	description = "Refers an active enforcement case to OLS/legal review from case reports."
+
+	on start
+	{
+		actions
+		{
+			on click
+			(
+				actorEmail = zoho.loginuserid;
+				if(input.Case_Status == "Assigned" || input.Case_Status == "Preliminary Investigation" || input.Case_Status == "Field Investigation" || input.Case_Status == "Report Preparation")
+				{
+					input.Case_Status = "Referred to OLS";
+					input.Legal_Review_Status = "Pending OLS Review";
+					input.RFA_Status = "Submitted to Division/OLS";
+					thisapp.Write_Audit_Log("Enforcement","Cases",input.ID,"Case referred to legal","Case referred to OLS/legal review from report by " + actorEmail + ".");
+				}
+				else
+				{
+					thisapp.Write_Audit_Log("Enforcement","Cases",input.ID,"Refer to legal action skipped","Refer to Legal clicked by " + actorEmail + " but case status was " + input.Case_Status + ".");
+				}
+			)
+		}
+	}
+}

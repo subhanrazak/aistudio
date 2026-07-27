@@ -1,0 +1,41 @@
+list Pending_Payments
+{
+	displayName = "Pending Payments"
+	show all rows from Payments [Payment_Status == "Pending"]
+	(
+		Payment_Reference as "Payment Reference"
+		Payment_Module as "Payment Module"
+		Application
+		Renewal_Batch as "Renewal Batch"
+		Entity
+		Amount_Due as "Amount Due"
+		Amount_Paid as "Amount Paid"
+		Payment_Status as "Payment Status"
+		Payment_Date as "Payment Date"
+		custom action "Mark Paid"
+		(
+			workflow = Payment_Mark_Paid
+			show action for each record = true
+			show action in edit record menu = true
+			column header = "Mark Paid"
+			success message = "Payment marked paid."
+			condition = ((Payment_Status == "Pending" || Payment_Status == "Failed") && Amount_Due > 0)
+			confirmation before execution
+			(
+				message for individual record = "Mark this pending payment as paid?"
+				confirm button text = "Mark Paid"
+				cancel button text = "Cancel"
+			)
+		)
+	)
+	filters
+	(
+		Payment_Module
+		Entity
+		Payment_Date
+	)
+	sort by
+	(
+		Payment_Date ascending
+	)
+}

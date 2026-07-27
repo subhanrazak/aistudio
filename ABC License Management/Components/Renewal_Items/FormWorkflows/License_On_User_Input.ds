@@ -1,0 +1,35 @@
+License_On_User_Input as "Calculate Renewal Item Fees"
+{
+
+				type =  form
+				form = Renewal_Items
+
+				record event = on add or edit
+
+				on user input of License
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.License != null)
+										{
+											licRows = Licenses[ID == input.License];
+											if(licRows.count() > 0)
+											{
+												input.License_Type = licRows.License_Type;
+												input.Current_Expiration_Date = licRows.Expiration_Date;
+												input.Penalty_Stage = licRows.Penalty_Stage;
+												totalFee = thisapp.Calculate_Renewal_Fee(input.License,input.Penalty_Stage);
+												baseFee = thisapp.Calculate_Renewal_Fee(input.License,"None");
+												input.Renewal_Fee = baseFee;
+												input.Total_Item_Amount = totalFee;
+												input.Penalty_Amount = totalFee - baseFee;
+											}
+										}
+						)
+					}
+				}
+
+			
+}

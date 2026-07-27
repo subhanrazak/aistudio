@@ -1,0 +1,48 @@
+list Closed_Cases
+{
+	displayName = "Closed Cases"
+	show all rows from Cases [Case_Status == "Closed"]
+	(
+		Case_Number as "Case Number"
+		Originating_Complaint as "Originating Complaint"
+		License
+		Premises
+		Entity
+		Priority
+		Supervising_Agent_Email as "Supervising Agent Email"
+		Case_Status as "Case Status"
+		Closure_Outcome as "Closure Outcome"
+		Closure_Date as "Closure Date"
+		Closure_Documents_Filed as "Closure Documents Filed"
+		Investigation_Summary as "Investigation Summary"
+		Legal_Review_Status as "Legal Review Status"
+		custom action "Reopen Case"
+		(
+			workflow = Case_Reopen_Case
+			show action for each record = true
+			show action in edit record menu = true
+			column header = "Reopen Case"
+			success message = "Case reopened."
+			condition = (Case_Status == "Closed")
+			confirmation before execution
+			(
+				message for individual record = "Reopen this closed case?"
+				confirm button text = "Reopen Case"
+				cancel button text = "Cancel"
+			)
+		)
+	)
+	filters
+	(
+		Priority
+		Supervising_Agent_Email
+		Case_Status
+		Closure_Outcome
+		Closure_Date
+		Legal_Review_Status
+	)
+	sort by
+	(
+		Closure_Date descending
+	)
+}

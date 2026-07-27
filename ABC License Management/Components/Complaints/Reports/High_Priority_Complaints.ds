@@ -1,0 +1,70 @@
+list High_Priority_Complaints
+{
+	displayName = "High Priority Complaints"
+	show all rows from Complaints  [Priority == "High"]
+	(
+		Complaint_Number as "Complaint Number"
+		Intake_Date as "Intake Date"
+		Premises
+		License
+		Nature_of_Violation as "Nature of Violation"
+		Screening_Decision as "Screening Decision"
+		Assigned_Supervisor_Email as "Assigned Supervisor"
+		Created_Case as "Created Case"
+		custom action "Accept Complaint"
+		(
+			workflow = Accept_Complaint
+			show action for each record = true
+			show action in edit record menu = true
+			column header = "Accept Complaint"
+			success message = "Complaint accepted"
+			condition = (Screening_Decision == "New" || Screening_Decision == "Need More Information")
+			confirmation before execution
+			(
+				message for individual record = "Accept this complaint for enforcement handling?"
+				confirm button text = "Accept Complaint"
+				cancel button text = "Cancel"
+			)
+		)
+		custom action "Reject Complaint"
+		(
+			workflow = Reject_Complaint
+			show action for each record = true
+			show action in edit record menu = true
+			column header = "Reject Complaint"
+			success message = "Complaint rejected"
+			condition = (Screening_Decision == "New" || Screening_Decision == "Need More Information")
+			confirmation before execution
+			(
+				message for individual record = "Reject this complaint?"
+				confirm button text = "Reject Complaint"
+				cancel button text = "Cancel"
+			)
+		)
+		custom action "Create Case"
+		(
+			workflow = Create_Case
+			show action for each record = true
+			show action in edit record menu = true
+			column header = "Create Case"
+			success message = "Case created"
+			condition = (Screening_Decision == "Accepted" && Created_Case is null)
+			confirmation before execution
+			(
+				message for individual record = "Create an enforcement case for this accepted complaint?"
+				confirm button text = "Create Case"
+				cancel button text = "Cancel"
+			)
+		)
+	)
+	filters
+	(
+		Screening_Decision
+		Nature_of_Violation
+		Assigned_Supervisor_Email
+	)
+	sort by
+	(
+		Intake_Date ascending
+	)
+}

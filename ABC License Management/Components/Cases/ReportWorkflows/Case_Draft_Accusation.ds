@@ -1,0 +1,28 @@
+Case_Draft_Accusation as "Draft Accusation"
+{
+	type = functions
+	form = Cases
+	execution type = for each record
+	description = "Marks a legal review case as accusation drafted from case reports."
+
+	on start
+	{
+		actions
+		{
+			on click
+			(
+				actorEmail = zoho.loginuserid;
+				if(input.Case_Status == "Legal Review" && (input.Legal_Review_Status == "Pending OLS Review" || input.Legal_Review_Status == "Returned"))
+				{
+					input.Legal_Review_Status = "Accusation Drafted";
+					input.RFA_Status = "Draft";
+					thisapp.Write_Audit_Log("Enforcement","Cases",input.ID,"Accusation drafted","Accusation draft status recorded from report by " + actorEmail + ".");
+				}
+				else
+				{
+					thisapp.Write_Audit_Log("Enforcement","Cases",input.ID,"Draft accusation action skipped","Draft Accusation clicked by " + actorEmail + " but case/legal status was " + input.Case_Status + " / " + input.Legal_Review_Status + ".");
+				}
+			)
+		}
+	}
+}

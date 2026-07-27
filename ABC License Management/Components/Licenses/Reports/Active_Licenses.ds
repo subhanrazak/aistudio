@@ -1,0 +1,63 @@
+list Active_Licenses
+{
+	displayName = "Active Licenses"
+	show all rows from Licenses [License_Status == "Active" || License_Status == "Renewed"]
+	(
+		License_Number as "License Number"
+		License_Type as "License Type"
+		Entity
+		Premises
+		Source_New_Application as "Source New Application"
+		Applicant_Profile as "Applicant Profile"
+		Legal_Entity_New as "Legal Entity New"
+		DBA_New as "DBA New"
+		Premise_Address_New as "Premise Address New"
+		Issue_Date as "Issue Date"
+		Expiration_Date as "Expiration Date"
+		License_Status as "License Status"
+		Licensee_Email as "Licensee Email"
+		custom action "Mark Renewal Due"
+		(
+			workflow = License_Mark_Renewal_Due
+			show action for each record = true
+			show action in edit record menu = true
+			column header = "Mark Renewal Due"
+			success message = "License marked renewal due."
+			condition = ((License_Status == "Active" || License_Status == "Renewed") && Expiration_Date in next 60 days)
+			confirmation before execution
+			(
+				message for individual record = "Mark this license as Renewal Due?"
+				confirm button text = "Mark Renewal Due"
+				cancel button text = "Cancel"
+			)
+		)
+		custom action "Terminate License"
+		(
+			workflow = License_Terminate_License
+			show action for each record = true
+			show action in edit record menu = true
+			column header = "Terminate License"
+			success message = "License terminated."
+			condition = (License_Status != "Terminated")
+			confirmation before execution
+			(
+				message for individual record = "Terminate this license?"
+				confirm button text = "Terminate License"
+				cancel button text = "Cancel"
+			)
+		)
+	)
+	filters
+	(
+		License_Type
+		Entity
+		Source_New_Application
+		Applicant_Profile
+		License_Status
+		Expiration_Date
+	)
+	sort by
+	(
+		Expiration_Date ascending
+	)
+}

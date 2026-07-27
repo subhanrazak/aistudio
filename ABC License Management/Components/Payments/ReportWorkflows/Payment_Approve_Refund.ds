@@ -1,0 +1,32 @@
+Payment_Approve_Refund as "Approve Refund"
+{
+	type = functions
+	form = Payments
+	execution type = for each record
+	description = "Approves and completes requested refunds from payment reports."
+
+	on start
+	{
+		actions
+		{
+			on click
+			(
+				actorEmail = zoho.loginuserid;
+				if(input.Refund_Requested == true && input.Refund_Status == "Requested")
+				{
+					input.Refund_Status = "Completed";
+					input.Payment_Status = "Refunded";
+					if(ifnull(input.Refund_Amount,0) <= 0 && ifnull(input.Amount_Paid,0) > 0)
+					{
+						input.Refund_Amount = input.Amount_Paid;
+					}
+					thisapp.Write_Audit_Log("Payment","Payments",input.ID,"Refund approved","Refund approved and marked completed from report by " + actorEmail + ".");
+				}
+				else
+				{
+					thisapp.Write_Audit_Log("Payment","Payments",input.ID,"Approve refund action skipped","Approve Refund clicked by " + actorEmail + " but refund status was " + input.Refund_Status + ".");
+				}
+			)
+		}
+	}
+}

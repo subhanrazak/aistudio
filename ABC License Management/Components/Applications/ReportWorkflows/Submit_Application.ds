@@ -1,0 +1,29 @@
+Submit_Application as "Submit Application"
+{
+	type = functions
+	form = Applications
+	execution type = for each record
+
+	on start
+	{
+		actions
+		{
+			on click
+			(
+				if(input.Application_Status == "Draft" || input.Application_Status == null || input.Application_Status == "")
+				{
+					input.Application_Status = "Submitted";
+					if(input.Submitted_Date == null)
+					{
+						input.Submitted_Date = zoho.currentdate;
+					}
+					if(input.Application_Submitted_Date == null)
+					{
+						input.Application_Submitted_Date = zoho.currentdate;
+					}
+					thisapp.Write_Audit_Log("New License Application","Applications",input.ID,"Application submitted","Submitted from application report by " + zoho.loginuserid + ".");
+				}
+			)
+		}
+	}
+}

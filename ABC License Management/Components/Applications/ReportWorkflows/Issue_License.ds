@@ -1,0 +1,119 @@
+Issue_License as "Issue License"
+{
+	type = functions
+	form = Applications
+	execution type = for each record
+
+	on start
+	{
+		actions
+		{
+			on click
+			(
+				if(input.Application_Status == "Approved")
+				{
+					issueDate = zoho.currentdate;
+					if(input.Issued_License != null)
+					{
+						input.Application_Status = "License Issued";
+						if(input.Issued_Date == null)
+						{
+							input.Issued_Date = issueDate;
+						}
+						thisapp.Write_Audit_Log("New License Application","Applications",input.ID,"License issued","Existing issued license linked and status set by " + zoho.loginuserid + ".");
+					}
+					else if(input.Application_Type == "Original" && input.License_Type != null && input.Entity != null && input.Premises != null)
+					{
+						licenseId = insert into Licenses
+						[
+							License_Type=input.License_Type
+							Entity=input.Entity
+							Premises=input.Premises
+							Source_Application=input.ID
+							Source_New_Application=input.ID
+							Applicant_Profile=input.Applicant_Profile
+							Legal_Entity_New=input.Legal_Entity
+							DBA_New=input.DBA
+							Premise_Address_New=input.Premise_Address
+							Issue_Date=issueDate
+							Expiration_Date=issueDate.addYear(1)
+							License_Status="Active"
+							Penalty_Stage="None"
+							Licensee_Email=input.Applicant_Email
+						];
+						input.Issued_License = licenseId;
+						input.Issued_Date = issueDate;
+						input.Application_Status = "License Issued";
+						thisapp.Write_Audit_Log("New License Application","Applications",input.ID,"Original license issued","New active license created from report action by " + zoho.loginuserid + ".");
+					}
+					else if(input.Application_Type == "Transfer" && input.License != null && input.License_Type != null && input.Entity != null && input.Premises != null)
+					{
+						licenseId = insert into Licenses
+						[
+							License_Type=input.License_Type
+							Entity=input.Entity
+							Premises=input.Premises
+							Source_Application=input.ID
+							Source_New_Application=input.ID
+							Applicant_Profile=input.Applicant_Profile
+							Legal_Entity_New=input.Legal_Entity
+							DBA_New=input.DBA
+							Premise_Address_New=input.Premise_Address
+							Issue_Date=issueDate
+							Expiration_Date=issueDate.addYear(1)
+							License_Status="Active"
+							Penalty_Stage="None"
+							Licensee_Email=input.Applicant_Email
+						];
+						input.Issued_License = licenseId;
+						input.Issued_Date = issueDate;
+						input.Application_Status = "License Issued";
+						existingLicense = Licenses[ID == input.License];
+						if(existingLicense.count() > 0)
+						{
+							existingLicense.License_Status = "Terminated";
+							existingLicense.Terminated_Date = issueDate;
+							existingLicense.Termination_Reason = "Terminated by transfer application " + input.ID;
+							existingLicense.Replaced_By_License = input.Issued_License;
+						}
+						thisapp.Write_Audit_Log("New License Application","Applications",input.ID,"Transfer license issued","New active license created and selected existing license terminated from report action by " + zoho.loginuserid + ".");
+					}
+					else if(input.Application_Type == "Change" && input.License != null)
+					{
+						existingLicense = Licenses[ID == input.License];
+						if(existingLicense.count() > 0)
+						{
+							if(input.License_Type != null)
+							{
+								existingLicense.License_Type = input.License_Type;
+							}
+							if(input.Entity != null)
+							{
+								existingLicense.Entity = input.Entity;
+							}
+							if(input.Premises != null)
+							{
+								existingLicense.Premises = input.Premises;
+							}
+							existingLicense.Source_New_Application = input.ID;
+							existingLicense.Applicant_Profile = input.Applicant_Profile;
+							existingLicense.Legal_Entity_New = input.Legal_Entity;
+							existingLicense.DBA_New = input.DBA;
+							existingLicense.Premise_Address_New = input.Premise_Address;
+							existingLicense.License_Status = "Active";
+							existingLicense.Licensee_Email = input.Applicant_Email;
+							input.Issued_License = input.License;
+							input.Issued_Date = issueDate;
+							input.Application_Status = "License Issued";
+							thisapp.Write_Audit_Log("New License Application","Applications",input.ID,"Change application issued","Selected existing license updated from report action by " + zoho.loginuserid + ".");
+						}
+					}
+					else
+					{
+						thisapp.Write_Audit_Log("New License Application","Applications",input.ID,"Issue license skipped","Missing license creation prerequisites for report action by " + zoho.loginuserid + ".");
+					}
+				}
+			)
+		}
+	}
+}

@@ -1,0 +1,37 @@
+Case_Close_Case as "Close Case"
+{
+	type = functions
+	form = Cases
+	execution type = for each record
+	description = "Closes an open enforcement/legal case from case reports."
+
+	on start
+	{
+		actions
+		{
+			on click
+			(
+				actorEmail = zoho.loginuserid;
+				if(input.Case_Status != "Closed")
+				{
+					previousStatus = input.Case_Status;
+					input.Case_Status = "Closed";
+					input.Closure_Date = zoho.currentdate;
+					if(input.Closure_Outcome == null)
+					{
+						input.Closure_Outcome = "Closed Other";
+					}
+					if(input.Legal_Review_Status != "Not Referred")
+					{
+						input.Legal_Review_Status = "Closed";
+					}
+					thisapp.Write_Audit_Log("Enforcement","Cases",input.ID,"Case closed","Case closed from report by " + actorEmail + ". Previous status: " + previousStatus + ".");
+				}
+				else
+				{
+					thisapp.Write_Audit_Log("Enforcement","Cases",input.ID,"Close case action skipped","Close Case clicked by " + actorEmail + " but case was already closed.");
+				}
+			)
+		}
+	}
+}

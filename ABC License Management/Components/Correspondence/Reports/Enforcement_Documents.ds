@@ -1,0 +1,88 @@
+list Enforcement_Documents
+{
+
+			displayName = "Enforcement Documents"
+			show all rows from Correspondence  [Module == "Enforcement"]  
+			(
+				Correspondence_Number as "Correspondence Number"
+				Template_Code as "Template Code"
+				Related_Case as "Related Case"
+				Merge_Status as "Merge Status"
+				Sign_Status as "Sign Status"
+				Generated_File as "Generated File"
+				Generated_Date as "Generated Date"
+				Sent_Date as "Sent Date"
+				custom action "Prepare Merge"
+				(
+					workflow = Correspondence_Prepare_Merge
+					show action for each record = true
+					show action in edit record menu = true
+					column header = "Prepare Merge"
+					success message = "Correspondence marked ready for manual merge."
+					condition = (Merge_Status == "Draft" || Merge_Status == "Failed")
+					confirmation before execution
+					(
+						message for individual record = "Prepare this correspondence for manual merge?"
+						confirm button text = "Prepare Merge"
+						cancel button text = "Cancel"
+					)
+				)
+				custom action "Mark Sent"
+				(
+					workflow = Correspondence_Mark_Sent
+					show action for each record = true
+					show action in edit record menu = true
+					column header = "Mark Sent"
+					success message = "Correspondence marked sent."
+					condition = (Sent_Date is null && (Merge_Status == "Generated Manually" || Merge_Status == "Ready for Manual Merge" || Merge_Status == "Sent Manually"))
+					confirmation before execution
+					(
+						message for individual record = "Mark this correspondence as sent?"
+						confirm button text = "Mark Sent"
+						cancel button text = "Cancel"
+					)
+				)
+				custom action "Mark Signed"
+				(
+					workflow = Correspondence_Mark_Signed
+					show action for each record = true
+					show action in edit record menu = true
+					column header = "Mark Signed"
+					success message = "Document marked signed."
+					condition = (Sign_Status == "Pending Manual Sign")
+					confirmation before execution
+					(
+						message for individual record = "Mark this document as signed?"
+						confirm button text = "Mark Signed"
+						cancel button text = "Cancel"
+					)
+				)
+				custom action "Archive Document"
+				(
+					workflow = Correspondence_Archive_Document
+					show action for each record = true
+					show action in edit record menu = true
+					column header = "Archive Document"
+					success message = "Document archived."
+					condition = (Merge_Status != "Failed" && (Sent_Date is not null || Sign_Status == "Signed"))
+					confirmation before execution
+					(
+						message for individual record = "Archive this completed document?"
+						confirm button text = "Archive Document"
+						cancel button text = "Cancel"
+					)
+				)
+			)
+			filters
+			(
+				Template_Code
+				Merge_Status
+				Generated_Date
+				Sent_Date
+			)
+			sort by
+			(
+				Generated_Date descending
+			)
+		
+}

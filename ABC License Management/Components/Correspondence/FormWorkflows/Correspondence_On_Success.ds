@@ -1,0 +1,29 @@
+Correspondence_On_Success as "Audit Correspondence"
+{
+
+				type =  form
+				form = Correspondence
+
+				record event = on add or edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Generated_Date == null)
+										{
+											input.Generated_Date = zoho.currentdate;
+										}
+										if(input.Merge_Status == "Sent Manually" && input.Sent_Date == null)
+										{
+											input.Sent_Date = zoho.currentdate;
+										}
+										thisapp.Write_Audit_Log("Correspondence","Correspondence",input.ID,"Correspondence saved","Template " + input.Template_Code + " status " + input.Merge_Status);
+						)
+					}
+				}
+
+			
+}

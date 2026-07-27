@@ -1,0 +1,37 @@
+Payment_Request_Refund as "Request Refund"
+{
+	type = functions
+	form = Payments
+	execution type = for each record
+	description = "Requests a refund from payment reports."
+
+	on start
+	{
+		actions
+		{
+			on click
+			(
+				actorEmail = zoho.loginuserid;
+				if(input.Payment_Status == "Complete" && input.Refund_Requested != true && ifnull(input.Amount_Paid,0) > 0)
+				{
+					input.Refund_Requested = true;
+					if(ifnull(input.Refund_Amount,0) <= 0)
+					{
+						input.Refund_Amount = input.Amount_Paid;
+					}
+					if(input.Refund_Reason == null || input.Refund_Reason.trim() == "")
+					{
+						input.Refund_Reason = "Refund requested from report by " + actorEmail + " on " + zoho.currentdate + ".";
+					}
+					input.Refund_Status = "Requested";
+					input.Payment_Status = "Refund Requested";
+					thisapp.Write_Audit_Log("Payment","Payments",input.ID,"Refund requested","Refund requested from payment report by " + actorEmail + ".");
+				}
+				else
+				{
+					thisapp.Write_Audit_Log("Payment","Payments",input.ID,"Request refund action skipped","Request Refund clicked by " + actorEmail + " but payment was not eligible for refund request.");
+				}
+			)
+		}
+	}
+}

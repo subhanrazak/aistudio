@@ -1,0 +1,78 @@
+License_Renewal_Schedule as "License Renewal Schedule"
+{
+
+				type =  schedule
+					status = inactive
+				start = "2026-01-01 08:00:00"
+				frequency = daily
+				time zone = "America/Los_Angeles"
+				on start
+				{
+					actions 
+					{
+					on load
+					(
+						noticeCandidates = Licenses[Expiration_Date in next 60 days && Renewal_Notice_Generated == false && License_Status == "Active" || License_Status == "Renewed"];
+										for each  lic in noticeCandidates
+										{
+											noticeId = insert into Renewal_Notices
+											[
+												License=lic.ID
+												Entity=lic.Entity
+												Notice_Type="60-Day Renewal Notice"
+												Notice_Date=zoho.currentdate
+												Due_Date=lic.Expiration_Date
+												Penalty_Stage="None"
+												Recipient_Email=lic.Licensee_Email
+												Delivery_Status="Draft"
+												Added_User=zoho.loginuser
+											];
+											lic.Renewal_Notice_Generated=true;
+											lic.License_Status="Renewal Due";
+											thisapp.Write_Audit_Log("Renewal","Licenses",lic.ID,"Renewal notice generated","60-day renewal notice created.");
+										}
+										expiredCandidates = Licenses[Expiration_Date < zoho.currentdate && Penalty_Stage == "None" && License_Status != "Renewed" && License_Status != "Closed"];
+										for each  lic2 in expiredCandidates
+										{
+											lic2.Penalty_Stage="50%";
+											lic2.License_Status="50% Penalty";
+											insert into Renewal_Notices
+											[
+												License=lic2.ID
+												Entity=lic2.Entity
+												Notice_Type="50% Late Notice"
+												Notice_Date=zoho.currentdate
+												Due_Date=lic2.Expiration_Date.addDay(14)
+												Penalty_Stage="50%"
+												Recipient_Email=lic2.Licensee_Email
+												Delivery_Status="Draft"
+												Added_User=zoho.loginuser
+											]
+											thisapp.Create_Correspondence_Stub("Renewal",lic2.ID,"50% Late Notice",lic2.Licensee_Email,"Not Required");
+											thisapp.Write_Audit_Log("Renewal","Licenses",lic2.ID,"50% penalty applied","License expired without renewal.");
+										}
+										secondPenaltyCandidates = Licenses[Expiration_Date < zoho.currentdate.addDay(-14) && Penalty_Stage == "50%" && License_Status != "Renewed" && License_Status != "Closed"];
+										for each  lic3 in secondPenaltyCandidates
+										{
+											lic3.Penalty_Stage="100%";
+											lic3.License_Status="100% Penalty";
+											insert into Renewal_Notices
+											[
+												License=lic3.ID
+												Entity=lic3.Entity
+												Notice_Type="100% Late Notice"
+												Notice_Date=zoho.currentdate
+												Due_Date=lic3.Expiration_Date.addDay(30)
+												Penalty_Stage="100%"
+												Recipient_Email=lic3.Licensee_Email
+												Delivery_Status="Draft"
+												Added_User=zoho.loginuser
+											]
+											thisapp.Create_Correspondence_Stub("Renewal",lic3.ID,"100% Late Notice",lic3.Licensee_Email,"Not Required");
+											thisapp.Write_Audit_Log("Renewal","Licenses",lic3.ID,"100% penalty applied","Second penalty deadline lapsed.");
+										}
+					)
+					}
+				}
+			
+}

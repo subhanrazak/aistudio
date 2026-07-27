@@ -1,0 +1,58 @@
+Payment_Mark_Paid as "Mark Paid"
+{
+	type = functions
+	form = Payments
+	execution type = for each record
+	description = "Marks pending payment records complete from payment reports."
+
+	on start
+	{
+		actions
+		{
+			on click
+			(
+				actorEmail = zoho.loginuserid;
+				if(input.Payment_Status == "Pending" || input.Payment_Status == "Failed")
+				{
+					if(ifnull(input.Amount_Paid,0) <= 0)
+					{
+						input.Amount_Paid = ifnull(input.Amount_Due,0);
+					}
+					input.Payment_Status = "Complete";
+					if(input.Payment_Date == null)
+					{
+						input.Payment_Date = zoho.currentdate;
+					}
+					if(input.Application != null)
+					{
+						appRows = Applications[ID == input.Application];
+						if(appRows.count() > 0)
+						{
+							appRows.Payment_Status = "Complete";
+							appRows.Books_Invoice_Status = "Paid";
+						}
+					}
+					if(input.Renewal_Batch != null)
+					{
+						batchRows = Renewal_Batches[ID == input.Renewal_Batch];
+						if(batchRows.count() > 0)
+						{
+							batchRows.Payment_Status = "Complete";
+							batchRows.Batch_Status = "Paid";
+						}
+					}
+					if(input.Receipt_Generated != true)
+					{
+						thisapp.Create_Correspondence_Stub("Payment",input.ID,"Receipt","","Not Required");
+						input.Receipt_Generated = true;
+					}
+					thisapp.Write_Audit_Log("Payment","Payments",input.ID,"Payment marked paid","Payment marked paid from report by " + actorEmail + ".");
+				}
+				else
+				{
+					thisapp.Write_Audit_Log("Payment","Payments",input.ID,"Mark paid action skipped","Mark Paid clicked by " + actorEmail + " but payment status was " + input.Payment_Status + ".");
+				}
+			)
+		}
+	}
+}

@@ -1,0 +1,549 @@
+form Applications
+{
+
+			displayname = "New License Application"
+			success message = "Application saved"
+			Application_Header
+			(
+				type = section
+				displayname = "Application Header"
+	 			row = 1
+	 			column = 0   
+				width = medium
+			)
+			Application_Number
+			(
+    			type = autonumber
+				displayname = "Application Number"
+				start index = 250000
+	 			row = 1
+	 			column = 1   
+				width = medium
+			)
+			must have Applicant_Profile
+			(
+				type = picklist	
+				displayname = "Applicant Profile"
+				values  = Applicant_Profile.ID
+    			displayformat = [Profile_Name.first_name + " " + Profile_Name.last_name]
+	 			row = 1
+	 			column = 1   
+				width = medium
+			)
+			must have Legal_Entity
+			(
+				type = picklist	
+				displayname = "Legal Entity"
+				values  = Legal_Entities[Applicant_Profile.ID == input.Applicant_Profile].ID
+    			displayformat = [Entity_Name]
+				allow new entries
+				[
+					displayname = "Add New Legal Entity"
+				]
+				sortorder = ascending
+	 			row = 1
+	 			column = 1   
+				width = medium
+			)
+			must have Premise_Address
+			(
+				type = picklist	
+				displayname = "Premise Address"
+				values  = Address_Records[Applicant_Profile == input.Applicant_Profile && Active == true].ID
+    			displayformat = [Address_Title]
+				allow new entries
+				[
+					displayname = "Add New Address"
+					set values
+					(
+						Applicant_Profile = input.Applicant_Profile
+					)
+				]
+	 			row = 1
+	 			column = 1   
+				width = medium
+			)
+			Attorney
+			(
+				type = picklist	
+				values  = Attorneys[Applicant_Profile == input.Applicant_Profile && Active == true].ID
+    			displayformat = [Last_Name]
+				allow new entries
+				[
+					displayname = "Add New Attorney"
+					set values
+					(
+						Applicant_Profile = input.Applicant_Profile
+					)
+				]
+	 			row = 1
+	 			column = 1   
+				width = medium
+			)
+			License
+			(
+				type = picklist	
+				displayname = "Existing License"
+				values  = Licenses[Applicant_Profile == input.Applicant_Profile && License_Status == "Active"].ID
+    			displayformat = [License_Number]
+				sortorder = ascending
+	 			row = 1
+	 			column = 1   
+				width = medium
+			)
+			Application_Type
+			(
+				type = picklist	
+				displayname = "Application Type"
+				values = {"Original","Transfer","Change"}
+				initial value = "Original"
+	 			row = 1
+	 			column = 2   
+				width = medium
+			)
+			DBA
+			(
+				type = picklist	
+				values  = DBA[Applicant_Profile.ID == input.Applicant_Profile && DBA_Status == "Active"].ID
+    			displayformat = [DBA_Name]
+				allow new entries
+				[
+					displayname = "Add New DBA"
+					set values
+					(
+						Applicant_Profile = input.Applicant_Profile
+					)
+				]
+	 			row = 1
+	 			column = 2   
+				width = medium
+			)
+			Mailing_Address
+			(
+				type = picklist	
+				displayname = "Mailing Address"
+				values  = Address_Records[Applicant_Profile == input.Applicant_Profile && Is_Mailing_Address == true && Active == true].ID
+    			displayformat = [Address_Title]
+				allow new entries
+				[
+					displayname = "Add New Mailing Address"
+					set values
+					(
+						Applicant_Profile = input.Applicant_Profile
+					)
+				]
+	 			row = 1
+	 			column = 2   
+				width = medium
+			)
+			Total_Fee
+			(
+				displayname = "Total Fee"
+				type = USD
+				initial value = 0
+				maxchar = 12
+	 			row = 1
+	 			column = 2   
+				width = medium
+			)
+			License_Type_Line_Items
+			(
+				type = grid
+				displayname = "License Type Line Items"
+				values  = License_Type_Line_Items.ID
+    			bidirectional = License_Application
+				defaultrow = 1
+	 			row = 2
+	 			column = 1   
+				width = medium
+			)
+			Application_Details
+			(
+				type = section
+				displayname = "Application Details"
+				visibility = true
+	 			row = 3
+	 			column = 0   
+				width = medium
+			)
+			must have Felony
+			(
+				type = radiobuttons
+				values = {"Yes","No"}
+				layout = 2
+	 			row = 3
+	 			column = 1   
+				width = medium
+			)
+			must have Violation
+			(
+				type = radiobuttons
+				values = {"Yes","No"}
+				layout = 2
+	 			row = 3
+	 			column = 1   
+				width = medium
+			)
+			Copies_Mailed
+			(
+    			type = date
+				displayname = "Copies Mailed"
+				alloweddays = 0,1,2,3,4,5,6
+	 			row = 3
+	 			column = 1   
+				width = medium
+			)
+			Sent_INS
+			(
+    			type = date
+				displayname = "Sent INS"
+				alloweddays = 0,1,2,3,4,5,6
+	 			row = 3
+	 			column = 1   
+				width = medium
+			)
+			Cleared_Date
+			(
+    			type = date
+				displayname = "Cleared Date"
+				alloweddays = 0,1,2,3,4,5,6
+	 			row = 3
+	 			column = 1   
+				width = medium
+			)
+			New_Beer_Price_Posting_Email
+			(
+    			type = email
+				displayname = "New Beer Price Posting Email"
+	 			row = 3
+	 			column = 1   
+				width = medium
+				personal data = true
+			)
+			Section_23826_8
+			(
+    			type = checkbox
+				displayname = "Section 23826.8"
+				initial value = false
+	 			row = 3
+	 			column = 2   
+				width = medium
+			)
+			must have Application_Submitted_Date
+			(
+    			type = date
+				displayname = "Application Submitted Date"
+				initial value = "${zoho.currentdate}"
+				alloweddays = 0,1,2,3,4,5,6
+	 			row = 3
+	 			column = 2   
+				width = medium
+			)
+			Estimated_Issue_Date
+			(
+    			type = date
+				displayname = "Estimated Issue Date"
+				alloweddays = 0,1,2,3,4,5,6
+	 			row = 3
+	 			column = 2   
+				width = medium
+			)
+			must have Fingerprints
+			(
+    			type = text
+	 			row = 3
+	 			column = 2   
+				width = medium
+			)
+			See_211_Signature_Page
+			(
+    			type = checkbox
+				displayname = "See 211 Signature Page"
+				initial value = false
+	 			row = 3
+	 			column = 2   
+				width = medium
+			)
+			Hidden
+			(
+				type = section
+				visibility = true
+	 			row = 4
+	 			column = 0   
+				width = medium
+			)
+			Application_Reference
+			(
+    			type = autonumber
+				displayname = "Legacy Application Reference"
+				start index = 250166000
+	 			row = 4
+	 			column = 1   
+				width = medium
+			)
+			Applicant_Email
+			(
+    			type = email
+				displayname = "Applicant Email"
+				maxchar = 80
+	 			row = 4
+	 			column = 1   
+				width = medium
+				personal data = true
+			)
+			Entity
+			(
+				type = picklist	
+				displayname = "Legacy Entity"
+				values  = Entities.ID
+    			displayformat = [Entity_Name]
+	 			row = 4
+	 			column = 1   
+				width = medium
+			)
+			Payment_Status
+			(
+				type = picklist
+				displayname = "Payment Status"
+				values = {"Pending","Complete","Waived","Refunded"}
+				initial value = "Pending"
+	 			row = 4
+	 			column = 1   
+				width = medium
+			)
+			Denial_Reason
+			(
+    			type = textarea
+				displayname = "Denial Reason"
+				height = 120px
+	 			row = 4
+	 			column = 1   
+				width = medium
+			)
+			Issued_Date
+			(
+    			type = date
+				displayname = "Issued Date"
+				alloweddays = 0,1,2,3,4,5,6
+	 			row = 4
+	 			column = 1   
+				width = medium
+			)
+			Total_Fee_Due
+			(
+				displayname = "Legacy Total Fee Due"
+				type = USD
+				initial value = 0
+				maxchar = 12
+	 			row = 4
+	 			column = 1   
+				width = medium
+			)
+			Books_Invoice_Status
+			(
+				type = picklist
+				displayname = "Books Invoice Status"
+				values = {"Not Created","Manual Invoice Created","Paid","Waived"}
+				initial value = "Not Created"
+	 			row = 4
+	 			column = 1   
+				width = medium
+			)
+			Investigator_Review_Flag
+			(
+    			type = checkbox
+				displayname = "Investigator Review Flag"
+				initial value = false
+	 			row = 4
+	 			column = 1   
+				width = medium
+			)
+			Application_Status
+			(
+				type = picklist
+				displayname = "Application Status"
+				values = {"Draft","Submitted","In-progress","Ready for Approval","On-hold","Rejected","Approved","License Issued"}
+				initial value = "Draft"
+	 			row = 4
+	 			column = 1   
+				width = medium
+			)
+			Business_DBA_Name
+			(
+    			type = text
+				displayname = "Business/DBA Name"
+	 			row = 4
+	 			column = 2   
+				width = medium
+			)
+			License_Type
+			(
+				type = picklist	
+				displayname = "Primary License Type"
+				values  = License_Types.ID
+    			displayformat = [Primary_LT_Name]
+	 			row = 4
+	 			column = 2   
+				width = medium
+			)
+			Premises
+			(
+				type = picklist	
+				displayname = "Legacy Premises"
+				values  = Premises.ID
+    			displayformat = [DBA_Name]
+	 			row = 4
+	 			column = 2   
+				width = medium
+			)
+			Checklist_Complete
+			(
+    			type = checkbox
+				displayname = "Checklist Complete"
+				initial value = false
+	 			row = 4
+	 			column = 2   
+				width = medium
+			)
+			Issued_License
+			(
+				type = picklist	
+				displayname = "Issued License"
+				values  = Licenses.ID
+    			displayformat = [License_Number]
+	 			row = 4
+	 			column = 2   
+				width = medium
+			)
+			Submitted_Date
+			(
+    			type = date
+				displayname = "Submitted Date"
+				alloweddays = 0,1,2,3,4,5,6
+	 			row = 4
+	 			column = 2   
+				width = medium
+			)
+			Signature_Status
+			(
+				type = picklist
+				displayname = "Signature Status"
+				values = {"Not Started","Pending Manual Sign","Signed","Waived"}
+				initial value = "Not Started"
+	 			row = 4
+	 			column = 2   
+				width = medium
+			)
+			Assigned_Licensing_Rep
+			(
+    			type = email
+				displayname = "Assigned Licensing Rep"
+				maxchar = 80
+	 			row = 4
+	 			column = 2   
+				width = medium
+			)
+			Tracking_Url_or_Note
+			(
+    			type = text
+				displayname = "Tracking URL or Note"
+	 			row = 4
+	 			column = 2   
+				width = medium
+			)
+			Guided_Intake_Helpers
+			(
+				type = section
+				displayname = "Guided Intake Helpers"
+				visibility = true
+	 			row = 9
+	 			column = 0   
+				width = medium
+			)
+			Month_field
+			(
+				type = number
+				displayname = "Month"
+	 			row = 9
+	 			column = 1   
+				width = medium
+			)
+			Year_field
+			(
+				type = number
+				displayname = "Year"
+	 			row = 9
+	 			column = 1   
+				width = medium
+			)
+			loadIn
+			(
+    			type = text
+	 			row = 9
+	 			column = 1   
+				width = medium
+			)
+			Current_Stage
+			(
+				type = radiobuttons
+				displayname = "Current Stage"
+				maxchar = 100
+				values = {"0","1","2","3","4","5","6"}
+				initial value = "0"
+	 			row = 9
+	 			column = 1   
+				width = medium
+			)
+			Show_Value
+			(
+    			type = text
+				displayname = "Show Value"
+	 			row = 9
+	 			column = 1   
+				width = medium
+			)
+			From_Page
+			(
+    			type = checkbox
+				displayname = "From Page"
+				initial value = false
+	 			row = 9
+	 			column = 1   
+				width = medium
+			)
+	
+			actions
+			{
+				on add
+				{
+					submit
+					(
+   						type = submit
+   						displayname = "Submit Application"
+					)
+					reset
+					(
+   						type = reset
+   						displayname = "Reset"
+					)
+				}
+				on edit
+				{
+					update
+					(
+   						type = submit
+   						displayname = "Update Application"
+					)
+					cancel
+					(
+   						type = cancel
+   						displayname = "Cancel"
+					)
+				}
+			}
+			blueprint components
+			{
+				stages = {"Draft","Submitted","In-progress","Ready for Approval","On-hold","Rejected","Approved","License Issued"}
+			}
+		
+}

@@ -1,0 +1,139 @@
+License_Status_Blueprint as "License Status Workflow"
+{
+
+        			type = Blueprint
+        			form = Licenses
+        			start
+        			{
+            			start stage = "Active"
+        			}
+        			stages
+        			{
+           			"Active"
+           			{
+           			}
+           			"Renewal Due"
+           			{
+           			}
+           			"Renewed"
+           			{
+           			}
+           			"50% Penalty"
+           			{
+           			}
+           			"100% Penalty"
+           			{
+           			}
+           			"Suspended"
+           			{
+           			}
+           			"Closed"
+           			{
+           			}
+        			}
+        			transitions
+        			{
+    				Apply_100_Penalty as "Apply 100% Penalty"
+    				{
+         				type = normal
+         				from stage = "50% Penalty"
+         				to stage = "100% Penalty"
+         				before
+         				{
+            				transition owner
+            				(
+                				permissions = {"Licensing_Supervisor"}
+             				)
+         				}
+         				after
+         				{
+         				}
+  				}
+    				Apply_50_Penalty as "Apply 50% Penalty"
+    				{
+         				type = normal
+         				from stage = "Renewal Due"
+         				to stage = "50% Penalty"
+         				before
+         				{
+            				transition owner
+            				(
+                				permissions = {"Licensing_Supervisor"}
+             				)
+         				}
+         				after
+         				{
+         				}
+  				}
+    				Close_License as "Close License"
+    				{
+         				type = common
+         				from stage = "Active"
+         				to stage = "Closed"
+         				common stages = {"100% Penalty", "Renewal Due", "Renewed", "50% Penalty", "Suspended"}
+         				before
+         				{
+            				transition owner
+            				(
+                				permissions = {"Licensing_Supervisor"}
+             				)
+            				confirmation before execution
+            				(
+                				message = "Close this license?"
+                				confirm button text = "Close"
+                				cancel button text = "Cancel"
+            				)
+         				}
+         				after
+         				{
+							actions 
+							{
+								custom deluge script
+								(
+															thisapp.Write_Audit_Log("Licensing","Licenses",input.ID,"License closed","License closed by supervisor.");
+								)
+							}
+         				}
+  				}
+    				Complete_Renewal as "Complete Renewal"
+    				{
+         				type = normal
+         				from stage = "Renewal Due"
+         				to stage = "Renewed"
+         				before
+         				{
+            				transition owner
+            				(
+                				permissions = {"Licensing_Supervisor", "Accounting_Staff"}
+             				)
+         				}
+         				after
+         				{
+							actions 
+							{
+								custom deluge script
+								(
+															thisapp.Write_Audit_Log("Renewal","Licenses",input.ID,"Renewal completed","License moved to renewed stage.");
+								)
+							}
+         				}
+  				}
+    				Mark_Renewal_Due as "Mark Renewal Due"
+    				{
+         				type = normal
+         				from stage = "Active"
+         				to stage = "Renewal Due"
+         				before
+         				{
+            				transition owner
+            				(
+                				permissions = {"Licensing_Supervisor"}
+             				)
+         				}
+         				after
+         				{
+         				}
+  				}
+        			}
+    			
+}

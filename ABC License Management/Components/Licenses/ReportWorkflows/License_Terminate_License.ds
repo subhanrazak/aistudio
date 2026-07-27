@@ -1,0 +1,29 @@
+License_Terminate_License as "Terminate License"
+{
+	type = functions
+	form = Licenses
+	execution type = for each record
+	description = "Terminates a license from license reports."
+
+	on start
+	{
+		actions
+		{
+			on click
+			(
+				actorEmail = zoho.loginuserid;
+				if(input.License_Status != "Terminated")
+				{
+					input.License_Status = "Terminated";
+					input.Terminated_Date = zoho.currentdate;
+					input.Termination_Reason = "Terminated from report by " + actorEmail + ".";
+					thisapp.Write_Audit_Log("Licensing","Licenses",input.ID,"License terminated","License terminated from report by " + actorEmail + ".");
+				}
+				else
+				{
+					thisapp.Write_Audit_Log("Licensing","Licenses",input.ID,"Terminate license action skipped","Terminate License clicked by " + actorEmail + " but the license was already Terminated.");
+				}
+			)
+		}
+	}
+}

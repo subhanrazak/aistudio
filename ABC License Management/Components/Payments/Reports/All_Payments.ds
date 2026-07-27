@@ -1,0 +1,112 @@
+default list All_Payments
+{
+	displayName = "All Payments"
+	show all rows from Payments
+	(
+		Payment_Reference as "Payment Reference"
+		Payment_Module as "Payment Module"
+		Application
+		Renewal_Batch as "Renewal Batch"
+		Entity
+		Payment_Method as "Payment Method"
+		Payment_Status as "Payment Status"
+		Amount_Due as "Amount Due"
+		Amount_Paid as "Amount Paid"
+		Payment_Date as "Payment Date"
+		Receipt_Generated as "Receipt Generated"
+		Refund_Requested as "Refund Requested"
+		Refund_Amount as "Refund Amount"
+		Refund_Status as "Refund Status"
+		Reconciled
+		Reconciliation_Date as "Reconciliation Date"
+		custom action "Mark Paid"
+		(
+			workflow = Payment_Mark_Paid
+			show action for each record = true
+			show action in edit record menu = true
+			column header = "Mark Paid"
+			success message = "Payment marked paid."
+			condition = ((Payment_Status == "Pending" || Payment_Status == "Failed") && Amount_Due > 0)
+			confirmation before execution
+			(
+				message for individual record = "Mark this payment as paid?"
+				confirm button text = "Mark Paid"
+				cancel button text = "Cancel"
+			)
+		)
+		custom action "Request Refund"
+		(
+			workflow = Payment_Request_Refund
+			show action for each record = true
+			show action in edit record menu = true
+			column header = "Request Refund"
+			success message = "Refund requested."
+			condition = (Payment_Status == "Complete" && Refund_Requested != true && Amount_Paid > 0 && (Refund_Status == "Not Requested" || Refund_Status is null))
+			confirmation before execution
+			(
+				message for individual record = "Request a refund for this payment?"
+				confirm button text = "Request Refund"
+				cancel button text = "Cancel"
+			)
+		)
+		custom action "Approve Refund"
+		(
+			workflow = Payment_Approve_Refund
+			show action for each record = true
+			show action in edit record menu = true
+			column header = "Approve Refund"
+			success message = "Refund approved."
+			condition = (Refund_Requested == true && Refund_Status == "Requested")
+			confirmation before execution
+			(
+				message for individual record = "Approve and complete this refund?"
+				confirm button text = "Approve Refund"
+				cancel button text = "Cancel"
+			)
+		)
+		custom action "Reject Refund"
+		(
+			workflow = Payment_Reject_Refund
+			show action for each record = true
+			show action in edit record menu = true
+			column header = "Reject Refund"
+			success message = "Refund rejected."
+			condition = (Refund_Requested == true && (Refund_Status == "Requested" || Refund_Status == "Approved"))
+			confirmation before execution
+			(
+				message for individual record = "Reject this refund request?"
+				confirm button text = "Reject Refund"
+				cancel button text = "Cancel"
+			)
+		)
+		custom action "Reconcile Payment"
+		(
+			workflow = Payment_Reconcile_Payment
+			show action for each record = true
+			show action in edit record menu = true
+			column header = "Reconcile Payment"
+			success message = "Payment reconciled."
+			condition = (Reconciled != true && (Payment_Status == "Complete" || Payment_Status == "Refunded" || Payment_Status == "Void"))
+			confirmation before execution
+			(
+				message for individual record = "Reconcile this payment?"
+				confirm button text = "Reconcile Payment"
+				cancel button text = "Cancel"
+			)
+		)
+	)
+	filters
+	(
+		Payment_Module
+		Payment_Status
+		Payment_Method
+		Payment_Date
+		Refund_Status
+		Refund_Requested
+		Reconciled
+	)
+	sort by
+	(
+		Payment_Date descending
+	)
+}

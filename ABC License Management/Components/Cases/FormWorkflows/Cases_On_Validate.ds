@@ -1,0 +1,41 @@
+Cases_On_Validate as "Validate Case Milestones"
+{
+
+				type =  form
+				form = Cases
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Case_Status == "Closed")
+										{
+											if(input.Closure_Outcome == null || input.Closure_Date == null)
+											{
+												alert "Closure outcome and closure date are required before closing a case.";
+												cancel submit;
+											}
+										}
+										if(input.Recommend_Accusation == true && input.Case_Status == "Referred to OLS")
+										{
+											if(input.RFA_Status != "Submitted to Division/OLS" && input.RFA_Status != "Approved")
+											{
+												alert "RFA status must be Submitted to Division/OLS or Approved before referring an accusation case to OLS.";
+												cancel submit;
+											}
+										}
+										if(input.Supervisor_Lock == true && input.Case_Status != "Closed")
+										{
+											alert "Supervisor lock is only allowed for closed cases.";
+											cancel submit;
+										}
+						)
+					}
+				}
+
+			
+}

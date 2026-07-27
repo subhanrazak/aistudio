@@ -1,0 +1,194 @@
+<%
+	licenseeEmail = ifnull(zoho.loginuserid,"");
+
+	activeCount = Licenses[Licensee_Email == licenseeEmail && License_Status == "Active"].count();
+	renewalDueCount = Licenses[Licensee_Email == licenseeEmail && License_Status == "Renewal Due"].count();
+	renewedCount = Licenses[Licensee_Email == licenseeEmail && License_Status == "Renewed"].count();
+	penalty50Status = Licenses[Licensee_Email == licenseeEmail && License_Status == "50% Penalty"].count();
+	penalty100Status = Licenses[Licensee_Email == licenseeEmail && License_Status == "100% Penalty"].count();
+	suspendedCount = Licenses[Licensee_Email == licenseeEmail && License_Status == "Suspended"].count();
+	closedCount = Licenses[Licensee_Email == licenseeEmail && License_Status == "Closed"].count();
+	terminatedCount = Licenses[Licensee_Email == licenseeEmail && License_Status == "Terminated"].count();
+
+	penalty50Stage = Licenses[Licensee_Email == licenseeEmail && Penalty_Stage == "50%"].count();
+	penalty100Stage = Licenses[Licensee_Email == licenseeEmail && Penalty_Stage == "100%"].count();
+	penalty50 = penalty50Status;
+	if(penalty50Stage > penalty50)
+	{
+		penalty50 = penalty50Stage;
+	}
+	penalty100 = penalty100Status;
+	if(penalty100Stage > penalty100)
+	{
+		penalty100 = penalty100Stage;
+	}
+	penaltyTotal = penalty50 + penalty100;
+	renewable = renewalDueCount + penalty50Status + penalty100Status;
+
+	batchCount = Renewal_Batches[Licensee_Email == licenseeEmail].count();
+	openBatches = Renewal_Batches[Licensee_Email == licenseeEmail && Batch_Status != "Completed" && Batch_Status != "Cancelled"].count();
+	completedRenewals = Renewal_Batches[Licensee_Email == licenseeEmail && Batch_Status == "Completed"].count();
+	pendingPayments = Renewal_Batches[Licensee_Email == licenseeEmail && Payment_Status == "Pending"].count();
+	completePayments = Renewal_Batches[Licensee_Email == licenseeEmail && Payment_Status == "Complete"].count();
+	waivedPayments = Renewal_Batches[Licensee_Email == licenseeEmail && Payment_Status == "Waived"].count();
+	refundedPayments = Renewal_Batches[Licensee_Email == licenseeEmail && Payment_Status == "Refunded"].count();
+	pendingAmount = ifnull(Renewal_Batches[Licensee_Email == licenseeEmail && Payment_Status == "Pending"].sum(Total_Amount_Due),0);
+
+	noticesGenerated = Renewal_Notices[Recipient_Email == licenseeEmail && Delivery_Status == "Generated"].count() + Renewal_Notices[Recipient_Email == licenseeEmail && Delivery_Status == "Sent Manually"].count() + Renewal_Notices[Recipient_Email == licenseeEmail && Delivery_Status == "Viewed"].count();
+	noticesDraft = Renewal_Notices[Recipient_Email == licenseeEmail && Delivery_Status == "Draft"].count();
+	noticesFailed = Renewal_Notices[Recipient_Email == licenseeEmail && Delivery_Status == "Failed"].count();
+
+	totalLicenseContext = activeCount + renewalDueCount + renewedCount + penalty50Status + penalty100Status + suspendedCount + closedCount + terminatedCount;
+	activeShare = 0;
+	renewalShare = 0;
+	closedShare = 0;
+	if(totalLicenseContext > 0)
+	{
+		activeShare = ((activeCount + renewedCount) * 100) / totalLicenseContext;
+		renewalShare = ((renewalDueCount + penalty50Status + penalty100Status) * 100) / totalLicenseContext;
+		closedShare = ((suspendedCount + closedCount + terminatedCount) * 100) / totalLicenseContext;
+	}
+%>
+<style>
+/* ZCS global utility subset included once for this page from zcs-global. */
+:root { --zcs-theme-brand-color: var(--zcs_brand_color); --zcs-light-bg-color: var(--zcs_brand_light_color); --zcs-page-bg-color: #F3F3F4; --zcs-primary-text-color: var(--zcs_primary_text_color); --zcs-secondary-text-color: var(--zcs_secondary_text_color); --zcs-teritiary-text-color: var(--zcs_tertiary_text_color); --zcs-border-color: var(--zcs_tertiary_border_color); --zcs-white-color: #FFFFFF; --zcs-black-color: #000000; font-size:16px; line-height:1.5; --column-gap:0px; }
+.zcs-row{display:flex;flex-wrap:wrap}.zcs-flex{display:flex}.zcs-inline-flex{display:inline-flex}.zcs-direction-column{flex-direction:column}.zcs-align-items-center{align-items:center}.zcs-align-items-start{align-items:flex-start}.zcs-justify-center{justify-content:center}.zcs-justify-space-between{justify-content:space-between}.zcs-gap-4{gap:.25rem}.zcs-gap-6{gap:.375rem}.zcs-gap-8{gap:.5rem}.zcs-gap-10{gap:.625rem}.zcs-gap-12{gap:.75rem}.zcs-gap-14{gap:.875rem}.zcs-gap-16{gap:1rem}.zcs-gap-20{gap:1.25rem}.zcs-gap-24{gap:1.5rem}.zcs-p-0{padding:0}.zcs-p-8{padding:.5rem}.zcs-p-10{padding:.625rem}.zcs-p-12{padding:.75rem}.zcs-p-16{padding:1rem}.zcs-p-20{padding:1.25rem}.zcs-p-24{padding:1.5rem}.zcs-px-10{padding-left:.625rem;padding-right:.625rem}.zcs-px-12{padding-left:.75rem;padding-right:.75rem}.zcs-px-16{padding-left:1rem;padding-right:1rem}.zcs-px-20{padding-left:1.25rem;padding-right:1.25rem}.zcs-py-2{padding-top:.125rem;padding-bottom:.125rem}.zcs-py-4{padding-top:.25rem;padding-bottom:.25rem}.zcs-py-8{padding-top:.5rem;padding-bottom:.5rem}.zcs-py-10{padding-top:.625rem;padding-bottom:.625rem}.zcs-py-12{padding-top:.75rem;padding-bottom:.75rem}.zcs-m-0{margin:0}.zcs-mt-8{margin-top:.5rem}.zcs-mt-10{margin-top:.625rem}.zcs-mt-12{margin-top:.75rem}.zcs-mt-16{margin-top:1rem}.zcs-mb-8{margin-bottom:.5rem}.zcs-mb-12{margin-bottom:.75rem}.zcs-mb-16{margin-bottom:1rem}.zcs-w-full{width:100%}.zcs-h-full{height:100%}.zcs-col-common{flex:1 1 0}.zcs-no-shrink{flex-shrink:0}.zcs-box-border{box-sizing:border-box}.zcs-rounded-sm{border-radius:.25rem}.zcs-rounded-md{border-radius:.375rem}.zcs-rounded-lg{border-radius:.5rem}.zcs-rounded-xl{border-radius:.75rem}.zcs-rounded-2xl{border-radius:1rem}.zcs-font-11{font-size:.6875rem}.zcs-font-12{font-size:.75rem}.zcs-font-13{font-size:.8125rem}.zcs-font-14{font-size:.875rem}.zcs-font-15{font-size:.9375rem}.zcs-font-16{font-size:1rem}.zcs-font-18{font-size:1.125rem}.zcs-font-20{font-size:1.25rem}.zcs-font-24{font-size:1.5rem}.zcs-font-28{font-size:1.75rem}.zcs-font-30{font-size:1.875rem}.zcs-font-normal{font-weight:400}.zcs-font-medium{font-weight:500}.zcs-font-semibold{font-weight:600}.zcs-font-bold{font-weight:700}.zcs-lh-body{line-height:1.5}.zcs-lh-heading{line-height:1.25}.zcs-uppercase{text-transform:uppercase}.zcs-text-left{text-align:left}.zcs-text-right{text-align:right}.zcs-color-theme{color:var(--zcs-theme-brand-color)}.zcs-color-primary{color:var(--zcs-primary-text-color)}.zcs-color-secondary{color:var(--zcs-secondary-text-color)}.zcs-color-tertiary{color:var(--zcs-teritiary-text-color)}.zcs-color-white{color:#fff}.zcs-card{background:var(--zcs-white-color);border:1px solid #e7e7ee;border-radius:12px}a{text-decoration:none}
+/* ZCS component CSS used: badge-badge-with-icon, banner-outline-banner-with-icon, button-primary-button, card-fleets-performance-metrics, table-simple-table, notes-notes-simple. */
+.zcs-badge{width:auto}.zcs-badge-filled-outline{border:1px solid}.zcs-badge-filled-outline.zcs-badge-theme{background-color:var(--zcs_component_hover_color);border-color:var(--zcs_brand_color);color:var(--zcs_brand_color)}.zcs-badge-filled-outline.zcs-badge-green{background:#E4FCF3;border-color:#179E6C;color:#179E6C}.zcs-badge-filled-outline.zcs-badge-red{background:#FDE3E6;border-color:#FE455D;color:#FE455D}.zcs-badge-filled-outline.zcs-badge-grey{background:#e8e8e8;border-color:#242424;color:#242424}.zcs-badge-filled-outline.zcs-badge-yellow{background:#FCF4E6;border-color:#FAAE13;color:#b8770d}.zcs-badge-filled-outline.zcs-badge-blue{background:#E8EFFF;border-color:#2A6FFC;color:#2A6FFC}.zcs-badge-filled-outline.zcs-badge-orange{background:#F8F0EB;border-color:#F4660C;color:#F4660C}.zcs-toast-link:hover,.zcs-notes-text a:hover{text-decoration:underline}.zcs-outline-toast{border:1px solid}.zcs-theme-toast{background:var(--zcs_component_hover_color)}.zcs-outline-toast.zcs-theme-toast{border:1px solid var(--zcs_brand_color)}.zcs-warning-toast{background:#fef4e5;color:#663c01}.zcs-info-toast{background:#e4f6fd;color:#024361}.zcs-button{width:auto;min-width:5rem;min-height:36px}.zcs-primary-button{background:var(--zcs_brand_color);color:var(--zcs_brand_foreground_color)}.zcs-primary-outline-button{border:1px solid var(--zcs_brand_color);background:#fff;color:var(--zcs_brand_color)}.zcs-primary-button.zcs-button:hover{background:var(--zcs_brand_dark_color)}.zcs-primary-outline-button:hover{background:var(--zcs_component_hover_color);border-color:var(--zcs_brand_color);color:var(--zcs_brand_color)}.zcs-button-icon{width:16px;max-height:16px}.zcs-progress-bar{height:8px;background:var(--zcs_component_hover_color);overflow:hidden}.zcs-progress-bar-indicator{height:inherit;border-radius:inherit;background:var(--zcs_brand_color)}.zcs-table-wrapper{border:1px solid var(--zcs_tertiary_border_color);background:#fff;overflow:auto}.zcs-table-wrapper table{line-height:normal;border-collapse:collapse}.zcs-table-wrapper table thead tr th{background:#F9FAFE;box-shadow:0 -1px 0 0 var(--zcs_tertiary_border_color) inset;white-space:nowrap}.zcs-table-wrapper table tbody tr td{border-top:1px solid var(--zcs_tertiary_border_color)}.zcs-table-wrapper table tbody tr:first-child td{border-color:transparent}.zcs-table-wrapper table tbody tr:hover td{background:#F9FAFE}.zcs-green{color:#179e6c}.zcs-red{color:#fe455d}.zcs-yellow{color:#b8770d}.zcs-blue{color:#09598e}.zcs-l_blue{color:#1094c5}.zcs-notes-wrapper ul{list-style-type:disc}.zcs-notes-wrapper ul li::marker{color:var(--zcs_tertiary_text_color)}
+/* Renewal portal layout. */
+.abc-renewal{background:linear-gradient(180deg,#f7fbff 0%,var(--zcs-page-bg-color) 100%);color:var(--zcs-primary-text-color);font-family:Inter,Arial,sans-serif;padding:28px;min-height:100%;box-sizing:border-box}.abc-shell{max-width:1440px;margin:0 auto}.abc-hero{position:relative;overflow:hidden;border:1px solid rgba(255,255,255,.28);border-radius:28px;background:radial-gradient(circle at 88% 12%,rgba(255,255,255,.22),transparent 28%),radial-gradient(circle at 8% 20%,rgba(20,184,166,.28),transparent 30%),linear-gradient(135deg,#0b2f5f 0%,var(--zcs_brand_color) 60%,#14b8a6 125%);color:#fff;box-shadow:0 24px 60px rgba(15,108,201,.22);padding:32px}.abc-hero h1{font-size:34px;line-height:1.12;margin:0}.abc-hero p{max-width:850px;color:rgba(255,255,255,.86);margin:12px 0 0}.abc-hero-meta{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}.abc-hero-pill{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.26);background:rgba(255,255,255,.14);color:#fff;border-radius:999px;padding:7px 12px;font-size:13px}.abc-hero-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}.abc-hero-actions .zcs-button{box-shadow:0 12px 22px rgba(0,0,0,.12)}.abc-section{margin-top:18px}.abc-grid{display:grid;gap:16px}.abc-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.abc-kpi{position:relative;overflow:hidden;min-height:142px}.abc-kpi:after{content:"";position:absolute;right:-28px;top:-28px;width:96px;height:96px;border-radius:50%;background:var(--abc-soft)}.abc-icon{width:46px;height:46px;border-radius:14px;background:var(--abc-soft);color:var(--abc-color);display:flex;align-items:center;justify-content:center;font-size:22px}.abc-kpi-value{font-size:32px;font-weight:800;line-height:1.1;color:var(--zcs-primary-text-color);margin-top:14px}.abc-kpi-label{font-size:13px;color:var(--zcs-teritiary-text-color);margin-top:4px}.abc-kpi-note{font-size:12px;color:var(--zcs-secondary-text-color);margin-top:8px}.abc-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px}.abc-card-head h2{font-size:18px;line-height:1.25;margin:0;color:var(--zcs-primary-text-color)}.abc-card-head p{font-size:13px;color:var(--zcs-teritiary-text-color);margin:4px 0 0}.abc-two{grid-template-columns:minmax(0,1.05fr) minmax(360px,.95fr)}.abc-status-grid{display:flex;flex-wrap:wrap;gap:9px}.abc-status-chip{display:inline-flex;align-items:center;gap:7px;border-radius:999px;padding:7px 11px;font-size:13px;font-weight:600;border:1px solid var(--chip-border);color:var(--chip-color);background:var(--chip-bg)}.abc-status-chip i{font-size:14px}.abc-progress-list{list-style:none}.abc-context-bars{display:grid;gap:18px}.abc-bar-meta{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13px;color:var(--zcs-teritiary-text-color)}.abc-bar{height:10px;border-radius:999px;background:#eef2f8;overflow:hidden}.abc-bar-fill{height:100%;border-radius:999px;background:var(--bar-color);width:var(--bar-width)}.abc-notice-card{border-left:4px solid var(--zcs_brand_color);border-radius:14px;background:linear-gradient(90deg,var(--zcs_component_hover_color),#fff);padding:16px}.abc-payment-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.abc-mini{border:1px solid #e7e7ee;border-radius:12px;padding:12px;background:#fff}.abc-mini strong{display:block;font-size:22px;color:var(--zcs-primary-text-color)}.abc-mini span{font-size:12px;color:var(--zcs-teritiary-text-color)}.abc-report-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.abc-report-card{overflow:hidden}.abc-report-body{border-top:1px solid #e7e7ee;background:#fbfdff;padding:8px}.abc-embed{min-height:400px;border:1px dashed #d7deea;border-radius:10px;background:#fff;overflow:hidden}.abc-report-card.wide{grid-column:1/-1}.abc-table-wrapper{max-height:340px}.abc-table-wrapper td,.abc-table-wrapper th{vertical-align:top}.abc-transfer-icon{width:40px;height:40px;border-radius:12px;background:#fff3e2;color:#b8770d;display:flex;align-items:center;justify-content:center;font-size:21px}.abc-muted{color:var(--zcs-teritiary-text-color)}@media(max-width:1120px){.abc-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.abc-two,.abc-report-grid{grid-template-columns:1fr}}@media(max-width:720px){.abc-renewal{padding:14px}.abc-hero{padding:22px;border-radius:20px}.abc-hero h1{font-size:28px}.abc-kpis,.abc-payment-grid{grid-template-columns:1fr}.abc-card-head{flex-direction:column}.abc-embed{min-height:360px}.abc-table-wrapper{overflow:auto}}
+</style>
+<div class="abc-renewal">
+	<div class="abc-shell">
+		<section class="abc-hero">
+			<div class="zcs-flex zcs-direction-column zcs-gap-8">
+				<span class="abc-hero-pill"><i class="zc-li-outline business-badge"></i> Renewal workspace</span>
+				<h1>Renewal Portal</h1>
+				<p>Review renewable licenses, renewal batches, payment status, notices, and active or terminated license context before taking the next renewal action.</p>
+				<div class="abc-hero-meta">
+					<span class="abc-hero-pill"><i class="zc-li-outline ui-1-email-83"></i> <%=licenseeEmail%></span>
+					<span class="abc-hero-pill"><i class="zc-li-outline ui-1-check-circle-08"></i> Active: <%=activeCount%></span>
+					<span class="abc-hero-pill"><i class="zc-li-outline ui-2-time"></i> Renewal due: <%=renewalDueCount%></span>
+					<span class="abc-hero-pill"><i class="zc-li-outline ui-1-circle-remove"></i> Terminated: <%=terminatedCount%></span>
+				</div>
+				<div class="abc-hero-actions">
+					<a class="zcs-button zcs-primary-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body" href="#Form:Renewal_Batches?zc_LoadIn=dialog&amp;zc_Header=true"><i class="zcs-button-icon zc-li-outline files-folder-add"></i><span class="zcs-button-text">Start renewal batch</span></a>
+					<a class="zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body" href="#Report:Licensee_Portal_Licenses"><i class="zcs-button-icon zc-li-outline ui-1-eye-17"></i><span class="zcs-button-text">View license list</span></a>
+				</div>
+			</div>
+		</section>
+
+		<section class="abc-section abc-grid abc-kpis">
+			<div class="zcs-card zcs-flex zcs-direction-column zcs-p-24 zcs-box-border abc-kpi" style="--abc-color:var(--zcs_brand_color);--abc-soft:var(--zcs_component_hover_color);">
+				<div class="abc-icon"><i class="zc-li-outline business-progress"></i></div>
+				<div class="abc-kpi-value"><%=renewable%></div>
+				<div class="abc-kpi-label">Renewable licenses</div>
+				<div class="abc-kpi-note">Renewal Due plus 50% and 100% penalty statuses.</div>
+			</div>
+			<div class="zcs-card zcs-flex zcs-direction-column zcs-p-24 zcs-box-border abc-kpi" style="--abc-color:#09598e;--abc-soft:#e4f6fd;">
+				<div class="abc-icon"><i class="zc-li-outline files-folder-15"></i></div>
+				<div class="abc-kpi-value"><%=batchCount%></div>
+				<div class="abc-kpi-label">Renewal batches</div>
+				<div class="abc-kpi-note">Open batches: <%=openBatches%></div>
+			</div>
+			<div class="zcs-card zcs-flex zcs-direction-column zcs-p-24 zcs-box-border abc-kpi" style="--abc-color:#b8770d;--abc-soft:#fef4e5;">
+				<div class="abc-icon"><i class="zc-li-outline business-money-time"></i></div>
+				<div class="abc-kpi-value"><%=pendingPayments%></div>
+				<div class="abc-kpi-label">Pending payments</div>
+				<div class="abc-kpi-note">Amount due: <%=pendingAmount%></div>
+			</div>
+			<div class="zcs-card zcs-flex zcs-direction-column zcs-p-24 zcs-box-border abc-kpi" style="--abc-color:#179E6C;--abc-soft:#E4FCF3;">
+				<div class="abc-icon"><i class="zc-li-outline ui-1-check-circle-08"></i></div>
+				<div class="abc-kpi-value"><%=completedRenewals%></div>
+				<div class="abc-kpi-label">Completed renewals</div>
+				<div class="abc-kpi-note">Renewed license records: <%=renewedCount%></div>
+			</div>
+			<div class="zcs-card zcs-flex zcs-direction-column zcs-p-24 zcs-box-border abc-kpi" style="--abc-color:#2A6FFC;--abc-soft:#E8EFFF;">
+				<div class="abc-icon"><i class="zc-li-outline files-single-copy-04"></i></div>
+				<div class="abc-kpi-value"><%=noticesGenerated%></div>
+				<div class="abc-kpi-label">Notices generated</div>
+				<div class="abc-kpi-note">Draft: <%=noticesDraft%> | Failed: <%=noticesFailed%></div>
+			</div>
+			<% if(penaltyTotal > 0) { %>
+			<div class="zcs-card zcs-flex zcs-direction-column zcs-p-24 zcs-box-border abc-kpi" style="--abc-color:#FE455D;--abc-soft:#FDE3E6;">
+				<div class="abc-icon"><i class="zc-li-outline ui-2-time"></i></div>
+				<div class="abc-kpi-value"><%=penaltyTotal%></div>
+				<div class="abc-kpi-label">Penalty stages</div>
+				<div class="abc-kpi-note">50%: <%=penalty50%> | 100%: <%=penalty100%></div>
+			</div>
+			<% } %>
+		</section>
+
+		<section class="abc-section abc-grid abc-two">
+			<div class="zcs-card zcs-p-24 zcs-box-border">
+				<div class="abc-card-head">
+					<div><h2>License status context</h2><p>Status chips show the renewal position for your current license records.</p></div>
+				</div>
+				<div class="abc-status-grid">
+					<span class="abc-status-chip" style="--chip-bg:#E4FCF3;--chip-border:#179E6C;--chip-color:#179E6C;"><i class="zc-li-outline ui-1-check-circle-08"></i>Active <b><%=activeCount%></b></span>
+					<span class="abc-status-chip" style="--chip-bg:#FCF4E6;--chip-border:#FAAE13;--chip-color:#b8770d;"><i class="zc-li-outline ui-2-time"></i>Renewal Due <b><%=renewalDueCount%></b></span>
+					<span class="abc-status-chip" style="--chip-bg:#E4FCF3;--chip-border:#179E6C;--chip-color:#179E6C;"><i class="zc-li-outline ui-1-check-circle-08"></i>Renewed <b><%=renewedCount%></b></span>
+					<span class="abc-status-chip" style="--chip-bg:#F8F0EB;--chip-border:#F4660C;--chip-color:#F4660C;"><i class="zc-li-outline ui-2-time"></i>50% <b><%=penalty50Status%></b></span>
+					<span class="abc-status-chip" style="--chip-bg:#FDE3E6;--chip-border:#FE455D;--chip-color:#FE455D;"><i class="zc-li-outline ui-2-time"></i>100% <b><%=penalty100Status%></b></span>
+					<span class="abc-status-chip" style="--chip-bg:#e8e8e8;--chip-border:#242424;--chip-color:#242424;"><i class="zc-li-outline ui-1-circle-remove"></i>Suspended <b><%=suspendedCount%></b></span>
+					<span class="abc-status-chip" style="--chip-bg:#e8e8e8;--chip-border:#242424;--chip-color:#242424;"><i class="zc-li-outline ui-1-simple-remove"></i>Closed <b><%=closedCount%></b></span>
+					<span class="abc-status-chip" style="--chip-bg:#FDE3E6;--chip-border:#FE455D;--chip-color:#FE455D;"><i class="zc-li-outline ui-1-circle-remove"></i>Terminated <b><%=terminatedCount%></b></span>
+				</div>
+				<ul class="abc-progress-list zcs-flex zcs-direction-column zcs-gap-16 zcs-p-0 zcs-m-0 zcs-mt-16">
+					<li class="zcs-progress-bar-wrapper zcs-flex zcs-direction-column zcs-gap-10"><p class="zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-8 zcs-font-14 zcs-font-normal zcs-lh-body zcs-m-0"><span class="zcs-color-tertiary">Active or renewed</span><span class="zcs-color-tertiary"><%=activeShare%>%</span></p><div class="zcs-progress-bar zcs-rounded-sm"><div class="zcs-progress-bar-indicator" style="width:<%=activeShare%>%;background:#179E6C;"></div></div></li>
+					<li class="zcs-progress-bar-wrapper zcs-flex zcs-direction-column zcs-gap-10"><p class="zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-8 zcs-font-14 zcs-font-normal zcs-lh-body zcs-m-0"><span class="zcs-color-tertiary">Due or penalty stage</span><span class="zcs-color-tertiary"><%=renewalShare%>%</span></p><div class="zcs-progress-bar zcs-rounded-sm"><div class="zcs-progress-bar-indicator" style="width:<%=renewalShare%>%;background:#FAAE13;"></div></div></li>
+					<li class="zcs-progress-bar-wrapper zcs-flex zcs-direction-column zcs-gap-10"><p class="zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-8 zcs-font-14 zcs-font-normal zcs-lh-body zcs-m-0"><span class="zcs-color-tertiary">Suspended, closed, or terminated</span><span class="zcs-color-tertiary"><%=closedShare%>%</span></p><div class="zcs-progress-bar zcs-rounded-sm"><div class="zcs-progress-bar-indicator" style="width:<%=closedShare%>%;background:#FE455D;"></div></div></li>
+				</ul>
+			</div>
+
+			<div class="zcs-card zcs-p-24 zcs-box-border">
+				<div class="abc-card-head">
+					<div><h2>Payment and notice status</h2><p>Use this snapshot with the payment queue and generated notices below.</p></div>
+				</div>
+				<div class="abc-payment-grid">
+					<div class="abc-mini"><strong><%=pendingPayments%></strong><span>Pending</span></div>
+					<div class="abc-mini"><strong><%=completePayments%></strong><span>Complete</span></div>
+					<div class="abc-mini"><strong><%=waivedPayments%></strong><span>Waived</span></div>
+					<div class="abc-mini"><strong><%=refundedPayments%></strong><span>Refunded</span></div>
+				</div>
+				<div class="zcs-toast zcs-outline-toast zcs-theme-toast zcs-w-full zcs-flex zcs-gap-8 zcs-px-16 zcs-py-12 zcs-rounded-sm zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary zcs-mt-16">
+					<i class="zcs-toast-icon zcs-no-shrink zcs-lh-body zc-li-outline travel-info"></i>
+					<div class="zcs-toast-text"><p class="zcs-m-0">Payment records remain tied to the renewal batch. If payment is pending, review the queue before assuming a renewal is complete.</p></div>
+				</div>
+				<div class="zcs-notes-wrapper zcs-mt-16">
+					<p class="zcs-notes-text zcs-m-0 zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"><span class="zcs-notes-title zcs-font-medium zcs-color-tertiary">Notice context: </span>Generated, sent, and viewed notices are counted as notices generated. Draft and failed notices are shown separately for follow-up.</p>
+				</div>
+			</div>
+		</section>
+
+		<section class="abc-section">
+			<div class="zcs-toast zcs-outline-toast zcs-warning-toast zcs-w-full zcs-flex zcs-gap-12 zcs-px-16 zcs-py-12 zcs-rounded-sm zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body">
+				<div class="abc-transfer-icon zcs-no-shrink"><i class="zc-li-outline arrows-1-refresh-68"></i></div>
+				<div class="zcs-toast-text"><p class="zcs-m-0"><b>Transferred license context:</b> A transferred license may appear as Terminated after the transfer issuance is completed. Use the new Active license record for all future renewals, payments, and notices.</p></div>
+			</div>
+		</section>
+
+		<section class="abc-section abc-grid abc-report-grid">
+			<div class="zcs-card zcs-box-border abc-report-card">
+				<div class="abc-card-head zcs-p-20 zcs-mb-0"><div><h2>Licensee portal licenses</h2><p>Active, renewal due, renewed, closed, and terminated license records.</p></div><span class="zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-blue"><i class="zcs-badge-icon zcs-no-shrink zc-li-outline business-badge"></i><span class="zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body">License status</span></span></div>
+				<div class="abc-report-body"><div class="abc-embed" zc-component="report" zc-linkname="Licensee_Portal_Licenses" zc-height="430px"></div></div>
+			</div>
+			<div class="zcs-card zcs-box-border abc-report-card">
+				<div class="abc-card-head zcs-p-20 zcs-mb-0"><div><h2>Licensee renewal batches</h2><p>Submitted, payment pending, paid, completed, and cancelled batches.</p></div><span class="zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-theme"><i class="zcs-badge-icon zcs-no-shrink zc-li-outline files-folder-15"></i><span class="zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body">Batches</span></span></div>
+				<div class="abc-report-body"><div class="abc-embed" zc-component="report" zc-linkname="Licensee_Renewal_Batches" zc-height="430px"></div></div>
+			</div>
+			<div class="zcs-card zcs-box-border abc-report-card">
+				<div class="abc-card-head zcs-p-20 zcs-mb-0"><div><h2>Pending renewal items</h2><p>Selected and payment-pending items requiring completion.</p></div><span class="zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-yellow"><i class="zcs-badge-icon zcs-no-shrink zc-li-outline ui-2-time"></i><span class="zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body">Pending</span></span></div>
+				<div class="abc-report-body"><div class="abc-embed" zc-component="report" zc-linkname="Pending_Renewal_Items" zc-height="430px"></div></div>
+			</div>
+			<div class="zcs-card zcs-box-border abc-report-card">
+				<div class="abc-card-head zcs-p-20 zcs-mb-0"><div><h2>Renewal payment queue</h2><p>Renewal batches waiting for payment completion.</p></div><span class="zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-orange"><i class="zcs-badge-icon zcs-no-shrink zc-li-outline business-payment"></i><span class="zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body">Payments</span></span></div>
+				<div class="abc-report-body"><div class="abc-embed" zc-component="report" zc-linkname="Renewal_Payment_Queue" zc-height="430px"></div></div>
+			</div>
+			<div class="zcs-card zcs-box-border abc-report-card wide">
+				<div class="abc-card-head zcs-p-20 zcs-mb-0"><div><h2>Renewal notices generated</h2><p>Notice date, due date, penalty stage, delivery status, and recipient email.</p></div><span class="zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-green"><i class="zcs-badge-icon zcs-no-shrink zc-li-outline files-single-copy-04"></i><span class="zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body">Notices</span></span></div>
+				<div class="abc-report-body"><div class="abc-embed" zc-component="report" zc-linkname="All_Renewal_Notices" zc-height="420px"></div></div>
+			</div>
+		</section>
+	</div>
+</div>

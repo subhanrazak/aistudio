@@ -1,0 +1,51 @@
+Legal_Entities_On_Validate as "Validate Legal Entity"
+{
+
+				type =  form
+				form = Legal_Entities
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Applicant_Profile == null)
+										{
+											alert "Applicant Profile is required.";
+											cancel submit;
+										}
+										if(input.Entity_Type in {""," ","null"})
+										{
+											alert "Entity Type is required.";
+											cancel submit;
+										}
+										if(input.Entity_Type == "Company")
+										{
+											if(input.Company_Name in {""," ","null"} || input.Company_Structure == null || input.State_of_Incorporation == null)
+											{
+												alert "Company Name, Company Structure, and State of Incorporation are required for company legal entities.";
+												cancel submit;
+											}
+										}
+										if(input.Entity_Type in {"Person","Manager","Food Lessee"})
+										{
+											if(input.Person_Name.first_name in {""," ","null"} || input.Person_Name.last_name in {""," ","null"} || input.Birth_Date == null || input.Address == null)
+											{
+												alert "Person Name, Birth Date, and Address are required for person, manager, and food lessee entities.";
+												cancel submit;
+											}
+										}
+										if(input.Last_Four_of_SSN not in {""," ","null"} && input.Last_Four_of_SSN.length() != 4)
+										{
+											alert "Last Four of SSN must be exactly 4 characters when entered.";
+											cancel submit;
+										}
+						)
+					}
+				}
+
+			
+}

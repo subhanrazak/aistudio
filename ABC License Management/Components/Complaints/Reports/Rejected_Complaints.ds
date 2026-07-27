@@ -1,0 +1,40 @@
+list Rejected_Complaints
+{
+	displayName = "Rejected Complaints"
+	show all rows from Complaints  [Screening_Decision == "Rejected" || Screening_Decision == "Closed"]
+	(
+		Complaint_Number as "Complaint Number"
+		Intake_Date as "Intake Date"
+		Complaint_Source as "Complaint Source"
+		Nature_of_Violation as "Nature of Violation"
+		Priority
+		Screening_Decision as "Screening Decision"
+		Screening_Notes as "Screening Notes"
+		Created_Case as "Created Case"
+		custom action "Accept Complaint"
+		(
+			workflow = Accept_Complaint
+			show action for each record = true
+			show action in edit record menu = true
+			column header = "Accept Complaint"
+			success message = "Complaint accepted"
+			condition = (Screening_Decision == "Rejected" || Screening_Decision == "Closed")
+			confirmation before execution
+			(
+				message for individual record = "Re-open and accept this complaint?"
+				confirm button text = "Accept Complaint"
+				cancel button text = "Cancel"
+			)
+		)
+	)
+	filters
+	(
+		Screening_Decision
+		Complaint_Source
+		Intake_Date
+	)
+	sort by
+	(
+		Intake_Date descending
+	)
+}

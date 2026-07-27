@@ -1,0 +1,51 @@
+Payments_On_Success as "Update Linked Payment Status"
+{
+
+				type =  form
+				form = Payments
+
+				record event = on add or edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Payment_Status == "Complete")
+										{
+											if(input.Application != null)
+											{
+												appRows = Applications[ID == input.Application];
+												if(appRows.count() > 0)
+												{
+													appRows.Payment_Status="Complete";
+													appRows.Books_Invoice_Status="Paid";
+												}
+											}
+											if(input.Renewal_Batch != null)
+											{
+												batchRows = Renewal_Batches[ID == input.Renewal_Batch];
+												if(batchRows.count() > 0)
+												{
+													batchRows.Payment_Status="Complete";
+													batchRows.Batch_Status="Paid";
+												}
+											}
+											if(input.Receipt_Generated != true)
+											{
+												thisapp.Create_Correspondence_Stub("Payment",input.ID,"Receipt","","Not Required");
+												input.Receipt_Generated = true;
+											}
+											thisapp.Write_Audit_Log("Payment","Payments",input.ID,"Payment completed","Manual/stub payment marked complete.");
+										}
+										if(input.Refund_Status == "Approved" || input.Refund_Status == "Completed")
+										{
+											thisapp.Write_Audit_Log("Payment","Payments",input.ID,"Refund status updated","Refund status: " + input.Refund_Status);
+										}
+						)
+					}
+				}
+
+			
+}

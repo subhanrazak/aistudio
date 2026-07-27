@@ -1,0 +1,321 @@
+<%
+	supervisorEmail = ifnull(zoho.loginuserid,"");
+	if(supervisorEmail == "" || supervisorEmail == null)
+	{
+		supervisorEmail = "Licensing supervisor";
+	}
+
+	draftCount = Applications[Application_Status == "Draft" || Application_Status is null || Application_Status == ""].count();
+	submittedQueue = Applications[Application_Status == "Submitted"] sort by Application_Submitted_Date asc;
+	inProgressQueue = Applications[Application_Status == "In-progress"] sort by Application_Submitted_Date asc;
+	readyApproval = Applications[Application_Status == "Ready for Approval"] sort by Application_Submitted_Date asc;
+	onHoldApps = Applications[Application_Status == "On-hold"] sort by Application_Submitted_Date asc;
+	rejectedApps = Applications[Application_Status == "Rejected"] sort by Application_Submitted_Date desc;
+	approvedApps = Applications[Application_Status == "Approved"] sort by Estimated_Issue_Date asc;
+	licenseIssuedCount = Applications[Application_Status == "License Issued"].count();
+	activeHolds = Application_Holds[Hold_Released == false] sort by Created_Date desc;
+	requestInfoApps = Applications[Application_Status == "On-hold" && Tracking_Url_or_Note.contains("Information requested")] sort by Application_Submitted_Date asc;
+	investigatorFlags = Applications[Investigator_Review_Flag == true && Application_Status != "Rejected" && Application_Status != "License Issued"] sort by Application_Submitted_Date asc;
+	approvedAwaitingLicense = Applications[Application_Status == "Approved" && Issued_License == null] sort by Estimated_Issue_Date asc;
+	unassignedApps = Applications[(Assigned_Licensing_Rep == null || Assigned_Licensing_Rep == "") && (Application_Status == "Submitted" || Application_Status == "In-progress" || Application_Status == "Ready for Approval")] sort by Application_Submitted_Date asc;
+
+	submittedCount = submittedQueue.count();
+	inProgressCount = inProgressQueue.count();
+	readyApprovalCount = readyApproval.count();
+	onHoldCount = onHoldApps.count();
+	rejectedCount = rejectedApps.count();
+	approvedCount = approvedApps.count();
+	holdCount = activeHolds.count();
+	requestInfoCount = requestInfoApps.count();
+	flagCount = investigatorFlags.count();
+	approvedIssueCount = approvedAwaitingLicense.count();
+	unassignedCount = unassignedApps.count();
+	allOpenAppCount = submittedCount + inProgressCount + readyApprovalCount + onHoldCount + approvedIssueCount;
+
+	renewalPaymentQueue = Renewal_Batches[(Payment_Status == "Pending" || Batch_Status == "Payment Pending") && Batch_Status != "Cancelled"] sort by Submitted_Date asc;
+	renewalSubmittedQueue = Renewal_Batches[(Batch_Status == "Submitted" || Batch_Status == "Draft" || Batch_Status == "Paid") && Batch_Status != "Completed" && Batch_Status != "Cancelled"] sort by Submitted_Date asc;
+	pendingPayments = Payments[(Payment_Status == "Pending" || Payment_Status == "Failed") && Amount_Due > 0] sort by Payment_Date asc;
+	refundQueue = Payments[Refund_Requested == true && Refund_Status != "Completed"] sort by Payment_Date asc;
+	reconciliationQueue = Payments[Reconciled != true && (Payment_Status == "Complete" || Payment_Status == "Refunded" || Payment_Status == "Void")] sort by Payment_Date asc;
+	renewalPaymentCount = renewalPaymentQueue.count();
+	renewalSubmittedCount = renewalSubmittedQueue.count();
+	pendingPaymentCount = pendingPayments.count();
+	refundCount = refundQueue.count();
+	reconCount = reconciliationQueue.count();
+	paymentAmountDue = ifnull(pendingPayments.sum(Amount_Due),0);
+	renewalAmountDue = ifnull(renewalPaymentQueue.sum(Total_Amount_Due),0);
+	paymentBottleneckCount = renewalPaymentCount + pendingPaymentCount + refundCount + reconCount;
+
+	staffRoster = Add_Agents[Agent_Role == "Licensing Staff" && Active == true] sort by Agent_Email asc;
+	staffCount = staffRoster.count();
+	bottleneckTotal = readyApprovalCount + holdCount + requestInfoCount + approvedIssueCount + unassignedCount + paymentBottleneckCount;
+	attentionBadge = if(bottleneckTotal > 0,"zcs-badge-yellow","zcs-badge-green");
+	attentionLabel = if(bottleneckTotal > 0,"Supervisor action needed","Queues clear");
+	attentionIcon = if(bottleneckTotal > 0,"ui-2-time","ui-1-check-circle-08");
+%>
+<style>
+/* ZCS components used on this page: zcs-global, header-heading-with-actions, card-sample-1, table-simple-table, button-primary-button, button-primary-outline-button, badge-filled-badge. */
+:root{--zcs-theme-brand-color:var(--zcs_brand_color,#2563eb);--zcs-light-bg-color:var(--zcs_brand_light_color,#eaf2ff);--zcs-page-bg-color:#f5f7fb;--zcs-primary-text-color:var(--zcs_primary_text_color,#111827);--zcs-secondary-text-color:var(--zcs_secondary_text_color,#4b5563);--zcs-teritiary-text-color:var(--zcs_tertiary_text_color,#8a94a6);--zcs-border-color:var(--zcs_tertiary_border_color,#e5e7eb);--zcs-white-color:#fff;--zcs-black-color:#000;--column-gap:0px;font-size:16px;line-height:1.5}.zcs-row{display:flex;flex-wrap:wrap}.zcs-flex{display:flex}.zcs-inline-flex{display:inline-flex}.zcs-direction-column{flex-direction:column}.zcs-align-items-center{align-items:center}.zcs-align-items-start{align-items:flex-start}.zcs-justify-center{justify-content:center}.zcs-justify-space-between{justify-content:space-between}.zcs-col-common{flex:1 1 0}.zcs-no-shrink{flex-shrink:0}.zcs-relative{position:relative}.zcs-sticky{position:sticky}.zcs-gap-4{gap:.25rem}.zcs-gap-6{gap:.375rem}.zcs-gap-8{gap:.5rem}.zcs-gap-10{gap:.625rem}.zcs-gap-12{gap:.75rem}.zcs-gap-14{gap:.875rem}.zcs-gap-16{gap:1rem}.zcs-gap-20{gap:1.25rem}.zcs-gap-24{gap:1.5rem}.zcs-p-0{padding:0}.zcs-p-8{padding:.5rem}.zcs-p-10{padding:.625rem}.zcs-p-12{padding:.75rem}.zcs-p-16{padding:1rem}.zcs-p-20{padding:1.25rem}.zcs-p-24{padding:1.5rem}.zcs-px-10{padding-left:.625rem;padding-right:.625rem}.zcs-px-12{padding-left:.75rem;padding-right:.75rem}.zcs-px-16{padding-left:1rem;padding-right:1rem}.zcs-px-20{padding-left:1.25rem;padding-right:1.25rem}.zcs-px-24{padding-left:1.5rem;padding-right:1.5rem}.zcs-px-30{padding-left:1.875rem;padding-right:1.875rem}.zcs-py-2{padding-top:.125rem;padding-bottom:.125rem}.zcs-py-4{padding-top:.25rem;padding-bottom:.25rem}.zcs-py-8{padding-top:.5rem;padding-bottom:.5rem}.zcs-py-10{padding-top:.625rem;padding-bottom:.625rem}.zcs-py-12{padding-top:.75rem;padding-bottom:.75rem}.zcs-py-24{padding-top:1.5rem;padding-bottom:1.5rem}.zcs-m-0{margin:0}.zcs-mt-8{margin-top:.5rem}.zcs-mt-10{margin-top:.625rem}.zcs-mt-12{margin-top:.75rem}.zcs-mt-16{margin-top:1rem}.zcs-mb-8{margin-bottom:.5rem}.zcs-mb-12{margin-bottom:.75rem}.zcs-mb-16{margin-bottom:1rem}.zcs-w-full{width:100%}.zcs-wh-full{width:100%;height:100%}.zcs-rounded-sm{border-radius:.25rem}.zcs-rounded-md{border-radius:.375rem}.zcs-rounded-lg{border-radius:.5rem}.zcs-rounded-xl{border-radius:.75rem}.zcs-rounded-2xl{border-radius:1rem}.zcs-box-border{box-sizing:border-box}.zcs-font-11{font-size:.6875rem}.zcs-font-12{font-size:.75rem}.zcs-font-13{font-size:.8125rem}.zcs-font-14{font-size:.875rem}.zcs-font-15{font-size:.9375rem}.zcs-font-16{font-size:1rem}.zcs-font-18{font-size:1.125rem}.zcs-font-20{font-size:1.25rem}.zcs-font-24{font-size:1.5rem}.zcs-font-28{font-size:1.75rem}.zcs-font-30{font-size:1.875rem}.zcs-font-normal{font-weight:400}.zcs-font-medium{font-weight:500}.zcs-font-semibold{font-weight:600}.zcs-font-bold{font-weight:700}.zcs-lh-body{line-height:1.5}.zcs-lh-heading{line-height:1.25}.zcs-uppercase{text-transform:uppercase}.zcs-text-left{text-align:left}.zcs-text-right{text-align:right}.zcs-text-center{text-align:center}.zcs-color-theme{color:var(--zcs-theme-brand-color)}.zcs-color-primary{color:var(--zcs-primary-text-color)}.zcs-color-secondary{color:var(--zcs-secondary-text-color)}.zcs-color-tertiary{color:var(--zcs-teritiary-text-color)}.zcs-color-white{color:#fff}.zcs-card{background:var(--zcs-white-color);border:1px solid var(--zcs-border-color);border-radius:12px}.zcs-ellipsis{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}a{text-decoration:none}.zcs-list-none{list-style-type:none}
+.zcs-button{width:auto;min-width:5rem;min-height:36px}.zcs-primary-button{background:var(--zcs_brand_color,#2563eb);color:var(--zcs_brand_foreground_color,#fff)}.zcs-primary-outline-button{border:1px solid var(--zcs_brand_color,#2563eb);background:#fff;color:var(--zcs_brand_color,#2563eb)}.zcs-primary-button.zcs-button:hover{background:var(--zcs_brand_dark_color,#1d4ed8)}.zcs-primary-outline-button:hover{background:var(--zcs_component_hover_color,#eff6ff);border-color:var(--zcs_brand_color,#2563eb);color:var(--zcs_brand_color,#2563eb)}.zcs-button-icon{width:16px;max-height:16px}.zcs-badge{width:auto}.zcs-badge-filled{border:1px solid transparent}.zcs-badge-filled.zcs-badge-theme{background:var(--zcs_brand_color,#2563eb);border-color:var(--zcs_brand_color,#2563eb);color:#fff}.zcs-badge-filled.zcs-badge-green{background:#179e6c;border-color:#179e6c;color:#fff}.zcs-badge-filled.zcs-badge-red{background:#fe455d;border-color:#fe455d;color:#fff}.zcs-badge-filled.zcs-badge-grey{background:#242424;border-color:#242424;color:#fff}.zcs-badge-filled.zcs-badge-yellow{background:#faae13;border-color:#faae13;color:#fff}.zcs-badge-filled.zcs-badge-blue{background:#2a6ffc;border-color:#2a6ffc;color:#fff}.zcs-badge-filled.zcs-badge-orange{background:#f4660c;border-color:#f4660c;color:#fff}.zcs-table-wrapper{border:1px solid var(--zcs-border-color);background:#fff;overflow:auto}.zcs-table-wrapper table{line-height:normal;border-collapse:collapse}.zcs-table-wrapper table thead{top:0}.zcs-table-wrapper table thead tr th{background:#f9fafe;box-shadow:0 -1px 0 0 var(--zcs-border-color) inset;white-space:nowrap}.zcs-table-wrapper table tbody tr td{border-top:1px solid var(--zcs-border-color);vertical-align:top}.zcs-table-wrapper table tbody tr:first-child td{border-color:transparent}.zcs-table-wrapper table tbody tr:hover td{background:#f9fafe}.zcs-green{color:#179e6c}.zcs-red{color:#fe455d}.zcs-yellow{color:#b8770d}.zcs-blue{color:#09598e}.zcs-l_blue{color:#1094c5}
+div#zppagesLive,div#elementsContainer,.Layout.elemContainment,div#row_1,.zc-pb-formreport-placeholder{height:100%!important}.Layout.elemContainment,.zc-pb-page-content-wrapper .elemContainment,.column-container .zc-pb-tile-container{padding:0!important}.zc-page-content-wrapper .zc-pb-page-content-wrapper .zc-pb-tile-card{box-shadow:none!important}.lsup{font-family:Inter,Arial,sans-serif;color:var(--zcs-primary-text-color);background:linear-gradient(180deg,#f5f8ff 0%,#f5f7fb 66%,#fff 100%);min-height:100%;padding:28px;box-sizing:border-box}.lsup *{box-sizing:border-box}.lsup-shell{max-width:1540px;margin:0 auto;display:flex;flex-direction:column;gap:18px}.lsup-header{background:rgba(255,255,255,.96);border:1px solid #e7e7ee;border-radius:20px;box-shadow:0 12px 34px rgba(20,44,84,.08);padding:22px 24px}.lsup-head-icon{width:50px;height:50px;border-radius:16px;background:var(--zcs_component_hover_color,#eff6ff);color:var(--zcs_brand_color,#2563eb);display:flex;align-items:center;justify-content:center;font-size:24px}.lsup-subtitle{margin-top:4px;color:#64748b}.lsup-hero{position:relative;overflow:hidden;border-radius:28px;padding:30px;background:radial-gradient(circle at 86% 8%,rgba(255,255,255,.25),transparent 30%),radial-gradient(circle at 8% 12%,rgba(45,212,191,.24),transparent 30%),linear-gradient(135deg,#111827 0%,var(--zcs_brand_color,#2563eb) 62%,#0f766e 130%);color:#fff;box-shadow:0 24px 60px rgba(37,99,235,.18)}.lsup-hero:after{content:"";position:absolute;right:-120px;bottom:-150px;width:360px;height:360px;border-radius:50%;border:1px solid rgba(255,255,255,.20);box-shadow:0 0 0 54px rgba(255,255,255,.08),0 0 0 108px rgba(255,255,255,.04)}.lsup-hero-grid{position:relative;z-index:1;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(330px,.75fr);gap:24px;align-items:center}.lsup-eyebrow{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.26);background:rgba(255,255,255,.15);color:#fff;border-radius:999px;padding:7px 12px;font-size:12px;font-weight:750;letter-spacing:.5px;text-transform:uppercase}.lsup-hero h1{font-size:clamp(30px,4vw,48px);line-height:1.03;letter-spacing:-.7px;margin:14px 0 10px;color:#fff}.lsup-hero p{max-width:850px;color:rgba(255,255,255,.86);font-size:15px;line-height:1.65;margin:0}.lsup-hero-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}.lsup-hero-actions .zcs-button{box-shadow:0 10px 22px rgba(0,0,0,.14)}.lsup-command{border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.12);border-radius:20px;padding:18px;backdrop-filter:blur(4px)}.lsup-avatar{width:58px;height:58px;border-radius:18px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;color:#fff;font-size:28px}.lsup-command h2{font-size:20px;line-height:1.2;margin:0;color:#fff}.lsup-command-line{font-size:13px;color:rgba(255,255,255,.82);display:flex;align-items:center;gap:8px;margin-top:6px}.lsup-kv-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}.lsup-kv{border:1px solid rgba(255,255,255,.18);border-radius:14px;padding:10px;background:rgba(255,255,255,.08)}.lsup-kv span{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.55px;color:rgba(255,255,255,.62)}.lsup-kv strong{display:block;font-size:14px;margin-top:4px;color:#fff}.lsup-section-title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:8px 4px -2px}.lsup-section-title h2{font-size:11px;font-weight:800;color:#8a94a6;text-transform:uppercase;letter-spacing:1.1px;margin:0;display:flex;align-items:center;gap:8px}.lsup-section-title h2:before{content:"";width:4px;height:15px;border-radius:4px;background:linear-gradient(180deg,var(--zcs_brand_color,#2563eb),#14b8a6)}.lsup-section-sub{font-size:12px;color:#8a94a6}.lsup-kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:14px}.lsup-kpi{position:relative;overflow:hidden;background:#fff;border:1px solid #e9edf5;border-radius:18px;padding:18px;box-shadow:0 1px 2px rgba(15,23,42,.04);min-height:148px}.lsup-kpi:after{content:"";position:absolute;right:-42px;top:-42px;width:120px;height:120px;border-radius:50%;background:var(--soft)}.lsup-kpi-icon{position:relative;z-index:1;width:42px;height:42px;border-radius:14px;background:var(--soft);color:var(--tone);display:flex;align-items:center;justify-content:center;font-size:21px}.lsup-kpi-value{position:relative;z-index:1;font-size:32px;line-height:1;font-weight:800;color:#111827;margin-top:16px;letter-spacing:-.5px}.lsup-kpi-label{position:relative;z-index:1;font-size:12px;color:#64748b;margin-top:5px;font-weight:650}.lsup-kpi-note{position:relative;z-index:1;font-size:11px;color:#8a94a6;margin-top:6px}.lsup-grid-two{display:grid;grid-template-columns:minmax(0,.95fr) minmax(420px,.65fr);gap:14px}.lsup-card{background:#fff;border:1px solid #e9edf5;border-radius:18px;box-shadow:0 1px 2px rgba(15,23,42,.04);overflow:hidden}.lsup-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:16px 18px;border-bottom:1px solid #eef1f6;background:#fbfcff}.lsup-card-title{display:flex;gap:12px;align-items:flex-start}.lsup-card-icon{width:40px;height:40px;border-radius:13px;background:var(--zcs_component_hover_color,#eff6ff);color:var(--zcs_brand_color,#2563eb);display:flex;align-items:center;justify-content:center;font-size:19px;flex:0 0 auto}.lsup-card h3{font-size:16px;line-height:1.25;margin:0;color:#111827}.lsup-card p{font-size:12px;color:#64748b;line-height:1.5;margin:4px 0 0}.lsup-card-body{padding:18px}.lsup-queue-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.lsup-queue{border:1px solid #e9edf5;border-radius:16px;background:#fff;padding:14px;min-height:126px;display:flex;flex-direction:column;gap:10px}.lsup-queue.hot{border-color:rgba(250,174,19,.45);background:linear-gradient(180deg,#fff,#fffbeb)}.lsup-queue-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}.lsup-queue h4{font-size:14px;margin:0;color:#111827}.lsup-queue-value{font-size:26px;font-weight:850;line-height:1;color:#111827}.lsup-queue-copy{font-size:12px;color:#64748b;line-height:1.45;margin:0}.lsup-chip{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 9px;font-size:11px;font-weight:750;line-height:1;border:1px solid transparent;white-space:nowrap}.chip-ok{background:#ecfdf5;color:#0f8f61;border-color:#bbf7d0}.chip-info{background:#eff6ff;color:#1d4ed8;border-color:#bfdbfe}.chip-warn{background:#fffbeb;color:#b45309;border-color:#fde68a}.chip-bad{background:#fff1f2;color:#be123c;border-color:#fecdd3}.chip-neutral{background:#f1f5f9;color:#64748b;border-color:#e2e8f0}.chip-theme{background:var(--zcs_component_hover_color,#eff6ff);color:var(--zcs_brand_color,#2563eb);border-color:rgba(37,99,235,.26)}.lsup-link{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:750;color:var(--zcs_brand_color,#2563eb);margin-right:10px}.lsup-link:hover{text-decoration:underline}.lsup-empty{display:flex;align-items:center;gap:12px;border:1px dashed #d7deea;background:#fbfcff;border-radius:14px;padding:16px;color:#64748b;font-size:13px}.lsup-empty-icon{width:38px;height:38px;border-radius:12px;background:var(--zcs_component_hover_color,#eff6ff);color:var(--zcs_brand_color,#2563eb);display:flex;align-items:center;justify-content:center;font-size:19px;flex:0 0 auto}.lsup-table-wrap{max-height:520px;overflow:auto}.lsup-table-wrap table{min-width:980px}.lsup-staff-table table{min-width:760px}.lsup-action-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.lsup-action{border:1px solid #e9edf5;border-radius:16px;background:#fff;padding:14px;display:flex;flex-direction:column;gap:10px}.lsup-action.top{border-color:rgba(250,174,19,.45);background:linear-gradient(180deg,#fff,#fffbeb)}.lsup-action-title{display:flex;align-items:center;justify-content:space-between;gap:10px}.lsup-action-title h4{font-size:15px;margin:0;color:#111827}.lsup-action-copy{font-size:12px;color:#64748b;line-height:1.5;margin:0}.lsup-action-links{display:flex;flex-wrap:wrap;gap:4px;margin-top:auto}.lsup-report-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.lsup-report{border:1px solid #e9edf5;border-radius:16px;background:#fff;padding:14px;display:flex;gap:12px;align-items:flex-start}.lsup-report-icon{width:36px;height:36px;border-radius:12px;background:var(--zcs_component_hover_color,#eff6ff);color:var(--zcs_brand_color,#2563eb);display:flex;align-items:center;justify-content:center;font-size:18px;flex:0 0 auto}.lsup-report h4{font-size:14px;margin:0 0 4px;color:#111827}.lsup-report p{font-size:12px;color:#64748b;line-height:1.45;margin:0}.lsup-progress{height:8px;background:#edf2f7;border-radius:8px;overflow:hidden}.lsup-progress span{display:block;height:100%;border-radius:inherit;background:var(--bar,#2563eb)}.lsup-foot-space{height:10px}@media(max-width:1280px){.lsup-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.lsup-queue-grid,.lsup-report-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.lsup-hero-grid,.lsup-grid-two{grid-template-columns:1fr}}@media(max-width:780px){.lsup{padding:14px}.lsup-header,.lsup-card-head{flex-direction:column;align-items:flex-start}.lsup-hero{padding:22px;border-radius:20px}.lsup-kpis,.lsup-queue-grid,.lsup-report-grid,.lsup-action-grid{grid-template-columns:1fr}.lsup-kv-grid{grid-template-columns:1fr}.lsup-section-title{align-items:flex-start;flex-direction:column}.lsup-hero-actions .zcs-button{width:100%}}
+</style>
+<div class="lsup">
+	<div class="lsup-shell">
+		<div class="zcs-page-header lsup-header zcs-w-full zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-16 zcs-box-border">
+			<div class="zcs-flex zcs-align-items-center zcs-gap-12 zcs-ellipsis">
+				<div class="lsup-head-icon zcs-no-shrink"><i class="zc-li-outline business-badge"></i></div>
+				<div class="zcs-flex zcs-direction-column zcs-gap-4 zcs-ellipsis">
+					<h5 class="zcs-font-20 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-ellipsis zcs-m-0">Licensing Supervisor Action Center</h5>
+					<p class="lsup-subtitle zcs-font-14 zcs-font-normal zcs-lh-body zcs-m-0">Approvals, escalations, queue oversight, issuance monitoring, and renewal/payment bottlenecks for <%=supervisorEmail%></p>
+				</div>
+			</div>
+			<div class="zcs-flex zcs-align-items-center zcs-gap-12">
+				<a class="zcs-button zcs-primary-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body" href="#Report:Staff_Application_Queue?zc_LoadIn=dialog&amp;zc_Header=true&amp;zc_Search=true"><i class="zcs-button-icon zc-li-outline files-search"></i><span class="zcs-button-text">Open staff queue</span></a>
+				<a class="zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body" href="#Report:Application_Status_Board?zc_LoadIn=dialog&amp;zc_Header=true"><i class="zcs-button-icon zc-li-outline business-progress"></i><span class="zcs-button-text">Status board</span></a>
+			</div>
+		</div>
+
+		<section class="lsup-hero">
+			<div class="lsup-hero-grid">
+				<div>
+					<span class="lsup-eyebrow"><i class="zc-li-outline ui-1-dashboard-29"></i> Supervisor command view</span>
+					<h1>Act on licensing bottlenecks from one page</h1>
+					<p>This command center aggregates all application queues, approval-ready files, request-info and rejected items, active holds, staff workload distribution, approved applications awaiting license issuance, and renewal/payment bottlenecks. Use the linked reports for action-enabled row buttons.</p>
+					<div class="lsup-hero-actions">
+						<a class="zcs-button zcs-primary-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body" href="#Report:Approved_Applications?zc_LoadIn=dialog&amp;zc_Header=true"><i class="zcs-button-icon zc-li-outline business-badge"></i><span class="zcs-button-text">Issue licenses</span></a>
+						<a class="zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body" href="#Report:Renewal_Payment_Queue?zc_LoadIn=dialog&amp;zc_Header=true"><i class="zcs-button-icon zc-li-outline business-payment"></i><span class="zcs-button-text">Renewal payments</span></a>
+						<a class="zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body" href="#Report:Pending_Payments?zc_LoadIn=dialog&amp;zc_Header=true"><i class="zcs-button-icon zc-li-outline business-payment"></i><span class="zcs-button-text">Pending payments</span></a>
+						<a class="zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body" href="#Report:Active_Holds?zc_LoadIn=dialog&amp;zc_Header=true"><i class="zcs-button-icon zc-li-outline files-folder-locked"></i><span class="zcs-button-text">Active holds</span></a>
+					</div>
+				</div>
+				<aside class="lsup-command">
+					<div class="zcs-flex zcs-align-items-center zcs-gap-12">
+						<div class="lsup-avatar"><i class="zc-li-outline users-single-01"></i></div>
+						<div class="zcs-col-common">
+							<h2>Supervisor oversight</h2>
+							<div class="lsup-command-line"><i class="zc-li-outline ui-1-email-83"></i><span><%=supervisorEmail%></span></div>
+							<div class="lsup-command-line"><i class="zc-li-outline ui-2-time"></i><span><%=bottleneckTotal%> active bottleneck signals</span></div>
+						</div>
+					</div>
+					<div class="lsup-kv-grid">
+						<div class="lsup-kv"><span>Open application load</span><strong><%=allOpenAppCount%></strong></div>
+						<div class="lsup-kv"><span>Staff roster</span><strong><%=staffCount%></strong></div>
+						<div class="lsup-kv"><span>Unassigned work</span><strong><%=unassignedCount%></strong></div>
+						<div class="lsup-kv"><span>Payment bottlenecks</span><strong><%=paymentBottleneckCount%></strong></div>
+					</div>
+				</aside>
+			</div>
+		</section>
+
+		<div class="lsup-section-title"><h2>KPI snapshot</h2><span class="lsup-section-sub">Counts are supervisor-wide across licensing operations.</span></div>
+		<section class="lsup-kpis">
+			<div class="lsup-kpi" style="--tone:#2a6ffc;--soft:#e8efff;"><div class="lsup-kpi-icon"><i class="zc-li-outline files-2-doc"></i></div><div class="lsup-kpi-value"><%=submittedCount + inProgressCount%></div><div class="lsup-kpi-label">Submitted and in progress</div><div class="lsup-kpi-note">Intake and active review queues</div></div>
+			<div class="lsup-kpi" style="--tone:#b8770d;--soft:#fcf4e6;"><div class="lsup-kpi-icon"><i class="zc-li-outline ui-2-time"></i></div><div class="lsup-kpi-value"><%=readyApprovalCount%></div><div class="lsup-kpi-label">Approvals pending</div><div class="lsup-kpi-note">Ready for Approval status</div></div>
+			<div class="lsup-kpi" style="--tone:#f4660c;--soft:#f8f0eb;"><div class="lsup-kpi-icon"><i class="zc-li-outline files-folder-locked"></i></div><div class="lsup-kpi-value"><%=holdCount%></div><div class="lsup-kpi-label">Active holds</div><div class="lsup-kpi-note">Unreleased hold records</div></div>
+			<div class="lsup-kpi" style="--tone:#fe455d;--soft:#fde3e6;"><div class="lsup-kpi-icon"><i class="zc-li-outline ui-1-simple-remove"></i></div><div class="lsup-kpi-value"><%=rejectedCount + requestInfoCount%></div><div class="lsup-kpi-label">Rejected and request-info</div><div class="lsup-kpi-note">Rejected plus on-hold information requests</div></div>
+			<div class="lsup-kpi" style="--tone:#179e6c;--soft:#e4fcf3;"><div class="lsup-kpi-icon"><i class="zc-li-outline business-badge"></i></div><div class="lsup-kpi-value"><%=approvedIssueCount%></div><div class="lsup-kpi-label">Approved awaiting license</div><div class="lsup-kpi-note">Approved, no issued license link</div></div>
+			<div class="lsup-kpi" style="--tone:#09598e;--soft:#e4f6fd;"><div class="lsup-kpi-icon"><i class="zc-li-outline business-payment"></i></div><div class="lsup-kpi-value"><%=paymentBottleneckCount%></div><div class="lsup-kpi-label">Renewal/payment bottlenecks</div><div class="lsup-kpi-note">Renewals, payments, refunds, reconciliation</div></div>
+		</section>
+
+		<section class="lsup-grid-two">
+			<div class="lsup-card">
+				<div class="lsup-card-head">
+					<div class="lsup-card-title"><div class="lsup-card-icon"><i class="zc-li-outline business-progress"></i></div><div><h3>All application queues</h3><p>Status queue oversight with direct links to action-enabled reports and board views.</p></div></div>
+					<span class="zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border <%=attentionBadge%>"><i class="zcs-badge-icon zcs-no-shrink zc-li-outline <%=attentionIcon%>"></i><span class="zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body"><%=attentionLabel%></span></span>
+				</div>
+				<div class="lsup-card-body">
+					<div class="lsup-queue-grid">
+						<div class="lsup-queue <%=if(submittedCount > 0,"hot","")%>"><div class="lsup-queue-top"><h4>Submitted</h4><span class="lsup-chip chip-info"><i class="zc-li-outline files-2-doc"></i><%=submittedCount%></span></div><div class="lsup-queue-value"><%=submittedCount%></div><p class="lsup-queue-copy">Verify intake, assign review, or request info.</p><a class="lsup-link" href="#Report:New_License_Application_Queue?zc_LoadIn=dialog&amp;zc_Header=true"><i class="zc-li-outline files-search"></i>New queue</a></div>
+						<div class="lsup-queue <%=if(inProgressCount > 0,"hot","")%>"><div class="lsup-queue-top"><h4>In progress</h4><span class="lsup-chip chip-theme"><i class="zc-li-outline business-progress"></i><%=inProgressCount%></span></div><div class="lsup-queue-value"><%=inProgressCount%></div><p class="lsup-queue-copy">Active staff review and escalation queue.</p><a class="lsup-link" href="#Report:Staff_Application_Queue?zc_LoadIn=dialog&amp;zc_Header=true"><i class="zc-li-outline files-search"></i>Staff queue</a></div>
+						<div class="lsup-queue <%=if(readyApprovalCount > 0,"hot","")%>"><div class="lsup-queue-top"><h4>Ready for Approval</h4><span class="lsup-chip chip-warn"><i class="zc-li-outline ui-2-time"></i><%=readyApprovalCount%></span></div><div class="lsup-queue-value"><%=readyApprovalCount%></div><p class="lsup-queue-copy">Supervisor approvals pending action.</p><a class="lsup-link" href="#Report:Staff_Application_Queue?zc_LoadIn=dialog&amp;zc_Header=true"><i class="zc-li-outline ui-1-check-circle-08"></i>Approve or reject</a></div>
+						<div class="lsup-queue <%=if(onHoldCount > 0,"hot","")%>"><div class="lsup-queue-top"><h4>On hold</h4><span class="lsup-chip chip-warn"><i class="zc-li-outline files-folder-locked"></i><%=onHoldCount%></span></div><div class="lsup-queue-value"><%=onHoldCount%></div><p class="lsup-queue-copy">Hold release and request-info follow-up.</p><a class="lsup-link" href="#Report:Active_Holds?zc_LoadIn=dialog&amp;zc_Header=true"><i class="zc-li-outline files-folder-locked"></i>Hold report</a></div>
+						<div class="lsup-queue <%=if(approvedIssueCount > 0,"hot","")%>"><div class="lsup-queue-top"><h4>Approved</h4><span class="lsup-chip chip-ok"><i class="zc-li-outline business-badge"></i><%=approvedCount%></span></div><div class="lsup-queue-value"><%=approvedIssueCount%></div><p class="lsup-queue-copy">Approved records waiting for license issuance.</p><a class="lsup-link" href="#Report:Approved_Applications?zc_LoadIn=dialog&amp;zc_Header=true"><i class="zc-li-outline business-badge"></i>Issue license</a></div>
+						<div class="lsup-queue <%=if(rejectedCount > 0,"hot","")%>"><div class="lsup-queue-top"><h4>Rejected</h4><span class="lsup-chip chip-bad"><i class="zc-li-outline ui-1-simple-remove"></i><%=rejectedCount%></span></div><div class="lsup-queue-value"><%=rejectedCount%></div><p class="lsup-queue-copy">Review rejection trends and supervisor escalations.</p><a class="lsup-link" href="#Report:All_Applications?Application_Status=Rejected&amp;zc_LoadIn=dialog&amp;zc_Header=true"><i class="zc-li-outline files-search"></i>Rejected items</a></div>
+						<div class="lsup-queue <%=if(unassignedCount > 0,"hot","")%>"><div class="lsup-queue-top"><h4>Unassigned</h4><span class="lsup-chip chip-warn"><i class="zc-li-outline users-single-01"></i><%=unassignedCount%></span></div><div class="lsup-queue-value"><%=unassignedCount%></div><p class="lsup-queue-copy">Submitted, in-progress, or approval-ready without a rep.</p><a class="lsup-link" href="#Report:All_Applications?zc_LoadIn=dialog&amp;zc_Header=true"><i class="zc-li-outline users-single-01"></i>Assign review</a></div>
+						<div class="lsup-queue"><div class="lsup-queue-top"><h4>License issued</h4><span class="lsup-chip chip-ok"><i class="zc-li-outline ui-1-check-circle-08"></i><%=licenseIssuedCount%></span></div><div class="lsup-queue-value"><%=licenseIssuedCount%></div><p class="lsup-queue-copy">Completed issuance records for trend monitoring.</p><a class="lsup-link" href="#Report:Application_Status_Board?zc_LoadIn=dialog&amp;zc_Header=true"><i class="zc-li-outline business-progress"></i>Status board</a></div>
+					</div>
+				</div>
+			</div>
+
+			<div class="lsup-card">
+				<div class="lsup-card-head"><div class="lsup-card-title"><div class="lsup-card-icon"><i class="zc-li-outline users-single-01"></i></div><div><h3>Assigned staff workload</h3><p>Open workload by active Licensing Staff agents. Use this to rebalance assignments and escalations.</p></div></div><span class="lsup-chip chip-theme"><%=staffCount%> staff</span></div>
+				<div class="lsup-card-body">
+<%
+	if(staffRoster.count() == 0)
+	{
+%>
+					<div class="lsup-empty"><div class="lsup-empty-icon"><i class="zc-li-outline travel-info"></i></div><div>No active Licensing Staff agents were found in Add Agents.</div></div>
+<%
+	}
+	else
+	{
+%>
+					<div class="zcs-table-wrapper lsup-table-wrap lsup-staff-table zcs-rounded-sm zcs-box-border zcs-relative">
+						<table class="zcs-w-full">
+							<thead class="zcs-sticky"><tr><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Staff</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Open</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Approval</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Holds</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Issue</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Load</th></tr></thead>
+							<tbody>
+<%
+		staffRows = 0;
+		for each staff in staffRoster
+		{
+			if(staffRows < 12)
+			{
+				staffEmail = ifnull(staff.Agent_Email,"");
+				staffName = ifnull(staff.Agent_Name.first_name,"");
+				if(ifnull(staff.Agent_Name.last_name,"") != "")
+				{
+					staffName = staffName + " " + staff.Agent_Name.last_name;
+				}
+				if(staffName == "" || staffName == null)
+				{
+					staffName = staffEmail;
+				}
+				staffOpen = Applications[Assigned_Licensing_Rep == staffEmail && (Application_Status == "Submitted" || Application_Status == "In-progress" || Application_Status == "Ready for Approval" || Application_Status == "On-hold" || Application_Status == "Approved")].count();
+				staffApproval = Applications[Assigned_Licensing_Rep == staffEmail && Application_Status == "Ready for Approval"].count();
+				staffHolds = Applications[Assigned_Licensing_Rep == staffEmail && Application_Status == "On-hold"].count();
+				staffIssue = Applications[Assigned_Licensing_Rep == staffEmail && Application_Status == "Approved" && Issued_License == null].count();
+				staffPct = if(staffOpen > 20,100,staffOpen * 5);
+				barColor = if(staffOpen > 12,"#f4660c",if(staffOpen > 6,"#faae13","#179e6c"));
+%>
+								<tr><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"><strong><%=staffName%></strong><div class="zcs-font-12 zcs-color-tertiary"><%=staffEmail%></div></td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body"><%=staffOpen%></td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body"><%=staffApproval%></td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body"><%=staffHolds%></td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body"><%=staffIssue%></td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body"><div class="lsup-progress"><span style="width:<%=staffPct%>%;--bar:<%=barColor%>;"></span></div><div class="zcs-font-12 zcs-color-tertiary zcs-mt-8"><a class="lsup-link" href="#Report:All_Applications?Assigned_Licensing_Rep=<%=encodeURL(staffEmail)%>&amp;zc_LoadIn=dialog&amp;zc_Header=true"><i class="zc-li-outline files-search"></i>Review</a></div></td></tr>
+<%
+			}
+			staffRows = staffRows + 1;
+		}
+%>
+							</tbody>
+						</table>
+					</div>
+<%
+	}
+%>
+				</div>
+			</div>
+		</section>
+
+		<div class="lsup-section-title"><h2>Pending action tables</h2><span class="lsup-section-sub">Bottleneck rows link back to reports that host row-level actions.</span></div>
+		<section class="lsup-card">
+			<div class="lsup-card-head"><div class="lsup-card-title"><div class="lsup-card-icon"><i class="zc-li-outline files-single-content-03"></i></div><div><h3>Priority licensing bottlenecks</h3><p>Approvals, holds, request-info follow-ups, rejected items, and approved applications awaiting a license.</p></div></div><a class="zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body" href="#Report:All_Applications?zc_LoadIn=dialog&amp;zc_Header=true&amp;zc_Search=true"><i class="zcs-button-icon zc-li-outline files-search"></i><span class="zcs-button-text">All applications</span></a></div>
+			<div class="lsup-card-body">
+<%
+	if(readyApproval.count() == 0 && activeHolds.count() == 0 && requestInfoApps.count() == 0 && rejectedApps.count() == 0 && approvedAwaitingLicense.count() == 0)
+	{
+%>
+				<div class="lsup-empty"><div class="lsup-empty-icon"><i class="zc-li-outline ui-1-check-circle-08"></i></div><div><strong>No priority licensing bottlenecks are currently open.</strong><br>Use the status board for broader operational review.</div></div>
+<%
+	}
+	else
+	{
+%>
+				<div class="zcs-table-wrapper lsup-table-wrap zcs-rounded-sm zcs-box-border zcs-relative">
+					<table class="zcs-w-full">
+						<thead class="zcs-sticky"><tr><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Bottleneck</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Application</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Applicant / DBA</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Assigned rep</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Next action</th></tr></thead>
+						<tbody>
+<%
+		priorityRows = 0;
+		for each app in readyApproval
+		{
+			if(priorityRows < 6)
+			{
+				appNo = ifnull(app.Application_Number,ifnull(app.Application_Reference,"Application"));
+				appTitle = ifnull(app.Business_DBA_Name,ifnull(app.Applicant_Profile.Profile_Name,"Applicant"));
+				rep = ifnull(app.Assigned_Licensing_Rep,"Unassigned");
+%>
+							<tr><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body"><span class="lsup-chip chip-warn"><i class="zc-li-outline ui-2-time"></i>Approval pending</span></td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"><%=appNo%></td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"><%=appTitle%></td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body"><%=rep%></td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body"><a class="lsup-link" href="#Report:Staff_Application_Queue?ID=<%=app.ID%>&amp;zc_LoadIn=dialog&amp;zc_Header=true"><i class="zc-li-outline ui-1-check-circle-08"></i>Approve or reject</a><a class="lsup-link" href="#Form:Applications?recLinkID=<%=app.ID%>&amp;viewLinkName=All_Applications&amp;zc_LoadIn=dialog"><i class="zc-li-outline ui-1-edit-72"></i>Record</a></td></tr>
+<%
+			}
+			priorityRows = priorityRows + 1;
+		}
+		for each hold in activeHolds
+		{
+			if(priorityRows < 12)
+			{
+				appNo = ifnull(hold.Application.Application_Number,ifnull(hold.Application.Application_Reference,"Application"));
+				appTitle = ifnull(hold.Application.Business_DBA_Name,ifnull(hold.Application.Applicant_Profile.Profile_Name,"Applicant"));
+				rep = ifnull(hold.Application.Assigned_Licensing_Rep,"Unassigned");
+%>
+							<tr><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body"><span class="lsup-chip chip-warn"><i class="zc-li-outline files-folder-locked"></i><%=ifnull(hold.Hold_Type,"Hold")%></span></td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"><%=appNo%></td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"><%=appTitle%></td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body"><%=rep%></td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body"><a class="lsup-link" href="#Report:Active_Holds?ID=<%=hold.ID%>&amp;zc_LoadIn=dialog&amp;zc_Header=true"><i class="zc-li-outline files-folder-locked"></i>View hold</a><a class="lsup-link" href="#Report:Staff_Application_Queue?ID=<%=hold.Application%>&amp;zc_LoadIn=dialog&amp;zc_Header=true"><i class="zc-li-outline ui-1-unlocked"></i>Release action</a></td></tr>
+<%
+			}
+			priorityRows = priorityRows + 1;
+		}
+		for each app in requestInfoApps
+		{
+			if(priorityRows < 16)
+			{
+				appNo = ifnull(app.Application_Number,ifnull(app.Application_Reference,"Application"));
+				appTitle = ifnull(app.Business_DBA_Name,ifnull(app.Applicant_Profile.Profile_Name,"Applicant"));
+				rep = ifnull(app.Assigned_Licensing_Rep,"Unassigned");
+%>
+							<tr><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body"><span class="lsup-chip chip-warn"><i class="zc-li-outline ui-2-time"></i>Request info</span></td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"><%=appNo%></td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"><%=appTitle%></td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body"><%=rep%></td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body"><a class="lsup-link" href="#Report:Staff_Application_Queue?ID=<%=app.ID%>&amp;zc_LoadIn=dialog&amp;zc_Header=true"><i class="zc-li-outline ui-2-time"></i>Follow up</a></td></tr>
+<%
+			}
+			priorityRows = priorityRows + 1;
+		}
+		for each app in approvedAwaitingLicense
+		{
+			if(priorityRows < 20)
+			{
+				appNo = ifnull(app.Application_Number,ifnull(app.Application_Reference,"Application"));
+				appTitle = ifnull(app.Business_DBA_Name,ifnull(app.Applicant_Profile.Profile_Name,"Applicant"));
+				rep = ifnull(app.Assigned_Licensing_Rep,"Unassigned");
+%>
+							<tr><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body"><span class="lsup-chip chip-ok"><i class="zc-li-outline business-badge"></i>Issue license</span></td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"><%=appNo%></td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"><%=appTitle%></td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body"><%=rep%></td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body"><a class="lsup-link" href="#Report:Approved_Applications?ID=<%=app.ID%>&amp;zc_LoadIn=dialog&amp;zc_Header=true"><i class="zc-li-outline business-badge"></i>Issue License</a></td></tr>
+<%
+			}
+			priorityRows = priorityRows + 1;
+		}
+%>
+						</tbody>
+					</table>
+				</div>
+<%
+	}
+%>
+			</div>
+		</section>
+
+		<section class="lsup-grid-two">
+			<div class="lsup-card">
+				<div class="lsup-card-head"><div class="lsup-card-title"><div class="lsup-card-icon"><i class="zc-li-outline business-payment"></i></div><div><h3>Renewal and payment bottlenecks</h3><p>Financial and renewal queues that can prevent license issuance or renewal completion.</p></div></div><span class="lsup-chip <%=if(paymentBottleneckCount > 0,"chip-warn","chip-ok")%>"><%=paymentBottleneckCount%> bottlenecks</span></div>
+				<div class="lsup-card-body">
+					<div class="lsup-action-grid">
+						<div class="lsup-action <%=if(renewalPaymentCount > 0,"top","")%>"><div class="lsup-action-title"><h4>Renewal payment queue</h4><span class="lsup-chip <%=if(renewalPaymentCount > 0,"chip-warn","chip-ok")%>"><i class="zc-li-outline business-payment"></i><%=renewalPaymentCount%></span></div><p class="lsup-action-copy">Renewal batches with pending payment. Amount due flagged: $<%=renewalAmountDue%>.</p><div class="lsup-action-links"><a class="lsup-link" href="#Report:Renewal_Payment_Queue?zc_LoadIn=dialog&amp;zc_Header=true"><i class="zc-li-outline business-payment"></i>Mark paid or complete</a></div></div>
+						<div class="lsup-action <%=if(pendingPaymentCount > 0,"top","")%>"><div class="lsup-action-title"><h4>Pending payments</h4><span class="lsup-chip <%=if(pendingPaymentCount > 0,"chip-warn","chip-ok")%>"><i class="zc-li-outline business-payment"></i><%=pendingPaymentCount%></span></div><p class="lsup-action-copy">Payment records pending or failed with amount due. Amount due: $<%=paymentAmountDue%>.</p><div class="lsup-action-links"><a class="lsup-link" href="#Report:Pending_Payments?zc_LoadIn=dialog&amp;zc_Header=true"><i class="zc-li-outline ui-1-check-circle-08"></i>Mark paid</a></div></div>
+						<div class="lsup-action <%=if(refundCount > 0,"top","")%>"><div class="lsup-action-title"><h4>Refund queue</h4><span class="lsup-chip <%=if(refundCount > 0,"chip-warn","chip-ok")%>"><i class="zc-li-outline arrows-1-refresh-69"></i><%=refundCount%></span></div><p class="lsup-action-copy">Refund requests awaiting approval, rejection, or completion.</p><div class="lsup-action-links"><a class="lsup-link" href="#Report:Refund_Queue?zc_LoadIn=dialog&amp;zc_Header=true"><i class="zc-li-outline files-search"></i>Review refunds</a></div></div>
+						<div class="lsup-action <%=if(reconCount > 0,"top","")%>"><div class="lsup-action-title"><h4>Daily reconciliation</h4><span class="lsup-chip <%=if(reconCount > 0,"chip-warn","chip-ok")%>"><i class="zc-li-outline ui-1-check-circle-08"></i><%=reconCount%></span></div><p class="lsup-action-copy">Completed, refunded, or void payments still unreconciled.</p><div class="lsup-action-links"><a class="lsup-link" href="#Report:Daily_Reconciliation?zc_LoadIn=dialog&amp;zc_Header=true"><i class="zc-li-outline ui-1-check-circle-08"></i>Reconcile</a></div></div>
+					</div>
+				</div>
+			</div>
+
+			<div class="lsup-card">
+				<div class="lsup-card-head"><div class="lsup-card-title"><div class="lsup-card-icon"><i class="zc-li-outline ui-1-flag-diagonal-33"></i></div><div><h3>Escalation oversight</h3><p>Investigator flags, request-info records, rejected records, and unassigned work requiring supervisor coordination.</p></div></div><span class="lsup-chip <%=if(flagCount + requestInfoCount + rejectedCount + unassignedCount > 0,"chip-warn","chip-ok")%>"><%=flagCount + requestInfoCount + rejectedCount + unassignedCount%> signals</span></div>
+				<div class="lsup-card-body">
+					<div class="lsup-action-grid">
+						<div class="lsup-action <%=if(flagCount > 0,"top","")%>"><div class="lsup-action-title"><h4>Investigator flags</h4><span class="lsup-chip <%=if(flagCount > 0,"chip-warn","chip-ok")%>"><%=flagCount%></span></div><p class="lsup-action-copy">Applications with investigator review flag enabled.</p><div class="lsup-action-links"><a class="lsup-link" href="#Report:Investigator_Review_Queue?zc_LoadIn=dialog&amp;zc_Header=true"><i class="zc-li-outline ui-1-flag-diagonal-33"></i>Investigator queue</a></div></div>
+						<div class="lsup-action <%=if(requestInfoCount > 0,"top","")%>"><div class="lsup-action-title"><h4>Request info</h4><span class="lsup-chip <%=if(requestInfoCount > 0,"chip-warn","chip-ok")%>"><%=requestInfoCount%></span></div><p class="lsup-action-copy">On-hold applications whose tracking note indicates information was requested.</p><div class="lsup-action-links"><a class="lsup-link" href="#Report:Staff_Application_Queue?zc_LoadIn=dialog&amp;zc_Header=true"><i class="zc-li-outline ui-2-time"></i>Follow up</a></div></div>
+						<div class="lsup-action <%=if(rejectedCount > 0,"top","")%>"><div class="lsup-action-title"><h4>Rejected items</h4><span class="lsup-chip <%=if(rejectedCount > 0,"chip-bad","chip-ok")%>"><%=rejectedCount%></span></div><p class="lsup-action-copy">Rejected applications to monitor for appeal, correction, or trend review.</p><div class="lsup-action-links"><a class="lsup-link" href="#Report:All_Applications?Application_Status=Rejected&amp;zc_LoadIn=dialog&amp;zc_Header=true"><i class="zc-li-outline files-search"></i>Rejected report</a></div></div>
+						<div class="lsup-action <%=if(unassignedCount > 0,"top","")%>"><div class="lsup-action-title"><h4>Unassigned queue</h4><span class="lsup-chip <%=if(unassignedCount > 0,"chip-warn","chip-ok")%>"><%=unassignedCount%></span></div><p class="lsup-action-copy">Submitted, in-progress, and approval-ready records without Assigned Licensing Rep.</p><div class="lsup-action-links"><a class="lsup-link" href="#Report:All_Applications?zc_LoadIn=dialog&amp;zc_Header=true"><i class="zc-li-outline users-single-01"></i>Assign ownership</a></div></div>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<div class="lsup-section-title"><h2>Action-enabled report shortcuts</h2><span class="lsup-section-sub">Every queue and referenced report is reachable from these links.</span></div>
+		<section class="lsup-report-grid">
+			<a class="lsup-report" href="#Report:Staff_Application_Queue?zc_LoadIn=dialog&amp;zc_Header=true&amp;zc_Search=true"><span class="lsup-report-icon"><i class="zc-li-outline files-search"></i></span><span><h4>Staff Application Queue</h4><p>Verify Intake, Request Info, Place Hold, Release Hold, Assign Review, Approve, Reject.</p></span></a>
+			<a class="lsup-report" href="#Report:New_License_Application_Queue?zc_LoadIn=dialog&amp;zc_Header=true"><span class="lsup-report-icon"><i class="zc-li-outline files-folder-15"></i></span><span><h4>New License Queue</h4><p>Submitted and active new-license workflow.</p></span></a>
+			<a class="lsup-report" href="#Report:Approved_Applications?zc_LoadIn=dialog&amp;zc_Header=true"><span class="lsup-report-icon"><i class="zc-li-outline business-badge"></i></span><span><h4>Approved Applications</h4><p>Issue License action for approved records without a linked license.</p></span></a>
+			<a class="lsup-report" href="#Report:Application_Status_Board?zc_LoadIn=dialog&amp;zc_Header=true"><span class="lsup-report-icon"><i class="zc-li-outline business-progress"></i></span><span><h4>Application Status Board</h4><p>Supervisor-wide application status oversight.</p></span></a>
+			<a class="lsup-report" href="#Report:Investigator_Review_Queue?zc_LoadIn=dialog&amp;zc_Header=true"><span class="lsup-report-icon"><i class="zc-li-outline ui-1-flag-diagonal-33"></i></span><span><h4>Investigator Review Queue</h4><p>Flags and escalations needing investigative coordination.</p></span></a>
+			<a class="lsup-report" href="#Report:Active_Holds?zc_LoadIn=dialog&amp;zc_Header=true"><span class="lsup-report-icon"><i class="zc-li-outline files-folder-locked"></i></span><span><h4>Active Holds</h4><p>Open application hold records and release oversight.</p></span></a>
+			<a class="lsup-report" href="#Report:Renewal_Payment_Queue?zc_LoadIn=dialog&amp;zc_Header=true"><span class="lsup-report-icon"><i class="zc-li-outline business-payment"></i></span><span><h4>Renewal Payment Queue</h4><p>Mark Renewal Paid, Complete Renewal, and Cancel Renewal.</p></span></a>
+			<a class="lsup-report" href="#Report:Pending_Payments?zc_LoadIn=dialog&amp;zc_Header=true"><span class="lsup-report-icon"><i class="zc-li-outline business-payment"></i></span><span><h4>Pending Payments</h4><p>Mark Paid action for pending or failed payment records.</p></span></a>
+			<a class="lsup-report" href="#Report:Refund_Queue?zc_LoadIn=dialog&amp;zc_Header=true"><span class="lsup-report-icon"><i class="zc-li-outline arrows-1-refresh-69"></i></span><span><h4>Refund Queue</h4><p>Approve Refund and Reject Refund actions.</p></span></a>
+			<a class="lsup-report" href="#Report:Daily_Reconciliation?zc_LoadIn=dialog&amp;zc_Header=true"><span class="lsup-report-icon"><i class="zc-li-outline ui-1-check-circle-08"></i></span><span><h4>Daily Reconciliation</h4><p>Reconcile payment action and payment audit oversight.</p></span></a>
+			<a class="lsup-report" href="#Report:All_Renewal_Batches?zc_LoadIn=dialog&amp;zc_Header=true"><span class="lsup-report-icon"><i class="zc-li-outline files-folder-15"></i></span><span><h4>All Renewal Batches</h4><p>Supervisor review of renewal lifecycle bottlenecks.</p></span></a>
+			<a class="lsup-report" href="#Report:All_Applications?zc_LoadIn=dialog&amp;zc_Header=true&amp;zc_Search=true"><span class="lsup-report-icon"><i class="zc-li-outline files-single-content-03"></i></span><span><h4>All Applications</h4><p>Full application search and assignment oversight.</p></span></a>
+		</section>
+		<div class="lsup-foot-space"></div>
+	</div>
+</div>

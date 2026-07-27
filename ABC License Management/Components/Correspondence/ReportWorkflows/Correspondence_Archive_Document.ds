@@ -1,0 +1,31 @@
+Correspondence_Archive_Document as "Archive Document"
+{
+	type = functions
+	form = Correspondence
+	execution type = for each record
+	description = "Archives completed correspondence documents from correspondence report queues."
+
+	on start
+	{
+		actions
+		{
+			on click
+			(
+				actorEmail = zoho.loginuserid;
+				if(input.Merge_Status != "Failed" && (input.Sent_Date != null || input.Sign_Status == "Signed"))
+				{
+					if(input.Merge_Status != "Sent Manually")
+					{
+						input.Merge_Status = "Generated Manually";
+					}
+					input.Body_or_Merge_Notes = ifnull(input.Body_or_Merge_Notes,"") + "\nArchived by " + actorEmail + " on " + zoho.currentdate + ".";
+					thisapp.Write_Audit_Log("Correspondence","Correspondence",input.ID,"Document archived","Completed document archived by " + actorEmail + ".");
+				}
+				else
+				{
+					thisapp.Write_Audit_Log("Correspondence","Correspondence",input.ID,"Archive document action skipped","Archive Document clicked by " + actorEmail + " but document was not completed.");
+				}
+			)
+		}
+	}
+}
