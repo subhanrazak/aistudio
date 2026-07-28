@@ -1,0 +1,187 @@
+<%
+totalOrders = orders[ID != 0].count();
+draftOrders = orders[status == "Draft"].count();
+deliveredOrders = orders[status == "Delivered"].count();
+shippedOrders = orders[status == "Shipped"].count();
+confirmedOrders = orders[status == "Confirmed"].count();
+cancelledOrders = orders[status == "Cancelled"].count();
+processingOrders = orders[status == "Processing"].count();
+if(totalOrders > 0)
+{
+	draftPct = (draftOrders * 100) / totalOrders;
+	deliveredPct = (deliveredOrders * 100) / totalOrders;
+	shippedPct = (shippedOrders * 100) / totalOrders;
+	confirmedPct = (confirmedOrders * 100) / totalOrders;
+	cancelledPct = (cancelledOrders * 100) / totalOrders;
+	processingPct = (processingOrders * 100) / totalOrders;
+}
+else
+{
+	draftPct = 0;
+	deliveredPct = 0;
+	shippedPct = 0;
+	confirmedPct = 0;
+	cancelledPct = 0;
+	processingPct = 0;
+}
+
+totalFulfillment = fulfillment_schedules[ID != 0].count();
+scheduledFulfillment = fulfillment_schedules[status == "Scheduled"].count();
+deliveredFulfillment = fulfillment_schedules[status == "Delivered"].count();
+inTransitFulfillment = fulfillment_schedules[status == "In Transit"].count();
+failedFulfillment = fulfillment_schedules[status == "Failed"].count();
+if(totalFulfillment > 0)
+{
+	scheduledFulfillmentPct = (scheduledFulfillment * 100) / totalFulfillment;
+	deliveredFulfillmentPct = (deliveredFulfillment * 100) / totalFulfillment;
+	inTransitFulfillmentPct = (inTransitFulfillment * 100) / totalFulfillment;
+	failedFulfillmentPct = (failedFulfillment * 100) / totalFulfillment;
+}
+else
+{
+	scheduledFulfillmentPct = 0;
+	deliveredFulfillmentPct = 0;
+	inTransitFulfillmentPct = 0;
+	failedFulfillmentPct = 0;
+}
+
+totalPayments = payment_records[ID != 0].count();
+bankTransferPayments = payment_records[payment_method == "Bank Transfer"].count();
+paypalPayments = payment_records[payment_method == "PayPal"].count();
+stripePayments = payment_records[payment_method == "Stripe"].count();
+cashPayments = payment_records[payment_method == "Cash"].count();
+cardPayments = payment_records[payment_method == "Card"].count();
+if(totalPayments > 0)
+{
+	bankTransferPct = (bankTransferPayments * 100) / totalPayments;
+	paypalPct = (paypalPayments * 100) / totalPayments;
+	stripePct = (stripePayments * 100) / totalPayments;
+	cashPct = (cashPayments * 100) / totalPayments;
+	cardPct = (cardPayments * 100) / totalPayments;
+}
+else
+{
+	bankTransferPct = 0;
+	paypalPct = 0;
+	stripePct = 0;
+	cashPct = 0;
+	cardPct = 0;
+}
+%>
+<div class="admin-dashboard-scope admin-section">
+  <div class="admin-shell">
+    <div class="admin-dashboard-grid">
+      <section class="admin-card admin-glass">
+        <div class="admin-card-header">
+          <div>
+            <h3 class="admin-card-title">Order Status Distribution</h3>
+            <div class="admin-card-subtitle">Counts from orders.status</div>
+          </div>
+          <span class="admin-status-pill admin-badge-soft-blue"><%=totalOrders%> orders</span>
+        </div>
+        <div class="admin-status-list">
+          <div class="admin-status-row"><div class="admin-status-name"><span class="admin-dot" style="--dot:#64748b"></span>Draft</div><div class="admin-bar"><span style="--bar-width:<%=draftPct%>%;--bar-from:#64748b;--bar-to:#94a3b8;"></span></div><div class="admin-status-count"><%=draftOrders%></div></div>
+          <div class="admin-status-row"><div class="admin-status-name"><span class="admin-dot" style="--dot:#34d399"></span>Delivered</div><div class="admin-bar"><span style="--bar-width:<%=deliveredPct%>%;--bar-from:#10b981;--bar-to:#6ee7b7;"></span></div><div class="admin-status-count"><%=deliveredOrders%></div></div>
+          <div class="admin-status-row"><div class="admin-status-name"><span class="admin-dot" style="--dot:#38bdf8"></span>Shipped</div><div class="admin-bar"><span style="--bar-width:<%=shippedPct%>%;--bar-from:#0284c7;--bar-to:#38bdf8;"></span></div><div class="admin-status-count"><%=shippedOrders%></div></div>
+          <div class="admin-status-row"><div class="admin-status-name"><span class="admin-dot" style="--dot:#a78bfa"></span>Confirmed</div><div class="admin-bar"><span style="--bar-width:<%=confirmedPct%>%;--bar-from:#7c3aed;--bar-to:#c4b5fd;"></span></div><div class="admin-status-count"><%=confirmedOrders%></div></div>
+          <div class="admin-status-row"><div class="admin-status-name"><span class="admin-dot" style="--dot:#fb7185"></span>Cancelled</div><div class="admin-bar"><span style="--bar-width:<%=cancelledPct%>%;--bar-from:#e11d48;--bar-to:#fb7185;"></span></div><div class="admin-status-count"><%=cancelledOrders%></div></div>
+          <div class="admin-status-row"><div class="admin-status-name"><span class="admin-dot" style="--dot:#fbbf24"></span>Processing</div><div class="admin-bar"><span style="--bar-width:<%=processingPct%>%;--bar-from:#d97706;--bar-to:#fbbf24;"></span></div><div class="admin-status-count"><%=processingOrders%></div></div>
+        </div>
+      </section>
+
+      <section class="admin-card admin-glass">
+        <div class="admin-card-header">
+          <div>
+            <h3 class="admin-card-title">Fulfillment Status Distribution</h3>
+            <div class="admin-card-subtitle">ZCS donut-style block from fulfillment_schedules.status</div>
+          </div>
+          <span class="admin-status-pill admin-badge-soft-purple"><%=totalFulfillment%> schedules</span>
+        </div>
+        <div class="admin-donut-card">
+          <div class="zcs-donut-chart-wrapper zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-12 zcs-p-20 zcs-box-border" style="--donut-a1:<%=scheduledFulfillmentPct%>;--donut-a2:<%=deliveredFulfillmentPct%>;--donut-a3:<%=inTransitFulfillmentPct%>;--donut-a4:<%=failedFulfillmentPct%>;">
+            <div class="zcs-donut-chart zcs-simple-donut-chart zcs-flex zcs-align-items-center zcs-justify-center zcs-relative">
+              <svg class="zcs-rounded-full"><circle r="68"></circle><circle r="68"></circle><circle r="68"></circle><circle r="68"></circle></svg>
+              <h6 class="zcs-donut-chart-name zcs-font-16 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0 zcs-absolute zcs-text-center"><%=totalFulfillment%><br>total</h6>
+            </div>
+          </div>
+          <div class="zcs-legend-wrapper">
+            <ul class="zcs-flex zcs-direction-column zcs-gap-12 zcs-p-0 zcs-m-0">
+              <li><label class="zcs-font-14 zcs-font-normal zcs-lh-body">Scheduled: <strong><%=scheduledFulfillment%></strong></label></li>
+              <li><label class="zcs-font-14 zcs-font-normal zcs-lh-body">Delivered: <strong><%=deliveredFulfillment%></strong></label></li>
+              <li><label class="zcs-font-14 zcs-font-normal zcs-lh-body">In Transit: <strong><%=inTransitFulfillment%></strong></label></li>
+              <li><label class="zcs-font-14 zcs-font-normal zcs-lh-body">Failed: <strong><%=failedFulfillment%></strong></label></li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="admin-card admin-glass">
+        <div class="admin-card-header">
+          <div>
+            <h3 class="admin-card-title">Payment Method Distribution</h3>
+            <div class="admin-card-subtitle">Counts from payment_records.payment_method</div>
+          </div>
+          <span class="admin-status-pill admin-badge-soft-green"><%=totalPayments%> payments</span>
+        </div>
+        <div class="admin-status-list">
+          <div class="admin-status-row"><div class="admin-status-name"><span class="admin-dot" style="--dot:#38bdf8"></span>Bank Transfer</div><div class="admin-bar"><span style="--bar-width:<%=bankTransferPct%>%;--bar-from:#0284c7;--bar-to:#38bdf8;"></span></div><div class="admin-status-count"><%=bankTransferPayments%></div></div>
+          <div class="admin-status-row"><div class="admin-status-name"><span class="admin-dot" style="--dot:#a78bfa"></span>PayPal</div><div class="admin-bar"><span style="--bar-width:<%=paypalPct%>%;--bar-from:#7c3aed;--bar-to:#c4b5fd;"></span></div><div class="admin-status-count"><%=paypalPayments%></div></div>
+          <div class="admin-status-row"><div class="admin-status-name"><span class="admin-dot" style="--dot:#2dd4bf"></span>Stripe</div><div class="admin-bar"><span style="--bar-width:<%=stripePct%>%;--bar-from:#0f766e;--bar-to:#2dd4bf;"></span></div><div class="admin-status-count"><%=stripePayments%></div></div>
+          <div class="admin-status-row"><div class="admin-status-name"><span class="admin-dot" style="--dot:#fbbf24"></span>Cash</div><div class="admin-bar"><span style="--bar-width:<%=cashPct%>%;--bar-from:#d97706;--bar-to:#fbbf24;"></span></div><div class="admin-status-count"><%=cashPayments%></div></div>
+          <div class="admin-status-row"><div class="admin-status-name"><span class="admin-dot" style="--dot:#34d399"></span>Card</div><div class="admin-bar"><span style="--bar-width:<%=cardPct%>%;--bar-from:#059669;--bar-to:#6ee7b7;"></span></div><div class="admin-status-count"><%=cardPayments%></div></div>
+        </div>
+      </section>
+
+      <section class="admin-card admin-glass">
+        <div class="admin-card-header">
+          <div>
+            <h3 class="admin-card-title">Inventory Risk Watch</h3>
+            <div class="admin-card-subtitle">Up to 8 records where available_stock is at or below reorder_point</div>
+          </div>
+          <a class="admin-status-pill admin-badge-soft-red" href="#Report:inventory_Report?zc_LoadIn=dialog&amp;zc_Header=true"><i class="zc-li-outline arrows-1-tail-right"></i>Open report</a>
+        </div>
+        <div class="admin-risk-list">
+          <%
+          riskShown = 0;
+          for each invRec in inventory[available_stock <= reorder_point] sort by available_stock asc
+          {
+            if(riskShown < 8)
+            {
+              productName = "Product not set";
+              if(invRec.product != null)
+              {
+                productName = ifnull(invRec.product.name,"Product " + invRec.product);
+              }
+              availableQty = ifnull(invRec.available_stock,0);
+              reorderQty = ifnull(invRec.reorder_point,0);
+              riskClass = "admin-badge-soft-yellow";
+              riskText = "Watch";
+              if(availableQty <= 0)
+              {
+                riskClass = "admin-badge-soft-red";
+                riskText = "Critical";
+              }
+              %>
+              <div class="admin-risk-row">
+                <div>
+                  <div class="admin-risk-product"><%=productName%></div>
+                  <div class="admin-risk-meta">Inventory ID <%=invRec.ID%></div>
+                </div>
+                <div><span class="admin-risk-meta">Available</span><br><strong><%=availableQty%></strong></div>
+                <div><span class="admin-risk-meta">Reorder</span><br><strong><%=reorderQty%></strong></div>
+                <div><span class="admin-status-pill <%=riskClass%>"><i class="zc-li-outline ui-3-alert"></i><%=riskText%></span></div>
+              </div>
+              <%
+              riskShown = riskShown + 1;
+            }
+          }
+          if(riskShown == 0)
+          {
+            %><div class="admin-empty"><i class="zc-li-outline ui-1-check-circle-08"></i> No inventory records are currently below reorder point.</div><%
+          }
+          %>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,181 @@
+<div class="admin-dashboard-scope admin-section">
+  <div class="admin-shell">
+    <div class="admin-activity-grid">
+      <section class="admin-table-card admin-card admin-glass">
+        <div class="admin-card-header">
+          <div>
+            <h3 class="admin-card-title">Recent Orders</h3>
+            <div class="admin-card-subtitle">Latest records by order_date</div>
+          </div>
+          <a class="admin-status-pill admin-badge-soft-blue" href="#Report:orders_Report?zc_LoadIn=dialog&amp;zc_Header=true">View all</a>
+        </div>
+        <div class="zcs-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative">
+          <table class="zcs-w-full">
+            <thead class="zcs-sticky">
+              <tr>
+                <th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body">Order</th>
+                <th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body">Date</th>
+                <th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body">Customer</th>
+                <th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body">Status</th>
+                <th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-lh-body">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              <%
+              orderShown = 0;
+              for each recentOrder in orders[ID != 0] sort by order_date desc
+              {
+                if(orderShown < 6)
+                {
+                  orderLabel = ifnull(recentOrder.order_id,"Order " + recentOrder.ID);
+                  orderDate = ifnull(recentOrder.order_date,"No date");
+                  customerName = "Unassigned";
+                  if(recentOrder.customer != null)
+                  {
+                    customerName = ifnull(recentOrder.customer.customer_display_name,"Customer " + recentOrder.customer);
+                  }
+                  orderStatus = ifnull(recentOrder.status,"Not set");
+                  orderTotal = ifnull(recentOrder.total_amount,0);
+                  statusClass = "admin-badge-soft-blue";
+                  if(orderStatus == "Delivered" || orderStatus == "Shipped")
+                  {
+                    statusClass = "admin-badge-soft-green";
+                  }
+                  else if(orderStatus == "Cancelled")
+                  {
+                    statusClass = "admin-badge-soft-red";
+                  }
+                  else if(orderStatus == "Processing")
+                  {
+                    statusClass = "admin-badge-soft-yellow";
+                  }
+                  %>
+                  <tr>
+                    <td class="zcs-px-16 zcs-py-10 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body"><span class="admin-record-title"><%=orderLabel%></span></td>
+                    <td class="zcs-px-16 zcs-py-10 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body"><%=orderDate%></td>
+                    <td class="zcs-px-16 zcs-py-10 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body"><%=customerName%></td>
+                    <td class="zcs-px-16 zcs-py-10 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body"><span class="admin-status-pill <%=statusClass%>"><%=orderStatus%></span></td>
+                    <td class="zcs-px-16 zcs-py-10 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body">$<%=orderTotal%></td>
+                  </tr>
+                  <%
+                  orderShown = orderShown + 1;
+                }
+              }
+              if(orderShown == 0)
+              {
+                %><tr><td colspan="5" class="zcs-px-16 zcs-py-12 zcs-box-border zcs-text-center zcs-font-14">No orders found.</td></tr><%
+              }
+              %>
+            </tbody>
+          </table>
+        </div>
+        <div class="admin-table-mobile-cards">
+          <%
+          mobOrderShown = 0;
+          for each mobOrder in orders[ID != 0] sort by order_date desc
+          {
+            if(mobOrderShown < 4)
+            {
+              mobOrderLabel = ifnull(mobOrder.order_id,"Order " + mobOrder.ID);
+              mobCustomer = "Unassigned";
+              if(mobOrder.customer != null)
+              {
+                mobCustomer = ifnull(mobOrder.customer.customer_display_name,"Customer " + mobOrder.customer);
+              }
+              %><div class="admin-mobile-record"><div class="admin-record-title"><%=mobOrderLabel%></div><div class="admin-record-muted"><%=ifnull(mobOrder.order_date,"No date")%> · <%=mobCustomer%></div><div style="margin-top:8px;"><span class="admin-status-pill admin-badge-soft-blue"><%=ifnull(mobOrder.status,"Not set")%></span> <strong>$<%=ifnull(mobOrder.total_amount,0)%></strong></div></div><%
+              mobOrderShown = mobOrderShown + 1;
+            }
+          }
+          %>
+        </div>
+      </section>
+
+      <section class="admin-table-card admin-card admin-glass">
+        <div class="admin-card-header">
+          <div>
+            <h3 class="admin-card-title">Recent Payments</h3>
+            <div class="admin-card-subtitle">Latest records by payment_date</div>
+          </div>
+          <a class="admin-status-pill admin-badge-soft-green" href="#Report:payment_records_Report?zc_LoadIn=dialog&amp;zc_Header=true">View all</a>
+        </div>
+        <div class="zcs-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative">
+          <table class="zcs-w-full">
+            <thead class="zcs-sticky">
+              <tr>
+                <th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body">Payment Date</th>
+                <th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body">Order</th>
+                <th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body">Method</th>
+                <th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-lh-body">Amount</th>
+                <th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <%
+              paymentShown = 0;
+              for each recentPayment in payment_records[ID != 0] sort by payment_date desc
+              {
+                if(paymentShown < 6)
+                {
+                  paymentDate = ifnull(recentPayment.payment_date,"No date");
+                  paymentOrder = "Unlinked";
+                  if(recentPayment.order != null)
+                  {
+                    paymentOrder = recentPayment.order;
+                  }
+                  paymentMethod = ifnull(recentPayment.payment_method,"Not set");
+                  paymentAmount = ifnull(recentPayment.amount,0);
+                  paymentStatus = ifnull(recentPayment.status,"Not set");
+                  paymentStatusClass = "admin-badge-soft-blue";
+                  if(paymentStatus == "Completed")
+                  {
+                    paymentStatusClass = "admin-badge-soft-green";
+                  }
+                  else if(paymentStatus == "Failed")
+                  {
+                    paymentStatusClass = "admin-badge-soft-red";
+                  }
+                  else if(paymentStatus == "Pending")
+                  {
+                    paymentStatusClass = "admin-badge-soft-yellow";
+                  }
+                  else if(paymentStatus == "Refunded")
+                  {
+                    paymentStatusClass = "admin-badge-soft-purple";
+                  }
+                  %>
+                  <tr>
+                    <td class="zcs-px-16 zcs-py-10 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body"><%=paymentDate%></td>
+                    <td class="zcs-px-16 zcs-py-10 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body"><span class="admin-record-title"><%=paymentOrder%></span></td>
+                    <td class="zcs-px-16 zcs-py-10 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body"><%=paymentMethod%></td>
+                    <td class="zcs-px-16 zcs-py-10 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body">$<%=paymentAmount%></td>
+                    <td class="zcs-px-16 zcs-py-10 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body"><span class="admin-status-pill <%=paymentStatusClass%>"><%=paymentStatus%></span></td>
+                  </tr>
+                  <%
+                  paymentShown = paymentShown + 1;
+                }
+              }
+              if(paymentShown == 0)
+              {
+                %><tr><td colspan="5" class="zcs-px-16 zcs-py-12 zcs-box-border zcs-text-center zcs-font-14">No payment records found.</td></tr><%
+              }
+              %>
+            </tbody>
+          </table>
+        </div>
+        <div class="admin-table-mobile-cards">
+          <%
+          mobPaymentShown = 0;
+          for each mobPayment in payment_records[ID != 0] sort by payment_date desc
+          {
+            if(mobPaymentShown < 4)
+            {
+              %><div class="admin-mobile-record"><div class="admin-record-title">$<%=ifnull(mobPayment.amount,0)%> · <%=ifnull(mobPayment.payment_method,"Not set")%></div><div class="admin-record-muted"><%=ifnull(mobPayment.payment_date,"No date")%> · <%=ifnull(mobPayment.order,"Unlinked")%></div><div style="margin-top:8px;"><span class="admin-status-pill admin-badge-soft-green"><%=ifnull(mobPayment.status,"Not set")%></span></div></div><%
+              mobPaymentShown = mobPaymentShown + 1;
+            }
+          }
+          %>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
