@@ -1,0 +1,32 @@
+Validate_Leave_Request as "Validate Leave Request"
+{
+	type = form
+	form = Leave_request
+	record event = on add or edit
+
+	on validate
+	{
+		actions
+		{
+			custom deluge script
+			(
+				fet = Team_Members[Email == zoho.loginuserid];
+				if(fet.ID == null)
+				{
+					alert "Your user is not mapped to a Team Member record. Please contact the administrator before submitting a leave request.";
+					cancel submit;
+				}
+				if(input.Name == null)
+				{
+					alert "Requester could not be identified. Please reload the form or contact the administrator.";
+					cancel submit;
+				}
+				if(input.First_Approver == null)
+				{
+					alert "No approver is configured for this leave request. Please contact the administrator.";
+					cancel submit;
+				}
+			)
+		}
+	}
+}

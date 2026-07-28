@@ -1,0 +1,27 @@
+Update_worklogs_Reassigne1 as "Update worklogs - Reassigned"
+{
+	type = form
+	form = Event_Tasks
+	record event = on edit
+
+	on success
+	{
+		actions
+		{
+			custom deluge script
+			(
+				for each rec in input.Tasks
+				{
+					if(rec.Reassigned == true && rec.Reassigned_to != null && rec.Worklogs != null)
+					{
+						rec.Worklogs=rec.Worklogs + "\n" + "<li>" + zoho.currentdate + " - <span style='color:#0000FF;'>Reassigned from " + rec.Assigned_To.Name + " to " + rec.Reassigned_to.Name + "</span></li>";
+					}
+					else if(rec.Reassigned == true && rec.Reassigned_to != null && rec.Worklogs == null)
+					{
+						rec.Worklogs="<li>" + zoho.currentdate + " - <span style='color:#0000FF;'>Reassigned from " + rec.Assigned_To.Name + " to " + rec.Reassigned_to.Name + "</span></li>";
+					}
+				}
+			)
+		}
+	}
+}

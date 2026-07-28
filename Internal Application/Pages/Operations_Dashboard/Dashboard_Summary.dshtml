@@ -1,0 +1,330 @@
+<%
+today = zoho.currentdate;
+upcomingEventsCount = Events[Start_Date >= today && Start_Date <= today.addDay(30)].count();
+myOpenTasksCount = Multiple_tasks_subform[((Assigned_To.Email == zoho.loginuserid && Reassigned == false) || (Reassigned_to.Email == zoho.loginuserid && Reassigned == true)) && Status != "Completed"].count();
+overdueTasksCount = Multiple_tasks_subform[Due_Date < today && Status != "Completed"].count();
+blockedTasksCount = Multiple_tasks_subform[Blocked == true && Status != "Completed"].count();
+todaysUpdatesCount = Task_updates_subform1[Date_field == today].count();
+remainingHours = Multiple_tasks_subform[Status != "Completed"].sum(Task_Remaining_Hours);
+if(remainingHours == null)
+{
+    remainingHours = 0;
+}
+todayHours = Task_updates_subform1[Date_field == today].sum(Hours_worked);
+if(todayHours == null)
+{
+    todayHours = 0;
+}
+userName = zoho.loginuser;
+upcomingUrl = "#Report:Upcoming_Events_30_Days?zc_LoadIn=dialog&amp;zc_Header=true";
+openTasksUrl = "#Report:My_Open_Task_Assignments?zc_LoadIn=dialog&amp;zc_Header=true";
+overdueUrl = "#Report:Overdue_Task_Assignments?zc_LoadIn=dialog&amp;zc_Header=true";
+blockedUrl = "#Report:Blocked_Task_Assignments?zc_LoadIn=dialog&amp;zc_Header=true";
+todaysUpdatesUrl = "#Report:Todays_Task_Update_Rows?zc_LoadIn=dialog&amp;zc_Header=true";
+workloadUrl = "#Report:Task_Workload_By_Member?zc_LoadIn=dialog&amp;zc_Header=true";
+addUpdateUrl = "#Form:Task_Updates?zc_LoadIn=dialog&amp;zc_Header=true";
+%>
+<style>
+/* ===== zcs-global.css (operations dashboard subset) ===== */
+:root {
+    --zcs-theme-brand-color: var(--zcs_brand_color);
+    --zcs-page-bg-color: #F3F3F4;
+    --zcs-white-color: #FFFFFF;
+    --zcs-black-color: #000000;
+    --zcs-primary-text-color: var(--zcs_primary_text_color);
+    --zcs-secondary-text-color: var(--zcs_secondary_text_color);
+    --zcs-teritiary-text-color: var(--zcs_tertiary_text_color);
+    --zcs-border-color: var(--zcs_tertiary_border_color);
+    --zcs-placeholder-color: #878895;
+    --column-gap: 0px;
+    font-size: 16px;
+    line-height: 1.5;
+}
+.zcs-row { display: flex; flex-wrap: wrap; }
+.zcs-flex { display: flex; }
+.zcs-inline-flex { display: inline-flex; }
+.zcs-direction-column { flex-direction: column; }
+.zcs-align-items-center { align-items: center; }
+.zcs-align-items-start { align-items: flex-start; }
+.zcs-justify-center { justify-content: center; }
+.zcs-justify-space-between { justify-content: space-between; }
+.zcs-col-common { flex: 1 1 0%; }
+.zcs-no-shrink { flex-shrink: 0; }
+.zcs-w-full { width: 100%; }
+.zcs-wh-full { width: 100%; height: 100%; }
+.zcs-box-border { box-sizing: border-box; }
+.zcs-overflow-auto { overflow: auto; }
+.zcs-relative { position: relative; }
+.zcs-absolute { position: absolute; }
+.zcs-sticky { position: sticky; }
+.zcs-cursor-pointer { cursor: pointer; }
+.zcs-text-left { text-align: left; }
+.zcs-text-right { text-align: right; }
+.zcs-rounded-sm { border-radius: 4px; }
+.zcs-rounded-md { border-radius: 6px; }
+.zcs-rounded-lg { border-radius: 8px; }
+.zcs-rounded-xl { border-radius: 12px; }
+.zcs-card { background-color: var(--zcs-white-color); border: 1px solid var(--zcs_tertiary_border_color); border-radius: 12px; }
+.zcs-ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.zcs-lh-body { line-height: 1.5; }
+.zcs-lh-heading { line-height: 1.25; }
+.zcs-m-0 { margin: 0; }
+.zcs-p-0 { padding: 0; }
+.zcs-p-8 { padding: 0.5rem; }
+.zcs-p-16 { padding: 1rem; }
+.zcs-px-10 { padding-left: 0.625rem; padding-right: 0.625rem; }
+.zcs-px-12 { padding-left: 0.75rem; padding-right: 0.75rem; }
+.zcs-px-16 { padding-left: 1rem; padding-right: 1rem; }
+.zcs-px-24 { padding-left: 1.5rem; padding-right: 1.5rem; }
+.zcs-px-30 { padding-left: 1.875rem; padding-right: 1.875rem; }
+.zcs-py-2 { padding-top: 0.125rem; padding-bottom: 0.125rem; }
+.zcs-py-4 { padding-top: 0.25rem; padding-bottom: 0.25rem; }
+.zcs-py-8 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+.zcs-py-12 { padding-top: 0.75rem; padding-bottom: 0.75rem; }
+.zcs-py-16 { padding-top: 1rem; padding-bottom: 1rem; }
+.zcs-py-24 { padding-top: 1.5rem; padding-bottom: 1.5rem; }
+.zcs-gap-4 { gap: 0.25rem; }
+.zcs-gap-8 { gap: 0.5rem; }
+.zcs-gap-10 { gap: 0.625rem; }
+.zcs-gap-12 { gap: 0.75rem; }
+.zcs-gap-16 { gap: 1rem; }
+.zcs-gap-20 { gap: 1.25rem; }
+.zcs-gap-24 { gap: 1.5rem; }
+.zcs-font-11 { font-size: 0.6875rem; }
+.zcs-font-12 { font-size: 0.75rem; }
+.zcs-font-13 { font-size: 0.8125rem; }
+.zcs-font-14 { font-size: 0.875rem; }
+.zcs-font-15 { font-size: 0.9375rem; }
+.zcs-font-16 { font-size: 1rem; }
+.zcs-font-18 { font-size: 1.125rem; }
+.zcs-font-20 { font-size: 1.25rem; }
+.zcs-font-24 { font-size: 1.5rem; }
+.zcs-font-28 { font-size: 1.75rem; }
+.zcs-font-40 { font-size: 2.5rem; }
+.zcs-font-normal { font-weight: 400; }
+.zcs-font-medium { font-weight: 500; }
+.zcs-font-semibold { font-weight: 600; }
+.zcs-font-bold { font-weight: 700; }
+.zcs-color-primary { color: var(--zcs_primary_text_color); }
+.zcs-color-secondary { color: var(--zcs_secondary_text_color); }
+.zcs-color-tertiary { color: var(--zcs_tertiary_text_color); }
+.zcs-color-white { color: var(--zcs-white-color); }
+a { text-decoration: none; }
+
+/* ===== layout-dashboard / button-primary-outline-button ===== */
+.zcs-page-container { background-color: var(--zcs-page-bg-color); }
+.zcs-page-container-inner { min-height: 100%; }
+.zcs-button { width: auto; min-width: 5rem; min-height: 36px; }
+.zcs-primary-button { background-color: var(--zcs_brand_color); color: var(--zcs_brand_foreground_color); }
+.zcs-primary-outline-button { border: 1px solid var(--zcs_brand_color); background-color: var(--zcs-white-color); color: var(--zcs_brand_color); }
+.zcs-primary-button:hover { background-color: var(--zcs_brand_dark_color); }
+.zcs-primary-outline-button:hover { background-color: var(--zcs_component_hover_color); border-color: var(--zcs_brand_color); color: var(--zcs_brand_color); }
+.zcs-button-icon { width: 16px; max-height: 16px; }
+.zcs-panel-wrapper ul li { list-style-type: none; }
+.zcs-panel { border: 1px solid var(--zcs_tertiary_border_color); box-shadow: 0 2px 8px 0 #F2F2F6; background-color: var(--zcs-white-color); transition: border-color 0.2s ease, background-color 0.2s ease; }
+.zcs-panel-icon-wrapper { width: 40px; height: 40px; }
+.zcs-panel-icon { width: 24px; height: 24px; line-height: 24px; }
+.zcs-panel.zcs-panel-green .zcs-panel-icon-wrapper { background-color: #E4FCF3; color: #179E6C; }
+.zcs-panel.zcs-panel-yellow .zcs-panel-icon-wrapper { background-color: #FCF4E6; color: #B8770D; }
+.zcs-panel.zcs-panel-red .zcs-panel-icon-wrapper { background-color: #FDE3E6; color: #FE455D; }
+.zcs-panel.zcs-panel-d_blue .zcs-panel-icon-wrapper { background-color: #EAF2FF; color: #1652BB; }
+.zcs-panel.zcs-panel-l_blue .zcs-panel-icon-wrapper { background-color: #E8EFFF; color: #2A6FFC; }
+.zcs-panel.zcs-panel-blue .zcs-panel-icon-wrapper { background-color: #F2F9FF; color: #2A8BCC; }
+.zcs-panel-wrapper .zcs-overlay { inset: 0; }
+.zcs-panel-wrapper li:hover .zcs-panel { border-color: var(--zcs_brand_color); background-image: linear-gradient(rgb(253 253 255 / 10%), #f7f9ff); }
+
+/* ===== badge-badge-with-icon ===== */
+.zcs-badge { width: auto; }
+.zcs-badge-filled-outline { border: 1px solid; }
+.zcs-badge-filled-outline.zcs-badge-green { background-color: #E4FCF3; border-color: #179E6C; color: #179E6C; }
+.zcs-badge-filled-outline.zcs-badge-red { background-color: #FDE3E6; border-color: #FE455D; color: #FE455D; }
+.zcs-badge-filled-outline.zcs-badge-yellow { background-color: #FCF4E6; border-color: #FAAE13; color: #B8770D; }
+.zcs-badge-filled-outline.zcs-badge-blue { background-color: #E8EFFF; border-color: #2A6FFC; color: #2A6FFC; }
+
+/* ===== table-simple-table ===== */
+:root { --zcs-thead-color: #F9FAFE; --zcs-tr-h-color: #F9FAFE; }
+.zcs-table-wrapper { border: 1px solid var(--zcs_tertiary_border_color); background-color: var(--zcs-white-color); overflow: auto; }
+.zcs-table-wrapper table { line-height: normal; border-collapse: collapse; }
+.zcs-table-wrapper table thead { top: 0; }
+.zcs-table-wrapper table thead tr th { background-color: var(--zcs-thead-color); box-shadow: 0 -1px 0 0 var(--zcs_tertiary_border_color) inset; white-space: nowrap; }
+.zcs-table-wrapper table tbody tr td { border-top: 1px solid var(--zcs_tertiary_border_color); }
+.zcs-table-wrapper table tbody tr:first-child td { border-color: transparent; }
+.zcs-table-wrapper table tbody tr:hover td { background-color: var(--zcs-tr-h-color); }
+.zcs-table-wrapper table tbody tr td.zcs-red, .zcs-red { color: #FE455D; }
+.zcs-table-wrapper table tbody tr td.zcs-green, .zcs-green { color: #179E6C; }
+.zcs-table-wrapper table tbody tr td.zcs-yellow, .zcs-yellow { color: #B8770D; }
+.zcs-table-wrapper table tbody tr td.zcs-l_blue, .zcs-l_blue { color: #1094C5; }
+
+/* Operations-specific composition */
+.ops-dashboard { min-height: 100%; }
+.ops-hero { background: linear-gradient(135deg, var(--zcs_brand_color), var(--zcs_brand_dark_color)); border-radius: 16px; color: var(--zcs_brand_foreground_color); position: relative; overflow: hidden; }
+.ops-hero:after { content: ""; position: absolute; width: 260px; height: 260px; border: 42px solid rgba(255,255,255,0.10); border-radius: 50%; right: -70px; top: -110px; }
+.ops-hero h2, .ops-hero p { color: var(--zcs_brand_foreground_color); position: relative; z-index: 1; }
+.ops-hero .zcs-button { position: relative; z-index: 1; background-color: var(--zcs-white-color); color: var(--zcs_brand_color); }
+.ops-kpi-list { list-style-type: none; }
+.ops-kpi-card { min-height: 136px; }
+.ops-kpi-card .ops-kpi-value { letter-spacing: -0.03em; }
+.ops-kpi-meta { color: var(--zcs_tertiary_text_color); }
+.ops-section-card { box-shadow: 0 2px 10px rgba(18,19,43,0.04); }
+.ops-report-link { color: var(--zcs_brand_color); }
+.ops-report-link:hover { text-decoration: underline; }
+.ops-col-2 { flex: 0 0 calc(16.666% - 17px); max-width: calc(16.666% - 17px); }
+@media (max-width: 1280px) { .ops-col-2 { flex-basis: calc(33.333% - 14px); max-width: calc(33.333% - 14px); } }
+@media (max-width: 768px) {
+    .zcs-page-container-inner { padding: 16px 20px; gap: 12px; }
+    .ops-col-2 { flex-basis: calc(50% - 10px); max-width: calc(50% - 10px); }
+    .ops-hero { flex-direction: column; align-items: flex-start; }
+}
+@media (max-width: 576px) { .ops-col-2 { flex-basis: 100%; max-width: 100%; } }
+</style>
+<div class='zcs-page-container zcs-commonview zcs-wh-full ops-dashboard'>
+    <div class='zcs-page-container-inner zcs-wh-full zcs-flex zcs-direction-column zcs-gap-20 zcs-px-30 zcs-py-24 zcs-box-border'>
+        <div class='ops-hero zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-20 zcs-px-30 zcs-py-24 zcs-box-border'>
+            <div class='zcs-flex zcs-direction-column zcs-gap-8'>
+                <p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-m-0'>Hello <%=userName%>. Today is <%=today%>.</p>
+                <h2 class='zcs-font-28 zcs-font-semibold zcs-lh-heading zcs-m-0'>Operations Dashboard</h2>
+                <p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-m-0'>Live view of upcoming events, open assignments, overdue work, blockers, today's updates, and remaining workload.</p>
+            </div>
+            <div class='zcs-flex zcs-align-items-center zcs-gap-12'>
+                <a class='zcs-button zcs-primary-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body' href='<%=addUpdateUrl%>'>
+                    <i class='zcs-button-icon zc-li-outline ui-1-simple-add'></i>
+                    <span class='zcs-button-text'>Add Daily Update</span>
+                </a>
+            </div>
+        </div>
+
+        <div class='zcs-panel-wrapper'>
+            <ul class='ops-kpi-list zcs-row zcs-justify-space-between zcs-gap-20 zcs-p-0 zcs-m-0'>
+                <li class='ops-col-2 zcs-relative zcs-cursor-pointer'>
+                    <div class='ops-kpi-card zcs-panel zcs-panel-blue zcs-wh-full zcs-flex zcs-direction-column zcs-gap-8 zcs-rounded-lg zcs-p-16 zcs-box-border'>
+                        <div class='zcs-flex zcs-align-items-center zcs-gap-10'>
+                            <div class='zcs-panel-icon-wrapper zcs-flex zcs-align-items-center zcs-justify-center zcs-no-shrink zcs-rounded-lg'><i class='zcs-panel-icon zcs-font-24 zc-li-outline ui-2-calendar-date'></i></div>
+                            <h4 class='ops-kpi-value zcs-font-40 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0'><%=upcomingEventsCount%></h4>
+                        </div>
+                        <p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'>Upcoming Events (30 days)</p>
+                        <span class='ops-kpi-meta zcs-font-12'>Events scheduled from today through the next 30 days</span>
+                    </div>
+                    <a href='<%=upcomingUrl%>' class='zcs-overlay zcs-wh-full zcs-absolute'></a>
+                </li>
+                <li class='ops-col-2 zcs-relative zcs-cursor-pointer'>
+                    <div class='ops-kpi-card zcs-panel zcs-panel-d_blue zcs-wh-full zcs-flex zcs-direction-column zcs-gap-8 zcs-rounded-lg zcs-p-16 zcs-box-border'>
+                        <div class='zcs-flex zcs-align-items-center zcs-gap-10'>
+                            <div class='zcs-panel-icon-wrapper zcs-flex zcs-align-items-center zcs-justify-center zcs-no-shrink zcs-rounded-lg'><i class='zcs-panel-icon zcs-font-24 zc-li-outline files-2-single-content-03'></i></div>
+                            <h4 class='ops-kpi-value zcs-font-40 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0'><%=myOpenTasksCount%></h4>
+                        </div>
+                        <p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'>Open Task Assignments</p>
+                        <span class='ops-kpi-meta zcs-font-12'>Open work assigned or reassigned to you</span>
+                    </div>
+                    <a href='<%=openTasksUrl%>' class='zcs-overlay zcs-wh-full zcs-absolute'></a>
+                </li>
+                <li class='ops-col-2 zcs-relative zcs-cursor-pointer'>
+                    <div class='ops-kpi-card zcs-panel zcs-panel-red zcs-wh-full zcs-flex zcs-direction-column zcs-gap-8 zcs-rounded-lg zcs-p-16 zcs-box-border'>
+                        <div class='zcs-flex zcs-align-items-center zcs-gap-10'>
+                            <div class='zcs-panel-icon-wrapper zcs-flex zcs-align-items-center zcs-justify-center zcs-no-shrink zcs-rounded-lg'><i class='zcs-panel-icon zcs-font-24 zc-li-outline ui-3-alert'></i></div>
+                            <h4 class='ops-kpi-value zcs-font-40 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0'><%=overdueTasksCount%></h4>
+                        </div>
+                        <p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'>Overdue Tasks</p>
+                        <span class='ops-kpi-meta zcs-font-12'>Open tasks past due date</span>
+                    </div>
+                    <a href='<%=overdueUrl%>' class='zcs-overlay zcs-wh-full zcs-absolute'></a>
+                </li>
+                <li class='ops-col-2 zcs-relative zcs-cursor-pointer'>
+                    <div class='ops-kpi-card zcs-panel zcs-panel-yellow zcs-wh-full zcs-flex zcs-direction-column zcs-gap-8 zcs-rounded-lg zcs-p-16 zcs-box-border'>
+                        <div class='zcs-flex zcs-align-items-center zcs-gap-10'>
+                            <div class='zcs-panel-icon-wrapper zcs-flex zcs-align-items-center zcs-justify-center zcs-no-shrink zcs-rounded-lg'><i class='zcs-panel-icon zcs-font-24 zc-li-outline ui-1-lock'></i></div>
+                            <h4 class='ops-kpi-value zcs-font-40 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0'><%=blockedTasksCount%></h4>
+                        </div>
+                        <p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'>Blocked Tasks</p>
+                        <span class='ops-kpi-meta zcs-font-12'>Open tasks marked as blocked</span>
+                    </div>
+                    <a href='<%=blockedUrl%>' class='zcs-overlay zcs-wh-full zcs-absolute'></a>
+                </li>
+                <li class='ops-col-2 zcs-relative zcs-cursor-pointer'>
+                    <div class='ops-kpi-card zcs-panel zcs-panel-green zcs-wh-full zcs-flex zcs-direction-column zcs-gap-8 zcs-rounded-lg zcs-p-16 zcs-box-border'>
+                        <div class='zcs-flex zcs-align-items-center zcs-gap-10'>
+                            <div class='zcs-panel-icon-wrapper zcs-flex zcs-align-items-center zcs-justify-center zcs-no-shrink zcs-rounded-lg'><i class='zcs-panel-icon zcs-font-24 zc-li-outline ui-1-check-circle-08'></i></div>
+                            <h4 class='ops-kpi-value zcs-font-40 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0'><%=todaysUpdatesCount%></h4>
+                        </div>
+                        <p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'>Today's Updates</p>
+                        <span class='ops-kpi-meta zcs-font-12'><%=todayHours%> hours logged today</span>
+                    </div>
+                    <a href='<%=todaysUpdatesUrl%>' class='zcs-overlay zcs-wh-full zcs-absolute'></a>
+                </li>
+                <li class='ops-col-2 zcs-relative zcs-cursor-pointer'>
+                    <div class='ops-kpi-card zcs-panel zcs-panel-l_blue zcs-wh-full zcs-flex zcs-direction-column zcs-gap-8 zcs-rounded-lg zcs-p-16 zcs-box-border'>
+                        <div class='zcs-flex zcs-align-items-center zcs-gap-10'>
+                            <div class='zcs-panel-icon-wrapper zcs-flex zcs-align-items-center zcs-justify-center zcs-no-shrink zcs-rounded-lg'><i class='zcs-panel-icon zcs-font-24 zc-li-outline ui-2-time'></i></div>
+                            <h4 class='ops-kpi-value zcs-font-40 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0'><%=remainingHours%></h4>
+                        </div>
+                        <p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'>Remaining Task Hours</p>
+                        <span class='ops-kpi-meta zcs-font-12'>Total remaining hours across open tasks</span>
+                    </div>
+                    <a href='<%=workloadUrl%>' class='zcs-overlay zcs-wh-full zcs-absolute'></a>
+                </li>
+            </ul>
+        </div>
+
+        <div class='ops-section-card zcs-card zcs-flex zcs-direction-column zcs-gap-16 zcs-p-16 zcs-box-border'>
+            <div class='zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12'>
+                <div class='zcs-flex zcs-direction-column zcs-gap-4'>
+                    <h5 class='zcs-font-18 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0'>Operational focus</h5>
+                    <p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'>Open each operational view in a dialog, or use the embedded reports below for full-width review.</p>
+                </div>
+                <div class='zcs-row zcs-align-items-center zcs-gap-16'>
+                    <div class='zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border <%=if(overdueTasksCount > 0,"zcs-badge-red","zcs-badge-green")%>'>
+                        <i class='zcs-badge-icon zcs-no-shrink zc-li-outline <%=if(overdueTasksCount > 0,"ui-3-alert","ui-1-check-circle-08")%>'></i>
+                        <span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'>Overdue: <%=overdueTasksCount%></span>
+                    </div>
+                    <div class='zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border <%=if(blockedTasksCount > 0,"zcs-badge-yellow","zcs-badge-green")%>'>
+                        <i class='zcs-badge-icon zcs-no-shrink zc-li-outline <%=if(blockedTasksCount > 0,"ui-1-lock","ui-1-check-circle-08")%>'></i>
+                        <span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'>Blocked: <%=blockedTasksCount%></span>
+                    </div>
+                </div>
+            </div>
+            <div class='zcs-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative'>
+                <table class='zcs-w-full'>
+                    <thead class='zcs-sticky'>
+                        <tr>
+                            <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>View</th>
+                            <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Focus</th>
+                            <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Current count</th>
+                            <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Open</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'>Upcoming Events 30 Days</td>
+                            <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'>Event schedule, DRI, mode, and survey readiness</td>
+                            <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-l_blue'><%=upcomingEventsCount%></td>
+                            <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body'><a class='ops-report-link' href='<%=upcomingUrl%>'>View report</a></td>
+                        </tr>
+                        <tr>
+                            <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'>My Open Task Assignments</td>
+                            <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'>My assigned or reassigned open tasks</td>
+                            <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-l_blue'><%=myOpenTasksCount%></td>
+                            <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body'><a class='ops-report-link' href='<%=openTasksUrl%>'>View report</a></td>
+                        </tr>
+                        <tr>
+                            <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'>Overdue Task Assignments</td>
+                            <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'>Open work that has passed its due date</td>
+                            <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-red'><%=overdueTasksCount%></td>
+                            <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body'><a class='ops-report-link' href='<%=overdueUrl%>'>View report</a></td>
+                        </tr>
+                        <tr>
+                            <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'>Blocked Task Assignments</td>
+                            <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'>Blocked tasks and blocker reasons</td>
+                            <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-yellow'><%=blockedTasksCount%></td>
+                            <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body'><a class='ops-report-link' href='<%=blockedUrl%>'>View report</a></td>
+                        </tr>
+                        <tr>
+                            <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'>Today's Task Update Rows</td>
+                            <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'>Updates submitted today and hours worked</td>
+                            <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-green'><%=todaysUpdatesCount%></td>
+                            <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body'><a class='ops-report-link' href='<%=todaysUpdatesUrl%>'>View report</a></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

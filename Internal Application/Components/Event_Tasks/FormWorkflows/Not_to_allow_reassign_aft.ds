@@ -1,0 +1,26 @@
+Not_to_allow_reassign_aft as "Not to allow reassign after completion"
+{
+	type = form
+	form = Event_Tasks
+	record event = on edit
+
+	on user input of Tasks.Reassigned
+	{
+		actions
+		{
+			custom deluge script
+			(
+				for each rec in input.Tasks
+				{
+					if(rec.Status == "Completed")
+					{
+						if(rec.Reassigned == true)
+						{
+							alert "Task is completed and cannot be reassigned";
+						}
+					}
+				}
+			)
+		}
+	}
+}

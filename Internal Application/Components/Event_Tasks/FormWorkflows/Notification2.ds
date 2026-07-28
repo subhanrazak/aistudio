@@ -1,0 +1,23 @@
+Notification2 as "Notification"
+{
+	type = form
+	form = Event_Tasks
+	record event = on edit
+
+	on success
+	{
+		actions
+		{
+			custom deluge script
+			(
+				for each rec in input.Tasks
+				{
+					if(rec.Reassigned == true && rec.Reassigned_to != null)
+					{
+						response = zoho.pushNotification(rec.Reassigned_to.Email,"New Event Assigned","New event - " + rec.Task_Name + " for " + rec.Event_Name_Lookup + " has been assigned","Tasks_Team",input.ID);
+					}
+				}
+			)
+		}
+	}
+}

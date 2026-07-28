@@ -1,0 +1,25 @@
+No_duplicate_entries_for_ as "No duplicate entries for a day"
+{
+	type = form
+	form = Task_Updates
+	record event = on add
+
+	on validate
+	{
+		actions
+		{
+			custom deluge script
+			(
+				fet_updates = Task_Updates[ID != null];
+				for each rec in fet_updates
+				{
+					if(rec.Date_field == input.Date_field && input.Name == rec.Name)
+					{
+						alert "Already task update is done for " + input.Date_field;
+						cancel submit;
+					}
+				}
+			)
+		}
+	}
+}

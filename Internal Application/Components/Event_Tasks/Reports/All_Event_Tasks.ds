@@ -1,0 +1,56 @@
+list All_Event_Tasks
+{
+	displayName = "All Event Tasks"
+	show all rows from Event_Tasks
+	(
+		Product
+		Event
+		Date_of_assign as "Date of assign"
+		Total_Hours_assigned as "Total Hours assigned"
+		Remaining_Hours as "Remaining Hours"
+		Event.Event_Status as "Event Status"
+		Event.Event_Type as "Event Type"
+		Tasks
+		(
+			field = Tasks.Task_Name + "- " + Tasks.Assigned_To + "- " + Tasks.Status
+		)
+		Event_Name_Lookup as "Event Name (Lookup)"
+	)
+	group by
+	(
+		Product ascending
+	)
+	conditional formatting
+	(
+		"Event completed"
+		{
+			condition = (Event.Event_Status == "Completed")
+			fields = [Event.Event_Status]
+			format = "color:#000000;background-color:#1bbc9b;"
+		}
+		"Event inprogress"
+		{
+			condition = (Event.Event_Status == "InProgress")
+			fields = [Event.Event_Status]
+			format = "color:#ffffff;background-color:#107c91;"
+		}
+		"Event open"
+		{
+			condition = (Event.Event_Status == "Open")
+			fields = [Event.Event_Status]
+			format = "color:#333;background-color:#f1c40f;"
+		}
+		"New Formatting"
+		{
+			condition = (Event.Event_Status == "Cancelled")
+			fields = [Event.Event_Status]
+			format = "color:#ffffff;background-color:#e84c3d;"
+		}
+		"Event OnHold"
+		{
+			condition = (Event.Event_Status == "OnHold")
+			fields = [Event.Event_Status]
+			format = "color:#ffffff;background-color:#818c8e;"
+		}
+	)
+}

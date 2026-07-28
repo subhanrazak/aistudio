@@ -1,0 +1,77 @@
+Auto_populate_subform1 as "Auto populate subform"
+{
+	type = form
+	form = Task_Updates
+	record event = on add
+
+	on load
+	{
+		actions
+		{
+			custom deluge script
+			(
+				name = Team_Members[Email == zoho.loginuserid];
+				input.Name = name.ID;
+				disable Name;
+				input.Date_field = zoho.currentdate;
+				//disable Date_field;
+				// hide Updates.Assigned_To;
+				// disable Updates.Remaining_Hours;
+				// hide Updates.Date_field;
+				// hide Updates.Event_Tasks;
+				// hide Updates.Task_Name;
+				// disable Updates.Event_Task;
+				// disable Updates.Task_Name1;
+				// To fetch the data according to assigned and reassigned and added it to the subfrom
+				fet_tasks = Multiple_tasks_subform[ID != null];
+				for each rec in fet_tasks
+				{
+					if(rec.Assigned_To == name && rec.Status != "Completed" && rec.Reassigned == false)
+					{
+						x = Task_Updates.Updates();
+						for each rec1 in rec
+						{
+							x.Task_Name=rec1.ID;
+							x.Task_Name1=rec1.Task_Name;
+							coll_var = Collection();
+							coll_var.insert(x);
+							input.Updates.insert(coll_var);
+						}
+					}
+					else if(rec.Reassigned_to == name && rec.Status != "Completed" && rec.Reassigned == true)
+					{
+						x = Task_Updates.Updates();
+						for each rec1 in rec
+						{
+							x.Task_Name=rec1.ID;
+							x.Task_Name1=rec1.Task_Name;
+							coll_var = Collection();
+							coll_var.insert(x);
+							input.Updates.insert(coll_var);
+						}
+					}
+				}
+				// To build relationship updating event task name
+				fet_eventtask = Event_Tasks[ID != null];
+				for each eventtask in input.Updates
+				{
+					for each eventname in fet_eventtask
+					{
+						if(eventtask.Task_Name.Event_Name_Lookup == eventname.Event_Name_Lookup)
+						{
+							eventtask.Event_Tasks=eventname.ID;
+							eventtask.Event_Task=eventname.Event.Event_Name;
+							eventtask.Remaining_Hours=eventname.Remaining_Hours;
+							eventtask.Assigned_To=input.Name;
+						}
+					}
+				}
+				//Date
+				for each ele in input.Updates
+				{
+					ele.Date_field=zoho.currentdate;
+				}
+			)
+		}
+	}
+}

@@ -1,0 +1,36 @@
+Autofilling_Info as "Autofilling Info"
+{
+	type = form
+	form = Leave_request
+	record event = on add
+
+	on load
+	{
+		actions
+		{
+			custom deluge script
+			(
+				fet = Team_Members[Email == zoho.loginuserid];
+				if(fet.ID != null)
+				{
+					if(input.Name == null)
+					{
+						input.Name = fet.ID;
+					}
+					if(input.First_Approver == null)
+					{
+						fet1 = Team_Members[ID == fet.Reporting_to];
+						if(fet.Reporting_to == null)
+						{
+							input.First_Approver = fet.users;
+						}
+						else
+						{
+							input.First_Approver = fet1.users;
+						}
+					}
+				}
+			)
+		}
+	}
+}

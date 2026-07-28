@@ -1,0 +1,100 @@
+list All_Events
+{
+	displayName = "All Events"
+	show all rows from Events
+	(
+		Product
+		Mode_of_Training as "Mode of Training"
+		(
+			width = 128px
+		)
+		Event_Type as "Event Type"
+		(
+			width = 185px
+		)
+		Event_Name as "Event Name"
+		(
+			width = 382px
+		)
+		Start_Date as "Start Date"
+		(
+			width = 105px
+		)
+		End_Date as "End Date"
+		(
+			width = 105px
+		)
+		Start_Time as "Start Time"
+		End_Time as "End Time"
+		DRI
+		(
+			width = 130px
+		)
+		Event_Status as "Event Status"
+		(
+			width = 101px
+		)
+		DRI_ID as "DRI ID"
+		custom action "Post Event Stats"
+		(
+			workflow = Post_Event_Stats1
+			show action in edit record menu = true
+			success message = "Opening post event stats"
+			condition = (Event_Type != "Adhoc")
+		)
+		custom action "Discount Request"
+		(
+			workflow = Discount_Request
+			show action in edit record menu = true
+			success message = "Opening discount request"
+			condition = (Event_Type == "Online Training" || Event_Type == "Certification")
+		)
+		custom action "Add Request Survey"
+		(
+			workflow = Add_request_Survey
+			show action in edit record menu = true
+			success message = "Survey request action completed"
+			condition = (Event_Type == "Online Training" && Survey_Request == "Yet to request")
+		)
+		Survey
+		Survey_Report as "Survey Report"
+		Survey_Request as "Survey Request"
+	)
+	group by
+	(
+		Product ascending
+	)
+	conditional formatting
+	(
+		"Completed"
+		{
+			condition = (Event_Status == "Completed")
+			fields = [Event_Status]
+			format = "color:#19bc9f;"
+		}
+		"New Formatting"
+		{
+			condition = (Event_Status == "Open")
+			fields = [Event_Status]
+			format = "color:#f1c50e;"
+		}
+		"New Formatting"
+		{
+			condition = (Event_Status == "InProgress")
+			fields = [Event_Status]
+			format = "color:#bd588b;"
+		}
+		"New Formatting"
+		{
+			condition = (Event_Status == "Cancelled")
+			fields = [Event_Status]
+			format = "color:#e64d3b;"
+		}
+		"New Formatting"
+		{
+			condition = (Event_Status == "OnHold")
+			fields = [Event_Status]
+			format = "color:#ffffff;background-color:#818c8e;"
+		}
+	)
+}

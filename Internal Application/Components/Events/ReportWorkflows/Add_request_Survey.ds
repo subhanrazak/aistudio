@@ -1,0 +1,25 @@
+Add_request_Survey as "Add Request Survey"
+{
+	type = functions
+	form = Events
+	execution type = for each record
+
+	on start
+	{
+		actions
+		{
+			on click
+			(
+				if(input.Survey_Request == "Yet to request")
+				{
+					response = zoho.pushNotification(zoho.loginuserid,"New Request for Online Training Survey","Survey for the event - " + input.Event_Name,"All_Events",input.ID);
+					input.Survey_Request = "Requested";
+				}
+				else if(input.Survey_Request == "Requested")
+				{
+					openURL("#Form:Events?recLinkID=" + input.ID + "&viewLinkName=All_Events","popup window");
+				}
+			)
+		}
+	}
+}

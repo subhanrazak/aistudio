@@ -1,0 +1,44 @@
+Update_worklogs_status_ch as "Update worklogs - status change"
+{
+	type = form
+	form = Task_Updates
+	record event = on add or edit
+
+	on success
+	{
+		actions
+		{
+			custom deluge script
+			(
+				for each rec in input.Updates
+				{
+					fet_tasks = Multiple_tasks_subform[Assigned_To == input.Name || Reassigned_to == input.Name && Task_Name == rec.Task_Name.Task_Name];
+					if(rec.Status == "InProgress" && fet_tasks.Worklogs != null)
+					{
+						fet_tasks.Worklogs=fet_tasks.Worklogs + "\n" + "<li>" + zoho.currentdate + " - <span style='color:#FFA500;'>Status changed to In Progress</span> by - " + input.Name.Name + "</li>";
+					}
+					else if(rec.Status == "InProgress" && fet_tasks.Worklogs == null)
+					{
+						fet_tasks.Worklogs="<li>" + zoho.currentdate + " - <span style='color:#FFA500;'>Status changed to In Progress</span> by - " + input.Name.Name + "</li>";
+					}
+					if(rec.Status == "Completed" && fet_tasks.Worklogs != null)
+					{
+						fet_tasks.Worklogs=fet_tasks.Worklogs + "\n" + "<li>" + zoho.currentdate + " - <span style='color:#008000;'>Status changed to Completed</span> by - " + input.Name.Name + "</li>";
+					}
+					else if(rec.Status == "Completed" && fet_tasks.Worklogs == null)
+					{
+						fet_tasks.Worklogs="<li>" + zoho.currentdate + " - <span style='color:#008000;'>Status changed to Completed</span> by - " + input.Name.Name + "</li>";
+					}
+					if(rec.Status == "NoProgress" && fet_tasks.Worklogs != null)
+					{
+						fet_tasks.Worklogs=fet_tasks.Worklogs + "\n" + "<li>" + zoho.currentdate + " - <span style='color:#800080;'>Status changed to NoProgress</span> by - " + input.Name.Name + "</li>";
+					}
+					else if(rec.Status == "NoProgress" && fet_tasks.Worklogs == null)
+					{
+						fet_tasks.Worklogs="<li>" + zoho.currentdate + " - <span style='color:#800080;'>Status changed to NoProgress</span> by - " + input.Name.Name + "</li>";
+					}
+				}
+			)
+		}
+	}
+}

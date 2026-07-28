@@ -1,0 +1,36 @@
+Reduce_the_total_hours_fr as "Reduce the total hours from hours assigned"
+{
+	type = form
+	form = Task_Updates
+	record event = on edit
+
+	on success
+	{
+		actions
+		{
+			custom deluge script
+			(
+				for each rec in input.Updates
+				{
+					if(rec.Hours_worked == null)
+					{
+						rec.Hours_worked=0;
+					}
+					// reduce the remaining hours
+					fet_eventtask = Event_Tasks[ID != null];
+					for each rec1 in fet_eventtask
+					{
+						for each ele in rec1.Tasks
+						{
+							if(ele.Task_Name == rec.Task_Name.Task_Name && ele.Assigned_To == input.Name || ele.Reassigned_to == input.Name)
+							{
+								rec1.Remaining_Hours=rec.Remaining_Hours - rec.Hours_worked;
+								rec.Remaining_Hours=rec1.Remaining_Hours;
+							}
+						}
+					}
+				}
+			)
+		}
+	}
+}
