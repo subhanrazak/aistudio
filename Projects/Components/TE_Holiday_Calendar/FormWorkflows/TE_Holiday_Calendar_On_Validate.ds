@@ -1,0 +1,52 @@
+TE_Holiday_Calendar_On_Validate as "TE Holiday Calendar On Validate"
+{
+    type = form
+    form = TE_Holiday_Calendar
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Country_Code == null || input.Country_Code.trim() == "")
+                {
+                    alert(Country_Code, "Country Code is required.");
+                    cancel submit;
+                }
+                if(input.Holiday_Date == null)
+                {
+                    alert(Holiday_Date, "Holiday Date is required.");
+                    cancel submit;
+                }
+                if(input.Active == true && input.Country_Code != null && input.Holiday_Date != null)
+                {
+                    regionValue = "";
+                    if(input.Region_State != null)
+                    {
+                        regionValue = input.Region_State.trim().toLowerCase();
+                    }
+                    duplicateCount = 0;
+                    for each holidayRecord in TE_Holiday_Calendar[ID != input.ID && Active == true && Holiday_Date == input.Holiday_Date && Country_Code == input.Country_Code.trim()]
+                    {
+                        existingRegion = "";
+                        if(holidayRecord.Region_State != null)
+                        {
+                            existingRegion = holidayRecord.Region_State.trim().toLowerCase();
+                        }
+                        if(existingRegion == regionValue)
+                        {
+                            duplicateCount = duplicateCount + 1;
+                        }
+                    }
+                    if(duplicateCount > 0)
+                    {
+                        alert(Holiday_Date, "An active holiday already exists for this date, country, and region/state.");
+                        cancel submit;
+                    }
+                }
+            )
+        }
+    }
+}

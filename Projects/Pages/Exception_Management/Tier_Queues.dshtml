@@ -1,0 +1,57 @@
+<%
+  pendingStatuses = {"Pending Manager Approval","Pending Department Head Approval","Pending Compliance Approval","Pending CFO Approval","Escalated"};
+  managerRows = TE_Exceptions[(Status == "Pending Manager Approval" || Status == "Escalated") && Excess_Amount <= 500] sort by SLA_Due_Date asc;
+  deptRows = TE_Exceptions[(Status == "Pending Department Head Approval" || Status == "Escalated") && Excess_Amount > 500 && Excess_Amount <= 2000] sort by SLA_Due_Date asc;
+  complianceRows = TE_Exceptions[(Status == "Pending Compliance Approval" || Status == "Escalated") && Excess_Amount > 2000 && Excess_Amount <= 5000] sort by SLA_Due_Date asc;
+  cfoRows = TE_Exceptions[(Status == "Pending CFO Approval" || Status == "Escalated") && Excess_Amount > 5000] sort by SLA_Due_Date asc;
+  tierNames = {"Manager <=500","Department 501-2000","Compliance 2001-5000","CFO >5000"};
+%>
+<style>
+.em-tier-wrap{padding:18px;background:#F3F3F4;box-sizing:border-box}.em-section-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}.em-section-title h2{margin:0;font-size:20px;color:var(--zcs_primary_text_color);line-height:1.25}.em-section-title p{margin:4px 0 0;font-size:13px;color:var(--zcs_secondary_text_color)}.em-tiers{display:grid;grid-template-columns:repeat(4,minmax(220px,1fr));gap:14px}.em-tier{background:#fff;border:1px solid var(--zcs_tertiary_border_color);border-radius:14px;overflow:hidden}.em-tier-head{padding:14px 16px;border-bottom:1px solid var(--zcs_tertiary_border_color);display:flex;align-items:center;justify-content:space-between}.em-tier-title{font-weight:700;color:var(--zcs_primary_text_color);font-size:14px}.em-tier-count{display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:26px;border-radius:20px;background:var(--zcs_component_hover_color);color:var(--zcs_brand_color);font-size:13px;font-weight:700}.em-tier-body{padding:10px;display:flex;flex-direction:column;gap:10px;max-height:340px;overflow:auto}.em-exception{border:1px solid var(--zcs_tertiary_border_color);border-radius:10px;padding:11px;background:#fff}.em-exception:hover{background:#F9FAFE}.em-exception a{color:var(--zcs_brand_color);text-decoration:none;font-weight:700;font-size:13px}.em-meta{display:flex;justify-content:space-between;gap:8px;margin-top:8px;font-size:12px;color:var(--zcs_secondary_text_color)}.em-badge{display:inline-flex;align-items:center;gap:6px;border-radius:4px;border:1px solid;padding:2px 8px;font-size:12px;margin-top:8px}.em-red{background:#FDE3E6;border-color:#FE455D;color:#FE455D}.em-yellow{background:#FCF4E6;border-color:#FAAE13;color:#b8770d}.em-blue{background:#E8EFFF;border-color:#2A6FFC;color:#2A6FFC}.em-empty{padding:18px;text-align:center;color:var(--zcs_secondary_text_color);font-size:13px}@media(max-width:1200px){.em-tiers{grid-template-columns:repeat(2,minmax(220px,1fr))}}@media(max-width:700px){.em-tiers{grid-template-columns:1fr}}
+</style>
+<div class="em-tier-wrap">
+  <div class="em-section-title">
+    <div>
+      <h2>Tier queue panels</h2>
+      <p>Amounts route to Manager, Department, Compliance, or CFO bands. Portal managers see their routed records through report permissions and the approver email filter in reports/workflows.</p>
+    </div>
+  </div>
+  <div class="em-tiers">
+    <div class="em-tier">
+      <div class="em-tier-head"><span class="em-tier-title">Manager &lt;=500</span><span class="em-tier-count"><%=managerRows.count(ID)%></span></div>
+      <div class="em-tier-body">
+        <% if(managerRows.count(ID) == 0) { %><div class="em-empty">No manager exceptions pending.</div><% } %>
+        <% rowCount = 0; for each ex in managerRows { if(rowCount < 6) { badgeClass = "em-blue"; badgeIcon = "loader-dots-06"; if(ex.SLA_Due_Date != null && ex.SLA_Due_Date < zoho.currentdate){ badgeClass = "em-red"; badgeIcon = "ui-2-time"; } else if(ex.SLA_Due_Date != null && ex.SLA_Due_Date <= zoho.currentdate.addDay(1)){ badgeClass = "em-yellow"; badgeIcon = "ui-2-alert"; } %>
+          <div class="em-exception"><a href="#Report:Pending_Exceptions?Exception_Number=<%=encodeURL(ex.Exception_Number)%>&amp;zc_LoadIn=dialog"><%=ex.Exception_Number%></a><div class="em-meta"><span>$<%=ifnull(ex.Excess_Amount,0)%></span><span><%=ifnull(ex.SLA_Due_Date,"No SLA")%></span></div><div class="em-badge <%=badgeClass%>"><i class="zc-li-outline <%=badgeIcon%>"></i><span><%=ex.Status%></span></div></div>
+        <% } rowCount = rowCount + 1; } %>
+      </div>
+    </div>
+    <div class="em-tier">
+      <div class="em-tier-head"><span class="em-tier-title">Department 501-2000</span><span class="em-tier-count"><%=deptRows.count(ID)%></span></div>
+      <div class="em-tier-body">
+        <% if(deptRows.count(ID) == 0) { %><div class="em-empty">No department exceptions pending.</div><% } %>
+        <% rowCount = 0; for each ex in deptRows { if(rowCount < 6) { badgeClass = "em-blue"; badgeIcon = "loader-dots-06"; if(ex.SLA_Due_Date != null && ex.SLA_Due_Date < zoho.currentdate){ badgeClass = "em-red"; badgeIcon = "ui-2-time"; } else if(ex.SLA_Due_Date != null && ex.SLA_Due_Date <= zoho.currentdate.addDay(1)){ badgeClass = "em-yellow"; badgeIcon = "ui-2-alert"; } %>
+          <div class="em-exception"><a href="#Report:Pending_Exceptions?Exception_Number=<%=encodeURL(ex.Exception_Number)%>&amp;zc_LoadIn=dialog"><%=ex.Exception_Number%></a><div class="em-meta"><span>$<%=ifnull(ex.Excess_Amount,0)%></span><span><%=ifnull(ex.SLA_Due_Date,"No SLA")%></span></div><div class="em-badge <%=badgeClass%>"><i class="zc-li-outline <%=badgeIcon%>"></i><span><%=ex.Status%></span></div></div>
+        <% } rowCount = rowCount + 1; } %>
+      </div>
+    </div>
+    <div class="em-tier">
+      <div class="em-tier-head"><span class="em-tier-title">Compliance 2001-5000</span><span class="em-tier-count"><%=complianceRows.count(ID)%></span></div>
+      <div class="em-tier-body">
+        <% if(complianceRows.count(ID) == 0) { %><div class="em-empty">No compliance exceptions pending.</div><% } %>
+        <% rowCount = 0; for each ex in complianceRows { if(rowCount < 6) { badgeClass = "em-blue"; badgeIcon = "loader-dots-06"; if(ex.SLA_Due_Date != null && ex.SLA_Due_Date < zoho.currentdate){ badgeClass = "em-red"; badgeIcon = "ui-2-time"; } else if(ex.SLA_Due_Date != null && ex.SLA_Due_Date <= zoho.currentdate.addDay(1)){ badgeClass = "em-yellow"; badgeIcon = "ui-2-alert"; } %>
+          <div class="em-exception"><a href="#Report:Pending_Exceptions?Exception_Number=<%=encodeURL(ex.Exception_Number)%>&amp;zc_LoadIn=dialog"><%=ex.Exception_Number%></a><div class="em-meta"><span>$<%=ifnull(ex.Excess_Amount,0)%></span><span><%=ifnull(ex.SLA_Due_Date,"No SLA")%></span></div><div class="em-badge <%=badgeClass%>"><i class="zc-li-outline <%=badgeIcon%>"></i><span><%=ex.Status%></span></div></div>
+        <% } rowCount = rowCount + 1; } %>
+      </div>
+    </div>
+    <div class="em-tier">
+      <div class="em-tier-head"><span class="em-tier-title">CFO &gt;5000</span><span class="em-tier-count"><%=cfoRows.count(ID)%></span></div>
+      <div class="em-tier-body">
+        <% if(cfoRows.count(ID) == 0) { %><div class="em-empty">No CFO exceptions pending.</div><% } %>
+        <% rowCount = 0; for each ex in cfoRows { if(rowCount < 6) { badgeClass = "em-blue"; badgeIcon = "loader-dots-06"; if(ex.SLA_Due_Date != null && ex.SLA_Due_Date < zoho.currentdate){ badgeClass = "em-red"; badgeIcon = "ui-2-time"; } else if(ex.SLA_Due_Date != null && ex.SLA_Due_Date <= zoho.currentdate.addDay(1)){ badgeClass = "em-yellow"; badgeIcon = "ui-2-alert"; } %>
+          <div class="em-exception"><a href="#Report:Pending_Exceptions?Exception_Number=<%=encodeURL(ex.Exception_Number)%>&amp;zc_LoadIn=dialog"><%=ex.Exception_Number%></a><div class="em-meta"><span>$<%=ifnull(ex.Excess_Amount,0)%></span><span><%=ifnull(ex.SLA_Due_Date,"No SLA")%></span></div><div class="em-badge <%=badgeClass%>"><i class="zc-li-outline <%=badgeIcon%>"></i><span><%=ex.Status%></span></div></div>
+        <% } rowCount = rowCount + 1; } %>
+      </div>
+    </div>
+  </div>
+</div>

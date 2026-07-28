@@ -1,0 +1,46 @@
+Reject_Claim as "Reject Claim"
+{
+    type = functions
+    form = TE_Claims
+    execution type = for each record
+
+    on start
+    {
+        actions
+        {
+            on click
+            (
+                if(input.Manager_Comments == null || input.Manager_Comments.trim() == "")
+                {
+                    info "Manager Comments are required before rejecting Trip " + input.Trip_Number + ".";
+                }
+                else
+                {
+                    input.Manager_Decision = "Reject";
+                    input.Claim_Status = "Rejected by Manager";
+                    try
+                    {
+                        insert into TE_Audit_Log
+                        [
+                            Event_Key = "REJECT-" + input.ID.toText() + "-" + zoho.currenttime.toText("yyyyMMddHHmmss")
+                            Event_Timestamp = zoho.currenttime
+                            Actor_Email = zoho.loginuserid
+                            Actor_Profile = zoho.loginuser
+                            Entity_Type = "Claim"
+                            Entity_Record_ID = input.Trip_Number
+                            Action = "Manager rejected claim"
+                            After_Value = "Decision=Reject; Comments=" + input.Manager_Comments
+                            IP_Address = zoho.ipaddress
+                            Severity = "Critical"
+                            Immutable_Flag = true
+                        ];
+                    }
+                    catch(auditError)
+                    {
+                        info "Reject-claim audit log write skipped: " + auditError.message;
+                    }
+                }
+            )
+        }
+    }
+}

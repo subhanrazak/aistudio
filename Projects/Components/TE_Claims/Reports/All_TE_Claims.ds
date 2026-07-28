@@ -1,0 +1,49 @@
+default list All_TE_Claims
+{
+    displayName = "All T&E Claims"
+    show all rows from TE_Claims
+    (
+        Trip_Number
+        Employee_Name
+        Employee_ID
+        Department
+        Trip_Start_Date
+        Trip_End_Date
+        Destination_City
+        Destination_Country
+        Submission_Date
+        Total_Amount
+        Currency
+        Claim_Status
+        Compliance_Rating
+        Critical_Violation_Count
+        Warning_Count
+        custom action "Recheck Compliance"
+        (
+            workflow = Recheck_Compliance
+            show action for each record = true
+            column header = "Actions"
+            success message = "Compliance recheck queued."
+            condition = (Claim_Status != "SAP Approved" && Claim_Status != "SAP Rejected")
+        )
+        custom action "Mark Cleared"
+        (
+            workflow = Mark_Cleared
+            show action for each record = true
+            column header = "Actions"
+            success message = "Claim marked cleared for approval."
+            condition = (Critical_Violation_Count == 0 && (Compliance_Rating == "Green" || Claim_Status == "Compliance Cleared - Green" || Claim_Status == "Exception Approved"))
+        )
+    )
+    filters
+    (
+        Claim_Status
+        Compliance_Rating
+        Department
+        Destination_Country
+    )
+    sort by
+    (
+        Submission_Date descending
+    )
+}

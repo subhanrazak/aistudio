@@ -1,0 +1,97 @@
+Request_Exception as "Request Exception"
+{
+    type = functions
+    form = TE_Compliance_Results
+    execution type = for each record
+
+    on start
+    {
+        actions
+        {
+            on click
+            (
+                try
+                {
+                    if(input.Pass_Fail == "Fail" && (input.Severity == "Critical" || input.Severity == "Warning") && input.Exception_Required == true && input.Exception_Status != "Approved")
+                    {
+                        requesterEmail = zoho.loginuserid;
+                        claimId = input.Claim;
+                        lineItemId = input.Line_Item;
+                        policyRuleId = input.Policy_Rule;
+                        try
+                        {
+                            claimRec = TE_Claims[ID == input.Claim];
+                            if(claimRec.Employee != null)
+                            {
+                                empRec = TE_Employees[ID == claimRec.Employee];
+                                if(empRec.Login_Email != null && empRec.Login_Email != "")
+                                {
+                                    requesterEmail = empRec.Login_Email;
+                                }
+                            }
+                        }
+                        catch(requesterError)
+                        {
+                            info "Requester email lookup skipped: " + requesterError.message;
+                        }
+                        try
+                        {
+                            exceptionId = insert into TE_Exceptions
+                            [
+                                Exception_Number = "EXC-" + input.ID + "-" + zoho.currenttime
+                                Claim = claimId
+                                Line_Item = lineItemId
+                                Compliance_Result = input.ID
+                                Violated_Rule = policyRuleId
+                                Policy_Limit = input.Policy_Limit
+                                Actual_Amount = input.Actual_Amount
+                                Excess_Amount = input.Excess_Amount
+                                Currency = input.Currency
+                                Requester_Email = requesterEmail
+                                Status = "Draft"
+                                Audit_Notes = "Created from compliance result " + input.Result_Key
+                            ];
+                        }
+                        catch(exceptionCreateError)
+                        {
+                            exceptionId = 0;
+                            info "Draft exception create deferred until TE_Exceptions is available and required justification/routing fields are supplied: " + exceptionCreateError.message;
+                        }
+                        input.Exception_Status = "Pending";
+                        try
+                        {
+                            insert into TE_Audit_Log
+                            [
+                                Event_Key = "EXCREQ-" + input.ID + "-" + zoho.currenttime
+                                Event_Timestamp = zoho.currenttime
+                                Actor_Email = zoho.loginuserid
+                                Actor_Profile = zoho.loginuser
+                                Entity_Type = "Exception"
+                                Entity_Record_ID = exceptionId
+                                Action = "Exception requested from compliance result"
+                                Before_Value = "Compliance_Result=" + input.Result_Key
+                                After_Value = "Exception_ID=" + exceptionId + "; Status=Pending Draft"
+                                IP_Address = zoho.ipaddress
+                                Severity = input.Severity
+                                Immutable_Flag = true
+                            ];
+                        }
+                        catch(auditError)
+                        {
+                            info "Exception request audit log write skipped: " + auditError.message;
+                        }
+                        openUrl("#Form:TE_Exceptions?Compliance_Result=" + input.ID + "&Claim=" + claimId + "&Line_Item=" + lineItemId + "&Violated_Rule=" + policyRuleId + "&Policy_Limit=" + input.Policy_Limit + "&Actual_Amount=" + input.Actual_Amount + "&Excess_Amount=" + input.Excess_Amount + "&Currency=" + input.Currency + "&Requester_Email=" + requesterEmail, "same window");
+                    }
+                    else
+                    {
+                        info "Request Exception action skipped because the record is not an unresolved failed warning/critical result requiring exception.";
+                    }
+                }
+                catch(e)
+                {
+                    info "Request Exception failed: " + e.message;
+                }
+            )
+        }
+    }
+}

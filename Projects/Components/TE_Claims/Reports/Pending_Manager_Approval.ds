@@ -1,0 +1,60 @@
+list Pending_Manager_Approval
+{
+    displayName = "Pending Manager Approval"
+    show all rows from TE_Claims [Claim_Status == "Submitted" || Claim_Status == "Compliance Cleared - Warnings" || Claim_Status == "Compliance Cleared - Green" || Claim_Status == "Exception Approved"]
+    (
+        Trip_Number
+        Employee_Name
+        Destination_City
+        Total_Amount
+        Compliance_Rating
+        Critical_Violation_Count
+        Warning_Count
+        Approver_Email
+        Manager_Acknowledgement
+        Claim_Status
+        custom action "Recheck Compliance"
+        (
+            workflow = Recheck_Compliance
+            show action for each record = true
+            column header = "Actions"
+            success message = "Compliance recheck queued."
+        )
+        custom action "Approve With Warnings"
+        (
+            workflow = Approve_With_Warnings
+            show action for each record = true
+            column header = "Actions"
+            success message = "Claim approved with warning acknowledgement."
+            condition = (Critical_Violation_Count == 0 && (Warning_Count > 0 || Compliance_Rating == "Yellow" || Claim_Status == "Compliance Cleared - Warnings" || Claim_Status == "Exception Approved"))
+        )
+        custom action "Mark Cleared"
+        (
+            workflow = Mark_Cleared
+            show action for each record = true
+            column header = "Actions"
+            success message = "Claim marked cleared for approval."
+            condition = (Critical_Violation_Count == 0 && (Compliance_Rating == "Green" || Claim_Status == "Compliance Cleared - Green" || Claim_Status == "Exception Approved"))
+        )
+        custom action "Return to Claimant"
+        (
+            workflow = Return_To_Claimant
+            show action for each record = true
+            column header = "Actions"
+            success message = "Claim returned to claimant when comments are present."
+        )
+        custom action "Reject Claim"
+        (
+            workflow = Reject_Claim
+            show action for each record = true
+            column header = "Actions"
+            success message = "Claim rejected when comments are present."
+            confirmation before execution
+            (
+                message for individual record = "Reject this travel claim?"
+                confirm button text = "Reject"
+                cancel button text = "Cancel"
+            )
+        )
+    )
+}

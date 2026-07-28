@@ -1,0 +1,534 @@
+TE_Line_Items_On_Success as "TE Line Items On Success"
+{
+    type = form
+    form = TE_Line_Items
+    record event = on add or edit
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                evaluationTime = zoho.currenttime;
+                ruleFlags = "";
+                highestSeverity = "Info";
+                requiresException = false;
+                claimCurrency = input.Currency;
+                employeeGradeBand = "All";
+                claimDestinationCity = input.Destination_City;
+                claimDestinationCountry = "USA";
+                claimEmployee = null;
+                tripNumberForAudit = input.Trip_Number_Text;
+                try
+                {
+                    claimRec = TE_Claims[ID == input.Claim];
+                    if(tripNumberForAudit == null || tripNumberForAudit == "")
+                    {
+                        tripNumberForAudit = claimRec.Trip_Number;
+                    }
+                    if(input.Trip_Number_Text == null || input.Trip_Number_Text == "")
+                    {
+                        input.Trip_Number_Text = claimRec.Trip_Number;
+                    }
+                    if(input.Employee_ID == null || input.Employee_ID == "")
+                    {
+                        input.Employee_ID = claimRec.Employee_ID;
+                    }
+                    if(input.Currency == null || input.Currency == "")
+                    {
+                        input.Currency = claimRec.Currency;
+                        claimCurrency = claimRec.Currency;
+                    }
+                    employeeGradeBand = claimRec.Employee_Grade_Band;
+                    if(employeeGradeBand == null || employeeGradeBand == "")
+                    {
+                        employeeGradeBand = "All";
+                    }
+                    if(claimRec.Destination_City != null && claimRec.Destination_City != "")
+                    {
+                        claimDestinationCity = claimRec.Destination_City;
+                    }
+                    if(claimRec.Destination_Country != null && claimRec.Destination_Country != "")
+                    {
+                        claimDestinationCountry = claimRec.Destination_Country;
+                    }
+                    claimEmployee = claimRec.Employee;
+                }
+                catch(claimLookupError)
+                {
+                    info "Line item claim context lookup skipped: " + claimLookupError.message;
+                }
+                if(claimCurrency == null || claimCurrency == "")
+                {
+                    claimCurrency = "USD";
+                }
+                if(input.Expense_Category == "Entertainment" && input.Amount != null && input.Attendee_Count != null && input.Attendee_Count > 0)
+                {
+                    input.Per_Person_Amount = (input.Amount / input.Attendee_Count).round(2);
+                }
+                if(input.Expense_Category == "Mileage" && (input.Expected_Distance_KM == null || input.Expected_Distance_KM <= 0) && input.Origin_City != null && input.Origin_City.trim() != "" && input.Destination_City != null && input.Destination_City.trim() != "")
+                {
+                    for each routeLookup in TE_Distance_Lookups[Active == true && Origin_City == input.Origin_City.trim() && Destination_City == input.Destination_City.trim() && Effective_Date <= input.Expense_Date] sort by Effective_Date desc range from 0 to 0
+                    {
+                        input.Expected_Distance_KM = routeLookup.Expected_Distance_KM;
+                    }
+                }
+                activeRules = TE_Policy_Rules[Active == true && Effective_Date <= input.Expense_Date && (Retired_Date == null || Retired_Date >= input.Expense_Date) && (Applies_To_Expense_Category == "Any" || Applies_To_Expense_Category == input.Expense_Category || Applies_To_Expense_Category == null || Applies_To_Expense_Category == "")];
+                for each ruleRec in activeRules
+                {
+                    passFail = "Not Applicable";
+                    severity = "Info";
+                    policyLimit = 0;
+                    actualAmount = 0;
+                    excessAmount = 0;
+                    violationDescription = "";
+                    recommendedAction = "No action required.";
+                    if(ruleRec.Default_Severity != null && ruleRec.Default_Severity != "")
+                    {
+                        severity = ruleRec.Default_Severity;
+                    }
+                    if(ruleRec.Rule_Category == "Hotel Rate Limit" && input.Expense_Category == "Hotel")
+                    {
+                        actualAmount = input.Amount;
+                        for each hotelRate in TE_Rate_Tables[Active == true && City_Location == claimDestinationCity && (Grade_Band == employeeGradeBand || Grade_Band == "All") && Effective_Date <= input.Expense_Date && (Expiry_Date == null || Expiry_Date >= input.Expense_Date)] sort by Effective_Date desc range from 0 to 0
+                        {
+                            policyLimit = hotelRate.Hotel_Max;
+                        }
+                        if(policyLimit == 0 && ruleRec.Amount_Limit_USD != null)
+                        {
+                            policyLimit = ruleRec.Amount_Limit_USD;
+                        }
+                        if(policyLimit > 0)
+                        {
+                            if(actualAmount > policyLimit)
+                            {
+                                passFail = "Fail";
+                                excessAmount = actualAmount - policyLimit;
+                                violationDescription = "Hotel amount exceeds configured hotel maximum by " + excessAmount.toText() + " " + claimCurrency + ".";
+                                recommendedAction = "Review hotel rate overage and request exception if business-justified.";
+                            }
+                            else
+                            {
+                                passFail = "Pass";
+                                violationDescription = "Hotel amount is within the configured hotel maximum.";
+                            }
+                        }
+                    }
+                    else if(ruleRec.Rule_Category == "Per Diem / Meals" && input.Expense_Category == "Meals")
+                    {
+                        actualAmount = input.Amount;
+                        for each mealRate in TE_Rate_Tables[Active == true && City_Location == claimDestinationCity && (Grade_Band == employeeGradeBand || Grade_Band == "All") && Effective_Date <= input.Expense_Date && (Expiry_Date == null || Expiry_Date >= input.Expense_Date)] sort by Effective_Date desc range from 0 to 0
+                        {
+                            policyLimit = mealRate.Daily_Per_Diem_Meals;
+                        }
+                        if(policyLimit == 0 && ruleRec.Amount_Limit_USD != null)
+                        {
+                            policyLimit = ruleRec.Amount_Limit_USD;
+                        }
+                        if(policyLimit > 0)
+                        {
+                            if(actualAmount > policyLimit)
+                            {
+                                passFail = "Fail";
+                                excessAmount = actualAmount - policyLimit;
+                                violationDescription = "Meal amount exceeds configured per diem by " + excessAmount.toText() + " " + claimCurrency + ".";
+                                recommendedAction = "Review meal per diem overage and request exception if needed.";
+                            }
+                            else
+                            {
+                                passFail = "Pass";
+                                violationDescription = "Meal amount is within configured per diem.";
+                            }
+                        }
+                    }
+                    else if(ruleRec.Rule_Category == "Airfare Class" && input.Expense_Category == "Airfare")
+                    {
+                        actualAmount = input.Amount;
+                        if(input.Flight_Class == "Business" || input.Flight_Class == "First")
+                        {
+                            passFail = "Fail";
+                            violationDescription = "Airfare class " + input.Flight_Class + " requires policy review.";
+                            recommendedAction = "Attach flight-class business justification or request exception.";
+                            requiresException = true;
+                        }
+                        else
+                        {
+                            passFail = "Pass";
+                            violationDescription = "Airfare class is policy-compliant.";
+                        }
+                    }
+                    else if(ruleRec.Rule_Category == "Advance Booking" && input.Expense_Category == "Airfare")
+                    {
+                        actualAmount = input.Amount;
+                        policyLimit = ruleRec.Days_Threshold;
+                        if(policyLimit == null || policyLimit == 0)
+                        {
+                            policyLimit = 14;
+                        }
+                        if(input.Booking_Date != null && input.Departure_Date != null)
+                        {
+                            daysBookedAhead = input.Booking_Date.daysBetween(input.Departure_Date);
+                            if(daysBookedAhead < policyLimit)
+                            {
+                                passFail = "Fail";
+                                violationDescription = "Airfare was booked " + daysBookedAhead.toText() + " days before departure; threshold is " + policyLimit.toText() + " days.";
+                                recommendedAction = "Review late booking and capture reason for exception.";
+                            }
+                            else
+                            {
+                                passFail = "Pass";
+                                violationDescription = "Airfare meets advance booking threshold.";
+                            }
+                        }
+                    }
+                    else if(ruleRec.Rule_Category == "Receipt Requirement")
+                    {
+                        actualAmount = input.Amount;
+                        policyLimit = ruleRec.Receipt_Minimum_Amount;
+                        if(policyLimit == null || policyLimit <= 0)
+                        {
+                            policyLimit = 25;
+                        }
+                        if(input.Amount != null && input.Amount > policyLimit)
+                        {
+                            if(input.Receipt_Attached == false)
+                            {
+                                passFail = "Fail";
+                                excessAmount = input.Amount - policyLimit;
+                                violationDescription = "Receipt is missing for amount above " + policyLimit.toText() + " " + claimCurrency + ".";
+                                recommendedAction = "Attach receipt or request exception.";
+                            }
+                            else
+                            {
+                                passFail = "Pass";
+                                violationDescription = "Receipt is attached for amount above threshold.";
+                            }
+                        }
+                        else
+                        {
+                            passFail = "Pass";
+                            violationDescription = "Receipt not required for this amount.";
+                        }
+                    }
+                    else if(ruleRec.Rule_Category == "Entertainment Documentation" && input.Expense_Category == "Entertainment")
+                    {
+                        actualAmount = input.Amount;
+                        policyLimit = 100;
+                        if(ruleRec.Amount_Limit_USD != null && ruleRec.Amount_Limit_USD > 0)
+                        {
+                            policyLimit = ruleRec.Amount_Limit_USD;
+                        }
+                        perPersonCheck = input.Per_Person_Amount;
+                        if((perPersonCheck == null || perPersonCheck == 0) && input.Amount != null && input.Attendee_Count != null && input.Attendee_Count > 0)
+                        {
+                            perPersonCheck = (input.Amount / input.Attendee_Count).round(2);
+                            input.Per_Person_Amount = perPersonCheck;
+                        }
+                        if(perPersonCheck != null && perPersonCheck > policyLimit && (input.Attendee_Names == null || input.Attendee_Names.trim() == "" || input.Attendee_Companies == null || input.Attendee_Companies.trim() == "" || input.Business_Purpose == null || input.Business_Purpose.trim() == "" || input.Attendee_Count == null || input.Attendee_Count <= 0))
+                        {
+                            passFail = "Fail";
+                            excessAmount = perPersonCheck - policyLimit;
+                            violationDescription = "Entertainment over per-person documentation threshold is missing attendee/company/purpose details.";
+                            recommendedAction = "Complete entertainment documentation before approval.";
+                        }
+                        else
+                        {
+                            passFail = "Pass";
+                            violationDescription = "Entertainment documentation is complete for the threshold tested.";
+                        }
+                    }
+                    else if(ruleRec.Rule_Category == "Entertainment Budget Cap" && input.Expense_Category == "Entertainment")
+                    {
+                        actualAmount = input.Amount;
+                        budgetCodeToUse = input.Entertainment_Budget_Code;
+                        if(budgetCodeToUse == null || budgetCodeToUse == "")
+                        {
+                            budgetCodeToUse = input.Employee_ID + "-" + input.Expense_Date.getYear().toText();
+                        }
+                        for each budgetRec in TE_Entertainment_Budgets[Budget_Code == budgetCodeToUse && Status != "Closed"] sort by Budget_Year desc range from 0 to 0
+                        {
+                            policyLimit = budgetRec.Annual_Budget - budgetRec.Used_Amount;
+                        }
+                        if(policyLimit > 0)
+                        {
+                            if(input.Amount > policyLimit)
+                            {
+                                passFail = "Fail";
+                                excessAmount = input.Amount - policyLimit;
+                                violationDescription = "Entertainment line exceeds remaining budget by " + excessAmount.toText() + " " + claimCurrency + ".";
+                                recommendedAction = "Request entertainment budget exception or reduce expense.";
+                            }
+                            else
+                            {
+                                passFail = "Pass";
+                                violationDescription = "Entertainment line is within remaining budget.";
+                            }
+                        }
+                    }
+                    else if(ruleRec.Rule_Category == "Duplicate Expense")
+                    {
+                        actualAmount = input.Amount;
+                        duplicateCount = TE_Line_Items[ID != input.ID && Employee_ID == input.Employee_ID && Expense_Date == input.Expense_Date && Expense_Category == input.Expense_Category && Amount == input.Amount].count(ID);
+                        if(duplicateCount > 0)
+                        {
+                            passFail = "Fail";
+                            severity = "Critical";
+                            violationDescription = "Potential duplicate expense detected for same employee, date, category, and amount.";
+                            recommendedAction = "Investigate duplicate before claim approval.";
+                        }
+                        else
+                        {
+                            passFail = "Pass";
+                            violationDescription = "No duplicate expense pattern found.";
+                        }
+                    }
+                    else if(ruleRec.Rule_Category == "Weekend/Holiday Travel")
+                    {
+                        actualAmount = input.Amount;
+                        dayOfWeekValue = input.Expense_Date.getDayOfWeek();
+                        holidayCount = TE_Holiday_Calendar[Active == true && Holiday_Date == input.Expense_Date && Country_Code == claimDestinationCountry && Business_Day_Flag == false].count(ID);
+                        if(dayOfWeekValue == 1 || dayOfWeekValue == 7 || holidayCount > 0)
+                        {
+                            passFail = "Fail";
+                            violationDescription = "Expense date falls on a weekend or maintained holiday.";
+                            recommendedAction = "Confirm business necessity for weekend/holiday travel.";
+                        }
+                        else
+                        {
+                            passFail = "Pass";
+                            violationDescription = "Expense date is not a maintained weekend/holiday exception.";
+                        }
+                    }
+                    else if(ruleRec.Rule_Category == "Mileage Reasonableness" && input.Expense_Category == "Mileage")
+                    {
+                        actualAmount = input.Claimed_Mileage_KM;
+                        tolerancePercent = ruleRec.Warning_Threshold_Percent;
+                        if(tolerancePercent == null || tolerancePercent == 0)
+                        {
+                            tolerancePercent = 20;
+                        }
+                        if(input.Expected_Distance_KM != null && input.Expected_Distance_KM > 0 && input.Claimed_Mileage_KM != null)
+                        {
+                            policyLimit = (input.Expected_Distance_KM * (1 + tolerancePercent / 100)).round(2);
+                            if(input.Claimed_Mileage_KM > policyLimit)
+                            {
+                                passFail = "Fail";
+                                excessAmount = input.Claimed_Mileage_KM - policyLimit;
+                                violationDescription = "Claimed mileage exceeds expected route tolerance by " + excessAmount.toText() + " KM.";
+                                recommendedAction = "Review route explanation and exception requirement.";
+                            }
+                            else
+                            {
+                                passFail = "Pass";
+                                violationDescription = "Claimed mileage is within expected route tolerance.";
+                            }
+                        }
+                    }
+                    if(passFail != "Not Applicable")
+                    {
+                        if(passFail == "Fail")
+                        {
+                            ruleFlags = ruleFlags + ruleRec.Rule_Category + ": " + violationDescription + " ";
+                            if(severity == "Critical")
+                            {
+                                highestSeverity = "Critical";
+                            }
+                            else if(highestSeverity != "Critical" && severity == "Warning")
+                            {
+                                highestSeverity = "Warning";
+                            }
+                            requiresException = true;
+                        }
+                        exceptionStatusValue = "Not Required";
+                        if(passFail == "Fail")
+                        {
+                            exceptionStatusValue = "Pending";
+                        }
+                        resultKeyValue = input.Line_Item_Key + "-" + ruleRec.Rule_ID;
+                        existingResult = TE_Compliance_Results[Line_Item == input.ID && Rule_Category == ruleRec.Rule_Category];
+                        if(existingResult.count(ID) > 0)
+                        {
+                            existingResult.Result_Key = resultKeyValue;
+                            existingResult.Claim = input.Claim;
+                            existingResult.Line_Item = input.ID;
+                            existingResult.Policy_Rule = ruleRec.ID;
+                            existingResult.Pass_Fail = passFail;
+                            existingResult.Severity = severity;
+                            existingResult.Policy_Limit = policyLimit;
+                            existingResult.Actual_Amount = actualAmount;
+                            existingResult.Excess_Amount = excessAmount;
+                            existingResult.Currency = claimCurrency;
+                            existingResult.Violation_Description = violationDescription;
+                            existingResult.Rule_Reference = ruleRec.Policy_Reference;
+                            existingResult.Recommended_Action = recommendedAction;
+                            existingResult.Exception_Required = (passFail == "Fail");
+                            if(existingResult.Exception_Status != "Approved")
+                            {
+                                existingResult.Exception_Status = exceptionStatusValue;
+                            }
+                            existingResult.Checked_On = evaluationTime;
+                            existingResult.Checked_By = "System";
+                        }
+                        else
+                        {
+                            insert into TE_Compliance_Results
+                            [
+                                Result_Key = resultKeyValue
+                                Claim = input.Claim
+                                Line_Item = input.ID
+                                Policy_Rule = ruleRec.ID
+                                Rule_Category = ruleRec.Rule_Category
+                                Pass_Fail = passFail
+                                Severity = severity
+                                Policy_Limit = policyLimit
+                                Actual_Amount = actualAmount
+                                Excess_Amount = excessAmount
+                                Currency = claimCurrency
+                                Violation_Description = violationDescription
+                                Rule_Reference = ruleRec.Policy_Reference
+                                Recommended_Action = recommendedAction
+                                Exception_Required = (passFail == "Fail")
+                                Exception_Status = exceptionStatusValue
+                                Checked_On = evaluationTime
+                                Checked_By = "System"
+                            ];
+                        }
+                    }
+                }
+                duplicateResultCount = TE_Compliance_Results[Line_Item == input.ID && Pass_Fail == "Fail" && Rule_Category == "Duplicate Expense"].count(ID);
+                criticalResultCount = TE_Compliance_Results[Line_Item == input.ID && Pass_Fail == "Fail" && Severity == "Critical"].count(ID);
+                warningResultCount = TE_Compliance_Results[Line_Item == input.ID && Pass_Fail == "Fail" && Severity == "Warning"].count(ID);
+                openExceptionCount = TE_Compliance_Results[Line_Item == input.ID && Pass_Fail == "Fail" && Exception_Required == true && Exception_Status != "Approved"].count(ID);
+                if(duplicateResultCount > 0)
+                {
+                    input.Policy_Status = "Duplicate";
+                }
+                else if(criticalResultCount > 0)
+                {
+                    input.Policy_Status = "Critical";
+                }
+                else if(warningResultCount > 0)
+                {
+                    input.Policy_Status = "Warning";
+                }
+                else
+                {
+                    input.Policy_Status = "Pass";
+                }
+                input.Requires_Exception = (openExceptionCount > 0 || requiresException == true);
+                input.Violation_Flags = ruleFlags;
+                input.Last_Checked_On = evaluationTime;
+                if(input.Expense_Category == "Entertainment" && input.Policy_Status == "Pass" && input.Amount != null)
+                {
+                    try
+                    {
+                        budgetCodeToUpdate = input.Entertainment_Budget_Code;
+                        if(budgetCodeToUpdate == null || budgetCodeToUpdate == "")
+                        {
+                            budgetCodeToUpdate = input.Employee_ID + "-" + input.Expense_Date.getYear().toText();
+                        }
+                        for each entBudget in TE_Entertainment_Budgets[Budget_Code == budgetCodeToUpdate && Status != "Closed"] sort by Budget_Year desc range from 0 to 0
+                        {
+                            entBudget.Used_Amount = TE_Line_Items[Entertainment_Budget_Code == budgetCodeToUpdate && Expense_Category == "Entertainment" && Policy_Status == "Pass"].sum(Amount);
+                            entBudget.Remaining_Amount = entBudget.Annual_Budget - entBudget.Used_Amount;
+                            if(entBudget.Remaining_Amount <= 0)
+                            {
+                                entBudget.Status = "Exhausted";
+                            }
+                            else if(entBudget.Warning_Threshold_Percent != null && entBudget.Annual_Budget > 0 && entBudget.Used_Amount >= (entBudget.Annual_Budget * entBudget.Warning_Threshold_Percent / 100))
+                            {
+                                entBudget.Status = "Approaching Cap";
+                            }
+                            else
+                            {
+                                entBudget.Status = "Active";
+                            }
+                            entBudget.Last_Recalculated_On = evaluationTime;
+                        }
+                    }
+                    catch(budgetUpdateError)
+                    {
+                        info "Entertainment budget rollup skipped: " + budgetUpdateError.message;
+                    }
+                }
+                try
+                {
+                    parentClaim = TE_Claims[ID == input.Claim];
+                    claimCriticalCount = TE_Compliance_Results[Claim == input.Claim && Pass_Fail == "Fail" && Severity == "Critical"].count(ID);
+                    claimWarningCount = TE_Compliance_Results[Claim == input.Claim && Pass_Fail == "Fail" && Severity == "Warning"].count(ID);
+                    claimDuplicateCount = TE_Compliance_Results[Claim == input.Claim && Pass_Fail == "Fail" && Rule_Category == "Duplicate Expense"].count(ID);
+                    claimExcessTotal = TE_Compliance_Results[Claim == input.Claim && Pass_Fail == "Fail"].sum(Excess_Amount);
+                    unresolvedCriticalCount = TE_Compliance_Results[Claim == input.Claim && Pass_Fail == "Fail" && Severity == "Critical" && Exception_Status != "Approved"].count(ID);
+                    parentClaim.Critical_Violation_Count = claimCriticalCount;
+                    parentClaim.Warning_Count = claimWarningCount;
+                    parentClaim.Estimated_Savings = claimExcessTotal;
+                    parentClaim.Has_Duplicate_Flag = (claimDuplicateCount > 0);
+                    parentClaim.Last_Compliance_Check = evaluationTime;
+                    claimScore = 100 - (claimCriticalCount * 25) - (claimWarningCount * 5);
+                    if(claimScore < 0)
+                    {
+                        claimScore = 0;
+                    }
+                    parentClaim.Compliance_Score = claimScore;
+                    if(claimCriticalCount > 0 || claimDuplicateCount > 0)
+                    {
+                        parentClaim.Compliance_Rating = "Red";
+                        if(unresolvedCriticalCount > 0)
+                        {
+                            parentClaim.Claim_Status = "Compliance Held - Critical";
+                        }
+                        else
+                        {
+                            parentClaim.Claim_Status = "Exception Approved";
+                        }
+                    }
+                    else if(claimWarningCount > 0)
+                    {
+                        parentClaim.Compliance_Rating = "Yellow";
+                        parentClaim.Claim_Status = "Compliance Cleared - Warnings";
+                    }
+                    else
+                    {
+                        parentClaim.Compliance_Rating = "Green";
+                        parentClaim.Claim_Status = "Compliance Cleared - Green";
+                    }
+                }
+                catch(claimRollupError)
+                {
+                    info "Line item parent claim rollup skipped: " + claimRollupError.message;
+                }
+                try
+                {
+                    auditSeverity = "Info";
+                    if(input.Policy_Status == "Critical" || input.Policy_Status == "Duplicate")
+                    {
+                        auditSeverity = "Critical";
+                    }
+                    else if(input.Policy_Status == "Warning")
+                    {
+                        auditSeverity = "Warning";
+                    }
+                    insert into TE_Audit_Log
+                    [
+                        Event_Key = "LINE-" + input.ID.toText() + "-" + zoho.currenttime.toText("yyyyMMddHHmmss")
+                        Event_Timestamp = zoho.currenttime
+                        Actor_Email = zoho.loginuserid
+                        Actor_Profile = zoho.loginuser
+                        Entity_Type = "Line Item"
+                        Entity_Record_ID = input.Line_Item_Key
+                        Action = "Line item compliance evaluated"
+                        After_Value = "Trip=" + tripNumberForAudit + "; Policy_Status=" + input.Policy_Status + "; Requires_Exception=" + input.Requires_Exception.toText() + "; Violation_Flags=" + input.Violation_Flags
+                        IP_Address = zoho.ipaddress
+                        Severity = auditSeverity
+                        Immutable_Flag = true
+                    ];
+                }
+                catch(auditError)
+                {
+                    info "Line item audit log write skipped: " + auditError.message;
+                }
+            )
+        }
+    }
+}

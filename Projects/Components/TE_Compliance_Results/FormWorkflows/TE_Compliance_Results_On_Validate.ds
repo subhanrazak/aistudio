@@ -1,0 +1,40 @@
+TE_Compliance_Results_On_Validate as "TE Compliance Results On Validate"
+{
+    type = form
+    form = TE_Compliance_Results
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Pass_Fail == "Fail" && (input.Violation_Description == null || input.Violation_Description == ""))
+                {
+                    alert "Violation Description is required when Pass/Fail is Fail.";
+                    cancel submit;
+                }
+                expectedExcess = 0;
+                if(input.Actual_Amount != null && input.Policy_Limit != null && input.Actual_Amount > input.Policy_Limit)
+                {
+                    expectedExcess = input.Actual_Amount - input.Policy_Limit;
+                }
+                input.Excess_Amount = expectedExcess;
+                if(input.Currency != null && input.Currency != "" && input.Currency.length() != 3)
+                {
+                    alert "Currency must be exactly 3 characters.";
+                    cancel submit;
+                }
+                if(input.Checked_On == null)
+                {
+                    input.Checked_On = zoho.currenttime;
+                }
+                if(input.Checked_By == null || input.Checked_By == "")
+                {
+                    input.Checked_By = "System";
+                }
+            )
+        }
+    }
+}

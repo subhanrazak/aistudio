@@ -1,0 +1,45 @@
+TE_Sync_Log_SAP_Polling_Schedule as "TE Sync Log SAP Polling Schedule"
+{
+    type = schedule
+    start = "2025-01-01 08:00:00"
+    frequency = daily
+    time zone = "UTC"
+
+    on start
+    {
+        actions
+        {
+            on load
+            (
+                actorEmail = zoho.loginuserid;
+                if(actorEmail == null || actorEmail == "")
+                {
+                    actorEmail = zoho.adminuserid;
+                }
+                placeholderKey = "SYNC-PHASE1-" + zoho.currenttime.toText("yyyyMMddHHmmss");
+                try
+                {
+                    insert into TE_Sync_Log
+                    [
+                        Sync_Run_ID = placeholderKey
+                        Source_System = "SAP FI-TV"
+                        SAP_Table = "Multiple"
+                        Started_On = zoho.currenttime
+                        Completed_On = zoho.currenttime
+                        Sync_Status = "Placeholder Only"
+                        Records_Read = 0
+                        Records_Imported = 0
+                        Records_Failed = 0
+                        Triggered_By_Email = actorEmail
+                        Next_Scheduled_Run = zoho.currenttime.addHour(2)
+                        Notes = "Phase 1 placeholder polling window: ODBC read from SAP FI-TV/HR is represented for visibility, but no credentials, live ODBC connection, Connection, or DataSource is configured in this Creator app."
+                    ];
+                }
+                catch(syncLogError)
+                {
+                    info "SAP polling placeholder sync log skipped: " + syncLogError.message;
+                }
+            )
+        }
+    }
+}

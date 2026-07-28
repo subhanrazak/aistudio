@@ -1,0 +1,113 @@
+TE_Claims_On_Success as "TE Claims On Success"
+{
+    type = form
+    form = TE_Claims
+    record event = on add or edit
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Claim_Status == "Submitted" || input.Claim_Status == "Compliance Pending")
+                {
+                    criticalCount = 0;
+                    warningCount = 0;
+                    estimatedSavings = 0;
+                    duplicateFlag = false;
+                    for each resultRec in TE_Compliance_Results[Claim == input.ID]
+                    {
+                        if(resultRec.Pass_Fail == "Fail")
+                        {
+                            if(resultRec.Severity == "Critical")
+                            {
+                                criticalCount = criticalCount + 1;
+                            }
+                            else if(resultRec.Severity == "Warning")
+                            {
+                                warningCount = warningCount + 1;
+                            }
+                            if(resultRec.Excess_Amount != null && resultRec.Excess_Amount > 0)
+                            {
+                                estimatedSavings = estimatedSavings + resultRec.Excess_Amount;
+                            }
+                            if(resultRec.Rule_Category == "Duplicate Expense")
+                            {
+                                duplicateFlag = true;
+                            }
+                        }
+                    }
+                    input.Critical_Violation_Count = criticalCount;
+                    input.Warning_Count = warningCount;
+                    input.Estimated_Savings = estimatedSavings;
+                    input.Has_Duplicate_Flag = duplicateFlag;
+                    input.Last_Compliance_Check = zoho.currenttime;
+                    scoreValue = 100 - (criticalCount * 25) - (warningCount * 5);
+                    if(scoreValue < 0)
+                    {
+                        scoreValue = 0;
+                    }
+                    input.Compliance_Score = scoreValue;
+                    if(criticalCount > 0)
+                    {
+                        input.Compliance_Rating = "Red";
+                        input.Claim_Status = "Compliance Held - Critical";
+                        auditSeverity = "Critical";
+                    }
+                    else if(warningCount > 0)
+                    {
+                        input.Compliance_Rating = "Yellow";
+                        input.Claim_Status = "Compliance Cleared - Warnings";
+                        auditSeverity = "Warning";
+                    }
+                    else
+                    {
+                        input.Compliance_Rating = "Green";
+                        input.Claim_Status = "Compliance Cleared - Green";
+                        auditSeverity = "Info";
+                    }
+                    scorecardSummary = "Trip " + input.Trip_Number + " compliance scorecard: Rating=" + input.Compliance_Rating + "; Score=" + input.Compliance_Score.toText() + "; Critical=" + criticalCount.toText() + "; Warnings=" + warningCount.toText() + "; Estimated Savings=" + estimatedSavings.toText() + " " + input.Currency + "; Status=" + input.Claim_Status;
+                    if(input.Approver_Email != null && input.Approver_Email != "")
+                    {
+                        try
+                        {
+                            sendmail
+                            [
+                                from: zoho.adminuserid
+                                to: input.Approver_Email
+                                subject: "T&E claim scorecard: " + input.Trip_Number
+                                message: scorecardSummary
+                            ]
+                        }
+                        catch(mailError)
+                        {
+                            info "Approver scorecard notification skipped: " + mailError.message;
+                        }
+                    }
+                    try
+                    {
+                        insert into TE_Audit_Log
+                        [
+                            Event_Key = "CLAIM-" + input.ID.toText() + "-" + zoho.currenttime.toText("yyyyMMddHHmmss")
+                            Event_Timestamp = zoho.currenttime
+                            Actor_Email = zoho.loginuserid
+                            Actor_Profile = zoho.loginuser
+                            Entity_Type = "Claim"
+                            Entity_Record_ID = input.Trip_Number
+                            Action = "Claim compliance scorecard recalculated"
+                            After_Value = scorecardSummary
+                            IP_Address = zoho.ipaddress
+                            Severity = auditSeverity
+                            Immutable_Flag = true
+                        ];
+                    }
+                    catch(auditError)
+                    {
+                        info "Claim score audit log write skipped: " + auditError.message;
+                    }
+                }
+            )
+        }
+    }
+}

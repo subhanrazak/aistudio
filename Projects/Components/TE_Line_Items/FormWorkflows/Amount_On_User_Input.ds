@@ -1,0 +1,36 @@
+Amount_On_User_Input as "Amount On User Input"
+{
+    type = form
+    form = TE_Line_Items
+    record event = on add or edit
+
+    on user input of Amount
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Expense_Category == "Entertainment" && input.Amount != null && input.Attendee_Count != null && input.Attendee_Count > 0)
+                {
+                    input.Per_Person_Amount = input.Amount / input.Attendee_Count;
+                }
+                else if(input.Expense_Category == "Entertainment")
+                {
+                    input.Per_Person_Amount = null;
+                }
+                receiptThreshold = 25;
+                for each receiptRule in TE_Policy_Rules[Active == true && Rule_Category == "Receipt Requirement" && Effective_Date <= zoho.currentdate] sort by Effective_Date desc range from 0 to 0
+                {
+                    if((receiptRule.Retired_Date == null || receiptRule.Retired_Date >= zoho.currentdate) && receiptRule.Receipt_Minimum_Amount != null && receiptRule.Receipt_Minimum_Amount > 0)
+                    {
+                        receiptThreshold = receiptRule.Receipt_Minimum_Amount;
+                    }
+                }
+                if(input.Amount != null && input.Amount > receiptThreshold && input.Receipt_Attached == false)
+                {
+                    alert "Receipt guidance: attach a receipt document for expenses above USD " + receiptThreshold.toText() + ".";
+                }
+            )
+        }
+    }
+}

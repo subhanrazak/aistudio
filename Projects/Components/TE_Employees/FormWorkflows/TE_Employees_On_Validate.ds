@@ -1,0 +1,31 @@
+TE_Employees_On_Validate as "TE Employees On Validate"
+{
+    type = form
+    form = TE_Employees
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Employee_ID == null || input.Employee_ID == "")
+                {
+                    alert "Employee ID is required for SAP HR staging records.";
+                    cancel submit;
+                }
+                if(input.Login_Email == null || input.Login_Email == "")
+                {
+                    alert "Login Email is required to match the employee to the signed-in or portal user.";
+                    cancel submit;
+                }
+                if(input.Manager_Email != null && input.Manager_Email != "" && input.Login_Email != null && input.Manager_Email == input.Login_Email && input.Employee_Grade_Band != "Executive")
+                {
+                    alert "Manager Email cannot be the same as Login Email unless Employee Grade Band is Executive.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}

@@ -1,0 +1,101 @@
+<%
+managerLogin = zoho.loginuserid;
+managerDisplay = zoho.loginuser;
+myPendingClaims = TE_Claims[((Claim_Status == "Submitted" || Claim_Status == "Compliance Cleared - Warnings" || Claim_Status == "Compliance Cleared - Green" || Claim_Status == "Exception Approved") && (Approver_Email == managerLogin || Approver_Email == managerDisplay))];
+allPendingClaims = TE_Claims[(Claim_Status == "Submitted" || Claim_Status == "Compliance Cleared - Warnings" || Claim_Status == "Compliance Cleared - Green" || Claim_Status == "Exception Approved")];
+if(myPendingClaims.count() > 0)
+{
+	claimScope = myPendingClaims;
+	scopeLabel = "Only claims assigned to your approver email are listed.";
+}
+else
+{
+	claimScope = allPendingClaims;
+	scopeLabel = "No claims matched your login, so all pending claims are shown for admin/demo review.";
+}
+%>
+<div class="maq-page-shell" style="padding-top:0;">
+    <div class="maq-section-card">
+        <div class='zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12 zcs-mb-8'>
+            <div>
+                <h5 class='zcs-font-20 zcs-font-semibold zcs-color-primary zcs-m-0'>Claim scorecards</h5>
+                <p class='zcs-font-13 zcs-color-secondary zcs-m-0 zcs-mt-8'><%=scopeLabel%> Use the embedded report actions for final decisions.</p>
+            </div>
+            <div class='zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-theme'>
+                <span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'><%=claimScope.count()%> pending</span>
+            </div>
+        </div>
+        <div class="maq-scorecard-grid">
+<%
+shown = 0;
+for each claimRec in claimScope
+{
+	if(shown < 8)
+	{
+		shown = shown + 1;
+		rating = ifnull(claimRec.Compliance_Rating,"Not Checked");
+		badgeClass = "zcs-badge-grey";
+		if(rating == "Green")
+		{
+			badgeClass = "zcs-badge-green";
+		}
+		else if(rating == "Yellow")
+		{
+			badgeClass = "zcs-badge-yellow";
+		}
+		else if(rating == "Red")
+		{
+			badgeClass = "zcs-badge-red";
+		}
+		criticalCount = ifnull(claimRec.Critical_Violation_Count,0);
+		claimWarnings = ifnull(claimRec.Warning_Count,0);
+		pendingExceptionCount = TE_Exceptions[Claim == claimRec.ID && Status == "Pending Manager Approval"].count();
+		reportUrl = "#Report:Pending_Manager_Approval?Trip_Number=" + encodeURL(claimRec.Trip_Number) + "&zc_LoadIn=dialog&zc_Header=true";
+%>
+            <div class='zcs-template-card zcs-card zcs-flex zcs-direction-column zcs-relative maq-claim-card'>
+                <div class='zcs-card-header zcs-p-16 zcs-box-border zcs-relative'>
+                    <div class='zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12'>
+                        <div class='zcs-ellipsis'>
+                            <h6 class='zcs-font-16 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0 zcs-ellipsis'><%=claimRec.Trip_Number%></h6>
+                            <p class='zcs-font-13 zcs-color-secondary zcs-m-0 zcs-mt-8 zcs-ellipsis'><%=claimRec.Employee_Name%> · <%=claimRec.Destination_City%></p>
+                        </div>
+                        <div class='zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border <%=badgeClass%>'>
+                            <span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'><%=rating%></span>
+                        </div>
+                    </div>
+                </div>
+                <div class='zcs-card-content zcs-col-common zcs-p-16 zcs-box-border'>
+                    <div class='zcs-flex zcs-align-items-start zcs-justify-space-between zcs-gap-16 zcs-mb-8'>
+                        <div>
+                            <p class='zcs-font-12 zcs-color-secondary zcs-m-0 zcs-uppercase'>Amount</p>
+                            <p class='zcs-font-22 zcs-font-bold zcs-color-primary zcs-m-0'><%=claimRec.Currency%> <%=ifnull(claimRec.Total_Amount,0)%></p>
+                        </div>
+                        <a class='zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body' href='<%=reportUrl%>'>
+                            <i class='zcs-button-icon zc-li-outline ui-1-eye-17'></i>
+                            <span class='zcs-button-text'>Review</span>
+                        </a>
+                    </div>
+                    <div class="maq-claim-meta">
+                        <div class="maq-meta-block"><p class='zcs-font-12 zcs-color-secondary zcs-m-0'>Critical</p><p class='zcs-font-18 zcs-font-semibold zcs-color-red zcs-m-0'><%=criticalCount%></p></div>
+                        <div class="maq-meta-block"><p class='zcs-font-12 zcs-color-secondary zcs-m-0'>Warnings</p><p class='zcs-font-18 zcs-font-semibold zcs-color-yellow zcs-m-0'><%=claimWarnings%></p></div>
+                        <div class="maq-meta-block"><p class='zcs-font-12 zcs-color-secondary zcs-m-0'>Exceptions</p><p class='zcs-font-18 zcs-font-semibold zcs-color-primary zcs-m-0'><%=pendingExceptionCount%></p></div>
+                    </div>
+                    <p class='zcs-font-13 zcs-color-secondary zcs-m-0 zcs-mt-12'>Status: <span class='zcs-color-primary zcs-font-medium'><%=claimRec.Claim_Status%></span></p>
+                </div>
+            </div>
+<%
+	}
+}
+if(shown == 0)
+{
+%>
+            <div class='zcs-toast zcs-info-toast zcs-w-full zcs-flex zcs-gap-8 zcs-px-16 zcs-py-12 zcs-rounded-sm zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'>
+                <i class='zcs-toast-icon zcs-no-shrink zcs-lh-body zc-li-outline travel-info'></i>
+                <div class='zcs-toast-text'><p class='zcs-m-0'>No pending manager approval claims were found.</p></div>
+            </div>
+<%
+}
+%>
+        </div>
+    </div>
+</div>

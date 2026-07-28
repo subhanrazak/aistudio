@@ -1,0 +1,50 @@
+TE_Exceptions_On_Load as "TE Exceptions On Load"
+{
+    type = form
+    form = TE_Exceptions
+    record event = on add or edit
+    description = "Profile-aware form setup for claimant request fields and approver decision fields."
+
+    on load
+    {
+        actions
+        {
+            custom deluge script
+            (
+                isApprover = false;
+                appPermission = "";
+                portalPermission = "";
+                try
+                {
+                    appPermission = thisapp.permissions.loginUserProfile();
+                }
+                catch(profileError)
+                {
+                    appPermission = "";
+                }
+                try
+                {
+                    portalPermission = thisapp.portal.loginUserProfile();
+                }
+                catch(portalProfileError)
+                {
+                    portalPermission = "";
+                }
+                if(appPermission == "Approving_Manager_Portal" || appPermission == "Compliance_Officer" || appPermission == "CFO_Head_of_Finance" || appPermission == "Travel_Policy_Administrator" || portalPermission == "Approving_Manager_Portal" || portalPermission == "Compliance_Officer" || portalPermission == "CFO_Head_of_Finance" || portalPermission == "Travel_Policy_Administrator")
+                {
+                    isApprover = true;
+                }
+                if(isApprover == true)
+                {
+                    show Approval_Decision, Approval_Comments, Decision_Date, Audit_Notes;
+                    hide Business_Justification, Supporting_Document, Requester_Email;
+                }
+                else
+                {
+                    show Business_Justification, Supporting_Document, Requester_Email;
+                    hide Approval_Decision, Approval_Comments, Decision_Date, Audit_Notes;
+                }
+            )
+        }
+    }
+}

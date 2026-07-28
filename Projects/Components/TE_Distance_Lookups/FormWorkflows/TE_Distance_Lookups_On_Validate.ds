@@ -1,0 +1,49 @@
+TE_Distance_Lookups_On_Validate as "TE Distance Lookups On Validate"
+{
+    type = form
+    form = TE_Distance_Lookups
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Route_Code == null || input.Route_Code.trim() == "")
+                {
+                    alert(Route_Code, "Route Code is required.");
+                    cancel submit;
+                }
+                if(input.Expected_Distance_KM == null || input.Expected_Distance_KM <= 0)
+                {
+                    alert(Expected_Distance_KM, "Expected distance must be greater than 0 KM.");
+                    cancel submit;
+                }
+                if(input.Tolerance_Percent == null || input.Tolerance_Percent < 0)
+                {
+                    alert(Tolerance_Percent, "Tolerance percent must be zero or greater.");
+                    cancel submit;
+                }
+                sameRoute = false;
+                if(input.Origin_City != null && input.Destination_City != null && input.Origin_Country != null && input.Destination_Country != null)
+                {
+                    if(input.Origin_City.trim().toLowerCase() == input.Destination_City.trim().toLowerCase() && input.Origin_Country.trim().toLowerCase() == input.Destination_Country.trim().toLowerCase())
+                    {
+                        sameRoute = true;
+                    }
+                }
+                notesText = "";
+                if(input.Notes != null)
+                {
+                    notesText = input.Notes;
+                }
+                if(sameRoute == true && notesText.containsIgnoreCase("allow identical route") == false)
+                {
+                    alert(Destination_City, "Origin and destination cannot be identical unless Notes includes 'allow identical route'.");
+                    cancel submit;
+                }
+            )
+        }
+    }
+}

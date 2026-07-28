@@ -1,0 +1,36 @@
+TE_Rate_Tables_On_Validate as "TE Rate Tables On Validate"
+{
+    type = form
+    form = TE_Rate_Tables
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Hotel_Max < 0)
+                {
+                    alert "Hotel Max must be greater than or equal to 0.";
+                    cancel submit;
+                }
+                if(input.Daily_Per_Diem_Meals < 0)
+                {
+                    alert "Daily Per Diem Meals must be greater than or equal to 0.";
+                    cancel submit;
+                }
+                if(input.Expiry_Date != null && input.Expiry_Date <= input.Effective_Date)
+                {
+                    alert "Expiry Date must be after Effective Date.";
+                    cancel submit;
+                }
+                if(input.Currency == null || input.Currency.length() != 3)
+                {
+                    alert "Currency must be exactly 3 characters.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}

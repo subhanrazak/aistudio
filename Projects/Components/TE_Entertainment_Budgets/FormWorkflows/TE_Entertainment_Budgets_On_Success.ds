@@ -1,0 +1,56 @@
+TE_Entertainment_Budgets_On_Success as "TE Entertainment Budgets On Success"
+{
+    type = form
+    form = TE_Entertainment_Budgets
+    record event = on add or edit
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                annualBudget = ifNull(input.Annual_Budget, 0);
+                usedAmount = ifNull(input.Used_Amount, 0);
+                thresholdPercent = ifNull(input.Warning_Threshold_Percent, 80);
+                input.Remaining_Amount = annualBudget - usedAmount;
+                input.Last_Recalculated_On = zoho.currenttime;
+                if(input.Remaining_Amount <= 0)
+                {
+                    input.Status = "Exhausted";
+                }
+                else if(annualBudget > 0 && usedAmount >= (annualBudget * thresholdPercent / 100))
+                {
+                    input.Status = "Approaching Cap";
+                }
+                else
+                {
+                    input.Status = "Active";
+                }
+                try
+                {
+                    auditKey = "BUD-" + input.ID.toText() + "-" + zoho.currenttime.toText("yyyyMMddHHmmss");
+                    budgetAfter = "Budget_Code=" + input.Budget_Code + "; Employee_ID=" + input.Employee_ID + "; Budget_Year=" + input.Budget_Year.toText() + "; Annual_Budget=" + annualBudget.toText() + "; Used_Amount=" + usedAmount.toText() + "; Remaining_Amount=" + input.Remaining_Amount.toText() + "; Currency=" + input.Currency + "; Status=" + input.Status;
+                    insert into TE_Audit_Log
+                    [
+                        Event_Key = auditKey
+                        Event_Timestamp = zoho.currenttime
+                        Actor_Email = zoho.loginuserid
+                        Actor_Profile = zoho.loginuser
+                        Entity_Type = "Entertainment Budget"
+                        Entity_Record_ID = input.ID.toText()
+                        Action = "Entertainment budget create/update"
+                        After_Value = budgetAfter
+                        IP_Address = zoho.ipaddress
+                        Severity = "Info"
+                        Immutable_Flag = true
+                    ];
+                }
+                catch(auditError)
+                {
+                    info "TE_Audit_Log write skipped: " + auditError.message;
+                }
+            )
+        }
+    }
+}

@@ -1,0 +1,73 @@
+Return_To_Claimant as "Return To Claimant"
+{
+    type = functions
+    form = TE_Claims
+    execution type = for each record
+
+    on start
+    {
+        actions
+        {
+            on click
+            (
+                if(input.Manager_Comments == null || input.Manager_Comments.trim() == "")
+                {
+                    info "Manager Comments are required before returning Trip " + input.Trip_Number + " to the claimant.";
+                }
+                else
+                {
+                    claimantEmail = "";
+                    try
+                    {
+                        employeeRec = TE_Employees[ID == input.Employee];
+                        claimantEmail = employeeRec.Login_Email;
+                    }
+                    catch(employeeError)
+                    {
+                        info "Claimant email lookup skipped: " + employeeError.message;
+                    }
+                    input.Manager_Decision = "Return for Clarification";
+                    input.Claim_Status = "Returned to Claimant";
+                    try
+                    {
+                        insert into TE_Audit_Log
+                        [
+                            Event_Key = "RETURN-" + input.ID.toText() + "-" + zoho.currenttime.toText("yyyyMMddHHmmss")
+                            Event_Timestamp = zoho.currenttime
+                            Actor_Email = zoho.loginuserid
+                            Actor_Profile = zoho.loginuser
+                            Entity_Type = "Claim"
+                            Entity_Record_ID = input.Trip_Number
+                            Action = "Manager returned claim to claimant"
+                            After_Value = "Decision=Return for Clarification; Comments=" + input.Manager_Comments
+                            IP_Address = zoho.ipaddress
+                            Severity = "Warning"
+                            Immutable_Flag = true
+                        ];
+                    }
+                    catch(auditError)
+                    {
+                        info "Return-to-claimant audit log write skipped: " + auditError.message;
+                    }
+                    if(claimantEmail != null && claimantEmail != "")
+                    {
+                        try
+                        {
+                            sendmail
+                            [
+                                from: zoho.adminuserid
+                                to: claimantEmail
+                                subject: "T&E claim returned for clarification: " + input.Trip_Number
+                                message: "Your travel claim was returned for clarification. Manager comments: " + input.Manager_Comments
+                            ]
+                        }
+                        catch(mailError)
+                        {
+                            info "Claimant return notification skipped: " + mailError.message;
+                        }
+                    }
+                }
+            )
+        }
+    }
+}

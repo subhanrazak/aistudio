@@ -1,0 +1,20 @@
+<%
+critical = TE_Compliance_Results[Pass_Fail == "Fail" && Severity == "Critical"].count();
+warning = TE_Compliance_Results[Pass_Fail == "Fail" && Severity == "Warning"].count();
+info = TE_Compliance_Results[Severity == "Info"].count();
+totalFail = critical + warning;
+if(totalFail == 0){totalFail = 1;}
+critPct = (critical * 100) / totalFail;
+warnPct = (warning * 100) / totalFail;
+%>
+<style>
+.hist{font-family:var(--zcs-font-family);background:#fff;border:1px solid #e6eaf0;border-radius:16px;padding:18px;margin-bottom:16px;}
+.hist h3{margin:0 0 14px;color:#0f2f57;font-size:18px;}
+.rowbar{margin:12px 0}.rowbar span{display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;color:#475467}.bar{height:12px;border-radius:999px;background:#eef2f6;overflow:hidden}.fill-red{height:12px;background:#d92d20}.fill-yellow{height:12px;background:#f79009}
+</style>
+<div class="hist">
+  <h3>Compliance History Snapshot</h3>
+  <div class="rowbar"><span><b>Critical failed checks</b><em><%=critical%></em></span><div class="bar"><div class="fill-red" style="width:<%=critPct%>%"></div></div></div>
+  <div class="rowbar"><span><b>Warning failed checks</b><em><%=warning%></em></span><div class="bar"><div class="fill-yellow" style="width:<%=warnPct%>%"></div></div></div>
+  <div class="rowbar"><span><b>Informational checks</b><em><%=info%></em></span></div>
+</div>

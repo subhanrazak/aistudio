@@ -1,0 +1,260 @@
+form TE_Exceptions
+{
+    displayname = "Policy Exceptions"
+    Exception_Request
+    (
+        type = section
+        displayname = "Exception Request"
+        row = 1
+        column = 0
+    )
+    must have unique Exception_Number
+    (
+        type = text
+        displayname = "Exception Number"
+        maxchar = 30
+        row = 1
+        column = 1
+        width = medium
+    )
+    must have Claim
+    (
+        type = picklist
+        values = TE_Claims.ID
+        displayformat = [Trip_Number]
+        searchable = true
+        row = 1
+        column = 2
+        width = medium
+    )
+    Line_Item
+    (
+        type = picklist
+        displayname = "Line Item"
+        values = TE_Line_Items.ID
+        displayformat = [Line_Item_Key]
+        searchable = true
+        row = 1
+        column = 1
+        width = medium
+    )
+    must have Compliance_Result
+    (
+        type = picklist
+        displayname = "Compliance Result"
+        values = TE_Compliance_Results.ID
+        displayformat = [Result_Key]
+        searchable = true
+        row = 1
+        column = 2
+        width = medium
+    )
+    Violated_Rule
+    (
+        type = picklist
+        displayname = "Violated Rule"
+        values = TE_Policy_Rules.ID
+        displayformat = [Rule_ID]
+        searchable = true
+        row = 1
+        column = 1
+        width = medium
+    )
+    must have Policy_Limit
+    (
+        type = decimal
+        displayname = "Policy Limit"
+        decimalplace = 2
+        initial value = 0
+        row = 1
+        column = 2
+        width = medium
+    )
+    must have Actual_Amount
+    (
+        type = decimal
+        displayname = "Actual Amount"
+        decimalplace = 2
+        initial value = 0
+        row = 1
+        column = 1
+        width = medium
+    )
+    Excess_Amount
+    (
+        type = decimal
+        displayname = "Excess Amount"
+        decimalplace = 2
+        initial value = 0
+        row = 1
+        column = 2
+        width = medium
+    )
+    must have Currency
+    (
+        type = text
+        maxchar = 3
+        initial value = "USD"
+        row = 1
+        column = 1
+        width = medium
+    )
+    must have Business_Justification
+    (
+        type = richtext
+        displayname = "Business Justification"
+        height = 200px
+        toolbar = enable
+        [
+            style, font-color, alignment, bullets-and-numbering, link, table
+        ]
+        row = 1
+        column = 2
+        width = medium
+    )
+    Supporting_Document
+    (
+        type = upload file
+        displayname = "Supporting Document"
+        browse = local_drive, google_docs, zoho_docs
+        row = 1
+        column = 1
+        width = medium
+    )
+    Requester_Email
+    (
+        type = email
+        displayname = "Requester Email"
+        personal data = true
+        row = 1
+        column = 2
+        width = medium
+    )
+    Approval_Routing
+    (
+        type = section
+        displayname = "Approval Routing"
+        visibility = true
+        row = 2
+        column = 1
+    )
+    must have Exception_Approver_Level
+    (
+        type = picklist
+        displayname = "Exception Approver Level"
+        values = {"Direct Manager","Department Head","Compliance Officer","CFO"}
+        row = 2
+        column = 1
+        width = medium
+    )
+    must have Exception_Approver_Email
+    (
+        type = email
+        displayname = "Exception Approver Email"
+        row = 2
+        column = 2
+        width = medium
+    )
+    SLA_Due_Date
+    (
+        type = date
+        displayname = "SLA Due Date"
+        row = 2
+        column = 1
+        width = medium
+    )
+    must have Status
+    (
+        type = picklist
+        values = {"Draft","Pending Manager Approval","Pending Department Head Approval","Pending Compliance Approval","Pending CFO Approval","Approved","Rejected","Escalated","Returned for Information"}
+        initial value = "Draft"
+        row = 2
+        column = 2
+        width = medium
+    )
+    Approval_Decision
+    (
+        type = picklist
+        displayname = "Approval Decision"
+        values = {"Approve","Reject","Return for Information"}
+        row = 2
+        column = 1
+        width = medium
+    )
+    Approval_Comments
+    (
+        type = textarea
+        displayname = "Approval Comments"
+        height = 120px
+        row = 2
+        column = 2
+        width = medium
+    )
+    Decision_Date
+    (
+        type = datetime
+        displayname = "Decision Date"
+        row = 2
+        column = 1
+        width = medium
+    )
+    Escalation_Count
+    (
+        type = number
+        displayname = "Escalation Count"
+        initial value = 0
+        row = 2
+        column = 2
+        width = medium
+    )
+    Last_Reminder_Sent_On
+    (
+        type = datetime
+        displayname = "Last Reminder Sent On"
+        row = 2
+        column = 1
+        width = medium
+    )
+    Audit_Notes
+    (
+        type = textarea
+        displayname = "Audit Notes"
+        height = 120px
+        row = 2
+        column = 2
+        width = medium
+    )
+    actions
+    {
+        on add
+        {
+            Submit
+            (
+                type = submit
+                displayname = "Submit"
+            )
+            Reset
+            (
+                type = reset
+                displayname = "Reset"
+            )
+        }
+        on edit
+        {
+            Update
+            (
+                type = submit
+                displayname = "Update"
+            )
+            Cancel
+            (
+                type = cancel
+                displayname = "Cancel"
+            )
+        }
+    }
+    blueprint components
+    {
+        stages = {"Draft","Pending Manager Approval","Pending Department Head Approval","Pending Compliance Approval","Pending CFO Approval","Approved","Rejected","Escalated","Returned for Information"}
+    }
+}

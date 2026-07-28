@@ -1,0 +1,136 @@
+TE_Exceptions_On_Success as "TE Exceptions On Success"
+{
+    type = form
+    form = TE_Exceptions
+    record event = on add or edit
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Exception_Number == null || input.Exception_Number == "")
+                {
+                    input.Exception_Number = "EXC-" + zoho.currentdate.toText("yyyy") + "-" + input.ID.toText();
+                }
+                approverEmail = input.Exception_Approver_Email;
+                requesterEmail = input.Requester_Email;
+                try
+                {
+                    claimRec = TE_Claims[ID == input.Claim];
+                    if(claimRec.Employee != null)
+                    {
+                        employeeRec = TE_Employees[ID == claimRec.Employee];
+                        if((requesterEmail == null || requesterEmail == "") && employeeRec.Login_Email != null && employeeRec.Login_Email != "")
+                        {
+                            requesterEmail = employeeRec.Login_Email;
+                            input.Requester_Email = requesterEmail;
+                        }
+                        if(input.Exception_Approver_Level == "Direct Manager" && employeeRec.Manager_Email != null && employeeRec.Manager_Email != "")
+                        {
+                            approverEmail = employeeRec.Manager_Email;
+                        }
+                        else if(input.Exception_Approver_Level == "Department Head" && employeeRec.Department_Head_Email != null && employeeRec.Department_Head_Email != "")
+                        {
+                            approverEmail = employeeRec.Department_Head_Email;
+                        }
+                        else if(input.Exception_Approver_Level == "Compliance Officer" && employeeRec.Compliance_Reviewer_Email != null && employeeRec.Compliance_Reviewer_Email != "")
+                        {
+                            approverEmail = employeeRec.Compliance_Reviewer_Email;
+                        }
+                        else if(input.Exception_Approver_Level == "CFO" && employeeRec.CFO_Approver_Email != null && employeeRec.CFO_Approver_Email != "")
+                        {
+                            approverEmail = employeeRec.CFO_Approver_Email;
+                        }
+                    }
+                    if((approverEmail == null || approverEmail == "") && claimRec.Approver_Email != null && claimRec.Approver_Email != "")
+                    {
+                        approverEmail = claimRec.Approver_Email;
+                    }
+                }
+                catch(routeError)
+                {
+                    info "Exception approver routing fallback used: " + routeError.message;
+                }
+                if(approverEmail != null && approverEmail != "" && approverEmail != input.Exception_Approver_Email)
+                {
+                    input.Exception_Approver_Email = approverEmail;
+                }
+                if((input.Status == "Pending Manager Approval" || input.Status == "Pending Department Head Approval" || input.Status == "Pending Compliance Approval" || input.Status == "Pending CFO Approval") && approverEmail != null && approverEmail != "")
+                {
+                    sendmail
+                    (
+                        from : zoho.adminuserid
+                        to : approverEmail
+                        subject : "Policy exception approval required: " + input.Exception_Number
+                        message : "A policy exception for claim " + input.Claim + " is awaiting your review. Excess amount: " + input.Excess_Amount + " " + input.Currency + ". SLA due date: " + input.SLA_Due_Date + "."
+                    )
+                }
+                if(input.Status == "Approved")
+                {
+                    try
+                    {
+                        resultRec = TE_Compliance_Results[ID == input.Compliance_Result];
+                        resultRec.Exception_Status = "Approved";
+                        unresolvedCritical = TE_Compliance_Results[Claim == input.Claim && Severity == "Critical" && Pass_Fail == "Fail" && Exception_Status != "Approved"].count(ID);
+                        if(unresolvedCritical == 0)
+                        {
+                            claimToUpdate = TE_Claims[ID == input.Claim];
+                            claimToUpdate.Claim_Status = "Exception Approved";
+                        }
+                    }
+                    catch(approvalUpdateError)
+                    {
+                        info "Approved exception rollup skipped: " + approvalUpdateError.message;
+                    }
+                }
+                else if(input.Status == "Rejected")
+                {
+                    try
+                    {
+                        rejectedResult = TE_Compliance_Results[ID == input.Compliance_Result];
+                        rejectedResult.Exception_Status = "Rejected";
+                        rejectedClaim = TE_Claims[ID == input.Claim];
+                        rejectedClaim.Claim_Status = "Compliance Held - Critical";
+                    }
+                    catch(rejectUpdateError)
+                    {
+                        info "Rejected exception rollup skipped: " + rejectUpdateError.message;
+                    }
+                    if(requesterEmail != null && requesterEmail != "")
+                    {
+                        sendmail
+                        (
+                            from : zoho.adminuserid
+                            to : requesterEmail
+                            subject : "Policy exception rejected: " + input.Exception_Number
+                            message : "Your policy exception request was rejected. Comments: " + input.Approval_Comments
+                        )
+                    }
+                }
+                try
+                {
+                    insert into TE_Audit_Log
+                    [
+                        Event_Key = "EXC-" + input.ID.toText() + "-" + zoho.currenttime.toText("yyyyMMddHHmmss")
+                        Event_Timestamp = zoho.currenttime
+                        Actor_Email = zoho.loginuserid
+                        Actor_Profile = zoho.loginuser
+                        Entity_Type = "Exception"
+                        Entity_Record_ID = input.ID.toText()
+                        Action = "Exception create/update: " + input.Status
+                        After_Value = "Exception_Number=" + input.Exception_Number + "; Claim=" + input.Claim + "; Compliance_Result=" + input.Compliance_Result + "; Approver_Level=" + input.Exception_Approver_Level + "; Approver_Email=" + input.Exception_Approver_Email + "; Excess_Amount=" + input.Excess_Amount + "; Status=" + input.Status
+                        IP_Address = zoho.ipaddress
+                        Severity = "Info"
+                        Immutable_Flag = true
+                    ];
+                }
+                catch(auditError)
+                {
+                    info "TE_Exceptions audit log write skipped: " + auditError.message;
+                }
+            )
+        }
+    }
+}

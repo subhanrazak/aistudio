@@ -1,0 +1,90 @@
+<style>
+.cd-section{background:var(--zcs-page-bg-color);padding:0 20px 20px;box-sizing:border-box;font-family:Inter,Arial,sans-serif}.cd-card-title{margin:0 0 4px;font-size:18px;font-weight:700;color:var(--zcs-primary-text-color)}.cd-card-subtitle{margin:0 0 16px;font-size:13px;color:var(--zcs-secondary-text-color)}.cd-heatmap{display:grid;grid-template-columns:repeat(4,minmax(190px,1fr));gap:12px}.cd-heat-cell{border:1px solid var(--zcs-border-color);border-radius:14px;padding:14px;min-height:118px;box-sizing:border-box}.cd-heat-green{background:#E4FCF3}.cd-heat-yellow{background:#FCF4E6}.cd-heat-red{background:#FDE3E6}.cd-heat-gray{background:#F9FAFE}.cd-heat-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.cd-dept{font-size:14px;font-weight:700;color:var(--zcs-primary-text-color);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.cd-rate{font-size:22px;font-weight:800;color:var(--zcs-primary-text-color);margin-top:12px}.cd-heat-meta{display:flex;justify-content:space-between;margin-top:10px;font-size:12px;color:var(--zcs-secondary-text-color)}.cd-mini-bar{height:7px;background:rgba(255,255,255,.7);border-radius:99px;margin-top:12px;overflow:hidden}.cd-mini-fill{height:100%;background:var(--zcs_brand_color);border-radius:99px}.cd-nodata{min-height:160px;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--zcs-secondary-text-color)}@media(max-width:1050px){.cd-heatmap{grid-template-columns:repeat(2,minmax(180px,1fr))}}@media(max-width:640px){.cd-section{padding:0 12px 12px}.cd-heatmap{grid-template-columns:1fr}}
+</style>
+<%
+deptTotal = Map();
+deptGood = Map();
+deptCritical = Map();
+for each cl in TE_Claims[ID != 0]
+{
+  deptName = ifnull(cl.Department,"Unassigned");
+  if(deptName == "")
+  {
+    deptName = "Unassigned";
+  }
+  totalVal = 0;
+  goodVal = 0;
+  criticalVal = 0;
+  if(deptTotal.containKey(deptName))
+  {
+    totalVal = deptTotal.get(deptName);
+    goodVal = deptGood.get(deptName);
+    criticalVal = deptCritical.get(deptName);
+  }
+  totalVal = totalVal + 1;
+  if(cl.Compliance_Rating == "Green" || cl.Claim_Status == "Compliance Cleared - Green" || cl.Claim_Status == "Compliance Cleared - Approved" || cl.Claim_Status == "SAP Approved")
+  {
+    goodVal = goodVal + 1;
+  }
+  if(ifnull(cl.Critical_Violation_Count,0) > 0)
+  {
+    criticalVal = criticalVal + ifnull(cl.Critical_Violation_Count,0);
+  }
+  deptTotal.put(deptName,totalVal);
+  deptGood.put(deptName,goodVal);
+  deptCritical.put(deptName,criticalVal);
+}
+%>
+<div class="cd-section">
+  <section class="zcs-card zcs-p-24 zcs-box-border">
+    <h2 class="cd-card-title">Department compliance heatmap</h2>
+    <p class="cd-card-subtitle">TE_Claims grouped by Department with compliance rating and critical violation concentration.</p>
+    <% if(deptTotal.keys().size() == 0) { %>
+      <div class="cd-nodata"><div><i class="zc-li-outline ui-1-circle-remove zcs-font-24 zcs-color-tertiary"></i><br>No department claim data available.</div></div>
+    <% } else { %>
+      <div class="cd-heatmap">
+      <%
+        for each deptName in deptTotal.keys()
+        {
+          totalVal = deptTotal.get(deptName);
+          goodVal = deptGood.get(deptName);
+          criticalVal = deptCritical.get(deptName);
+          deptRate = 0.0;
+          if(totalVal > 0)
+          {
+            deptRate = (goodVal * 100.0) / totalVal;
+          }
+          heatClass = "cd-heat-gray";
+          if(deptRate >= 85 && criticalVal == 0)
+          {
+            heatClass = "cd-heat-green";
+          }
+          else if(deptRate >= 70)
+          {
+            heatClass = "cd-heat-yellow";
+          }
+          else
+          {
+            heatClass = "cd-heat-red";
+          }
+          %>
+          <article class="cd-heat-cell <%=heatClass%>">
+            <div class="cd-heat-head">
+              <div class="cd-dept"><%=deptName%></div>
+              <% if(criticalVal > 0) { %>
+                <div class="zcs-badge zcs-badge-filled-outline zcs-badge-red zcs-inline-flex zcs-align-items-center zcs-gap-4 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border"><i class="zcs-badge-icon zc-li-outline ui-1-circle-remove"></i><span class="zcs-font-12"><%=criticalVal%> critical</span></div>
+              <% } else { %>
+                <div class="zcs-badge zcs-badge-filled-outline zcs-badge-green zcs-inline-flex zcs-align-items-center zcs-gap-4 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border"><i class="zcs-badge-icon zc-li-outline ui-1-check-circle-08"></i><span class="zcs-font-12">Clear</span></div>
+              <% } %>
+            </div>
+            <div class="cd-rate"><%=deptRate%>%</div>
+            <div class="cd-mini-bar"><div class="cd-mini-fill" style="width:<%=deptRate%>%;"></div></div>
+            <div class="cd-heat-meta"><span><%=goodVal%> compliant</span><span><%=totalVal%> claims</span></div>
+          </article>
+          <%
+        }
+      %>
+      </div>
+    <% } %>
+  </section>
+</div>

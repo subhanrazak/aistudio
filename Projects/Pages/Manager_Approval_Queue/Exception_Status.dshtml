@@ -1,0 +1,98 @@
+<%
+managerLogin = zoho.loginuserid;
+managerDisplay = zoho.loginuser;
+managerExceptions = TE_Exceptions[Status == "Pending Manager Approval" && (Exception_Approver_Email == managerLogin || Exception_Approver_Email == managerDisplay)];
+if(managerExceptions.count() == 0)
+{
+	managerExceptions = TE_Exceptions[Status == "Pending Manager Approval"];
+	exceptionScopeLabel = "Admin/demo mode: all manager-level exceptions.";
+}
+else
+{
+	exceptionScopeLabel = "Filtered to your exception approver email.";
+}
+%>
+<div class="maq-page-shell" style="padding-top:0;">
+    <div class="maq-section-card">
+        <div class='zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12 zcs-mb-8'>
+            <div>
+                <h5 class='zcs-font-20 zcs-font-semibold zcs-color-primary zcs-m-0'>Exception status and SLA</h5>
+                <p class='zcs-font-13 zcs-color-secondary zcs-m-0 zcs-mt-8'><%=exceptionScopeLabel%></p>
+            </div>
+            <div class='zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-orange'>
+                <span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'><%=managerExceptions.count()%> awaiting manager</span>
+            </div>
+        </div>
+<%
+if(managerExceptions.count() == 0)
+{
+%>
+        <div class='zcs-toast zcs-success-toast zcs-w-full zcs-flex zcs-gap-8 zcs-px-16 zcs-py-12 zcs-rounded-sm zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'>
+            <i class='zcs-toast-icon zcs-no-shrink zcs-lh-body zc-li-outline ui-1-check-circle-08'></i>
+            <div class='zcs-toast-text'><p class='zcs-m-0'>No TE exceptions are currently pending manager approval.</p></div>
+        </div>
+<%
+}
+else
+{
+%>
+        <div class='zcs-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative'>
+            <table class='zcs-w-full'>
+                <thead class='zcs-sticky'>
+                    <tr>
+                        <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Exception</th>
+                        <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Claim</th>
+                        <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Excess</th>
+                        <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>SLA due</th>
+                        <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Status</th>
+                    </tr>
+                    <tr class='zcs-tspace'><th class='zcs-p-2 zcs-box-border' colspan='5'> </th></tr>
+                </thead>
+                <tbody>
+<%
+rowCount = 0;
+for each excRec in managerExceptions
+{
+	if(rowCount < 10)
+	{
+		rowCount = rowCount + 1;
+		slaClass = "zcs-badge-blue";
+		slaLabel = "Scheduled";
+		if(excRec.SLA_Due_Date != null && excRec.SLA_Due_Date < zoho.currentdate)
+		{
+			slaClass = "zcs-badge-red";
+			slaLabel = "Overdue";
+		}
+		else if(excRec.SLA_Due_Date != null && excRec.SLA_Due_Date == zoho.currentdate)
+		{
+			slaClass = "zcs-badge-yellow";
+			slaLabel = "Due today";
+		}
+%>
+                    <tr>
+                        <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'>
+                            <strong><%=excRec.Exception_Number%></strong><br>
+                            <span class='zcs-font-12 zcs-color-secondary'><%=excRec.Exception_Approver_Level%></span>
+                        </td>
+                        <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=excRec.Claim%></td>
+                        <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=excRec.Currency%> <%=ifnull(excRec.Excess_Amount,0)%></td>
+                        <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'>
+                            <%=excRec.SLA_Due_Date%><br>
+                            <div class='zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border <%=slaClass%>'>
+                                <span class='zcs-badge-text zcs-font-12 zcs-font-normal zcs-lh-body'><%=slaLabel%></span>
+                            </div>
+                        </td>
+                        <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=excRec.Status%></td>
+                    </tr>
+<%
+	}
+}
+%>
+                </tbody>
+            </table>
+        </div>
+<%
+}
+%>
+    </div>
+</div>

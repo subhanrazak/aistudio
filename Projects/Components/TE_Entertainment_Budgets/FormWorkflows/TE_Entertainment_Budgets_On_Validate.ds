@@ -1,0 +1,36 @@
+TE_Entertainment_Budgets_On_Validate as "TE Entertainment Budgets On Validate"
+{
+    type = form
+    form = TE_Entertainment_Budgets
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Annual_Budget < 0)
+                {
+                    alert "Annual Budget must be greater than or equal to 0.";
+                    cancel submit;
+                }
+                if(input.Used_Amount != null && input.Used_Amount < 0)
+                {
+                    alert "Used Amount must be greater than or equal to 0.";
+                    cancel submit;
+                }
+                if(input.Budget_Year < 2020 || input.Budget_Year > 2100)
+                {
+                    alert "Budget Year must be between 2020 and 2100.";
+                    cancel submit;
+                }
+                if(input.Currency == null || input.Currency.length() != 3)
+                {
+                    alert "Currency must be exactly 3 characters.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}

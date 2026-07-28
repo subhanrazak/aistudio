@@ -1,0 +1,155 @@
+TE_Compliance_Results_On_Success as "TE Compliance Results On Success"
+{
+    type = form
+    form = TE_Compliance_Results
+    record event = on add or edit
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                lineStatus = "Pass";
+                if(input.Pass_Fail == "Fail")
+                {
+                    if(input.Severity == "Critical")
+                    {
+                        lineStatus = "Critical";
+                    }
+                    else if(input.Severity == "Warning")
+                    {
+                        lineStatus = "Warning";
+                    }
+                    else
+                    {
+                        lineStatus = "Warning";
+                    }
+                }
+                if(input.Line_Item != null)
+                {
+                    try
+                    {
+                        lineRec = TE_Line_Items[ID == input.Line_Item];
+                        relatedCritical = TE_Compliance_Results[Line_Item == input.Line_Item && Pass_Fail == "Fail" && Severity == "Critical"].count(ID);
+                        relatedWarning = TE_Compliance_Results[Line_Item == input.Line_Item && Pass_Fail == "Fail" && Severity == "Warning"].count(ID);
+                        relatedException = TE_Compliance_Results[Line_Item == input.Line_Item && Pass_Fail == "Fail" && Exception_Required == true && Exception_Status != "Approved"].count(ID);
+                        if(relatedCritical > 0)
+                        {
+                            lineStatus = "Critical";
+                        }
+                        else if(relatedWarning > 0)
+                        {
+                            lineStatus = "Warning";
+                        }
+                        else
+                        {
+                            lineStatus = "Pass";
+                        }
+                        lineRec.Policy_Status = lineStatus;
+                        lineRec.Requires_Exception = (relatedException > 0);
+                        lineRec.Last_Checked_On = zoho.currenttime;
+                    }
+                    catch(lineError)
+                    {
+                        info "Line item rollup skipped: " + lineError.message;
+                    }
+                }
+                if(input.Claim != null)
+                {
+                    try
+                    {
+                        claimRec = TE_Claims[ID == input.Claim];
+                        criticalCount = TE_Compliance_Results[Claim == input.Claim && Pass_Fail == "Fail" && Severity == "Critical"].count(ID);
+                        warningCount = TE_Compliance_Results[Claim == input.Claim && Pass_Fail == "Fail" && Severity == "Warning"].count(ID);
+                        excessTotal = TE_Compliance_Results[Claim == input.Claim && Pass_Fail == "Fail"].sum(Excess_Amount);
+                        unresolvedCritical = TE_Compliance_Results[Claim == input.Claim && Pass_Fail == "Fail" && Severity == "Critical" && Exception_Status != "Approved"].count(ID);
+                        claimRec.Critical_Violation_Count = criticalCount;
+                        claimRec.Warning_Count = warningCount;
+                        claimRec.Estimated_Savings = excessTotal;
+                        claimRec.Last_Compliance_Check = zoho.currenttime;
+                        if(criticalCount > 0)
+                        {
+                            claimRec.Compliance_Rating = "Red";
+                            if(unresolvedCritical > 0)
+                            {
+                                claimRec.Claim_Status = "Compliance Held - Critical";
+                            }
+                            else
+                            {
+                                claimRec.Claim_Status = "Exception Approved";
+                            }
+                        }
+                        else if(warningCount > 0)
+                        {
+                            claimRec.Compliance_Rating = "Yellow";
+                            claimRec.Claim_Status = "Compliance Cleared - Warnings";
+                        }
+                        else
+                        {
+                            claimRec.Compliance_Rating = "Green";
+                            claimRec.Claim_Status = "Compliance Cleared - Green";
+                        }
+                    }
+                    catch(claimError)
+                    {
+                        info "Claim rollup skipped: " + claimError.message;
+                    }
+                }
+                try
+                {
+                    if(input.Claim != null)
+                    {
+                        claimForEmployee = TE_Claims[ID == input.Claim];
+                        if(claimForEmployee.Employee != null)
+                        {
+                            employeeRec = TE_Employees[ID == claimForEmployee.Employee];
+                            empCritical = 0;
+                            empWarning = 0;
+                            employeeClaims = TE_Claims[Employee == claimForEmployee.Employee];
+                            for each employeeClaim in employeeClaims
+                            {
+                                empCritical = empCritical + TE_Compliance_Results[Claim == employeeClaim.ID && Pass_Fail == "Fail" && Severity == "Critical"].count(ID);
+                                empWarning = empWarning + TE_Compliance_Results[Claim == employeeClaim.ID && Pass_Fail == "Fail" && Severity == "Warning"].count(ID);
+                            }
+                            employeeRec.Critical_Violations_12M = empCritical;
+                            employeeRec.Warning_Violations_12M = empWarning;
+                            employeeRec.Repeat_Offender = (empCritical > 0 || empWarning >= 3);
+                        }
+                    }
+                }
+                catch(employeeError)
+                {
+                    info "Employee counter rollup skipped: " + employeeError.message;
+                }
+                try
+                {
+                    auditSeverity = input.Severity;
+                    if(auditSeverity == null || auditSeverity == "")
+                    {
+                        auditSeverity = "Info";
+                    }
+                    insert into TE_Audit_Log
+                    [
+                        Event_Key = "COMP-" + input.ID + "-" + zoho.currenttime
+                        Event_Timestamp = zoho.currenttime
+                        Actor_Email = zoho.loginuserid
+                        Actor_Profile = zoho.loginuser
+                        Entity_Type = "Compliance Result"
+                        Entity_Record_ID = input.Result_Key
+                        Action = "Compliance result create/update"
+                        Before_Value = ""
+                        After_Value = "Pass_Fail=" + input.Pass_Fail + "; Severity=" + input.Severity + "; Excess_Amount=" + input.Excess_Amount + "; Exception_Status=" + input.Exception_Status
+                        IP_Address = zoho.ipaddress
+                        Severity = auditSeverity
+                        Immutable_Flag = true
+                    ];
+                }
+                catch(auditError)
+                {
+                    info "Compliance result audit log write skipped: " + auditError.message;
+                }
+            )
+        }
+    }
+}

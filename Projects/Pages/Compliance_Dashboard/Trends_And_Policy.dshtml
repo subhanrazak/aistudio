@@ -1,0 +1,175 @@
+<style>
+.cd-section{background:var(--zcs-page-bg-color);padding:0 20px 20px;box-sizing:border-box;font-family:Inter,Arial,sans-serif}.cd-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:16px}.cd-card-title{margin:0 0 4px;font-size:18px;font-weight:700;color:var(--zcs-primary-text-color)}.cd-card-subtitle{margin:0 0 16px;font-size:13px;color:var(--zcs-secondary-text-color)}.cd-trend-bars{height:245px;display:flex;align-items:flex-end;gap:10px;border-left:1px dashed #dfe3ec;border-bottom:1px solid #dfe3ec;padding:12px 8px 0;overflow-x:auto}.cd-trend-col{min-width:74px;display:flex;flex-direction:column;align-items:center;gap:8px;height:100%;justify-content:flex-end}.cd-trend-bar{width:38px;min-height:4px;background:linear-gradient(180deg,var(--zcs_brand_color),#A4D5FF);border-radius:10px 10px 0 0}.cd-trend-label{font-size:11px;color:var(--zcs-secondary-text-color);text-align:center;line-height:1.25}.cd-trend-value{font-size:12px;color:var(--zcs-primary-text-color);font-weight:700}.cd-status-grid{display:grid;grid-template-columns:repeat(2,minmax(140px,1fr));gap:10px}.cd-status-card{border:1px solid var(--zcs-border-color);border-radius:14px;padding:14px;background:#fff}.cd-status-card strong{display:block;font-size:24px;color:var(--zcs-primary-text-color);margin-top:8px}.cd-status-card span{font-size:12px;color:var(--zcs-secondary-text-color)}.cd-status-icon{width:34px;height:34px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:var(--zcs_component_hover_color);color:var(--zcs_brand_color)}.cd-policy{margin-top:16px}.cd-table-wrap{overflow:auto;border:1px solid var(--zcs-border-color);border-radius:10px}.cd-table{width:100%;border-collapse:collapse;background:#fff}.cd-table th{background:#F9FAFE;color:var(--zcs-primary-text-color);font-size:13px;font-weight:700;text-align:left;padding:10px;border-bottom:1px solid var(--zcs-border-color);white-space:nowrap}.cd-table td{padding:10px;border-top:1px solid var(--zcs-border-color);font-size:13px;color:var(--zcs-primary-text-color)}.cd-table tr:first-child td{border-top:none}.cd-util-track{height:8px;background:#eef0f6;border-radius:999px;overflow:hidden;min-width:110px}.cd-util-fill{height:100%;background:linear-gradient(90deg,#28CC97,#FAAE13);border-radius:999px}.cd-nodata{min-height:160px;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--zcs-secondary-text-color)}@media(max-width:1100px){.cd-grid{grid-template-columns:1fr}}@media(max-width:640px){.cd-section{padding:0 12px 12px}.cd-status-grid{grid-template-columns:1fr}}
+</style>
+<%
+monthTotal = Map();
+monthPass = Map();
+monthLabels = List();
+for each li in TE_Line_Items[Expense_Category == "Airfare" && Booking_Date != null && Departure_Date != null] sort by Departure_Date asc
+{
+  monthKey = li.Departure_Date.toString("MMM yyyy");
+  if(!monthLabels.contains(monthKey))
+  {
+    monthLabels.add(monthKey);
+    monthTotal.put(monthKey,0);
+    monthPass.put(monthKey,0);
+  }
+  monthTotal.put(monthKey,monthTotal.get(monthKey) + 1);
+  daysAhead = li.Booking_Date.daysBetween(li.Departure_Date);
+  if(daysAhead >= 14)
+  {
+    monthPass.put(monthKey,monthPass.get(monthKey) + 1);
+  }
+}
+exceptionStatuses = {"Draft","Pending Manager Approval","Pending Department Head Approval","Pending Compliance Approval","Pending CFO Approval","Approved","Rejected","Escalated","Returned for Information"};
+tierActual = Map();
+tierAllowance = Map();
+tierCount = Map();
+tiers = {"Tier 1 (Major Metro)","Tier 2","Tier 3 (Regional)","Unmatched Rate"};
+for each tier in tiers
+{
+  tierActual.put(tier,0.0);
+  tierAllowance.put(tier,0.0);
+  tierCount.put(tier,0);
+}
+for each meal in TE_Line_Items[Expense_Category == "Meals"]
+{
+  tierName = "Unmatched Rate";
+  dailyAllowance = 0.0;
+  rateRows = TE_Rate_Tables[City_Location == meal.Claim.Destination_City && Active == true && (Grade_Band == meal.Claim.Employee_Grade_Band || Grade_Band == "All")] sort by Effective_Date desc;
+  if(rateRows.count(ID) > 0)
+  {
+    tierName = ifnull(rateRows.City_Tier,"Unmatched Rate");
+    dailyAllowance = ifnull(rateRows.Daily_Per_Diem_Meals,0);
+  }
+  if(!tierActual.containKey(tierName))
+  {
+    tierActual.put(tierName,0.0);
+    tierAllowance.put(tierName,0.0);
+    tierCount.put(tierName,0);
+  }
+  tierActual.put(tierName,tierActual.get(tierName) + ifnull(meal.Amount,0));
+  tierAllowance.put(tierName,tierAllowance.get(tierName) + dailyAllowance);
+  tierCount.put(tierName,tierCount.get(tierName) + 1);
+}
+%>
+<div class="cd-section">
+  <div class="cd-grid">
+    <section class="zcs-card zcs-p-24 zcs-box-border">
+      <h2 class="cd-card-title">Advance booking compliance trend</h2>
+      <p class="cd-card-subtitle">Airfare line items by departure month; compliant when booked at least 14 days before departure.</p>
+      <% if(monthLabels.size() == 0) { %>
+        <div class="cd-nodata"><div><i class="zc-li-outline ui-2-time zcs-font-24 zcs-color-tertiary"></i><br>No airfare booking data with booking and departure dates.</div></div>
+      <% } else { %>
+        <div class="cd-trend-bars">
+        <%
+          for each monthKey in monthLabels
+          {
+            mt = monthTotal.get(monthKey);
+            mp = monthPass.get(monthKey);
+            trendPct = 0.0;
+            if(mt > 0)
+            {
+              trendPct = (mp * 100.0) / mt;
+            }
+            %>
+            <div class="cd-trend-col">
+              <div class="cd-trend-value"><%=trendPct%>%</div>
+              <div class="cd-trend-bar" style="height:<%=trendPct%>%;"></div>
+              <div class="cd-trend-label"><%=monthKey%><br><%=mp%>/<%=mt%></div>
+            </div>
+            <%
+          }
+        %>
+        </div>
+      <% } %>
+    </section>
+    <section class="zcs-card zcs-p-24 zcs-box-border">
+      <h2 class="cd-card-title">Exception request cards</h2>
+      <p class="cd-card-subtitle">TE_Exceptions volume by current approval status.</p>
+      <div class="cd-status-grid">
+      <%
+        for each st in exceptionStatuses
+        {
+          stCount = TE_Exceptions[Status == st].count(ID);
+          iconClass = "zc-li-outline ui-2-time";
+          badgeClass = "zcs-badge-blue";
+          if(st == "Approved")
+          {
+            iconClass = "zc-li-outline ui-1-check-circle-08";
+            badgeClass = "zcs-badge-green";
+          }
+          else if(st == "Rejected" || st == "Escalated")
+          {
+            iconClass = "zc-li-outline ui-1-circle-remove";
+            badgeClass = "zcs-badge-red";
+          }
+          %>
+          <article class="cd-status-card">
+            <div class="zcs-flex zcs-justify-space-between zcs-align-items-center zcs-gap-8">
+              <div class="cd-status-icon"><i class="<%=iconClass%>"></i></div>
+              <div class="zcs-badge zcs-badge-filled-outline <%=badgeClass%> zcs-inline-flex zcs-align-items-center zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border"><span class="zcs-font-12">Status</span></div>
+            </div>
+            <strong><%=stCount%></strong>
+            <span><%=st%></span>
+          </article>
+          <%
+        }
+      %>
+      </div>
+    </section>
+  </div>
+  <section class="cd-policy zcs-card zcs-p-24 zcs-box-border">
+    <h2 class="cd-card-title">Per diem utilization by city tier</h2>
+    <p class="cd-card-subtitle">Meal line amounts compared with active TE_Rate_Tables daily per diem where city and grade-band mappings are available.</p>
+    <div class="cd-table-wrap">
+      <table class="cd-table">
+        <thead><tr><th>City tier</th><th>Meal lines</th><th>Actual meals</th><th>Per diem allowance</th><th>Utilization</th><th>Mapping note</th></tr></thead>
+        <tbody>
+        <%
+          hasMeals = false;
+          for each tierName in tierActual.keys()
+          {
+            lineCount = tierCount.get(tierName);
+            if(lineCount > 0)
+            {
+              hasMeals = true;
+              actualAmount = tierActual.get(tierName);
+              allowanceAmount = tierAllowance.get(tierName);
+              utilPct = 0.0;
+              note = "Matched active rate table";
+              if(allowanceAmount > 0)
+              {
+                utilPct = (actualAmount * 100.0) / allowanceAmount;
+              }
+              else
+              {
+                note = "Needs city or grade-band rate mapping";
+              }
+              barWidth = utilPct;
+              if(barWidth > 100)
+              {
+                barWidth = 100;
+              }
+              %>
+              <tr>
+                <td><%=tierName%></td>
+                <td><%=lineCount%></td>
+                <td>$<%=actualAmount%></td>
+                <td>$<%=allowanceAmount%></td>
+                <td><div class="zcs-flex zcs-align-items-center zcs-gap-8"><div class="cd-util-track"><div class="cd-util-fill" style="width:<%=barWidth%>%;"></div></div><span><%=utilPct%>%</span></div></td>
+                <td><%=note%></td>
+              </tr>
+              <%
+            }
+          }
+          if(!hasMeals)
+          {
+            %><tr><td colspan="6" class="zcs-text-center zcs-color-secondary">No meal line items available for per diem utilization.</td></tr><%
+          }
+        %>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>

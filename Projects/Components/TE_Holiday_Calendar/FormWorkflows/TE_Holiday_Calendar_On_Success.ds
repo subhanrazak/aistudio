@@ -1,0 +1,39 @@
+TE_Holiday_Calendar_On_Success as "TE Holiday Calendar On Success"
+{
+    type = form
+    form = TE_Holiday_Calendar
+    record event = on add or edit
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                try
+                {
+                    auditKey = "HOL-" + input.ID.toText() + "-" + zoho.currenttime.toText("yyyyMMddHHmmss");
+                    holidayAfter = "Holiday_Code=" + input.Holiday_Code + "; Holiday_Name=" + input.Holiday_Name + "; Holiday_Date=" + input.Holiday_Date.toText() + "; Country_Code=" + input.Country_Code + "; Region_State=" + input.Region_State + "; Business_Day_Flag=" + input.Business_Day_Flag.toText() + "; Active=" + input.Active.toText();
+                    insert into TE_Audit_Log
+                    [
+                        Event_Key = auditKey
+                        Event_Timestamp = zoho.currenttime
+                        Actor_Email = zoho.loginuserid
+                        Actor_Profile = zoho.loginuser
+                        Entity_Type = "Holiday Calendar"
+                        Entity_Record_ID = input.ID.toText()
+                        Action = "Holiday calendar create/update"
+                        After_Value = holidayAfter
+                        IP_Address = zoho.ipaddress
+                        Severity = "Info"
+                        Immutable_Flag = true
+                    ];
+                }
+                catch(auditError)
+                {
+                    info "TE_Audit_Log write skipped: " + auditError.message;
+                }
+            )
+        }
+    }
+}

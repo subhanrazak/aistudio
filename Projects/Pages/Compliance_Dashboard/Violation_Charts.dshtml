@@ -1,0 +1,132 @@
+<style>
+.cd-section{background:var(--zcs-page-bg-color);padding:0 20px 20px;box-sizing:border-box;font-family:Inter,Arial,sans-serif}.cd-analytics-grid{display:grid;grid-template-columns:420px 1fr;gap:16px}.cd-card-title{margin:0 0 4px;font-size:18px;font-weight:700;color:var(--zcs-primary-text-color)}.cd-card-subtitle{margin:0 0 16px;font-size:13px;color:var(--zcs-secondary-text-color)}.cd-donut-wrap{display:flex;gap:20px;align-items:center}.cd-donut{width:210px;height:210px;border-radius:50%;background:conic-gradient(#e4e7ee 0 100%);position:relative;flex-shrink:0}.cd-donut:after{content:"";position:absolute;inset:42px;background:#fff;border-radius:50%;box-shadow:inset 0 0 0 1px var(--zcs-border-color)}.cd-donut-center{position:absolute;z-index:2;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;text-align:center}.cd-donut-center strong{font-size:30px;color:var(--zcs-primary-text-color)}.cd-donut-center span{font-size:12px;color:var(--zcs-secondary-text-color)}.cd-legend{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:9px;min-width:0}.cd-legend li{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:13px;color:var(--zcs-primary-text-color)}.cd-legend-left{display:flex;align-items:center;gap:8px;min-width:0}.cd-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}.cd-muted{color:var(--zcs-secondary-text-color)}.cd-bars{display:flex;flex-direction:column;gap:12px}.cd-bar-row{display:grid;grid-template-columns:92px 1fr 112px;gap:12px;align-items:center}.cd-emp-label{font-size:13px;color:var(--zcs-primary-text-color)}.cd-bar-track{height:12px;background:#eef0f6;border-radius:999px;overflow:hidden}.cd-bar-fill{height:100%;background:linear-gradient(90deg,#FE455D,#FAAE13);border-radius:999px}.cd-amount{text-align:right;font-size:13px;color:var(--zcs-secondary-text-color)}.cd-nodata{min-height:190px;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--zcs-secondary-text-color)}@media(max-width:980px){.cd-analytics-grid{grid-template-columns:1fr}.cd-donut-wrap{flex-direction:column;align-items:flex-start}.cd-bar-row{grid-template-columns:84px 1fr 92px}}@media(max-width:640px){.cd-section{padding:0 12px 12px}.cd-bar-row{grid-template-columns:1fr}.cd-amount{text-align:left}}
+</style>
+<%
+ruleCategories = {"Hotel Rate Limit","Per Diem / Meals","Airfare Class","Advance Booking","Receipt Requirement","Entertainment Documentation","Entertainment Budget Cap","Duplicate Expense","Weekend/Holiday Travel","Mileage Reasonableness"};
+colors = {"#FECE56","#36A2EB","#FF6283","#28CC97","#845EC2","#FF9671","#008F7A","#C34A36","#2C73D2","#B0A8B9"};
+totalFails = TE_Compliance_Results[Pass_Fail == "Fail"].count(ID);
+gradient = "#e4e7ee 0 100%";
+runningPct = 0.0;
+if(totalFails > 0)
+{
+  gradient = "";
+  colorIndex = 0;
+  for each cat in ruleCategories
+  {
+    catCount = TE_Compliance_Results[Pass_Fail == "Fail" && Rule_Category == cat].count(ID);
+    if(catCount > 0)
+    {
+      pct = (catCount * 100.0) / totalFails;
+      endPct = runningPct + pct;
+      if(gradient != "")
+      {
+        gradient = gradient + ", ";
+      }
+      gradient = gradient + colors.get(colorIndex) + " " + runningPct + "% " + endPct + "%";
+      runningPct = endPct;
+    }
+    colorIndex = colorIndex + 1;
+  }
+}
+overspend = Map();
+for each failRec in TE_Compliance_Results[Pass_Fail == "Fail" && Excess_Amount > 0]
+{
+  empKey = ifnull(failRec.Claim.Employee_ID,"Unassigned");
+  if(empKey == "")
+  {
+    empKey = "Unassigned";
+  }
+  currentSpend = 0.0;
+  if(overspend.containKey(empKey))
+  {
+    currentSpend = overspend.get(empKey);
+  }
+  overspend.put(empKey,currentSpend + ifnull(failRec.Excess_Amount,0));
+}
+maxSpend = 0.0;
+for each empKey in overspend.keys()
+{
+  if(overspend.get(empKey) > maxSpend)
+  {
+    maxSpend = overspend.get(empKey);
+  }
+}
+%>
+<div class="cd-section">
+  <div class="cd-analytics-grid">
+    <section class="zcs-card zcs-p-24 zcs-box-border">
+      <h2 class="cd-card-title">Violation type distribution</h2>
+      <p class="cd-card-subtitle">Failed TE_Compliance_Results grouped by rule category.</p>
+      <% if(totalFails == 0) { %>
+        <div class="cd-nodata"><div><i class="zc-li-outline ui-1-check-circle-08 zcs-font-24 zcs-color-theme"></i><br>No failed compliance results yet.</div></div>
+      <% } else { %>
+        <div class="cd-donut-wrap">
+          <div class="cd-donut" style="background:conic-gradient(<%=gradient%>);">
+            <div class="cd-donut-center"><strong><%=totalFails%></strong><span>Failed checks</span></div>
+          </div>
+          <ul class="cd-legend">
+          <%
+            colorIndex = 0;
+            for each cat in ruleCategories
+            {
+              catCount = TE_Compliance_Results[Pass_Fail == "Fail" && Rule_Category == cat].count(ID);
+              if(catCount > 0)
+              {
+                catPct = (catCount * 100.0) / totalFails;
+                %>
+                <li><span class="cd-legend-left"><span class="cd-dot" style="background:<%=colors.get(colorIndex)%>"></span><span class="zcs-ellipsis"><%=cat%></span></span><strong><%=catCount%> <span class="cd-muted">(<%=catPct%>%)</span></strong></li>
+                <%
+              }
+              colorIndex = colorIndex + 1;
+            }
+          %>
+          </ul>
+        </div>
+      <% } %>
+    </section>
+    <section class="zcs-card zcs-p-24 zcs-box-border">
+      <h2 class="cd-card-title">Top 10 over-spenders</h2>
+      <p class="cd-card-subtitle">Failed compliance excess amount grouped by employee; labels are anonymized for executive review.</p>
+      <% if(overspend.keys().size() == 0) { %>
+        <div class="cd-nodata"><div><i class="zc-li-outline ui-1-check-circle-08 zcs-font-24 zcs-color-theme"></i><br>No over-spend violations found.</div></div>
+      <% } else { %>
+        <div class="cd-bars">
+        <%
+          usedEmp = List();
+          rank = 1;
+          for each slot in {1,2,3,4,5,6,7,8,9,10}
+          {
+            selectedEmp = "";
+            selectedAmount = 0.0;
+            for each empKey in overspend.keys()
+            {
+              if(!usedEmp.contains(empKey) && overspend.get(empKey) > selectedAmount)
+              {
+                selectedEmp = empKey;
+                selectedAmount = overspend.get(empKey);
+              }
+            }
+            if(selectedEmp != "")
+            {
+              usedEmp.add(selectedEmp);
+              barPct = 0.0;
+              if(maxSpend > 0)
+              {
+                barPct = (selectedAmount * 100.0) / maxSpend;
+              }
+              %>
+              <div class="cd-bar-row">
+                <div class="cd-emp-label">Employee <%=rank%></div>
+                <div class="cd-bar-track"><div class="cd-bar-fill" style="width:<%=barPct%>%;"></div></div>
+                <div class="cd-amount">$<%=selectedAmount%></div>
+              </div>
+              <%
+              rank = rank + 1;
+            }
+          }
+        %>
+        </div>
+      <% } %>
+    </section>
+  </div>
+</div>

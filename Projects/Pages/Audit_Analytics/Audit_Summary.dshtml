@@ -1,0 +1,32 @@
+<%
+claimCount = TE_Claims[ID != 0].count();
+checkCount = TE_Compliance_Results[ID != 0].count();
+failedChecks = TE_Compliance_Results[Pass_Fail == "Fail"].count();
+approvedExceptions = TE_Exceptions[Status == "Approved"].count();
+rejectedExceptions = TE_Exceptions[Status == "Rejected"].count();
+repeatOffenders = TE_Employees[Repeat_Offender == true].count();
+failedSyncs = TE_Sync_Log[Sync_Status == "Failed" || Sync_Status == "Partial"].count();
+%>
+<link rel="stylesheet" href="https://css.zohostatic.com/creator/zcs-global.css">
+<style>
+.audit-wrap{font-family:var(--zcs-font-family);color:var(--zcs-text-primary);}
+.audit-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:18px;}
+.audit-card{background:var(--zcs-card-bg);border:1px solid var(--zcs-border-color);border-radius:16px;padding:18px;box-shadow:0 8px 24px rgba(15,23,42,.06);}
+.audit-label{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--zcs-text-secondary);margin-bottom:8px;}
+.audit-value{font-size:30px;font-weight:800;color:#0f2f57;}
+.audit-danger{color:#b42318;}.audit-ok{color:#067647;}.audit-warn{color:#b54708;}
+.audit-note{background:#f8fafc;border-left:4px solid #1f5eff;border-radius:12px;padding:14px 16px;margin-top:12px;line-height:1.55;}
+</style>
+<div class="audit-wrap">
+  <div class="audit-grid">
+    <div class="audit-card"><div class="audit-label">Claims in Scope</div><div class="audit-value"><%=claimCount%></div></div>
+    <div class="audit-card"><div class="audit-label">Compliance Checks</div><div class="audit-value"><%=checkCount%></div></div>
+    <div class="audit-card"><div class="audit-label">Failed Checks</div><div class="audit-value audit-danger"><%=failedChecks%></div></div>
+    <div class="audit-card"><div class="audit-label">Repeat Offenders</div><div class="audit-value audit-warn"><%=repeatOffenders%></div></div>
+    <div class="audit-card"><div class="audit-label">Approved Exceptions</div><div class="audit-value audit-ok"><%=approvedExceptions%></div></div>
+    <div class="audit-card"><div class="audit-label">Rejected Exceptions</div><div class="audit-value audit-danger"><%=rejectedExceptions%></div></div>
+    <div class="audit-card"><div class="audit-label">Failed / Partial Syncs</div><div class="audit-value audit-danger"><%=failedSyncs%></div></div>
+    <div class="audit-card"><div class="audit-label">Retention Lens</div><div class="audit-value">7Y</div></div>
+  </div>
+  <div class="audit-note"><strong>Quarterly audit package:</strong> export Audit Export View, Critical Audit Events, Compliance Scorecards, Critical Violations, Approved Exceptions, Rejected Exceptions, Repeat Offenders, SAP Sync History, and Failed Syncs.</div>
+</div>

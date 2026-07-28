@@ -1,0 +1,63 @@
+Recheck_Compliance as "Recheck Compliance"
+{
+    type = functions
+    form = TE_Claims
+    execution type = for each record
+
+    on start
+    {
+        actions
+        {
+            on click
+            (
+                try
+                {
+                    resetLineCount = 0;
+                    try
+                    {
+                        for each lineRec in TE_Line_Items[Claim == input.ID]
+                        {
+                            lineRec.Policy_Status = "Not Checked";
+                            lineRec.Requires_Exception = false;
+                            lineRec.Last_Checked_On = zoho.currenttime;
+                            resetLineCount = resetLineCount + 1;
+                        }
+                    }
+                    catch(lineItemError)
+                    {
+                        info "Line-item reset skipped until TE_Line_Items checks are available: " + lineItemError.message;
+                    }
+                    input.Claim_Status = "Compliance Pending";
+                    input.Compliance_Rating = "Not Checked";
+                    input.Last_Compliance_Check = zoho.currenttime;
+                    try
+                    {
+                        insert into TE_Audit_Log
+                        [
+                            Event_Key = "RECHECK-" + input.ID.toText() + "-" + zoho.currenttime.toText("yyyyMMddHHmmss")
+                            Event_Timestamp = zoho.currenttime
+                            Actor_Email = zoho.loginuserid
+                            Actor_Profile = zoho.loginuser
+                            Entity_Type = "Claim"
+                            Entity_Record_ID = input.Trip_Number
+                            Action = "Compliance recheck requested"
+                            After_Value = "Status=Compliance Pending; Reset_Line_Items=" + resetLineCount.toText()
+                            IP_Address = zoho.ipaddress
+                            Severity = "Info"
+                            Immutable_Flag = true
+                        ];
+                    }
+                    catch(auditError)
+                    {
+                        info "Recheck audit log write skipped: " + auditError.message;
+                    }
+                    info "Compliance recheck queued. Run or resubmit line-item checks for Trip " + input.Trip_Number + ".";
+                }
+                catch(e)
+                {
+                    info "Recheck Compliance failed: " + e.message;
+                }
+            )
+        }
+    }
+}

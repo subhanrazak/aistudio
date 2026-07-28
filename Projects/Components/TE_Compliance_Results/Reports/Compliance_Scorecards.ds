@@ -1,0 +1,36 @@
+default list Compliance_Scorecards
+{
+    displayName = "Compliance Scorecards"
+    show all rows from TE_Compliance_Results
+    (
+        Claim
+        Line_Item
+        Rule_Category
+        Pass_Fail
+        Severity
+        Policy_Limit
+        Actual_Amount
+        Excess_Amount
+        Exception_Status
+        Checked_On
+        custom action "Request Exception"
+        (
+            workflow = Request_Exception
+            show action for each record = true
+            column header = "Actions"
+            success message = "Exception request opened."
+            condition = (Pass_Fail == "Fail" && (Severity == "Critical" || Severity == "Warning") && Exception_Required == true && Exception_Status != "Approved")
+        )
+    )
+    filters
+    (
+        Rule_Category
+        Pass_Fail
+        Severity
+        Exception_Status
+    )
+    sort by
+    (
+        Checked_On descending
+    )
+}

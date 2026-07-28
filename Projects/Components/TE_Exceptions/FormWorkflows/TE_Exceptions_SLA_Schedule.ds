@@ -1,0 +1,123 @@
+TE_Exceptions_SLA_Schedule as "TE Exceptions SLA Schedule"
+{
+    type = schedule
+    start = "2025-01-01 08:00:00"
+    frequency = daily
+    time zone = "UTC"
+
+    on start
+    {
+        actions
+        {
+            on load
+            (
+                overdueExceptions = TE_Exceptions[SLA_Due_Date < zoho.currentdate && (Status == "Pending Manager Approval" || Status == "Pending Department Head Approval" || Status == "Pending Compliance Approval" || Status == "Pending CFO Approval" || Status == "Escalated")];
+                for each exceptionRec in overdueExceptions
+                {
+                    priorLevel = exceptionRec.Exception_Approver_Level;
+                    priorStatus = exceptionRec.Status;
+                    nextLevel = priorLevel;
+                    nextStatus = "Escalated";
+                    additionalDays = 1;
+                    if(priorLevel == "Direct Manager")
+                    {
+                        nextLevel = "Department Head";
+                        nextStatus = "Escalated";
+                        additionalDays = 2;
+                    }
+                    else if(priorLevel == "Department Head")
+                    {
+                        nextLevel = "Compliance Officer";
+                        nextStatus = "Escalated";
+                        additionalDays = 3;
+                    }
+                    else if(priorLevel == "Compliance Officer")
+                    {
+                        nextLevel = "CFO";
+                        nextStatus = "Escalated";
+                        additionalDays = 5;
+                    }
+                    escalationCount = ifNull(exceptionRec.Escalation_Count, 0) + 1;
+                    nextApprover = exceptionRec.Exception_Approver_Email;
+                    requesterEmail = exceptionRec.Requester_Email;
+                    try
+                    {
+                        claimRec = TE_Claims[ID == exceptionRec.Claim];
+                        if(claimRec.Employee != null)
+                        {
+                            employeeRec = TE_Employees[ID == claimRec.Employee];
+                            if((requesterEmail == null || requesterEmail == "") && employeeRec.Login_Email != null && employeeRec.Login_Email != "")
+                            {
+                                requesterEmail = employeeRec.Login_Email;
+                            }
+                            if(nextLevel == "Department Head" && employeeRec.Department_Head_Email != null && employeeRec.Department_Head_Email != "")
+                            {
+                                nextApprover = employeeRec.Department_Head_Email;
+                            }
+                            else if(nextLevel == "Compliance Officer" && employeeRec.Compliance_Reviewer_Email != null && employeeRec.Compliance_Reviewer_Email != "")
+                            {
+                                nextApprover = employeeRec.Compliance_Reviewer_Email;
+                            }
+                            else if(nextLevel == "CFO" && employeeRec.CFO_Approver_Email != null && employeeRec.CFO_Approver_Email != "")
+                            {
+                                nextApprover = employeeRec.CFO_Approver_Email;
+                            }
+                        }
+                    }
+                    catch(routeError)
+                    {
+                        info "SLA escalation routing fallback used: " + routeError.message;
+                    }
+                    exceptionRec.Exception_Approver_Level = nextLevel;
+                    exceptionRec.Exception_Approver_Email = nextApprover;
+                    exceptionRec.Status = nextStatus;
+                    exceptionRec.Escalation_Count = escalationCount;
+                    exceptionRec.SLA_Due_Date = zoho.currentdate.addBusinessDay(additionalDays);
+                    exceptionRec.Last_Reminder_Sent_On = zoho.currenttime;
+                    exceptionRec.Audit_Notes = ifNull(exceptionRec.Audit_Notes, "") + "\nSLA escalation from " + priorStatus + " / " + priorLevel + " on " + zoho.currenttime.toText();
+                    if(nextApprover != null && nextApprover != "")
+                    {
+                        sendmail
+                        (
+                            from : zoho.adminuserid
+                            to : nextApprover
+                            subject : "Escalated policy exception requires review: " + exceptionRec.Exception_Number
+                            message : "Policy exception " + exceptionRec.Exception_Number + " has breached SLA and is now routed to " + nextLevel + "."
+                        )
+                    }
+                    if(requesterEmail != null && requesterEmail != "")
+                    {
+                        sendmail
+                        (
+                            from : zoho.adminuserid
+                            to : requesterEmail
+                            subject : "Policy exception SLA escalation: " + exceptionRec.Exception_Number
+                            message : "Your exception request has been escalated for review. Current approver level: " + nextLevel + "."
+                        )
+                    }
+                    try
+                    {
+                        insert into TE_Audit_Log
+                        [
+                            Event_Key = "EXCSLA-" + exceptionRec.ID.toText() + "-" + zoho.currenttime.toText("yyyyMMddHHmmss")
+                            Event_Timestamp = zoho.currenttime
+                            Actor_Email = zoho.adminuserid
+                            Actor_Profile = "SLA Schedule"
+                            Entity_Type = "Exception"
+                            Entity_Record_ID = exceptionRec.ID.toText()
+                            Action = "Exception SLA escalated"
+                            Before_Value = "Status=" + priorStatus + "; Approver_Level=" + priorLevel
+                            After_Value = "Status=" + exceptionRec.Status + "; Approver_Level=" + exceptionRec.Exception_Approver_Level + "; Escalation_Count=" + exceptionRec.Escalation_Count
+                            Severity = "Warning"
+                            Immutable_Flag = true
+                        ];
+                    }
+                    catch(auditError)
+                    {
+                        info "Exception SLA audit log write skipped: " + auditError.message;
+                    }
+                }
+            )
+        }
+    }
+}

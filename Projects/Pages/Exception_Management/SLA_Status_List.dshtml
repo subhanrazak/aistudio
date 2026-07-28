@@ -1,0 +1,23 @@
+<%
+  slaRows = TE_Exceptions[(Status == "Pending Manager Approval" || Status == "Pending Department Head Approval" || Status == "Pending Compliance Approval" || Status == "Pending CFO Approval" || Status == "Escalated") && SLA_Due_Date != null] sort by SLA_Due_Date asc;
+%>
+<style>
+.em-sla-card{background:#fff;border:1px solid var(--zcs_tertiary_border_color);border-radius:14px;overflow:hidden}.em-sla-head{padding:16px 18px;border-bottom:1px solid var(--zcs_tertiary_border_color);display:flex;align-items:center;justify-content:space-between}.em-sla-head h2{margin:0;font-size:18px;color:var(--zcs_primary_text_color)}.em-sla-head p{margin:4px 0 0;font-size:13px;color:var(--zcs_secondary_text_color)}.em-sla-list{padding:10px 14px;display:flex;flex-direction:column;gap:8px;max-height:430px;overflow:auto}.em-sla-row{display:grid;grid-template-columns:1.2fr 1fr 120px 150px;gap:10px;align-items:center;padding:10px;border:1px solid var(--zcs_tertiary_border_color);border-radius:10px}.em-sla-row a{font-weight:700;color:var(--zcs_brand_color);text-decoration:none}.em-sla-meta{font-size:12px;color:var(--zcs_secondary_text_color)}.em-sla-badge{display:inline-flex;align-items:center;gap:6px;border:1px solid;border-radius:5px;padding:3px 8px;font-size:12px;justify-content:center}.em-sla-red{background:#FDE3E6;color:#FE455D;border-color:#FE455D}.em-sla-yellow{background:#FCF4E6;color:#b8770d;border-color:#FAAE13}.em-sla-green{background:#E4FCF3;color:#179E6C;border-color:#179E6C}.em-sla-empty{padding:26px;text-align:center;color:var(--zcs_secondary_text_color)}@media(max-width:800px){.em-sla-row{grid-template-columns:1fr}.em-sla-badge{justify-content:flex-start}}
+</style>
+<div class="em-sla-card">
+  <div class="em-sla-head">
+    <div><h2>SLA heat/status list</h2><p>Sorted by SLA due date from TE_Exceptions.</p></div>
+    <span class="em-sla-badge em-sla-yellow"><i class="zc-li-outline ui-2-time"></i><span><%=slaRows.count(ID)%> tracked</span></span>
+  </div>
+  <div class="em-sla-list">
+    <% if(slaRows.count(ID) == 0) { %><div class="em-sla-empty">No pending exception has an SLA due date.</div><% } %>
+    <% rowCount = 0; for each ex in slaRows { if(rowCount < 12) { badgeClass = "em-sla-green"; badgeText = "On track"; badgeIcon = "ui-1-check-circle-08"; if(ex.SLA_Due_Date < zoho.currentdate){ badgeClass = "em-sla-red"; badgeText = "Overdue"; badgeIcon = "ui-2-time"; } else if(ex.SLA_Due_Date <= zoho.currentdate.addDay(1)){ badgeClass = "em-sla-yellow"; badgeText = "Due soon"; badgeIcon = "ui-2-alert"; } %>
+      <div class="em-sla-row">
+        <div><a href="#Report:Pending_Exceptions?Exception_Number=<%=encodeURL(ex.Exception_Number)%>&amp;zc_LoadIn=dialog"><%=ex.Exception_Number%></a><div class="em-sla-meta"><%=ex.Exception_Approver_Level%></div></div>
+        <div class="em-sla-meta"><%=ex.Status%></div>
+        <div class="em-sla-meta"><%=ex.SLA_Due_Date%></div>
+        <div class="em-sla-badge <%=badgeClass%>"><i class="zc-li-outline <%=badgeIcon%>"></i><span><%=badgeText%></span></div>
+      </div>
+    <% } rowCount = rowCount + 1; } %>
+  </div>
+</div>

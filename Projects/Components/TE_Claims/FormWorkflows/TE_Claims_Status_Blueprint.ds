@@ -1,0 +1,232 @@
+TE_Claims_Status_Blueprint as "TE Claims Status Blueprint"
+{
+    type = blueprint
+    form = TE_Claims
+
+    start
+    {
+        start stage = "Synced"
+    }
+
+    stages
+    {
+        "Synced" { }
+        "Submitted" { }
+        "Compliance Pending" { }
+        "Compliance Cleared - Green" { }
+        "Compliance Cleared - Warnings" { }
+        "Compliance Held - Critical" { }
+        "Exception Pending" { }
+        "Exception Approved" { }
+        "Returned to Claimant" { }
+        "Rejected by Manager" { }
+        "Compliance Cleared - Approved" { }
+    }
+
+    transitions
+    {
+        Submit_For_Check as "Submit for Check"
+        {
+            type = normal
+            from stage = "Synced"
+            to stage = "Submitted"
+            before
+            {
+                transition owner
+                (
+                    permissions = {"AP_Expense_Processing_Team","Travel_Policy_Administrator"}
+                )
+                transition criteria = (Submission_Date is not null)
+            }
+            after
+            {
+            }
+        }
+
+        Hold_For_Critical as "Hold for Critical"
+        {
+            type = normal
+            from stage = "Submitted"
+            to stage = "Compliance Held - Critical"
+            before
+            {
+                transition owner
+                (
+                    permissions = {"Compliance_Officer","AP_Expense_Processing_Team","Travel_Policy_Administrator"}
+                )
+                transition criteria = (Critical_Violation_Count > 0)
+            }
+            after
+            {
+            }
+        }
+
+        Clear_Green as "Clear Green"
+        {
+            type = normal
+            from stage = "Submitted"
+            to stage = "Compliance Cleared - Green"
+            before
+            {
+                transition owner
+                (
+                    permissions = {"AP_Expense_Processing_Team","Travel_Policy_Administrator"}
+                )
+                transition criteria = (Critical_Violation_Count == 0 && Warning_Count == 0)
+            }
+            after
+            {
+            }
+        }
+
+        Clear_With_Warnings as "Clear With Warnings"
+        {
+            type = normal
+            from stage = "Submitted"
+            to stage = "Compliance Cleared - Warnings"
+            before
+            {
+                transition owner
+                (
+                    permissions = {"AP_Expense_Processing_Team","Compliance_Officer","Travel_Policy_Administrator"}
+                )
+                transition criteria = (Critical_Violation_Count == 0 && Warning_Count > 0)
+            }
+            after
+            {
+            }
+        }
+
+        Send_To_Exception as "Send to Exception"
+        {
+            type = normal
+            from stage = "Compliance Held - Critical"
+            to stage = "Exception Pending"
+            before
+            {
+                transition owner
+                (
+                    permissions = {"Compliance_Officer","Travel_Policy_Administrator"}
+                )
+            }
+            during
+            {
+                action = update_fields
+                workflow status = true
+                visible fields = [Manager_Comments]
+            }
+            after
+            {
+            }
+        }
+
+        Exception_Approved as "Exception Approved"
+        {
+            type = normal
+            from stage = "Exception Pending"
+            to stage = "Exception Approved"
+            before
+            {
+                transition owner
+                (
+                    permissions = {"Compliance_Officer","Travel_Policy_Administrator"}
+                )
+                transition criteria = (Critical_Violation_Count >= 0)
+            }
+            after
+            {
+            }
+        }
+
+        Return_To_Claimant as "Return to Claimant"
+        {
+            type = common
+            from stage = "Submitted"
+            to stage = "Returned to Claimant"
+            common stages = {"Compliance Cleared - Green","Compliance Cleared - Warnings","Compliance Held - Critical","Exception Approved"}
+            before
+            {
+                transition owner
+                (
+                    permissions = {"Approving_Manager_Portal","Travel_Policy_Administrator"}
+                )
+                confirmation before execution
+                (
+                    message = "Return this claim to the claimant for clarification?"
+                    confirm button text = "Return"
+                    cancel button text = "Cancel"
+                )
+            }
+            during
+            {
+                action = update_fields
+                workflow status = true
+                visible fields = [Manager_Decision, Manager_Comments]
+            }
+            after
+            {
+            }
+        }
+
+        Manager_Reject as "Manager Reject"
+        {
+            type = common
+            from stage = "Submitted"
+            to stage = "Rejected by Manager"
+            common stages = {"Compliance Cleared - Green","Compliance Cleared - Warnings","Compliance Held - Critical","Exception Approved"}
+            before
+            {
+                transition owner
+                (
+                    permissions = {"Approving_Manager_Portal","Travel_Policy_Administrator"}
+                )
+                confirmation before execution
+                (
+                    message = "Reject this travel claim?"
+                    confirm button text = "Reject"
+                    cancel button text = "Cancel"
+                )
+            }
+            during
+            {
+                action = update_fields
+                workflow status = true
+                visible fields = [Manager_Decision, Manager_Comments]
+            }
+            after
+            {
+            }
+        }
+
+        Manager_Approve as "Manager Approve"
+        {
+            type = common
+            from stage = "Compliance Cleared - Green"
+            to stage = "Compliance Cleared - Approved"
+            common stages = {"Compliance Cleared - Warnings","Exception Approved"}
+            before
+            {
+                transition owner
+                (
+                    permissions = {"Approving_Manager_Portal","AP_Expense_Processing_Team","Travel_Policy_Administrator"}
+                )
+                transition criteria = (Critical_Violation_Count == 0)
+                confirmation before execution
+                (
+                    message = "Approve this claim for AP expense processing?"
+                    confirm button text = "Approve"
+                    cancel button text = "Cancel"
+                )
+            }
+            during
+            {
+                action = update_fields
+                workflow status = true
+                visible fields = [Manager_Acknowledgement, Manager_Decision, Manager_Comments]
+            }
+            after
+            {
+            }
+        }
+    }
+}

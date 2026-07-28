@@ -1,0 +1,34 @@
+<%
+  monthList = {"Jan","Feb","Mar","Apr","May","Jun"};
+  tierList = {"Direct Manager","Department Head","Compliance Officer","CFO"};
+%>
+<style>
+.em-chart-card{background:#fff;border:1px solid var(--zcs_tertiary_border_color);border-radius:14px;padding:18px;box-sizing:border-box}.em-chart-card h2{font-size:18px;margin:0;color:var(--zcs_primary_text_color)}.em-chart-card p{font-size:13px;margin:4px 0 14px;color:var(--zcs_secondary_text_color)}.zcs-chart{height:300px}.zcs-chart ul li{list-style-type:none}.zcs-chart-y-axis-text{width:50px}.zcs-chart-y-axis-line{border-top:1px dashed #EBECF0}.zcs-scrollable-container{top:10px;left:50px;width:calc(100% - 50px);height:calc(100% + 12px);overflow-x:auto;overflow-y:hidden}.zcs-bar-value{width:24px;border-radius:6px 6px 0 0;display:block}.zcs-columnchart-wrapper .zcs-chart-x-axis li .zcs-bar-value:nth-child(1){background-color:#2D4C57}.zcs-columnchart-wrapper .zcs-chart-x-axis li .zcs-bar-value:nth-child(2){background-color:#46899C}.zcs-columnchart-wrapper .zcs-chart-x-axis li .zcs-bar-value:nth-child(3){background-color:#A19483}.zcs-columnchart-wrapper .zcs-chart-x-axis li .zcs-bar-value:nth-child(4){background-color:var(--zcs_brand_color)}.zcs-chart-x-axis-text{max-width:90px;text-align:center;color:var(--zcs_primary_text_color);font-size:12px;text-decoration:none}.em-legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:10px}.em-legend span{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--zcs_secondary_text_color)}.em-dot{width:10px;height:10px;border-radius:10px;display:inline-block}.zcs-flex{display:flex}.zcs-direction-column{flex-direction:column}.zcs-align-items-center{align-items:center}.zcs-justify-center{justify-content:center}.zcs-justify-space-around{justify-content:space-around}.zcs-gap-4{gap:.25rem}.zcs-gap-12{gap:.75rem}.zcs-gap-32{gap:2rem}.zcs-m-0{margin:0}.zcs-p-0{padding:0}.zcs-w-full{width:100%}.zcs-wh-full{width:100%;height:100%}.zcs-relative{position:relative}.zcs-absolute{position:absolute}.zcs-col-common{flex:1 1 0}.zcs-color-primary{color:var(--zcs_primary_text_color)}.zcs-font-14{font-size:.875rem}.zcs-font-normal{font-weight:400}.zcs-lh-body{line-height:1.5}.zcs-ellipsis{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+</style>
+<div class="em-chart-card">
+  <h2>Historical approval rate by month and tier</h2>
+  <p>Approval percentage uses TE_Exceptions Decision_Date, Status, and Exception_Approver_Level for the recent month buckets.</p>
+  <div class='zcs-chart zcs-w-full zcs-columnchart-wrapper zcs-relative'>
+    <ul class='zcs-chart-y-axis zcs-flex zcs-direction-column zcs-gap-32 zcs-m-0 zcs-p-0'>
+      <li class='zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-4'><span class='zcs-chart-y-axis-text zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'>100%</span><span class='zcs-chart-y-axis-line zcs-col-common'></span></li>
+      <li class='zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-4'><span class='zcs-chart-y-axis-text zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'>80%</span><span class='zcs-chart-y-axis-line zcs-col-common'></span></li>
+      <li class='zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-4'><span class='zcs-chart-y-axis-text zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'>60%</span><span class='zcs-chart-y-axis-line zcs-col-common'></span></li>
+      <li class='zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-4'><span class='zcs-chart-y-axis-text zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'>40%</span><span class='zcs-chart-y-axis-line zcs-col-common'></span></li>
+      <li class='zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-4'><span class='zcs-chart-y-axis-text zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'>20%</span><span class='zcs-chart-y-axis-line zcs-col-common'></span></li>
+      <li class='zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-4'><span class='zcs-chart-y-axis-text zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'>0%</span><span class='zcs-chart-y-axis-line zcs-col-common'></span></li>
+    </ul>
+    <div class='zcs-scrollable-container zcs-absolute'>
+      <ul class='zcs-chart-x-axis zcs-wh-full zcs-flex zcs-justify-space-around zcs-gap-4 zcs-m-0 zcs-p-0'>
+        <% for each mon in monthList { %>
+          <li class='zcs-flex zcs-direction-column zcs-gap-12'>
+            <div class='zcs-bar zcs-col-common zcs-flex zcs-align-items-center zcs-justify-center' style='align-items:flex-end;'>
+              <% for each tier in tierList { approved = 0; rejected = 0; decisionRows = TE_Exceptions[Decision_Date != null && Exception_Approver_Level == tier]; for each ex in decisionRows { if(ex.Decision_Date.toString("MMM") == mon && (ex.Status == "Approved" || ex.Status == "Rejected")) { if(ex.Status == "Approved") { approved = approved + 1; } else { rejected = rejected + 1; } } } total = approved + rejected; pct = 0; if(total > 0) { pct = (approved * 100) / total; } if(pct < 3 && total > 0) { pct = 3; } %><a class='zcs-bar-value' href='#Report:All_TE_Exceptions?Exception_Approver_Level=<%=encodeURL(tier)%>&amp;zc_LoadIn=dialog' style='height:<%=pct%>%;' title='<%=tier%> <%=mon%>'></a><% } %>
+            </div>
+            <a class='zcs-chart-x-axis-text zcs-font-normal zcs-lh-body zcs-color-primary zcs-ellipsis' href='#Report:All_TE_Exceptions?zc_LoadIn=dialog'><%=mon%></a>
+          </li>
+        <% } %>
+      </ul>
+    </div>
+  </div>
+  <div class="em-legend"><span><b class="em-dot" style="background:#2D4C57"></b>Manager</span><span><b class="em-dot" style="background:#46899C"></b>Department</span><span><b class="em-dot" style="background:#A19483"></b>Compliance</span><span><b class="em-dot" style="background:var(--zcs_brand_color)"></b>CFO</span></div>
+</div>

@@ -1,0 +1,147 @@
+TE_Line_Items_On_Validate as "TE Line Items On Validate"
+{
+    type = form
+    form = TE_Line_Items
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                validationFlags = "";
+                if(input.Amount != null && input.Amount < 0)
+                {
+                    alert(Amount, "Amount cannot be negative.");
+                    cancel submit;
+                }
+                if(input.Currency == null || input.Currency.trim().length() != 3)
+                {
+                    alert(Currency, "Currency must be exactly 3 characters.");
+                    cancel submit;
+                }
+                if(input.Expense_Category == "Entertainment" && input.Amount != null && input.Attendee_Count != null && input.Attendee_Count > 0)
+                {
+                    input.Per_Person_Amount = input.Amount / input.Attendee_Count;
+                }
+                receiptThreshold = 25;
+                receiptSeverity = "Warning";
+                for each receiptRule in TE_Policy_Rules[Active == true && Rule_Category == "Receipt Requirement" && Effective_Date <= zoho.currentdate] sort by Effective_Date desc range from 0 to 0
+                {
+                    if(receiptRule.Retired_Date == null || receiptRule.Retired_Date >= zoho.currentdate)
+                    {
+                        if(receiptRule.Receipt_Minimum_Amount != null && receiptRule.Receipt_Minimum_Amount > 0)
+                        {
+                            receiptThreshold = receiptRule.Receipt_Minimum_Amount;
+                        }
+                        if(receiptRule.Default_Severity != null && receiptRule.Default_Severity != "")
+                        {
+                            receiptSeverity = receiptRule.Default_Severity;
+                        }
+                    }
+                }
+                if(input.Receipt_Attached == false && input.Amount != null && input.Amount > receiptThreshold)
+                {
+                    validationFlags = validationFlags + "Receipt required above USD " + receiptThreshold.toText() + "; ";
+                    if(receiptSeverity == "Critical")
+                    {
+                        alert(Receipt_Attached, "Receipt is required for this amount before submission.");
+                        cancel submit;
+                    }
+                }
+                if(input.Expense_Category == "Entertainment")
+                {
+                    perPersonForValidation = 0;
+                    if(input.Attendee_Count != null && input.Attendee_Count > 0 && input.Amount != null)
+                    {
+                        perPersonForValidation = input.Amount / input.Attendee_Count;
+                        input.Per_Person_Amount = perPersonForValidation;
+                    }
+                    if((input.Amount != null && input.Amount > 100 && (input.Attendee_Count == null || input.Attendee_Count <= 0)) || perPersonForValidation > 100)
+                    {
+                        if(input.Attendee_Count == null || input.Attendee_Count <= 0)
+                        {
+                            alert(Attendee_Count, "Attendee Count is required for entertainment over USD 100 per person.");
+                            cancel submit;
+                        }
+                        if(input.Attendee_Names == null || input.Attendee_Names.trim() == "")
+                        {
+                            alert(Attendee_Names, "Attendee Names are required for entertainment over USD 100 per person.");
+                            cancel submit;
+                        }
+                        if(input.Attendee_Companies == null || input.Attendee_Companies.trim() == "")
+                        {
+                            alert(Attendee_Companies, "Attendee Companies are required for entertainment over USD 100 per person.");
+                            cancel submit;
+                        }
+                        if(input.Business_Purpose == null || input.Business_Purpose.trim() == "")
+                        {
+                            alert(Business_Purpose, "Business Purpose is required for entertainment over USD 100 per person.");
+                            cancel submit;
+                        }
+                    }
+                }
+                if(input.Expense_Category == "Airfare")
+                {
+                    if(input.Flight_Class == null || input.Flight_Class == "")
+                    {
+                        alert(Flight_Class, "Flight Class is required for Airfare line items.");
+                        cancel submit;
+                    }
+                    if(input.Departure_Date == null)
+                    {
+                        alert(Departure_Date, "Departure Date is required for Airfare line items.");
+                        cancel submit;
+                    }
+                }
+                if(input.Expense_Category == "Mileage")
+                {
+                    if(input.Claimed_Mileage_KM == null)
+                    {
+                        alert(Claimed_Mileage_KM, "Claimed Mileage KM is required for Mileage line items.");
+                        cancel submit;
+                    }
+                    mileageTolerancePercent = 20;
+                    for each mileageRule in TE_Policy_Rules[Active == true && Rule_Category == "Mileage Reasonableness" && Effective_Date <= zoho.currentdate] sort by Effective_Date desc range from 0 to 0
+                    {
+                        if((mileageRule.Retired_Date == null || mileageRule.Retired_Date >= zoho.currentdate) && mileageRule.Warning_Threshold_Percent != null && mileageRule.Warning_Threshold_Percent > 0)
+                        {
+                            mileageTolerancePercent = mileageRule.Warning_Threshold_Percent;
+                        }
+                    }
+                    if((input.Expected_Distance_KM == null || input.Expected_Distance_KM <= 0) && input.Origin_City != null && input.Origin_City.trim() != "" && input.Destination_City != null && input.Destination_City.trim() != "")
+                    {
+                        for each route in TE_Distance_Lookups[Active == true && Origin_City == input.Origin_City.trim() && Destination_City == input.Destination_City.trim()] sort by Effective_Date desc range from 0 to 0
+                        {
+                            input.Expected_Distance_KM = route.Expected_Distance_KM;
+                            if(route.Tolerance_Percent != null)
+                            {
+                                mileageTolerancePercent = route.Tolerance_Percent;
+                            }
+                        }
+                    }
+                    if(input.Claimed_Mileage_KM != null && input.Expected_Distance_KM != null && input.Expected_Distance_KM > 0 && input.Claimed_Mileage_KM > (input.Expected_Distance_KM * (1 + mileageTolerancePercent / 100)))
+                    {
+                        if(input.Route_Explanation == null || input.Route_Explanation.trim() == "")
+                        {
+                            alert(Route_Explanation, "Route Explanation is required when claimed mileage exceeds expected tolerance.");
+                            cancel submit;
+                        }
+                    }
+                    else if(input.Claimed_Mileage_KM != null && (input.Expected_Distance_KM == null || input.Expected_Distance_KM <= 0) && (input.Route_Explanation == null || input.Route_Explanation.trim() == ""))
+                    {
+                        alert(Route_Explanation, "Route Explanation is required when no maintained route distance is found.");
+                        cancel submit;
+                    }
+                }
+                if(validationFlags != "")
+                {
+                    input.Policy_Status = "Warning";
+                    input.Violation_Flags = validationFlags;
+                    input.Requires_Exception = true;
+                }
+            )
+        }
+    }
+}

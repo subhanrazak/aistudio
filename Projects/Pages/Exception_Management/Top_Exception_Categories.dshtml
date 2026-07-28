@@ -1,0 +1,19 @@
+<%
+  cats = {"Hotel Rate Limit","Per Diem / Meals","Airfare Class","Advance Booking","Receipt Requirement","Entertainment Documentation","Entertainment Budget Cap","Duplicate Expense","Weekend/Holiday Travel","Mileage Reasonableness"};
+%>
+<style>
+.em-cat-card{background:#fff;border:1px solid var(--zcs_tertiary_border_color);border-radius:14px;overflow:hidden}.em-cat-head{padding:16px 18px;border-bottom:1px solid var(--zcs_tertiary_border_color)}.em-cat-head h2{font-size:18px;margin:0;color:var(--zcs_primary_text_color)}.em-cat-head p{font-size:13px;margin:4px 0 0;color:var(--zcs_secondary_text_color)}.zcs-table-wrapper{border:0;background:#fff;overflow:auto}.zcs-table-wrapper table{width:100%;border-collapse:collapse}.zcs-table-wrapper th{background:#F9FAFE;box-shadow:0 -1px 0 0 var(--zcs_tertiary_border_color) inset;white-space:nowrap}.zcs-table-wrapper td{border-top:1px solid var(--zcs_tertiary_border_color)}.zcs-table-wrapper tbody tr:hover td{background:#F9FAFE}.zcs-px-16{padding-left:1rem;padding-right:1rem}.zcs-py-8{padding-top:.5rem;padding-bottom:.5rem}.zcs-box-border{box-sizing:border-box}.zcs-text-left{text-align:left}.zcs-text-right{text-align:right}.zcs-font-14{font-size:.875rem}.zcs-font-medium{font-weight:500}.zcs-font-normal{font-weight:400}.zcs-lh-body{line-height:1.5}.zcs-color-primary{color:var(--zcs_primary_text_color)}.em-cat-link{color:var(--zcs_brand_color);text-decoration:none;font-weight:700}.em-cat-badge{display:inline-flex;align-items:center;gap:6px;border-radius:5px;border:1px solid #2A6FFC;background:#E8EFFF;color:#2A6FFC;padding:2px 8px;font-size:12px}
+</style>
+<div class="em-cat-card">
+  <div class="em-cat-head"><h2>Top exception categories</h2><p>Failure categories from TE_Compliance_Results linked to exception records.</p></div>
+  <div class='zcs-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative'>
+    <table class='zcs-w-full'>
+      <thead><tr><th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Category</th><th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Failed checks</th><th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Open exceptions</th><th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Action</th></tr></thead>
+      <tbody>
+        <% for each cat in cats { failCount = TE_Compliance_Results[Rule_Category == cat && Pass_Fail == "Fail"].count(ID); openEx = TE_Exceptions[Compliance_Result.Rule_Category == cat && Status != "Approved" && Status != "Rejected"].count(ID); if(failCount > 0 || openEx > 0) { %>
+        <tr><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=cat%></td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=failCount%></td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=openEx%></td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body'><a class="em-cat-link" href="#Report:All_TE_Exceptions?zc_LoadIn=dialog">Review exceptions</a></td></tr>
+        <% } } %>
+      </tbody>
+    </table>
+  </div>
+</div>

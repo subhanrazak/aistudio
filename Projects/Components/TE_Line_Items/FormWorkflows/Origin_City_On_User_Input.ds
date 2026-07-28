@@ -1,0 +1,23 @@
+Origin_City_On_User_Input as "Origin City On User Input"
+{
+    type = form
+    form = TE_Line_Items
+    record event = on add or edit
+
+    on user input of Origin_City
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Expense_Category == "Mileage" && input.Origin_City != null && input.Origin_City.trim() != "" && input.Destination_City != null && input.Destination_City.trim() != "")
+                {
+                    for each route in TE_Distance_Lookups[Active == true && Origin_City == input.Origin_City.trim() && Destination_City == input.Destination_City.trim()] sort by Effective_Date desc range from 0 to 0
+                    {
+                        input.Expected_Distance_KM = route.Expected_Distance_KM;
+                    }
+                }
+            )
+        }
+    }
+}

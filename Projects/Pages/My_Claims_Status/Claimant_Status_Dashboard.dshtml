@@ -1,0 +1,258 @@
+<%
+currentEmail = zoho.loginuser;
+if(currentEmail == null || currentEmail == "")
+{
+  currentEmail = zoho.loginuserid;
+}
+employeeRecords = TE_Employees[Login_Email == currentEmail];
+claimantName = currentEmail;
+claimantMatched = false;
+totalSubmitted = 0;
+awaitingClarification = 0;
+criticalViolations = 0;
+approvedExceptions = 0;
+if(employeeRecords.count() > 0)
+{
+  claimantMatched = true;
+  employeeRec = employeeRecords;
+  claimantName = ifnull(employeeRec.Employee_Name,currentEmail);
+  totalSubmitted = TE_Claims[Employee == employeeRec.ID].count(ID);
+  awaitingClarification = TE_Claims[Employee == employeeRec.ID && (Claim_Status == "Returned to Claimant" || Claim_Status == "Exception Pending" || Claim_Status == "Compliance Held - Critical")].count(ID);
+  criticalViolations = TE_Compliance_Results[Claim.Employee == employeeRec.ID && Pass_Fail == "Fail" && Severity == "Critical" && Exception_Status != "Approved"].count(ID);
+  approvedExceptions = TE_Exceptions[Requester_Email == currentEmail && Status == "Approved"].count(ID);
+}
+else
+{
+  approvedExceptions = TE_Exceptions[Requester_Email == currentEmail && Status == "Approved"].count(ID);
+}
+exceptionCount = TE_Exceptions[Requester_Email == currentEmail].count(ID);
+%>
+<style>
+/* ===== zcs-global.css (required ZCS utility subset used by this page) ===== */
+:root { --zcs-theme-brand-color: var(--zcs_brand_color); --zcs-light-bg-color: var(--zcs_brand_light_color); --zcs-page-bg-color: #F3F3F4; --zcs-primary-text-color: var(--zcs_primary_text_color); --zcs-secondary-text-color: var(--zcs_secondary_text_color); --zcs-teritiary-text-color: var(--zcs_tertiary_text_color); --zcs-border-color: var(--zcs_tertiary_border_color); --zcs-white-color: #FFFFFF; --zcs-black-color: #000000; font-size: 16px; line-height: 1.5; }
+.zcs-row { display: flex; flex-wrap: wrap; } .zcs-col { flex-shrink: 0; width: 100%; max-width: 100%; } .zcs-col-3 { flex: 0 0 25%; max-width: 25%; } .zcs-col-4 { flex: 0 0 33.3333%; max-width: 33.3333%; } .zcs-col-6 { flex: 0 0 50%; max-width: 50%; } .zcs-col-12 { flex: 0 0 100%; max-width: 100%; } .zcs-col-common { flex-shrink: 1; flex-grow: 1; flex-basis: 0%; }
+.zcs-flex { display:flex; } .zcs-inline-flex { display:inline-flex; } .zcs-direction-column { flex-direction: column; } .zcs-align-items-center { align-items:center; } .zcs-align-items-start { align-items:flex-start; } .zcs-justify-center { justify-content:center; } .zcs-justify-space-between { justify-content:space-between; } .zcs-gap-4 { gap:.25rem; } .zcs-gap-8 { gap:.5rem; } .zcs-gap-10 { gap:.625rem; } .zcs-gap-12 { gap:.75rem; } .zcs-gap-16 { gap:1rem; } .zcs-gap-20 { gap:1.25rem; } .zcs-gap-24 { gap:1.5rem; }
+.zcs-p-0 { padding:0; } .zcs-p-8 { padding:.5rem; } .zcs-p-10 { padding:.625rem; } .zcs-p-12 { padding:.75rem; } .zcs-p-16 { padding:1rem; } .zcs-p-20 { padding:1.25rem; } .zcs-p-24 { padding:1.5rem; } .zcs-px-8 { padding-left:.5rem; padding-right:.5rem; } .zcs-px-10 { padding-left:.625rem; padding-right:.625rem; } .zcs-px-12 { padding-left:.75rem; padding-right:.75rem; } .zcs-px-16 { padding-left:1rem; padding-right:1rem; } .zcs-py-2 { padding-top:.125rem; padding-bottom:.125rem; } .zcs-py-4 { padding-top:.25rem; padding-bottom:.25rem; } .zcs-py-8 { padding-top:.5rem; padding-bottom:.5rem; } .zcs-py-12 { padding-top:.75rem; padding-bottom:.75rem; } .zcs-pl-24 { padding-left:1.5rem; }
+.zcs-m-0 { margin:0; } .zcs-mt-0 { margin-top:0; } .zcs-mt-10 { margin-top:.625rem; } .zcs-mb-0 { margin-bottom:0; } .zcs-mx-0 { margin-left:0; margin-right:0; } .zcs-my-16 { margin-top:1rem; margin-bottom:1rem; }
+.zcs-w-full { width:100%; } .zcs-h-full { height:100%; } .zcs-wh-full { width:100%; height:100%; } .zcs-box-border { box-sizing:border-box; } .zcs-rounded-sm { border-radius:.25rem; } .zcs-rounded-md { border-radius:.375rem; } .zcs-rounded-lg { border-radius:.5rem; } .zcs-rounded-xl { border-radius:.75rem; } .zcs-rounded-half { border-radius:50%; } .zcs-relative { position:relative; } .zcs-absolute { position:absolute; } .zcs-sticky { position:sticky; } .zcs-text-left { text-align:left; } .zcs-text-right { text-align:right; } .zcs-text-center { text-align:center; } .zcs-overflow-auto { overflow:auto; } .zcs-ellipsis { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.zcs-font-11 { font-size:.6875rem; } .zcs-font-12 { font-size:.75rem; } .zcs-font-13 { font-size:.8125rem; } .zcs-font-14 { font-size:.875rem; } .zcs-font-16 { font-size:1rem; } .zcs-font-18 { font-size:1.125rem; } .zcs-font-22 { font-size:1.375rem; } .zcs-font-24 { font-size:1.5rem; } .zcs-font-30 { font-size:1.875rem; } .zcs-font-40 { font-size:2.5rem; } .zcs-font-normal { font-weight:400; } .zcs-font-medium { font-weight:500; } .zcs-font-semibold { font-weight:600; } .zcs-font-bold { font-weight:700; } .zcs-lh-body { line-height:1.5; } .zcs-lh-heading { line-height:1.25; } .zcs-uppercase { text-transform:uppercase; }
+.zcs-color-theme { color:var(--zcs-theme-brand-color); } .zcs-color-primary { color:var(--zcs-primary-text-color); } .zcs-color-secondary { color:var(--zcs-secondary-text-color); } .zcs-color-tertiary { color:var(--zcs-teritiary-text-color); } .zcs-color-white { color:var(--zcs-white-color); } .zcs-color-green { color:#179E6C; } .zcs-color-red { color:#FE455D; } .zcs-color-yellow { color:#b8770d; } .zcs-color-blue { color:#09598E; }
+.zcs-card { background-color:var(--zcs-white-color); border:1px solid var(--zcs-border-color); border-radius:12px; } a { text-decoration:none; }
+.zc-pb-page-content-wrapper div#zppagesLive, .zc-pb-page-content-wrapper div#elementsContainer, .zc-pb-page-content-wrapper .elemContainment, .zc-pb-page-content-wrapper .zcpage-elemContainer { height:100%; } .zc-container-wrapper .zc-main-content .inner .zc-page-content-wrapper .zc-pb-page-content-wrapper .elemContainment, .zc-full-height .zc-page-content-wrapper .zc-pb-page-content-wrapper .elemContainment, .zc-pb-page-content-wrapper .zc-pb-tile-container { padding:0px; } #splash-screen { display:none !important; }
+
+/* ===== ZCS components: table-simple-table, badge-filled-badge, button-primary-outline-button-no-icon, notes-notes-with-list ===== */
+.zcs-table-wrapper { border:1px solid var(--zcs_tertiary_border_color); background-color:var(--zcs-white-color); overflow:auto; } .zcs-table-wrapper table { line-height:normal; border-collapse:collapse; } .zcs-table-wrapper table thead { top:0px; } .zcs-table-wrapper table thead tr th { background-color:#F9FAFE; box-shadow:0px -1px 0px 0px var(--zcs_tertiary_border_color) inset; white-space:nowrap; } .zcs-table-wrapper table thead tr.zcs-tspace th { background-color:var(--zcs-white-color); box-shadow:none; } .zcs-table-wrapper table tbody tr td { border-top:1px solid var(--zcs_tertiary_border_color); vertical-align:top; } .zcs-table-wrapper table tbody tr:first-child td { border-color:transparent; } .zcs-table-wrapper table tbody tr:hover td { background-color:#F9FAFE; } .zcs-table-wrapper table tbody tr td.zcs-green, .zcs-table-wrapper table tbody tr td .zcs-green { color:#179e6c; } .zcs-table-wrapper table tbody tr td.zcs-red, .zcs-table-wrapper table tbody tr td .zcs-red { color:#fe455d; } .zcs-table-wrapper table tbody tr td.zcs-yellow, .zcs-table-wrapper table tbody tr td .zcs-yellow { color:#b8770d; } .zcs-table-wrapper table tbody tr td.zcs-blue, .zcs-table-wrapper table tbody tr td .zcs-blue { color:#09598e; } .zcs-table-wrapper table tbody tr td.zcs-l_blue, .zcs-table-wrapper table tbody tr td .zcs-l_blue { color:#1094c5; }
+.zcs-badge { width:auto; } .zcs-badge-filled { border:1px solid transparent; } .zcs-badge-filled.zcs-badge-theme { background-color:var(--zcs_brand_color); border-color:var(--zcs_brand_color); color:var(--zcs-white-color); } .zcs-badge-filled.zcs-badge-green { background-color:#179E6C; border-color:#179E6C; color:var(--zcs-white-color); } .zcs-badge-filled.zcs-badge-red { background-color:#FE455D; border-color:#FE455D; color:var(--zcs-white-color); } .zcs-badge-filled.zcs-badge-grey { background-color:#242424; border-color:#242424; color:var(--zcs-white-color); } .zcs-badge-filled.zcs-badge-yellow { background-color:#FAAE13; border-color:#FAAE13; color:var(--zcs-white-color); } .zcs-badge-filled.zcs-badge-blue { background-color:#2A6FFC; border-color:#2A6FFC; color:var(--zcs-white-color); } .zcs-badge-filled.zcs-badge-orange { background-color:#F4660C; border-color:#F4660C; color:var(--zcs-white-color); }
+.zcs-button { width:auto; min-width:5rem; min-height:36px; } .zcs-primary-outline-button { border:1px solid var(--zcs_brand_color); background-color:var(--zcs-white-color); color:var(--zcs_brand_color); } .zcs-primary-outline-button:hover { background-color:var(--zcs_component_hover_color); border-color:var(--zcs_brand_color); color:var(--zcs_brand_color); } .zcs-button-icon { width:16px; max-height:16px; }
+.zcs-notes-wrapper ul { list-style-type:disc; } .zcs-notes-wrapper ul li::marker { color:var(--zcs_tertiary_text_color); }
+
+/* ===== Page-specific composition ===== */
+.my-claims-page { min-height:100%; background:var(--zcs-page-bg-color); padding:24px; box-sizing:border-box; }
+.claims-hero { border:1px solid color-mix(in srgb, var(--zcs_brand_color) 30%, var(--zcs_tertiary_border_color)); background:linear-gradient(135deg, var(--zcs_brand_color), var(--zcs_brand_dark_color)); color:var(--zcs_brand_foreground_color); border-radius:16px; padding:24px; margin-bottom:18px; overflow:hidden; }
+.claims-hero .hero-subtitle, .claims-hero .hero-meta { color:color-mix(in srgb, var(--zcs_brand_foreground_color) 78%, transparent); }
+.status-kpi-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:16px; margin-bottom:18px; }
+.status-kpi-card { min-height:128px; border-left:4px solid var(--kpi-color); }
+.status-kpi-icon { width:42px; height:42px; background:var(--kpi-bg); color:var(--kpi-color); }
+.status-kpi-value { font-size:34px; line-height:1; }
+.status-two-col { display:grid; grid-template-columns:minmax(0,1.2fr) minmax(360px,.8fr); gap:18px; margin-bottom:18px; align-items:start; }
+.status-section { margin-bottom:18px; }
+.status-section-header { border-bottom:1px solid var(--zcs-border-color); }
+.status-muted { color:var(--zcs-secondary-text-color); }
+.status-empty { min-height:112px; border:1px dashed var(--zcs-border-color); background:color-mix(in srgb, var(--zcs-white-color) 85%, var(--zcs-page-bg-color)); }
+.policy-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:16px; }
+.policy-icon { width:38px; height:38px; background:var(--zcs_component_hover_color); color:var(--zcs_brand_color); }
+.guidance-card { min-height:184px; }
+.native-report-box { min-height:260px; }
+.native-report-box div[elName='zc-component'] { min-height:230px; }
+.status-callout { background:var(--zcs_component_hover_color); border:1px solid var(--zcs-border-color); border-radius:12px; }
+@media (max-width:1180px) { .status-kpi-grid, .policy-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } .status-two-col { grid-template-columns:1fr; } }
+@media (max-width:680px) { .my-claims-page { padding:14px; } .status-kpi-grid, .policy-grid { grid-template-columns:1fr; } .claims-hero { padding:18px; } .zcs-table-wrapper { max-width:100%; } }
+</style>
+
+<div class="my-claims-page">
+  <div class="claims-hero zcs-box-border">
+    <div class="zcs-flex zcs-justify-space-between zcs-align-items-start zcs-gap-16">
+      <div class="zcs-flex zcs-direction-column zcs-gap-8">
+        <div class="zcs-inline-flex zcs-align-items-center zcs-gap-8 zcs-font-14 zcs-font-medium hero-meta">
+          <i class="zc-li-outline users-single-01"></i>
+          <span>Claimant self-service</span>
+        </div>
+        <h1 class="zcs-font-30 zcs-font-semibold zcs-lh-heading zcs-m-0">My Claims Status</h1>
+        <p class="zcs-font-14 zcs-lh-body zcs-m-0 hero-subtitle">Review submitted claims, compliance findings, violations, and exception request progress. Use the guidance cards to prepare justifications when a compliance result needs more information.</p>
+      </div>
+      <div class="zcs-flex zcs-direction-column zcs-align-items-start zcs-gap-4">
+        <span class="zcs-font-12 zcs-uppercase hero-meta">Signed in as</span>
+        <strong class="zcs-font-16"><%=claimantName%></strong>
+      </div>
+    </div>
+  </div>
+
+  <% if(!claimantMatched) { %>
+  <div class="status-callout zcs-p-16 zcs-box-border zcs-flex zcs-gap-12 zcs-align-items-start status-section">
+    <i class="zc-li-outline ui-2-alert-circle zcs-font-22 zcs-color-yellow"></i>
+    <div class="zcs-flex zcs-direction-column zcs-gap-4">
+      <h6 class="zcs-font-16 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0">No employee profile matched this login</h6>
+      <p class="zcs-font-14 zcs-lh-body status-muted zcs-m-0">Claims are filtered by TE_Employees.Login_Email matching the current user. This can be expected for admin/demo users; exception requests submitted with this email are still shown below.</p>
+    </div>
+  </div>
+  <% } %>
+
+  <div class="status-kpi-grid">
+    <div class="zcs-template-card zcs-card status-kpi-card zcs-p-20 zcs-box-border zcs-flex zcs-direction-column zcs-justify-space-between" style="--kpi-color:#2A6FFC;--kpi-bg:#E8EFFF;">
+      <div class="zcs-flex zcs-justify-space-between zcs-align-items-start zcs-gap-12">
+        <div><h6 class="zcs-font-14 zcs-font-medium zcs-color-secondary zcs-m-0">Total submitted</h6><div class="status-kpi-value zcs-font-bold zcs-color-primary zcs-mt-10"><%=totalSubmitted%></div></div>
+        <div class="status-kpi-icon zcs-rounded-half zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline files-single-content-03 zcs-font-22"></i></div>
+      </div>
+      <span class="zcs-font-12 status-muted">Claims tied to your employee record</span>
+    </div>
+    <div class="zcs-template-card zcs-card status-kpi-card zcs-p-20 zcs-box-border zcs-flex zcs-direction-column zcs-justify-space-between" style="--kpi-color:#F4660C;--kpi-bg:#F8F0EB;">
+      <div class="zcs-flex zcs-justify-space-between zcs-align-items-start zcs-gap-12">
+        <div><h6 class="zcs-font-14 zcs-font-medium zcs-color-secondary zcs-m-0">Awaiting clarification</h6><div class="status-kpi-value zcs-font-bold zcs-color-primary zcs-mt-10"><%=awaitingClarification%></div></div>
+        <div class="status-kpi-icon zcs-rounded-half zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline ui-2-chat-round zcs-font-22"></i></div>
+      </div>
+      <span class="zcs-font-12 status-muted">Returned, held, or exception pending</span>
+    </div>
+    <div class="zcs-template-card zcs-card status-kpi-card zcs-p-20 zcs-box-border zcs-flex zcs-direction-column zcs-justify-space-between" style="--kpi-color:#FE455D;--kpi-bg:#FDE3E6;">
+      <div class="zcs-flex zcs-justify-space-between zcs-align-items-start zcs-gap-12">
+        <div><h6 class="zcs-font-14 zcs-font-medium zcs-color-secondary zcs-m-0">Critical violations</h6><div class="status-kpi-value zcs-font-bold zcs-color-primary zcs-mt-10"><%=criticalViolations%></div></div>
+        <div class="status-kpi-icon zcs-rounded-half zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline ui-2-alert zcs-font-22"></i></div>
+      </div>
+      <span class="zcs-font-12 status-muted">Unapproved critical failed checks</span>
+    </div>
+    <div class="zcs-template-card zcs-card status-kpi-card zcs-p-20 zcs-box-border zcs-flex zcs-direction-column zcs-justify-space-between" style="--kpi-color:#179E6C;--kpi-bg:#E4FCF3;">
+      <div class="zcs-flex zcs-justify-space-between zcs-align-items-start zcs-gap-12">
+        <div><h6 class="zcs-font-14 zcs-font-medium zcs-color-secondary zcs-m-0">Approved exceptions</h6><div class="status-kpi-value zcs-font-bold zcs-color-primary zcs-mt-10"><%=approvedExceptions%></div></div>
+        <div class="status-kpi-icon zcs-rounded-half zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline ui-1-check-circle-08 zcs-font-22"></i></div>
+      </div>
+      <span class="zcs-font-12 status-muted">Exceptions requested by your email</span>
+    </div>
+  </div>
+
+  <div class="status-two-col">
+    <section class="zcs-card zcs-box-border status-section">
+      <div class="status-section-header zcs-p-16 zcs-box-border zcs-flex zcs-justify-space-between zcs-align-items-center zcs-gap-12">
+        <div>
+          <h2 class="zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0">My claims</h2>
+          <p class="zcs-font-13 status-muted zcs-m-0">Filtered by TE_Employees.Login_Email and the claim Employee lookup.</p>
+        </div>
+      </div>
+      <div class="zcs-p-16 zcs-box-border">
+        <% if(claimantMatched && totalSubmitted > 0) { %>
+        <div class="zcs-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative">
+          <table class="zcs-w-full">
+            <thead class="zcs-sticky"><tr><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Claim</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Trip</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Amount</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Status</th></tr><tr class="zcs-tspace"><th class="zcs-p-2 zcs-box-border" colspan="4"></th></tr></thead>
+            <tbody>
+              <% for each claimRec in TE_Claims[Employee == employeeRec.ID] sort by Submission_Date desc { 
+                claimBadgeClass = "zcs-badge-blue";
+                if(claimRec.Claim_Status == "Compliance Held - Critical" || claimRec.Claim_Status == "Rejected by Manager" || claimRec.Claim_Status == "SAP Rejected") { claimBadgeClass = "zcs-badge-red"; }
+                else if(claimRec.Claim_Status == "Returned to Claimant" || claimRec.Claim_Status == "Exception Pending" || claimRec.Claim_Status == "Compliance Cleared - Warnings") { claimBadgeClass = "zcs-badge-yellow"; }
+                else if(claimRec.Claim_Status == "Exception Approved" || claimRec.Claim_Status == "Compliance Cleared - Green" || claimRec.Claim_Status == "Compliance Cleared - Approved" || claimRec.Claim_Status == "SAP Approved") { claimBadgeClass = "zcs-badge-green"; }
+              %>
+              <tr>
+                <td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"><strong><%=claimRec.Trip_Number%></strong><br><span class="zcs-font-12 status-muted"><%=claimRec.Submission_Date%></span></td>
+                <td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"><%=claimRec.Destination_City%>, <%=claimRec.Destination_Country%><br><span class="zcs-font-12 status-muted"><%=claimRec.Trip_Type%></span></td>
+                <td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"><%=claimRec.Currency%> <%=claimRec.Total_Amount%><br><span class="zcs-font-12 status-muted">Score <%=ifnull(claimRec.Compliance_Score,0)%></span></td>
+                <td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left"><div class="zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border <%=claimBadgeClass%>"><span class="zcs-badge-text zcs-font-12 zcs-font-normal zcs-lh-body"><%=claimRec.Claim_Status%></span></div></td>
+              </tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+        <% } else { %>
+        <div class="zcs-nodata-wrapper status-empty zcs-w-full zcs-flex zcs-align-items-center zcs-justify-center zcs-text-center zcs-rounded-lg">
+          <div class="zcs-nodata-content zcs-p-20 zcs-box-border"><h5 class="zcs-nodata-header zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-mt-10 zcs-mx-0 zcs-mb-0">No submitted claims found for this login.</h5></div>
+        </div>
+        <% } %>
+      </div>
+    </section>
+
+    <section class="zcs-card zcs-box-border status-section">
+      <div class="status-section-header zcs-p-16 zcs-box-border">
+        <h2 class="zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0">Exception request tracker</h2>
+        <p class="zcs-font-13 status-muted zcs-m-0">Requests where Requester_Email matches the current user.</p>
+      </div>
+      <div class="zcs-p-16 zcs-box-border zcs-flex zcs-direction-column zcs-gap-12">
+        <% if(exceptionCount > 0) { %>
+          <% for each exceptionRec in TE_Exceptions[Requester_Email == currentEmail] sort by SLA_Due_Date asc { 
+            exBadgeClass = "zcs-badge-blue";
+            if(exceptionRec.Status == "Approved") { exBadgeClass = "zcs-badge-green"; }
+            else if(exceptionRec.Status == "Rejected") { exBadgeClass = "zcs-badge-red"; }
+            else if(exceptionRec.Status == "Returned for Information" || exceptionRec.Status == "Draft") { exBadgeClass = "zcs-badge-yellow"; }
+            else if(exceptionRec.Status == "Escalated") { exBadgeClass = "zcs-badge-orange"; }
+          %>
+          <div class="zcs-card zcs-p-16 zcs-box-border zcs-flex zcs-direction-column zcs-gap-10">
+            <div class="zcs-flex zcs-justify-space-between zcs-align-items-start zcs-gap-12">
+              <div><h6 class="zcs-font-16 zcs-font-medium zcs-color-primary zcs-m-0"><%=exceptionRec.Exception_Number%></h6><span class="zcs-font-12 status-muted">SLA due: <%=ifnull(exceptionRec.SLA_Due_Date,"Not set")%></span></div>
+              <div class="zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border <%=exBadgeClass%>"><span class="zcs-badge-text zcs-font-12 zcs-font-normal zcs-lh-body"><%=exceptionRec.Status%></span></div>
+            </div>
+            <p class="zcs-font-13 zcs-lh-body zcs-color-primary zcs-m-0"><strong>Comments:</strong> <%=ifnull(exceptionRec.Approval_Comments,"No approver comments yet.")%></p>
+          </div>
+          <% } %>
+        <% } else { %>
+        <div class="zcs-nodata-wrapper status-empty zcs-w-full zcs-flex zcs-align-items-center zcs-justify-center zcs-text-center zcs-rounded-lg">
+          <div class="zcs-nodata-content zcs-p-20 zcs-box-border"><h5 class="zcs-nodata-header zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-mt-10 zcs-mx-0 zcs-mb-0">No exception requests found.</h5></div>
+        </div>
+        <% } %>
+        <a class="zcs-button zcs-primary-outline-button zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body" href="#Report:My_Exception_Requests?zc_LoadIn=dialog&amp;zc_Header=true&amp;zc_Footer=true&amp;zc_AddRec=false&amp;zc_EditRec=false&amp;zc_DelRec=false"><span class="zcs-button-text">Open My Exception Requests</span></a>
+      </div>
+    </section>
+  </div>
+
+  <section class="zcs-card zcs-box-border status-section">
+    <div class="status-section-header zcs-p-16 zcs-box-border">
+      <h2 class="zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0">Violation details</h2>
+      <p class="zcs-font-13 status-muted zcs-m-0">Compliance results combined with line item context for your claims.</p>
+    </div>
+    <div class="zcs-p-16 zcs-box-border">
+      <% if(claimantMatched && criticalViolations + TE_Compliance_Results[Claim.Employee == employeeRec.ID && Pass_Fail == "Fail" && Severity != "Critical"].count(ID) > 0) { %>
+      <div class="zcs-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative">
+        <table class="zcs-w-full">
+          <thead class="zcs-sticky"><tr><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Claim / line</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Rule</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Excess</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Recommended action</th></tr><tr class="zcs-tspace"><th class="zcs-p-2 zcs-box-border" colspan="4"></th></tr></thead>
+          <tbody>
+          <% for each resultRec in TE_Compliance_Results[Claim.Employee == employeeRec.ID && Pass_Fail == "Fail"] sort by Checked_On desc { 
+            sevClass = "zcs-yellow"; severityBadgeClass = "zcs-badge-yellow";
+            if(resultRec.Severity == "Critical") { sevClass = "zcs-red"; severityBadgeClass = "zcs-badge-red"; }
+            lineLabel = "Claim level";
+            if(resultRec.Line_Item != null) { lineLabel = ifnull(resultRec.Line_Item.Expense_Category,"Line item") + " - " + ifnull(resultRec.Line_Item.Expense_Date,""); }
+          %>
+            <tr>
+              <td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"><strong><%=resultRec.Claim.Trip_Number%></strong><br><span class="zcs-font-12 status-muted"><%=lineLabel%></span></td>
+              <td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"><div class="zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border <%=severityBadgeClass%>"><span class="zcs-badge-text zcs-font-12 zcs-font-normal zcs-lh-body"><%=resultRec.Severity%></span></div><br><span><%=resultRec.Rule_Category%></span><br><span class="zcs-font-12 status-muted"><%=ifnull(resultRec.Rule_Reference,"")%></span></td>
+              <td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body <%=sevClass%>"><%=ifnull(resultRec.Currency,"")%> <%=ifnull(resultRec.Excess_Amount,0)%><br><span class="zcs-font-12 status-muted">Actual <%=ifnull(resultRec.Actual_Amount,0)%></span></td>
+              <td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"><%=ifnull(resultRec.Recommended_Action,"Provide business justification or attach missing support through the exception workflow when required.")%><br><span class="zcs-font-12 status-muted">Exception: <%=ifnull(resultRec.Exception_Status,"Not Required")%></span></td>
+            </tr>
+          <% } %>
+          </tbody>
+        </table>
+      </div>
+      <% } else { %>
+      <div class="zcs-nodata-wrapper status-empty zcs-w-full zcs-flex zcs-align-items-center zcs-justify-center zcs-text-center zcs-rounded-lg">
+        <div class="zcs-nodata-content zcs-p-20 zcs-box-border"><h5 class="zcs-nodata-header zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-mt-10 zcs-mx-0 zcs-mb-0">No open violations found for this login.</h5></div>
+      </div>
+      <% } %>
+    </div>
+  </section>
+
+  <section class="status-section">
+    <div class="zcs-flex zcs-direction-column zcs-gap-8 zcs-py-12">
+      <h2 class="zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0">Policy guidance</h2>
+      <p class="zcs-font-13 status-muted zcs-m-0">Use these prompts when preparing explanations or supporting documents. Exception creation stays in the compliance result/report workflow or TE_Exceptions form.</p>
+    </div>
+    <div class="policy-grid">
+      <div class="zcs-template-card zcs-card guidance-card zcs-p-20 zcs-box-border zcs-flex zcs-direction-column zcs-gap-12"><div class="policy-icon zcs-rounded-half zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline files-paper zcs-font-22"></i></div><h6 class="zcs-font-16 zcs-font-medium zcs-color-primary zcs-m-0">Receipts</h6><p class="zcs-font-14 zcs-lh-body status-muted zcs-m-0">Attach itemized receipts for expenses requiring proof. If unavailable, document why the receipt cannot be provided and identify alternate evidence.</p></div>
+      <div class="zcs-template-card zcs-card guidance-card zcs-p-20 zcs-box-border zcs-flex zcs-direction-column zcs-gap-12"><div class="policy-icon zcs-rounded-half zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline business-handshake zcs-font-22"></i></div><h6 class="zcs-font-16 zcs-font-medium zcs-color-primary zcs-m-0">Entertainment documentation</h6><p class="zcs-font-14 zcs-lh-body status-muted zcs-m-0">Include attendee names, companies, business purpose, and budget code. Explain business value where per-person amount is high.</p></div>
+      <div class="zcs-template-card zcs-card guidance-card zcs-p-20 zcs-box-border zcs-flex zcs-direction-column zcs-gap-12"><div class="policy-icon zcs-rounded-half zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline food-dish zcs-font-22"></i></div><h6 class="zcs-font-16 zcs-font-medium zcs-color-primary zcs-m-0">Per diem</h6><p class="zcs-font-14 zcs-lh-body status-muted zcs-m-0">Compare meals to the policy limit for destination and travel dates. Add context for required overages, hosted meals, or exceptional circumstances.</p></div>
+      <div class="zcs-template-card zcs-card guidance-card zcs-p-20 zcs-box-border zcs-flex zcs-direction-column zcs-gap-12"><div class="policy-icon zcs-rounded-half zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline ui-2-time zcs-font-22"></i></div><h6 class="zcs-font-16 zcs-font-medium zcs-color-primary zcs-m-0">Advance booking</h6><p class="zcs-font-14 zcs-lh-body status-muted zcs-m-0">For late bookings, note when the trip was approved, why travel could not be planned earlier, and any savings or business constraints.</p></div>
+    </div>
+  </section>
+
+  <section class="zcs-card zcs-box-border status-section native-report-box">
+    <div class="status-section-header zcs-p-16 zcs-box-border zcs-flex zcs-justify-space-between zcs-align-items-center zcs-gap-12">
+      <div><h2 class="zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0">My Exception Requests report</h2><p class="zcs-font-13 status-muted zcs-m-0">Embedded read-only report area for quick review.</p></div>
+      <a class="zcs-button zcs-primary-outline-button zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body" href="#Report:My_Exception_Requests?zc_LoadIn=dialog&amp;zc_Header=true"><span class="zcs-button-text">Open report</span></a>
+    </div>
+    <div class="zcs-p-16 zcs-box-border">
+      <div elName="zc-component" viewLinkName="My_Exception_Requests" params="zc_Header=false&amp;zc_Footer=true&amp;zc_AddRec=false&amp;zc_EditRec=false&amp;zc_DelRec=false&amp;zc_DuplRec=false&amp;zc_Search=false&amp;zc_ColMenu=false&amp;zc_MoreAction=false" style="border:0;background:transparent;"></div>
+    </div>
+  </section>
+</div>

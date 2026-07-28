@@ -1,0 +1,49 @@
+TE_Claims_On_Validate as "TE Claims On Validate"
+{
+    type = form
+    form = TE_Claims
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Trip_Start_Date != null && input.Trip_End_Date != null && input.Trip_End_Date < input.Trip_Start_Date)
+                {
+                    alert "Trip End Date must be on or after Trip Start Date.";
+                    cancel submit;
+                }
+                if(input.Submission_Date == null)
+                {
+                    alert "Submission Date is required for claim lifecycle tracking.";
+                    cancel submit;
+                }
+                if(input.Total_Amount != null && input.Total_Amount < 0)
+                {
+                    alert "Total Amount cannot be negative.";
+                    cancel submit;
+                }
+                if(input.Currency == null || input.Currency.trim().length() != 3)
+                {
+                    alert "Currency must be exactly 3 characters.";
+                    cancel submit;
+                }
+                if(input.Manager_Decision == "Approve" && input.Compliance_Rating == "Red")
+                {
+                    unresolvedCriticalCount = 1;
+                    if(input.ID != null)
+                    {
+                        unresolvedCriticalCount = TE_Compliance_Results[Claim == input.ID && Pass_Fail == "Fail" && Severity == "Critical" && Exception_Status != "Approved"].count();
+                    }
+                    if(unresolvedCriticalCount > 0)
+                    {
+                        alert "Red claims cannot be approved until every critical compliance result has an approved exception.";
+                        cancel submit;
+                    }
+                }
+            )
+        }
+    }
+}

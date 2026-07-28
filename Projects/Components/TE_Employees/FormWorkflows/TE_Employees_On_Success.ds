@@ -1,0 +1,18 @@
+TE_Employees_On_Success as "TE Employees On Success"
+{
+    type = form
+    form = TE_Employees
+    record event = on add or edit
+    description = "Audit insert is deferred until TE_Audit_Log exists in the application."
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                info "TE_Audit_Log form is not present at compile time; audit write deferred for Employee " + input.Employee_ID + " by " + zoho.loginuser + " at " + zoho.currenttime;
+            )
+        }
+    }
+}

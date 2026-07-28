@@ -1,0 +1,25 @@
+list Warning_Violations
+{
+    displayName = "Warning Violations"
+    show all rows from TE_Compliance_Results [Pass_Fail == "Fail" && Severity == "Warning"]
+    (
+        Claim
+        Line_Item
+        Rule_Category
+        Violation_Description
+        Policy_Limit
+        Actual_Amount
+        Excess_Amount
+        Exception_Status
+        Pass_Fail
+        Severity
+        custom action "Request Exception"
+        (
+            workflow = Request_Exception
+            show action for each record = true
+            column header = "Actions"
+            success message = "Exception request opened."
+            condition = (Exception_Required == true && Exception_Status != "Approved")
+        )
+    )
+}

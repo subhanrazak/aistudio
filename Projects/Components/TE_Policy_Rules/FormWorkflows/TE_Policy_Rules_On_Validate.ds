@@ -1,0 +1,51 @@
+TE_Policy_Rules_On_Validate as "TE Policy Rules On Validate"
+{
+    type = form
+    form = TE_Policy_Rules
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Rule_ID == null || input.Rule_ID == "")
+                {
+                    alert "Rule ID is required.";
+                    cancel submit;
+                }
+                if(input.Rule_Name == null || input.Rule_Name == "")
+                {
+                    alert "Rule Name is required.";
+                    cancel submit;
+                }
+                if(input.Rule_Category == null || input.Rule_Category == "")
+                {
+                    alert "Rule Category is required.";
+                    cancel submit;
+                }
+                if(input.Default_Severity == null || input.Default_Severity == "")
+                {
+                    alert "Default Severity is required.";
+                    cancel submit;
+                }
+                if(input.Effective_Date == null)
+                {
+                    alert "Effective Date is required.";
+                    cancel submit;
+                }
+                if(input.Warning_Threshold_Percent != null && input.Critical_Threshold_Percent != null && input.Warning_Threshold_Percent > 0 && input.Critical_Threshold_Percent > 0 && input.Critical_Threshold_Percent < input.Warning_Threshold_Percent)
+                {
+                    alert "Critical Threshold Percent cannot be lower than Warning Threshold Percent when both thresholds are greater than zero.";
+                    cancel submit;
+                }
+                if(input.Retired_Date != null && input.Effective_Date != null && input.Retired_Date < input.Effective_Date)
+                {
+                    alert "Retired Date cannot be before Effective Date.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}

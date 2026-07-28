@@ -1,0 +1,30 @@
+TE_Distance_Lookups_On_Success as "TE Distance Lookups On Success"
+{
+    type = form
+    form = TE_Distance_Lookups
+    record event = on add or edit
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                auditKey = "DIST-" + input.ID;
+                afterValue = "Route " + input.Route_Code + ": " + input.Origin_City + ", " + input.Origin_Country + " to " + input.Destination_City + ", " + input.Destination_Country + "; expected KM=" + input.Expected_Distance_KM + "; tolerance=" + input.Tolerance_Percent + "; active=" + input.Active;
+                insert into TE_Audit_Log
+                [
+                    Event_Key = auditKey
+                    Event_Timestamp = zoho.currenttime
+                    Actor_Email = zoho.loginuser
+                    Entity_Type = "Distance Lookup"
+                    Entity_Record_ID = input.ID
+                    Action = "Route distance create/update"
+                    After_Value = afterValue
+                    Severity = "Info"
+                    Immutable_Flag = true
+                ];
+            )
+        }
+    }
+}

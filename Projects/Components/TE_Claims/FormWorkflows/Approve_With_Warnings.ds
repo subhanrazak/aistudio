@@ -1,0 +1,62 @@
+Approve_With_Warnings as "Approve With Warnings"
+{
+    type = functions
+    form = TE_Claims
+    execution type = for each record
+
+    on start
+    {
+        actions
+        {
+            on click
+            (
+                unresolvedCriticalCount = TE_Compliance_Results[Claim == input.ID && Pass_Fail == "Fail" && Severity == "Critical" && Exception_Status != "Approved"].count();
+                if(unresolvedCriticalCount > 0)
+                {
+                    info "Approval blocked: unresolved critical compliance failures remain for Trip " + input.Trip_Number + ".";
+                }
+                else
+                {
+                    input.Manager_Acknowledgement = true;
+                    input.Manager_Decision = "Approve";
+                    input.Claim_Status = "Compliance Cleared - Approved";
+                    try
+                    {
+                        insert into TE_Audit_Log
+                        [
+                            Event_Key = "APPWARN-" + input.ID.toText() + "-" + zoho.currenttime.toText("yyyyMMddHHmmss")
+                            Event_Timestamp = zoho.currenttime
+                            Actor_Email = zoho.loginuserid
+                            Actor_Profile = zoho.loginuser
+                            Entity_Type = "Claim"
+                            Entity_Record_ID = input.Trip_Number
+                            Action = "Manager approved claim with warnings"
+                            After_Value = "Decision=Approve; Status=Compliance Cleared - Approved; Warnings=" + input.Warning_Count.toText()
+                            IP_Address = zoho.ipaddress
+                            Severity = "Warning"
+                            Immutable_Flag = true
+                        ];
+                    }
+                    catch(auditError)
+                    {
+                        info "Approve-with-warnings audit log write skipped: " + auditError.message;
+                    }
+                    try
+                    {
+                        sendmail
+                        [
+                            from: zoho.adminuserid
+                            to: zoho.adminuserid
+                            subject: "T&E claim approved for AP processing: " + input.Trip_Number
+                            message: "Trip " + input.Trip_Number + " was approved by " + zoho.loginuser + " with warning acknowledgement."
+                        ]
+                    }
+                    catch(mailError)
+                    {
+                        info "AP notification skipped: " + mailError.message;
+                    }
+                }
+            )
+        }
+    }
+}

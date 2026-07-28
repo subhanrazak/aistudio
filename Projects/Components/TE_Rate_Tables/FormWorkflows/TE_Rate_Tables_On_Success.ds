@@ -1,0 +1,48 @@
+TE_Rate_Tables_On_Success as "TE Rate Tables On Success"
+{
+    type = form
+    form = TE_Rate_Tables
+    record event = on add or edit
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Active == true)
+                {
+                    olderRates = TE_Rate_Tables[ID != input.ID && Active == true && City_Location == input.City_Location && Country_Code == input.Country_Code && Grade_Band == input.Grade_Band && Effective_Date < input.Effective_Date && Expiry_Date == null];
+                    for each olderRate in olderRates
+                    {
+                        olderRate.Expiry_Date = input.Effective_Date.subDay(1);
+                        olderRate.Active = false;
+                    }
+                }
+                try
+                {
+                    auditKey = "RATE-" + input.ID.toText() + "-" + zoho.currenttime.toText("yyyyMMddHHmmss");
+                    rateAfter = "Rate_Code=" + input.Rate_Code + "; City_Location=" + input.City_Location + "; Country_Code=" + input.Country_Code + "; Grade_Band=" + input.Grade_Band + "; Hotel_Max=" + input.Hotel_Max.toText() + "; Daily_Per_Diem_Meals=" + input.Daily_Per_Diem_Meals.toText() + "; Currency=" + input.Currency + "; Effective_Date=" + input.Effective_Date.toText() + "; Expiry_Date=" + input.Expiry_Date.toText() + "; Active=" + input.Active.toText();
+                    insert into TE_Audit_Log
+                    [
+                        Event_Key = auditKey
+                        Event_Timestamp = zoho.currenttime
+                        Actor_Email = zoho.loginuserid
+                        Actor_Profile = zoho.loginuser
+                        Entity_Type = "Rate Table"
+                        Entity_Record_ID = input.ID.toText()
+                        Action = "Rate table create/update"
+                        After_Value = rateAfter
+                        IP_Address = zoho.ipaddress
+                        Severity = "Info"
+                        Immutable_Flag = true
+                    ];
+                }
+                catch(auditError)
+                {
+                    info "TE_Audit_Log write skipped: " + auditError.message;
+                }
+            )
+        }
+    }
+}

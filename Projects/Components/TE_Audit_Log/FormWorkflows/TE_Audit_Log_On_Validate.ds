@@ -1,0 +1,78 @@
+TE_Audit_Log_On_Validate as "TE Audit Log On Validate"
+{
+    type = form
+    form = TE_Audit_Log
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                userProfile = "";
+                portalProfile = "";
+                isAdminProfile = false;
+                try
+                {
+                    userProfile = thisapp.permissions.loginUserProfile();
+                }
+                catch(profileError)
+                {
+                    userProfile = "";
+                }
+                try
+                {
+                    portalProfile = thisapp.portal.loginUserProfile();
+                }
+                catch(portalProfileError)
+                {
+                    portalProfile = "";
+                }
+                if(userProfile == "Travel_Policy_Administrator" || userProfile == "Developer" || userProfile == "Admin" || userProfile == "Administrator" || userProfile == "Internal_Auditor" || portalProfile == "Travel_Policy_Administrator" || portalProfile == "Developer" || portalProfile == "Admin" || portalProfile == "Administrator" || portalProfile == "Internal_Auditor" || zoho.loginuser == zoho.adminuser)
+                {
+                    isAdminProfile = true;
+                }
+                if(input.ID != null && isAdminProfile == false)
+                {
+                    alert "Audit log records are append-only. Contact an administrator if a correction record is required.";
+                    cancel submit;
+                }
+                if(input.Event_Timestamp == null)
+                {
+                    input.Event_Timestamp = zoho.currenttime;
+                }
+                if(input.Entity_Type == null || input.Entity_Type == "")
+                {
+                    alert "Entity Type is required for audit logging.";
+                    cancel submit;
+                }
+                if(input.Action == null || input.Action == "")
+                {
+                    alert "Action is required for audit logging.";
+                    cancel submit;
+                }
+                if(input.Severity == null || input.Severity == "")
+                {
+                    alert "Severity is required for audit logging.";
+                    cancel submit;
+                }
+                if(input.Event_Key == null || input.Event_Key == "")
+                {
+                    if(input.ID != null)
+                    {
+                        input.Event_Key = "AUD-" + input.ID.toText();
+                    }
+                    else
+                    {
+                        input.Event_Key = "AUD-" + zoho.currenttime.toText("yyyyMMddHHmmss");
+                    }
+                }
+                if(input.Immutable_Flag == false)
+                {
+                    input.Immutable_Flag = true;
+                }
+            )
+        }
+    }
+}

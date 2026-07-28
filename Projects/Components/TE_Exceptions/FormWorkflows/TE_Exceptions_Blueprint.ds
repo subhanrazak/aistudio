@@ -1,0 +1,297 @@
+TE_Exceptions_Blueprint as "TE Exceptions Blueprint"
+{
+    type = blueprint
+    form = TE_Exceptions
+
+    start
+    {
+        start stage = "Draft"
+    }
+
+    stages
+    {
+        "Draft"
+        {
+        }
+        "Pending Manager Approval"
+        {
+        }
+        "Pending Department Head Approval"
+        {
+        }
+        "Pending Compliance Approval"
+        {
+        }
+        "Pending CFO Approval"
+        {
+        }
+        "Approved"
+        {
+        }
+        "Rejected"
+        {
+        }
+        "Escalated"
+        {
+        }
+        "Returned for Information"
+        {
+        }
+    }
+
+    transitions
+    {
+        Submit_Exception as "Submit Exception"
+        {
+            type = normal
+            from stage = "Draft"
+            to stage = "Pending Manager Approval"
+            before
+            {
+                transition owner
+                (
+                    permissions = {"Expense_Claimant_Portal","Travel_Policy_Administrator"}
+                )
+                transition criteria = ( Business_Justification != null )
+            }
+            during
+            {
+                action = update_fields
+                workflow status = true
+                visible fields = [Business_Justification, Supporting_Document, Requester_Email]
+            }
+            after
+            {
+                actions
+                {
+                    custom deluge script
+                    (
+                    input.Status = "Pending Manager Approval";
+                    )
+                }
+            }
+        }
+
+        Manager_Approve as "Manager Approve"
+        {
+            type = normal
+            from stage = "Pending Manager Approval"
+            to stage = "Approved"
+            before
+            {
+                transition owner
+                (
+                    permissions = {"Approving_Manager_Portal","Travel_Policy_Administrator"}
+                )
+            }
+            during
+            {
+                action = update_fields
+                workflow status = true
+                visible fields = [Approval_Decision, Approval_Comments, Decision_Date]
+            }
+            after
+            {
+                actions
+                {
+                    custom deluge script
+                    (
+                    input.Approval_Decision = "Approve";
+                    input.Status = "Approved";
+                    input.Decision_Date = zoho.currenttime;
+                    )
+                }
+            }
+        }
+
+        Department_Head_Approve as "Department Head Approve"
+        {
+            type = normal
+            from stage = "Pending Department Head Approval"
+            to stage = "Approved"
+            before
+            {
+                transition owner
+                (
+                    permissions = {"Approving_Manager_Portal","Travel_Policy_Administrator"}
+                )
+            }
+            during
+            {
+                action = update_fields
+                workflow status = true
+                visible fields = [Approval_Decision, Approval_Comments, Decision_Date]
+            }
+            after
+            {
+                actions
+                {
+                    custom deluge script
+                    (
+                    input.Approval_Decision = "Approve";
+                    input.Status = "Approved";
+                    input.Decision_Date = zoho.currenttime;
+                    )
+                }
+            }
+        }
+
+        Compliance_Approve as "Compliance Approve"
+        {
+            type = normal
+            from stage = "Pending Compliance Approval"
+            to stage = "Approved"
+            before
+            {
+                transition owner
+                (
+                    permissions = {"Compliance_Officer","Travel_Policy_Administrator"}
+                )
+            }
+            during
+            {
+                action = update_fields
+                workflow status = true
+                visible fields = [Approval_Decision, Approval_Comments, Decision_Date]
+            }
+            after
+            {
+                actions
+                {
+                    custom deluge script
+                    (
+                    input.Approval_Decision = "Approve";
+                    input.Status = "Approved";
+                    input.Decision_Date = zoho.currenttime;
+                    )
+                }
+            }
+        }
+
+        CFO_Approve as "CFO Approve"
+        {
+            type = normal
+            from stage = "Pending CFO Approval"
+            to stage = "Approved"
+            before
+            {
+                transition owner
+                (
+                    permissions = {"CFO_Head_of_Finance","Travel_Policy_Administrator"}
+                )
+            }
+            during
+            {
+                action = update_fields
+                workflow status = true
+                visible fields = [Approval_Decision, Approval_Comments, Decision_Date]
+            }
+            after
+            {
+                actions
+                {
+                    custom deluge script
+                    (
+                    input.Approval_Decision = "Approve";
+                    input.Status = "Approved";
+                    input.Decision_Date = zoho.currenttime;
+                    )
+                }
+            }
+        }
+
+        Reject_Exception as "Reject Exception"
+        {
+            type = common
+            from stage = "Pending Manager Approval"
+            to stage = "Rejected"
+            common stages = {"Pending Department Head Approval","Pending Compliance Approval","Pending CFO Approval","Escalated"}
+            before
+            {
+                transition owner
+                (
+                    permissions = {"Approving_Manager_Portal","Compliance_Officer","CFO_Head_of_Finance","Travel_Policy_Administrator"}
+                )
+            }
+            during
+            {
+                action = update_fields
+                workflow status = true
+                visible fields = [Approval_Decision, Approval_Comments, Decision_Date]
+            }
+            after
+            {
+                actions
+                {
+                    custom deluge script
+                    (
+                    input.Approval_Decision = "Reject";
+                    input.Status = "Rejected";
+                    input.Decision_Date = zoho.currenttime;
+                    )
+                }
+            }
+        }
+
+        Return_For_Information as "Return for Information"
+        {
+            type = common
+            from stage = "Pending Manager Approval"
+            to stage = "Returned for Information"
+            common stages = {"Pending Department Head Approval","Pending Compliance Approval","Pending CFO Approval","Escalated"}
+            before
+            {
+                transition owner
+                (
+                    permissions = {"Approving_Manager_Portal","Compliance_Officer","CFO_Head_of_Finance","Travel_Policy_Administrator"}
+                )
+            }
+            during
+            {
+                action = update_fields
+                workflow status = true
+                visible fields = [Approval_Decision, Approval_Comments, Decision_Date]
+            }
+            after
+            {
+                actions
+                {
+                    custom deluge script
+                    (
+                    input.Approval_Decision = "Return for Information";
+                    input.Status = "Returned for Information";
+                    input.Decision_Date = zoho.currenttime;
+                    )
+                }
+            }
+        }
+
+        Escalate_SLA as "Escalate SLA"
+        {
+            type = common
+            from stage = "Pending Manager Approval"
+            to stage = "Escalated"
+            common stages = {"Pending Department Head Approval","Pending Compliance Approval","Pending CFO Approval"}
+            before
+            {
+                transition owner
+                (
+                    permissions = {"Travel_Policy_Administrator","Compliance_Officer"}
+                )
+                transition criteria = ( SLA_Due_Date < zoho.currentdate )
+            }
+            after
+            {
+                actions
+                {
+                    custom deluge script
+                    (
+                    input.Status = "Escalated";
+                    input.Escalation_Count = ifNull(input.Escalation_Count, 0) + 1;
+                    input.Last_Reminder_Sent_On = zoho.currenttime;
+                    )
+                }
+            }
+        }
+    }
+}

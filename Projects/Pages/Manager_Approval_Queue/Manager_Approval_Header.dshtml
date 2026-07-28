@@ -1,0 +1,85 @@
+<%
+managerLogin = zoho.loginuserid;
+managerDisplay = zoho.loginuser;
+myPendingClaims = TE_Claims[((Claim_Status == "Submitted" || Claim_Status == "Compliance Cleared - Warnings" || Claim_Status == "Compliance Cleared - Green" || Claim_Status == "Exception Approved") && (Approver_Email == managerLogin || Approver_Email == managerDisplay))];
+allPendingClaims = TE_Claims[(Claim_Status == "Submitted" || Claim_Status == "Compliance Cleared - Warnings" || Claim_Status == "Compliance Cleared - Green" || Claim_Status == "Exception Approved")];
+if(myPendingClaims.count() > 0)
+{
+	claimScope = myPendingClaims;
+	scopeLabel = "Filtered to your approver email";
+}
+else
+{
+	claimScope = allPendingClaims;
+	scopeLabel = "Admin/demo mode: showing all pending claims";
+}
+pendingCount = claimScope.count();
+redCount = 0;
+warningOnlyCount = 0;
+for each claimRec in claimScope
+{
+	criticalCount = ifnull(claimRec.Critical_Violation_Count,0);
+	claimWarnings = ifnull(claimRec.Warning_Count,0);
+	if(criticalCount > 0 || claimRec.Compliance_Rating == "Red")
+	{
+		redCount = redCount + 1;
+	}
+	else if(claimWarnings > 0 || claimRec.Compliance_Rating == "Yellow" || claimRec.Claim_Status == "Compliance Cleared - Warnings")
+	{
+		warningOnlyCount = warningOnlyCount + 1;
+	}
+}
+managerExceptionScope = TE_Exceptions[Status == "Pending Manager Approval" && (Exception_Approver_Email == managerLogin || Exception_Approver_Email == managerDisplay)];
+if(managerExceptionScope.count() == 0)
+{
+	managerExceptionScope = TE_Exceptions[Status == "Pending Manager Approval"];
+}
+managerExceptionCount = managerExceptionScope.count();
+%>
+<style>
+/* zcs-global.css critical utilities included once for this page */
+:root{--zcs-theme-brand-color:var(--zcs_brand_color);--zcs-white-color:#fff;--zcs-primary-text-color:var(--zcs_primary_text_color);--zcs-secondary-text-color:var(--zcs_secondary_text_color);--zcs-teritiary-text-color:var(--zcs_tertiary_text_color);--zcs-border-color:var(--zcs_tertiary_border_color);--zcs-page-bg-color:#F3F3F4;--zcs-thead-color:#F9FAFE;--zcs-tr-h-color:#F9FAFE;--zcs-tgroup-color:#F1F2F8;--zcs-tgroup-h-color:#F1F2F8}.zcs-row{display:flex;flex-wrap:wrap}.zcs-flex{display:flex}.zcs-inline-flex{display:inline-flex}.zcs-direction-column{flex-direction:column}.zcs-align-items-center{align-items:center}.zcs-align-items-start{align-items:flex-start}.zcs-justify-center{justify-content:center}.zcs-justify-space-between{justify-content:space-between}.zcs-gap-4{gap:.25rem}.zcs-gap-8{gap:.5rem}.zcs-gap-10{gap:.625rem}.zcs-gap-12{gap:.75rem}.zcs-gap-16{gap:1rem}.zcs-gap-20{gap:1.25rem}.zcs-p-0{padding:0}.zcs-p-8{padding:.5rem}.zcs-p-10{padding:.625rem}.zcs-p-16{padding:1rem}.zcs-px-10{padding-left:.625rem;padding-right:.625rem}.zcs-px-16{padding-left:1rem;padding-right:1rem}.zcs-px-24{padding-left:1.5rem;padding-right:1.5rem}.zcs-px-30{padding-left:1.875rem;padding-right:1.875rem}.zcs-py-2{padding-top:.125rem;padding-bottom:.125rem}.zcs-py-4{padding-top:.25rem;padding-bottom:.25rem}.zcs-py-8{padding-top:.5rem;padding-bottom:.5rem}.zcs-py-12{padding-top:.75rem;padding-bottom:.75rem}.zcs-py-16{padding-top:1rem;padding-bottom:1rem}.zcs-py-24{padding-top:1.5rem;padding-bottom:1.5rem}.zcs-m-0{margin:0}.zcs-mt-8{margin-top:.5rem}.zcs-mt-12{margin-top:.75rem}.zcs-mt-16{margin-top:1rem}.zcs-mb-4{margin-bottom:.25rem}.zcs-mb-8{margin-bottom:.5rem}.zcs-w-full{width:100%}.zcs-h-full{height:100%}.zcs-col-common{flex:1 1 0}.zcs-no-shrink{flex-shrink:0}.zcs-box-border{box-sizing:border-box}.zcs-rounded-sm{border-radius:.25rem}.zcs-rounded-md{border-radius:.375rem}.zcs-rounded-lg{border-radius:.5rem}.zcs-rounded-xl{border-radius:.75rem}.zcs-relative{position:relative}.zcs-absolute{position:absolute}.zcs-sticky{position:sticky}.zcs-text-left{text-align:left}.zcs-text-right{text-align:right}.zcs-text-center{text-align:center}.zcs-font-11{font-size:.6875rem}.zcs-font-12{font-size:.75rem}.zcs-font-13{font-size:.8125rem}.zcs-font-14{font-size:.875rem}.zcs-font-15{font-size:.9375rem}.zcs-font-16{font-size:1rem}.zcs-font-18{font-size:1.125rem}.zcs-font-20{font-size:1.25rem}.zcs-font-22{font-size:1.375rem}.zcs-font-24{font-size:1.5rem}.zcs-font-28{font-size:1.75rem}.zcs-font-normal{font-weight:400}.zcs-font-medium{font-weight:500}.zcs-font-semibold{font-weight:600}.zcs-font-bold{font-weight:700}.zcs-lh-body{line-height:1.5}.zcs-lh-heading{line-height:1.25}.zcs-uppercase{text-transform:uppercase}.zcs-ellipsis{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.zcs-color-primary{color:var(--zcs-primary-text-color)}.zcs-color-secondary{color:var(--zcs-secondary-text-color)}.zcs-color-tertiary{color:var(--zcs-teritiary-text-color)}.zcs-color-white{color:#fff}.zcs-color-theme{color:var(--zcs-theme-brand-color)}.zcs-color-red{color:#FE455D}.zcs-color-yellow{color:#b8770d}.zcs-color-green{color:#179E6C}.zcs-card{background-color:var(--zcs-white-color);border:1px solid #e7e7ee;border-radius:12px}a{text-decoration:none;color:inherit}.maq-page-shell{background:var(--zcs-page-bg-color);padding:18px;box-sizing:border-box;font-family:Arial,Roboto,sans-serif}.zcs-page-header{background:linear-gradient(135deg,var(--zcs_brand_color),var(--zcs_brand_dark_color));border-radius:16px;color:#fff;box-shadow:0 10px 28px rgba(18,19,43,.10)}.zcs-page-header .zcs-color-primary,.zcs-page-header .zcs-color-secondary,.zcs-page-header .zcs-color-tertiary{color:#fff}.zcs-button{width:auto;min-width:5rem;min-height:36px}.zcs-primary-outline-button{border:1px solid var(--zcs_brand_color);background-color:var(--zcs-white-color);color:var(--zcs_brand_color)}.zcs-primary-outline-button:hover{background-color:var(--zcs_component_hover_color);border-color:var(--zcs_brand_color);color:var(--zcs_brand_color)}.zcs-badge{width:auto}.zcs-badge-filled{border:1px solid transparent}.zcs-badge-filled.zcs-badge-theme{background-color:var(--zcs_brand_color);border-color:var(--zcs_brand_color);color:#fff}.zcs-badge-filled.zcs-badge-green{background-color:#179E6C;border-color:#179E6C;color:#fff}.zcs-badge-filled.zcs-badge-red{background-color:#FE455D;border-color:#FE455D;color:#fff}.zcs-badge-filled.zcs-badge-grey{background-color:#242424;border-color:#242424;color:#fff}.zcs-badge-filled.zcs-badge-yellow{background-color:#FAAE13;border-color:#FAAE13;color:#fff}.zcs-badge-filled.zcs-badge-blue{background-color:#2A6FFC;border-color:#2A6FFC;color:#fff}.zcs-badge-filled.zcs-badge-orange{background-color:#F4660C;border-color:#F4660C;color:#fff}.zcs-template-card{min-height:168px;overflow:hidden}.zcs-card-header{border-bottom:1px solid var(--zcs_tertiary_border_color)}.zcs-template-card-badge{top:0;right:0;background-color:var(--theme_brand_color);border-bottom-left-radius:32px}.maq-kpi-grid{display:grid;grid-template-columns:repeat(4,minmax(180px,1fr));gap:16px;margin-top:18px}.maq-kpi-value{font-size:34px;font-weight:700;line-height:1;color:var(--zcs-primary-text-color)}.maq-kpi-icon{width:42px;height:42px;border-radius:14px;background:var(--zcs_component_hover_color);color:var(--zcs_brand_color);display:flex;align-items:center;justify-content:center;font-size:22px}.maq-section-card{background:#fff;border:1px solid var(--zcs_tertiary_border_color);border-radius:16px;padding:18px;box-sizing:border-box}.zcs-toast-link:hover{text-decoration:underline}.zcs-success-toast{background-color:#edf7ed;color:#1d4620}.zcs-info-toast{background-color:#e4f6fd;color:#024361}.zcs-warning-toast{background-color:#fef4e5;color:#663c01}.zcs-error-toast{background-color:#feedec;color:#5f2120}.zcs-notes-wrapper ul{list-style-type:disc}.zcs-notes-text a:hover{text-decoration:underline}.zcs-table-wrapper{border:1px solid var(--zcs_tertiary_border_color);background-color:#fff;overflow:auto}.zcs-table-wrapper table{line-height:normal;border-collapse:collapse}.zcs-table-wrapper table thead{top:0}.zcs-table-wrapper table thead tr th{background-color:var(--zcs-thead-color);box-shadow:0 -1px 0 0 var(--zcs_tertiary_border_color) inset;white-space:nowrap}.zcs-table-wrapper table thead tr.zcs-tspace th{background-color:#fff;box-shadow:none}.zcs-table-wrapper table tbody tr td{border-top:1px solid var(--zcs_tertiary_border_color);vertical-align:top}.zcs-table-wrapper table tbody tr:first-child td{border-color:transparent}.zcs-table-wrapper table tbody tr:hover td{background-color:var(--zcs-tr-h-color)}.zcs-table-wrapper table tbody tr td.zcs-green,.zcs-table-wrapper table tbody tr td .zcs-green{color:#179e6c}.zcs-table-wrapper table tbody tr td.zcs-red,.zcs-table-wrapper table tbody tr td .zcs-red{color:#fe455d}.zcs-table-wrapper table tbody tr td.zcs-yellow,.zcs-table-wrapper table tbody tr td .zcs-yellow{color:#b8770d}.zcs-table-wrapper table tbody tr td.zcs-l_blue,.zcs-table-wrapper table tbody tr td .zcs-l_blue{color:#1094c5}.maq-scorecard-grid{display:grid;grid-template-columns:repeat(2,minmax(260px,1fr));gap:16px}.maq-claim-card{min-height:230px}.maq-claim-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.maq-meta-block{background:#F9FAFE;border:1px solid var(--zcs_tertiary_border_color);border-radius:10px;padding:10px}.maq-report-wrap .zc-pb-tile-card{border-radius:16px!important}.maq-muted{color:var(--zcs-secondary-text-color)}@media(max-width:1100px){.maq-kpi-grid,.maq-scorecard-grid{grid-template-columns:repeat(2,minmax(180px,1fr))}}@media(max-width:700px){.maq-page-shell{padding:12px}.maq-kpi-grid,.maq-scorecard-grid{grid-template-columns:1fr}.zcs-page-header{flex-direction:column;align-items:flex-start}.maq-claim-meta{grid-template-columns:1fr}}
+</style>
+<div class="maq-page-shell">
+    <div class='zcs-page-header zcs-w-full zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-16 zcs-px-30 zcs-py-24 zcs-box-border'>
+        <div class='zcs-flex zcs-align-items-center zcs-gap-12 zcs-ellipsis'>
+            <i class='zcs-font-28 zc-li-outline business-briefcase-24'></i>
+            <div>
+                <h5 class='zcs-font-24 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-ellipsis zcs-m-0'>Manager Approval Queue</h5>
+                <p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-secondary zcs-m-0'>Focused claim review for <%=managerLogin%>. <%=scopeLabel%>.</p>
+            </div>
+        </div>
+        <div class='zcs-flex zcs-align-items-center zcs-gap-12'>
+            <a class='zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body' href='#Report:Pending_Manager_Approval?zc_LoadIn=dialog&amp;zc_Header=true'>
+                <i class='zcs-button-icon zc-li-outline ui-1-eye-17'></i>
+                <span class='zcs-button-text'>Open Report</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="maq-kpi-grid">
+        <div class='zcs-template-card zcs-card zcs-flex zcs-direction-column zcs-relative'>
+            <div class='zcs-card-header zcs-p-16 zcs-box-border zcs-relative'><h6 class='zcs-font-16 zcs-font-normal zcs-lh-heading zcs-color-primary zcs-m-0'>Pending approvals</h6><span class='zcs-template-card-badge zcs-px-16 zcs-py-4 zcs-box-border zcs-font-11 zcs-font-normal zcs-lh-body zcs-color-white zcs-uppercase zcs-absolute'>Queue</span></div>
+            <div class='zcs-card-content zcs-col-common zcs-p-16 zcs-box-border'><div class='zcs-flex zcs-align-items-center zcs-justify-space-between'><div><div class="maq-kpi-value"><%=pendingCount%></div><p class='zcs-font-13 zcs-color-secondary zcs-m-0 zcs-mt-8'>Claims waiting for manager action</p></div><div class="maq-kpi-icon"><i class='zc-li-outline ui-2-time'></i></div></div></div>
+        </div>
+        <div class='zcs-template-card zcs-card zcs-flex zcs-direction-column zcs-relative'>
+            <div class='zcs-card-header zcs-p-16 zcs-box-border zcs-relative'><h6 class='zcs-font-16 zcs-font-normal zcs-lh-heading zcs-color-primary zcs-m-0'>Red claims</h6><span class='zcs-template-card-badge zcs-px-16 zcs-py-4 zcs-box-border zcs-font-11 zcs-font-normal zcs-lh-body zcs-color-white zcs-uppercase zcs-absolute'>Critical</span></div>
+            <div class='zcs-card-content zcs-col-common zcs-p-16 zcs-box-border'><div class='zcs-flex zcs-align-items-center zcs-justify-space-between'><div><div class="maq-kpi-value zcs-color-red"><%=redCount%></div><p class='zcs-font-13 zcs-color-secondary zcs-m-0 zcs-mt-8'>Critical violations or Red rating</p></div><div class="maq-kpi-icon"><i class='zc-li-outline ui-3-alert'></i></div></div></div>
+        </div>
+        <div class='zcs-template-card zcs-card zcs-flex zcs-direction-column zcs-relative'>
+            <div class='zcs-card-header zcs-p-16 zcs-box-border zcs-relative'><h6 class='zcs-font-16 zcs-font-normal zcs-lh-heading zcs-color-primary zcs-m-0'>Warning-only claims</h6><span class='zcs-template-card-badge zcs-px-16 zcs-py-4 zcs-box-border zcs-font-11 zcs-font-normal zcs-lh-body zcs-color-white zcs-uppercase zcs-absolute'>Review</span></div>
+            <div class='zcs-card-content zcs-col-common zcs-p-16 zcs-box-border'><div class='zcs-flex zcs-align-items-center zcs-justify-space-between'><div><div class="maq-kpi-value zcs-color-yellow"><%=warningOnlyCount%></div><p class='zcs-font-13 zcs-color-secondary zcs-m-0 zcs-mt-8'>Yellow or warnings with no criticals</p></div><div class="maq-kpi-icon"><i class='zc-li-outline ui-1-notification-69'></i></div></div></div>
+        </div>
+        <div class='zcs-template-card zcs-card zcs-flex zcs-direction-column zcs-relative'>
+            <div class='zcs-card-header zcs-p-16 zcs-box-border zcs-relative'><h6 class='zcs-font-16 zcs-font-normal zcs-lh-heading zcs-color-primary zcs-m-0'>Manager exceptions</h6><span class='zcs-template-card-badge zcs-px-16 zcs-py-4 zcs-box-border zcs-font-11 zcs-font-normal zcs-lh-body zcs-color-white zcs-uppercase zcs-absolute'>SLA</span></div>
+            <div class='zcs-card-content zcs-col-common zcs-p-16 zcs-box-border'><div class='zcs-flex zcs-align-items-center zcs-justify-space-between'><div><div class="maq-kpi-value"><%=managerExceptionCount%></div><p class='zcs-font-13 zcs-color-secondary zcs-m-0 zcs-mt-8'>TE exceptions pending manager approval</p></div><div class="maq-kpi-icon"><i class='zc-li-outline files-paper'></i></div></div></div>
+        </div>
+    </div>
+
+    <div class='zcs-w-full zcs-flex zcs-direction-column zcs-gap-16 zcs-mt-16'>
+        <div class='zcs-toast zcs-warning-toast zcs-w-full zcs-flex zcs-gap-8 zcs-px-16 zcs-py-12 zcs-rounded-sm zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'>
+            <i class='zcs-toast-icon zcs-no-shrink zcs-lh-body zc-li-outline ui-3-alert'></i>
+            <div class='zcs-toast-text'><p class='zcs-m-0'><strong>Phase 1 SAP constraint:</strong> approval actions on this page update Creator claim status and audit history only. Do not attempt SAP write-back from this page.</p></div>
+        </div>
+    </div>
+</div>

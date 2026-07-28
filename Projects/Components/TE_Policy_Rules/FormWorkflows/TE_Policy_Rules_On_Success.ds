@@ -1,0 +1,49 @@
+TE_Policy_Rules_On_Success as "TE Policy Rules On Success"
+{
+    type = form
+    form = TE_Policy_Rules
+    record event = on add or edit
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                auditAction = "Policy rule create/update";
+                if(input.Active == false || input.Retired_Date != null)
+                {
+                    auditAction = "Policy rule retired";
+                }
+                auditSeverity = input.Default_Severity;
+                if(auditSeverity == null || auditSeverity == "")
+                {
+                    auditSeverity = "Info";
+                }
+                auditAfterValue = "Rule_ID=" + input.Rule_ID + "; Rule_Name=" + input.Rule_Name + "; Rule_Category=" + input.Rule_Category + "; Severity=" + input.Default_Severity + "; Active=" + input.Active + "; Effective_Date=" + input.Effective_Date + "; Retired_Date=" + input.Retired_Date;
+                try
+                {
+                    insert into TE_Audit_Log
+                    [
+                        Event_Key = "POL-" + input.ID + "-" + zoho.currenttime
+                        Event_Timestamp = zoho.currenttime
+                        Actor_Email = zoho.loginuserid
+                        Actor_Profile = zoho.loginuser
+                        Entity_Type = "Policy Rule"
+                        Entity_Record_ID = input.Rule_ID
+                        Action = auditAction
+                        Before_Value = ""
+                        After_Value = auditAfterValue
+                        IP_Address = zoho.ipaddress
+                        Severity = auditSeverity
+                        Immutable_Flag = true
+                    ];
+                }
+                catch(e)
+                {
+                    info "Policy rule audit log write skipped: " + e.message;
+                }
+            )
+        }
+    }
+}

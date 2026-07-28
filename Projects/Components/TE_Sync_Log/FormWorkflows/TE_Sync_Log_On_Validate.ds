@@ -1,0 +1,41 @@
+TE_Sync_Log_On_Validate as "TE Sync Log On Validate"
+{
+    type = form
+    form = TE_Sync_Log
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Started_On == null)
+                {
+                    alert "Started On is required for every SAP sync log.";
+                    cancel submit;
+                }
+                if(input.Completed_On != null && input.Started_On != null && input.Completed_On < input.Started_On)
+                {
+                    alert "Completed On cannot be before Started On.";
+                    cancel submit;
+                }
+                if(input.Records_Read != null && input.Records_Read < 0)
+                {
+                    alert "Records Read cannot be negative.";
+                    cancel submit;
+                }
+                if(input.Records_Imported != null && input.Records_Imported < 0)
+                {
+                    alert "Records Imported cannot be negative.";
+                    cancel submit;
+                }
+                if(input.Records_Failed != null && input.Records_Failed < 0)
+                {
+                    alert "Records Failed cannot be negative.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}

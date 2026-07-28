@@ -1,0 +1,61 @@
+TE_Sync_Log_On_Success as "TE Sync Log On Success"
+{
+    type = form
+    form = TE_Sync_Log
+    record event = on add or edit
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Sync_Status == "Failed" || input.Sync_Status == "Partial" || input.Sync_Status == "Placeholder Only")
+                {
+                    auditSeverity = "Info";
+                    if(input.Sync_Status == "Failed")
+                    {
+                        auditSeverity = "Critical";
+                    }
+                    else if(input.Sync_Status == "Partial")
+                    {
+                        auditSeverity = "Warning";
+                    }
+                    auditAction = "SAP sync " + input.Sync_Status;
+                    auditAfter = "Source_System=" + input.Source_System + "; SAP_Table=" + input.SAP_Table + "; Started_On=" + input.Started_On + "; Completed_On=" + input.Completed_On + "; Records_Read=" + input.Records_Read + "; Records_Imported=" + input.Records_Imported + "; Records_Failed=" + input.Records_Failed + "; Notes=" + input.Notes;
+                    actorEmail = input.Triggered_By_Email;
+                    if(actorEmail == null || actorEmail == "")
+                    {
+                        actorEmail = zoho.loginuserid;
+                    }
+                    if(actorEmail == null || actorEmail == "")
+                    {
+                        actorEmail = zoho.adminuserid;
+                    }
+                    try
+                    {
+                        insert into TE_Audit_Log
+                        [
+                            Event_Key = "SYNC-" + input.ID.toText() + "-" + zoho.currenttime.toText("yyyyMMddHHmmss")
+                            Event_Timestamp = zoho.currenttime
+                            Actor_Email = actorEmail
+                            Actor_Profile = zoho.loginuser
+                            Entity_Type = "SAP Sync"
+                            Entity_Record_ID = input.Sync_Run_ID
+                            Action = auditAction
+                            Before_Value = ""
+                            After_Value = auditAfter
+                            IP_Address = zoho.ipaddress
+                            Severity = auditSeverity
+                            Immutable_Flag = true
+                        ];
+                    }
+                    catch(auditError)
+                    {
+                        info "SAP sync audit log write skipped: " + auditError.message;
+                    }
+                }
+            )
+        }
+    }
+}
