@@ -1,0 +1,75 @@
+<%
+  vendorEmail = zoho.loginuser;
+  vendorParam = encodeURL(vendorEmail);
+  subCount = Attendance_Submission[Vendor_Email == vendorEmail].count();
+  attInvCount = Attendance_Invoice[Vendor_Email == vendorEmail].count();
+  consInvCount = Consumable_Invoice[Vendor_Email == vendorEmail].count();
+  maintCount = Maintenance_Task[Vendor_Email == vendorEmail].count();
+  warnCount = Warning_Penalty[Vendor_Email == vendorEmail].count();
+  attDataCount = Attendance_Record[Vendor_Email == vendorEmail].count();
+  rosterCount = FMS_Employee_Master[Vendor_Email == vendorEmail].count();
+  historyCount = Maintenance_Task_History[Vendor_Email == vendorEmail].count();
+  assetCount = Asset_Master[Status == "Active"].count();
+%>
+<style>
+.fms-report-workspace{background:#f6f7fb;padding:0 18px 22px 18px;box-sizing:border-box}.fms-report-card{background:#fff;border:1px solid #e7e7ee;border-radius:14px;margin-top:16px;box-shadow:0 10px 26px rgba(16,24,40,.04);overflow:hidden}.fms-report-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:16px 18px;border-bottom:1px solid #edf0f5;flex-wrap:wrap}.fms-report-title{display:flex;align-items:center;gap:9px;margin:0;font-size:18px;font-weight:600;line-height:1.25;color:var(--zcs_primary_text_color)}.fms-report-title i{color:var(--zcs_brand_color)}.fms-report-subtitle{font-size:13px;color:var(--zcs_tertiary_text_color);margin:4px 0 0 29px}.fms-report-count{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:4px;padding:2px 10px;background:var(--zcs_component_hover_color);color:var(--zcs_brand_color);font-size:13px}.fms-report-body{padding:0}.fms-report-grid{display:grid;grid-template-columns:1fr;gap:0}.fms-report-workspace [zc-component='report']{min-height:420px}.fms-report-workspace .fms-compact [zc-component='report']{min-height:360px}.fms-report-nav{background:#fff;border:1px solid #e7e7ee;border-radius:14px;overflow:hidden;margin-top:16px}.fms-report-nav .zcs-horizontal-tabhead{box-shadow:0 -1px 0 0 var(--zcs_tertiary_border_color) inset;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;display:flex;gap:.75rem;padding:0 .625rem;margin:0;box-sizing:border-box}.fms-report-nav .zcs-horizontal-tabitem{list-style:none;border-bottom:1px solid transparent;letter-spacing:.1px}.fms-report-nav .zcs-horizontal-tablink{display:flex;align-items:center;justify-content:center;gap:.5rem;padding:.75rem .625rem;box-sizing:border-box;font-weight:500;line-height:1.5;color:var(--zcs_tertiary_text_color);white-space:nowrap}.fms-report-nav .zcs-horizontal-tabcount{min-width:20px;border-radius:4px;background:#F3F3F4;padding:.125rem .375rem;box-sizing:border-box;font-size:.75rem;text-align:center}.fms-report-nav .zcs-horizontal-tabitem:hover .zcs-horizontal-tablink,.fms-report-nav .zcs-horizontal-tabactive .zcs-horizontal-tablink{color:var(--zcs_brand_color)}.fms-report-nav .zcs-horizontal-tabactive{border-bottom-color:var(--zcs_brand_color)}@media(max-width:700px){.fms-report-workspace{padding:0 10px 16px}.fms-report-head{padding:14px}.fms-report-title{font-size:16px}.fms-report-subtitle{margin-left:0}.fms-report-workspace [zc-component='report']{min-height:500px}}
+</style>
+
+<div class="fms-report-workspace">
+  <nav class="fms-report-nav zcs-horizontal-tabpanel zcs-flex zcs-direction-column zcs-wh-full">
+    <ul class="zcs-horizontal-tabhead">
+      <li class="zcs-horizontal-tabitem zcs-horizontal-tabactive"><a class="zcs-horizontal-tablink" href="#Report:Attendance_Submission_List_FMS"><span class="zcs-horizontal-tabtext">Attendance Files</span><span class="zcs-horizontal-tabcount"><%=subCount%></span></a></li>
+      <li class="zcs-horizontal-tabitem"><a class="zcs-horizontal-tablink" href="#Report:Attendance_Invoice_List_FMS"><span class="zcs-horizontal-tabtext">Attendance Invoices</span><span class="zcs-horizontal-tabcount"><%=attInvCount%></span></a></li>
+      <li class="zcs-horizontal-tabitem"><a class="zcs-horizontal-tablink" href="#Report:Consumable_Invoice_List_FMS"><span class="zcs-horizontal-tabtext">Consumables</span><span class="zcs-horizontal-tabcount"><%=consInvCount%></span></a></li>
+      <li class="zcs-horizontal-tabitem"><a class="zcs-horizontal-tablink" href="#Report:Maintenance_Task_List_FMS"><span class="zcs-horizontal-tabtext">Maintenance</span><span class="zcs-horizontal-tabcount"><%=maintCount%></span></a></li>
+      <li class="zcs-horizontal-tabitem"><a class="zcs-horizontal-tablink" href="#Report:Warning_List_FMS"><span class="zcs-horizontal-tabtext">Warnings</span><span class="zcs-horizontal-tabcount"><%=warnCount%></span></a></li>
+      <li class="zcs-horizontal-tabitem"><a class="zcs-horizontal-tablink" href="#Report:FMS_Employee_Master_List"><span class="zcs-horizontal-tabtext">Roster</span><span class="zcs-horizontal-tabcount"><%=rosterCount%></span></a></li>
+      <li class="zcs-horizontal-tabitem"><a class="zcs-horizontal-tablink" href="#Report:Asset_Reference_List_FMS"><span class="zcs-horizontal-tabtext">Assets</span><span class="zcs-horizontal-tabcount"><%=assetCount%></span></a></li>
+    </ul>
+  </nav>
+
+  <section class="fms-report-card">
+    <div class="fms-report-head"><div><h2 class="fms-report-title"><i class="zc-li-outline files-2-upload"></i> Attendance submission list</h2><p class="fms-report-subtitle">Filtered criteria: Vendor_Email == zoho.loginuser</p></div><span class="fms-report-count"><%=subCount%> records</span></div>
+    <div class="fms-report-body"><div zc-component="report" zc-linkname="Attendance_Submission_List_FMS" zc-criteria="Vendor_Email == zoho.loginuser" zc-height="520px"></div></div>
+  </section>
+
+  <section class="fms-report-card">
+    <div class="fms-report-head"><div><h2 class="fms-report-title"><i class="zc-li-outline files-2-paper-diploma"></i> Attendance invoice list</h2><p class="fms-report-subtitle">Filtered criteria: Vendor_Email == zoho.loginuser</p></div><span class="fms-report-count"><%=attInvCount%> records</span></div>
+    <div class="fms-report-body"><div zc-component="report" zc-linkname="Attendance_Invoice_List_FMS" zc-criteria="Vendor_Email == zoho.loginuser" zc-height="520px"></div></div>
+  </section>
+
+  <section class="fms-report-card">
+    <div class="fms-report-head"><div><h2 class="fms-report-title"><i class="zc-li-outline e-commerce-shopping-cart-simple"></i> Consumable invoice list</h2><p class="fms-report-subtitle">Filtered criteria: Vendor_Email == zoho.loginuser</p></div><span class="fms-report-count"><%=consInvCount%> records</span></div>
+    <div class="fms-report-body"><div zc-component="report" zc-linkname="Consumable_Invoice_List_FMS" zc-criteria="Vendor_Email == zoho.loginuser" zc-height="500px"></div></div>
+  </section>
+
+  <section class="fms-report-card">
+    <div class="fms-report-head"><div><h2 class="fms-report-title"><i class="zc-li-outline ui-2-time"></i> Maintenance task list</h2><p class="fms-report-subtitle">Filtered criteria: Vendor_Email == zoho.loginuser</p></div><span class="fms-report-count"><%=maintCount%> records</span></div>
+    <div class="fms-report-body"><div zc-component="report" zc-linkname="Maintenance_Task_List_FMS" zc-criteria="Vendor_Email == zoho.loginuser" zc-height="520px"></div></div>
+  </section>
+
+  <section class="fms-report-card">
+    <div class="fms-report-head"><div><h2 class="fms-report-title"><i class="zc-li-outline ui-3-alert"></i> Warning list</h2><p class="fms-report-subtitle">Filtered criteria: Vendor_Email == zoho.loginuser</p></div><span class="fms-report-count"><%=warnCount%> records</span></div>
+    <div class="fms-report-body"><div zc-component="report" zc-linkname="Warning_List_FMS" zc-criteria="Vendor_Email == zoho.loginuser" zc-height="480px"></div></div>
+  </section>
+
+  <section class="fms-report-card fms-compact">
+    <div class="fms-report-head"><div><h2 class="fms-report-title"><i class="zc-li-outline ui-1-calendar-date"></i> Employee attendance data</h2><p class="fms-report-subtitle">Filtered criteria: Vendor_Email == zoho.loginuser</p></div><span class="fms-report-count"><%=attDataCount%> records</span></div>
+    <div class="fms-report-body"><div zc-component="report" zc-linkname="FMS_Employee_Attendance_Data" zc-criteria="Vendor_Email == zoho.loginuser" zc-height="460px"></div></div>
+  </section>
+
+  <section class="fms-report-card fms-compact">
+    <div class="fms-report-head"><div><h2 class="fms-report-title"><i class="zc-li-outline users-single-02"></i> My employee roster</h2><p class="fms-report-subtitle">Filtered criteria: Vendor_Email == zoho.loginuser</p></div><span class="fms-report-count"><%=rosterCount%> employees</span></div>
+    <div class="fms-report-body"><div zc-component="report" zc-linkname="FMS_Employee_Master_List" zc-criteria="Vendor_Email == zoho.loginuser" zc-height="460px"></div></div>
+  </section>
+
+  <section class="fms-report-card fms-compact">
+    <div class="fms-report-head"><div><h2 class="fms-report-title"><i class="zc-li-outline design-todo"></i> Maintenance task history</h2><p class="fms-report-subtitle">Filtered criteria: Vendor_Email == zoho.loginuser</p></div><span class="fms-report-count"><%=historyCount%> updates</span></div>
+    <div class="fms-report-body"><div zc-component="report" zc-linkname="Maintenance_Task_History_Report" zc-criteria="Vendor_Email == zoho.loginuser" zc-height="420px"></div></div>
+  </section>
+
+  <section class="fms-report-card fms-compact">
+    <div class="fms-report-head"><div><h2 class="fms-report-title"><i class="zc-li-outline furniture-lamp"></i> Active asset reference</h2><p class="fms-report-subtitle">Criteria: Status == "Active"; asset reference is visible across active assets.</p></div><span class="fms-report-count"><%=assetCount%> active assets</span></div>
+    <div class="fms-report-body"><div zc-component="report" zc-linkname="Asset_Reference_List_FMS" zc-criteria='Status == "Active"' zc-height="460px"></div></div>
+  </section>
+</div>

@@ -1,0 +1,30 @@
+Attendance_Invoice_On_Success as "Attendance Invoice On Success"
+{
+    type = form
+    form = Attendance_Invoice
+    record event = on add
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                input.Submitted_By_Email = zoho.loginuser;
+                input.Status = "Pending F&A Validation";
+                insert into Audit_Log
+                [
+                    Module_Name = "Attendance Invoice"
+                    Source_Form = "Attendance_Invoice"
+                    Source_Record_ID = input.ID
+                    Source_Record_Label = input.Invoice_Number
+                    Action_Type = "Submitted"
+                    New_Status = "Pending F&A Validation"
+                    Performed_By_Email = zoho.loginuser
+                    Performed_On = zoho.currenttime
+                    Details = "Attendance invoice submitted for F&A validation."
+                ]
+            )
+        }
+    }
+}

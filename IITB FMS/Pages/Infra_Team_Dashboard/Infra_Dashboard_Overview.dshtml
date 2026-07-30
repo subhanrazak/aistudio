@@ -1,0 +1,400 @@
+<%
+loginEmail = zoho.loginuserid;
+displayUser = zoho.loginuser;
+if(displayUser == null || displayUser == "")
+{
+    displayUser = loginEmail;
+}
+currentMonthNumber = zoho.currentdate.getMonth();
+currentYear = zoho.currentdate.getYear();
+
+pendingAttendance = Attendance_Submission[Status == "Pending Validation"].count();
+pendingConsumables = Consumable_Invoice[Status == "Pending Infra Validation"].count();
+submittedMaintenance = Maintenance_Task[Status == "Submitted"].count();
+assetsDueSoon = Asset_Master[Status == "Active" && Next_Maintenance_Date >= zoho.currentdate && Next_Maintenance_Date <= zoho.currentdate.addDay(7)].count();
+openWarnings = Warning_Penalty[Status != "Acknowledged" && Status != "Cancelled"].count();
+
+activeVendors = User_Master[Role == "Vendor" && Status == "Active"].count();
+uploadPending = Attendance_Submission[Month_Number == currentMonthNumber && Year == currentYear && Status == "Pending Upload"].count();
+uploadSubmitted = Attendance_Submission[Month_Number == currentMonthNumber && Year == currentYear && Status != "Pending Upload"].count();
+uploadTotal = uploadPending + uploadSubmitted;
+uploadPct = 0;
+if(uploadTotal > 0)
+{
+    uploadPct = (uploadSubmitted * 100) / uploadTotal;
+}
+
+maintenanceApproved = Maintenance_Task[Status == "Approved"].count();
+maintenanceSubmitted = Maintenance_Task[Status == "Submitted"].count();
+maintenancePending = Maintenance_Task[Status == "Pending"].count();
+maintenanceRejected = Maintenance_Task[Status == "Rejected"].count();
+maintenanceOverdue = Maintenance_Task[Task_Due_Date < zoho.currentdate && Status != "Approved"].count();
+maintenanceTotal = maintenanceApproved + maintenanceSubmitted + maintenancePending + maintenanceRejected;
+maintenanceApprovedPct = 0;
+maintenanceSubmittedPct = 0;
+maintenanceOverduePct = 0;
+if(maintenanceTotal > 0)
+{
+    maintenanceApprovedPct = (maintenanceApproved * 100) / maintenanceTotal;
+    maintenanceSubmittedPct = (maintenanceSubmitted * 100) / maintenanceTotal;
+    maintenanceOverduePct = (maintenanceOverdue * 100) / maintenanceTotal;
+}
+
+totalAssets = Asset_Master[Status == "Active"].count();
+assetCategories = Asset_Category_Master[Status == "Active"] sort by Category_Name asc;
+
+warningsRaised = Warning_Penalty[Status == "Raised"].count();
+warningsFA = Warning_Penalty[Status == "Pending F&A Action"].count();
+warningsFMS = Warning_Penalty[Status == "Pending FMS Acknowledgement"].count();
+warningsClosed = Warning_Penalty[Status == "Acknowledged"].count() + Warning_Penalty[Status == "Cancelled"].count();
+warningsTotal = warningsRaised + warningsFA + warningsFMS + warningsClosed;
+wRaisedPct = 0;
+wFAPct = 0;
+wFMSPct = 0;
+wClosedPct = 0;
+if(warningsTotal > 0)
+{
+    wRaisedPct = (warningsRaised * 100) / warningsTotal;
+    wFAPct = (warningsFA * 100) / warningsTotal;
+    wFMSPct = (warningsFMS * 100) / warningsTotal;
+    wClosedPct = (warningsClosed * 100) / warningsTotal;
+}
+%>
+<style>
+/* ZCS global utility stylesheet included once for this page: compact utility subset used by fetched ZCS components. */
+:root {
+    --zcs-theme-brand-color: var(--zcs_brand_color);
+    --zcs-light-bg-color: var(--zcs_brand_light_color);
+    --zcs-primary-text-color: var(--zcs_primary_text_color);
+    --zcs-secondary-text-color: var(--zcs_secondary_text_color);
+    --zcs-teritiary-text-color: var(--zcs_tertiary_text_color);
+    --zcs-border-color: var(--zcs_tertiary_border_color);
+    --zcs-white-color: #FFFFFF;
+    --zcs-black-color: #000000;
+    --iitb-blue: #004B8D;
+    --iitb-blue-dark: #002F6C;
+    --iitb-blue-light: #E8F2FC;
+    --fms-saffron: #F7A600;
+    --infra-green: #179E6C;
+    --infra-red: #D93045;
+    --infra-yellow: #B8770D;
+    font-size: 16px;
+    line-height: 1.5;
+}
+.zc-pb-page-content-wrapper div#zppagesLive,
+.zc-pb-page-content-wrapper div#elementsContainer,
+.zc-pb-page-content-wrapper .elemContainment,
+.zc-pb-page-content-wrapper .zcpage-elemContainer { height: 100%; }
+.zc-page-content-wrapper .zc-pb-page-content-wrapper .zc-pb-tile-card { box-shadow: none !important; }
+* { box-sizing: border-box; }
+a { text-decoration: none; }
+.zcs-card { background-color: var(--zcs-white-color); border: 1px solid #E4E8F0; border-radius: 12px; }
+.zcs-row { display: flex; flex-wrap: wrap; }
+.zcs-flex { display: flex; }
+.zcs-direction-column { flex-direction: column; }
+.zcs-align-items-center { align-items: center; }
+.zcs-align-center { align-items: center; }
+.zcs-justify-center { justify-content: center; }
+.zcs-justify-space-between { justify-content: space-between; }
+.zcs-gap-8 { gap: 0.5rem; }
+.zcs-gap-10 { gap: 0.625rem; }
+.zcs-gap-12 { gap: 0.75rem; }
+.zcs-gap-16 { gap: 1rem; }
+.zcs-gap-20 { gap: 1.25rem; }
+.zcs-gap-24 { gap: 1.5rem; }
+.zcs-p-0 { padding: 0; }
+.zcs-p-16 { padding: 1rem; }
+.zcs-p-20 { padding: 1.25rem; }
+.zcs-p-24 { padding: 1.5rem; }
+.zcs-px-12 { padding-left: 0.75rem; padding-right: 0.75rem; }
+.zcs-py-8 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+.zcs-m-0 { margin: 0; }
+.zcs-font-12 { font-size: 0.75rem; }
+.zcs-font-13 { font-size: 0.8125rem; }
+.zcs-font-14 { font-size: 0.875rem; }
+.zcs-font-15 { font-size: 0.9375rem; }
+.zcs-font-16 { font-size: 1rem; }
+.zcs-font-18 { font-size: 1.125rem; }
+.zcs-font-20 { font-size: 1.25rem; }
+.zcs-font-24 { font-size: 1.5rem; }
+.zcs-font-28 { font-size: 1.75rem; }
+.zcs-font-30 { font-size: 1.875rem; }
+.zcs-font-40 { font-size: 2.5rem; }
+.zcs-font-normal { font-weight: 400; }
+.zcs-font-medium { font-weight: 500; }
+.zcs-font-semibold { font-weight: 600; }
+.zcs-font-bold { font-weight: 700; }
+.zcs-lh-body { line-height: 1.5; }
+.zcs-lh-heading { line-height: 1.25; }
+.zcs-rounded-sm { border-radius: 0.25rem; }
+.zcs-rounded-lg { border-radius: 0.5rem; }
+.zcs-rounded-xl { border-radius: 0.75rem; }
+.zcs-rounded-full { border-radius: 100%; }
+.zcs-relative { position: relative; }
+.zcs-absolute { position: absolute; }
+.zcs-box-border { box-sizing: border-box; }
+.zcs-color-primary { color: var(--zcs-primary-text-color); }
+.zcs-color-secondary { color: var(--zcs-secondary-text-color); }
+.zcs-color-tertiary { color: var(--zcs-teritiary-text-color); }
+.zcs-color-white { color: var(--zcs-white-color); }
+/* ZCS component CSS: quick-actions-card-type-quick-actions */
+.zcs-quick-action-item { list-style-type: none; }
+.zcs-quick-action-item.zcs-card:hover { border-color: var(--zcs_brand_color); }
+.zcs-quick-action-item:hover .zcs-quick-action-link { color: var(--zcs_brand_color); }
+.zcs-quick-action-item:hover .zcs-quick-action-text { text-decoration: underline; }
+.zcs-quick-action-item.zcs-card:hover .zcs-quick-action-text { text-decoration: none; }
+/* ZCS component CSS: card-fleets-performance-metrics */
+.zcs-progress-bar { height: 8px; background-color: var(--zcs_component_hover_color, #EEF2F6); overflow: hidden; }
+.zcs-progress-bar-indicator { height: inherit; border-radius: inherit; background-color: var(--zcs_brand_color); }
+/* ZCS component CSS: chart-donut-chart-with-text */
+.zcs-legend-wrapper li { list-style-type: none; }
+.zcs-legend-wrapper li label { min-width: 160px; }
+.zcs-legend-wrapper li label:before { content: ''; display: inline-block; vertical-align: top; width: 12px; height: 12px; margin: 4px 12px 4px 0; border-radius: 50%; }
+.zcs-legend-wrapper li:nth-child(1) label:before { background-color: #FECE56; }
+.zcs-legend-wrapper li:nth-child(2) label:before { background-color: #36A2EB; }
+.zcs-legend-wrapper li:nth-child(3) label:before { background-color: #FF6283; }
+.zcs-legend-wrapper li:nth-child(4) label:before { background-color: #28CC97; }
+:root { --donut-cx: 82px; --donut-cy: 82px; --donut-r: 64; --donut-stroke_width: 18; --donut-pi: 3.14; --donut-a1: 0; --donut-a2: 0; --donut-a3: 0; --donut-a4: 0; --donut-space_value: 0; --donut-donut_size: calc(var(--donut-cx) + var(--donut-cy)); }
+.zcs-donut-chart-wrapper .zcs-simple-donut-chart svg { width: var(--donut-donut_size); height: var(--donut-donut_size); overflow: hidden; }
+.zcs-donut-chart-wrapper .zcs-simple-donut-chart svg circle { cx: var(--donut-cx); cy: var(--donut-cy); r: var(--donut-r); stroke-width: var(--donut-stroke_width); fill: transparent; }
+.zcs-donut-chart-wrapper .zcs-simple-donut-chart svg circle:nth-child(1) { stroke: #FECE56; stroke-dasharray: calc(2 * var(--donut-pi) * var(--donut-r) * var(--donut-a1) / 100) calc(2 * var(--donut-pi) * var(--donut-r) * calc(1 - var(--donut-a1) / 100)); stroke-dashoffset: calc((2 * var(--donut-pi) * var(--donut-r)) / 4); }
+.zcs-donut-chart-wrapper .zcs-simple-donut-chart svg circle:nth-child(2) { stroke: #36A2EB; stroke-dasharray: calc(2 * var(--donut-pi) * var(--donut-r) * var(--donut-a2) / 100) calc(2 * var(--donut-pi) * var(--donut-r) * calc(1 - var(--donut-a2) / 100)); stroke-dashoffset: calc(((2 * var(--donut-pi) * var(--donut-r)) / 4) - (2 * var(--donut-pi) * var(--donut-r) * var(--donut-a1) / 100)); }
+.zcs-donut-chart-wrapper .zcs-simple-donut-chart svg circle:nth-child(3) { stroke: #FF6283; stroke-dasharray: calc(2 * var(--donut-pi) * var(--donut-r) * var(--donut-a3) / 100) calc(2 * var(--donut-pi) * var(--donut-r) * calc(1 - var(--donut-a3) / 100)); stroke-dashoffset: calc(((2 * var(--donut-pi) * var(--donut-r)) / 4) - (2 * var(--donut-pi) * var(--donut-r) * var(--donut-a1) / 100) - (2 * var(--donut-pi) * var(--donut-r) * var(--donut-a2) / 100)); }
+.zcs-donut-chart-wrapper .zcs-simple-donut-chart svg circle:nth-child(4) { stroke: #28CC97; stroke-dasharray: calc(2 * var(--donut-pi) * var(--donut-r) * var(--donut-a4) / 100) calc(2 * var(--donut-pi) * var(--donut-r) * calc(1 - var(--donut-a4) / 100)); stroke-dashoffset: calc(((2 * var(--donut-pi) * var(--donut-r)) / 4) - (2 * var(--donut-pi) * var(--donut-r) * var(--donut-a1) / 100) - (2 * var(--donut-pi) * var(--donut-r) * var(--donut-a2) / 100) - (2 * var(--donut-pi) * var(--donut-r) * var(--donut-a3) / 100)); }
+/* Infra dashboard custom layout using ZCS tokens/components */
+.infra-dashboard { min-height: 100%; background: #F2F5FA; color: #172033; font-family: Lato, Arial, sans-serif; }
+.infra-hero { position: relative; overflow: hidden; border-radius: 0; color: #FFFFFF; background: radial-gradient(circle at 86% 20%, rgba(247,166,0,0.34) 0, rgba(247,166,0,0.18) 18%, transparent 38%), linear-gradient(135deg, var(--iitb-blue-dark) 0%, var(--iitb-blue) 58%, #0A6EB8 100%); }
+.infra-hero:before { content: ''; position: absolute; right: -88px; top: -116px; width: 330px; height: 330px; border: 1px solid rgba(255,255,255,0.16); border-radius: 50%; }
+.infra-hero:after { content: ''; position: absolute; right: 95px; bottom: -125px; width: 260px; height: 260px; border: 34px solid rgba(255,255,255,0.08); border-radius: 50%; }
+.infra-hero-content { position: relative; z-index: 1; padding: 28px 30px 30px; }
+.infra-title-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; flex-wrap: wrap; }
+.infra-brand-mark { width: 44px; height: 44px; border-radius: 13px; background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.22); color: #FFFFFF; display: inline-flex; align-items: center; justify-content: center; }
+.infra-brand-mark i { font-size: 23px; }
+.infra-title { margin: 0; font-size: 30px; line-height: 1.18; font-weight: 700; letter-spacing: -0.01em; color: #FFFFFF; }
+.infra-subtitle { max-width: 850px; margin: 10px 0 0; color: rgba(255,255,255,0.86); font-size: 15px; line-height: 1.6; }
+.infra-hero-actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+.infra-chip-link { min-height: 36px; display: inline-flex; align-items: center; gap: 8px; padding: 8px 13px; border-radius: 9px; color: #FFFFFF; border: 1px solid rgba(255,255,255,0.50); background: rgba(255,255,255,0.12); font-size: 13px; font-weight: 600; }
+.infra-chip-link:hover { background: rgba(255,255,255,0.20); color: #FFFFFF; }
+.infra-kpi-grid { margin-top: 24px; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; }
+.infra-kpi-card { min-height: 126px; padding: 16px; border: 1px solid rgba(255,255,255,0.18); background: rgba(255,255,255,0.12); border-radius: 14px; backdrop-filter: blur(8px); }
+.infra-kpi-icon { width: 34px; height: 34px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 14px; background: rgba(255,255,255,0.16); color: #FFFFFF; }
+.infra-kpi-icon i { font-size: 18px; }
+.infra-kpi-value { display: block; color: #FFFFFF; font-size: 30px; line-height: 1; font-weight: 700; }
+.infra-kpi-label { display: block; margin-top: 8px; color: rgba(255,255,255,0.84); font-size: 13px; line-height: 1.35; }
+.infra-kpi-card.urgent { border-color: rgba(247,166,0,0.55); }
+.infra-body { padding: 26px 30px 32px; }
+.infra-section-heading { margin: 0 0 16px; }
+.infra-section-heading h2 { margin: 0; color: #172033; font-size: 22px; font-weight: 700; }
+.infra-section-heading p { margin: 6px 0 0; color: #647084; font-size: 14px; line-height: 1.55; }
+.infra-insights-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; align-items: stretch; }
+.infra-card { border: 1px solid #E1E7F0; box-shadow: 0 12px 30px rgba(20,38,72,0.08); }
+.infra-card-title { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid #E8EDF5; }
+.infra-card-title h3 { margin: 0; font-size: 18px; color: #172033; }
+.infra-card-title span { color: #647084; font-size: 12px; }
+.infra-numberline { display: flex; align-items: baseline; justify-content: space-between; margin: 16px 0 10px; gap: 12px; }
+.infra-numberline strong { font-size: 28px; color: #172033; line-height: 1; }
+.infra-numberline small { color: #647084; font-size: 13px; }
+.infra-muted { color: #647084; font-size: 13px; line-height: 1.5; }
+.infra-bar-list { display: flex; flex-direction: column; gap: 12px; margin-top: 14px; }
+.infra-bar-row { display: grid; grid-template-columns: minmax(120px, 1fr) minmax(160px, 2fr) 42px; gap: 10px; align-items: center; }
+.infra-bar-label { color: #41506B; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.infra-bar-track { height: 8px; background: #EEF2F6; border-radius: 8px; overflow: hidden; }
+.infra-bar-fill { height: 100%; background: linear-gradient(90deg, var(--iitb-blue), #0A6EB8); border-radius: 8px; }
+.infra-bar-count { text-align: right; font-size: 13px; font-weight: 700; color: #172033; }
+.infra-status-badges { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.infra-badge { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 5px 10px; font-size: 12px; font-weight: 700; border: 1px solid #DDE5F0; color: #41506B; background: #FFFFFF; }
+.infra-badge.green { border-color: #BFEAD9; color: var(--infra-green); background: #EAFBF4; }
+.infra-badge.yellow { border-color: #F3DCA5; color: var(--infra-yellow); background: #FFF8E5; }
+.infra-badge.red { border-color: #F4BDC5; color: var(--infra-red); background: #FDECEF; }
+.infra-badge.blue { border-color: #C8DEF3; color: var(--iitb-blue); background: var(--iitb-blue-light); }
+.infra-action-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; margin-top: 18px; }
+.infra-action-group .zcs-quick-actions-wrapper { height: 100%; }
+.infra-action-group .zcs-quick-action-link { color: #172033; }
+.infra-action-group .zcs-quick-action-icon { color: var(--iitb-blue); width: 18px; text-align: center; }
+.infra-empty { padding: 12px; border: 1px dashed #CBD5E1; border-radius: 10px; color: #647084; background: #F8FAFD; }
+.infra-report-note { margin-top: 20px; padding: 13px 14px; border-radius: 12px; border: 1px solid #DCE8F8; color: #41506B; background: #F8FBFF; font-size: 13px; line-height: 1.55; }
+@media (max-width: 1280px) { .infra-kpi-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } .infra-action-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 860px) { .infra-kpi-grid, .infra-insights-grid, .infra-action-grid { grid-template-columns: 1fr; } .infra-hero-actions { justify-content: flex-start; } .infra-bar-row { grid-template-columns: 1fr; gap: 6px; } .infra-bar-count { text-align: left; } }
+</style>
+<div class="infra-dashboard">
+    <section class="infra-hero">
+        <div class="infra-hero-content">
+            <div class="infra-title-row">
+                <div class="zcs-flex zcs-gap-16 zcs-align-items-center">
+                    <div class="infra-brand-mark"><i class="zc-li-outline buildings-2_factory"></i></div>
+                    <div>
+                        <h1 class="infra-title">Infra Team Dashboard</h1>
+                        <p class="infra-subtitle">Hello <%=displayUser%>. Validate vendor attendance, consumable invoices, maintenance reports, assets due soon, warnings, and setup records from one control surface.</p>
+                    </div>
+                </div>
+                <div class="infra-hero-actions">
+                    <a class="infra-chip-link" href="#Report:Attendance_Submission_List_Infra"><i class="zc-li-outline ui-1-check-circle-08"></i>Validate attendance</a>
+                    <a class="infra-chip-link" href="#Report:Consumable_Invoice_List_Infra"><i class="zc-li-outline shopping_cart-modern"></i>Validate consumables</a>
+                    <a class="infra-chip-link" href="#Form:Warning_Penalty"><i class="zc-li-outline ui-3-alert"></i>New warning</a>
+                    <a class="infra-chip-link" href="#Report:Audit_Log_List"><i class="zc-li-outline files-2-single-content-03"></i>Audit log</a>
+                </div>
+            </div>
+            <div class="infra-kpi-grid">
+                <a class="infra-kpi-card urgent" href="#Report:Attendance_Submission_List_Infra">
+                    <span class="infra-kpi-icon"><i class="zc-li-outline users-wm"></i></span>
+                    <span class="infra-kpi-value"><%=pendingAttendance%></span>
+                    <span class="infra-kpi-label">Pending attendance validations</span>
+                </a>
+                <a class="infra-kpi-card urgent" href="#Report:Consumable_Invoice_List_Infra">
+                    <span class="infra-kpi-icon"><i class="zc-li-outline shopping_bag-16"></i></span>
+                    <span class="infra-kpi-value"><%=pendingConsumables%></span>
+                    <span class="infra-kpi-label">Pending consumable Infra validations</span>
+                </a>
+                <a class="infra-kpi-card" href="#Report:Maintenance_Task_List_Infra">
+                    <span class="infra-kpi-icon"><i class="zc-li-outline design-2_ruler-pencil"></i></span>
+                    <span class="infra-kpi-value"><%=submittedMaintenance%></span>
+                    <span class="infra-kpi-label">Submitted maintenance reports</span>
+                </a>
+                <a class="infra-kpi-card" href="#Report:Asset_Master_List_Infra">
+                    <span class="infra-kpi-icon"><i class="zc-li-outline files-archive-3d-content"></i></span>
+                    <span class="infra-kpi-value"><%=assetsDueSoon%></span>
+                    <span class="infra-kpi-label">Assets due within 7 days</span>
+                </a>
+                <a class="infra-kpi-card urgent" href="#Report:Warning_List_Infra">
+                    <span class="infra-kpi-icon"><i class="zc-li-outline ui-3-alert"></i></span>
+                    <span class="infra-kpi-value"><%=openWarnings%></span>
+                    <span class="infra-kpi-label">Open warnings and disciplinary cases</span>
+                </a>
+            </div>
+        </div>
+    </section>
+    <section class="infra-body">
+        <div class="infra-section-heading">
+            <h2>Operational health snippets</h2>
+            <p>Live summaries built from Infra-permitted forms, followed by full-width working lists below.</p>
+        </div>
+        <div class="infra-insights-grid">
+            <div class="infra-card zcs-card zcs-flex zcs-direction-column zcs-gap-16 zcs-p-24 zcs-box-border">
+                <div class="infra-card-title"><h3>Vendor attendance upload status</h3><span>This month</span></div>
+                <div class="infra-numberline"><strong><%=uploadPct%>%</strong><small><%=uploadSubmitted%> submitted of <%=uploadTotal%> submission records</small></div>
+                <div class="zcs-progress-bar zcs-rounded-sm"><div class="zcs-progress-bar-indicator" style="width:<%=uploadPct%>%;"></div></div>
+                <div class="infra-status-badges">
+                    <span class="infra-badge blue"><i class="zc-li-outline users-wm"></i><%=activeVendors%> active vendors</span>
+                    <span class="infra-badge green"><i class="zc-li-outline ui-1-check-circle-08"></i><%=uploadSubmitted%> uploaded</span>
+                    <span class="infra-badge yellow"><i class="zc-li-outline ui-2-time"></i><%=uploadPending%> pending upload</span>
+                </div>
+                <p class="infra-muted zcs-m-0">Use the attendance validation list to approve or reject submissions waiting for Infra validation.</p>
+            </div>
+            <div class="infra-card zcs-card zcs-flex zcs-direction-column zcs-gap-16 zcs-p-24 zcs-box-border">
+                <div class="infra-card-title"><h3>Maintenance schedule adherence</h3><span>All tasks</span></div>
+                <ul class="zcs-flex zcs-direction-column zcs-gap-16 zcs-p-0 zcs-m-0">
+                    <li class="zcs-progress-bar-wrapper zcs-flex zcs-direction-column zcs-gap-10">
+                        <p class="zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-8 zcs-font-14 zcs-font-normal zcs-lh-body zcs-m-0"><span class="zcs-color-tertiary">Approved tasks</span><span class="zcs-color-tertiary"><%=maintenanceApproved%> (<%=maintenanceApprovedPct%>%)</span></p>
+                        <div class="zcs-progress-bar zcs-rounded-sm"><div class="zcs-progress-bar-indicator" style="width:<%=maintenanceApprovedPct%>%; background:#179E6C;"></div></div>
+                    </li>
+                    <li class="zcs-progress-bar-wrapper zcs-flex zcs-direction-column zcs-gap-10">
+                        <p class="zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-8 zcs-font-14 zcs-font-normal zcs-lh-body zcs-m-0"><span class="zcs-color-tertiary">Submitted for Infra review</span><span class="zcs-color-tertiary"><%=maintenanceSubmitted%> (<%=maintenanceSubmittedPct%>%)</span></p>
+                        <div class="zcs-progress-bar zcs-rounded-sm"><div class="zcs-progress-bar-indicator" style="width:<%=maintenanceSubmittedPct%>%; background:#36A2EB;"></div></div>
+                    </li>
+                    <li class="zcs-progress-bar-wrapper zcs-flex zcs-direction-column zcs-gap-10">
+                        <p class="zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-8 zcs-font-14 zcs-font-normal zcs-lh-body zcs-m-0"><span class="zcs-color-tertiary">Overdue and not approved</span><span class="zcs-color-tertiary"><%=maintenanceOverdue%> (<%=maintenanceOverduePct%>%)</span></p>
+                        <div class="zcs-progress-bar zcs-rounded-sm"><div class="zcs-progress-bar-indicator" style="width:<%=maintenanceOverduePct%>%; background:#D93045;"></div></div>
+                    </li>
+                </ul>
+                <div class="infra-status-badges"><span class="infra-badge yellow"><%=maintenancePending%> pending</span><span class="infra-badge red"><%=maintenanceRejected%> rejected</span></div>
+            </div>
+            <div class="infra-card zcs-card zcs-flex zcs-direction-column zcs-gap-16 zcs-p-24 zcs-box-border">
+                <div class="infra-card-title"><h3>Asset category distribution</h3><span><%=totalAssets%> active assets</span></div>
+                <div class="infra-bar-list">
+                <%
+                if(assetCategories.count() == 0)
+                {
+                %>
+                    <div class="infra-empty">No active asset categories are configured.</div>
+                <%
+                }
+                for each cat in assetCategories
+                {
+                    catCount = Asset_Master[Status == "Active" && Category == cat.ID].count();
+                    catPct = 0;
+                    if(totalAssets > 0)
+                    {
+                        catPct = (catCount * 100) / totalAssets;
+                    }
+                %>
+                    <div class="infra-bar-row">
+                        <div class="infra-bar-label"><%=cat.Category_Name%></div>
+                        <div class="infra-bar-track"><div class="infra-bar-fill" style="width:<%=catPct%>%;"></div></div>
+                        <div class="infra-bar-count"><%=catCount%></div>
+                    </div>
+                <%
+                }
+                %>
+                </div>
+            </div>
+            <div class="infra-card zcs-card zcs-flex zcs-direction-column zcs-gap-16 zcs-p-24 zcs-box-border">
+                <div class="infra-card-title"><h3>Warning status breakdown</h3><span><%=warningsTotal%> cases</span></div>
+                <div class="zcs-donut-chart-wrapper zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-12 zcs-p-20 zcs-box-border" style="--donut-a1:<%=wRaisedPct%>; --donut-a2:<%=wFAPct%>; --donut-a3:<%=wFMSPct%>; --donut-a4:<%=wClosedPct%>;">
+                    <div class="zcs-donut-chart zcs-simple-donut-chart zcs-flex zcs-align-items-center zcs-justify-center zcs-relative">
+                        <svg class="zcs-rounded-full"><circle></circle><circle></circle><circle></circle><circle></circle></svg>
+                        <h6 class="zcs-donut-chart-name zcs-font-16 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0 zcs-absolute zcs-text-center"><%=openWarnings%><br><span class="zcs-font-12 zcs-font-normal">Open</span></h6>
+                    </div>
+                    <div class="zcs-legend-wrapper">
+                        <ul class="zcs-flex zcs-direction-column zcs-gap-20 zcs-p-0 zcs-m-0">
+                            <li class="zcs-flex zcs-align-center zcs-gap-8"><label class="zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary">Raised: <%=warningsRaised%></label></li>
+                            <li class="zcs-flex zcs-align-center zcs-gap-8"><label class="zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary">Pending F&amp;A: <%=warningsFA%></label></li>
+                            <li class="zcs-flex zcs-align-center zcs-gap-8"><label class="zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary">Pending FMS: <%=warningsFMS%></label></li>
+                            <li class="zcs-flex zcs-align-center zcs-gap-8"><label class="zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary">Closed: <%=warningsClosed%></label></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="infra-section-heading" style="margin-top:26px;">
+            <h2>Quick setup and report links</h2>
+            <p>All Infra-permitted setup forms and reports are reachable here. The validation and snapshot lists are embedded below.</p>
+        </div>
+        <div class="infra-action-grid">
+            <div class="infra-action-group">
+                <div class="zcs-quick-actions-wrapper zcs-card zcs-flex zcs-direction-column zcs-gap-16 zcs-p-16 zcs-box-border">
+                    <h5 class="zcs-font-18 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0">Create records</h5>
+                    <ul class="zcs-flex zcs-direction-column zcs-gap-16 zcs-p-0 zcs-m-0">
+                        <li class="zcs-quick-action-item zcs-card zcs-px-12 zcs-py-8 zcs-box-border"><a class="zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary" href="#Form:User_Master?Role=Vendor"><i class="zcs-quick-action-icon zc-li-outline users-single-02"></i><span class="zcs-quick-action-text">New User Master vendor</span></a></li>
+                        <li class="zcs-quick-action-item zcs-card zcs-px-12 zcs-py-8 zcs-box-border"><a class="zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary" href="#Form:FMS_Employee_Master"><i class="zcs-quick-action-icon zc-li-outline users-wm"></i><span class="zcs-quick-action-text">New Employee</span></a></li>
+                        <li class="zcs-quick-action-item zcs-card zcs-px-12 zcs-py-8 zcs-box-border"><a class="zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary" href="#Form:Asset_Master"><i class="zcs-quick-action-icon zc-li-outline files-archive-3d-content"></i><span class="zcs-quick-action-text">New Asset</span></a></li>
+                        <li class="zcs-quick-action-item zcs-card zcs-px-12 zcs-py-8 zcs-box-border"><a class="zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary" href="#Form:Maintenance_Schedule_Configuration"><i class="zcs-quick-action-icon zc-li-outline ui-2-time"></i><span class="zcs-quick-action-text">New Schedule</span></a></li>
+                        <li class="zcs-quick-action-item zcs-card zcs-px-12 zcs-py-8 zcs-box-border"><a class="zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary" href="#Form:Warning_Penalty"><i class="zcs-quick-action-icon zc-li-outline ui-3-alert"></i><span class="zcs-quick-action-text">New Warning</span></a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="infra-action-group">
+                <div class="zcs-quick-actions-wrapper zcs-card zcs-flex zcs-direction-column zcs-gap-16 zcs-p-16 zcs-box-border">
+                    <h5 class="zcs-font-18 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0">Masters</h5>
+                    <ul class="zcs-flex zcs-direction-column zcs-gap-16 zcs-p-0 zcs-m-0">
+                        <li class="zcs-quick-action-item zcs-card zcs-px-12 zcs-py-8 zcs-box-border"><a class="zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary" href="#Form:Asset_Category_Master"><i class="zcs-quick-action-icon zc-li-outline design_app"></i><span class="zcs-quick-action-text">Asset category master</span></a></li>
+                        <li class="zcs-quick-action-item zcs-card zcs-px-12 zcs-py-8 zcs-box-border"><a class="zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary" href="#Form:Consumable_Category_Master"><i class="zcs-quick-action-icon zc-li-outline shopping_tag-content"></i><span class="zcs-quick-action-text">Consumable category master</span></a></li>
+                        <li class="zcs-quick-action-item zcs-card zcs-px-12 zcs-py-8 zcs-box-border"><a class="zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary" href="#Form:Consumable_Item_Master"><i class="zcs-quick-action-icon zc-li-outline shopping_bag-16"></i><span class="zcs-quick-action-text">Consumable item master</span></a></li>
+                        <li class="zcs-quick-action-item zcs-card zcs-px-12 zcs-py-8 zcs-box-border"><a class="zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary" href="#Form:Warning_Penalty_Type_Master"><i class="zcs-quick-action-icon zc-li-outline ui-3-alert"></i><span class="zcs-quick-action-text">Warning type master</span></a></li>
+                        <li class="zcs-quick-action-item zcs-card zcs-px-12 zcs-py-8 zcs-box-border"><a class="zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary" href="#Report:Vendor_Master_List"><i class="zcs-quick-action-icon zc-li-outline users-single-02"></i><span class="zcs-quick-action-text">Vendor master report</span></a></li>
+                        <li class="zcs-quick-action-item zcs-card zcs-px-12 zcs-py-8 zcs-box-border"><a class="zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary" href="#Report:FMS_Employee_Master_List"><i class="zcs-quick-action-icon zc-li-outline users-wm"></i><span class="zcs-quick-action-text">Employee master report</span></a></li>
+                        <li class="zcs-quick-action-item zcs-card zcs-px-12 zcs-py-8 zcs-box-border"><a class="zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary" href="#Report:Asset_Category_Master_List"><i class="zcs-quick-action-icon zc-li-outline files-2-doc"></i><span class="zcs-quick-action-text">Asset category report</span></a></li>
+                        <li class="zcs-quick-action-item zcs-card zcs-px-12 zcs-py-8 zcs-box-border"><a class="zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary" href="#Report:Consumable_Category_Master_List"><i class="zcs-quick-action-icon zc-li-outline files-2-doc"></i><span class="zcs-quick-action-text">Consumable category report</span></a></li>
+                        <li class="zcs-quick-action-item zcs-card zcs-px-12 zcs-py-8 zcs-box-border"><a class="zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary" href="#Report:Consumable_Item_Master_List"><i class="zcs-quick-action-icon zc-li-outline files-2-doc"></i><span class="zcs-quick-action-text">Consumable item report</span></a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="infra-action-group">
+                <div class="zcs-quick-actions-wrapper zcs-card zcs-flex zcs-direction-column zcs-gap-16 zcs-p-16 zcs-box-border">
+                    <h5 class="zcs-font-18 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0">Infra reports</h5>
+                    <ul class="zcs-flex zcs-direction-column zcs-gap-16 zcs-p-0 zcs-m-0">
+                        <li class="zcs-quick-action-item zcs-card zcs-px-12 zcs-py-8 zcs-box-border"><a class="zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary" href="#Report:Attendance_Submission_List_Infra"><i class="zcs-quick-action-icon zc-li-outline ui-1-check-circle-08"></i><span class="zcs-quick-action-text">Attendance submissions</span></a></li>
+                        <li class="zcs-quick-action-item zcs-card zcs-px-12 zcs-py-8 zcs-box-border"><a class="zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary" href="#Report:Consumable_Invoice_List_Infra"><i class="zcs-quick-action-icon zc-li-outline shopping_bag-16"></i><span class="zcs-quick-action-text">Consumable invoices</span></a></li>
+                        <li class="zcs-quick-action-item zcs-card zcs-px-12 zcs-py-8 zcs-box-border"><a class="zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary" href="#Report:Maintenance_Task_List_Infra"><i class="zcs-quick-action-icon zc-li-outline design-2_ruler-pencil"></i><span class="zcs-quick-action-text">Maintenance tasks</span></a></li>
+                        <li class="zcs-quick-action-item zcs-card zcs-px-12 zcs-py-8 zcs-box-border"><a class="zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary" href="#Report:Asset_Master_List_Infra"><i class="zcs-quick-action-icon zc-li-outline files-archive-3d-content"></i><span class="zcs-quick-action-text">Asset master</span></a></li>
+                        <li class="zcs-quick-action-item zcs-card zcs-px-12 zcs-py-8 zcs-box-border"><a class="zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary" href="#Report:Warning_List_Infra"><i class="zcs-quick-action-icon zc-li-outline ui-3-alert"></i><span class="zcs-quick-action-text">Warning list</span></a></li>
+                        <li class="zcs-quick-action-item zcs-card zcs-px-12 zcs-py-8 zcs-box-border"><a class="zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary" href="#Report:Attendance_Invoice_List_Infra"><i class="zcs-quick-action-icon zc-li-outline business_money-coins"></i><span class="zcs-quick-action-text">Attendance invoices</span></a></li>
+                        <li class="zcs-quick-action-item zcs-card zcs-px-12 zcs-py-8 zcs-box-border"><a class="zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary" href="#Report:Maintenance_Schedule_List_Infra"><i class="zcs-quick-action-icon zc-li-outline ui-2-time"></i><span class="zcs-quick-action-text">Maintenance schedules</span></a></li>
+                        <li class="zcs-quick-action-item zcs-card zcs-px-12 zcs-py-8 zcs-box-border"><a class="zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary" href="#Report:FMS_Employee_Attendance_Data"><i class="zcs-quick-action-icon zc-li-outline files-2-single-content-03"></i><span class="zcs-quick-action-text">Attendance data snapshot</span></a></li>
+                        <li class="zcs-quick-action-item zcs-card zcs-px-12 zcs-py-8 zcs-box-border"><a class="zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary" href="#Report:Audit_Log_List"><i class="zcs-quick-action-icon zc-li-outline ui-1_zoom"></i><span class="zcs-quick-action-text">Audit Log</span></a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="infra-report-note"><strong>Working lists below:</strong> wide reports are intentionally placed in dedicated full-width rows to avoid cramped columns and horizontal scroll in validation workflows.</div>
+    </section>
+</div>

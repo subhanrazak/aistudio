@@ -1,0 +1,27 @@
+Warning_Penalty_Vendor_On_User_Input as "Warning Penalty Vendor On User Input"
+{
+    type = form
+    form = Warning_Penalty
+    record event = on add or edit
+
+    on user input of Vendor
+    {
+        actions
+        {
+            custom deluge script
+            (
+                input.Employee = null;
+                clear Employee;
+                vendorRec = User_Master[ID == input.Vendor];
+                if(vendorRec.count() > 0)
+                {
+                    input.Vendor_Email = vendorRec.Email;
+                    for each employeeRec in FMS_Employee_Master[Vendor == input.Vendor && Status == "Active"] sort by Employee_Name
+                    {
+                        Employee:ui.add(employeeRec.ID);
+                    }
+                }
+            )
+        }
+    }
+}

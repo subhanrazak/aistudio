@@ -1,0 +1,63 @@
+list Attendance_Invoice_List_FA
+{
+    displayName = "Attendance Invoice List (F&A)"
+    show all rows from Attendance_Invoice
+    (
+        Invoice_ID
+        Vendor
+        Month
+        Month_Number
+        Year
+        Invoice_Number
+        Invoice_Date
+        Sub_Total
+        Tax
+        Total_Amount
+        Invoice_File
+        Status
+        custom action "Approve"
+        (
+            workflow = WF_Approve_Attendance_Invoice
+            show action for each record = true
+            column header = "Approve"
+            success message = "Attendance invoice approved."
+            condition = (Status == "Pending F&A Validation")
+        )
+        custom action "Reject"
+        (
+            workflow = WF_Reject_Attendance_Invoice
+            show action for each record = true
+            column header = "Reject"
+            success message = "Opening rejection form."
+            condition = (Status == "Pending F&A Validation")
+        )
+    )
+    filters
+    (
+        Vendor
+        Month
+        Year
+        Status
+    )
+    sort by
+    (
+        Status ascending
+        Year descending
+        Month_Number descending
+    )
+    conditional formatting
+    (
+        "Pending F&A Validation"
+        {
+            condition = (Status == "Pending F&A Validation")
+            fields = [Invoice_ID, Vendor, Invoice_Number, Status]
+            format = "background-color:#FFF3CD;color:#664D03"
+        }
+        "Rejected"
+        {
+            condition = (Status == "Rejected")
+            fields = [Invoice_ID, Vendor, Invoice_Number, Status]
+            format = "background-color:#F8D7DA;color:#842029"
+        }
+    )
+}

@@ -1,0 +1,21 @@
+Consumable_Invoice_Delete_Validate as "Consumable Invoice Delete Validation"
+{
+    type = form
+    form = Consumable_Invoice
+    record event = on delete
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Status == "Approved")
+                {
+                    alert "Approved consumable invoices cannot be deleted. Use administrative correction with manual dependent cleanup if needed.";
+                    cancel delete;
+                }
+            )
+        }
+    }
+}

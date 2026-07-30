@@ -1,0 +1,21 @@
+Attendance_Invoice_Delete_Validate as "Attendance Invoice Delete Validation"
+{
+    type = form
+    form = Attendance_Invoice
+    record event = on delete
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Status == "Approved")
+                {
+                    alert "Approved attendance invoices cannot be deleted. Use administrative correction with manual dependent cleanup if needed.";
+                    cancel delete;
+                }
+            )
+        }
+    }
+}

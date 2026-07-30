@@ -1,0 +1,49 @@
+list Maintenance_Task_List_FMS
+{
+    displayName = "Maintenance Task List - FMS"
+    show all rows from Maintenance_Task [Vendor_Email == zoho.loginuser && (Status == "Pending" || Status == "Rejected")]
+    (
+        Task_ID
+        Asset
+        Frequency
+        Task_Due_Date
+        Status
+        FMS_Comments
+        Maintenance_Report_File
+        custom action "Edit Report"
+        (
+            workflow = WF_Open_Submit_Maintenance_Report
+            show action for each record = true
+            column header = "Edit Report"
+            success message = "Opening maintenance task for report upload."
+            condition = (Status == "Pending" || Status == "Rejected")
+        )
+        custom action "Submit Report"
+        (
+            workflow = WF_Submit_Maintenance_Report
+            show action for each record = true
+            column header = "Submit Report"
+            success message = "Maintenance report submitted."
+            condition = (Status == "Pending" || Status == "Rejected")
+        )
+    )
+    filters
+    (
+        Status
+        Asset
+        Task_Due_Date
+    )
+    sort by
+    (
+        Task_Due_Date ascending
+    )
+    conditional formatting
+    (
+        "Overdue Maintenance"
+        {
+            condition = (Task_Due_Date < zoho.currentdate && Status != "Approved")
+            fields = [Task_ID, Asset, Task_Due_Date, Status]
+            format = "background-color:#FFE0E0;color:#B00020;font-weight:bold"
+        }
+    )
+}

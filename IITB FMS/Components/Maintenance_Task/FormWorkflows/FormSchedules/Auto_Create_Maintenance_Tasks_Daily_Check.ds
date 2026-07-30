@@ -1,0 +1,82 @@
+Auto_Create_Maintenance_Tasks_Daily_Check as "Auto Create Maintenance Tasks Daily Check"
+{
+    type = schedule
+    start = "2025-01-01 07:00:00"
+    frequency = daily
+    time zone = "Asia/Kolkata"
+
+    on start
+    {
+        actions
+        {
+            on load
+            (
+                dueSchedules = Maintenance_Schedule_Configuration[Status == "Active" && Next_Due_Date == zoho.currentdate];
+                for each scheduleRec in dueSchedules
+                {
+                    existingTask = Maintenance_Task[Schedule == scheduleRec.ID && Task_Due_Date == scheduleRec.Next_Due_Date];
+                    if(existingTask.count() == 0)
+                    {
+                        taskId = insert into Maintenance_Task
+                        [
+                            Schedule = scheduleRec.ID
+                            Asset = scheduleRec.Asset
+                            Assigned_To = scheduleRec.Assigned_To
+                            Vendor = scheduleRec.Vendor
+                            Vendor_Email = scheduleRec.Vendor_Email
+                            Task_Due_Date = scheduleRec.Next_Due_Date
+                            Frequency = scheduleRec.Frequency
+                            Status = "Pending"
+                        ];
+                        insert into Maintenance_Task_History
+                        [
+                            Maintenance_Task = taskId
+                            Vendor_Email = scheduleRec.Vendor_Email
+                            Status = "Pending"
+                            Comments = "Task auto-created from schedule."
+                            Updated_By_Email = zoho.adminuserid
+                            Updated_On = zoho.currenttime
+                        ]
+                        insert into Audit_Log
+                        [
+                            Module_Name = "Maintenance"
+                            Source_Form = "Maintenance_Task"
+                            Source_Record_ID = taskId
+                            Source_Record_Label = taskId.toString()
+                            Action_Type = "Created"
+                            New_Status = "Pending"
+                            Performed_By_Email = zoho.adminuserid
+                            Performed_On = zoho.currenttime
+                            Details = "Maintenance task auto-created from due schedule."
+                        ]
+                        if(scheduleRec.Vendor_Email not in {"", " ", "null"})
+                        {
+                            sendmail
+                            (
+                                from : zoho.adminuserid
+                                to : scheduleRec.Vendor_Email
+                                subject : "MAINTENANCE_TASK_CREATED"
+                                message : "A maintenance task is due today for your assigned asset."
+                            )
+                        }
+                        infraRecipients = List();
+                        for each infraUserRec in User_Master[Role == "Infra Team" && Status == "Active"]
+                        {
+                            infraRecipients.add(infraUserRec.Email);
+                        }
+                        if(infraRecipients.size() > 0)
+                        {
+                            sendmail
+                            (
+                                from : zoho.adminuserid
+                                to : infraRecipients
+                                subject : "MAINTENANCE_TASK_CREATED"
+                                message : "A maintenance task was auto-created for a due schedule."
+                            )
+                        }
+                    }
+                }
+            )
+        }
+    }
+}

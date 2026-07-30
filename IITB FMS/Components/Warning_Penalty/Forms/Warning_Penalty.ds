@@ -1,0 +1,171 @@
+form Warning_Penalty
+{
+    displayname = "Warning / Penalty Form"
+
+    Case_Details
+    (
+        type = section
+        displayname = "Case Details"
+        row = 1
+        column = 0
+    )
+    Warning_ID
+    (
+        type = autonumber
+        displayname = "Warning ID"
+        start index = 1
+        row = 1
+        column = 1
+    )
+    must have Date
+    (
+        type = date
+        displayname = "Date"
+        initial value = "${zoho.currentdate}"
+        row = 1
+        column = 1
+        width = medium
+    )
+    must have Vendor
+    (
+        type = picklist
+        displayname = "Vendor"
+        values = User_Master[Role == "Vendor" && Status == "Active"].ID
+        displayformat = [User_Name]
+        searchable = true
+        row = 1
+        column = 2
+        width = medium
+    )
+    Vendor_Email
+    (
+        type = email
+        displayname = "Vendor Email"
+        row = 1
+        column = 1
+        width = medium
+    )
+    must have Employee
+    (
+        type = picklist
+        displayname = "Employee"
+        values = FMS_Employee_Master[Status == "Active"].ID
+        displayformat = [Employee_Name]
+        searchable = true
+        row = 1
+        column = 2
+        width = medium
+    )
+    must have Issue_Type
+    (
+        type = picklist
+        displayname = "Issue Type"
+        values = {"Warning", "Disciplinary"}
+        row = 1
+        column = 1
+        width = medium
+    )
+    must have Warning_Penalty_Type
+    (
+        type = picklist
+        displayname = "Warning / Penalty Type"
+        values = Warning_Penalty_Type_Master[Status == "Active"].ID
+        displayformat = [Type_Name]
+        searchable = true
+        row = 1
+        column = 2
+        width = medium
+    )
+    must have Reason_Description
+    (
+        type = textarea
+        displayname = "Reason Description"
+        height = 160px
+        row = 1
+        column = 1
+        width = medium
+    )
+
+    Action_Acknowledgement
+    (
+        type = section
+        displayname = "Action and Acknowledgement"
+        visibility = true
+        row = 2
+        column = 1
+    )
+    Action_Taken_By_FA
+    (
+        type = textarea
+        displayname = "Action Taken By F&A"
+        height = 140px
+        row = 2
+        column = 1
+        width = medium
+    )
+    Action_Taken_Date
+    (
+        type = date
+        displayname = "Action Taken Date"
+        row = 2
+        column = 2
+        width = medium
+    )
+    FMS_Acknowledgement_Comment
+    (
+        type = textarea
+        displayname = "FMS Acknowledgement Comment"
+        height = 140px
+        row = 2
+        column = 1
+        width = medium
+    )
+    must have Status
+    (
+        type = picklist
+        displayname = "Status"
+        values = {"Raised", "Pending F&A Action", "Pending FMS Acknowledgement", "Acknowledged", "Cancelled"}
+        initial value = "Raised"
+        row = 2
+        column = 2
+        width = medium
+    )
+    Raised_By_Email
+    (
+        type = email
+        displayname = "Raised By Email"
+        row = 2
+        column = 1
+        width = medium
+    )
+
+    actions
+    {
+        on add
+        {
+            Submit
+            (
+                type = submit
+                displayname = "Submit"
+            )
+            Reset
+            (
+                type = reset
+                displayname = "Reset"
+            )
+        }
+        on edit
+        {
+            Update
+            (
+                type = submit
+                displayname = "Update"
+            )
+            Cancel
+            (
+                type = cancel
+                displayname = "Cancel"
+            )
+        }
+    }
+}

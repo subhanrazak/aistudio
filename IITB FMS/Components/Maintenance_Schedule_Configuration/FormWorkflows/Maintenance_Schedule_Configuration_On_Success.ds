@@ -1,0 +1,34 @@
+Maintenance_Schedule_Configuration_On_Success as "Maintenance Schedule Configuration On Success"
+{
+    type = form
+    form = Maintenance_Schedule_Configuration
+    record event = on add or edit
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                earliestSchedules = Maintenance_Schedule_Configuration[Asset == input.Asset && Status == "Active"] sort by Next_Due_Date range from 1 to 1;
+                assetRec = Asset_Master[ID == input.Asset];
+                if(assetRec.count() > 0 && earliestSchedules.count() > 0)
+                {
+                    assetRec.Next_Maintenance_Date = earliestSchedules.Next_Due_Date;
+                }
+                insert into Audit_Log
+                [
+                    Module_Name = "Maintenance"
+                    Source_Form = "Maintenance_Schedule_Configuration"
+                    Source_Record_ID = input.ID
+                    Source_Record_Label = input.Schedule_ID.toString()
+                    Action_Type = "Saved"
+                    New_Status = input.Status
+                    Performed_By_Email = zoho.loginuser
+                    Performed_On = zoho.currenttime
+                    Details = "Maintenance schedule saved and asset next maintenance date refreshed."
+                ]
+            )
+        }
+    }
+}

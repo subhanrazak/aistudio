@@ -1,0 +1,47 @@
+list Attendance_Submission_List_FMS
+{
+    displayName = "Attendance Submission List (FMS View)"
+    show all rows from Attendance_Submission [Vendor_Email == zoho.loginuser]
+    (
+        Submission_ID
+        Month
+        Month_Number
+        Year
+        Date_of_Submission
+        Status
+        custom action "Upload"
+        (
+            workflow = WF_Upload_Attendance_File
+            show action for each record = true
+            column header = "Upload"
+            success message = "Opening attendance submission."
+            condition = (Status == "Pending Upload" || Status == "Rejected")
+        )
+    )
+    filters
+    (
+        Month
+        Year
+        Status
+    )
+    sort by
+    (
+        Year descending
+        Month_Number descending
+    )
+    conditional formatting
+    (
+        "Pending Upload"
+        {
+            condition = (Status == "Pending Upload")
+            fields = [Submission_ID, Month, Year, Status]
+            format = "background-color:#FFF3CD;color:#664D03"
+        }
+        "Rejected"
+        {
+            condition = (Status == "Rejected")
+            fields = [Submission_ID, Month, Year, Status]
+            format = "background-color:#F8D7DA;color:#842029"
+        }
+    )
+}

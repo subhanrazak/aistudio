@@ -1,0 +1,239 @@
+form Consumable_Invoice
+{
+    displayname = "Consumable Invoice"
+
+    Invoice_Details
+    (
+        type = section
+        displayname = "Invoice Details"
+        row = 1
+        column = 0
+    )
+    Invoice_ID
+    (
+        type = autonumber
+        displayname = "Invoice ID"
+        start index = 1
+        row = 1
+        column = 1
+    )
+    must have Invoice_Number
+    (
+        type = text
+        displayname = "Invoice Number"
+        row = 1
+        column = 1
+        width = medium
+    )
+    must have Invoice_Date
+    (
+        type = date
+        displayname = "Invoice Date"
+        row = 1
+        column = 2
+        width = medium
+    )
+    must have Vendor
+    (
+        type = picklist
+        displayname = "Vendor"
+        values = User_Master[Role == "Vendor" && Status == "Active"].ID
+        displayformat = [User_Name]
+        searchable = true
+        row = 1
+        column = 1
+        width = medium
+    )
+    Vendor_Email
+    (
+        type = email
+        displayname = "Vendor Email"
+        row = 1
+        column = 2
+        width = medium
+    )
+    must have Consumable_Category
+    (
+        type = picklist
+        displayname = "Consumable Category"
+        values = Consumable_Category_Master[Status == "Active"].ID
+        displayformat = [Category_Name]
+        searchable = true
+        row = 1
+        column = 1
+        width = medium
+    )
+
+    Amounts_Status
+    (
+        type = section
+        displayname = "Amounts and Status"
+        visibility = true
+        row = 2
+        column = 1
+    )
+    must have Sub_Total
+    (
+        type = INR
+        displayname = "Sub Total"
+        format = commadotindian
+        decimalplace = 2
+        maxchar = 12
+        row = 2
+        column = 1
+        width = medium
+    )
+    must have Tax
+    (
+        type = INR
+        displayname = "Tax"
+        format = commadotindian
+        decimalplace = 2
+        maxchar = 12
+        row = 2
+        column = 2
+        width = medium
+    )
+    Total_Amount
+    (
+        type = formula
+        displayname = "Total Amount"
+        value = Sub_Total + Tax
+        visibility = true
+        row = 2
+        column = 1
+        width = medium
+    )
+    must have Invoice_File
+    (
+        type = upload file
+        displayname = "Invoice File"
+        browse = local_drive, google_docs, zoho_docs
+        row = 2
+        column = 2
+        width = medium
+    )
+    Supporting_Documents
+    (
+        type = upload file
+        displayname = "Supporting Documents"
+        file count = 10
+        browse = local_drive, google_docs, zoho_docs
+        row = 2
+        column = 1
+        width = medium
+    )
+    must have Status
+    (
+        type = picklist
+        displayname = "Status"
+        values = {"Pending Infra Validation", "Pending F&A Validation", "Approved", "Rejected"}
+        initial value = "Pending Infra Validation"
+        row = 2
+        column = 2
+        width = medium
+    )
+    Submitted_By_Email
+    (
+        type = email
+        displayname = "Submitted By Email"
+        row = 2
+        column = 1
+        width = medium
+    )
+    Submitted_Date
+    (
+        type = datetime
+        displayname = "Submitted Date"
+        row = 2
+        column = 2
+        width = medium
+    )
+    Rejection_Reason
+    (
+        type = textarea
+        displayname = "Rejection Reason"
+        height = 120px
+        row = 2
+        column = 1
+        width = medium
+    )
+
+    Line_Item_Details
+    (
+        type = section
+        displayname = "Line Items"
+        visibility = false
+        row = 3
+        column = 1
+    )
+    Line_Items
+    (
+        type = grid
+        displayname = "Line Items"
+        defaultrow = 1
+        maxrow = 100
+        Item
+        (
+            type = picklist
+            displayname = "Item"
+            values = Consumable_Item_Master[Status == "Active"].ID
+            displayformat = [Item_Name]
+            searchable = true
+        )
+        Qty
+        (
+            type = number
+            displayname = "Qty"
+        )
+        Unit_Rate
+        (
+            type = INR
+            displayname = "Unit Rate"
+            format = commadotindian
+            decimalplace = 2
+            maxchar = 12
+        )
+        Amount
+        (
+            type = INR
+            displayname = "Amount"
+            format = commadotindian
+            decimalplace = 2
+            maxchar = 12
+        )
+        row = 3
+        column = 1
+        width = medium
+    )
+
+    actions
+    {
+        on add
+        {
+            Submit
+            (
+                type = submit
+                displayname = "Submit"
+            )
+            Reset
+            (
+                type = reset
+                displayname = "Reset"
+            )
+        }
+        on edit
+        {
+            Update
+            (
+                type = submit
+                displayname = "Update"
+            )
+            Cancel
+            (
+                type = cancel
+                displayname = "Cancel"
+            )
+        }
+    }
+}

@@ -1,0 +1,24 @@
+Audit_Log_On_Load as "Audit Log On Load"
+{
+    type = form
+    form = Audit_Log
+    record event = on add or edit
+
+    on load
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Performed_By_Email in {"", " ", "null"})
+                {
+                    input.Performed_By_Email = zoho.loginuser;
+                }
+                if(input.Performed_On == null)
+                {
+                    input.Performed_On = zoho.currenttime;
+                }
+            )
+        }
+    }
+}

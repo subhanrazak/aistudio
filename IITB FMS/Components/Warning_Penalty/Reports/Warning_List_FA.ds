@@ -1,0 +1,35 @@
+list Warning_List_FA
+{
+    displayName = "Warning List - F&A"
+    show all rows from Warning_Penalty [Issue_Type == "Disciplinary" && Status == "Pending F&A Action"]
+    (
+        Warning_ID
+        Date
+        Vendor
+        Employee
+        Warning_Penalty_Type
+        Reason_Description
+        Action_Taken_By_FA
+        Status
+        custom action "Enter Action Taken"
+        (
+            workflow = WF_Enter_FA_Action_Warning_Penalty
+            show action for each record = true
+            column header = "Enter Action Taken"
+            success message = "Opening action capture form."
+            condition = (Status == "Pending F&A Action")
+        )
+    )
+    filters
+    (
+        Vendor
+        Employee
+        Warning_Penalty_Type
+        Status
+        Date
+    )
+    sort by
+    (
+        Date ascending
+    )
+}

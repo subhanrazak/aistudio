@@ -1,0 +1,22 @@
+Maintenance_Task_History_Delete_Validate as "Maintenance Task History Delete Validation"
+{
+    type = form
+    form = Maintenance_Task_History
+    record event = on delete
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                parentTask = Maintenance_Task[ID == input.Maintenance_Task];
+                if(parentTask.count() > 0)
+                {
+                    alert "History is linked to an existing maintenance task. Remove the parent/dependency manually before deleting history.";
+                    cancel delete;
+                }
+            )
+        }
+    }
+}

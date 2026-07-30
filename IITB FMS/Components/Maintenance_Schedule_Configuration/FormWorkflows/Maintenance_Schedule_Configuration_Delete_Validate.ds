@@ -1,0 +1,22 @@
+Maintenance_Schedule_Configuration_Delete_Validate as "Maintenance Schedule Configuration Delete Validation"
+{
+    type = form
+    form = Maintenance_Schedule_Configuration
+    record event = on delete
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                tasks = Maintenance_Task[Schedule == input.ID];
+                if(tasks.count() > 0)
+                {
+                    alert "This schedule has maintenance tasks. Remove dependent tasks manually before deletion.";
+                    cancel delete;
+                }
+            )
+        }
+    }
+}

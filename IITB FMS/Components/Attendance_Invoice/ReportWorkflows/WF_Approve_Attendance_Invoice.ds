@@ -1,0 +1,36 @@
+WF_Approve_Attendance_Invoice as "Approve Attendance Invoice"
+{
+    type = functions
+    form = Attendance_Invoice
+    execution type = for each record
+
+    on start
+    {
+        actions
+        {
+            on click
+            (
+                if(input.Status == "Pending F&A Validation" && input.Invoice_File != null)
+                {
+                    oldStatus = input.Status;
+                    input.Status = "Approved";
+                    // TODO Zoho Books scaffold: when integration details are available, create a bill using a configured Books connection and organization_id.
+                    // TODO payload line item: Attendance - <Month> <Year>, amount = input.Total_Amount, vendor tax/bank details from User_Master.
+                    insert into Audit_Log
+                    [
+                        Module_Name = "Attendance Invoice"
+                        Source_Form = "Attendance_Invoice"
+                        Source_Record_ID = input.ID
+                        Source_Record_Label = input.Invoice_Number
+                        Action_Type = "Approved"
+                        Old_Status = oldStatus
+                        New_Status = "Approved"
+                        Performed_By_Email = zoho.loginuser
+                        Performed_On = zoho.currenttime
+                        Details = "Attendance invoice approved. Books push is scaffold-only in this build."
+                    ]
+                }
+            )
+        }
+    }
+}

@@ -1,0 +1,84 @@
+Warning_Penalty_On_Success as "Warning Penalty On Success"
+{
+    type = form
+    form = Warning_Penalty
+    record event = on add
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                input.Raised_By_Email = zoho.loginuser;
+                if(input.Issue_Type == "Warning")
+                {
+                    input.Status = "Pending FMS Acknowledgement";
+                    nextStatus = "Pending FMS Acknowledgement";
+                    templateCode = "WARNING_CREATED";
+                }
+                else
+                {
+                    input.Status = "Pending F&A Action";
+                    nextStatus = "Pending F&A Action";
+                    templateCode = "DISCIPLINARY_CREATED";
+                }
+                insert into Audit_Log
+                [
+                    Module_Name = "Disciplinary"
+                    Source_Form = "Warning_Penalty"
+                    Source_Record_ID = input.ID
+                    Source_Record_Label = input.Warning_ID.toString()
+                    Action_Type = "Created"
+                    New_Status = nextStatus
+                    Performed_By_Email = zoho.loginuser
+                    Performed_On = zoho.currenttime
+                    Details = "Warning / penalty case created."
+                ]
+                if(input.Vendor_Email not in {"", " ", "null"})
+                {
+                    sendmail
+                    (
+                        from : zoho.adminuserid
+                        to : input.Vendor_Email
+                        subject : templateCode + ": " + input.Warning_ID
+                        message : "A " + input.Issue_Type + " case has been created and is currently " + nextStatus + ". Reason: " + input.Reason_Description
+                    )
+                }
+                infraRecipients = List();
+                for each infraUserRec in User_Master[Role == "Infra Team" && Status == "Active"]
+                {
+                    infraRecipients.add(infraUserRec.Email);
+                }
+                if(infraRecipients.size() > 0)
+                {
+                    sendmail
+                    (
+                        from : zoho.adminuserid
+                        to : infraRecipients
+                        subject : templateCode + ": " + input.Warning_ID
+                        message : "A " + input.Issue_Type + " case has been created for vendor " + input.Vendor_Email + ". Status: " + nextStatus
+                    )
+                }
+                if(input.Issue_Type == "Disciplinary")
+                {
+                    faRecipients = List();
+                    for each faUserRec in User_Master[Role == "F&A Team" && Status == "Active"]
+                    {
+                        faRecipients.add(faUserRec.Email);
+                    }
+                    if(faRecipients.size() > 0)
+                    {
+                        sendmail
+                        (
+                            from : zoho.adminuserid
+                            to : faRecipients
+                            subject : "DISCIPLINARY_CREATED: " + input.Warning_ID
+                            message : "A disciplinary case is pending F&A action. Reason: " + input.Reason_Description
+                        )
+                    }
+                }
+            )
+        }
+    }
+}

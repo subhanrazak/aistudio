@@ -1,0 +1,23 @@
+Line_Item_Qty_On_User_Input as "Line Item Qty On User Input"
+{
+    type = form
+    form = Consumable_Invoice
+    record event = on add or edit
+
+    on user input of Line_Items.Qty
+    {
+        actions
+        {
+            custom deluge script
+            (
+                row.Amount = ifnull(row.Qty,0) * ifnull(row.Unit_Rate,0);
+                computedSubtotal = 0;
+                for each itemLine in input.Line_Items
+                {
+                    computedSubtotal = computedSubtotal + (ifnull(itemLine.Qty,0) * ifnull(itemLine.Unit_Rate,0));
+                }
+                input.Sub_Total = computedSubtotal;
+            )
+        }
+    }
+}

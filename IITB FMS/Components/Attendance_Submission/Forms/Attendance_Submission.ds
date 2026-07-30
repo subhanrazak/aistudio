@@ -1,0 +1,157 @@
+form Attendance_Submission
+{
+    displayname = "Attendance Submission"
+
+    Submission_Details
+    (
+        type = section
+        displayname = "Submission Details"
+        row = 1
+        column = 0
+    )
+    Submission_ID
+    (
+        type = autonumber
+        displayname = "Submission ID"
+        start index = 1
+        row = 1
+        column = 1
+    )
+    must have Month
+    (
+        type = picklist
+        displayname = "Month"
+        values = {"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"}
+        row = 1
+        column = 1
+        width = medium
+    )
+    Month_Number
+    (
+        type = number
+        displayname = "Month Number"
+        row = 1
+        column = 2
+        width = medium
+    )
+    must have Year
+    (
+        type = number
+        displayname = "Year"
+        row = 1
+        column = 1
+        width = medium
+    )
+    must have Vendor
+    (
+        type = picklist
+        displayname = "Vendor"
+        values = User_Master[Role == "Vendor" && Status == "Active"].ID
+        displayformat = [User_Name]
+        searchable = true
+        row = 1
+        column = 2
+        width = medium
+    )
+    Vendor_Email
+    (
+        type = email
+        displayname = "Vendor Email"
+        row = 1
+        column = 1
+        width = medium
+    )
+    must have Date_of_Submission
+    (
+        type = date
+        displayname = "Date of Submission"
+        initial value = "${zoho.currentdate}"
+        row = 1
+        column = 2
+        width = medium
+    )
+
+    Files_Status
+    (
+        type = section
+        displayname = "Files and Status"
+        visibility = true
+        row = 2
+        column = 1
+    )
+    FMS_Attendance_File
+    (
+        type = upload file
+        displayname = "FMS Attendance File"
+        browse = local_drive, google_docs, zoho_docs
+        row = 2
+        column = 1
+        width = medium
+    )
+    Infra_Verified_Excel
+    (
+        type = upload file
+        displayname = "Infra Verified Excel"
+        browse = local_drive, google_docs, zoho_docs
+        row = 2
+        column = 2
+        width = medium
+    )
+    must have Status
+    (
+        type = picklist
+        displayname = "Status"
+        values = {"Pending Upload", "Pending Validation", "Approved", "Rejected"}
+        initial value = "Pending Upload"
+        row = 2
+        column = 1
+        width = medium
+    )
+    Submitted_By_Email
+    (
+        type = email
+        displayname = "Submitted By Email"
+        row = 2
+        column = 2
+        width = medium
+    )
+    Remarks
+    (
+        type = textarea
+        displayname = "Remarks"
+        height = 120px
+        row = 2
+        column = 1
+        width = medium
+    )
+
+    actions
+    {
+        on add
+        {
+            Submit
+            (
+                type = submit
+                displayname = "Submit"
+            )
+            Reset
+            (
+                type = reset
+                displayname = "Reset"
+            )
+        }
+        on edit
+        {
+            Update
+            (
+                type = submit
+                displayname = "Update"
+            )
+            Cancel
+            (
+                type = cancel
+                displayname = "Cancel"
+            )
+        }
+    }
+}

@@ -1,0 +1,44 @@
+list Warning_List_Infra
+{
+    displayName = "Warning List - Infra"
+    show all rows from Warning_Penalty
+    (
+        Warning_ID
+        Date
+        Vendor
+        Employee
+        Issue_Type
+        Warning_Penalty_Type
+        Reason_Description
+        Status
+        Action_Taken_By_FA
+        Action_Taken_Date
+        custom action "Cancel"
+        (
+            workflow = WF_Cancel_Warning_Penalty
+            show action for each record = true
+            column header = "Cancel"
+            success message = "Warning / penalty case cancelled."
+            condition = (Status != "Acknowledged" && Status != "Cancelled")
+            confirmation before execution
+            (
+                message for individual record = "Cancel this warning / penalty case?"
+                confirm button text = "Cancel Case"
+                cancel button text = "Go Back"
+            )
+        )
+    )
+    filters
+    (
+        Vendor
+        Employee
+        Issue_Type
+        Warning_Penalty_Type
+        Status
+        Date
+    )
+    sort by
+    (
+        Date descending
+    )
+}

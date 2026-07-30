@@ -1,0 +1,47 @@
+WF_FA_Approve_Consumable_Invoice as "F&A Approve Consumable Invoice"
+{
+    type = functions
+    form = Consumable_Invoice
+    execution type = for each record
+
+    on start
+    {
+        actions
+        {
+            on click
+            (
+                if(input.Status == "Pending F&A Validation" && input.Invoice_File != null)
+                {
+                    oldStatus = input.Status;
+                    input.Status = "Approved";
+                    // TODO Zoho Books scaffold: when integration details are available, create a bill using shared Books connection and organization_id.
+                    // TODO payload line item: Consumables - <Category>, amount = input.Total_Amount.
+                    insert into Audit_Log
+                    [
+                        Module_Name = "Consumables"
+                        Source_Form = "Consumable_Invoice"
+                        Source_Record_ID = input.ID
+                        Source_Record_Label = input.Invoice_Number
+                        Action_Type = "Approved"
+                        Old_Status = oldStatus
+                        New_Status = "Approved"
+                        Performed_By_Email = zoho.loginuser
+                        Performed_On = zoho.currenttime
+                        Details = "F&A approved consumable invoice. Books push is scaffold-only in this build."
+                    ]
+                    if(input.Vendor_Email not in {"", " ", "null"})
+                    {
+                        sendmail
+                        (
+                            from : zoho.adminuserid
+                            to : input.Vendor_Email
+                            subject : "Consumable invoice approved: " + input.Invoice_Number
+                            message : "Your consumable invoice " + input.Invoice_Number + " has been approved by F&A. Approved amount: " + input.Total_Amount
+                            attachments : file : Invoice_File
+                        )
+                    }
+                }
+            )
+        }
+    }
+}

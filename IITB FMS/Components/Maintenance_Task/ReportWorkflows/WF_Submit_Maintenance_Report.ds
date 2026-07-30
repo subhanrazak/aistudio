@@ -1,0 +1,25 @@
+WF_Submit_Maintenance_Report as "Submit Maintenance Report"
+{
+    type = functions
+    form = Maintenance_Task
+    execution type = for each record
+
+    on start
+    {
+        actions
+        {
+            on click
+            (
+                if((input.Status == "Pending" || input.Status == "Rejected") && input.Maintenance_Report_File != null)
+                {
+                    input.Status = "Submitted";
+                    input.Rejection_Remarks = "";
+                }
+                else
+                {
+                    // Report-button workflows cannot use alert; the report action condition/message handles invalid submissions.
+                }
+            )
+        }
+    }
+}

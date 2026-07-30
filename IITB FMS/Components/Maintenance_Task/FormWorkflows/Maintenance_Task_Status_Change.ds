@@ -1,0 +1,70 @@
+Maintenance_Task_Status_Change as "Maintenance Task Status Change"
+{
+    type = form
+    form = Maintenance_Task
+    record event = on edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(old.Status != input.Status)
+                {
+                    insert into Maintenance_Task_History
+                    [
+                        Maintenance_Task = input.ID
+                        Vendor_Email = input.Vendor_Email
+                        Status = input.Status
+                        Comments = if(input.Status == "Rejected", input.Rejection_Remarks, input.FMS_Comments)
+                        Updated_By_Email = zoho.loginuser
+                        Updated_On = zoho.currenttime
+                    ]
+                    insert into Audit_Log
+                    [
+                        Module_Name = "Maintenance"
+                        Source_Form = "Maintenance_Task"
+                        Source_Record_ID = input.ID
+                        Source_Record_Label = input.Task_ID.toString()
+                        Action_Type = "Status Changed"
+                        Old_Status = old.Status
+                        New_Status = input.Status
+                        Performed_By_Email = zoho.loginuser
+                        Performed_On = zoho.currenttime
+                        Details = if(input.Status == "Rejected", input.Rejection_Remarks, input.FMS_Comments)
+                    ]
+                    if(input.Status == "Submitted")
+                    {
+                        infraRecipients = List();
+                        for each infraUserRec in User_Master[Role == "Infra Team" && Status == "Active"]
+                        {
+                            infraRecipients.add(infraUserRec.Email);
+                        }
+                        if(infraRecipients.size() > 0)
+                        {
+                            sendmail
+                            (
+                                from : zoho.adminuserid
+                                to : infraRecipients
+                                subject : "MAINTENANCE_SUBMITTED: " + input.Task_ID
+                                message : "Maintenance task has been submitted for Infra approval."
+                                attachments : file : Maintenance_Report_File
+                            )
+                        }
+                    }
+                    else if(input.Status == "Rejected" && input.Vendor_Email not in {"", " ", "null"})
+                    {
+                        sendmail
+                        (
+                            from : zoho.adminuserid
+                            to : input.Vendor_Email
+                            subject : "MAINTENANCE_REJECTED: " + input.Task_ID
+                            message : "Maintenance task was rejected. Reason: " + input.Rejection_Remarks
+                        )
+                    }
+                }
+            )
+        }
+    }
+}

@@ -1,0 +1,44 @@
+list Maintenance_Task_List_Infra
+{
+    displayName = "Maintenance Task List - Infra"
+    show all rows from Maintenance_Task
+    (
+        Task_ID
+        Asset
+        Assigned_To
+        Frequency
+        Task_Due_Date
+        Status
+        FMS_Comments
+        Maintenance_Report_File
+        Rejection_Remarks
+        custom action "Approve"
+        (
+            workflow = WF_Approve_Maintenance_Task
+            show action for each record = true
+            column header = "Approve"
+            success message = "Maintenance task approved."
+            condition = (Status == "Submitted")
+        )
+        custom action "Reject"
+        (
+            workflow = WF_Reject_Maintenance_Task
+            show action for each record = true
+            column header = "Reject"
+            success message = "Opening rejection form."
+            condition = (Status == "Submitted")
+        )
+    )
+    filters
+    (
+        Status
+        Asset
+        Assigned_To
+        Task_Due_Date
+    )
+    sort by
+    (
+        Status descending
+        Task_Due_Date ascending
+    )
+}

@@ -1,0 +1,22 @@
+Maintenance_Task_Delete_Validate as "Maintenance Task Delete Validation"
+{
+    type = form
+    form = Maintenance_Task
+    record event = on delete
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                histories = Maintenance_Task_History[Maintenance_Task == input.ID];
+                if(input.Status in {"Submitted", "Approved"} || histories.count() > 0)
+                {
+                    alert "Submitted/approved tasks or tasks with history cannot be deleted until dependencies are manually removed.";
+                    cancel delete;
+                }
+            )
+        }
+    }
+}

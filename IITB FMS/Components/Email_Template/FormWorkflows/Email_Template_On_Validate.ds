@@ -1,0 +1,24 @@
+Email_Template_On_Validate as "Email Template On Validate"
+{
+    type = form
+    form = Email_Template
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Status == "Active")
+                {
+                    if(input.Subject in {"", " ", "null"} || input.Body in {"", " ", "null"})
+                    {
+                        alert "Active email templates must have both subject and body.";
+                        cancel submit;
+                    }
+                }
+            )
+        }
+    }
+}

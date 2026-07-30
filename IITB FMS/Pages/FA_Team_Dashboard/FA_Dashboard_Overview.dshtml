@@ -1,0 +1,400 @@
+<%
+loginEmail = zoho.loginuserid;
+displayUser = zoho.loginuser;
+if(displayUser == null || displayUser == "")
+{
+    displayUser = loginEmail;
+}
+currentMonthNumber = zoho.currentdate.getMonth();
+currentYear = zoho.currentdate.getYear();
+
+pendingAttendanceInvoices = Attendance_Invoice[Status == "Pending F&A Validation"].count();
+pendingConsumableInvoices = Consumable_Invoice[Status == "Pending F&A Validation"].count();
+pendingDisciplinaryActions = Warning_Penalty[Status == "Pending F&A Action"].count();
+
+monthInvoiceValue = 0.0;
+for each attInv in Attendance_Invoice[ID != 0]
+{
+    if(attInv.Invoice_Date != null && attInv.Invoice_Date.getMonth() == currentMonthNumber && attInv.Invoice_Date.getYear() == currentYear)
+    {
+        monthInvoiceValue = monthInvoiceValue + ifnull(attInv.Total_Amount,0.0);
+    }
+}
+for each conInv in Consumable_Invoice[ID != 0]
+{
+    if(conInv.Invoice_Date != null && conInv.Invoice_Date.getMonth() == currentMonthNumber && conInv.Invoice_Date.getYear() == currentYear)
+    {
+        monthInvoiceValue = monthInvoiceValue + ifnull(conInv.Total_Amount,0.0);
+    }
+}
+
+booksApprovalsThisMonth = 0;
+for each logRec in Audit_Log[Module_Name == "Integration" && Action_Type == "Books Push" && New_Status == "Approved"]
+{
+    if(logRec.Performed_On != null && logRec.Performed_On.getMonth() == currentMonthNumber && logRec.Performed_On.getYear() == currentYear)
+    {
+        booksApprovalsThisMonth = booksApprovalsThisMonth + 1;
+    }
+}
+
+statusPendingFA = pendingAttendanceInvoices + pendingConsumableInvoices;
+statusPendingInfra = Consumable_Invoice[Status == "Pending Infra Validation"].count();
+statusApproved = Attendance_Invoice[Status == "Approved"].count() + Consumable_Invoice[Status == "Approved"].count();
+statusRejected = Attendance_Invoice[Status == "Rejected"].count() + Consumable_Invoice[Status == "Rejected"].count();
+statusTotal = statusPendingFA + statusPendingInfra + statusApproved + statusRejected;
+pctPendingFA = 0;
+pctPendingInfra = 0;
+pctApproved = 0;
+pctRejected = 0;
+if(statusTotal > 0)
+{
+    pctPendingFA = (statusPendingFA * 100) / statusTotal;
+    pctPendingInfra = (statusPendingInfra * 100) / statusTotal;
+    pctApproved = (statusApproved * 100) / statusTotal;
+    pctRejected = (statusRejected * 100) / statusTotal;
+}
+
+rejectedAttendance = Attendance_Invoice[Status == "Rejected"].count();
+rejectedConsumables = Consumable_Invoice[Status == "Rejected"].count();
+rejectedTotal = rejectedAttendance + rejectedConsumables;
+fmsAckPending = Warning_Penalty[Status == "Pending FMS Acknowledgement"].count();
+activeVendors = User_Master[Role == "Vendor" && Status == "Active"].count();
+activeEmployees = FMS_Employee_Master[Status == "Active"].count();
+
+maxVendorSpend = 0.0;
+for each vendorCalc in User_Master[Role == "Vendor" && Status == "Active"]
+{
+    vendorSpendCalc = ifnull(Attendance_Invoice[Vendor == vendorCalc.ID && Status == "Approved"].sum(Total_Amount),0.0) + ifnull(Consumable_Invoice[Vendor == vendorCalc.ID && Status == "Approved"].sum(Total_Amount),0.0);
+    if(vendorSpendCalc > maxVendorSpend)
+    {
+        maxVendorSpend = vendorSpendCalc;
+    }
+}
+%>
+<style>
+/* ZCS global utility stylesheet included once for this page: compact utility subset used by fetched ZCS components. */
+:root { --zcs-theme-brand-color: var(--zcs_brand_color); --zcs-light-bg-color: var(--zcs_brand_light_color); --zcs-primary-text-color: var(--zcs_primary_text_color); --zcs-secondary-text-color: var(--zcs_secondary_text_color); --zcs-teritiary-text-color: var(--zcs_tertiary_text_color); --zcs-border-color: var(--zcs_tertiary_border_color); --zcs-white-color: #FFFFFF; --zcs-black-color: #000000; --fa-blue: #004B8D; --fa-blue-dark: #002F6C; --fa-gold: #F7A600; --fa-green: #179E6C; --fa-red: #D93045; --fa-yellow: #B8770D; font-size: 16px; line-height: 1.5; }
+.zc-pb-page-content-wrapper div#zppagesLive, .zc-pb-page-content-wrapper div#elementsContainer, .zc-pb-page-content-wrapper .elemContainment, .zc-pb-page-content-wrapper .zcpage-elemContainer { height: 100%; }
+.zc-page-content-wrapper .zc-pb-page-content-wrapper .zc-pb-tile-card { box-shadow: none !important; }
+* { box-sizing: border-box; } a { text-decoration: none; }
+.zcs-card { background-color: var(--zcs-white-color); border: 1px solid #E4E8F0; border-radius: 12px; }
+.zcs-row { display: flex; flex-wrap: wrap; } .zcs-flex { display: flex; } .zcs-inline-flex { display: inline-flex; } .zcs-direction-column { flex-direction: column; } .zcs-align-items-center, .zcs-align-center { align-items: center; } .zcs-justify-center { justify-content: center; } .zcs-justify-space-between { justify-content: space-between; } .zcs-gap-4 { gap: 0.25rem; } .zcs-gap-8 { gap: 0.5rem; } .zcs-gap-10 { gap: 0.625rem; } .zcs-gap-12 { gap: 0.75rem; } .zcs-gap-16 { gap: 1rem; } .zcs-gap-20 { gap: 1.25rem; } .zcs-gap-24 { gap: 1.5rem; }
+.zcs-p-0 { padding: 0; } .zcs-p-8 { padding: 0.5rem; } .zcs-p-10 { padding: 0.625rem; } .zcs-p-16 { padding: 1rem; } .zcs-p-20 { padding: 1.25rem; } .zcs-p-24 { padding: 1.5rem; } .zcs-px-10 { padding-left: 0.625rem; padding-right: 0.625rem; } .zcs-px-12 { padding-left: 0.75rem; padding-right: 0.75rem; } .zcs-px-16 { padding-left: 1rem; padding-right: 1rem; } .zcs-py-2 { padding-top: 0.125rem; padding-bottom: 0.125rem; } .zcs-py-5 { padding-top: 0.3125rem; padding-bottom: 0.3125rem; } .zcs-py-8 { padding-top: 0.5rem; padding-bottom: 0.5rem; } .zcs-m-0 { margin: 0; }
+.zcs-w-full { width: 100%; } .zcs-font-11 { font-size: 0.6875rem; } .zcs-font-12 { font-size: 0.75rem; } .zcs-font-13 { font-size: 0.8125rem; } .zcs-font-14 { font-size: 0.875rem; } .zcs-font-15 { font-size: 0.9375rem; } .zcs-font-16 { font-size: 1rem; } .zcs-font-18 { font-size: 1.125rem; } .zcs-font-20 { font-size: 1.25rem; } .zcs-font-22 { font-size: 1.375rem; } .zcs-font-24 { font-size: 1.5rem; } .zcs-font-28 { font-size: 1.75rem; } .zcs-font-30 { font-size: 1.875rem; } .zcs-font-40 { font-size: 2.5rem; }
+.zcs-font-normal { font-weight: 400; } .zcs-font-medium { font-weight: 500; } .zcs-font-semibold { font-weight: 600; } .zcs-font-bold { font-weight: 700; } .zcs-lh-body { line-height: 1.5; } .zcs-lh-heading { line-height: 1.25; } .zcs-rounded-sm { border-radius: 0.25rem; } .zcs-rounded-md { border-radius: 0.375rem; } .zcs-rounded-lg { border-radius: 0.5rem; } .zcs-rounded-xl { border-radius: 0.75rem; } .zcs-rounded-full { border-radius: 100%; } .zcs-relative { position: relative; } .zcs-absolute { position: absolute; } .zcs-box-border { box-sizing: border-box; } .zcs-color-primary { color: var(--zcs-primary-text-color); } .zcs-color-secondary { color: var(--zcs-secondary-text-color); } .zcs-color-tertiary { color: var(--zcs-teritiary-text-color); } .zcs-color-white { color: var(--zcs-white-color); } .zcs-text-left { text-align: left; } .zcs-text-right { text-align: right; } .zcs-text-center { text-align: center; } .zcs-sticky { position: sticky; } .zcs-cursor-pointer { cursor: pointer; }
+/* ZCS component CSS: button-primary-button */
+.zcs-button { width: auto; min-width: 5rem; min-height: 36px; } .zcs-primary-button { background-color: var(--zcs_brand_color); color: var(--zcs_brand_foreground_color); } .zcs-primary-outline-button { border: 1px solid var(--zcs_brand_color); background-color: var(--zcs-white-color); color: var(--zcs_brand_color); } .zcs-button:hover { filter: brightness(0.96); } .zcs-button-icon { width: 16px; max-height: 16px; }
+/* ZCS component CSS: badge-filled-badge */
+.zcs-badge { width: auto; } .zcs-badge-filled { border: 1px solid transparent; } .zcs-badge-filled.zcs-badge-theme { background-color: var(--zcs_brand_color); border-color: var(--zcs_brand_color); color: var(--zcs-white-color); } .zcs-badge-filled.zcs-badge-green { background-color: #179E6C; border-color: #179E6C; color: var(--zcs-white-color); } .zcs-badge-filled.zcs-badge-red { background-color: #FE455D; border-color: #FE455D; color: var(--zcs-white-color); } .zcs-badge-filled.zcs-badge-yellow { background-color: #FAAE13; border-color: #FAAE13; color: var(--zcs-white-color); } .zcs-badge-filled.zcs-badge-blue { background-color: #2A6FFC; border-color: #2A6FFC; color: var(--zcs-white-color); } .zcs-badge-filled.zcs-badge-orange { background-color: #F4660C; border-color: #F4660C; color: var(--zcs-white-color); }
+/* ZCS component CSS: table-simple-table */
+.zcs-table-wrapper { border: 1px solid var(--zcs_tertiary_border_color); background-color: var(--zcs-white-color); overflow: auto; } .zcs-table-wrapper table { line-height: normal; border-collapse: collapse; } .zcs-table-wrapper table thead { top: 0; } .zcs-table-wrapper table thead tr th { background-color: #F9FAFE; box-shadow: 0 -1px 0 0 var(--zcs_tertiary_border_color) inset; white-space: nowrap; } .zcs-table-wrapper table thead tr.zcs-tspace th { background-color: var(--zcs-white-color); box-shadow: none; } .zcs-table-wrapper table tbody tr td { border-top: 1px solid var(--zcs_tertiary_border_color); } .zcs-table-wrapper table tbody tr:first-child td { border-color: transparent; } .zcs-table-wrapper table tbody tr:hover td { background-color: #F9FAFE; } .zcs-table-wrapper .zcs-green { color: #179E6C; } .zcs-table-wrapper .zcs-red { color: #FE455D; } .zcs-table-wrapper .zcs-yellow { color: #B8770D; } .zcs-table-wrapper .zcs-blue { color: #09598E; }
+/* ZCS component CSS: chart-donut-chart-with-text */
+.zcs-legend-wrapper li { list-style-type: none; } .zcs-legend-wrapper li label { min-width: 170px; } .zcs-legend-wrapper li label:before { content: ''; display: inline-block; vertical-align: top; width: 12px; height: 12px; margin: 4px 12px 4px 0; border-radius: 50%; } .zcs-legend-wrapper li:nth-child(1) label:before { background-color: #FECE56; } .zcs-legend-wrapper li:nth-child(2) label:before { background-color: #36A2EB; } .zcs-legend-wrapper li:nth-child(3) label:before { background-color: #FF6283; } .zcs-legend-wrapper li:nth-child(4) label:before { background-color: #28CC97; }
+.zcs-donut-chart-wrapper .zcs-simple-donut-chart svg { width: var(--donut-donut_size); height: var(--donut-donut_size); overflow: hidden; } .zcs-donut-chart-wrapper .zcs-simple-donut-chart svg circle { cx: var(--donut-cx); cy: var(--donut-cy); r: var(--donut-r); stroke-width: var(--donut-stroke_width); fill: transparent; } .zcs-donut-chart-wrapper .zcs-simple-donut-chart svg circle:nth-child(1) { stroke: #FECE56; stroke-dasharray: calc(2 * var(--donut-pi) * var(--donut-r) * var(--donut-a1) / 100) calc(2 * var(--donut-pi) * var(--donut-r) * calc(1 - var(--donut-a1) / 100)); stroke-dashoffset: calc((2 * var(--donut-pi) * var(--donut-r)) / 4); } .zcs-donut-chart-wrapper .zcs-simple-donut-chart svg circle:nth-child(2) { stroke: #36A2EB; stroke-dasharray: calc(2 * var(--donut-pi) * var(--donut-r) * var(--donut-a2) / 100) calc(2 * var(--donut-pi) * var(--donut-r) * calc(1 - var(--donut-a2) / 100)); stroke-dashoffset: calc(((2 * var(--donut-pi) * var(--donut-r)) / 4) - (2 * var(--donut-pi) * var(--donut-r) * var(--donut-a1) / 100)); } .zcs-donut-chart-wrapper .zcs-simple-donut-chart svg circle:nth-child(3) { stroke: #FF6283; stroke-dasharray: calc(2 * var(--donut-pi) * var(--donut-r) * var(--donut-a3) / 100) calc(2 * var(--donut-pi) * var(--donut-r) * calc(1 - var(--donut-a3) / 100)); stroke-dashoffset: calc(((2 * var(--donut-pi) * var(--donut-r)) / 4) - (2 * var(--donut-pi) * var(--donut-r) * var(--donut-a1) / 100) - (2 * var(--donut-pi) * var(--donut-r) * var(--donut-a2) / 100)); } .zcs-donut-chart-wrapper .zcs-simple-donut-chart svg circle:nth-child(4) { stroke: #28CC97; stroke-dasharray: calc(2 * var(--donut-pi) * var(--donut-r) * var(--donut-a4) / 100) calc(2 * var(--donut-pi) * var(--donut-r) * calc(1 - var(--donut-a4) / 100)); stroke-dashoffset: calc(((2 * var(--donut-pi) * var(--donut-r)) / 4) - (2 * var(--donut-pi) * var(--donut-r) * var(--donut-a1) / 100) - (2 * var(--donut-pi) * var(--donut-r) * var(--donut-a2) / 100) - (2 * var(--donut-pi) * var(--donut-r) * var(--donut-a3) / 100)); }
+/* ZCS component CSS: card-fleets-performance-metrics */
+.zcs-progress-bar { height: 8px; background-color: var(--zcs_component_hover_color, #EEF2F6); overflow: hidden; } .zcs-progress-bar-indicator { height: inherit; border-radius: inherit; background-color: var(--zcs_brand_color); }
+/* ZCS component CSS: quick-actions-card-type-quick-actions */
+.zcs-quick-action-item { list-style-type: none; } .zcs-quick-action-item.zcs-card:hover { border-color: var(--zcs_brand_color); } .zcs-quick-action-item:hover .zcs-quick-action-link { color: var(--zcs_brand_color); } .zcs-quick-action-item:hover .zcs-quick-action-text { text-decoration: underline; }
+/* F&A dashboard layout */
+.fa-dashboard { min-height: 100%; background: #F2F5FA; color: #172033; font-family: Lato, Arial, sans-serif; }
+.fa-hero { position: relative; overflow: hidden; color: #FFFFFF; background: radial-gradient(circle at 88% 18%, rgba(247,166,0,0.34) 0, rgba(247,166,0,0.18) 18%, transparent 38%), linear-gradient(135deg, var(--fa-blue-dark) 0%, var(--fa-blue) 58%, #0A6EB8 100%); }
+.fa-hero:before { content: ''; position: absolute; right: -90px; top: -115px; width: 330px; height: 330px; border: 1px solid rgba(255,255,255,0.16); border-radius: 50%; }
+.fa-hero:after { content: ''; position: absolute; right: 96px; bottom: -126px; width: 260px; height: 260px; border: 34px solid rgba(255,255,255,0.08); border-radius: 50%; }
+.fa-hero-content { position: relative; z-index: 1; padding: 28px 30px 30px; }
+.fa-title-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; flex-wrap: wrap; }
+.fa-brand-mark { width: 44px; height: 44px; border-radius: 13px; background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.22); color: #FFFFFF; display: inline-flex; align-items: center; justify-content: center; }
+.fa-brand-mark i { font-size: 23px; }
+.fa-title { margin: 0; font-size: 30px; line-height: 1.18; font-weight: 700; letter-spacing: -0.01em; color: #FFFFFF; }
+.fa-subtitle { max-width: 900px; margin: 10px 0 0; color: rgba(255,255,255,0.86); font-size: 15px; line-height: 1.6; }
+.fa-hero-actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+.fa-chip-link { min-height: 36px; display: inline-flex; align-items: center; gap: 8px; padding: 8px 13px; border-radius: 9px; color: #FFFFFF; border: 1px solid rgba(255,255,255,0.50); background: rgba(255,255,255,0.12); font-size: 13px; font-weight: 600; }
+.fa-chip-link:hover { background: rgba(255,255,255,0.20); color: #FFFFFF; }
+.fa-kpi-grid { margin-top: 24px; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; }
+.fa-kpi-card { min-height: 126px; padding: 16px; border: 1px solid rgba(255,255,255,0.18); background: rgba(255,255,255,0.12); border-radius: 14px; backdrop-filter: blur(8px); }
+.fa-kpi-icon { width: 34px; height: 34px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 14px; background: rgba(255,255,255,0.16); color: #FFFFFF; }
+.fa-kpi-icon i { font-size: 18px; }
+.fa-kpi-value { display: block; color: #FFFFFF; font-size: 30px; line-height: 1; font-weight: 700; }
+.fa-kpi-label { display: block; margin-top: 8px; color: rgba(255,255,255,0.84); font-size: 13px; line-height: 1.35; }
+.fa-kpi-card.urgent { border-color: rgba(247,166,0,0.55); }
+.fa-body { padding: 26px 30px 32px; }
+.fa-section-heading { margin: 0 0 16px; }
+.fa-section-heading h2 { margin: 0; color: #172033; font-size: 22px; font-weight: 700; }
+.fa-section-heading p { margin: 6px 0 0; color: #647084; font-size: 14px; line-height: 1.55; }
+.fa-insights-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; align-items: stretch; }
+.fa-card { border: 1px solid #E1E7F0; box-shadow: 0 12px 30px rgba(20,38,72,0.08); }
+.fa-card-title { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid #E8EDF5; }
+.fa-card-title h3 { margin: 0; font-size: 18px; color: #172033; }
+.fa-card-title span { color: #647084; font-size: 12px; }
+.fa-numberline { display: flex; align-items: baseline; justify-content: space-between; margin: 16px 0 10px; gap: 12px; }
+.fa-numberline strong { font-size: 28px; color: #172033; line-height: 1; }
+.fa-numberline small { color: #647084; font-size: 13px; }
+.fa-muted { color: #647084; font-size: 13px; line-height: 1.5; }
+.fa-bar-list { display: flex; flex-direction: column; gap: 12px; margin-top: 14px; }
+.fa-bar-row { display: grid; grid-template-columns: minmax(130px, 1fr) minmax(160px, 2fr) 90px; gap: 10px; align-items: center; }
+.fa-bar-label { color: #41506B; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fa-bar-track { height: 8px; background: #EEF2F6; border-radius: 8px; overflow: hidden; }
+.fa-bar-fill { height: 100%; border-radius: 8px; background: var(--zcs_brand_color); }
+.fa-bar-value { color: #172033; font-size: 13px; text-align: right; white-space: nowrap; }
+.fa-status-grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; margin-top: 14px; }
+.fa-status-mini { padding: 12px; border: 1px solid #E6EBF2; border-radius: 10px; background: #FBFCFE; }
+.fa-status-mini b { display: block; font-size: 20px; color: #172033; line-height: 1; }
+.fa-status-mini span { display: block; margin-top: 6px; color: #647084; font-size: 12px; }
+.fa-table-empty { padding: 20px; color: #647084; text-align: center; }
+.fa-quick-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.fa-panel-grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr); gap: 18px; margin-top: 18px; }
+.fa-note-list { margin: 12px 0 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.fa-note-list li { list-style-type: none; display: flex; gap: 10px; align-items: flex-start; color: #41506B; font-size: 13px; line-height: 1.45; }
+.fa-note-list i { color: var(--zcs_brand_color); margin-top: 2px; }
+@media (max-width: 1180px) { .fa-kpi-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } .fa-insights-grid, .fa-panel-grid { grid-template-columns: 1fr; } }
+@media (max-width: 760px) { .fa-hero-content, .fa-body { padding: 20px; } .fa-kpi-grid, .fa-status-grid, .fa-quick-grid { grid-template-columns: 1fr; } .fa-title { font-size: 24px; } .fa-bar-row { grid-template-columns: 1fr; gap: 6px; } .fa-bar-value { text-align: left; } }
+</style>
+<div class="fa-dashboard">
+    <div class="fa-hero">
+        <div class="fa-hero-content">
+            <div class="fa-title-row">
+                <div class="zcs-flex zcs-gap-12 zcs-align-items-center">
+                    <div class="fa-brand-mark"><i class="zc-li-outline business-chart-bar-32"></i></div>
+                    <div>
+                        <h1 class="fa-title">F&amp;A Team Dashboard</h1>
+                        <p class="fa-subtitle">Hello <%=displayUser%>. Track invoice validation queues, disciplinary follow-up, rejected resubmissions, vendor references, and the local Books push audit scaffold. No live Books calls are made from this page.</p>
+                    </div>
+                </div>
+                <div class="fa-hero-actions">
+                    <a class="fa-chip-link" href="#Report:Attendance_Invoice_List_FA"><i class="zc-li-outline files-2-single-copy-04"></i>Attendance invoices</a>
+                    <a class="fa-chip-link" href="#Report:Consumable_Invoice_List_FA"><i class="zc-li-outline shopping-cart"></i>Consumable invoices</a>
+                    <a class="fa-chip-link" href="#Report:Audit_Log_List"><i class="zc-li-outline ui-1-calendar-60"></i>Audit log</a>
+                </div>
+            </div>
+            <div class="fa-kpi-grid">
+                <div class="fa-kpi-card urgent">
+                    <div class="fa-kpi-icon"><i class="zc-li-outline files-2-single-copy-04"></i></div>
+                    <span class="fa-kpi-value"><%=pendingAttendanceInvoices%></span>
+                    <span class="fa-kpi-label">Pending attendance invoices</span>
+                </div>
+                <div class="fa-kpi-card urgent">
+                    <div class="fa-kpi-icon"><i class="zc-li-outline shopping-cart"></i></div>
+                    <span class="fa-kpi-value"><%=pendingConsumableInvoices%></span>
+                    <span class="fa-kpi-label">Pending consumable F&amp;A invoices</span>
+                </div>
+                <div class="fa-kpi-card urgent">
+                    <div class="fa-kpi-icon"><i class="zc-li-outline ui-3-alert"></i></div>
+                    <span class="fa-kpi-value"><%=pendingDisciplinaryActions%></span>
+                    <span class="fa-kpi-label">Pending disciplinary actions</span>
+                </div>
+                <div class="fa-kpi-card">
+                    <div class="fa-kpi-icon"><i class="zc-li-outline business-money-coins"></i></div>
+                    <span class="fa-kpi-value">INR <%=monthInvoiceValue%></span>
+                    <span class="fa-kpi-label">Total invoice value this month</span>
+                </div>
+                <div class="fa-kpi-card">
+                    <div class="fa-kpi-icon"><i class="zc-li-outline ui-1-check-circle-08"></i></div>
+                    <span class="fa-kpi-value"><%=booksApprovalsThisMonth%></span>
+                    <span class="fa-kpi-label">Approved Books push audit entries this month</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="fa-body">
+        <div class="fa-section-heading">
+            <h2>F&amp;A operating snapshot</h2>
+            <p>Invoice and warning data is sourced from local Creator records and audit logs.</p>
+        </div>
+        <div class="fa-insights-grid">
+            <div class="zcs-card zcs-p-24 zcs-box-border fa-card">
+                <div class="fa-card-title">
+                    <h3>Invoice status breakdown</h3>
+                    <span><%=statusTotal%> records</span>
+                </div>
+                <div class="zcs-donut-chart-wrapper zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-12 zcs-p-20 zcs-box-border" style="--donut-cx:82px; --donut-cy:82px; --donut-r:64; --donut-stroke_width:18; --donut-pi:3.14; --donut-a1:<%=pctPendingFA%>; --donut-a2:<%=pctApproved%>; --donut-a3:<%=pctRejected%>; --donut-a4:<%=pctPendingInfra%>; --donut-donut_size:164px;">
+                    <div class="zcs-donut-chart zcs-simple-donut-chart zcs-flex zcs-align-items-center zcs-justify-center zcs-relative">
+                        <svg class="zcs-rounded-full"><circle></circle><circle></circle><circle></circle><circle></circle></svg>
+                        <h6 class="zcs-donut-chart-name zcs-font-16 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0 zcs-absolute zcs-text-center">Invoices</h6>
+                    </div>
+                    <div class="zcs-legend-wrapper">
+                        <ul class="zcs-flex zcs-direction-column zcs-gap-20 zcs-p-0 zcs-m-0">
+                            <li><label class="zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary">Pending F&amp;A: <%=statusPendingFA%></label></li>
+                            <li><label class="zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary">Approved: <%=statusApproved%></label></li>
+                            <li><label class="zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary">Rejected: <%=statusRejected%></label></li>
+                            <li><label class="zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary">Pending Infra: <%=statusPendingInfra%></label></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="fa-status-grid">
+                    <div class="fa-status-mini"><b><%=pendingAttendanceInvoices%></b><span>Attendance queue</span></div>
+                    <div class="fa-status-mini"><b><%=pendingConsumableInvoices%></b><span>Consumable queue</span></div>
+                    <div class="fa-status-mini"><b><%=rejectedTotal%></b><span>Rejected items</span></div>
+                    <div class="fa-status-mini"><b><%=booksApprovalsThisMonth%></b><span>Books approvals</span></div>
+                </div>
+            </div>
+            <div class="zcs-card zcs-p-24 zcs-box-border fa-card">
+                <div class="fa-card-title">
+                    <h3>Vendor-wise approved spend</h3>
+                    <span><%=activeVendors%> active vendors</span>
+                </div>
+                <div class="fa-bar-list">
+                    <%
+                    vendorIndex = 0;
+                    for each vendorRec in User_Master[Role == "Vendor" && Status == "Active"] sort by User_Name asc
+                    {
+                        if(vendorIndex < 6)
+                        {
+                            vendorSpend = ifnull(Attendance_Invoice[Vendor == vendorRec.ID && Status == "Approved"].sum(Total_Amount),0.0) + ifnull(Consumable_Invoice[Vendor == vendorRec.ID && Status == "Approved"].sum(Total_Amount),0.0);
+                            vendorPct = 0;
+                            if(maxVendorSpend > 0)
+                            {
+                                vendorPct = (vendorSpend * 100) / maxVendorSpend;
+                            }
+                            vendorName = ifnull(vendorRec.User_Name,"Vendor");
+                            %>
+                            <div class="fa-bar-row">
+                                <div class="fa-bar-label"><%=vendorName%></div>
+                                <div class="fa-bar-track"><div class="fa-bar-fill" style="width:<%=vendorPct%>%;"></div></div>
+                                <div class="fa-bar-value">INR <%=vendorSpend%></div>
+                            </div>
+                            <%
+                            vendorIndex = vendorIndex + 1;
+                        }
+                    }
+                    if(vendorIndex == 0)
+                    {
+                        %><div class="fa-table-empty">No active vendor spend is available yet.</div><%
+                    }
+                    %>
+                </div>
+            </div>
+        </div>
+        <div class="fa-panel-grid">
+            <div class="zcs-card zcs-p-24 zcs-box-border fa-card">
+                <div class="fa-card-title">
+                    <h3>Rejected invoices awaiting resubmission</h3>
+                    <span><%=rejectedTotal%> rejected</span>
+                </div>
+                <div class="zcs-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative" style="margin-top:16px; max-height:330px;">
+                    <table class="zcs-w-full">
+                        <thead class="zcs-sticky">
+                            <tr>
+                                <th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Type</th>
+                                <th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Invoice</th>
+                                <th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Vendor</th>
+                                <th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Amount</th>
+                                <th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Status</th>
+                            </tr>
+                            <tr class="zcs-tspace"><th class="zcs-p-8 zcs-box-border" colspan="5"></th></tr>
+                        </thead>
+                        <tbody>
+                            <%
+                            rejectedRows = 0;
+                            for each rAtt in Attendance_Invoice[Status == "Rejected"] sort by Invoice_Date desc
+                            {
+                                if(rejectedRows < 5)
+                                {
+                                    rejectedRows = rejectedRows + 1;
+                                    %>
+                                    <tr>
+                                        <td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary">Attendance</td>
+                                        <td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"><%=ifnull(rAtt.Invoice_Number,rAtt.Invoice_ID)%></td>
+                                        <td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"><%=ifnull(rAtt.Vendor.User_Name,"Vendor")%></td>
+                                        <td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary">INR <%=ifnull(rAtt.Total_Amount,0)%></td>
+                                        <td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-red">Rejected</td>
+                                    </tr>
+                                    <%
+                                }
+                            }
+                            for each rCon in Consumable_Invoice[Status == "Rejected"] sort by Invoice_Date desc
+                            {
+                                if(rejectedRows < 10)
+                                {
+                                    rejectedRows = rejectedRows + 1;
+                                    %>
+                                    <tr>
+                                        <td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary">Consumable</td>
+                                        <td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"><%=ifnull(rCon.Invoice_Number,rCon.Invoice_ID)%></td>
+                                        <td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"><%=ifnull(rCon.Vendor.User_Name,"Vendor")%></td>
+                                        <td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary">INR <%=ifnull(rCon.Total_Amount,0)%></td>
+                                        <td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-red">Rejected</td>
+                                    </tr>
+                                    <%
+                                }
+                            }
+                            if(rejectedRows == 0)
+                            {
+                                %><tr class="zcs-tnodata"><td class="fa-table-empty" colspan="5">No rejected invoices are currently awaiting resubmission.</td></tr><%
+                            }
+                            %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="zcs-card zcs-p-24 zcs-box-border fa-card">
+                <div class="fa-card-title">
+                    <h3>Disciplinary cases pending FMS acknowledgement</h3>
+                    <span><%=fmsAckPending%> cases</span>
+                </div>
+                <div class="fa-numberline">
+                    <strong><%=fmsAckPending%></strong>
+                    <small>Awaiting FMS acknowledgement</small>
+                </div>
+                <div class="fa-bar-list">
+                    <%
+                    caseRows = 0;
+                    for each warnRec in Warning_Penalty[Status == "Pending FMS Acknowledgement"] sort by Date asc
+                    {
+                        if(caseRows < 5)
+                        {
+                            caseRows = caseRows + 1;
+                            %>
+                            <div class="zcs-flex zcs-justify-space-between zcs-gap-12 zcs-p-16 zcs-box-border zcs-rounded-lg" style="border:1px solid #E6EBF2; background:#FBFCFE;">
+                                <div>
+                                    <div class="zcs-font-14 zcs-font-semibold zcs-color-primary"><%=ifnull(warnRec.Employee.Employee_Name,"Employee")%></div>
+                                    <div class="zcs-font-13 zcs-color-tertiary"><%=ifnull(warnRec.Warning_Penalty_Type.Type_Name,"Disciplinary case")%></div>
+                                </div>
+                                <div class="zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-orange"><span class="zcs-badge-text zcs-font-12 zcs-font-normal zcs-lh-body">Pending FMS</span></div>
+                            </div>
+                            <%
+                        }
+                    }
+                    if(caseRows == 0)
+                    {
+                        %><div class="fa-table-empty">No cases are waiting for FMS acknowledgement.</div><%
+                    }
+                    %>
+                </div>
+            </div>
+        </div>
+        <div class="fa-panel-grid">
+            <div class="zcs-quick-actions-wrapper zcs-card zcs-flex zcs-direction-column zcs-gap-16 zcs-p-16 zcs-box-border fa-card">
+                <h5 class="zcs-font-18 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0">Quick links</h5>
+                <div class="fa-quick-grid">
+                    <ul class="zcs-flex zcs-direction-column zcs-gap-12 zcs-p-0 zcs-m-0">
+                        <li class="zcs-quick-action-item zcs-card zcs-px-12 zcs-py-8 zcs-box-border"><a class="zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary zcs-cursor-pointer" href="#Report:Attendance_Invoice_List_FA"><i class="zcs-quick-action-icon zcs-font-medium zc-li-outline files-2-single-copy-04"></i><span class="zcs-quick-action-text">Attendance Invoice List</span></a></li>
+                        <li class="zcs-quick-action-item zcs-card zcs-px-12 zcs-py-8 zcs-box-border"><a class="zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary zcs-cursor-pointer" href="#Report:Consumable_Invoice_List_FA"><i class="zcs-quick-action-icon zcs-font-medium zc-li-outline shopping-cart"></i><span class="zcs-quick-action-text">Consumable Invoice List</span></a></li>
+                    </ul>
+                    <ul class="zcs-flex zcs-direction-column zcs-gap-12 zcs-p-0 zcs-m-0">
+                        <li class="zcs-quick-action-item zcs-card zcs-px-12 zcs-py-8 zcs-box-border"><a class="zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary zcs-cursor-pointer" href="#Report:Warning_List_FA"><i class="zcs-quick-action-icon zcs-font-medium zc-li-outline ui-3-alert"></i><span class="zcs-quick-action-text">Warning List</span></a></li>
+                        <li class="zcs-quick-action-item zcs-card zcs-px-12 zcs-py-8 zcs-box-border"><a class="zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary zcs-cursor-pointer" href="#Report:FMS_Employee_Master_List"><i class="zcs-quick-action-icon zcs-font-medium zc-li-outline users-single-01"></i><span class="zcs-quick-action-text">Employee Master</span></a></li>
+                    </ul>
+                    <ul class="zcs-flex zcs-direction-column zcs-gap-12 zcs-p-0 zcs-m-0">
+                        <li class="zcs-quick-action-item zcs-card zcs-px-12 zcs-py-8 zcs-box-border"><a class="zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary zcs-cursor-pointer" href="#Report:Vendor_Master_List"><i class="zcs-quick-action-icon zcs-font-medium zc-li-outline business-briefcase-24"></i><span class="zcs-quick-action-text">Vendor Master</span></a></li>
+                        <li class="zcs-quick-action-item zcs-card zcs-px-12 zcs-py-8 zcs-box-border"><a class="zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary zcs-cursor-pointer" href="#Report:Audit_Log_List"><i class="zcs-quick-action-icon zcs-font-medium zc-li-outline ui-1-calendar-60"></i><span class="zcs-quick-action-text">Audit Log</span></a></li>
+                    </ul>
+                </div>
+                <div class="zcs-flex zcs-gap-12 zcs-align-items-center" style="margin-top:6px; flex-wrap:wrap;">
+                    <a class="zcs-button zcs-primary-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body" href="#Form:Warning_Penalty"><i class="zcs-button-icon zc-li-outline ui-1-simple-add"></i><span class="zcs-button-text">New disciplinary action</span></a>
+                    <a class="zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body" href="#Report:Audit_Log_List?Module_Name=Integration"><i class="zcs-button-icon zc-li-outline arrows-1-tail-right"></i><span class="zcs-button-text">Review integration audit</span></a>
+                </div>
+            </div>
+            <div class="zcs-card zcs-p-24 zcs-box-border fa-card">
+                <div class="fa-card-title">
+                    <h3>Reference coverage</h3>
+                    <span>Local master data</span>
+                </div>
+                <ul class="fa-note-list">
+                    <li><i class="zc-li-outline ui-1-check-circle-08"></i><span><strong><%=activeVendors%></strong> active vendor records are available through Vendor Master List.</span></li>
+                    <li><i class="zc-li-outline ui-1-check-circle-08"></i><span><strong><%=activeEmployees%></strong> active FMS employee records are available through Employee Master.</span></li>
+                    <li><i class="zc-li-outline ui-2-time"></i><span>Books KPIs are derived from Audit_Log rows where Module Name is Integration, Action Type is Books Push, and New Status is Approved.</span></li>
+                    <li><i class="zc-li-outline ui-1-lock-circle-open"></i><span>F&amp;A validation stays on local approval data; this dashboard does not call Zoho Books live APIs.</span></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>

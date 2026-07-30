@@ -1,0 +1,27 @@
+Asset_Master_On_Validate as "Asset Master On Validate"
+{
+    type = form
+    form = Asset_Master
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                categoryRec = Asset_Category_Master[ID == input.Category];
+                if(categoryRec.count() == 0 || categoryRec.Status != "Active")
+                {
+                    alert "Select an active asset category.";
+                    cancel submit;
+                }
+                if(input.Purchase_Date != null && input.Warranty_Expiry != null && input.Warranty_Expiry < input.Purchase_Date)
+                {
+                    alert "Warranty expiry cannot be before purchase date.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}

@@ -1,0 +1,35 @@
+Maintenance_Schedule_Start_Date_On_User_Input as "Maintenance Schedule Start Date On User Input"
+{
+    type = form
+    form = Maintenance_Schedule_Configuration
+    record event = on add or edit
+
+    on user input of Start_Date
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Start_Date != null && input.Frequency not in {"", " ", "null"})
+                {
+                    if(input.Frequency == "Weekly")
+                    {
+                        input.Next_Due_Date = input.Start_Date.addDay(7);
+                    }
+                    else if(input.Frequency == "Monthly")
+                    {
+                        input.Next_Due_Date = input.Start_Date.addMonth(1);
+                    }
+                    else if(input.Frequency == "Quarterly")
+                    {
+                        input.Next_Due_Date = input.Start_Date.addMonth(3);
+                    }
+                    else if(input.Frequency == "Other" && ifnull(input.Interval,0) > 0)
+                    {
+                        input.Next_Due_Date = input.Start_Date.addDay(input.Interval);
+                    }
+                }
+            )
+        }
+    }
+}

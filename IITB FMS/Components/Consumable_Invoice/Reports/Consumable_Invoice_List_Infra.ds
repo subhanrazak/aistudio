@@ -1,0 +1,45 @@
+list Consumable_Invoice_List_Infra
+{
+    displayName = "Consumable Invoice List (Infra View)"
+    show all rows from Consumable_Invoice [Status == "Pending Infra Validation"]
+    (
+        Invoice_ID
+        Vendor
+        Invoice_Number
+        Invoice_Date
+        Consumable_Category
+        Sub_Total
+        Tax
+        Total_Amount
+        Invoice_File
+        Status
+        Submitted_Date
+        custom action "Approve"
+        (
+            workflow = WF_Infra_Approve_Consumable_Invoice
+            show action for each record = true
+            column header = "Approve"
+            success message = "Consumable invoice moved to F&A validation."
+            condition = (Status == "Pending Infra Validation")
+        )
+        custom action "Reject"
+        (
+            workflow = WF_Infra_Reject_Consumable_Invoice
+            show action for each record = true
+            column header = "Reject"
+            success message = "Opening rejection form."
+            condition = (Status == "Pending Infra Validation")
+        )
+    )
+    filters
+    (
+        Vendor
+        Consumable_Category
+        Status
+        Submitted_Date
+    )
+    sort by
+    (
+        Submitted_Date ascending
+    )
+}

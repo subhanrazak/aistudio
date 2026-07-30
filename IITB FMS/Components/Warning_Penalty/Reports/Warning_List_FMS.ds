@@ -1,0 +1,34 @@
+list Warning_List_FMS
+{
+    displayName = "Warning List - FMS"
+    show all rows from Warning_Penalty [Vendor_Email == zoho.loginuser]
+    (
+        Warning_ID
+        Date
+        Issue_Type
+        Warning_Penalty_Type
+        Reason_Description
+        Action_Taken_By_FA
+        FMS_Acknowledgement_Comment
+        Status
+        custom action "Acknowledge"
+        (
+            workflow = WF_Acknowledge_Warning_Penalty
+            show action for each record = true
+            column header = "Acknowledge"
+            success message = "Opening acknowledgement form."
+            condition = (Status == "Pending FMS Acknowledgement")
+        )
+    )
+    filters
+    (
+        Issue_Type
+        Warning_Penalty_Type
+        Status
+        Date
+    )
+    sort by
+    (
+        Date descending
+    )
+}

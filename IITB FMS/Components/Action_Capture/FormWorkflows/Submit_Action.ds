@@ -1,0 +1,201 @@
+Action_Capture_Submit_Action as "Submit Action"
+{
+    type = form
+    form = Action_Capture
+    button = Submit_Action
+
+    on click
+    {
+        actions
+        {
+            on click
+            (
+                targetId = input.Target_Record_ID;
+                if(input.Action_Code == "ATTENDANCE_REJECT")
+                {
+                    attendanceSubmissionRec = Attendance_Submission[ID == targetId];
+                    if(attendanceSubmissionRec.count() > 0 && attendanceSubmissionRec.Status == "Pending Validation")
+                    {
+                        oldStatus = attendanceSubmissionRec.Status;
+                        attendanceSubmissionRec.Status = "Rejected";
+                        attendanceSubmissionRec.Remarks = input.Reason;
+                        insert into Audit_Log
+                        [
+                            Module_Name = "Attendance"
+                            Source_Form = "Attendance_Submission"
+                            Source_Record_ID = targetId
+                            Source_Record_Label = attendanceSubmissionRec.Submission_ID.toString()
+                            Action_Type = "Rejected"
+                            Old_Status = oldStatus
+                            New_Status = "Rejected"
+                            Performed_By_Email = zoho.loginuser
+                            Performed_On = zoho.currenttime
+                            Details = input.Reason
+                        ]
+                    }
+                }
+                else if(input.Action_Code == "ATTENDANCE_INVOICE_REJECT")
+                {
+                    attendanceInvoiceRec = Attendance_Invoice[ID == targetId];
+                    if(attendanceInvoiceRec.count() > 0 && attendanceInvoiceRec.Status == "Pending F&A Validation")
+                    {
+                        oldStatus = attendanceInvoiceRec.Status;
+                        attendanceInvoiceRec.Status = "Rejected";
+                        attendanceInvoiceRec.Rejection_Reason = input.Reason;
+                        insert into Audit_Log
+                        [
+                            Module_Name = "Attendance Invoice"
+                            Source_Form = "Attendance_Invoice"
+                            Source_Record_ID = targetId
+                            Source_Record_Label = attendanceInvoiceRec.Invoice_Number
+                            Action_Type = "Rejected"
+                            Old_Status = oldStatus
+                            New_Status = "Rejected"
+                            Performed_By_Email = zoho.loginuser
+                            Performed_On = zoho.currenttime
+                            Details = input.Reason
+                        ]
+                    }
+                }
+                else if(input.Action_Code == "CONSUMABLE_INFRA_REJECT" || input.Action_Code == "CONSUMABLE_FA_REJECT")
+                {
+                    consumableInvoiceRec = Consumable_Invoice[ID == targetId];
+                    if(consumableInvoiceRec.count() > 0)
+                    {
+                        oldStatus = consumableInvoiceRec.Status;
+                        consumableInvoiceRec.Status = "Rejected";
+                        consumableInvoiceRec.Rejection_Reason = input.Reason;
+                        insert into Audit_Log
+                        [
+                            Module_Name = "Consumables"
+                            Source_Form = "Consumable_Invoice"
+                            Source_Record_ID = targetId
+                            Source_Record_Label = consumableInvoiceRec.Invoice_Number
+                            Action_Type = "Rejected"
+                            Old_Status = oldStatus
+                            New_Status = "Rejected"
+                            Performed_By_Email = zoho.loginuser
+                            Performed_On = zoho.currenttime
+                            Details = input.Reason
+                        ]
+                    }
+                }
+                else if(input.Action_Code == "WARNING_FA_ACTION")
+                {
+                    warningFARec = Warning_Penalty[ID == targetId];
+                    if(warningFARec.count() > 0 && warningFARec.Status == "Pending F&A Action")
+                    {
+                        oldStatus = warningFARec.Status;
+                        warningFARec.Action_Taken_By_FA = input.Action_Taken;
+                        warningFARec.Action_Taken_Date = input.Action_Taken_Date;
+                        warningFARec.Status = "Pending FMS Acknowledgement";
+                        insert into Audit_Log
+                        [
+                            Module_Name = "Disciplinary"
+                            Source_Form = "Warning_Penalty"
+                            Source_Record_ID = targetId
+                            Source_Record_Label = warningFARec.Warning_ID.toString()
+                            Action_Type = "Status Changed"
+                            Old_Status = oldStatus
+                            New_Status = "Pending FMS Acknowledgement"
+                            Performed_By_Email = zoho.loginuser
+                            Performed_On = zoho.currenttime
+                            Details = input.Action_Taken
+                        ]
+                        if(warningFARec.Vendor_Email not in {"", " ", "null"})
+                        {
+                            sendmail
+                            (
+                                from : zoho.adminuserid
+                                to : warningFARec.Vendor_Email
+                                subject : "DISCIPLINARY_ACTION_TAKEN: " + warningFARec.Warning_ID
+                                message : "F&A action has been recorded for the disciplinary case. Action: " + input.Action_Taken + ". Please acknowledge the case."
+                            )
+                        }
+                    }
+                }
+                else if(input.Action_Code == "WARNING_ACKNOWLEDGE")
+                {
+                    warningAckRec = Warning_Penalty[ID == targetId];
+                    if(warningAckRec.count() > 0 && warningAckRec.Status == "Pending FMS Acknowledgement")
+                    {
+                        oldStatus = warningAckRec.Status;
+                        warningAckRec.FMS_Acknowledgement_Comment = input.Acknowledgement_Comment;
+                        warningAckRec.Status = "Acknowledged";
+                        insert into Audit_Log
+                        [
+                            Module_Name = "Disciplinary"
+                            Source_Form = "Warning_Penalty"
+                            Source_Record_ID = targetId
+                            Source_Record_Label = warningAckRec.Warning_ID.toString()
+                            Action_Type = "Acknowledged"
+                            Old_Status = oldStatus
+                            New_Status = "Acknowledged"
+                            Performed_By_Email = zoho.loginuser
+                            Performed_On = zoho.currenttime
+                            Details = input.Acknowledgement_Comment
+                        ]
+                        infraRecipients = List();
+                        for each infraUserRec in User_Master[Role == "Infra Team" && Status == "Active"]
+                        {
+                            infraRecipients.add(infraUserRec.Email);
+                        }
+                        if(infraRecipients.size() > 0)
+                        {
+                            sendmail
+                            (
+                                from : zoho.adminuserid
+                                to : infraRecipients
+                                subject : "WARNING_ACKNOWLEDGED: " + warningAckRec.Warning_ID
+                                message : "The vendor has acknowledged warning / penalty case " + warningAckRec.Warning_ID + ". Comment: " + input.Acknowledgement_Comment
+                            )
+                        }
+                    }
+                }
+                else if(input.Action_Code == "MAINTENANCE_REJECT")
+                {
+                    maintenanceTaskRec = Maintenance_Task[ID == targetId];
+                    if(maintenanceTaskRec.count() > 0 && maintenanceTaskRec.Status == "Submitted")
+                    {
+                        oldStatus = maintenanceTaskRec.Status;
+                        maintenanceTaskRec.Status = "Rejected";
+                        maintenanceTaskRec.Rejection_Remarks = input.Reason;
+                        insert into Maintenance_Task_History
+                        [
+                            Maintenance_Task = maintenanceTaskRec.ID
+                            Vendor_Email = maintenanceTaskRec.Vendor_Email
+                            Status = "Rejected"
+                            Comments = input.Reason
+                            Updated_By_Email = zoho.loginuser
+                            Updated_On = zoho.currenttime
+                        ]
+                        insert into Audit_Log
+                        [
+                            Module_Name = "Maintenance"
+                            Source_Form = "Maintenance_Task"
+                            Source_Record_ID = targetId
+                            Source_Record_Label = maintenanceTaskRec.Task_ID.toString()
+                            Action_Type = "Rejected"
+                            Old_Status = oldStatus
+                            New_Status = "Rejected"
+                            Performed_By_Email = zoho.loginuser
+                            Performed_On = zoho.currenttime
+                            Details = input.Reason
+                        ]
+                        if(maintenanceTaskRec.Vendor_Email not in {"", " ", "null"})
+                        {
+                            sendmail
+                            (
+                                from : zoho.adminuserid
+                                to : maintenanceTaskRec.Vendor_Email
+                                subject : "MAINTENANCE_REJECTED: " + maintenanceTaskRec.Task_ID
+                                message : "Maintenance task was rejected. Reason: " + input.Reason
+                            )
+                        }
+                    }
+                }
+                openUrl("#Page:Home", "same window");
+            )
+        }
+    }
+}

@@ -1,0 +1,47 @@
+Consumable_Invoice_On_Validate as "Consumable Invoice On Validate"
+{
+    type = form
+    form = Consumable_Invoice
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                vendorRec = User_Master[ID == input.Vendor];
+                if(vendorRec.count() == 0 || vendorRec.Role != "Vendor" || vendorRec.Status != "Active")
+                {
+                    alert "Select an active vendor.";
+                    cancel submit;
+                }
+                if(vendorRec.count() > 0)
+                {
+                    input.Vendor_Email = vendorRec.Email;
+                }
+                if(input.Line_Items.isEmpty())
+                {
+                    alert "At least one line item is required.";
+                    cancel submit;
+                }
+                computedSubtotal = 0;
+                for each itemLine in input.Line_Items
+                {
+                    if(ifnull(itemLine.Qty,0) <= 0 || ifnull(itemLine.Unit_Rate,0) <= 0)
+                    {
+                        alert "Line item quantity and unit rate must be greater than zero.";
+                        cancel submit;
+                    }
+                    computedSubtotal = computedSubtotal + (itemLine.Qty * itemLine.Unit_Rate);
+                }
+                input.Sub_Total = computedSubtotal;
+                if(ifnull(input.Tax,0) < 0)
+                {
+                    alert "Tax cannot be negative.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}

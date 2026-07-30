@@ -1,0 +1,238 @@
+<%
+  vendorEmail = zoho.loginuser;
+  vendorParam = encodeURL(vendorEmail);
+  currentMonthNo = zoho.currentdate.getMonth();
+  currentYear = zoho.currentdate.getYear();
+  currentMonthName = "January";
+  if(currentMonthNo == 2)
+  {
+    currentMonthName = "February";
+  }
+  else if(currentMonthNo == 3)
+  {
+    currentMonthName = "March";
+  }
+  else if(currentMonthNo == 4)
+  {
+    currentMonthName = "April";
+  }
+  else if(currentMonthNo == 5)
+  {
+    currentMonthName = "May";
+  }
+  else if(currentMonthNo == 6)
+  {
+    currentMonthName = "June";
+  }
+  else if(currentMonthNo == 7)
+  {
+    currentMonthName = "July";
+  }
+  else if(currentMonthNo == 8)
+  {
+    currentMonthName = "August";
+  }
+  else if(currentMonthNo == 9)
+  {
+    currentMonthName = "September";
+  }
+  else if(currentMonthNo == 10)
+  {
+    currentMonthName = "October";
+  }
+  else if(currentMonthNo == 11)
+  {
+    currentMonthName = "November";
+  }
+  else if(currentMonthNo == 12)
+  {
+    currentMonthName = "December";
+  }
+
+  attendanceUploadCount = Attendance_Submission[Vendor_Email == vendorEmail && (Status == "Pending Upload" || Status == "Rejected")].count();
+  attendanceInvoiceRejectedCount = Attendance_Invoice[Vendor_Email == vendorEmail && Status == "Rejected"].count();
+  consumableInfraCount = Consumable_Invoice[Vendor_Email == vendorEmail && Status == "Pending Infra Validation"].count();
+  consumableFACount = Consumable_Invoice[Vendor_Email == vendorEmail && Status == "Pending F&A Validation"].count();
+  consumableRejectedCount = Consumable_Invoice[Vendor_Email == vendorEmail && Status == "Rejected"].count();
+  maintenanceDueCount = Maintenance_Task[Vendor_Email == vendorEmail && (Status == "Pending" || Status == "Rejected") && Task_Due_Date <= zoho.currentdate].count();
+  maintenanceOverdueCount = Maintenance_Task[Vendor_Email == vendorEmail && (Status == "Pending" || Status == "Rejected") && Task_Due_Date < zoho.currentdate].count();
+  warningsPendingCount = Warning_Penalty[Vendor_Email == vendorEmail && Status == "Pending FMS Acknowledgement"].count();
+
+  currentSubmissionStatus = "Not Started";
+  currentSubmissionDate = "";
+  for each sub in Attendance_Submission[Vendor_Email == vendorEmail && Month_Number == currentMonthNo && Year == currentYear]
+  {
+    currentSubmissionStatus = ifnull(sub.Status,"Not Started");
+    currentSubmissionDate = ifnull(sub.Date_of_Submission,"");
+  }
+  currentInvoiceStatus = "Not Submitted";
+  currentInvoiceNumber = "";
+  for each inv in Attendance_Invoice[Vendor_Email == vendorEmail && Month_Number == currentMonthNo && Year == currentYear]
+  {
+    currentInvoiceStatus = ifnull(inv.Status,"Not Submitted");
+    currentInvoiceNumber = ifnull(inv.Invoice_Number,"");
+  }
+
+  uploadState = "pending";
+  validationState = "pending";
+  invoiceState = "pending";
+  faState = "pending";
+  if(currentSubmissionStatus != "Not Started" && currentSubmissionStatus != "Pending Upload")
+  {
+    uploadState = "complete";
+  }
+  if(currentSubmissionStatus == "Approved")
+  {
+    validationState = "complete";
+  }
+  else if(currentSubmissionStatus == "Rejected")
+  {
+    validationState = "failed";
+  }
+  if(currentInvoiceStatus != "Not Submitted")
+  {
+    invoiceState = "complete";
+  }
+  if(currentInvoiceStatus == "Approved")
+  {
+    faState = "complete";
+  }
+  else if(currentInvoiceStatus == "Rejected")
+  {
+    faState = "failed";
+  }
+%>
+<style>
+/* zcs-global critical utility sheet included once for this page */
+:root { --zcs-theme-brand-color: var(--zcs_brand_color); --zcs-page-bg-color:#F3F3F4; --zcs-primary-text-color:var(--zcs_primary_text_color); --zcs-secondary-text-color:var(--zcs_secondary_text_color); --zcs-teritiary-text-color:var(--zcs_tertiary_text_color); --zcs-border-color:var(--zcs_tertiary_border_color); --zcs-white-color:#FFFFFF; --zcs-black-color:#000000; font-size:16px; line-height:1.5; --column-gap:0px; }
+.zcs-row{display:flex;flex-wrap:wrap}.zcs-flex{display:flex}.zcs-inline-flex{display:inline-flex}.zcs-direction-column{flex-direction:column}.zcs-row-wrap{flex-wrap:wrap}.zcs-col-common{flex:1 1 0%;min-width:0}.zcs-col-2{flex:0 0 16.6667%;max-width:16.6667%}.zcs-col-3{flex:0 0 25%;max-width:25%}.zcs-col-4{flex:0 0 33.3333%;max-width:33.3333%}.zcs-col-5{flex:0 0 41.6667%;max-width:41.6667%}.zcs-col-6{flex:0 0 50%;max-width:50%}.zcs-col-10{flex:0 0 83.3333%;max-width:83.3333%}.zcs-col-12{flex:0 0 100%;max-width:100%}.zcs-align-items-center{align-items:center}.zcs-align-items-start{align-items:flex-start}.zcs-justify-center{justify-content:center}.zcs-justify-space-between{justify-content:space-between}.zcs-no-shrink{flex-shrink:0}.zcs-gap-4{gap:.25rem}.zcs-gap-6{gap:.375rem}.zcs-gap-8{gap:.5rem}.zcs-gap-10{gap:.625rem}.zcs-gap-12{gap:.75rem}.zcs-gap-16{gap:1rem}.zcs-gap-20{gap:1.25rem}.zcs-gap-24{gap:1.5rem}.zcs-gap-32{gap:2rem}.zcs-p-0{padding:0}.zcs-p-8{padding:.5rem}.zcs-p-10{padding:.625rem}.zcs-p-12{padding:.75rem}.zcs-p-16{padding:1rem}.zcs-p-20{padding:1.25rem}.zcs-p-24{padding:1.5rem}.zcs-px-6{padding-left:.375rem;padding-right:.375rem}.zcs-px-10{padding-left:.625rem;padding-right:.625rem}.zcs-px-12{padding-left:.75rem;padding-right:.75rem}.zcs-px-16{padding-left:1rem;padding-right:1rem}.zcs-px-20{padding-left:1.25rem;padding-right:1.25rem}.zcs-px-60{padding-left:3.75rem;padding-right:3.75rem}.zcs-py-0{padding-top:0;padding-bottom:0}.zcs-py-2{padding-top:.125rem;padding-bottom:.125rem}.zcs-py-8{padding-top:.5rem;padding-bottom:.5rem}.zcs-py-10{padding-top:.625rem;padding-bottom:.625rem}.zcs-py-12{padding-top:.75rem;padding-bottom:.75rem}.zcs-m-0{margin:0}.zcs-mt-5{margin-top:.3125rem}.zcs-mt-8{margin-top:.5rem}.zcs-mx-0{margin-left:0;margin-right:0}.zcs-mb-0{margin-bottom:0}.zcs-my-0{margin-top:0;margin-bottom:0}.zcs-font-11{font-size:.6875rem}.zcs-font-12{font-size:.75rem}.zcs-font-13{font-size:.8125rem}.zcs-font-14{font-size:.875rem}.zcs-font-15{font-size:.9375rem}.zcs-font-16{font-size:1rem}.zcs-font-18{font-size:1.125rem}.zcs-font-20{font-size:1.25rem}.zcs-font-24{font-size:1.5rem}.zcs-font-30{font-size:1.875rem}.zcs-font-normal{font-weight:400}.zcs-font-medium{font-weight:500}.zcs-font-semibold{font-weight:600}.zcs-font-bold{font-weight:700}.zcs-lh-body{line-height:1.5}.zcs-lh-heading{line-height:1.25}.zcs-uppercase{text-transform:uppercase}.zcs-text-right{text-align:right}.zcs-text-center{text-align:center}.zcs-rounded-sm{border-radius:.25rem}.zcs-rounded-md{border-radius:.375rem}.zcs-rounded-lg{border-radius:.5rem}.zcs-rounded-xl{border-radius:.75rem}.zcs-rounded-half{border-radius:50%}.zcs-box-border{box-sizing:border-box}.zcs-cursor-pointer{cursor:pointer}.zcs-relative{position:relative}.zcs-absolute{position:absolute}.zcs-h-full{height:100%}.zcs-wh-full{width:100%;height:100%}.zcs-color-theme{color:var(--zcs_brand_color)}.zcs-color-primary{color:var(--zcs_primary_text_color)}.zcs-color-secondary{color:var(--zcs_secondary_text_color)}.zcs-color-tertiary{color:var(--zcs_tertiary_text_color)}.zcs-color-white{color:#fff}.zcs-ellipsis{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.zcs-card{background-color:#fff;border:1px solid #e7e7ee;border-radius:12px}a{text-decoration:none;color:inherit}#splash-screen{display:none!important}
+@media(max-width:992px){.zcs-col-md-6{flex:0 0 50%;max-width:50%}.zcs-col-md-12{flex:0 0 100%;max-width:100%}}@media(max-width:768px){.zcs-col-sm-12{flex:0 0 100%;max-width:100%}.zcs-col-2,.zcs-col-10{flex:0 0 100%;max-width:100%}.zcs-px-60{padding-left:3.25rem;padding-right:1rem}}@media(max-width:576px){.zcs-col-xs-12{flex:0 0 100%;max-width:100%}}
+/* ZCS button component: button-primary-button */
+.zcs-button{width:auto;min-width:5rem;min-height:36px}.zcs-primary-button{background-color:var(--zcs_brand_color);color:var(--zcs_brand_foreground_color)}.zcs-primary-button.zcs-button:hover{background-color:var(--zcs_brand_dark_color)}.zcs-button-icon{width:16px;max-height:16px}.zcs-fw-button{width:100%}
+/* ZCS quick actions component: quick-actions-card-type-quick-actions */
+.zcs-quick-action-item{list-style-type:none}.zcs-quick-action-item.zcs-card:hover{border-color:var(--zcs_brand_color)}.zcs-quick-action-item:hover .zcs-quick-action-link{color:var(--zcs_brand_color)}.zcs-quick-action-item:hover .zcs-quick-action-text{text-decoration:none}
+/* ZCS badge component: badge-filled-badge */
+.zcs-badge{width:auto}.zcs-badge-filled{border:1px solid transparent}.zcs-badge-filled.zcs-badge-theme{background-color:var(--zcs_brand_color);border-color:var(--zcs_brand_color);color:#fff}.zcs-badge-filled.zcs-badge-green{background-color:#179E6C;border-color:#179E6C;color:#fff}.zcs-badge-filled.zcs-badge-red{background-color:#FE455D;border-color:#FE455D;color:#fff}.zcs-badge-filled.zcs-badge-grey{background-color:#242424;border-color:#242424;color:#fff}.zcs-badge-filled.zcs-badge-yellow{background-color:#FAAE13;border-color:#FAAE13;color:#fff}.zcs-badge-filled.zcs-badge-blue{background-color:#2A6FFC;border-color:#2A6FFC;color:#fff}.zcs-badge-filled.zcs-badge-orange{background-color:#F4660C;border-color:#F4660C;color:#fff}
+/* ZCS timeline component: timeline-simple-timeline */
+.zcs-tl-indicator{width:60px;left:16.6667%}.zcs-tl-dot{width:12px;height:12px;background-color:var(--zcs_brand_color);border:1px solid #fff;box-shadow:0 2px 6px 0 #C4DEE4}.zcs-tl-li:not(:last-child) .zcs-tl-indicator:before{content:'';display:flex;position:absolute;width:1px;height:calc(100% + 32px);background-color:#E1E1E1;top:5px}.zcs-tl-li.fms-tl-complete .zcs-tl-dot{background-color:#179E6C}.zcs-tl-li.fms-tl-failed .zcs-tl-dot{background-color:#FE455D}.zcs-tl-li.fms-tl-pending .zcs-tl-dot{background-color:#FAAE13}.zcs-tl-li.fms-tl-neutral .zcs-tl-dot{background-color:#878895}@media(max-width:768px){.zcs-tl-li{flex-direction:column}.zcs-tl-indicator{left:0}.zcs-tl-time{text-align:left;padding:0 60px;margin-bottom:12px}}
+/* ZCS horizontal tab component: horizontal-tab-horizontal-tab-with-count */
+.zcs-horizontal-tabhead{box-shadow:0 -1px 0 0 var(--zcs_tertiary_border_color) inset;overflow-x:auto;overflow-y:hidden;scrollbar-width:none}.zcs-horizontal-tabhead::-webkit-scrollbar{display:none}.zcs-horizontal-tabitem{list-style-type:none;border-bottom:1px solid transparent;letter-spacing:.1px}.zcs-horizontal-tabtext{white-space:nowrap}.zcs-horizontal-tabcount{min-width:20px;background-color:#F3F3F4}.zcs-horizontal-tabitem:hover .zcs-horizontal-tablink{color:var(--zcs_brand_color)}.zcs-horizontal-tabitem:hover .zcs-horizontal-tabcount,.zcs-horizontal-tabitem.zcs-horizontal-tabactive .zcs-horizontal-tabcount{background-color:var(--zcs_component_hover_color)}.zcs-horizontal-tabitem.zcs-horizontal-tabactive{border-bottom-color:var(--zcs_brand_color)}.zcs-horizontal-tabitem.zcs-horizontal-tabactive .zcs-horizontal-tablink{color:var(--zcs_brand_color)}
+/* FMS page-specific layout */
+.fms-dashboard{background:#f6f7fb;padding:18px;box-sizing:border-box;color:var(--zcs_primary_text_color)}.fms-hero{background:linear-gradient(135deg,var(--zcs_brand_color),#172033);color:#fff;border-radius:18px;padding:24px;overflow:hidden;position:relative}.fms-hero:after{content:'';position:absolute;right:-60px;top:-70px;width:210px;height:210px;border:30px solid rgba(255,255,255,.12);border-radius:50%}.fms-hero .zcs-color-white-muted{color:rgba(255,255,255,.78)}.fms-kpi-grid{display:grid;grid-template-columns:repeat(5,minmax(170px,1fr));gap:14px;margin-top:16px}.fms-kpi-card{min-height:146px;border-left:4px solid var(--zcs_brand_color);box-shadow:0 10px 26px rgba(16,24,40,.05)}.fms-kpi-card.fms-danger{border-left-color:#FE455D}.fms-kpi-card.fms-warning{border-left-color:#FAAE13}.fms-kpi-card.fms-success{border-left-color:#179E6C}.fms-kpi-card.fms-blue{border-left-color:#2A6FFC}.fms-kpi-icon{width:38px;height:38px;border-radius:12px;background:var(--zcs_component_hover_color);color:var(--zcs_brand_color)}.fms-kpi-value{font-size:2rem;font-weight:700;line-height:1;color:var(--zcs_primary_text_color)}.fms-micro-row{display:flex;gap:6px;flex-wrap:wrap}.fms-shell-grid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(300px,.75fr);gap:16px;margin-top:16px}.fms-section-title{display:flex;align-items:center;gap:8px}.fms-action-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;list-style:none;padding:0;margin:0}.fms-action-list .zcs-quick-action-item{min-height:43px}.fms-note{background:#fff8e7;border:1px solid #ffe2a8;color:#704a00;border-radius:10px;padding:10px 12px;margin-top:12px}.fms-timeline-card{min-height:100%}.fms-status-pill{white-space:nowrap}.fms-tl-description{max-width:760px}@media(max-width:1180px){.fms-kpi-grid{grid-template-columns:repeat(3,minmax(170px,1fr))}.fms-shell-grid{grid-template-columns:1fr}}@media(max-width:700px){.fms-dashboard{padding:10px}.fms-kpi-grid,.fms-action-list{grid-template-columns:1fr}.fms-hero{padding:18px}.fms-kpi-value{font-size:1.7rem}}
+</style>
+
+<div class="fms-dashboard">
+  <section class="fms-hero zcs-flex zcs-justify-space-between zcs-align-items-center zcs-gap-16 zcs-row-wrap">
+    <div class="zcs-flex zcs-direction-column zcs-gap-8 zcs-col-common">
+      <span class="zcs-font-13 zcs-font-semibold zcs-uppercase zcs-color-white-muted">Vendor self-service</span>
+      <h1 class="zcs-font-30 zcs-font-bold zcs-lh-heading zcs-m-0 zcs-color-white">FMS / Vendor Dashboard</h1>
+      <p class="zcs-font-15 zcs-font-normal zcs-lh-body zcs-m-0 zcs-color-white-muted">Operational workspace for attendance uploads, invoices, maintenance reports, warnings, roster and active asset reference. Data is scoped to <%=vendorEmail%>.</p>
+    </div>
+    <a class="zcs-button zcs-primary-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body" href="#Form:Attendance_Submission?Vendor_Email=<%=vendorParam%>">
+      <i class="zcs-button-icon zc-li-outline files-2-upload"></i>
+      <span class="zcs-button-text">Upload Attendance</span>
+    </a>
+  </section>
+
+  <section class="fms-kpi-grid">
+    <article class="fms-kpi-card zcs-card zcs-flex zcs-direction-column zcs-gap-12 zcs-p-16 zcs-box-border fms-warning">
+      <div class="zcs-flex zcs-justify-space-between zcs-align-items-center zcs-gap-8">
+        <div class="fms-kpi-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline files-2-upload zcs-font-20"></i></div>
+        <span class="zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-yellow"><span class="zcs-badge-text zcs-font-12 zcs-font-normal zcs-lh-body">Awaiting file</span></span>
+      </div>
+      <div class="fms-kpi-value"><%=attendanceUploadCount%></div>
+      <div class="zcs-font-14 zcs-color-secondary">Attendance submissions needing upload or re-upload</div>
+    </article>
+
+    <article class="fms-kpi-card zcs-card zcs-flex zcs-direction-column zcs-gap-12 zcs-p-16 zcs-box-border fms-danger">
+      <div class="zcs-flex zcs-justify-space-between zcs-align-items-center zcs-gap-8">
+        <div class="fms-kpi-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline files-2-paper-diploma zcs-font-20"></i></div>
+        <span class="zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-red"><span class="zcs-badge-text zcs-font-12 zcs-font-normal zcs-lh-body">Action needed</span></span>
+      </div>
+      <div class="fms-kpi-value"><%=attendanceInvoiceRejectedCount%></div>
+      <div class="zcs-font-14 zcs-color-secondary">Rejected attendance invoices requiring correction</div>
+    </article>
+
+    <article class="fms-kpi-card zcs-card zcs-flex zcs-direction-column zcs-gap-12 zcs-p-16 zcs-box-border fms-blue">
+      <div class="zcs-flex zcs-justify-space-between zcs-align-items-center zcs-gap-8">
+        <div class="fms-kpi-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline e-commerce-shopping-cart-simple zcs-font-20"></i></div>
+        <span class="zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-blue"><span class="zcs-badge-text zcs-font-12 zcs-font-normal zcs-lh-body">Consumables</span></span>
+      </div>
+      <div class="fms-micro-row">
+        <span class="zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-yellow"><span class="zcs-badge-text zcs-font-12">Infra <%=consumableInfraCount%></span></span>
+        <span class="zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-orange"><span class="zcs-badge-text zcs-font-12">F&amp;A <%=consumableFACount%></span></span>
+        <span class="zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-red"><span class="zcs-badge-text zcs-font-12">Rejected <%=consumableRejectedCount%></span></span>
+      </div>
+      <div class="zcs-font-14 zcs-color-secondary">Consumable invoice statuses by validation stage</div>
+    </article>
+
+    <article class="fms-kpi-card zcs-card zcs-flex zcs-direction-column zcs-gap-12 zcs-p-16 zcs-box-border fms-danger">
+      <div class="zcs-flex zcs-justify-space-between zcs-align-items-center zcs-gap-8">
+        <div class="fms-kpi-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline ui-2-time zcs-font-20"></i></div>
+        <span class="zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-red"><span class="zcs-badge-text zcs-font-12 zcs-font-normal zcs-lh-body">Overdue <%=maintenanceOverdueCount%></span></span>
+      </div>
+      <div class="fms-kpi-value"><%=maintenanceDueCount%></div>
+      <div class="zcs-font-14 zcs-color-secondary">Maintenance tasks due or overdue for report upload</div>
+    </article>
+
+    <article class="fms-kpi-card zcs-card zcs-flex zcs-direction-column zcs-gap-12 zcs-p-16 zcs-box-border fms-warning">
+      <div class="zcs-flex zcs-justify-space-between zcs-align-items-center zcs-gap-8">
+        <div class="fms-kpi-icon zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline ui-3-alert zcs-font-20"></i></div>
+        <span class="zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-yellow"><span class="zcs-badge-text zcs-font-12 zcs-font-normal zcs-lh-body">Pending ack</span></span>
+      </div>
+      <div class="fms-kpi-value"><%=warningsPendingCount%></div>
+      <div class="zcs-font-14 zcs-color-secondary">Warnings pending FMS acknowledgement</div>
+    </article>
+  </section>
+
+  <section class="fms-shell-grid">
+    <article class="fms-timeline-card zcs-card zcs-flex zcs-direction-column zcs-gap-20 zcs-p-20 zcs-box-border">
+      <div class="zcs-flex zcs-justify-space-between zcs-align-items-center zcs-gap-12 zcs-row-wrap">
+        <div class="fms-section-title">
+          <i class="zc-li-outline design-todo zcs-color-theme zcs-font-20"></i>
+          <h2 class="zcs-font-18 zcs-font-semibold zcs-m-0 zcs-lh-heading zcs-color-primary">Current month submission tracker</h2>
+        </div>
+        <span class="zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-theme"><span class="zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body"><%=currentMonthName%> <%=currentYear%></span></span>
+      </div>
+      <div class="zcs-timeline-wrapper">
+        <ul class="zcs-flex zcs-direction-column zcs-gap-32 zcs-p-0 zcs-m-0">
+          <li class="zcs-tl-li zcs-row zcs-gap-0 zcs-relative fms-tl-<%=uploadState%>">
+            <div class="zcs-tl-indicator zcs-h-full zcs-flex zcs-justify-center zcs-absolute"><span class="zcs-tl-dot zcs-rounded-half zcs-mt-5 zcs-box-border zcs-relative"></span></div>
+            <span class="zcs-col-2 zcs-col-sm-12 zcs-tl-time zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-text-right">Step 1</span>
+            <div class="zcs-flex zcs-direction-column zcs-col-10 zcs-col-sm-12 zcs-px-60 zcs-box-border"><div class="zcs-flex zcs-align-items-center zcs-row-wrap zcs-gap-8"><h6 class="zcs-font-16 zcs-font-normal zcs-lh-heading zcs-color-primary zcs-m-0">Attendance file upload</h6><span class="fms-status-pill zcs-font-13 zcs-color-tertiary"><%=currentSubmissionStatus%></span></div><p class="fms-tl-description zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary zcs-mt-8 zcs-mx-0 zcs-mb-0">Upload or re-upload the FMS attendance file for the month. Date: <%=ifnull(currentSubmissionDate,"Not available")%></p></div>
+          </li>
+          <li class="zcs-tl-li zcs-row zcs-gap-0 zcs-relative fms-tl-<%=validationState%>">
+            <div class="zcs-tl-indicator zcs-h-full zcs-flex zcs-justify-center zcs-absolute"><span class="zcs-tl-dot zcs-rounded-half zcs-mt-5 zcs-box-border zcs-relative"></span></div>
+            <span class="zcs-col-2 zcs-col-sm-12 zcs-tl-time zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-text-right">Step 2</span>
+            <div class="zcs-flex zcs-direction-column zcs-col-10 zcs-col-sm-12 zcs-px-60 zcs-box-border"><div class="zcs-flex zcs-align-items-center zcs-row-wrap zcs-gap-8"><h6 class="zcs-font-16 zcs-font-normal zcs-lh-heading zcs-color-primary zcs-m-0">Infra validation</h6><span class="fms-status-pill zcs-font-13 zcs-color-tertiary"><%=currentSubmissionStatus%></span></div><p class="fms-tl-description zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary zcs-mt-8 zcs-mx-0 zcs-mb-0">Track approval or rejection for the submitted attendance file before invoice submission.</p></div>
+          </li>
+          <li class="zcs-tl-li zcs-row zcs-gap-0 zcs-relative fms-tl-<%=invoiceState%>">
+            <div class="zcs-tl-indicator zcs-h-full zcs-flex zcs-justify-center zcs-absolute"><span class="zcs-tl-dot zcs-rounded-half zcs-mt-5 zcs-box-border zcs-relative"></span></div>
+            <span class="zcs-col-2 zcs-col-sm-12 zcs-tl-time zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-text-right">Step 3</span>
+            <div class="zcs-flex zcs-direction-column zcs-col-10 zcs-col-sm-12 zcs-px-60 zcs-box-border"><div class="zcs-flex zcs-align-items-center zcs-row-wrap zcs-gap-8"><h6 class="zcs-font-16 zcs-font-normal zcs-lh-heading zcs-color-primary zcs-m-0">Attendance invoice submission</h6><span class="fms-status-pill zcs-font-13 zcs-color-tertiary"><%=currentInvoiceStatus%></span></div><p class="fms-tl-description zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary zcs-mt-8 zcs-mx-0 zcs-mb-0">Invoice number: <%=ifnull(currentInvoiceNumber,"Not submitted")%>. Submit after the attendance file is approved.</p></div>
+          </li>
+          <li class="zcs-tl-li zcs-row zcs-gap-0 zcs-relative fms-tl-<%=faState%>">
+            <div class="zcs-tl-indicator zcs-h-full zcs-flex zcs-justify-center zcs-absolute"><span class="zcs-tl-dot zcs-rounded-half zcs-mt-5 zcs-box-border zcs-relative"></span></div>
+            <span class="zcs-col-2 zcs-col-sm-12 zcs-tl-time zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-text-right">Step 4</span>
+            <div class="zcs-flex zcs-direction-column zcs-col-10 zcs-col-sm-12 zcs-px-60 zcs-box-border"><div class="zcs-flex zcs-align-items-center zcs-row-wrap zcs-gap-8"><h6 class="zcs-font-16 zcs-font-normal zcs-lh-heading zcs-color-primary zcs-m-0">F&amp;A validation</h6><span class="fms-status-pill zcs-font-13 zcs-color-tertiary"><%=currentInvoiceStatus%></span></div><p class="fms-tl-description zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary zcs-mt-8 zcs-mx-0 zcs-mb-0">Review rejected invoices from the attendance invoice list and resubmit with corrections.</p></div>
+          </li>
+        </ul>
+      </div>
+    </article>
+
+    <aside class="zcs-quick-actions-wrapper zcs-card zcs-flex zcs-direction-column zcs-gap-16 zcs-p-16 zcs-box-border">
+      <h5 class="zcs-font-18 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0">Quick links</h5>
+      <ul class="fms-action-list">
+        <li class="zcs-quick-action-item zcs-card zcs-px-12 zcs-py-8 zcs-box-border"><a class="zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary zcs-cursor-pointer" href="#Form:Attendance_Submission?Vendor_Email=<%=vendorParam%>"><i class="zcs-quick-action-icon zcs-font-medium zc-li-outline files-2-upload"></i><span class="zcs-quick-action-text">Upload Attendance</span></a></li>
+        <li class="zcs-quick-action-item zcs-card zcs-px-12 zcs-py-8 zcs-box-border"><a class="zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary zcs-cursor-pointer" href="#Form:Attendance_Invoice?Vendor_Email=<%=vendorParam%>"><i class="zcs-quick-action-icon zcs-font-medium zc-li-outline files-2-paper-diploma"></i><span class="zcs-quick-action-text">Submit Attendance Invoice</span></a></li>
+        <li class="zcs-quick-action-item zcs-card zcs-px-12 zcs-py-8 zcs-box-border"><a class="zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary zcs-cursor-pointer" href="#Form:Consumable_Invoice?Vendor_Email=<%=vendorParam%>"><i class="zcs-quick-action-icon zcs-font-medium zc-li-outline e-commerce-shopping-cart-simple"></i><span class="zcs-quick-action-text">Submit Consumable Invoice</span></a></li>
+        <li class="zcs-quick-action-item zcs-card zcs-px-12 zcs-py-8 zcs-box-border"><a class="zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary zcs-cursor-pointer" href="#Report:Maintenance_Task_List_FMS?Vendor_Email=<%=vendorParam%>"><i class="zcs-quick-action-icon zcs-font-medium zc-li-outline ui-2-time"></i><span class="zcs-quick-action-text">Submit Maintenance Report</span></a></li>
+        <li class="zcs-quick-action-item zcs-card zcs-px-12 zcs-py-8 zcs-box-border"><a class="zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary zcs-cursor-pointer" href="#Report:Warning_List_FMS?Vendor_Email=<%=vendorParam%>"><i class="zcs-quick-action-icon zcs-font-medium zc-li-outline ui-3-alert"></i><span class="zcs-quick-action-text">Acknowledge Warning</span></a></li>
+        <li class="zcs-quick-action-item zcs-card zcs-px-12 zcs-py-8 zcs-box-border"><a class="zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary zcs-cursor-pointer" href="#Report:FMS_Employee_Master_List?Vendor_Email=<%=vendorParam%>"><i class="zcs-quick-action-icon zcs-font-medium zc-li-outline users-single-02"></i><span class="zcs-quick-action-text">My Employee Roster</span></a></li>
+        <li class="zcs-quick-action-item zcs-card zcs-px-12 zcs-py-8 zcs-box-border"><a class="zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary zcs-cursor-pointer" href="#Report:Asset_Reference_List_FMS"><i class="zcs-quick-action-icon zcs-font-medium zc-li-outline furniture-lamp"></i><span class="zcs-quick-action-text">Asset Reference</span></a></li>
+        <li class="zcs-quick-action-item zcs-card zcs-px-12 zcs-py-8 zcs-box-border"><a class="zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary zcs-cursor-pointer" href="#Report:FMS_Employee_Attendance_Data?Vendor_Email=<%=vendorParam%>"><i class="zcs-quick-action-icon zcs-font-medium zc-li-outline ui-1-calendar-date"></i><span class="zcs-quick-action-text">Attendance Data</span></a></li>
+      </ul>
+      <div class="fms-note zcs-font-14 zcs-lh-body"><i class="zc-li-outline ui-1-check-circle-08"></i> Use the embedded lists below for filtered operational records. Report actions are available inside the relevant list rows.</div>
+    </aside>
+  </section>
+</div>

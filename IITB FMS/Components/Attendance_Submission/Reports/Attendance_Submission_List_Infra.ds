@@ -1,0 +1,59 @@
+list Attendance_Submission_List_Infra
+{
+    displayName = "Attendance Submission List (Infra View)"
+    show all rows from Attendance_Submission
+    (
+        Submission_ID
+        Vendor
+        Month
+        Month_Number
+        Year
+        FMS_Attendance_File
+        Infra_Verified_Excel
+        Status
+        custom action "Approve"
+        (
+            workflow = WF_Approve_Attendance_Submission
+            show action for each record = true
+            column header = "Approve"
+            success message = "Attendance approved."
+            condition = (Status == "Pending Validation")
+        )
+        custom action "Reject"
+        (
+            workflow = WF_Reject_Attendance_Submission
+            show action for each record = true
+            column header = "Reject"
+            success message = "Opening rejection form."
+            condition = (Status == "Pending Validation")
+        )
+    )
+    filters
+    (
+        Vendor
+        Month
+        Year
+        Status
+    )
+    sort by
+    (
+        Status ascending
+        Year descending
+        Month_Number descending
+    )
+    conditional formatting
+    (
+        "Pending Validation"
+        {
+            condition = (Status == "Pending Validation")
+            fields = [Submission_ID, Vendor, Month, Year, Status]
+            format = "background-color:#CFE2FF;color:#084298"
+        }
+        "Rejected"
+        {
+            condition = (Status == "Rejected")
+            fields = [Submission_ID, Vendor, Month, Year, Status]
+            format = "background-color:#F8D7DA;color:#842029"
+        }
+    )
+}

@@ -1,0 +1,34 @@
+Maintenance_Task_History_On_Validate as "Maintenance Task History On Validate"
+{
+    type = form
+    form = Maintenance_Task_History
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                taskRec = Maintenance_Task[ID == input.Maintenance_Task];
+                if(taskRec.count() == 0)
+                {
+                    alert "Select a valid maintenance task.";
+                    cancel submit;
+                }
+                if(taskRec.count() > 0)
+                {
+                    input.Vendor_Email = taskRec.Vendor_Email;
+                }
+                if(input.Updated_By_Email in {"", " ", "null"})
+                {
+                    input.Updated_By_Email = zoho.loginuser;
+                }
+                if(input.Updated_On == null)
+                {
+                    input.Updated_On = zoho.currenttime;
+                }
+            )
+        }
+    }
+}

@@ -1,0 +1,21 @@
+Warning_Penalty_Delete_Validate as "Warning Penalty Delete Validation"
+{
+    type = form
+    form = Warning_Penalty
+    record event = on delete
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Status not in {"Raised", "Cancelled"} || input.Action_Taken_By_FA not in {"", " ", "null"} || input.FMS_Acknowledgement_Comment not in {"", " ", "null"})
+                {
+                    alert "Only raised or cancelled cases with no action/acknowledgement history can be deleted. Remove dependencies manually before administrative cleanup.";
+                    cancel delete;
+                }
+            )
+        }
+    }
+}

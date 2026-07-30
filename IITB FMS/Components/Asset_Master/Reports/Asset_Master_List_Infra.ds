@@ -1,0 +1,35 @@
+list Asset_Master_List_Infra
+{
+    displayName = "Asset Master List - Infra"
+    show all rows from Asset_Master [Status == "Active"]
+    (
+        Asset_Code
+        Asset_Name
+        Category
+        Location
+        Brand_Model
+        Purchase_Date
+        Warranty_Expiry
+        Next_Maintenance_Date
+        Status
+    )
+    filters
+    (
+        Category
+        Status
+        Next_Maintenance_Date
+    )
+    sort by
+    (
+        Next_Maintenance_Date ascending
+    )
+    conditional formatting
+    (
+        "Maintenance Due Soon"
+        {
+            condition = (Next_Maintenance_Date in next 7 days)
+            fields = [Asset_Code, Asset_Name, Next_Maintenance_Date]
+            format = "background-color:#FFF4CC;color:#8A5A00;font-weight:bold"
+        }
+    )
+}

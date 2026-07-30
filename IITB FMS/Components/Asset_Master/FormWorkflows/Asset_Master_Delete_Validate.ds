@@ -1,0 +1,23 @@
+Asset_Master_Delete_Validate as "Asset Master Delete Validation"
+{
+    type = form
+    form = Asset_Master
+    record event = on delete
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                schedules = Maintenance_Schedule_Configuration[Asset == input.ID];
+                tasks = Maintenance_Task[Asset == input.ID];
+                if(schedules.count() > 0 || tasks.count() > 0)
+                {
+                    alert "This asset is referenced by maintenance schedules or tasks. Remove dependent records manually before deletion.";
+                    cancel delete;
+                }
+            )
+        }
+    }
+}

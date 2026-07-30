@@ -1,0 +1,38 @@
+Warning_Penalty_On_Load as "Warning Penalty On Load"
+{
+    type = form
+    form = Warning_Penalty
+    record event = on add or edit
+
+    on load
+    {
+        actions
+        {
+            custom deluge script
+            (
+                disable Vendor_Email;
+                disable Raised_By_Email;
+                disable Status;
+                disable Action_Taken_By_FA;
+                disable Action_Taken_Date;
+                disable FMS_Acknowledgement_Comment;
+                clear Employee;
+                clear Warning_Penalty_Type;
+                if(input.Vendor != null)
+                {
+                    for each employeeRec in FMS_Employee_Master[Vendor == input.Vendor && Status == "Active"] sort by Employee_Name
+                    {
+                        Employee:ui.add(employeeRec.ID);
+                    }
+                }
+                if(input.Issue_Type not in {"", " ", "null"})
+                {
+                    for each warningTypeRec in Warning_Penalty_Type_Master[Issue_Type == input.Issue_Type && Status == "Active"] sort by Type_Name
+                    {
+                        Warning_Penalty_Type:ui.add(warningTypeRec.ID);
+                    }
+                }
+            )
+        }
+    }
+}

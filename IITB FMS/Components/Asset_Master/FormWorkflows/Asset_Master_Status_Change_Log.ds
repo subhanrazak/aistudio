@@ -1,0 +1,32 @@
+Asset_Master_Status_Change_Log as "Asset Master Status Change Log"
+{
+    type = form
+    form = Asset_Master
+    record event = on edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(old.Status != input.Status)
+                {
+                    insert into Audit_Log
+                    [
+                        Module_Name = "Maintenance"
+                        Source_Form = "Asset_Master"
+                        Source_Record_ID = input.ID
+                        Source_Record_Label = input.Asset_Code
+                        Action_Type = "Status Changed"
+                        Old_Status = old.Status
+                        New_Status = input.Status
+                        Performed_By_Email = zoho.loginuser
+                        Performed_On = zoho.currenttime
+                        Details = "Asset status changed."
+                    ]
+                }
+            )
+        }
+    }
+}

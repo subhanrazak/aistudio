@@ -1,0 +1,36 @@
+Action_Capture_On_Validate as "Action Capture On Validate"
+{
+    type = form
+    form = Action_Capture
+    record event = on add
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Target_Form in {"", " ", "null"} || input.Target_Record_ID == null)
+                {
+                    alert "This action must be opened from a report button.";
+                    cancel submit;
+                }
+                if(input.Action_Code in {"ATTENDANCE_REJECT", "ATTENDANCE_INVOICE_REJECT", "CONSUMABLE_INFRA_REJECT", "CONSUMABLE_FA_REJECT", "MAINTENANCE_REJECT"} && input.Reason in {"", " ", "null"})
+                {
+                    alert "Reason is required for rejection.";
+                    cancel submit;
+                }
+                if(input.Action_Code == "WARNING_FA_ACTION" && (input.Action_Taken in {"", " ", "null"} || input.Action_Taken_Date == null))
+                {
+                    alert "Action taken and action taken date are required.";
+                    cancel submit;
+                }
+                if(input.Action_Code == "WARNING_ACKNOWLEDGE" && input.Acknowledgement_Comment in {"", " ", "null"})
+                {
+                    alert "Acknowledgement comment is required.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}

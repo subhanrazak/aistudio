@@ -1,0 +1,36 @@
+Attendance_Submission_On_Success as "Attendance Submission On Success"
+{
+    type = form
+    form = Attendance_Submission
+    record event = on add or edit
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.FMS_Attendance_File != null && (input.Status == "Pending Upload" || input.Status == "Rejected"))
+                {
+                    input.Date_of_Submission = zoho.currentdate;
+                    input.Submitted_By_Email = zoho.loginuser;
+                    oldStatus = input.Status;
+                    input.Status = "Pending Validation";
+                    insert into Audit_Log
+                    [
+                        Module_Name = "Attendance"
+                        Source_Form = "Attendance_Submission"
+                        Source_Record_ID = input.ID
+                        Source_Record_Label = input.Submission_ID.toString()
+                        Action_Type = "Uploaded"
+                        Old_Status = oldStatus
+                        New_Status = "Pending Validation"
+                        Performed_By_Email = zoho.loginuser
+                        Performed_On = zoho.currenttime
+                        Details = "Attendance file uploaded for validation."
+                    ]
+                }
+            )
+        }
+    }
+}

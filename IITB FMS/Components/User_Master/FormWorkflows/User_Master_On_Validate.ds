@@ -1,0 +1,43 @@
+User_Master_On_Validate as "User Master On Validate"
+{
+    type = form
+    form = User_Master
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Status == "Active" && input.Role == "Vendor")
+                {
+                    if(input.Email in {"", " ", "null"})
+                    {
+                        alert "Email is required for active vendors.";
+                        cancel submit;
+                    }
+                    if(input.Vendor_Code in {"", " ", "null"} || input.GSTIN in {"", " ", "null"} || input.PAN_Number in {"", " ", "null"} || input.Bank_Account_Number in {"", " ", "null"} || input.IFSC_Code in {"", " ", "null"} || input.Bank_Name in {"", " ", "null"} || input.Contact_Person in {"", " ", "null"} || input.Contact_Phone in {"", " ", "null"} || input.Billing_Address in {"", " ", "null"})
+                    {
+                        alert "Vendor tax, bank, contact, and billing details are required for active vendors.";
+                        cancel submit;
+                    }
+                }
+                if(input.Status == "Active" && (input.Role == "Infra Team" || input.Role == "F&A Team") && input.Email in {"", " ", "null"})
+                {
+                    alert "Email is required for active internal notification recipients.";
+                    cancel submit;
+                }
+                if(input.Email not in {"", " ", "null"})
+                {
+                    duplicateUsers = User_Master[Email == input.Email && ID != input.ID && Status == "Active"];
+                    if(duplicateUsers.count() > 0)
+                    {
+                        alert "Another active User Master record already uses this email.";
+                        cancel submit;
+                    }
+                }
+            )
+        }
+    }
+}

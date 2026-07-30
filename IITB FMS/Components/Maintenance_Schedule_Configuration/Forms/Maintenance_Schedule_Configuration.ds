@@ -1,0 +1,143 @@
+form Maintenance_Schedule_Configuration
+{
+    displayname = "Maintenance Schedule Configuration"
+
+    Schedule_Details
+    (
+        type = section
+        displayname = "Schedule Details"
+        row = 1
+        column = 0
+    )
+    Schedule_ID
+    (
+        type = autonumber
+        displayname = "Schedule ID"
+        start index = 1
+        row = 1
+        column = 1
+    )
+    must have Asset
+    (
+        type = picklist
+        displayname = "Asset"
+        values = Asset_Master[Status == "Active"].ID
+        displayformat = [Asset_Name]
+        searchable = true
+        row = 1
+        column = 1
+        width = medium
+    )
+    must have Frequency
+    (
+        type = picklist
+        displayname = "Frequency"
+        values = {"Weekly", "Monthly", "Quarterly", "Other"}
+        row = 1
+        column = 2
+        width = medium
+    )
+    Interval
+    (
+        type = number
+        displayname = "Interval (Days)"
+        row = 1
+        column = 1
+        width = medium
+    )
+    must have Assigned_To
+    (
+        type = picklist
+        displayname = "Assigned To"
+        values = FMS_Employee_Master[Status == "Active"].ID
+        displayformat = [Employee_Name]
+        searchable = true
+        row = 1
+        column = 2
+        width = medium
+    )
+
+    Vendor_Due_Dates
+    (
+        type = section
+        displayname = "Vendor and Due Dates"
+        visibility = true
+        row = 2
+        column = 1
+    )
+    Vendor
+    (
+        type = picklist
+        displayname = "Vendor"
+        values = User_Master[Role == "Vendor" && Status == "Active"].ID
+        displayformat = [User_Name]
+        searchable = true
+        row = 2
+        column = 1
+        width = medium
+    )
+    Vendor_Email
+    (
+        type = email
+        displayname = "Vendor Email"
+        row = 2
+        column = 2
+        width = medium
+    )
+    must have Start_Date
+    (
+        type = date
+        displayname = "Start Date"
+        row = 2
+        column = 1
+        width = medium
+    )
+    must have Next_Due_Date
+    (
+        type = date
+        displayname = "Next Due Date"
+        row = 2
+        column = 2
+        width = medium
+    )
+    must have Status
+    (
+        type = picklist
+        displayname = "Status"
+        values = {"Active", "Inactive"}
+        initial value = "Active"
+        row = 2
+        column = 1
+        width = medium
+    )
+
+    actions
+    {
+        on add
+        {
+            Submit
+            (
+                type = submit
+                displayname = "Submit"
+            )
+            Reset
+            (
+                type = reset
+                displayname = "Reset"
+            )
+        }
+        on edit
+        {
+            Update
+            (
+                type = submit
+                displayname = "Update"
+            )
+            Cancel
+            (
+                type = cancel
+                displayname = "Cancel"
+            )
+        }
+    }
+}

@@ -1,0 +1,44 @@
+Attendance_Submission_On_Validate as "Attendance Submission On Validate"
+{
+    type = form
+    form = Attendance_Submission
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                monthList = {"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"};
+                input.Month_Number = monthList.indexOf(input.Month) + 1;
+                vendorRec = User_Master[ID == input.Vendor];
+                if(vendorRec.count() == 0 || vendorRec.Role != "Vendor" || vendorRec.Status != "Active")
+                {
+                    alert "Select an active vendor.";
+                    cancel submit;
+                }
+                if(vendorRec.count() > 0)
+                {
+                    input.Vendor_Email = vendorRec.Email;
+                }
+                duplicates = Attendance_Submission[Vendor == input.Vendor && Month == input.Month && Year == input.Year && ID != input.ID];
+                if(duplicates.count() > 0)
+                {
+                    alert "Attendance submission already exists for this vendor, month, and year.";
+                    cancel submit;
+                }
+                if(input.Status == "Pending Validation" && input.FMS_Attendance_File == null)
+                {
+                    alert "FMS Attendance File is required before validation.";
+                    cancel submit;
+                }
+                if(input.Status == "Approved" && input.Infra_Verified_Excel == null)
+                {
+                    alert "Infra Verified Excel is required before approval.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}

@@ -1,0 +1,50 @@
+Maintenance_Task_On_Validate as "Maintenance Task On Validate"
+{
+    type = form
+    form = Maintenance_Task
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                scheduleRec = Maintenance_Schedule_Configuration[ID == input.Schedule];
+                if(scheduleRec.count() == 0 || scheduleRec.Status != "Active")
+                {
+                    alert "Select an active maintenance schedule.";
+                    cancel submit;
+                }
+                if(scheduleRec.count() > 0)
+                {
+                    input.Asset = scheduleRec.Asset;
+                    input.Assigned_To = scheduleRec.Assigned_To;
+                    input.Vendor = scheduleRec.Vendor;
+                    input.Vendor_Email = scheduleRec.Vendor_Email;
+                    input.Frequency = scheduleRec.Frequency;
+                    if(input.Task_Due_Date == null)
+                    {
+                        input.Task_Due_Date = scheduleRec.Next_Due_Date;
+                    }
+                }
+                duplicates = Maintenance_Task[Schedule == input.Schedule && Task_Due_Date == input.Task_Due_Date && ID != input.ID];
+                if(duplicates.count() > 0)
+                {
+                    alert "A maintenance task already exists for this schedule and due date.";
+                    cancel submit;
+                }
+                if((input.Status == "Submitted" || input.Status == "Approved") && input.Maintenance_Report_File == null)
+                {
+                    alert "Maintenance report file is required before submission or approval.";
+                    cancel submit;
+                }
+                if(input.Status == "Rejected" && input.Rejection_Remarks in {"", " ", "null"})
+                {
+                    alert "Rejection remarks are required when a task is rejected.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}

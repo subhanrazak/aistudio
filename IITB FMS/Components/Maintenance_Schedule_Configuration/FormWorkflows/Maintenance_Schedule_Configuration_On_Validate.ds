@@ -1,0 +1,62 @@
+Maintenance_Schedule_Configuration_On_Validate as "Maintenance Schedule Configuration On Validate"
+{
+    type = form
+    form = Maintenance_Schedule_Configuration
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                assetRec = Asset_Master[ID == input.Asset];
+                if(assetRec.count() == 0 || assetRec.Status != "Active")
+                {
+                    alert "Select an active asset.";
+                    cancel submit;
+                }
+                employeeRec = FMS_Employee_Master[ID == input.Assigned_To];
+                if(employeeRec.count() == 0 || employeeRec.Status != "Active")
+                {
+                    alert "Select an active FMS employee.";
+                    cancel submit;
+                }
+                if(employeeRec.count() > 0)
+                {
+                    input.Vendor = employeeRec.Vendor;
+                    input.Vendor_Email = employeeRec.Vendor_Email;
+                }
+                if(input.Frequency == "Other" && ifnull(input.Interval,0) <= 0)
+                {
+                    alert "Interval must be greater than zero when frequency is Other.";
+                    cancel submit;
+                }
+                if(input.Start_Date != null && input.Frequency not in {"", " ", "null"})
+                {
+                    if(input.Frequency == "Weekly")
+                    {
+                        input.Next_Due_Date = input.Start_Date.addDay(7);
+                    }
+                    else if(input.Frequency == "Monthly")
+                    {
+                        input.Next_Due_Date = input.Start_Date.addMonth(1);
+                    }
+                    else if(input.Frequency == "Quarterly")
+                    {
+                        input.Next_Due_Date = input.Start_Date.addMonth(3);
+                    }
+                    else if(input.Frequency == "Other")
+                    {
+                        input.Next_Due_Date = input.Start_Date.addDay(input.Interval);
+                    }
+                }
+                if(input.Next_Due_Date < input.Start_Date)
+                {
+                    alert "Next due date cannot be before start date.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}

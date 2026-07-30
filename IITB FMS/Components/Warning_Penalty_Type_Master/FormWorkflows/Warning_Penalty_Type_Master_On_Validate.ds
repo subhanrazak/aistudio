@@ -1,0 +1,22 @@
+Warning_Penalty_Type_Master_On_Validate as "Warning Penalty Type Master On Validate"
+{
+    type = form
+    form = Warning_Penalty_Type_Master
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                duplicateTypes = Warning_Penalty_Type_Master[Issue_Type == input.Issue_Type && Type_Name == input.Type_Name && Status == "Active" && ID != input.ID];
+                if(input.Status == "Active" && duplicateTypes.count() > 0)
+                {
+                    alert "An active type with this name already exists for the selected issue type.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}

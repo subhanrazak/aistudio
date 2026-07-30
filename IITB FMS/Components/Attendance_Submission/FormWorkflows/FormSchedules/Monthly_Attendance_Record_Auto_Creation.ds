@@ -1,0 +1,51 @@
+Monthly_Attendance_Record_Auto_Creation as "Monthly Attendance Record Auto-Creation"
+{
+    type = schedule
+    start = "2025-01-01 09:00:00"
+    frequency = monthly
+    time zone = "Asia/Kolkata"
+
+    on start
+    {
+        actions
+        {
+            on load
+            (
+                monthList = {"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"};
+                currentMonthNumber = zoho.currentdate.getMonth();
+                currentMonthName = monthList.get(currentMonthNumber - 1);
+                currentYear = zoho.currentdate.getYear();
+                vendors = User_Master[Role == "Vendor" && Status == "Active"];
+                for each vendorRec in vendors
+                {
+                    existingSubmissions = Attendance_Submission[Vendor == vendorRec.ID && Month_Number == currentMonthNumber && Year == currentYear];
+                    if(existingSubmissions.count() == 0)
+                    {
+                        newSubmission = insert into Attendance_Submission
+                        [
+                            Month = currentMonthName
+                            Month_Number = currentMonthNumber
+                            Year = currentYear
+                            Vendor = vendorRec.ID
+                            Vendor_Email = vendorRec.Email
+                            Date_of_Submission = zoho.currentdate
+                            Status = "Pending Upload"
+                        ];
+                        insert into Audit_Log
+                        [
+                            Module_Name = "Attendance"
+                            Source_Form = "Attendance_Submission"
+                            Source_Record_ID = newSubmission
+                            Source_Record_Label = vendorRec.User_Name + " - " + currentMonthName + " " + currentYear
+                            Action_Type = "Created"
+                            New_Status = "Pending Upload"
+                            Performed_By_Email = zoho.loginuser
+                            Performed_On = zoho.currenttime
+                            Details = "Monthly attendance submission auto-created."
+                        ]
+                    }
+                }
+            )
+        }
+    }
+}

@@ -1,0 +1,53 @@
+Warning_Penalty_On_Validate as "Warning Penalty On Validate"
+{
+    type = form
+    form = Warning_Penalty
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                vendorRec = User_Master[ID == input.Vendor];
+                if(vendorRec.count() == 0 || vendorRec.Role != "Vendor" || vendorRec.Status != "Active")
+                {
+                    alert "Select an active vendor.";
+                    cancel submit;
+                }
+                if(vendorRec.count() > 0)
+                {
+                    input.Vendor_Email = vendorRec.Email;
+                }
+                employeeRec = FMS_Employee_Master[ID == input.Employee];
+                if(employeeRec.count() == 0 || employeeRec.Status != "Active" || employeeRec.Vendor != input.Vendor)
+                {
+                    alert "Select an active employee for the selected vendor.";
+                    cancel submit;
+                }
+                typeRec = Warning_Penalty_Type_Master[ID == input.Warning_Penalty_Type];
+                if(typeRec.count() == 0 || typeRec.Status != "Active" || typeRec.Issue_Type != input.Issue_Type)
+                {
+                    alert "Select an active warning / penalty type that matches the issue type.";
+                    cancel submit;
+                }
+                if(input.Status == "Pending F&A Action" && input.Issue_Type != "Disciplinary")
+                {
+                    alert "Only disciplinary cases can be pending F&A action.";
+                    cancel submit;
+                }
+                if(input.Status == "Pending FMS Acknowledgement" && input.Issue_Type == "Disciplinary" && (input.Action_Taken_By_FA in {"", " ", "null"} || input.Action_Taken_Date == null))
+                {
+                    alert "F&A action and action date are required before vendor acknowledgement.";
+                    cancel submit;
+                }
+                if(input.Status == "Acknowledged" && input.FMS_Acknowledgement_Comment in {"", " ", "null"})
+                {
+                    alert "Acknowledgement comment is required.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}

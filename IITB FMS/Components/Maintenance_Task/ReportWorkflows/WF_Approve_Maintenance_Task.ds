@@ -1,0 +1,84 @@
+WF_Approve_Maintenance_Task as "Approve Maintenance Task"
+{
+    type = functions
+    form = Maintenance_Task
+    execution type = for each record
+
+    on start
+    {
+        actions
+        {
+            on click
+            (
+                if(input.Status == "Submitted" && input.Maintenance_Report_File != null)
+                {
+                    oldStatus = input.Status;
+                    input.Status = "Approved";
+                    scheduleRec = Maintenance_Schedule_Configuration[ID == input.Schedule];
+                    if(scheduleRec.count() > 0)
+                    {
+                        if(scheduleRec.Frequency == "Weekly")
+                        {
+                            scheduleRec.Next_Due_Date = scheduleRec.Next_Due_Date.addDay(7);
+                        }
+                        else if(scheduleRec.Frequency == "Monthly")
+                        {
+                            scheduleRec.Next_Due_Date = scheduleRec.Next_Due_Date.addMonth(1);
+                        }
+                        else if(scheduleRec.Frequency == "Quarterly")
+                        {
+                            scheduleRec.Next_Due_Date = scheduleRec.Next_Due_Date.addMonth(3);
+                        }
+                        else if(scheduleRec.Frequency == "Other" && ifnull(scheduleRec.Interval,0) > 0)
+                        {
+                            scheduleRec.Next_Due_Date = scheduleRec.Next_Due_Date.addDay(scheduleRec.Interval);
+                        }
+                        earliestSchedules = Maintenance_Schedule_Configuration[Asset == scheduleRec.Asset && Status == "Active"] sort by Next_Due_Date range from 1 to 1;
+                        assetRec = Asset_Master[ID == scheduleRec.Asset];
+                        if(assetRec.count() > 0 && earliestSchedules.count() > 0)
+                        {
+                            assetRec.Next_Maintenance_Date = earliestSchedules.Next_Due_Date;
+                        }
+                    }
+                    insert into Maintenance_Task_History
+                    [
+                        Maintenance_Task = input.ID
+                        Vendor_Email = input.Vendor_Email
+                        Status = "Approved"
+                        Comments = "Task approved by Infra."
+                        Updated_By_Email = zoho.loginuser
+                        Updated_On = zoho.currenttime
+                    ]
+                    insert into Audit_Log
+                    [
+                        Module_Name = "Maintenance"
+                        Source_Form = "Maintenance_Task"
+                        Source_Record_ID = input.ID
+                        Source_Record_Label = input.Task_ID.toString()
+                        Action_Type = "Approved"
+                        Old_Status = oldStatus
+                        New_Status = "Approved"
+                        Performed_By_Email = zoho.loginuser
+                        Performed_On = zoho.currenttime
+                        Details = "Maintenance task approved and schedule advanced."
+                    ]
+                    if(input.Vendor_Email not in {"", " ", "null"})
+                    {
+                        sendmail
+                        (
+                            from : zoho.adminuserid
+                            to : input.Vendor_Email
+                            subject : "MAINTENANCE_APPROVED: " + input.Task_ID
+                            message : "Maintenance task has been approved."
+                            attachments : file : Maintenance_Report_File
+                        )
+                    }
+                }
+                else
+                {
+                    // Report-button workflows cannot use alert; the report action condition/message handles invalid approvals.
+                }
+            )
+        }
+    }
+}

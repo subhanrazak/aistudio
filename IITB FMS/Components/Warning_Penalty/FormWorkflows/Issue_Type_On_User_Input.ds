@@ -1,0 +1,25 @@
+Warning_Penalty_Issue_Type_On_User_Input as "Warning Penalty Issue Type On User Input"
+{
+    type = form
+    form = Warning_Penalty
+    record event = on add or edit
+
+    on user input of Issue_Type
+    {
+        actions
+        {
+            custom deluge script
+            (
+                input.Warning_Penalty_Type = null;
+                clear Warning_Penalty_Type;
+                if(input.Issue_Type not in {"", " ", "null"})
+                {
+                    for each warningTypeRec in Warning_Penalty_Type_Master[Issue_Type == input.Issue_Type && Status == "Active"] sort by Type_Name
+                    {
+                        Warning_Penalty_Type:ui.add(warningTypeRec.ID);
+                    }
+                }
+            )
+        }
+    }
+}

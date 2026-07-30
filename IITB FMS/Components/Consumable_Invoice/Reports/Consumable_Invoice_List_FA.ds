@@ -1,0 +1,46 @@
+list Consumable_Invoice_List_FA
+{
+    displayName = "Consumable Invoice List (F&A View)"
+    show all rows from Consumable_Invoice [Status == "Pending F&A Validation"]
+    (
+        Invoice_ID
+        Vendor
+        Invoice_Number
+        Invoice_Date
+        Consumable_Category
+        Sub_Total
+        Tax
+        Total_Amount
+        Invoice_File
+        Supporting_Documents
+        Status
+        Submitted_Date
+        custom action "Approve"
+        (
+            workflow = WF_FA_Approve_Consumable_Invoice
+            show action for each record = true
+            column header = "Approve"
+            success message = "Consumable invoice approved."
+            condition = (Status == "Pending F&A Validation")
+        )
+        custom action "Reject"
+        (
+            workflow = WF_FA_Reject_Consumable_Invoice
+            show action for each record = true
+            column header = "Reject"
+            success message = "Opening rejection form."
+            condition = (Status == "Pending F&A Validation")
+        )
+    )
+    filters
+    (
+        Vendor
+        Consumable_Category
+        Status
+        Submitted_Date
+    )
+    sort by
+    (
+        Submitted_Date ascending
+    )
+}

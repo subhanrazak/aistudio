@@ -1,0 +1,47 @@
+Consumable_Invoice_On_Success as "Consumable Invoice On Success"
+{
+    type = form
+    form = Consumable_Invoice
+    record event = on add
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                input.Submitted_By_Email = zoho.loginuser;
+                input.Submitted_Date = zoho.currenttime;
+                input.Status = "Pending Infra Validation";
+                insert into Audit_Log
+                [
+                    Module_Name = "Consumables"
+                    Source_Form = "Consumable_Invoice"
+                    Source_Record_ID = input.ID
+                    Source_Record_Label = input.Invoice_Number
+                    Action_Type = "Submitted"
+                    New_Status = "Pending Infra Validation"
+                    Performed_By_Email = zoho.loginuser
+                    Performed_On = zoho.currenttime
+                    Details = "Consumable invoice submitted for Infra validation."
+                ]
+                infraRecipients = List();
+                for each infraUserRec in User_Master[Role == "Infra Team" && Status == "Active"]
+                {
+                    infraRecipients.add(infraUserRec.Email);
+                }
+                if(infraRecipients.size() > 0)
+                {
+                    sendmail
+                    (
+                        from : zoho.adminuserid
+                        to : infraRecipients
+                        subject : "Consumable invoice submitted: " + input.Invoice_Number
+                        message : "A consumable invoice has been submitted by " + input.Vendor_Email + " and is pending Infra validation. Amount: " + input.Total_Amount
+                        attachments : file : Invoice_File
+                    )
+                }
+            )
+        }
+    }
+}

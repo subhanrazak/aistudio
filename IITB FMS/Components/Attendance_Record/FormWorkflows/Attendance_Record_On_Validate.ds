@@ -1,0 +1,34 @@
+Attendance_Record_On_Validate as "Attendance Record On Validate"
+{
+    type = form
+    form = Attendance_Record
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                employeeRec = FMS_Employee_Master[ID == input.Employee];
+                if(employeeRec.count() > 0)
+                {
+                    input.Biometric_Code = employeeRec.Biometric_Code;
+                    input.Vendor = employeeRec.Vendor;
+                    input.Vendor_Email = employeeRec.Vendor_Email;
+                }
+                if(input.Date != null)
+                {
+                    input.Month = input.Date.getMonth();
+                    input.Year = input.Date.getYear();
+                }
+                duplicates = Attendance_Record[Employee == input.Employee && Date == input.Date && ID != input.ID];
+                if(duplicates.count() > 0)
+                {
+                    alert "Attendance record already exists for this employee and date.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}

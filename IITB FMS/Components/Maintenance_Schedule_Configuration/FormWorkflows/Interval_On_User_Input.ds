@@ -1,0 +1,20 @@
+Maintenance_Schedule_Interval_On_User_Input as "Maintenance Schedule Interval On User Input"
+{
+    type = form
+    form = Maintenance_Schedule_Configuration
+    record event = on add or edit
+
+    on user input of Interval
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Frequency == "Other" && input.Start_Date != null && ifnull(input.Interval,0) > 0)
+                {
+                    input.Next_Due_Date = input.Start_Date.addDay(input.Interval);
+                }
+            )
+        }
+    }
+}

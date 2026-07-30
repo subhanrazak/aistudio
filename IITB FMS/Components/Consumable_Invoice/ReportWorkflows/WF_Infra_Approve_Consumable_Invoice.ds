@@ -1,0 +1,50 @@
+WF_Infra_Approve_Consumable_Invoice as "Infra Approve Consumable Invoice"
+{
+    type = functions
+    form = Consumable_Invoice
+    execution type = for each record
+
+    on start
+    {
+        actions
+        {
+            on click
+            (
+                if(input.Status == "Pending Infra Validation" && input.Invoice_File != null)
+                {
+                    oldStatus = input.Status;
+                    input.Status = "Pending F&A Validation";
+                    insert into Audit_Log
+                    [
+                        Module_Name = "Consumables"
+                        Source_Form = "Consumable_Invoice"
+                        Source_Record_ID = input.ID
+                        Source_Record_Label = input.Invoice_Number
+                        Action_Type = "Approved"
+                        Old_Status = oldStatus
+                        New_Status = "Pending F&A Validation"
+                        Performed_By_Email = zoho.loginuser
+                        Performed_On = zoho.currenttime
+                        Details = "Infra approved consumable invoice for F&A validation."
+                    ]
+                    faRecipients = List();
+                    for each faUserRec in User_Master[Role == "F&A Team" && Status == "Active"]
+                    {
+                        faRecipients.add(faUserRec.Email);
+                    }
+                    if(faRecipients.size() > 0)
+                    {
+                        sendmail
+                        (
+                            from : zoho.adminuserid
+                            to : faRecipients
+                            subject : "Consumable invoice pending F&A: " + input.Invoice_Number
+                            message : "Infra has approved consumable invoice " + input.Invoice_Number + ". It is pending F&A validation. Amount: " + input.Total_Amount
+                            attachments : file : Invoice_File
+                        )
+                    }
+                }
+            )
+        }
+    }
+}

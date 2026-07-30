@@ -1,0 +1,34 @@
+WF_Approve_Attendance_Submission as "Approve Attendance Submission"
+{
+    type = functions
+    form = Attendance_Submission
+    execution type = for each record
+
+    on start
+    {
+        actions
+        {
+            on click
+            (
+                if(input.Status == "Pending Validation" && input.Infra_Verified_Excel != null)
+                {
+                    oldStatus = input.Status;
+                    input.Status = "Approved";
+                    insert into Audit_Log
+                    [
+                        Module_Name = "Attendance"
+                        Source_Form = "Attendance_Submission"
+                        Source_Record_ID = input.ID
+                        Source_Record_Label = input.Submission_ID.toString()
+                        Action_Type = "Approved"
+                        Old_Status = oldStatus
+                        New_Status = "Approved"
+                        Performed_By_Email = zoho.loginuser
+                        Performed_On = zoho.currenttime
+                        Details = "Attendance submission approved."
+                    ]
+                }
+            )
+        }
+    }
+}

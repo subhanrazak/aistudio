@@ -1,0 +1,21 @@
+Email_Template_Delete_Validate as "Email Template Delete Validation"
+{
+    type = form
+    form = Email_Template
+    record event = on delete
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Status == "Active")
+                {
+                    alert "Deactivate the email template before deleting it. Workflows skip emails when templates are inactive or missing.";
+                    cancel delete;
+                }
+            )
+        }
+    }
+}

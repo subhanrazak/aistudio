@@ -1,0 +1,26 @@
+Maintenance_Task_Schedule_On_User_Input as "Maintenance Task Schedule On User Input"
+{
+    type = form
+    form = Maintenance_Task
+    record event = on add or edit
+
+    on user input of Schedule
+    {
+        actions
+        {
+            custom deluge script
+            (
+                scheduleRec = Maintenance_Schedule_Configuration[ID == input.Schedule];
+                if(scheduleRec.count() > 0)
+                {
+                    input.Asset = scheduleRec.Asset;
+                    input.Assigned_To = scheduleRec.Assigned_To;
+                    input.Vendor = scheduleRec.Vendor;
+                    input.Vendor_Email = scheduleRec.Vendor_Email;
+                    input.Task_Due_Date = scheduleRec.Next_Due_Date;
+                    input.Frequency = scheduleRec.Frequency;
+                }
+            )
+        }
+    }
+}

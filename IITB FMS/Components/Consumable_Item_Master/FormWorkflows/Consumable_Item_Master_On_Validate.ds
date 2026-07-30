@@ -1,0 +1,27 @@
+Consumable_Item_Master_On_Validate as "Consumable Item Master On Validate"
+{
+    type = form
+    form = Consumable_Item_Master
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(ifnull(input.Unit_Price,0) <= 0)
+                {
+                    alert "Unit price must be greater than zero.";
+                    cancel submit;
+                }
+                duplicateItems = Consumable_Item_Master[Item_Name == input.Item_Name && Category == input.Category && Status == "Active" && ID != input.ID];
+                if(input.Status == "Active" && duplicateItems.count() > 0)
+                {
+                    alert "An active item with this name already exists in the selected category.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}

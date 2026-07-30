@@ -1,0 +1,22 @@
+Consumable_Category_Master_On_Validate as "Consumable Category Master On Validate"
+{
+    type = form
+    form = Consumable_Category_Master
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                duplicateCategories = Consumable_Category_Master[Category_Name == input.Category_Name && Status == "Active" && ID != input.ID];
+                if(input.Status == "Active" && duplicateCategories.count() > 0)
+                {
+                    alert "An active consumable category with this name already exists.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}
