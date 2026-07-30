@@ -1,0 +1,40 @@
+Log_Steel_Grade_Master_Data as "Log Steel Grade Master Data"
+{
+
+				type =  form
+				form = Steel_Grades
+
+				record event = on add or edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											auditAction = "Created";
+										existingAudit = Approval_Audit_Log[Module_Name == "Steel Grade" && Related_Record_ID == input.ID] range from 1 to 1;
+										if(existingAudit.count() > 0)
+										{
+											auditAction = "Updated";
+										}
+										relatedDisplay = input.Grade_Code + " - " + input.Grade_Name;
+										auditId = insert into Approval_Audit_Log
+										[
+											Module_Name="Steel Grade"
+											Related_Record_ID=input.ID
+											Related_Record_Display=relatedDisplay
+											Action=auditAction
+											To_Status=input.Active
+											Actor_Email=zoho.loginuserid
+											Action_On=zoho.currenttime
+											Remarks="Steel grade master data change logged by system workflow."
+											Added_User=zoho.loginuser
+										];
+										info "Steel Grade master-data " + auditAction + ": " + input.Grade_Code;
+						)
+					}
+				}
+
+			
+}

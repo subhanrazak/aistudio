@@ -1,0 +1,44 @@
+Log_Plant_Master_Data as "Log Plant Master Data"
+{
+
+				type =  form
+				form = Plants
+
+				record event = on add or edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											auditAction = "Created";
+										fromActive = "";
+										if(input.ID != null)
+										{
+											existingAudit = Approval_Audit_Log[Module_Name == "Plant" && Related_Record_ID == input.ID] range from 1 to 1;
+											if(existingAudit.count() > 0)
+											{
+												auditAction = "Updated";
+											}
+										}
+										relatedDisplay = input.Plant_Code + " - " + input.Plant_Name;
+										auditId = insert into Approval_Audit_Log
+										[
+											Module_Name="Plant"
+											Related_Record_ID=input.ID
+											Related_Record_Display=relatedDisplay
+											Action=auditAction
+											From_Status=fromActive
+											To_Status=input.Active
+											Actor_Email=zoho.loginuserid
+											Action_On=zoho.currenttime
+											Remarks="Plant master data change logged by system workflow."
+											Added_User=zoho.loginuser
+										];
+						)
+					}
+				}
+
+			
+}

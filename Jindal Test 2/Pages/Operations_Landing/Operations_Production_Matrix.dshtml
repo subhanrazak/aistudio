@@ -1,0 +1,185 @@
+<%
+selectedFYId = 0;
+selectedFYName = "No active financial year";
+if(input.Financial_Year != null && input.Financial_Year != 0)
+{
+	fyRows = Financial_Years[ID == input.Financial_Year];
+	for each fyRec in fyRows
+	{
+		if(selectedFYId == 0)
+		{
+			selectedFYId = fyRec.ID;
+			selectedFYName = fyRec.Year_Name;
+		}
+	}
+}
+if(selectedFYId == 0)
+{
+	fyRows = Financial_Years[Active == true] sort by Start_Date desc;
+	for each fyRec in fyRows
+	{
+		if(selectedFYId == 0)
+		{
+			selectedFYId = fyRec.ID;
+			selectedFYName = fyRec.Year_Name;
+		}
+	}
+}
+selectedPlantId = 0;
+if(input.Plant != null && input.Plant != 0)
+{
+	selectedPlantId = input.Plant;
+}
+selectedLineId = 0;
+if(input.Production_Line != null && input.Production_Line != 0)
+{
+	selectedLineId = input.Production_Line;
+}
+monthRows = Financial_Year_Months[ID == 0];
+if(selectedFYId != 0)
+{
+	monthRows = Financial_Year_Months[Financial_Year == selectedFYId && Included == true] sort by Month_Order;
+}
+if(selectedFYId == 0)
+{
+	approvedProductionPlans = Operations_Production_Plans[ID == 0];
+}
+else if(selectedPlantId != 0 && selectedLineId != 0)
+{
+	approvedProductionPlans = Operations_Production_Plans[Requested_Financial_Year == selectedFYId && Plant == selectedPlantId && Production_Line == selectedLineId && Status == "Operations Approved"] sort by Operations_Approved_On desc;
+}
+else if(selectedPlantId != 0)
+{
+	approvedProductionPlans = Operations_Production_Plans[Requested_Financial_Year == selectedFYId && Plant == selectedPlantId && Status == "Operations Approved"] sort by Operations_Approved_On desc;
+}
+else if(selectedLineId != 0)
+{
+	approvedProductionPlans = Operations_Production_Plans[Requested_Financial_Year == selectedFYId && Production_Line == selectedLineId && Status == "Operations Approved"] sort by Operations_Approved_On desc;
+}
+else
+{
+	approvedProductionPlans = Operations_Production_Plans[Requested_Financial_Year == selectedFYId && Status == "Operations Approved"] sort by Operations_Approved_On desc;
+}
+productKeys = list();
+for each planRec in approvedProductionPlans
+{
+	for each productionRow in planRec.Product_Production_Lines
+	{
+		productTextForKey = "";
+		if(productionRow.Product != null)
+		{
+			productTextForKey = productionRow.Product.Grade_Code;
+		}
+		rowKey = productTextForKey + "|" + ifnull(productionRow.Series,"") + "|" + ifnull(productionRow.Width,"") + "|" + ifnull(productionRow.Thickness,"") + "|" + ifnull(productionRow.Productivity_MTPH,"");
+		if(!productKeys.contains(rowKey))
+		{
+			productKeys.add(rowKey);
+		}
+	}
+}
+%>
+<div class='op-section zcs-card'>
+	<div class='op-section-head'>
+		<div>
+			<h3>Product Production Plan Matrix</h3>
+			<p>Product, series, size, productivity, month-wise production tons, and FY totals from approved operations production plans.</p>
+		</div>
+		<span class='zcs-badge zcs-badge-filled zcs-badge-blue zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border'><span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'><%=approvedProductionPlans.count()%> Approved</span></span>
+	</div>
+	<% if(selectedFYId == 0 || monthRows.count() == 0) { %>
+	<div class='zcs-nodata-wrapper zcs-wh-full zcs-flex zcs-align-items-center zcs-justify-center zcs-text-center op-empty'>
+		<div class='zcs-nodata-content zcs-p-20 zcs-box-border'>
+			<i class='zc-li-outline files-2-folder-15 op-empty-icon'></i>
+			<h5 class='zcs-nodata-header zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-mt-10 zcs-mx-0 zcs-mb-0'>No FY month setup found</h5>
+			<p>Configure included Financial Year Months before reviewing production plans.</p>
+		</div>
+	</div>
+	<% } else if(productKeys.size() == 0) { %>
+	<div class='zcs-nodata-wrapper zcs-wh-full zcs-flex zcs-align-items-center zcs-justify-center zcs-text-center op-empty'>
+		<div class='zcs-nodata-content zcs-p-20 zcs-box-border'>
+			<i class='zc-li-outline ui-1-ban-bold op-empty-icon'></i>
+			<h5 class='zcs-nodata-header zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-mt-10 zcs-mx-0 zcs-mb-0'>No approved production plan</h5>
+			<p>Adjust filters or approve an Operations Production Plan for the selected FY, plant, and production line.</p>
+		</div>
+	</div>
+	<% } else { %>
+	<div class='zcs-table-wrapper op-matrix-wrapper zcs-rounded-sm zcs-box-border zcs-relative'>
+		<table class='zcs-w-full op-matrix-table op-production-table'>
+			<thead class='zcs-sticky'>
+				<tr>
+					<th class='op-sticky-col op-product-col zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Product/Series</th>
+					<th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Width</th>
+					<th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Thickness</th>
+					<th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Productivity</th>
+					<% for each monthRec in monthRows { %>
+					<th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'><%=monthRec.Month_Label%></th>
+					<% } %>
+					<th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>FY Total</th>
+				</tr>
+				<tr class='zcs-tspace'><th class='zcs-p-2 zcs-box-border' colspan='<%=monthRows.count() + 5%>'> </th></tr>
+			</thead>
+			<tbody>
+			<% for each productKey in productKeys
+			{
+				productText = "";
+				seriesText = "";
+				widthText = "";
+				thicknessText = "";
+				productivityText = "";
+				for each planRec in approvedProductionPlans
+				{
+					for each productionRow in planRec.Product_Production_Lines
+					{
+						prodCode = "";
+						if(productionRow.Product != null)
+						{
+							prodCode = productionRow.Product.Grade_Code;
+						}
+						rowKey = prodCode + "|" + ifnull(productionRow.Series,"") + "|" + ifnull(productionRow.Width,"") + "|" + ifnull(productionRow.Thickness,"") + "|" + ifnull(productionRow.Productivity_MTPH,"");
+						if(rowKey == productKey && productText == "")
+						{
+							productText = prodCode;
+							seriesText = ifnull(productionRow.Series,"");
+							widthText = ifnull(productionRow.Width,"");
+							thicknessText = ifnull(productionRow.Thickness,"");
+							productivityText = ifnull(productionRow.Productivity_MTPH,"");
+						}
+					}
+				}
+				fyTotal = 0.0;
+				%>
+				<tr>
+					<td class='op-sticky-col op-product-col zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><strong><%=productText%></strong><span><%=seriesText%></span></td>
+					<td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=widthText%></td>
+					<td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=thicknessText%></td>
+					<td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=productivityText%></td>
+					<% for each monthRec in monthRows
+					{
+						monthTotal = 0.0;
+						for each planRec in approvedProductionPlans
+						{
+							for each productionRow in planRec.Product_Production_Lines
+							{
+								prodCode = "";
+								if(productionRow.Product != null)
+								{
+									prodCode = productionRow.Product.Grade_Code;
+								}
+								rowKey = prodCode + "|" + ifnull(productionRow.Series,"") + "|" + ifnull(productionRow.Width,"") + "|" + ifnull(productionRow.Thickness,"") + "|" + ifnull(productionRow.Productivity_MTPH,"");
+								if(rowKey == productKey && productionRow.Month_Order == monthRec.Month_Order)
+								{
+									monthTotal = monthTotal + ifnull(productionRow.Production_Tons,0.0);
+								}
+							}
+						}
+						fyTotal = fyTotal + monthTotal;
+						%><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=monthTotal%></td><%
+					}
+					%><td class='op-total-cell zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'><%=fyTotal%></td>
+				</tr>
+				<% } %>
+			</tbody>
+		</table>
+	</div>
+	<% } %>
+</div>

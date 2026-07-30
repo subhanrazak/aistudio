@@ -1,0 +1,161 @@
+SMS_Capacity_Plans_Validate as "SMS Capacity Plans Validate"
+{
+
+				type =  form
+				form = SMS_Capacity_Plans
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											isSMS = thisapp.permissions.isUserInProfile("SMS_Team");
+										isCentralPPC = thisapp.permissions.isUserInProfile("SCM_Central_PPC");
+										isFinance = thisapp.permissions.isUserInProfile("Finance_Costing");
+										isAdmin = thisapp.permissions.isUserInProfile("System_Administrator");
+										canSubmit = isSMS || isAdmin;
+										canApprove = isCentralPPC || isAdmin;
+										canReopen = isCentralPPC || isFinance || isAdmin;
+										totalSteelAvailability = 0;
+										monthList = list();
+										for each  smsMonth in input.Monthly_SMS_Availability
+										{
+											if(smsMonth.Month == null || smsMonth.Month == "")
+											{
+												alert "Month is required in every SMS availability row.";
+												cancel submit;
+											}
+											if(monthList.contains(smsMonth.Month))
+											{
+												alert "Duplicate month found in SMS availability rows: " + smsMonth.Month + ".";
+												cancel submit;
+											}
+											monthList.add(smsMonth.Month);
+											if(ifNull(smsMonth.Available_Days,0) < 0 || ifNull(smsMonth.Heats_Per_Day,0) < 0 || ifNull(smsMonth.Tonnage_Per_Heat,0) < 0)
+											{
+												alert "SMS available days, heats per day and tonnage per heat cannot be negative.";
+												cancel submit;
+											}
+											smsMonth.Output_MT=ifNull(smsMonth.Available_Days,0) * ifNull(smsMonth.Heats_Per_Day,0) * ifNull(smsMonth.Tonnage_Per_Heat,0);
+											if(smsMonth.Month == "Apr")
+											{
+												smsMonth.Month_Order=1;
+											}
+											else if(smsMonth.Month == "May")
+											{
+												smsMonth.Month_Order=2;
+											}
+											else if(smsMonth.Month == "Jun")
+											{
+												smsMonth.Month_Order=3;
+											}
+											else if(smsMonth.Month == "Jul")
+											{
+												smsMonth.Month_Order=4;
+											}
+											else if(smsMonth.Month == "Aug")
+											{
+												smsMonth.Month_Order=5;
+											}
+											else if(smsMonth.Month == "Sep")
+											{
+												smsMonth.Month_Order=6;
+											}
+											else if(smsMonth.Month == "Oct")
+											{
+												smsMonth.Month_Order=7;
+											}
+											else if(smsMonth.Month == "Nov")
+											{
+												smsMonth.Month_Order=8;
+											}
+											else if(smsMonth.Month == "Dec")
+											{
+												smsMonth.Month_Order=9;
+											}
+											else if(smsMonth.Month == "Jan")
+											{
+												smsMonth.Month_Order=10;
+											}
+											else if(smsMonth.Month == "Feb")
+											{
+												smsMonth.Month_Order=11;
+											}
+											else if(smsMonth.Month == "Mar")
+											{
+												smsMonth.Month_Order=12;
+											}
+											totalSteelAvailability = totalSteelAvailability + ifNull(smsMonth.Output_MT,0);
+										}
+										input.Total_Steel_Availability_BTV = totalSteelAvailability;
+										if(input.Locked == true && input.Approver_Action != "Reopen" && !isAdmin)
+										{
+											alert "Locked SMS capacity plans cannot be edited.";
+											cancel submit;
+										}
+										if(input.Approver_Action == "Return" || input.Approver_Action == "Reopen" && input.Approval_Remarks == null || input.Approval_Remarks == "" || input.Approval_Remarks == " ")
+										{
+											alert "Approval remarks are required for Return/Reopen actions on an SMS capacity plan.";
+											cancel submit;
+										}
+										if(input.Approver_Action == "Submit")
+										{
+											if(!canSubmit)
+											{
+												alert "Only SMS Team or System Administrator can submit SMS capacity plans.";
+												cancel submit;
+											}
+											if(!(input.Status == "Draft" || input.Status == "Returned by Central PPC" || input.Status == "Reopened"))
+											{
+												alert "Only Draft, Returned or Reopened SMS capacity plans can be submitted.";
+												cancel submit;
+											}
+										}
+										if(input.Approver_Action == "Approve" || input.Approver_Action == "Return")
+										{
+											if(!canApprove)
+											{
+												alert "Only Central PPC or System Administrator can approve or return SMS capacity plans.";
+												cancel submit;
+											}
+											if(input.Status != "Submitted to Central PPC")
+											{
+												alert "Central PPC can approve or return only submitted SMS capacity plans.";
+												cancel submit;
+											}
+										}
+										if(input.Approver_Action == "Lock")
+										{
+											if(!canApprove)
+											{
+												alert "Only Central PPC or System Administrator can lock SMS capacity plans.";
+												cancel submit;
+											}
+											if(!(input.Status == "Accepted" || input.Status == "Submitted to Central PPC"))
+											{
+												alert "Only Accepted or Submitted SMS capacity plans can be locked.";
+												cancel submit;
+											}
+										}
+										if(input.Approver_Action == "Reopen")
+										{
+											if(!canReopen)
+											{
+												alert "Only Central PPC, Finance Costing or System Administrator can reopen SMS capacity plans.";
+												cancel submit;
+											}
+											if(!(input.Status == "Accepted" || input.Status == "Locked"))
+											{
+												alert "Only Accepted or Locked SMS capacity plans can be reopened.";
+												cancel submit;
+											}
+										}
+						)
+					}
+				}
+
+			
+}

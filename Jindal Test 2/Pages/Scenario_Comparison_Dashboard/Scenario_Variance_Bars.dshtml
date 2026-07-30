@@ -1,0 +1,292 @@
+<%
+	selectedCycle = Budget_Cycles[ID != 0] sort by Opened_Date desc;
+	if(input.Budget_Cycle_ID != null && input.Budget_Cycle_ID > 0)
+	{
+		requestedCycle = Budget_Cycles[ID == input.Budget_Cycle_ID];
+		if(requestedCycle.count() > 0)
+		{
+			selectedCycle = requestedCycle;
+		}
+	}
+	volumeCycle = Budget_Cycles[ID == 0];
+	ebitdaCycle = Budget_Cycles[ID == 0];
+	volumeFinancial = Financial_Consolidations[ID == 0];
+	ebitdaFinancial = Financial_Consolidations[ID == 0];
+	if(selectedCycle.count() > 0)
+	{
+		scenarioSetCode = ifNull(selectedCycle.Scenario_Set_Code,"");
+		if(scenarioSetCode != "")
+		{
+			volumeCycle = Budget_Cycles[Scenario_Set_Code == scenarioSetCode && Scenario == "Volume Maximising"];
+			ebitdaCycle = Budget_Cycles[Scenario_Set_Code == scenarioSetCode && Scenario == "EBITDA Maximising"];
+		}
+		if(volumeCycle.count() == 0 && selectedCycle.Scenario == "Volume Maximising")
+		{
+			volumeCycle = selectedCycle;
+		}
+		if(ebitdaCycle.count() == 0 && selectedCycle.Scenario == "EBITDA Maximising")
+		{
+			ebitdaCycle = selectedCycle;
+		}
+		if(volumeCycle.count() > 0)
+		{
+			volumeFinancial = Financial_Consolidations[Budget_Cycle == volumeCycle.ID && Scenario == "Volume Maximising"] sort by Financial_Consolidation_No desc;
+		}
+		if(ebitdaCycle.count() > 0)
+		{
+			ebitdaFinancial = Financial_Consolidations[Budget_Cycle == ebitdaCycle.ID && Scenario == "EBITDA Maximising"] sort by Financial_Consolidation_No desc;
+		}
+	}
+	vVolume = ifNull(volumeFinancial.Volume_MT,0);
+	vRevenue = ifNull(volumeFinancial.Revenue,0);
+	vRaw = ifNull(volumeFinancial.Raw_Material_Cost,0);
+	vCons = ifNull(volumeFinancial.Consumables_Cost,0);
+	vTotal = ifNull(volumeFinancial.Total_Cost,0);
+	vEbitda = ifNull(volumeFinancial.EBITDA,0);
+	vMargin = ifNull(volumeFinancial.EBITDA_Margin_Percent,0);
+	eVolume = ifNull(ebitdaFinancial.Volume_MT,0);
+	eRevenue = ifNull(ebitdaFinancial.Revenue,0);
+	eRaw = ifNull(ebitdaFinancial.Raw_Material_Cost,0);
+	eCons = ifNull(ebitdaFinancial.Consumables_Cost,0);
+	eTotal = ifNull(ebitdaFinancial.Total_Cost,0);
+	eEbitda = ifNull(ebitdaFinancial.EBITDA,0);
+	eMargin = ifNull(ebitdaFinancial.EBITDA_Margin_Percent,0);
+	volVar = eVolume - vVolume;
+	volPct = 0;
+	if(vVolume != 0)
+	{
+		volPct = volVar / vVolume * 100;
+	}
+	else if(eVolume != 0)
+	{
+		volPct = 100;
+	}
+	volWidth = volPct;
+	if(volWidth < 0)
+	{
+		volWidth = volWidth * -1;
+	}
+	if(volWidth > 100)
+	{
+		volWidth = 100;
+	}
+	if(volWidth > 0 && volWidth < 3)
+	{
+		volWidth = 3;
+	}
+	volClass = "is-neutral";
+	if(volVar > 0)
+	{
+		volClass = "is-positive";
+	}
+	if(volVar < 0)
+	{
+		volClass = "is-negative";
+	}
+	revVar = eRevenue - vRevenue;
+	revPct = 0;
+	if(vRevenue != 0)
+	{
+		revPct = revVar / vRevenue * 100;
+	}
+	else if(eRevenue != 0)
+	{
+		revPct = 100;
+	}
+	revWidth = revPct;
+	if(revWidth < 0)
+	{
+		revWidth = revWidth * -1;
+	}
+	if(revWidth > 100)
+	{
+		revWidth = 100;
+	}
+	if(revWidth > 0 && revWidth < 3)
+	{
+		revWidth = 3;
+	}
+	revClass = "is-neutral";
+	if(revVar > 0)
+	{
+		revClass = "is-positive";
+	}
+	if(revVar < 0)
+	{
+		revClass = "is-negative";
+	}
+	rawVar = eRaw - vRaw;
+	rawPct = 0;
+	if(vRaw != 0)
+	{
+		rawPct = rawVar / vRaw * 100;
+	}
+	else if(eRaw != 0)
+	{
+		rawPct = 100;
+	}
+	rawWidth = rawPct;
+	if(rawWidth < 0)
+	{
+		rawWidth = rawWidth * -1;
+	}
+	if(rawWidth > 100)
+	{
+		rawWidth = 100;
+	}
+	if(rawWidth > 0 && rawWidth < 3)
+	{
+		rawWidth = 3;
+	}
+	rawClass = "is-neutral";
+	if(rawVar > 0)
+	{
+		rawClass = "is-positive";
+	}
+	if(rawVar < 0)
+	{
+		rawClass = "is-negative";
+	}
+	conVar = eCons - vCons;
+	conPct = 0;
+	if(vCons != 0)
+	{
+		conPct = conVar / vCons * 100;
+	}
+	else if(eCons != 0)
+	{
+		conPct = 100;
+	}
+	conWidth = conPct;
+	if(conWidth < 0)
+	{
+		conWidth = conWidth * -1;
+	}
+	if(conWidth > 100)
+	{
+		conWidth = 100;
+	}
+	if(conWidth > 0 && conWidth < 3)
+	{
+		conWidth = 3;
+	}
+	conClass = "is-neutral";
+	if(conVar > 0)
+	{
+		conClass = "is-positive";
+	}
+	if(conVar < 0)
+	{
+		conClass = "is-negative";
+	}
+	totVar = eTotal - vTotal;
+	totPct = 0;
+	if(vTotal != 0)
+	{
+		totPct = totVar / vTotal * 100;
+	}
+	else if(eTotal != 0)
+	{
+		totPct = 100;
+	}
+	totWidth = totPct;
+	if(totWidth < 0)
+	{
+		totWidth = totWidth * -1;
+	}
+	if(totWidth > 100)
+	{
+		totWidth = 100;
+	}
+	if(totWidth > 0 && totWidth < 3)
+	{
+		totWidth = 3;
+	}
+	totClass = "is-neutral";
+	if(totVar > 0)
+	{
+		totClass = "is-positive";
+	}
+	if(totVar < 0)
+	{
+		totClass = "is-negative";
+	}
+	ebiVar = eEbitda - vEbitda;
+	ebiPct = 0;
+	if(vEbitda != 0)
+	{
+		ebiPct = ebiVar / vEbitda * 100;
+	}
+	else if(eEbitda != 0)
+	{
+		ebiPct = 100;
+	}
+	ebiWidth = ebiPct;
+	if(ebiWidth < 0)
+	{
+		ebiWidth = ebiWidth * -1;
+	}
+	if(ebiWidth > 100)
+	{
+		ebiWidth = 100;
+	}
+	if(ebiWidth > 0 && ebiWidth < 3)
+	{
+		ebiWidth = 3;
+	}
+	ebiClass = "is-neutral";
+	if(ebiVar > 0)
+	{
+		ebiClass = "is-positive";
+	}
+	if(ebiVar < 0)
+	{
+		ebiClass = "is-negative";
+	}
+	marVar = eMargin - vMargin;
+	marPct = 0;
+	if(vMargin != 0)
+	{
+		marPct = marVar / vMargin * 100;
+	}
+	else if(eMargin != 0)
+	{
+		marPct = 100;
+	}
+	marWidth = marPct;
+	if(marWidth < 0)
+	{
+		marWidth = marWidth * -1;
+	}
+	if(marWidth > 100)
+	{
+		marWidth = 100;
+	}
+	if(marWidth > 0 && marWidth < 3)
+	{
+		marWidth = 3;
+	}
+	marClass = "is-neutral";
+	if(marVar > 0)
+	{
+		marClass = "is-positive";
+	}
+	if(marVar < 0)
+	{
+		marClass = "is-negative";
+	}
+	%>
+<div class="scenario-page" style="padding-top:0;">
+		<div class="scenario-section">
+				<div class="scenario-card-title">
+						<div><h5 class="zcs-font-20 zcs-font-semibold zcs-m-0 zcs-color-primary">Scenario Variance Bars</h5><p class="zcs-font-13 zcs-color-secondary zcs-m-0 zcs-mt-8">Variance is EBITDA-maximising scenario minus volume-maximising scenario.</p></div>
+				</div>
+				<div class="variance-row <%=volClass%>"><div><strong>Volume MT</strong><div class="variance-meta">Base <%=vVolume%> | Compare <%=eVolume%></div></div><div class="variance-bar-track"><div class="variance-bar-fill" style="width:<%=volWidth%>%;"></div></div><div class="variance-value"><strong><%=volVar%></strong><br><span class="variance-meta"><%=volPct%>%</span></div></div>
+				<div class="variance-row <%=revClass%>"><div><strong>Revenue</strong><div class="variance-meta">Base <%=vRevenue%> | Compare <%=eRevenue%></div></div><div class="variance-bar-track"><div class="variance-bar-fill" style="width:<%=revWidth%>%;"></div></div><div class="variance-value"><strong>INR <%=revVar%></strong><br><span class="variance-meta"><%=revPct%>%</span></div></div>
+				<div class="variance-row <%=rawClass%>"><div><strong>Raw Material Cost</strong><div class="variance-meta">Base <%=vRaw%> | Compare <%=eRaw%></div></div><div class="variance-bar-track"><div class="variance-bar-fill" style="width:<%=rawWidth%>%;"></div></div><div class="variance-value"><strong>INR <%=rawVar%></strong><br><span class="variance-meta"><%=rawPct%>%</span></div></div>
+				<div class="variance-row <%=conClass%>"><div><strong>Consumables Cost</strong><div class="variance-meta">Base <%=vCons%> | Compare <%=eCons%></div></div><div class="variance-bar-track"><div class="variance-bar-fill" style="width:<%=conWidth%>%;"></div></div><div class="variance-value"><strong>INR <%=conVar%></strong><br><span class="variance-meta"><%=conPct%>%</span></div></div>
+				<div class="variance-row <%=totClass%>"><div><strong>Total Cost</strong><div class="variance-meta">Base <%=vTotal%> | Compare <%=eTotal%></div></div><div class="variance-bar-track"><div class="variance-bar-fill" style="width:<%=totWidth%>%;"></div></div><div class="variance-value"><strong>INR <%=totVar%></strong><br><span class="variance-meta"><%=totPct%>%</span></div></div>
+				<div class="variance-row <%=ebiClass%>"><div><strong>EBITDA</strong><div class="variance-meta">Base <%=vEbitda%> | Compare <%=eEbitda%></div></div><div class="variance-bar-track"><div class="variance-bar-fill" style="width:<%=ebiWidth%>%;"></div></div><div class="variance-value"><strong>INR <%=ebiVar%></strong><br><span class="variance-meta"><%=ebiPct%>%</span></div></div>
+				<div class="variance-row <%=marClass%>"><div><strong>EBITDA Margin Percent</strong><div class="variance-meta">Base <%=vMargin%>% | Compare <%=eMargin%>%</div></div><div class="variance-bar-track"><div class="variance-bar-fill" style="width:<%=marWidth%>%;"></div></div><div class="variance-value"><strong><%=marVar%> pts</strong><br><span class="variance-meta"><%=marPct%>%</span></div></div>
+		</div>
+</div>

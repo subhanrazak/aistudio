@@ -1,0 +1,32 @@
+Log_Production_Line_Update as "Log Production Line Update"
+{
+
+				type =  form
+				form = Production_Lines
+
+				record event = on edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											audit_id = insert into Approval_Audit_Log
+										[
+											Module_Name="Production Line"
+											Related_Record_ID=input.ID
+											Related_Record_Display=input.Line_Code + " - " + input.Line_Name
+											Action="Updated"
+											Actor_Email=zoho.loginuserid
+											Action_On=zoho.currenttime
+											Remarks="Production line master data updated."
+											Added_User=zoho.loginuser
+										];
+										info "Production Line master-data updated: " + input.Line_Code;
+						)
+					}
+				}
+
+			
+}

@@ -1,0 +1,315 @@
+form Financial_Consolidations
+{
+
+			displayname = "Financial Consolidations"
+			Section
+			(
+				type = section
+				displayname = "Consolidation Context"
+	 			row = 1
+	 			column = 0   
+				width = medium
+			)
+			Financial_Consolidation_No
+			(
+    			type = autonumber
+				displayname = "Financial Consolidation No"
+				start index = 1000
+	 			row = 1
+	 			column = 1   
+				width = medium
+			)
+			Requested_Financial_Year
+			(
+				type = picklist
+				displayname = "Requested Financial Year"
+				values = Financial_Years.ID
+    			displayformat = [Year_Name]
+				searchable = true
+	 			row = 1
+	 			column = 1
+				width = medium
+			)
+			must have Budget_Cycle
+			(
+				type = picklist	
+				displayname = "Budget Cycle"
+				values  = Budget_Cycles.ID
+    			displayformat = [Cycle_Code]
+	 			row = 1
+	 			column = 2
+				width = medium
+			)
+			SCM_Consolidation
+			(
+				type = picklist
+				displayname = "SCM Consolidation"
+				values = Volume_Consolidations.ID
+    			displayformat = [Consolidation_No]
+				searchable = true
+	 			row = 1
+	 			column = 1
+				width = medium
+			)
+			must have Scenario
+			(
+				type = picklist
+				values = {"Base","Revised","Final"}
+	 			row = 1
+	 			column = 2   
+				width = medium
+			)
+			Volume_MT
+			(
+				type = decimal
+				displayname = "Volume MT"
+	 			row = 1
+	 			column = 1   
+				width = medium
+			)
+			Revenue_Costs
+			(
+				type = section
+				displayname = "Revenue And Costs"
+				visibility = true
+	 			row = 2
+	 			column = 0   
+				width = medium
+			)
+			Revenue
+			(
+				type = decimal
+				format = commadotindian
+	 			row = 2
+	 			column = 1   
+				width = medium
+			)
+			Raw_Material_Cost
+			(
+				type = decimal
+				displayname = "Raw Material Cost"
+				format = commadotindian
+	 			row = 2
+	 			column = 2   
+				width = medium
+			)
+			Consumables_Cost
+			(
+				type = decimal
+				displayname = "Consumables Cost"
+				format = commadotindian
+	 			row = 2
+	 			column = 1   
+				width = medium
+			)
+			HR_Cost
+			(
+				type = decimal
+				displayname = "HR Cost"
+				format = commadotindian
+	 			row = 2
+	 			column = 2   
+				width = medium
+			)
+			Logistics_Cost
+			(
+				type = decimal
+				displayname = "Logistics Cost"
+				format = commadotindian
+	 			row = 2
+	 			column = 1   
+				width = medium
+			)
+			IT_Cost
+			(
+				type = decimal
+				displayname = "IT Cost"
+				format = commadotindian
+	 			row = 2
+	 			column = 2   
+				width = medium
+			)
+			Other_Support_Costs
+			(
+				type = decimal
+				displayname = "Other Support Costs"
+				format = commadotindian
+	 			row = 2
+	 			column = 1   
+				width = medium
+			)
+			Financial_Metrics
+			(
+				type = section
+				displayname = "Financial Metrics"
+				visibility = true
+	 			row = 3
+	 			column = 0   
+				width = medium
+			)
+			Total_Other_Cost
+			(
+    			type = textarea
+				displayname = "Total Other Cost"
+	 			row = 3
+	 			column = 1   
+				width = medium
+    			Formula_Properties
+    			(
+    						value =  ifNull(input.HR_Cost,0) + ifNull(input.Logistics_Cost,0) + ifNull(input.IT_Cost,0) + ifNull(input.Other_Support_Costs,0)
+    						visibility = true
+    						format = plaintext
+    			)
+			)
+			Total_Cost
+			(
+    			type = textarea
+				displayname = "Total Cost"
+	 			row = 3
+	 			column = 2   
+				width = medium
+    			Formula_Properties
+    			(
+    						value =  ifNull(input.Raw_Material_Cost,0) + ifNull(input.Consumables_Cost,0) + ifNull(input.HR_Cost,0) + ifNull(input.Logistics_Cost,0) + ifNull(input.IT_Cost,0) + ifNull(input.Other_Support_Costs,0)
+    						visibility = true
+    						format = plaintext
+    			)
+			)
+			EBITDA
+			(
+    			type = textarea
+	 			row = 3
+	 			column = 1   
+				width = medium
+    			Formula_Properties
+    			(
+    						value =  ifNull(input.Revenue,0) - (ifNull(input.Raw_Material_Cost,0) + ifNull(input.Consumables_Cost,0) + ifNull(input.HR_Cost,0) + ifNull(input.Logistics_Cost,0) + ifNull(input.IT_Cost,0) + ifNull(input.Other_Support_Costs,0))
+    						visibility = true
+    						format = plaintext
+    			)
+			)
+			EBITDA_Margin_Percent
+			(
+    			type = textarea
+				displayname = "EBITDA Margin Percent"
+	 			row = 3
+	 			column = 2   
+				width = medium
+    			Formula_Properties
+    			(
+    						value =  if(Revenue != null && Revenue != 0,(ifNull(input.Revenue,0) - (ifNull(input.Raw_Material_Cost,0) + ifNull(input.Consumables_Cost,0) + ifNull(input.HR_Cost,0) + ifNull(input.Logistics_Cost,0) + ifNull(input.IT_Cost,0) + ifNull(input.Other_Support_Costs,0))) / input.Revenue * 100,0)
+    						visibility = true
+    						format = plaintext
+    			)
+			)
+			Management_Approval
+			(
+				type = section
+				displayname = "Management Approval"
+				visibility = true
+	 			row = 4
+	 			column = 0   
+				width = medium
+			)
+			Management_Decision
+			(
+				type = picklist
+				displayname = "Management Decision"
+				values = {"Pending","Volume Scenario Selected","EBITDA Scenario Selected","Rejected","Final Approved"}
+				initial value = "Pending"
+	 			row = 4
+	 			column = 1   
+				width = medium
+			)
+			must have Status
+			(
+				type = picklist
+				values = {"Draft","Submitted to Management","Returned by Management","Approved Final","Completed","Locked","Reopened"}
+				initial value = "Draft"
+	 			row = 4
+	 			column = 2   
+				width = medium
+			)
+			Approver_Action
+			(
+				type = picklist
+				displayname = "Approver Action"
+				values = {"Submit","Approve Final","Return","Complete Budget","Lock"}
+	 			row = 4
+	 			column = 1   
+				width = medium
+			)
+			Approval_Remarks
+			(
+    			type = textarea
+				displayname = "Approval Remarks"
+				height = 13px
+	 			row = 4
+	 			column = 2   
+				width = medium
+			)
+			Iteration_Count
+			(
+				type = number
+				displayname = "Iteration Count"
+				initial value = 0
+	 			row = 4
+	 			column = 1   
+				width = medium
+			)
+			Locked
+			(
+    			type = checkbox
+				initial value = false
+	 			row = 4
+	 			column = 2   
+				width = medium
+			)
+			Ownership
+			(
+				type = section
+				visibility = true
+	 			row = 5
+	 			column = 0   
+				width = medium
+			)
+			Owner_Email
+			(
+    			type = email
+				displayname = "Owner Email"
+	 			row = 5
+	 			column = 1   
+				width = medium
+			)
+	
+			actions
+			{
+				on add
+				{
+					Submit
+					(
+   						type = submit
+   						displayname = "Submit"
+					)
+					Reset
+					(
+   						type = reset
+   						displayname = "Reset"
+					)
+				}
+				on edit
+				{
+					Update
+					(
+   						type = submit
+   						displayname = "Update"
+					)
+					Cancel
+					(
+   						type = cancel
+   						displayname = "Cancel"
+					)
+				}
+			}
+		
+}

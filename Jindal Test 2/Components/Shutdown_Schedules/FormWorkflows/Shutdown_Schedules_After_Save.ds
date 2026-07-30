@@ -1,0 +1,183 @@
+Shutdown_Schedules_After_Save as "Shutdown Schedules After Save"
+{
+
+				type =  form
+				form = Shutdown_Schedules
+
+				record event = on add or edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											statusBeforeRouting = input.Status;
+										routedByAction = "";
+										if(input.Approver_Action == "Submit" && statusBeforeRouting == "Draft" || statusBeforeRouting == "Reopened")
+										{
+											input.Status = "Submitted";
+											input.Locked = false;
+											routedByAction = "Submitted";
+										}
+										else if(input.Approver_Action == "Approve" && statusBeforeRouting == "Submitted")
+										{
+											input.Status = "Available to Capacity";
+											input.Locked = false;
+											routedByAction = "Approved";
+										}
+										else if(input.Approver_Action == "Reopen" && statusBeforeRouting == "Locked")
+										{
+											input.Status = "Reopened";
+											input.Locked = false;
+											routedByAction = "Reopened";
+										}
+										else if(input.Approver_Action == "Lock" && statusBeforeRouting == "Available to Capacity")
+										{
+											input.Status = "Locked";
+											input.Locked = true;
+											routedByAction = "Locked";
+										}
+										latestAudit = Approval_Audit_Log[Module_Name == "Shutdown Schedule" && Related_Record_ID == input.ID] sort by Action_On desc range from 0 to 0;
+										previousStatus = "";
+										if(latestAudit.count() > 0)
+										{
+											previousStatus = latestAudit.To_Status;
+										}
+										if(previousStatus == "" || previousStatus != input.Status || routedByAction != "")
+										{
+											auditAction = "Updated";
+											if(previousStatus == "")
+											{
+												auditAction = "Created";
+											}
+											if(routedByAction == "Submitted")
+											{
+												auditAction = "Submitted";
+											}
+											if(routedByAction == "Approved")
+											{
+												auditAction = "Approved";
+											}
+											if(routedByAction == "Reopened")
+											{
+												auditAction = "Reopened";
+											}
+											if(routedByAction == "Locked")
+											{
+												auditAction = "Locked";
+											}
+											auditRecordId = insert into Approval_Audit_Log
+											[
+												Budget_Cycle=input.Budget_Cycle
+												Module_Name="Shutdown Schedule"
+												Related_Record_ID=input.ID
+												Related_Record_Display="Shutdown " + input.Shutdown_No
+												Action=auditAction
+												From_Status=previousStatus
+												To_Status=input.Status
+												Actor_Email=zoho.loginuserid
+												Action_On=zoho.currenttime
+												Remarks=input.Approval_Remarks
+												Added_User=zoho.loginuser
+											];
+										}
+										if(input.Shutdown_Type == "Capital" && routedByAction == "Approved")
+										{
+											mailRecipients = List();
+											for each  plantRecord in Plants[ID == input.Plant] range from 0 to 0
+											{
+												plantName = plantRecord.Plant_Name;
+												if(plantRecord.Finance_Contact_Email != null && plantRecord.Finance_Contact_Email != "")
+												{
+													mailRecipients.add(plantRecord.Finance_Contact_Email);
+												}
+											}
+											lineName = "";
+											for each  lineRecord in Production_Lines[ID == input.Production_Line] range from 0 to 0
+											{
+												lineName = lineRecord.Line_Name;
+											}
+											if(mailRecipients.size() > 0)
+											{
+												sendmail
+												[
+													from :zoho.adminuserid
+													to :mailRecipients
+													subject :"Capital shutdown available for capacity planning"
+													message :"A capital shutdown schedule has been submitted and made available to capacity planning. Plant: " + plantName + ", Line: " + lineName + ", Annual shutdown days: " + input.Annual_Shutdown_Days
+												]
+											}
+										}
+										totalApr = 0;
+										totalMay = 0;
+										totalJun = 0;
+										totalJul = 0;
+										totalAug = 0;
+										totalSep = 0;
+										totalOct = 0;
+										totalNov = 0;
+										totalDec = 0;
+										totalJan = 0;
+										totalFeb = 0;
+										totalMar = 0;
+										approvedSchedules = Shutdown_Schedules[Budget_Cycle == input.Budget_Cycle && Production_Line == input.Production_Line && Status == "Available to Capacity" || Status == "Locked"];
+										for each  shutdownSchedule in approvedSchedules
+										{
+											for each  shutdownMonth in shutdownSchedule.Monthly_Shutdowns
+											{
+												if(shutdownMonth.Month == "Apr")
+												{
+													totalApr = totalApr + ifNull(shutdownMonth.Days_For,0);
+												}
+												else if(shutdownMonth.Month == "May")
+												{
+													totalMay = totalMay + ifNull(shutdownMonth.Days_For,0);
+												}
+												else if(shutdownMonth.Month == "Jun")
+												{
+													totalJun = totalJun + ifNull(shutdownMonth.Days_For,0);
+												}
+												else if(shutdownMonth.Month == "Jul")
+												{
+													totalJul = totalJul + ifNull(shutdownMonth.Days_For,0);
+												}
+												else if(shutdownMonth.Month == "Aug")
+												{
+													totalAug = totalAug + ifNull(shutdownMonth.Days_For,0);
+												}
+												else if(shutdownMonth.Month == "Sep")
+												{
+													totalSep = totalSep + ifNull(shutdownMonth.Days_For,0);
+												}
+												else if(shutdownMonth.Month == "Oct")
+												{
+													totalOct = totalOct + ifNull(shutdownMonth.Days_For,0);
+												}
+												else if(shutdownMonth.Month == "Nov")
+												{
+													totalNov = totalNov + ifNull(shutdownMonth.Days_For,0);
+												}
+												else if(shutdownMonth.Month == "Dec")
+												{
+													totalDec = totalDec + ifNull(shutdownMonth.Days_For,0);
+												}
+												else if(shutdownMonth.Month == "Jan")
+												{
+													totalJan = totalJan + ifNull(shutdownMonth.Days_For,0);
+												}
+												else if(shutdownMonth.Month == "Feb")
+												{
+													totalFeb = totalFeb + ifNull(shutdownMonth.Days_For,0);
+												}
+												else if(shutdownMonth.Month == "Mar")
+												{
+													totalMar = totalMar + ifNull(shutdownMonth.Days_For,0);
+												}
+											}
+										}
+										// Capacity_TEP_Plans now uses configurable Monthly_Availability_Lines; legacy fixed-month shutdown push is intentionally skipped.
+						)
+					}
+				}
+			}

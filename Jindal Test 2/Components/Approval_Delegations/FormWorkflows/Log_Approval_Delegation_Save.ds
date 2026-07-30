@@ -1,0 +1,46 @@
+Log_Approval_Delegation_Save as "Log Approval Delegation Save"
+{
+
+				type =  form
+				form = Approval_Delegations
+
+				record event = on add or edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											latestAudit = Approval_Audit_Log[Module_Name == "Approval Delegation" && Related_Record_ID == input.ID] sort by Action_On desc range from 0 to 0;
+										previousActive = null;
+										auditAction = "Created";
+										if(latestAudit.count() > 0)
+										{
+											previousActive = latestAudit.To_Status;
+											auditAction = "Updated";
+											if(input.Active == false)
+											{
+												auditAction = "Deactivated";
+											}
+										}
+										relatedDisplay = input.Delegator_Email + " -> " + input.Delegate_Email + " (" + input.Module_Name + ")";
+										auditId = insert into Approval_Audit_Log
+										[
+											Module_Name="Approval Delegation"
+											Related_Record_ID=input.ID
+											Related_Record_Display=relatedDisplay
+											Action=auditAction
+											From_Status=previousActive
+											To_Status=input.Active
+											Actor_Email=zoho.loginuserid
+											Action_On=zoho.currenttime
+											Remarks=input.Reason
+											Added_User=zoho.loginuser
+										];
+						)
+					}
+				}
+
+			
+}

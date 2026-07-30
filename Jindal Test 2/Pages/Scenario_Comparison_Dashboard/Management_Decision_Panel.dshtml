@@ -1,0 +1,146 @@
+<%
+	selectedCycle = Budget_Cycles[ID != 0] sort by Opened_Date desc;
+	if(input.Budget_Cycle_ID != null && input.Budget_Cycle_ID > 0)
+	{
+		requestedCycle = Budget_Cycles[ID == input.Budget_Cycle_ID];
+		if(requestedCycle.count() > 0)
+		{
+			selectedCycle = requestedCycle;
+		}
+	}
+	volumeCycle = Budget_Cycles[ID == 0];
+	ebitdaCycle = Budget_Cycles[ID == 0];
+	volumeFinancial = Financial_Consolidations[ID == 0];
+	ebitdaFinancial = Financial_Consolidations[ID == 0];
+	if(selectedCycle.count() > 0)
+	{
+		scenarioSetCode = ifNull(selectedCycle.Scenario_Set_Code,"");
+		if(scenarioSetCode != "")
+		{
+			volumeCycle = Budget_Cycles[Scenario_Set_Code == scenarioSetCode && Scenario == "Volume Maximising"];
+			ebitdaCycle = Budget_Cycles[Scenario_Set_Code == scenarioSetCode && Scenario == "EBITDA Maximising"];
+		}
+		if(volumeCycle.count() == 0 && selectedCycle.Scenario == "Volume Maximising")
+		{
+			volumeCycle = selectedCycle;
+		}
+		if(ebitdaCycle.count() == 0 && selectedCycle.Scenario == "EBITDA Maximising")
+		{
+			ebitdaCycle = selectedCycle;
+		}
+		if(volumeCycle.count() > 0)
+		{
+			volumeFinancial = Financial_Consolidations[Budget_Cycle == volumeCycle.ID && Scenario == "Volume Maximising"] sort by Financial_Consolidation_No desc;
+		}
+		if(ebitdaCycle.count() > 0)
+		{
+			ebitdaFinancial = Financial_Consolidations[Budget_Cycle == ebitdaCycle.ID && Scenario == "EBITDA Maximising"] sort by Financial_Consolidation_No desc;
+		}
+	}
+	volumeDecision = ifNull(volumeFinancial.Management_Decision,"Pending");
+	ebitdaDecision = ifNull(ebitdaFinancial.Management_Decision,"Pending");
+	volumeStatus = ifNull(volumeFinancial.Status,"Not Created");
+	ebitdaStatus = ifNull(ebitdaFinancial.Status,"Not Created");
+	volumeDraftClass = "";
+	volumeSubmittedClass = "";
+	volumeApprovedClass = "";
+	volumeLockedClass = "";
+	if(volumeStatus == "Draft")
+	{
+		volumeDraftClass = "active";
+	}
+	if(volumeStatus == "Submitted to Management")
+	{
+		volumeSubmittedClass = "active";
+	}
+	if(volumeStatus == "Approved Final")
+	{
+		volumeApprovedClass = "active";
+	}
+	if(volumeStatus == "Locked")
+	{
+		volumeLockedClass = "active";
+	}
+	ebitdaDraftClass = "";
+	ebitdaSubmittedClass = "";
+	ebitdaApprovedClass = "";
+	ebitdaLockedClass = "";
+	if(ebitdaStatus == "Draft")
+	{
+		ebitdaDraftClass = "active";
+	}
+	if(ebitdaStatus == "Submitted to Management")
+	{
+		ebitdaSubmittedClass = "active";
+	}
+	if(ebitdaStatus == "Approved Final")
+	{
+		ebitdaApprovedClass = "active";
+	}
+	if(ebitdaStatus == "Locked")
+	{
+		ebitdaLockedClass = "active";
+	}
+	currentDecision = "Pending";
+	if(volumeDecision != "Pending")
+	{
+		currentDecision = volumeDecision;
+	}
+	if(ebitdaDecision != "Pending")
+	{
+		currentDecision = ebitdaDecision;
+	}
+	decisionClass = "zcs-badge-yellow";
+	if(currentDecision.contains("Selected"))
+	{
+		decisionClass = "zcs-badge-green";
+	}
+	if(currentDecision == "Rejected")
+	{
+		decisionClass = "zcs-badge-red";
+	}
+	%>
+<div class="scenario-page" style="padding-top:0;">
+		<div class="scenario-section">
+				<div class="scenario-card-title">
+						<div><h5 class="zcs-font-20 zcs-font-semibold zcs-m-0 zcs-color-primary">Management Decision Panel</h5><p class="zcs-font-13 zcs-color-secondary zcs-m-0 zcs-mt-8">Current approval decision and Financial Consolidation status before final lock.</p></div>
+						<span class="zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border <%=decisionClass%>"><span class="zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body"><%=currentDecision%></span></span>
+				</div>
+				<div class="scenario-grid-3">
+						<div class="decision-tile">
+								<span class="scenario-muted">Volume Maximising Decision</span>
+								<div class="decision-big"><%=volumeDecision%></div>
+								<div class="zcs-mt-8"><span class="scenario-muted">Financial status</span><br><strong><%=volumeStatus%></strong></div>
+								<div class="status-flow">
+										<span class="status-step <%=volumeDraftClass%>">Draft</span>
+										<span class="status-step <%=volumeSubmittedClass%>">Submitted</span>
+										<span class="status-step <%=volumeApprovedClass%>">Approved Final</span>
+										<span class="status-step <%=volumeLockedClass%>">Locked</span>
+								</div>
+						</div>
+						<div class="decision-tile">
+								<span class="scenario-muted">EBITDA Maximising Decision</span>
+								<div class="decision-big"><%=ebitdaDecision%></div>
+								<div class="zcs-mt-8"><span class="scenario-muted">Financial status</span><br><strong><%=ebitdaStatus%></strong></div>
+								<div class="status-flow">
+										<span class="status-step <%=ebitdaDraftClass%>">Draft</span>
+										<span class="status-step <%=ebitdaSubmittedClass%>">Submitted</span>
+										<span class="status-step <%=ebitdaApprovedClass%>">Approved Final</span>
+										<span class="status-step <%=ebitdaLockedClass%>">Locked</span>
+								</div>
+						</div>
+						<div class="decision-tile">
+								<span class="scenario-muted">Review Actions</span>
+								<div class="zcs-flex zcs-direction-column zcs-gap-12 zcs-mt-12">
+										<a class='zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body' href='#Report:All_Financial_Consolidations'>
+												<i class='zcs-button-icon zc-li-outline ui-1-edit-72'></i><span class='zcs-button-text'>Drill to Consolidations</span>
+										</a>
+										<a class='zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body' href='#Report:Approved_Final_Budgets'>
+												<i class='zcs-button-icon zc-li-outline ui-1-check-circle-08'></i><span class='zcs-button-text'>Approved Final Budgets</span>
+										</a>
+								</div>
+								<p class="zcs-font-13 zcs-color-secondary zcs-m-0 zcs-mt-16">Final approval is performed in the Financial Consolidations workflow using Management Decision, Approver Action and Approval Remarks.</p>
+						</div>
+				</div>
+		</div>
+</div>

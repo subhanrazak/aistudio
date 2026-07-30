@@ -1,0 +1,103 @@
+Volume_Consolidations_Validate as "Volume Consolidations Validate"
+{
+
+				type = form
+				form = Volume_Consolidations
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions
+					{
+						custom deluge script
+						(
+							if(input.Locked == true || input.Status == "Locked")
+							{
+								alert "This SCM review is locked and cannot be edited.";
+								cancel submit;
+							}
+							if(input.Budget_Cycle == null && input.Requested_Financial_Year != null)
+							{
+								activeCycle = Budget_Cycles[Financial_Year == input.Requested_Financial_Year && Status != "Completed" && Status != "Closed"] sort by Opened_Date desc range from 0 to 0;
+								if(activeCycle.count() > 0)
+								{
+									input.Budget_Cycle = activeCycle.ID;
+								}
+							}
+							if(input.Sales_Plan != null)
+							{
+								salesPlanRec = Sales_Plans[ID == input.Sales_Plan];
+								if(salesPlanRec.count() == 0 || salesPlanRec.Status != "Sales Approved")
+								{
+									alert "SCM review can start only with a Sales Approved Sales Plan.";
+									cancel submit;
+								}
+							}
+							if(input.Availability_Plan != null)
+							{
+								availabilityRec = Capacity_TEP_Plans[ID == input.Availability_Plan];
+								if(availabilityRec.count() == 0 || availabilityRec.Status != "Operations Approved")
+								{
+									alert "SCM review can start only with an Operations Approved availability plan.";
+									cancel submit;
+								}
+							}
+							if(input.Operations_Production_Plan != null)
+							{
+								productionRec = Operations_Production_Plans[ID == input.Operations_Production_Plan];
+								if(productionRec.count() == 0 || productionRec.Status != "Operations Approved")
+								{
+									alert "SCM review can start only with an Operations Approved production plan.";
+									cancel submit;
+								}
+							}
+							if((input.Approver_Action == "Start Review" || input.Approver_Action == "Approve" || input.Approver_Action == "Request Revision" || input.Approver_Action == "Submit to Finance") && (input.Sales_Plan == null || input.Availability_Plan == null || input.Operations_Production_Plan == null))
+							{
+								alert "Sales, Operations availability, and Operations production plans are all required before SCM action.";
+								cancel submit;
+							}
+							totalShortfall = 0.0;
+							totalCost = 0.0;
+							for each reviewRow in input.SCM_Review_Lines
+							{
+								if(ifNull(reviewRow.Sales_Target_Tons,0) < 0 || ifNull(reviewRow.Operations_Production_Tons,0) < 0 || ifNull(reviewRow.BTV_Measured_MT,0) < 0 || ifNull(reviewRow.Required_Raw_Material_MT,0) < 0 || ifNull(reviewRow.Available_Raw_Material_MT,0) < 0 || ifNull(reviewRow.To_Be_Raised_MT,0) < 0 || ifNull(reviewRow.Cost_Forecast,0) < 0)
+								{
+									alert "SCM review line tonnage and cost values cannot be negative.";
+									cancel submit;
+								}
+								shortfall = ifNull(reviewRow.Required_Raw_Material_MT,0) - ifNull(reviewRow.Available_Raw_Material_MT,0);
+								if(shortfall < 0)
+								{
+									shortfall = 0;
+								}
+								reviewRow.To_Be_Raised_MT = shortfall;
+								if(reviewRow.SCM_Override == true && (reviewRow.Override_Comments == null || reviewRow.Override_Comments == ""))
+								{
+									alert "Override comments are required for every SCM override line.";
+									cancel submit;
+								}
+								totalShortfall = totalShortfall + shortfall;
+								totalCost = totalCost + ifNull(reviewRow.Cost_Forecast,0);
+							}
+							if((input.SCM_Decision == "Request Sales Revision" || input.SCM_Decision == "Request Operations Revision" || input.SCM_Decision == "Request Sales and Operations Revision") && (input.SCM_Comments == null || input.SCM_Comments == ""))
+							{
+								alert "SCM comments are required when requesting a revision.";
+								cancel submit;
+							}
+							if(input.Approver_Action == "Approve" && input.SCM_Decision != "Approve")
+							{
+								alert "Set SCM Decision to Approve before approving this SCM review.";
+								cancel submit;
+							}
+							if(input.Approver_Action == "Request Revision" && (input.SCM_Decision == null || input.SCM_Decision == "Approve"))
+							{
+								alert "Choose which team must revise before selecting Request Revision.";
+								cancel submit;
+							}
+						)
+					}
+				}
+
+			
+}

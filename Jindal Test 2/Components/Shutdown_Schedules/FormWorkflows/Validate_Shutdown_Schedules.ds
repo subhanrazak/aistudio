@@ -1,0 +1,145 @@
+Validate_Shutdown_Schedules as "Validate Shutdown Schedules"
+{
+
+				type =  form
+				form = Shutdown_Schedules
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											isOperationsPPC = thisapp.permissions.isUserInProfile("Operations_PPC");
+										isCentralPPC = thisapp.permissions.isUserInProfile("SCM_Central_PPC");
+										isFinance = thisapp.permissions.isUserInProfile("Finance_Costing");
+										isAdmin = thisapp.permissions.isUserInProfile("System_Administrator");
+										canAction = isOperationsPPC || isCentralPPC || isFinance || isAdmin;
+										if(input.Owner_Email == null)
+										{
+											input.Owner_Email = zoho.loginuserid;
+										}
+										if(input.Status == null)
+										{
+											input.Status = "Draft";
+										}
+										if(input.Locked == true && !(isAdmin && input.Approver_Action == "Reopen"))
+										{
+											alert "This shutdown schedule is locked. Only System Administrator can reopen locked schedules through Approver Action = Reopen.";
+											cancel submit;
+										}
+										if(input.Approver_Action != null && input.Approver_Action != "" && !canAction)
+										{
+											alert "Only Operations PPC, Central PPC, Finance Costing or System Administrator can act on shutdown schedules.";
+											cancel submit;
+										}
+										if(input.Approver_Action == "Submit" && !(input.Status == "Draft" || input.Status == "Reopened"))
+										{
+											alert "Submit is allowed only from Draft or Reopened shutdown schedules.";
+											cancel submit;
+										}
+										if(input.Approver_Action == "Approve" && input.Status != "Submitted")
+										{
+											alert "Approve is allowed only after the shutdown schedule is Submitted.";
+											cancel submit;
+										}
+										if(input.Approver_Action == "Lock" && input.Status != "Available to Capacity")
+										{
+											alert "Only schedules available to capacity can be locked.";
+											cancel submit;
+										}
+										if(input.Approver_Action == "Reopen" && input.Status != "Locked")
+										{
+											alert "Only locked shutdown schedules can be reopened.";
+											cancel submit;
+										}
+										if(input.Approver_Action == "Reopen" && input.Approval_Remarks == null || input.Approval_Remarks == "")
+										{
+											alert "Approval remarks are required when reopening a shutdown schedule.";
+											cancel submit;
+										}
+										annualShutdownDays = 0;
+										monthList = list();
+										for each  shutdownMonth in input.Monthly_Shutdowns
+										{
+											if(shutdownMonth.Month == null || shutdownMonth.Month == "")
+											{
+												alert "Month is required in every shutdown row.";
+												cancel submit;
+											}
+											if(monthList.contains(shutdownMonth.Month))
+											{
+												alert "Duplicate month found in shutdown rows: " + shutdownMonth.Month + ".";
+												cancel submit;
+											}
+											monthList.add(shutdownMonth.Month);
+											if(ifNull(shutdownMonth.Days_For,0) < 0)
+											{
+												alert "Shutdown days cannot be negative.";
+												cancel submit;
+											}
+											if(ifNull(shutdownMonth.Days_For,0) > 0 && shutdownMonth.Reason == null || shutdownMonth.Reason == "")
+											{
+												alert "Reason is required when shutdown days are entered for " + shutdownMonth.Month + ".";
+												cancel submit;
+											}
+											if(shutdownMonth.Month == "Apr")
+											{
+												shutdownMonth.Month_Order=1;
+											}
+											else if(shutdownMonth.Month == "May")
+											{
+												shutdownMonth.Month_Order=2;
+											}
+											else if(shutdownMonth.Month == "Jun")
+											{
+												shutdownMonth.Month_Order=3;
+											}
+											else if(shutdownMonth.Month == "Jul")
+											{
+												shutdownMonth.Month_Order=4;
+											}
+											else if(shutdownMonth.Month == "Aug")
+											{
+												shutdownMonth.Month_Order=5;
+											}
+											else if(shutdownMonth.Month == "Sep")
+											{
+												shutdownMonth.Month_Order=6;
+											}
+											else if(shutdownMonth.Month == "Oct")
+											{
+												shutdownMonth.Month_Order=7;
+											}
+											else if(shutdownMonth.Month == "Nov")
+											{
+												shutdownMonth.Month_Order=8;
+											}
+											else if(shutdownMonth.Month == "Dec")
+											{
+												shutdownMonth.Month_Order=9;
+											}
+											else if(shutdownMonth.Month == "Jan")
+											{
+												shutdownMonth.Month_Order=10;
+											}
+											else if(shutdownMonth.Month == "Feb")
+											{
+												shutdownMonth.Month_Order=11;
+											}
+											else if(shutdownMonth.Month == "Mar")
+											{
+												shutdownMonth.Month_Order=12;
+											}
+											annualShutdownDays = annualShutdownDays + ifNull(shutdownMonth.Days_For,0);
+										}
+										input.Annual_Shutdown_Days = annualShutdownDays;
+										input.Annual_Shutdown_Hours = annualShutdownDays * 24;
+						)
+					}
+				}
+
+			
+}

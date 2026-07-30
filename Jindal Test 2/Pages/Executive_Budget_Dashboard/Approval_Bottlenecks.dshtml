@@ -1,0 +1,89 @@
+<%
+	salesAwaiting = Sales_Plans[Status == "Submitted to COE" || Status == "Submitted to SCM" || Status == "Submitted to Operations" || Status == "Submitted to Sales Head" || Status == "Submitted to Global Sales Head" || Status == "Submitted to SCM Head"].count();
+	salesReturned = Sales_Plans[Status.contains("Returned")].count();
+	salesApproved = Sales_Plans[Status == "Approved and Locked" || Locked == true].count();
+	volumeAwaiting = Volume_Consolidations[Status == "Under SCM Review"].count();
+	volumeReturned = Volume_Consolidations[Status == "Returned to Sales"].count();
+	volumeApproved = Volume_Consolidations[Status == "Balanced" || Status == "SCM Head Finalised" || Status == "Locked" || Locked == true].count();
+	financialAwaiting = Financial_Consolidations[Status == "Submitted to Management"].count();
+	financialReturned = Financial_Consolidations[Status == "Returned by Management"].count();
+	financialApproved = Financial_Consolidations[Status == "Approved Final" || Status == "Locked" || Locked == true].count();
+	cutoff = zoho.currenttime.subDay(7);
+	overdueReturns = Approval_Audit_Log[Action == "Returned" && Action_On < cutoff] sort by Action_On asc range from 0 to 4;
+	overdueCount = Approval_Audit_Log[Action == "Returned" && Action_On < cutoff].count();
+	%>
+<div class="ebd-section-card">
+		<div class="ebd-section-title">
+				<div class="zcs-flex zcs-align-items-center zcs-gap-10">
+						<span class="ebd-icon-ring"><i class="zc-li-outline ui-2-time"></i></span>
+						<h2>Approval Bottlenecks</h2>
+				</div>
+				<div class='zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-yellow'>
+						<i class='zcs-badge-icon zcs-no-shrink zc-li-outline ui-1-simple-remove'></i>
+						<span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'><%=overdueCount%> overdue returns</span>
+				</div>
+		</div>
+		<div class='zcs-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative'>
+				<table class='zcs-w-full'>
+						<thead class='zcs-sticky'>
+								<tr>
+										<th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Module</th>
+										<th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Awaiting approval</th>
+										<th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Returned</th>
+										<th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Approved or locked</th>
+								</tr>
+						</thead>
+						<tbody>
+								<tr>
+										<td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'>Sales Plan</td>
+										<td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-blue'><%=salesAwaiting%></td>
+										<td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-yellow'><%=salesReturned%></td>
+										<td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-green'><%=salesApproved%></td>
+								</tr>
+								<tr>
+										<td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'>Volume Consolidation</td>
+										<td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-blue'><%=volumeAwaiting%></td>
+										<td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-yellow'><%=volumeReturned%></td>
+										<td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-green'><%=volumeApproved%></td>
+								</tr>
+								<tr>
+										<td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'>Financial Consolidation</td>
+										<td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-blue'><%=financialAwaiting%></td>
+										<td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-yellow'><%=financialReturned%></td>
+										<td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-green'><%=financialApproved%></td>
+								</tr>
+						</tbody>
+				</table>
+		</div>
+
+		<div class="zcs-flex zcs-align-items-center zcs-gap-10" style="margin-top:16px;margin-bottom:8px;">
+				<i class="zc-li-outline ui-1-alert-circle-i zcs-color-yellow"></i>
+				<strong class="zcs-font-14 zcs-color-primary">Oldest returned approvals past 7 days</strong>
+		</div>
+		<div class="ebd-feed-list">
+<%
+	if(overdueReturns.count() == 0)
+	{
+		%>
+<div class="ebd-feed-item ebd-muted zcs-font-14">No overdue returned approvals at this time.</div>
+<%
+	}
+	else
+	{
+		for each  audit in overdueReturns
+		{
+			%>
+<div class="ebd-feed-item">
+								<div class="ebd-feed-title">
+										<strong><%=audit.Module_Name%></strong>
+										<span class="ebd-muted ebd-small"><%=audit.Action_On%></span>
+								</div>
+								<div class="ebd-muted zcs-font-13"><%=audit.Related_Record_Display%></div>
+								<div class="zcs-font-13">Returned to: <span class="zcs-color-yellow"><%=audit.To_Status%></span></div>
+						</div>
+<%
+		}
+	}
+	%>
+</div>
+</div>

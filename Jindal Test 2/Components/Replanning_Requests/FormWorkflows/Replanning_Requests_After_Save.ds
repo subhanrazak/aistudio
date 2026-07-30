@@ -1,0 +1,110 @@
+Replanning_Requests_After_Save as "Replanning Requests After Save"
+{
+
+				type = form
+				form = Replanning_Requests
+
+				record event = on add or edit
+
+				on success
+				{
+					actions
+					{
+						custom deluge script
+						(
+							if(input.Requested_By_Email == null)
+							{
+								input.Requested_By_Email = zoho.loginuserid;
+							}
+							if(input.Request_Date == null)
+							{
+								input.Request_Date = zoho.currentdate;
+							}
+							if(input.Parent_Budget_Cycle != null && input.Requested_Financial_Year == null)
+							{
+								cycleRec = Budget_Cycles[ID == input.Parent_Budget_Cycle];
+								if(cycleRec.count() > 0)
+								{
+									input.Requested_Financial_Year = cycleRec.Financial_Year;
+								}
+							}
+							currentStatus = input.Status;
+							actionValue = input.Approver_Action;
+							newStatus = currentStatus;
+							auditAction = "Updated";
+							shouldAudit = false;
+							if(actionValue == "Submit" && currentStatus == "Draft")
+							{
+								newStatus = "Submitted to Finance";
+								auditAction = "Submitted";
+								shouldAudit = true;
+							}
+							else if(actionValue == "Approve" && currentStatus == "Submitted to Finance")
+							{
+								newStatus = "Finance Approved";
+								auditAction = "Approved";
+								shouldAudit = true;
+							}
+							else if(actionValue == "Reject" && (currentStatus == "Submitted to Finance" || currentStatus == "Finance Approved" || currentStatus == "Draft"))
+							{
+								newStatus = "Rejected";
+								auditAction = "Cancelled";
+								shouldAudit = true;
+							}
+							else if(actionValue == "Mark Revision Created" && (currentStatus == "Finance Approved" || currentStatus == "In Team Revision" || currentStatus == "Submitted to Finance"))
+							{
+								newStatus = "Revision Created";
+								auditAction = "Revision Copy Created";
+								shouldAudit = true;
+							}
+							else if(actionValue == "Close" && (currentStatus == "Revision Created" || currentStatus == "Resubmitted to SCM" || currentStatus == "Finance Approved"))
+							{
+								newStatus = "Locked";
+								auditAction = "Locked";
+								shouldAudit = true;
+							}
+							latestAudit = Approval_Audit_Log[Module_Name == "Replanning Requests" && Related_Record_ID == input.ID] sort by Action_On desc range from 0 to 0;
+							if(latestAudit.count() == 0)
+							{
+								createdAuditId = insert into Approval_Audit_Log
+								[
+									Budget_Cycle=input.Parent_Budget_Cycle
+									Module_Name="Replanning Requests"
+									Related_Record_ID=input.ID
+									Related_Record_Display="Replanning Request " + input.Replan_No
+									Action="Created"
+									From_Status=""
+									To_Status=currentStatus
+									Iteration_Number=0
+									Actor_Email=zoho.loginuserid
+									Action_On=zoho.currenttime
+									Remarks=input.Trigger_Reason
+									Added_User=zoho.loginuser
+								];
+							}
+							if(shouldAudit == true)
+							{
+								input.Status = newStatus;
+								auditRecordId = insert into Approval_Audit_Log
+								[
+									Budget_Cycle=input.Parent_Budget_Cycle
+									Module_Name="Replanning Requests"
+									Related_Record_ID=input.ID
+									Related_Record_Display="Replanning Request " + input.Replan_No
+									Action=auditAction
+									From_Status=currentStatus
+									To_Status=newStatus
+									Iteration_Number=0
+									Actor_Email=zoho.loginuserid
+									Action_On=zoho.currenttime
+									Remarks=input.Approval_Remarks
+									Added_User=zoho.loginuser
+								];
+								input.Approver_Action = null;
+							}
+						)
+					}
+				}
+
+			
+}

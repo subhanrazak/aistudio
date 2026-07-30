@@ -1,0 +1,83 @@
+Replanning_Requests_Validate as "Replanning Requests Validate"
+{
+
+				type =  form
+				form = Replanning_Requests
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											isFinance = thisapp.permissions.isUserInProfile("Finance_Costing");
+										isAdmin = thisapp.permissions.isUserInProfile("System_Administrator");
+										canFinanceAct = isFinance || isAdmin;
+										if(input.Requested_By_Email == null)
+										{
+											input.Requested_By_Email = zoho.loginuserid;
+										}
+										if(input.Status == null)
+										{
+											input.Status = "Draft";
+										}
+										if(input.Affected_Modules == null || input.Affected_Modules.size() == 0)
+										{
+											alert "Select at least one affected module for replanning.";
+											cancel submit;
+										}
+										parentCycle = Budget_Cycles[ID == input.Parent_Budget_Cycle] range from 0 to 0;
+										if(parentCycle.count() == 0)
+										{
+											alert "Select a valid parent budget cycle.";
+											cancel submit;
+										}
+										else if(!(parentCycle.Status == "Locked" || parentCycle.Status == "Approved" || parentCycle.Baseline_Locked == true || parentCycle.Approved_Scenario == true))
+										{
+											alert "Parent Budget Cycle must be approved or locked before annual replanning can be opened.";
+											cancel submit;
+										}
+										isRequester = input.Requested_By_Email == zoho.loginuserid || input.Requested_By_Email == zoho.loginuser;
+										if(input.Approver_Action == "Submit" && !(input.Status == "Draft" && isRequester || isAdmin))
+										{
+											alert "Only the requester or System Administrator can submit draft replanning requests.";
+											cancel submit;
+										}
+										if(input.Approver_Action == "Approve" || input.Approver_Action == "Reject" || input.Approver_Action == "Create Revision" || input.Approver_Action == "Lock" && !canFinanceAct)
+										{
+											alert "Only Finance Costing or System Administrator can approve, reject, create, or lock replanning requests.";
+											cancel submit;
+										}
+										if(input.Approver_Action == "Approve" && input.Status != "Submitted to Finance")
+										{
+											alert "Only requests submitted to Finance can be approved.";
+											cancel submit;
+										}
+										if(input.Approver_Action == "Reject" && input.Status != "Submitted to Finance" && input.Status != "Finance Approved")
+										{
+											alert "Only submitted or Finance approved replanning requests can be rejected.";
+											cancel submit;
+										}
+										if(input.Approver_Action == "Create Revision" && input.Status != "Finance Approved")
+										{
+											alert "Create Revision is allowed only after Finance approval.";
+											cancel submit;
+										}
+										if(input.Approver_Action == "Lock" && input.Status != "Revision Created")
+										{
+											alert "Only replanning requests with a created revision can be locked.";
+											cancel submit;
+										}
+										if(input.Approver_Action == "Reject" || input.Approver_Action == "Lock" && input.Approval_Remarks == null || input.Approval_Remarks == "")
+										{
+											alert "Approval remarks are required for reject or lock actions.";
+											cancel submit;
+										}
+						)
+					}
+				}
+
+			
+}
