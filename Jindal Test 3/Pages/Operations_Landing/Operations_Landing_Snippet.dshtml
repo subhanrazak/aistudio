@@ -1,0 +1,251 @@
+<%
+loginName = zoho.loginuser;
+loginEmail = zoho.loginuserid;
+profileText = "Operations PPC";
+if(thisapp.permissions.isUserInProfile("System_Administrator"))
+{
+	profileText = "System Administrator";
+}
+selectedFYId = 0;
+selectedFYName = "No active financial year";
+selectedPlantId = 0;
+selectedLineId = 0;
+selectedPlantName = "All plants";
+selectedLineName = "All production lines";
+if(input.Financial_Year != null && input.Financial_Year != 0)
+{
+	fyRows = Financial_Years[ID == input.Financial_Year];
+	for each fyRec in fyRows
+	{
+		if(selectedFYId == 0)
+		{
+			selectedFYId = fyRec.ID;
+			selectedFYName = fyRec.Year_Name;
+		}
+	}
+}
+if(selectedFYId == 0)
+{
+	fyRows = Financial_Years[Active == true] sort by Start_Date desc;
+	for each fyRec in fyRows
+	{
+		if(selectedFYId == 0)
+		{
+			selectedFYId = fyRec.ID;
+			selectedFYName = fyRec.Year_Name;
+		}
+	}
+}
+if(input.Plant != null && input.Plant != 0)
+{
+	selectedPlantId = input.Plant;
+	plantRows = Plants[ID == selectedPlantId];
+	for each plantRec in plantRows
+	{
+		selectedPlantName = plantRec.Plant_Name;
+	}
+}
+if(input.Production_Line != null && input.Production_Line != 0)
+{
+	selectedLineId = input.Production_Line;
+	lineRows = Production_Lines[ID == selectedLineId];
+	for each lineRec in lineRows
+	{
+		selectedLineName = lineRec.Line_Name;
+	}
+}
+monthCount = 0;
+if(selectedFYId != 0)
+{
+	monthCount = Financial_Year_Months[Financial_Year == selectedFYId && Included == true].count();
+}
+if(selectedFYId == 0)
+{
+	availabilityPlans = Capacity_TEP_Plans[ID == 0];
+	productionPlans = Operations_Production_Plans[ID == 0];
+}
+else if(selectedPlantId != 0 && selectedLineId != 0)
+{
+	availabilityPlans = Capacity_TEP_Plans[Requested_Financial_Year == selectedFYId && Plant == selectedPlantId && Production_Line == selectedLineId];
+	productionPlans = Operations_Production_Plans[Requested_Financial_Year == selectedFYId && Plant == selectedPlantId && Production_Line == selectedLineId];
+}
+else if(selectedPlantId != 0)
+{
+	availabilityPlans = Capacity_TEP_Plans[Requested_Financial_Year == selectedFYId && Plant == selectedPlantId];
+	productionPlans = Operations_Production_Plans[Requested_Financial_Year == selectedFYId && Plant == selectedPlantId];
+}
+else if(selectedLineId != 0)
+{
+	availabilityPlans = Capacity_TEP_Plans[Requested_Financial_Year == selectedFYId && Production_Line == selectedLineId];
+	productionPlans = Operations_Production_Plans[Requested_Financial_Year == selectedFYId && Production_Line == selectedLineId];
+}
+else
+{
+	availabilityPlans = Capacity_TEP_Plans[Requested_Financial_Year == selectedFYId];
+	productionPlans = Operations_Production_Plans[Requested_Financial_Year == selectedFYId];
+}
+avDraft = 0;
+avSubmitted = 0;
+avApproved = 0;
+avRevision = 0;
+prodDraft = 0;
+prodSubmitted = 0;
+prodApproved = 0;
+prodRevision = 0;
+totalAvailableHours = 0.0;
+totalNetRunningHours = 0.0;
+availabilityPctTotal = 0.0;
+availabilityPctCount = 0;
+utilizationPctTotal = 0.0;
+utilizationPctCount = 0;
+for each capPlan in availabilityPlans
+{
+	if(capPlan.Status == "Operations Approved")
+	{
+		avApproved = avApproved + 1;
+		totalAvailableHours = totalAvailableHours + ifnull(capPlan.Annual_Available_Hours,0.0);
+		totalNetRunningHours = totalNetRunningHours + ifnull(capPlan.Annual_Net_Running_Hours,0.0);
+		availabilityPctTotal = availabilityPctTotal + ifnull(capPlan.Average_Equipment_Availability_Percent,0.0);
+		availabilityPctCount = availabilityPctCount + 1;
+		utilizationPctTotal = utilizationPctTotal + ifnull(capPlan.Average_Equipment_Utilization_Percent,0.0);
+		utilizationPctCount = utilizationPctCount + 1;
+	}
+	else if(capPlan.Status == "Submitted to Operations Approval")
+	{
+		avSubmitted = avSubmitted + 1;
+	}
+	else if(capPlan.Status == "Revision Requested by SCM")
+	{
+		avRevision = avRevision + 1;
+	}
+	else if(capPlan.Status == "Draft" || capPlan.Status == "Revised Draft")
+	{
+		avDraft = avDraft + 1;
+	}
+}
+totalProductionTons = 0.0;
+for each prodPlan in productionPlans
+{
+	if(prodPlan.Status == "Operations Approved")
+	{
+		prodApproved = prodApproved + 1;
+		totalProductionTons = totalProductionTons + ifnull(prodPlan.Total_FY_Production_Tons,0.0);
+	}
+	else if(prodPlan.Status == "Submitted to Operations Approval")
+	{
+		prodSubmitted = prodSubmitted + 1;
+	}
+	else if(prodPlan.Status == "Revision Requested by SCM")
+	{
+		prodRevision = prodRevision + 1;
+	}
+	else if(prodPlan.Status == "Draft" || prodPlan.Status == "Revised Draft")
+	{
+		prodDraft = prodDraft + 1;
+	}
+}
+avgAvailability = 0.0;
+if(availabilityPctCount > 0)
+{
+	avgAvailability = availabilityPctTotal / availabilityPctCount;
+}
+avgUtilization = 0.0;
+if(utilizationPctCount > 0)
+{
+	avgUtilization = utilizationPctTotal / utilizationPctCount;
+}
+%>
+<style>
+:root{--zcs-theme-brand-color:var(--zcs_brand_color);--zcs-white-color:#fff;--zcs-page-bg-color:#F3F3F4;--zcs-primary-text-color:var(--zcs_primary_text_color);--zcs-secondary-text-color:var(--zcs_secondary_text_color);--zcs-teritiary-text-color:var(--zcs_tertiary_text_color);--zcs-border-color:var(--zcs_tertiary_border_color);--zcs-thead-color:#F9FAFE;--zcs-tr-h-color:#F9FAFE}.zcs-flex{display:flex}.zcs-inline-flex{display:inline-flex}.zcs-direction-column{flex-direction:column}.zcs-align-items-center{align-items:center}.zcs-justify-center{justify-content:center}.zcs-justify-space-between{justify-content:space-between}.zcs-gap-8{gap:.5rem}.zcs-gap-10{gap:.625rem}.zcs-gap-12{gap:.75rem}.zcs-gap-16{gap:1rem}.zcs-w-full{width:100%}.zcs-wh-full{width:100%;height:100%}.zcs-p-2{padding:.125rem}.zcs-p-8{padding:.5rem}.zcs-p-10{padding:.625rem}.zcs-p-16{padding:1rem}.zcs-p-20{padding:1.25rem}.zcs-px-10{padding-left:.625rem;padding-right:.625rem}.zcs-px-16{padding-left:1rem;padding-right:1rem}.zcs-px-30{padding-left:1.875rem;padding-right:1.875rem}.zcs-py-2{padding-top:.125rem;padding-bottom:.125rem}.zcs-py-4{padding-top:.25rem;padding-bottom:.25rem}.zcs-py-8{padding-top:.5rem;padding-bottom:.5rem}.zcs-py-24{padding-top:1.5rem;padding-bottom:1.5rem}.zcs-m-0{margin:0}.zcs-mt-10{margin-top:.625rem}.zcs-mx-0{margin-left:0;margin-right:0}.zcs-mb-0{margin-bottom:0}.zcs-box-border{box-sizing:border-box}.zcs-rounded-sm{border-radius:.25rem}.zcs-rounded-md{border-radius:.375rem}.zcs-font-11{font-size:.6875rem}.zcs-font-14{font-size:.875rem}.zcs-font-16{font-size:1rem}.zcs-font-18{font-size:1.125rem}.zcs-font-20{font-size:1.25rem}.zcs-font-24{font-size:1.5rem}.zcs-font-normal{font-weight:400}.zcs-font-medium{font-weight:500}.zcs-font-semibold{font-weight:600}.zcs-font-bold{font-weight:700}.zcs-lh-body{line-height:1.5}.zcs-lh-heading{line-height:1.25}.zcs-color-primary{color:var(--zcs-primary-text-color)}.zcs-color-secondary{color:var(--zcs-secondary-text-color)}.zcs-color-tertiary{color:var(--zcs-teritiary-text-color)}.zcs-color-white{color:var(--zcs-white-color)}.zcs-text-left{text-align:left}.zcs-text-right{text-align:right}.zcs-text-center{text-align:center}.zcs-relative{position:relative}.zcs-absolute{position:absolute}.zcs-sticky{position:sticky}.zcs-ellipsis{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.zcs-card{background:var(--zcs-white-color);border:1px solid var(--zcs_tertiary_border_color);border-radius:12px}.zcs-button{width:auto;min-width:5rem;min-height:36px;text-decoration:none}.zcs-primary-outline-button{border:1px solid var(--zcs_brand_color);background:var(--zcs-white-color);color:var(--zcs_brand_color)}.zcs-primary-outline-button:hover{background:var(--zcs_component_hover_color);border-color:var(--zcs_brand_color);color:var(--zcs_brand_color)}.zcs-badge{width:auto}.zcs-badge-filled{border:1px solid transparent}.zcs-badge-filled.zcs-badge-theme{background:var(--zcs_brand_color);border-color:var(--zcs_brand_color);color:var(--zcs-white-color)}.zcs-badge-filled.zcs-badge-green{background:#179E6C;border-color:#179E6C;color:#fff}.zcs-badge-filled.zcs-badge-red{background:#FE455D;border-color:#FE455D;color:#fff}.zcs-badge-filled.zcs-badge-grey{background:#242424;border-color:#242424;color:#fff}.zcs-badge-filled.zcs-badge-yellow{background:#FAAE13;border-color:#FAAE13;color:#fff}.zcs-badge-filled.zcs-badge-blue{background:#2A6FFC;border-color:#2A6FFC;color:#fff}.zcs-badge-filled.zcs-badge-orange{background:#F4660C;border-color:#F4660C;color:#fff}.zcs-table-wrapper{border:1px solid var(--zcs_tertiary_border_color);background:#fff;overflow:auto}.zcs-table-wrapper table{line-height:normal;border-collapse:collapse}.zcs-table-wrapper table thead{top:0;z-index:3}.zcs-table-wrapper table thead tr th{background:var(--zcs-thead-color);box-shadow:0 -1px 0 0 var(--zcs_tertiary_border_color) inset;white-space:nowrap}.zcs-table-wrapper table thead tr.zcs-tspace th{background:#fff;box-shadow:none}.zcs-table-wrapper table tbody tr td{border-top:1px solid var(--zcs_tertiary_border_color)}.zcs-table-wrapper table tbody tr:hover td{background:var(--zcs-tr-h-color)}.zcs-nodata-wrapper{min-height:220px}.op-shell{background:var(--zcs-page-bg-color);padding:20px;box-sizing:border-box}.op-hero{background:linear-gradient(135deg,var(--zcs_brand_color),#1c3d5a);color:var(--zcs_brand_foreground_color);border-radius:16px;padding:24px;display:flex;justify-content:space-between;gap:16px;align-items:center}.op-hero h2{margin:0 0 6px;font-size:26px}.op-hero p{margin:0;opacity:.92}.op-hero-meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}.op-filter-card,.op-section{margin-top:16px;padding:18px;box-sizing:border-box}.op-kpi-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-top:16px}.zcs-template-card.op-kpi{width:auto;height:auto;min-height:142px;overflow:hidden}.op-kpi .zcs-card-header{border-bottom:1px solid var(--zcs_tertiary_border_color);padding:14px 16px}.op-kpi .zcs-card-content{padding:16px}.op-kpi-value{display:block;font-size:27px;line-height:1.1;font-weight:700;color:var(--zcs_primary_text_color);margin-bottom:8px}.op-kpi-caption{color:var(--zcs_secondary_text_color);font-size:13px}.op-section-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;margin-bottom:14px}.op-section-head h3,.op-filter-card h3{margin:0 0 5px;font-size:19px;color:var(--zcs_primary_text_color)}.op-section-head p,.op-filter-card p{margin:0;color:var(--zcs_secondary_text_color);font-size:13px}.op-filter-row{display:flex;align-items:flex-start;gap:12px;margin-top:12px;flex-wrap:wrap}.op-filter-label{min-width:120px;color:var(--zcs_secondary_text_color);font-size:13px;font-weight:600;padding-top:5px}.op-chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--zcs_tertiary_border_color);border-radius:999px;padding:6px 11px;text-decoration:none;color:var(--zcs_primary_text_color);background:#fff;font-size:13px}.op-chip:hover,.op-chip.active{border-color:var(--zcs_brand_color);color:var(--zcs_brand_color);background:var(--zcs_component_hover_color)}.op-status-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:14px}.op-status-box{border:1px solid var(--zcs_tertiary_border_color);border-radius:10px;padding:12px;background:#fff}.op-status-box b{display:block;font-size:21px}.op-matrix-wrapper{max-height:620px}.op-matrix-table{min-width:980px}.op-matrix-table th,.op-matrix-table td{white-space:nowrap}.op-sticky-col{position:sticky;left:0;z-index:2;background:#fff;min-width:230px}.op-matrix-table thead .op-sticky-col{z-index:4;background:var(--zcs-thead-color)}.op-total-cell{background:#fbfcff;font-weight:600}.op-product-col{min-width:210px}.op-product-col strong{display:block}.op-product-col span{display:block;color:var(--zcs_secondary_text_color);font-size:12px;margin-top:2px}.op-empty{border:1px dashed var(--zcs_tertiary_border_color);border-radius:12px;background:#fbfcff}.op-empty-icon{font-size:42px;color:var(--zcs_brand_color)}.op-empty p{margin:8px auto 0;max-width:560px;color:var(--zcs_secondary_text_color)}.op-report-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px}@media(max-width:1100px){.op-kpi-grid,.op-status-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.op-hero{flex-direction:column;align-items:flex-start}}@media(max-width:700px){.op-kpi-grid,.op-status-grid{grid-template-columns:1fr}.op-shell{padding:12px}.op-filter-label{min-width:100%}}
+</style>
+<div class='op-shell'>
+	<div class='op-hero'>
+		<div>
+			<h2>Operations Overview Dashboard</h2>
+			<p>Signed in as <strong><%=loginName%></strong> (<%=loginEmail%>). Review approved availability and production plans without writing data.</p>
+			<div class='op-hero-meta'>
+				<span class='zcs-badge zcs-badge-filled zcs-badge-theme zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border'><i class='zc-li-outline users-single-01'></i><span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'><%=profileText%></span></span>
+				<span class='zcs-badge zcs-badge-filled zcs-badge-blue zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border'><i class='zc-li-outline ui-1-calendar-grid-58'></i><span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'><%=selectedFYName%></span></span>
+			</div>
+		</div>
+		<div class='op-report-actions'>
+			<a class='zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body' href='#Report:Capacity_By_Line'><span class='zcs-button-text'>Capacity by Line</span></a>
+			<a class='zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body' href='#Report:Operations_Production_By_Product'><span class='zcs-button-text'>Production by Product</span></a>
+		</div>
+	</div>
+	<% if(selectedFYId == 0 || monthCount == 0) { %>
+	<div class='op-empty zcs-nodata-wrapper zcs-wh-full zcs-flex zcs-align-items-center zcs-justify-center zcs-text-center op-filter-card'>
+		<div class='zcs-nodata-content zcs-p-20 zcs-box-border'>
+			<i class='zc-li-outline ui-1-calendar-date op-empty-icon'></i>
+			<h5 class='zcs-nodata-header zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-mt-10 zcs-mx-0 zcs-mb-0'>Active FY or month setup is incomplete</h5>
+			<p>Set one Financial Year as active and add included Financial Year Months. The matrices below will populate after approved plans exist.</p>
+		</div>
+	</div>
+	<% } %>
+	<div class='op-filter-card zcs-card'>
+		<h3>Filters</h3>
+		<p>Use URL parameters to focus the dashboard by Financial Year, Plant, and Production Line. Current filter: <strong><%=selectedFYName%></strong>, <strong><%=selectedPlantName%></strong>, <strong><%=selectedLineName%></strong>.</p>
+		<div class='op-filter-row'><span class='op-filter-label'>Financial Year</span><a class='op-chip' href='#Page:Operations_Landing'>Active FY</a><%
+		fyFilterRows = Financial_Years[Status != "Archived"] sort by Start_Date desc;
+		for each fyOpt in fyFilterRows
+		{
+			fyUrl = "#Page:Operations_Landing?Financial_Year=" + fyOpt.ID;
+			if(selectedPlantId != 0) { fyUrl = fyUrl + "&Plant=" + selectedPlantId; }
+			if(selectedLineId != 0) { fyUrl = fyUrl + "&Production_Line=" + selectedLineId; }
+			chipClass = "op-chip";
+			if(fyOpt.ID == selectedFYId) { chipClass = "op-chip active"; }
+			%><a class='<%=chipClass%>' href='<%=fyUrl%>'><%=fyOpt.Year_Name%></a><%
+		}
+		%></div>
+		<div class='op-filter-row'><span class='op-filter-label'>Plant</span><%
+		allPlantUrl = "#Page:Operations_Landing";
+		if(selectedFYId != 0) { allPlantUrl = allPlantUrl + "?Financial_Year=" + selectedFYId; }
+		%><a class='op-chip <% if(selectedPlantId == 0) { %>active<% } %>' href='<%=allPlantUrl%>'>All plants</a><%
+		plantRows = Plants[Active == true] sort by Plant_Name;
+		for each plantOpt in plantRows
+		{
+			plantUrl = "#Page:Operations_Landing?Financial_Year=" + selectedFYId + "&Plant=" + plantOpt.ID;
+			chipClass = "op-chip";
+			if(plantOpt.ID == selectedPlantId) { chipClass = "op-chip active"; }
+			%><a class='<%=chipClass%>' href='<%=plantUrl%>'><%=plantOpt.Plant_Name%></a><%
+		}
+		%></div>
+		<div class='op-filter-row'><span class='op-filter-label'>Production Line</span><%
+		allLineUrl = "#Page:Operations_Landing?Financial_Year=" + selectedFYId;
+		if(selectedPlantId != 0) { allLineUrl = allLineUrl + "&Plant=" + selectedPlantId; }
+		%><a class='op-chip <% if(selectedLineId == 0) { %>active<% } %>' href='<%=allLineUrl%>'>All lines</a><%
+		if(selectedPlantId != 0)
+		{
+			lineFilterRows = Production_Lines[Active == true && Plant == selectedPlantId] sort by Line_Name;
+		}
+		else
+		{
+			lineFilterRows = Production_Lines[Active == true] sort by Line_Name;
+		}
+		for each lineOpt in lineFilterRows
+		{
+			lineUrl = "#Page:Operations_Landing?Financial_Year=" + selectedFYId;
+			if(selectedPlantId != 0) { lineUrl = lineUrl + "&Plant=" + selectedPlantId; }
+			lineUrl = lineUrl + "&Production_Line=" + lineOpt.ID;
+			chipClass = "op-chip";
+			if(lineOpt.ID == selectedLineId) { chipClass = "op-chip active"; }
+			%><a class='<%=chipClass%>' href='<%=lineUrl%>'><%=lineOpt.Line_Name%></a><%
+		}
+		%></div>
+		<div class='op-status-grid'>
+			<div class='op-status-box'><span class='zcs-badge zcs-badge-filled zcs-badge-grey zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border'><span>Draft</span></span><b><%=avDraft + prodDraft%></b><small>Availability <%=avDraft%>, Production <%=prodDraft%></small></div>
+			<div class='op-status-box'><span class='zcs-badge zcs-badge-filled zcs-badge-blue zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border'><span>Submitted</span></span><b><%=avSubmitted + prodSubmitted%></b><small>Availability <%=avSubmitted%>, Production <%=prodSubmitted%></small></div>
+			<div class='op-status-box'><span class='zcs-badge zcs-badge-filled zcs-badge-green zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border'><span>Approved</span></span><b><%=avApproved + prodApproved%></b><small>Availability <%=avApproved%>, Production <%=prodApproved%></small></div>
+			<div class='op-status-box'><span class='zcs-badge zcs-badge-filled zcs-badge-orange zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border'><span>Revision Requested</span></span><b><%=avRevision + prodRevision%></b><small>Availability <%=avRevision%>, Production <%=prodRevision%></small></div>
+		</div>
+	</div>
+	<div class='op-kpi-grid'>
+		<div class='zcs-template-card zcs-card zcs-flex zcs-direction-column zcs-relative op-kpi'><div class='zcs-card-header zcs-box-border'><h6 class='zcs-font-16 zcs-font-normal zcs-lh-heading zcs-color-primary zcs-m-0'>Active Financial Year</h6></div><div class='zcs-card-content zcs-box-border'><span class='op-kpi-value'><%=selectedFYName%></span><span class='op-kpi-caption'><%=monthCount%> included months configured</span></div></div>
+		<div class='zcs-template-card zcs-card zcs-flex zcs-direction-column zcs-relative op-kpi'><div class='zcs-card-header zcs-box-border'><h6 class='zcs-font-16 zcs-font-normal zcs-lh-heading zcs-color-primary zcs-m-0'>Approved Availability Plans</h6></div><div class='zcs-card-content zcs-box-border'><span class='op-kpi-value'><%=avApproved%></span><span class='op-kpi-caption'>Capacity TEP plans approved by Operations</span></div></div>
+		<div class='zcs-template-card zcs-card zcs-flex zcs-direction-column zcs-relative op-kpi'><div class='zcs-card-header zcs-box-border'><h6 class='zcs-font-16 zcs-font-normal zcs-lh-heading zcs-color-primary zcs-m-0'>Approved Production Plans</h6></div><div class='zcs-card-content zcs-box-border'><span class='op-kpi-value'><%=prodApproved%></span><span class='op-kpi-caption'>Operations production plans approved</span></div></div>
+		<div class='zcs-template-card zcs-card zcs-flex zcs-direction-column zcs-relative op-kpi'><div class='zcs-card-header zcs-box-border'><h6 class='zcs-font-16 zcs-font-normal zcs-lh-heading zcs-color-primary zcs-m-0'>Total Available Hours</h6></div><div class='zcs-card-content zcs-box-border'><span class='op-kpi-value'><%=totalAvailableHours%></span><span class='op-kpi-caption'>FY available hours from approved plans</span></div></div>
+		<div class='zcs-template-card zcs-card zcs-flex zcs-direction-column zcs-relative op-kpi'><div class='zcs-card-header zcs-box-border'><h6 class='zcs-font-16 zcs-font-normal zcs-lh-heading zcs-color-primary zcs-m-0'>Net Running Hours</h6></div><div class='zcs-card-content zcs-box-border'><span class='op-kpi-value'><%=totalNetRunningHours%></span><span class='op-kpi-caption'>FY net running hours after downtime</span></div></div>
+		<div class='zcs-template-card zcs-card zcs-flex zcs-direction-column zcs-relative op-kpi'><div class='zcs-card-header zcs-box-border'><h6 class='zcs-font-16 zcs-font-normal zcs-lh-heading zcs-color-primary zcs-m-0'>Total Production Tons</h6></div><div class='zcs-card-content zcs-box-border'><span class='op-kpi-value'><%=totalProductionTons%></span><span class='op-kpi-caption'>FY production tons from approved plans</span></div></div>
+		<div class='zcs-template-card zcs-card zcs-flex zcs-direction-column zcs-relative op-kpi'><div class='zcs-card-header zcs-box-border'><h6 class='zcs-font-16 zcs-font-normal zcs-lh-heading zcs-color-primary zcs-m-0'>Avg Availability / Utilization</h6></div><div class='zcs-card-content zcs-box-border'><span class='op-kpi-value'><%=avgAvailability%>% / <%=avgUtilization%>%</span><span class='op-kpi-caption'>Average equipment metrics across approved plans</span></div></div>
+	</div>
+</div>

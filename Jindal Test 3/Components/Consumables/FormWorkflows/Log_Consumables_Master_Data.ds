@@ -1,0 +1,40 @@
+Log_Consumables_Master_Data as "Log Consumables Master Data"
+{
+
+				type =  form
+				form = Consumables
+
+				record event = on add or edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											auditAction = "Created";
+										existingAudit = Approval_Audit_Log[Module_Name == "Consumable" && Related_Record_ID == input.ID] range from 1 to 1;
+										if(existingAudit.count() > 0)
+										{
+											auditAction = "Updated";
+										}
+										relatedDisplay = input.Consumable_Code + " - " + input.Consumable_Name;
+										auditId = insert into Approval_Audit_Log
+										[
+											Module_Name="Consumable"
+											Related_Record_ID=input.ID
+											Related_Record_Display=relatedDisplay
+											Action=auditAction
+											To_Status=input.Active
+											Actor_Email=zoho.loginuserid
+											Action_On=zoho.currenttime
+											Remarks="Consumable master data change logged by system workflow."
+											Added_User=zoho.loginuser
+										];
+										info "Consumable master-data " + auditAction + ": " + input.Consumable_Code;
+						)
+					}
+				}
+
+			
+}

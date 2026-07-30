@@ -1,0 +1,23 @@
+<%
+	activeCycleCount = Budget_Cycles[Status != "Completed" && Status != "Closed"].count();
+	completedCycleCount = Budget_Cycles[Status == "Completed" || Status == "Closed"].count();
+	approvedSalesCount = Sales_Plans[Status == "Sales Approved" || Locked == true].count();
+	approvedOpsAvailability = Capacity_TEP_Plans[Status == "Operations Approved" || Locked == true].count();
+	approvedOpsProduction = Operations_Production_Plans[Status == "Operations Approved" || Locked == true].count();
+	scmReadyCount = Volume_Consolidations[Status == "Under SCM Review" || Status == "SCM Approved" || Status == "Submitted to Finance"].count();
+	financeCompletedCount = Financial_Consolidations[Status == "Completed" || Status == "Locked" || Status == "Approved Final"].count();
+	criticalEvents = Approval_Audit_Log[Action == "Revision Requested" || Action == "Revision Copy Created" || Action == "Locked" || Action == "Final Approved" || Action == "Completed"].count();
+%>
+<style>
+.ebd-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:16px}.ebd-card{background:#fff;border:1px solid var(--zcs_tertiary_border_color);border-radius:14px;padding:16px}.ebd-label{font-size:12px;color:var(--zcs_secondary_text_color);text-transform:uppercase;letter-spacing:.04em}.ebd-value{font-size:26px;font-weight:700;color:var(--zcs_primary_text_color);margin-top:8px}.ebd-section-card{background:#fff;border:1px solid var(--zcs_tertiary_border_color);border-radius:14px;padding:18px;margin-bottom:16px}.ebd-section-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}.ebd-section-title h2{margin:0;color:var(--zcs_primary_text_color);font-size:18px}.ebd-muted{color:var(--zcs_secondary_text_color)}.ebd-feed{display:grid;grid-template-columns:1fr 1fr;gap:14px}.ebd-feed-item{border:1px solid var(--zcs_tertiary_border_color);border-radius:10px;padding:12px;margin-bottom:8px}.ebd-feed-title{display:flex;justify-content:space-between;gap:10px}.ebd-small{font-size:12px}.ebd-matrix-grid{display:grid;grid-template-columns:1.3fr 1fr 1fr 1fr;border:1px solid var(--zcs_tertiary_border_color);border-radius:12px;overflow:hidden}.ebd-matrix-head,.ebd-matrix-cell{padding:10px;border-top:1px solid var(--zcs_tertiary_border_color)}.ebd-matrix-head{background:#f9fafe;font-weight:600;color:var(--zcs_primary_text_color);border-top:0}.zcs-red{color:#fe455d}.zcs-green{color:#179e6c}@media(max-width:900px){.ebd-grid,.ebd-feed{grid-template-columns:1fr}.ebd-matrix-grid{grid-template-columns:1fr}}
+</style>
+<div class="ebd-grid">
+	<div class="ebd-card"><div class="ebd-label">Active cycles</div><div class="ebd-value"><%=activeCycleCount%></div></div>
+	<div class="ebd-card"><div class="ebd-label">Sales approved</div><div class="ebd-value"><%=approvedSalesCount%></div></div>
+	<div class="ebd-card"><div class="ebd-label">Ops approved</div><div class="ebd-value"><%=approvedOpsAvailability + approvedOpsProduction%></div></div>
+	<div class="ebd-card"><div class="ebd-label">SCM ready/final</div><div class="ebd-value"><%=scmReadyCount%></div></div>
+	<div class="ebd-card"><div class="ebd-label">Finance completed</div><div class="ebd-value"><%=financeCompletedCount%></div></div>
+	<div class="ebd-card"><div class="ebd-label">Completed cycles</div><div class="ebd-value"><%=completedCycleCount%></div></div>
+	<div class="ebd-card"><div class="ebd-label">Critical events</div><div class="ebd-value"><%=criticalEvents%></div></div>
+	<div class="ebd-card"><div class="ebd-label">Revision requests</div><div class="ebd-value"><%=Volume_Consolidations[Status == "Revision Requested" || Status == "Sales Revision Pending" || Status == "Operations Revision Pending" || Status == "Both Revisions Pending"].count()%></div></div>
+</div>

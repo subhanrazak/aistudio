@@ -1,0 +1,36 @@
+Financial_Year_Months_On_Validate as "Validate Financial Year Months"
+{
+
+				type = form
+				form = Financial_Year_Months
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions
+					{
+						custom deluge script
+						(
+							if(input.Month_Start_Date != null && input.Month_End_Date != null && input.Month_End_Date < input.Month_Start_Date)
+							{
+								alert "Month End Date cannot be before Month Start Date.";
+								cancel submit;
+							}
+							if(input.Month_Label == null || input.Month_Label.trim() == "")
+							{
+								alert "Month Label is required.";
+								cancel submit;
+							}
+							duplicate_month_count = Financial_Year_Months[Financial_Year == input.Financial_Year && Month_Order == input.Month_Order && ID != input.ID].count();
+							if(duplicate_month_count > 0)
+							{
+								alert "Month Order must be unique for the selected Financial Year.";
+								cancel submit;
+							}
+						)
+					}
+				}
+
+			
+}

@@ -1,0 +1,51 @@
+<%
+	selectedCycle = Budget_Cycles[ID != 0] sort by Opened_Date desc;
+	if(input.Budget_Cycle_ID != null && input.Budget_Cycle_ID > 0)
+	{
+		requestedCycle = Budget_Cycles[ID == input.Budget_Cycle_ID];
+		if(requestedCycle.count() > 0)
+		{
+			selectedCycle = requestedCycle;
+		}
+	}
+	consolidations = Volume_Consolidations[ID == 0];
+	if(selectedCycle.count() > 0)
+	{
+		consolidations = Volume_Consolidations[Budget_Cycle == selectedCycle.ID] sort by Consolidation_No desc;
+	}
+%>
+<div class="scenario-page" style="padding-top:0;">
+	<div class="scenario-section">
+		<h3 style="margin:0 0 6px;color:var(--zcs_primary_text_color);">SCM Consolidation Summary</h3>
+		<p style="margin:0 0 14px;color:var(--zcs_secondary_text_color);font-size:13px;">Valid SCM review records linked to the selected budget cycle.</p>
+		<table class="scenario-table">
+			<thead><tr><th>Consolidation</th><th>FY</th><th>Plant</th><th>Status</th><th>Decision</th><th>Latest Revision</th></tr></thead>
+			<tbody>
+<%
+	if(consolidations.count() == 0)
+	{
+%>
+				<tr><td colspan="6" style="text-align:center;color:var(--zcs_secondary_text_color);">No SCM consolidations found for the selected cycle.</td></tr>
+<%
+	}
+	else
+	{
+		for each rec in consolidations
+		{
+%>
+				<tr>
+					<td><%=rec.Consolidation_No%></td>
+					<td><%=rec.Requested_Financial_Year.Year_Name%></td>
+					<td><%=rec.Plant.Plant_Name%></td>
+					<td><%=rec.Status%></td>
+					<td><%=rec.SCM_Decision%></td>
+					<td><%=ifNull(rec.Latest_Revision_No,0)%></td>
+				</tr>
+<%
+		}
+	}
+%>
+			</tbody>
+		</table>
+	</div>
+</div>

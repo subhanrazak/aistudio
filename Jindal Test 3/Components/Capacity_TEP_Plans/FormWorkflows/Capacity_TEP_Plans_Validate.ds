@@ -1,0 +1,111 @@
+Capacity_TEP_Plans_Validate as "Capacity TEP Plans Validate"
+{
+
+				type = form
+				form = Capacity_TEP_Plans
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions
+					{
+						custom deluge script
+						(
+							if(input.Locked == true || input.Status == "Locked" || input.Status == "Superseded")
+							{
+								alert "This Operations availability plan is locked or superseded and cannot be edited.";
+								cancel submit;
+							}
+							if(input.Budget_Cycle == null)
+							{
+								activeCycle = Budget_Cycles[Financial_Year == input.Requested_Financial_Year && Status != "Completed" && Status != "Closed"] sort by Opened_Date desc range from 0 to 0;
+								if(activeCycle.count() > 0)
+								{
+									input.Budget_Cycle = activeCycle.ID;
+								}
+								else
+								{
+									alert "An active Budget Cycle is required for the selected Financial Year.";
+									cancel submit;
+								}
+							}
+							annualCalendar = 0;
+							annualAvailable = 0;
+							annualNet = 0;
+							availabilitySum = 0;
+							utilizationSum = 0;
+							rowCount = 0;
+							for each monthRow in input.Monthly_Availability_Lines
+							{
+								if(monthRow.Month == null)
+								{
+									alert "Month is required in every availability row.";
+									cancel submit;
+								}
+								if(ifNull(monthRow.Calendar_Hours,0) < 0 || ifNull(monthRow.Holidays_Hours,0) < 0 || ifNull(monthRow.Planned_Down_Time_Hours,0) < 0 || ifNull(monthRow.Capital_Shutdown_Hours,0) < 0 || ifNull(monthRow.Setup_Change_Time_Hours,0) < 0 || ifNull(monthRow.Steckel_Mill_Work_Roll_Change_Hours,0) < 0 || ifNull(monthRow.Roughing_Mill_Work_Roll_Change_Hours,0) < 0 || ifNull(monthRow.Unforeseen_Delay_Breakdowns_Hours,0) < 0)
+								{
+									alert "Availability hour values cannot be negative.";
+									cancel submit;
+								}
+								available = ifNull(monthRow.Calendar_Hours,0) - ifNull(monthRow.Holidays_Hours,0) - ifNull(monthRow.Planned_Down_Time_Hours,0) - ifNull(monthRow.Capital_Shutdown_Hours,0) - ifNull(monthRow.Setup_Change_Time_Hours,0) - ifNull(monthRow.Steckel_Mill_Work_Roll_Change_Hours,0) - ifNull(monthRow.Roughing_Mill_Work_Roll_Change_Hours,0);
+								if(available < 0)
+								{
+									alert "Available Hours cannot be negative after subtracting downtime.";
+									cancel submit;
+								}
+								netRun = available - ifNull(monthRow.Unforeseen_Delay_Breakdowns_Hours,0);
+								if(netRun < 0)
+								{
+									alert "Net Running Hours cannot be negative.";
+									cancel submit;
+								}
+								monthRow.Available_Hours = available;
+								monthRow.Net_Running_Hours = netRun;
+								if(ifNull(monthRow.Calendar_Hours,0) > 0)
+								{
+									monthRow.Equipment_Availability_Percent = available / monthRow.Calendar_Hours * 100;
+								}
+								else
+								{
+									monthRow.Equipment_Availability_Percent = 0;
+								}
+								if(available > 0)
+								{
+									monthRow.Equipment_Utilization_Percent = netRun / available * 100;
+								}
+								else
+								{
+									monthRow.Equipment_Utilization_Percent = 0;
+								}
+								annualCalendar = annualCalendar + ifNull(monthRow.Calendar_Hours,0);
+								annualAvailable = annualAvailable + available;
+								annualNet = annualNet + netRun;
+								availabilitySum = availabilitySum + ifNull(monthRow.Equipment_Availability_Percent,0);
+								utilizationSum = utilizationSum + ifNull(monthRow.Equipment_Utilization_Percent,0);
+								rowCount = rowCount + 1;
+							}
+							input.Annual_Calendar_Hours = annualCalendar;
+							input.Annual_Available_Hours = annualAvailable;
+							input.Annual_Net_Running_Hours = annualNet;
+							if(rowCount > 0)
+							{
+								input.Average_Equipment_Availability_Percent = availabilitySum / rowCount;
+								input.Average_Equipment_Utilization_Percent = utilizationSum / rowCount;
+							}
+							else
+							{
+								input.Average_Equipment_Availability_Percent = 0;
+								input.Average_Equipment_Utilization_Percent = 0;
+							}
+							if((input.Approver_Action == "Return" || input.Approver_Action == "Create Revision Copy") && (input.Approval_Remarks == null || input.Approval_Remarks == ""))
+							{
+								alert "Approval remarks are required for Return or Create Revision Copy actions.";
+								cancel submit;
+							}
+						)
+					}
+				}
+
+			
+}

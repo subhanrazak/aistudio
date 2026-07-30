@@ -1,0 +1,60 @@
+Sales_Plans_On_Load as "Sales Plans On Load"
+{
+
+				type = form
+				form = Sales_Plans
+
+				record event = on add or edit
+
+				on load
+				{
+					actions
+					{
+						custom deluge script
+						(
+							if(input.Owner_Email == null)
+							{
+								input.Owner_Email = zoho.loginuserid;
+							}
+							if(input.Status == null)
+							{
+								input.Status = "Draft";
+							}
+							if(input.Requested_Financial_Year != null && input.Budget_Cycle == null)
+							{
+								activeCycle = Budget_Cycles[Financial_Year == input.Requested_Financial_Year && Status != "Completed" && Status != "Closed"] sort by Opened_Date desc range from 0 to 0;
+								if(activeCycle.count() > 0)
+								{
+									input.Budget_Cycle = activeCycle.ID;
+								}
+							}
+							disable Budget_Cycle;
+							disable Total_Grade_Target_Tons;
+							disable Total_Product_Required_Tons;
+							disable Variance_Tons;
+							disable Status;
+							disable Iteration_Count;
+							disable Locked;
+							disable Owner_Email;
+							disable Sales_Approved_By;
+							disable Sales_Approved_On;
+							hide Approval_Remarks;
+							if(input.Locked == true || input.Status == "Locked" || input.Status == "Superseded")
+							{
+								disable Requested_Financial_Year;
+								disable Revision_No;
+								disable Parent_Sales_Plan;
+								disable Approver_Action;
+								disable Approval_Remarks;
+							}
+							if(input.Approver_Action == "Return" || input.Approver_Action == "Create Revision Copy")
+							{
+								show Approval_Remarks;
+								enable Approval_Remarks;
+							}
+						)
+					}
+				}
+
+			
+}

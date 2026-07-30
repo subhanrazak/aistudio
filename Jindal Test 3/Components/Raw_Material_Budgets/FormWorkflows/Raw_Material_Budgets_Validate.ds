@@ -1,0 +1,211 @@
+Raw_Material_Budgets_Validate as "Raw Material Budgets Validate"
+{
+
+				type =  form
+				form = Raw_Material_Budgets
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+										if(input.Budget_Cycle != null && input.Requested_Financial_Year == null)
+										{
+											cycleRecForFY = Budget_Cycles[ID == input.Budget_Cycle];
+											if(cycleRecForFY.count() > 0)
+											{
+												input.Requested_Financial_Year = cycleRecForFY.Financial_Year;
+											}
+										}
+										if(ifNull(input.Previous_Year_Price,0) < 0 || ifNull(input.Market_Price_Month_1,0) < 0 || ifNull(input.Market_Price_Month_2,0) < 0 || ifNull(input.Market_Price_Month_3,0) < 0)
+										{
+											alert "Raw material prices cannot be negative.";
+											cancel submit;
+										}
+										budgetPrice = (ifNull(input.Market_Price_Month_1,0) + ifNull(input.Market_Price_Month_2,0) + ifNull(input.Market_Price_Month_3,0)) / 3;
+										annualRequirement = 0.0;
+										availableTotal = 0.0;
+										toBeRaisedTotal = 0.0;
+										costForecastTotal = 0.0;
+										monthList = list();
+										materialRecord = Raw_Materials[ID == input.Material];
+										isNickelSource = false;
+										if(materialRecord.count() > 0 && materialRecord.Is_Nickel_Source == true)
+										{
+											isNickelSource = true;
+										}
+										for each  rmMonth in input.Monthly_RM_Budget_Lines
+										{
+											if(rmMonth.Month == null || rmMonth.Month == "")
+											{
+												alert "Month is required in every raw material budget row.";
+												cancel submit;
+											}
+											if(monthList.contains(rmMonth.Month))
+											{
+												alert "Duplicate month found in raw material budget rows: " + rmMonth.Month + ".";
+												cancel submit;
+											}
+											monthList.add(rmMonth.Month);
+											if(ifNull(rmMonth.Requirement_MT,0) < 0 || ifNull(rmMonth.Required_Raw_Material_MT,0) < 0 || ifNull(rmMonth.Available_Raw_Material_MT,0) < 0 || ifNull(rmMonth.To_Be_Raised_MT,0) < 0 || ifNull(rmMonth.Cost_Forecast,0) < 0 || ifNull(rmMonth.Scrap_Percent,0) < 0 || ifNull(rmMonth.NPI_Percent,0) < 0 || ifNull(rmMonth.Ferro_Nickel_Percent,0) < 0 || ifNull(rmMonth.Pure_Metal_Percent,0) < 0)
+											{
+												alert "Monthly requirement, availability, shortfall, cost, and nickel mix values cannot be negative.";
+												cancel submit;
+											}
+											mixTotal = ifNull(rmMonth.Scrap_Percent,0) + ifNull(rmMonth.NPI_Percent,0) + ifNull(rmMonth.Ferro_Nickel_Percent,0) + ifNull(rmMonth.Pure_Metal_Percent,0);
+											if(isNickelSource == true && mixTotal != 100)
+											{
+												alert "For nickel-source materials, Scrap + NPI + Ferro Nickel + Pure Metal percentages must total 100 for " + rmMonth.Month + ".";
+												cancel submit;
+											}
+											if(rmMonth.Month == "Apr")
+											{
+												rmMonth.Month_Order=1;
+											}
+											else if(rmMonth.Month == "May")
+											{
+												rmMonth.Month_Order=2;
+											}
+											else if(rmMonth.Month == "Jun")
+											{
+												rmMonth.Month_Order=3;
+											}
+											else if(rmMonth.Month == "Jul")
+											{
+												rmMonth.Month_Order=4;
+											}
+											else if(rmMonth.Month == "Aug")
+											{
+												rmMonth.Month_Order=5;
+											}
+											else if(rmMonth.Month == "Sep")
+											{
+												rmMonth.Month_Order=6;
+											}
+											else if(rmMonth.Month == "Oct")
+											{
+												rmMonth.Month_Order=7;
+											}
+											else if(rmMonth.Month == "Nov")
+											{
+												rmMonth.Month_Order=8;
+											}
+											else if(rmMonth.Month == "Dec")
+											{
+												rmMonth.Month_Order=9;
+											}
+											else if(rmMonth.Month == "Jan")
+											{
+												rmMonth.Month_Order=10;
+											}
+											else if(rmMonth.Month == "Feb")
+											{
+												rmMonth.Month_Order=11;
+											}
+											else if(rmMonth.Month == "Mar")
+											{
+												rmMonth.Month_Order=12;
+											}
+											requiredMaterial = ifNull(rmMonth.Required_Raw_Material_MT,0);
+											if(requiredMaterial == 0 && ifNull(rmMonth.Requirement_MT,0) > 0)
+											{
+												requiredMaterial = ifNull(rmMonth.Requirement_MT,0);
+												rmMonth.Required_Raw_Material_MT = requiredMaterial;
+											}
+											availableMaterial = ifNull(rmMonth.Available_Raw_Material_MT,0);
+											shortfall = requiredMaterial - availableMaterial;
+											if(shortfall < 0)
+											{
+												shortfall = 0;
+											}
+											calculatedForecast = shortfall * budgetPrice;
+											if(rmMonth.Cost_Forecast != null && rmMonth.Cost_Forecast != calculatedForecast && (rmMonth.Override_Reason == null || rmMonth.Override_Reason == ""))
+											{
+												alert "Override Reason is required when a row Cost Forecast is manually changed.";
+												cancel submit;
+											}
+											else if(rmMonth.Cost_Forecast == null || rmMonth.Cost_Forecast == 0 || rmMonth.Override_Reason == null || rmMonth.Override_Reason == "")
+											{
+												rmMonth.Cost_Forecast = calculatedForecast;
+											}
+											rmMonth.To_Be_Raised_MT = shortfall;
+											annualRequirement = annualRequirement + requiredMaterial;
+											availableTotal = availableTotal + availableMaterial;
+											toBeRaisedTotal = toBeRaisedTotal + shortfall;
+											costForecastTotal = costForecastTotal + ifNull(rmMonth.Cost_Forecast,0);
+										}
+										input.Annual_Requirement_MT = annualRequirement;
+										input.Available_Raw_Material_Total_MT = availableTotal;
+										input.To_Be_Raised_Total_MT = toBeRaisedTotal;
+										input.Cost_Forecast_Total = costForecastTotal;
+										if(ifNull(input.Lead_Time_Days,0) < 0 || ifNull(input.In_Plant_Inventory_MT,0) < 0 || ifNull(input.In_Transit_Inventory_MT,0) < 0)
+										{
+											alert "Lead time and inventory assumptions cannot be negative.";
+											cancel submit;
+										}
+										if((input.Approver_Action == "Return" || input.Approver_Action == "Reopen") && (input.Approval_Remarks == null || input.Approval_Remarks == ""))
+										{
+											alert(Approval_Remarks,"Approval remarks are required for Return/Reopen actions.");
+											cancel submit;
+										}
+										isSourcing = thisapp.permissions.isUserInProfile("Sourcing_Team");
+										isSourcingManager = thisapp.permissions.isUserInProfile("SCM_Central_PPC");
+										isFinance = thisapp.permissions.isUserInProfile("Finance_Costing");
+										isAdmin = thisapp.permissions.isUserInProfile("System_Administrator");
+										delegatedSourcing = Approval_Delegations[Delegate_Email == zoho.loginuserid && Profile_Name == "Sourcing_Team" && Module_Name == "Raw Material Budget" && Active == true && Start_Date <= zoho.currentdate && End_Date >= zoho.currentdate].count() > 0;
+										delegatedManager = Approval_Delegations[Delegate_Email == zoho.loginuserid && Profile_Name == "SCM_Central_PPC" && Module_Name == "Raw Material Budget" && Active == true && Start_Date <= zoho.currentdate && End_Date >= zoho.currentdate].count() > 0;
+										delegatedFinance = Approval_Delegations[Delegate_Email == zoho.loginuserid && Profile_Name == "Finance_Costing" && Module_Name == "Raw Material Budget" && Active == true && Start_Date <= zoho.currentdate && End_Date >= zoho.currentdate].count() > 0;
+										roleAllowed = false;
+										actionValid = false;
+										if(input.Approver_Action != null && input.Approver_Action != "")
+										{
+											if((input.Status == "Draft" || input.Status == "Returned by Sourcing Manager" || input.Status == "Returned by Finance" || input.Status == "Reopened") && input.Approver_Action == "Submit")
+											{
+												actionValid = true;
+												roleAllowed = isSourcing || isAdmin || delegatedSourcing;
+											}
+											else if(input.Status == "Submitted to Sourcing Manager" && (input.Approver_Action == "Approve" || input.Approver_Action == "Return"))
+											{
+												actionValid = true;
+												roleAllowed = isSourcingManager || isAdmin || delegatedManager;
+											}
+											else if(input.Status == "Submitted to Finance" && (input.Approver_Action == "Approve" || input.Approver_Action == "Return" || input.Approver_Action == "Lock"))
+											{
+												actionValid = true;
+												roleAllowed = isFinance || isAdmin || delegatedFinance;
+											}
+											else if(input.Status == "Approved" && input.Approver_Action == "Lock")
+											{
+												actionValid = true;
+												roleAllowed = isFinance || isAdmin || delegatedFinance;
+											}
+											else if(input.Status == "Locked" && input.Approver_Action == "Reopen")
+											{
+												actionValid = true;
+												roleAllowed = isFinance || isAdmin || delegatedFinance;
+											}
+											if(actionValid == false)
+											{
+												alert(Approver_Action,"The selected action is not valid for the current RM Budget status.");
+												cancel submit;
+											}
+											if(roleAllowed == false)
+											{
+												alert "Your profile or active delegation is not authorised for this RM Budget action.";
+												cancel submit;
+											}
+										}
+										if(input.Locked == true && !((input.Approver_Action == "Reopen" && input.Status == "Locked" && isFinance) || isAdmin || delegatedFinance))
+										{
+											alert "This Raw Material Budget is locked. Only Finance/System Administrator can reopen it through Approver Action = Reopen.";
+											cancel submit;
+										}
+						)
+					}
+				}
+
+			
+}

@@ -1,0 +1,99 @@
+Volume_Consolidations_On_Load as "Volume Consolidations On Load"
+{
+
+				type = form
+				form = Volume_Consolidations
+
+				record event = on add or edit
+
+				on load
+				{
+					actions
+					{
+						custom deluge script
+						(
+							if(input.Owner_Email == null)
+							{
+								input.Owner_Email = zoho.loginuserid;
+							}
+							if(input.Status == null)
+							{
+								input.Status = "Waiting for Sales and Operations Approval";
+							}
+							if(input.Locked == null)
+							{
+								input.Locked = false;
+							}
+							if(input.Iteration_Count == null)
+							{
+								input.Iteration_Count = 0;
+							}
+							if(input.Latest_Revision_No == null)
+							{
+								input.Latest_Revision_No = 0;
+							}
+							if(input.Requested_Financial_Year != null && input.Budget_Cycle == null)
+							{
+								activeCycle = Budget_Cycles[Financial_Year == input.Requested_Financial_Year && Status != "Completed" && Status != "Closed"] sort by Opened_Date desc range from 0 to 0;
+								if(activeCycle.count() > 0)
+								{
+									input.Budget_Cycle = activeCycle.ID;
+								}
+							}
+							if(input.Budget_Cycle != null && input.Sales_Plan == null)
+							{
+								approvedSalesPlan = Sales_Plans[Budget_Cycle == input.Budget_Cycle && Status == "Sales Approved"] sort by Sales_Approved_On desc range from 0 to 0;
+								if(approvedSalesPlan.count() > 0)
+								{
+									input.Sales_Plan = approvedSalesPlan.ID;
+								}
+							}
+							if(input.Budget_Cycle != null && input.Availability_Plan == null)
+							{
+								approvedAvailabilityPlan = Capacity_TEP_Plans[Budget_Cycle == input.Budget_Cycle && Status == "Operations Approved"] sort by Operations_Approved_On desc range from 0 to 0;
+								if(approvedAvailabilityPlan.count() > 0)
+								{
+									input.Availability_Plan = approvedAvailabilityPlan.ID;
+									input.Plant = approvedAvailabilityPlan.Plant;
+								}
+							}
+							if(input.Budget_Cycle != null && input.Operations_Production_Plan == null)
+							{
+								approvedProductionPlan = Operations_Production_Plans[Budget_Cycle == input.Budget_Cycle && Status == "Operations Approved"] sort by Operations_Approved_On desc range from 0 to 0;
+								if(approvedProductionPlan.count() > 0)
+								{
+									input.Operations_Production_Plan = approvedProductionPlan.ID;
+									input.Plant = approvedProductionPlan.Plant;
+								}
+							}
+							disable Status;
+							disable Iteration_Count;
+							disable Locked;
+							disable Owner_Email;
+							disable SCM_Approved_By;
+							disable SCM_Approved_On;
+							hide Approval_Remarks;
+							if(input.Locked == true || input.Status == "Locked")
+							{
+								disable Requested_Financial_Year;
+								disable Budget_Cycle;
+								disable Sales_Plan;
+								disable Availability_Plan;
+								disable Operations_Production_Plan;
+								disable Plant;
+								disable SCM_Decision;
+								disable SCM_Comments;
+								disable Approver_Action;
+								disable Approval_Remarks;
+							}
+							if(input.Approver_Action == "Request Revision" || input.Approver_Action == "Approve" || input.Approver_Action == "Submit to Finance")
+							{
+								show Approval_Remarks;
+								enable Approval_Remarks;
+							}
+						)
+					}
+				}
+
+			
+}

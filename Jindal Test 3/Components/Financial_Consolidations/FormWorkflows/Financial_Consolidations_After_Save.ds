@@ -1,0 +1,149 @@
+Financial_Consolidations_After_Save as "Financial Consolidations After Save"
+{
+	type = form
+	form = Financial_Consolidations
+	record event = on add or edit
+
+	on success
+	{
+		actions
+		{
+			custom deluge script
+			(
+				if(input.Owner_Email == null)
+				{
+					input.Owner_Email = zoho.loginuserid;
+				}
+				if(input.Management_Decision == null)
+				{
+					input.Management_Decision = "Pending";
+				}
+				currentStatus = input.Status;
+				actionValue = input.Approver_Action;
+				newStatus = currentStatus;
+				auditAction = "Updated";
+				shouldAudit = false;
+				isReturn = false;
+				isFinalCompletion = false;
+				if(actionValue == "Submit" && (currentStatus == "Draft" || currentStatus == "Returned by Management" || currentStatus == "Reopened"))
+				{
+					newStatus = "Submitted to Management";
+					auditAction = "Submitted";
+					shouldAudit = true;
+				}
+				else if(actionValue == "Return" && currentStatus == "Submitted to Management")
+				{
+					newStatus = "Returned by Management";
+					auditAction = "Returned";
+					shouldAudit = true;
+					isReturn = true;
+				}
+				else if(actionValue == "Approve Final" && currentStatus == "Submitted to Management")
+				{
+					newStatus = "Approved Final";
+					auditAction = "Final Approved";
+					shouldAudit = true;
+					input.Management_Decision = "Final Approved";
+				}
+				else if(actionValue == "Complete Budget" && currentStatus == "Approved Final")
+				{
+					newStatus = "Completed";
+					auditAction = "Completed";
+					shouldAudit = true;
+					isFinalCompletion = true;
+					input.Locked = true;
+				}
+				else if(actionValue == "Lock" && (currentStatus == "Approved Final" || currentStatus == "Completed"))
+				{
+					newStatus = "Locked";
+					auditAction = "Locked";
+					shouldAudit = true;
+					isFinalCompletion = true;
+					input.Locked = true;
+				}
+				latestAudit = Approval_Audit_Log[Module_Name == "Financial Consolidation" && Related_Record_ID == input.ID] sort by Action_On desc range from 0 to 0;
+				if(latestAudit.count() == 0)
+				{
+					createdAuditId = insert into Approval_Audit_Log
+					[
+						Budget_Cycle=input.Budget_Cycle
+						Module_Name="Financial Consolidation"
+						Related_Record_ID=input.ID
+						Related_Record_Display="Financial Consolidation " + input.Financial_Consolidation_No
+						Action="Created"
+						From_Status=""
+						To_Status=currentStatus
+						Iteration_Number=input.Iteration_Count
+						Actor_Email=zoho.loginuserid
+						Action_On=zoho.currenttime
+						Remarks="Financial consolidation created."
+						Added_User=zoho.loginuser
+					];
+				}
+				if(shouldAudit == true)
+				{
+					input.Status = newStatus;
+					auditRecordId = insert into Approval_Audit_Log
+					[
+						Budget_Cycle=input.Budget_Cycle
+						Module_Name="Financial Consolidation"
+						Related_Record_ID=input.ID
+						Related_Record_Display="Financial Consolidation " + input.Financial_Consolidation_No
+						Action=auditAction
+						From_Status=currentStatus
+						To_Status=newStatus
+						Iteration_Number=input.Iteration_Count
+						Actor_Email=zoho.loginuserid
+						Action_On=zoho.currenttime
+						Remarks=input.Approval_Remarks
+						Added_User=zoho.loginuser
+					];
+					if(isFinalCompletion == true)
+					{
+						cycleRecords = Budget_Cycles[ID == input.Budget_Cycle];
+						if(cycleRecords.count() > 0)
+						{
+							cycleRecords.Approved_Scenario=true;
+							cycleRecords.Status="Completed";
+							cycleRecords.Finance_Completed=true;
+							cycleRecords.Completion_Date=zoho.currentdate;
+							cycleRecords.Baseline_Locked=true;
+							fyRec = Financial_Years[ID == cycleRecords.Financial_Year];
+							if(fyRec.count() > 0)
+							{
+								fyRec.Status="Completed";
+								fyRec.Completion_Date=zoho.currentdate;
+							}
+						}
+						for each salesPlan in Sales_Plans[Budget_Cycle == input.Budget_Cycle]
+						{
+							salesPlan.Locked=true;
+						}
+						for each capacityPlan in Capacity_TEP_Plans[Budget_Cycle == input.Budget_Cycle]
+						{
+							capacityPlan.Locked=true;
+						}
+						for each productionPlan in Operations_Production_Plans[Budget_Cycle == input.Budget_Cycle]
+						{
+							productionPlan.Locked=true;
+						}
+						for each consolidation in Volume_Consolidations[Budget_Cycle == input.Budget_Cycle]
+						{
+							consolidation.Locked=true;
+							consolidation.Status="Locked";
+						}
+						for each rawMaterialBudget in Raw_Material_Budgets[Budget_Cycle == input.Budget_Cycle]
+						{
+							rawMaterialBudget.Locked=true;
+						}
+						for each financialConsolidation in Financial_Consolidations[Budget_Cycle == input.Budget_Cycle]
+						{
+							financialConsolidation.Locked=true;
+						}
+					}
+					input.Approver_Action = null;
+				}
+			)
+		}
+	}
+}

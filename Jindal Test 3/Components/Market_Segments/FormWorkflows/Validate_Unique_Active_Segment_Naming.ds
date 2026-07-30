@@ -1,0 +1,48 @@
+Validate_Unique_Active_Segment_Naming as "Validate Grade Master Naming"
+{
+
+				type = form
+				form = Market_Segments
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions
+					{
+						custom deluge script
+						(
+							if(input.Segment_Code == null || input.Segment_Code.trim() == "")
+							{
+								alert "Grade Code is required.";
+								cancel submit;
+							}
+							if(input.Segment_Name == null || input.Segment_Name.trim() == "")
+							{
+								alert "Grade Name is required.";
+								cancel submit;
+							}
+							if(input.Active == true)
+							{
+								duplicate_segments = Market_Segments[ID != input.ID && Active == true && Segment_Name == input.Segment_Name];
+								if(duplicate_segments.count() > 0)
+								{
+									alert "Active grade name must be unique.";
+									cancel submit;
+								}
+							}
+							if(input.Active == false)
+							{
+								active_sales_grade_count = Sales_Plans[Status != "Locked" && Status != "Superseded" && Grade_Demand_Lines.Grade == input.ID].count();
+								active_scm_grade_count = Volume_Consolidations[Status != "Locked" && SCM_Review_Lines.Grade == input.ID].count();
+								if(active_sales_grade_count > 0 || active_scm_grade_count > 0)
+								{
+									alert "This inactive grade is referenced in active Sales or SCM records. Review dependent plans before saving.";
+								}
+							}
+						)
+					}
+				}
+
+			
+}

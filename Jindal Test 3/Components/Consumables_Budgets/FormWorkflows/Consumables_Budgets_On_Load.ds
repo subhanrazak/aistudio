@@ -1,0 +1,118 @@
+Consumables_Budgets_On_Load as "Consumables Budgets On Load"
+{
+
+				type =  form
+				form = Consumables_Budgets
+
+				record event = on add or edit
+
+				on load
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Owner_Email == null)
+										{
+											input.Owner_Email = zoho.loginuserid;
+										}
+										if(input.Status == null)
+										{
+											input.Status = "Draft";
+										}
+										if(input.Iteration_Count == null)
+										{
+											input.Iteration_Count = 0;
+										}
+										if(input.Locked == null)
+										{
+											input.Locked = false;
+										}
+										if(input.Half_Year_Split == null || input.Half_Year_Split == "")
+										{
+											input.Half_Year_Split = "No Split";
+										}
+										if(input.Production_Basis_MT == null || input.Production_Basis_MT == 0 && input.Budget_Cycle != null && input.Plant != null)
+										{
+											productionBasis = 0.0;
+											if(input.Production_Line != null)
+											{
+												capacityPlans = Capacity_TEP_Plans[Budget_Cycle == input.Budget_Cycle && Plant == input.Plant && Production_Line == input.Production_Line && Status == "Operations Approved"];
+												for each  capacityPlan in capacityPlans
+												{
+													productionBasis = productionBasis + ifNull(capacityPlan.Annual_Net_Running_Hours,0);
+												}
+											}
+											if(productionBasis > 0)
+											{
+												input.Production_Basis_MT = productionBasis;
+											}
+										}
+										disable Calculated_Budget_Norm;
+										disable Applied_Norm;
+										disable Status;
+										disable Iteration_Count;
+										disable Locked;
+										disable Owner_Email;
+										hide Approver_Action;
+										hide Approval_Remarks;
+										disable Approver_Action;
+										disable Approval_Remarks;
+										if(input.Locked == true)
+										{
+											disable Budget_Cycle;
+											disable Plant;
+											disable Production_Line;
+											disable Consumable;
+											disable Previous_Year_Budget_Norm;
+											disable Previous_Year_Actual_Average;
+											disable Best_Three_Month_Average;
+											disable Override_Norm;
+											disable Override_Justification;
+											disable Half_Year_Split;
+											disable H1_Norm;
+											disable H2_Norm;
+											disable Budget_Price_Per_Unit;
+											disable Production_Basis_MT;
+											disable Plant_Remarks;
+										}
+										isPlantOps = thisapp.permissions.isUserInProfile("Plant_Operations");
+										isOperationsPPC = thisapp.permissions.isUserInProfile("Operations_PPC");
+										isFinance = thisapp.permissions.isUserInProfile("Finance_Costing");
+										isAdmin = thisapp.permissions.isUserInProfile("System_Administrator");
+										delegatedPlantOps = Approval_Delegations[Delegate_Email == zoho.loginuserid && Profile_Name == "Plant_Operations" && Module_Name == "Consumables Budget" && Active == true && Start_Date <= zoho.currentdate && End_Date >= zoho.currentdate].count() > 0;
+										delegatedPlantManager = Approval_Delegations[Delegate_Email == zoho.loginuserid && Profile_Name == "Operations_PPC" && Module_Name == "Consumables Budget" && Active == true && Start_Date <= zoho.currentdate && End_Date >= zoho.currentdate].count() > 0;
+										delegatedFinance = Approval_Delegations[Delegate_Email == zoho.loginuserid && Profile_Name == "Finance_Costing" && Module_Name == "Consumables Budget" && Active == true && Start_Date <= zoho.currentdate && End_Date >= zoho.currentdate].count() > 0;
+										canAct = false;
+										if(input.Status == "Draft" || input.Status == "Returned by Plant Manager" || input.Status == "Returned by Finance" || input.Status == "Reopened" && isPlantOps || isAdmin || delegatedPlantOps)
+										{
+											canAct = true;
+										}
+										else if(input.Status == "Submitted to Plant Manager" && isOperationsPPC || isAdmin || delegatedPlantManager)
+										{
+											canAct = true;
+										}
+										else if(input.Status == "Submitted to Finance" && isFinance || isAdmin || delegatedFinance)
+										{
+											canAct = true;
+										}
+										else if(input.Status == "Approved" || input.Status == "Locked" && isFinance || isAdmin || delegatedFinance)
+										{
+											canAct = true;
+										}
+										if(canAct == true)
+										{
+											show Approver_Action;
+											enable Approver_Action;
+											if(input.Approver_Action == "Return" || input.Approver_Action == "Reopen")
+											{
+												show Approval_Remarks;
+												enable Approval_Remarks;
+											}
+										}
+						)
+					}
+				}
+
+			
+}

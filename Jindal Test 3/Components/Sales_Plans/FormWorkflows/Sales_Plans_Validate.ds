@@ -1,0 +1,114 @@
+Sales_Plans_Validate as "Sales Plans Validate"
+{
+
+				type = form
+				form = Sales_Plans
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions
+					{
+						custom deluge script
+						(
+							if(input.Locked == true || input.Status == "Locked" || input.Status == "Superseded")
+							{
+								alert "This Sales Plan is locked or superseded and cannot be edited.";
+								cancel submit;
+							}
+							if(input.Budget_Cycle == null)
+							{
+								activeCycle = Budget_Cycles[Financial_Year == input.Requested_Financial_Year && Status != "Completed" && Status != "Closed"] sort by Opened_Date desc range from 0 to 0;
+								if(activeCycle.count() > 0)
+								{
+									input.Budget_Cycle = activeCycle.ID;
+								}
+								else
+								{
+									alert "An active Budget Cycle is required for the selected Financial Year.";
+									cancel submit;
+								}
+							}
+							gradeTotal = 0;
+							productTotal = 0;
+							gradeList = list();
+							for each gradeRow in input.Grade_Demand_Lines
+							{
+								if(gradeRow.Grade == null)
+								{
+									alert "Grade is required in every demand row.";
+									cancel submit;
+								}
+								if(gradeList.contains(gradeRow.Grade))
+								{
+									alert "Each Grade can appear only once in Grade Demand Lines.";
+									cancel submit;
+								}
+								gradeList.add(gradeRow.Grade);
+								if(ifNull(gradeRow.Target_Tons_Needed,0) < 0 || ifNull(gradeRow.Actual_Year_3_MT,0) < 0 || ifNull(gradeRow.Actual_Year_2_MT,0) < 0 || ifNull(gradeRow.Actual_Year_1_MT,0) < 0 || ifNull(gradeRow.Current_Year_Produced_Tons,0) < 0)
+								{
+									alert "Sales demand quantities cannot be negative.";
+									cancel submit;
+								}
+								if(ifNull(gradeRow.Actual_3_Year_Growth_Percent,0) < 0 || ifNull(gradeRow.Current_Year_Growth_Percent,0) < 0 || ifNull(gradeRow.Expected_Growth_Percent,0) < 0)
+								{
+									alert "Growth percentages cannot be negative.";
+									cancel submit;
+								}
+								gradeTotal = gradeTotal + ifNull(gradeRow.Target_Tons_Needed,0);
+							}
+							for each productRow in input.Product_Split_Lines
+							{
+								if(productRow.Grade == null || productRow.Product == null)
+								{
+									alert "Grade and Product are required in every Product Split row.";
+									cancel submit;
+								}
+								if(!gradeList.contains(productRow.Grade))
+								{
+									alert "Product Split contains a Grade that is not present in Grade Demand Lines.";
+									cancel submit;
+								}
+								if(ifNull(productRow.Required_Tons,0) < 0)
+								{
+									alert "Product required tons cannot be negative.";
+									cancel submit;
+								}
+								productTotal = productTotal + ifNull(productRow.Required_Tons,0);
+							}
+							for each gradeCheck in input.Grade_Demand_Lines
+							{
+								productByGrade = 0;
+								for each productCheck in input.Product_Split_Lines
+								{
+									if(productCheck.Grade == gradeCheck.Grade)
+									{
+										productByGrade = productByGrade + ifNull(productCheck.Required_Tons,0);
+									}
+								}
+								if(productByGrade != ifNull(gradeCheck.Target_Tons_Needed,0))
+								{
+									alert "Product split tons must equal target tons for every Grade.";
+									cancel submit;
+								}
+							}
+							input.Total_Grade_Target_Tons = gradeTotal;
+							input.Total_Product_Required_Tons = productTotal;
+							input.Variance_Tons = productTotal - gradeTotal;
+							if(gradeTotal != productTotal)
+							{
+								alert "Total Product Required Tons must equal Total Grade Target Tons.";
+								cancel submit;
+							}
+							if((input.Approver_Action == "Return" || input.Approver_Action == "Create Revision Copy") && (input.Approval_Remarks == null || input.Approval_Remarks == ""))
+							{
+								alert "Approval remarks are required for Return or Create Revision Copy actions.";
+								cancel submit;
+							}
+						)
+					}
+				}
+
+			
+}

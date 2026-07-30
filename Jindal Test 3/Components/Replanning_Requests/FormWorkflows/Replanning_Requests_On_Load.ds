@@ -1,0 +1,61 @@
+Replanning_Requests_On_Load as "Replanning Requests On Load"
+{
+
+				type = form
+				form = Replanning_Requests
+
+				record event = on add or edit
+
+				on load
+				{
+					actions
+					{
+						custom deluge script
+						(
+							if(input.Requested_By_Email == null)
+							{
+								input.Requested_By_Email = zoho.loginuserid;
+							}
+							if(input.Request_Date == null)
+							{
+								input.Request_Date = zoho.currentdate;
+							}
+							if(input.Status == null)
+							{
+								input.Status = "Draft";
+							}
+							if(input.Parent_Budget_Cycle != null && input.Requested_Financial_Year == null)
+							{
+								cycleRec = Budget_Cycles[ID == input.Parent_Budget_Cycle];
+								if(cycleRec.count() > 0)
+								{
+									input.Requested_Financial_Year = cycleRec.Financial_Year;
+								}
+							}
+							disable Requested_By_Email;
+							disable Request_Date;
+							hide Approval_Remarks;
+							if(input.Status == "Locked" || input.Status == "Rejected")
+							{
+								disable Parent_Budget_Cycle;
+								disable New_Revision_Cycle;
+								disable Requested_Financial_Year;
+								disable Trigger_Reason;
+								disable Affected_Modules;
+								disable Source_Module;
+								disable Source_Record_ID;
+								disable New_Revision_Record_ID;
+								disable Approver_Action;
+								disable Approval_Remarks;
+							}
+							if(input.Approver_Action == "Reject" || input.Approver_Action == "Close" || input.Approver_Action == "Mark Revision Created")
+							{
+								show Approval_Remarks;
+								enable Approval_Remarks;
+							}
+						)
+					}
+				}
+
+			
+}

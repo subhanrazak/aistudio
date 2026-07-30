@@ -1,0 +1,119 @@
+Sales_Plans_After_Save as "Sales Plans After Save"
+{
+
+				type = form
+				form = Sales_Plans
+
+				record event = on add or edit
+
+				on success
+				{
+					actions
+					{
+						custom deluge script
+						(
+							if(input.Owner_Email == null)
+							{
+								input.Owner_Email = zoho.loginuserid;
+							}
+							currentStatus = input.Status;
+							actionValue = input.Approver_Action;
+							newStatus = currentStatus;
+							auditAction = "Updated";
+							shouldAudit = false;
+							if(actionValue == "Submit" && (currentStatus == "Draft" || currentStatus == "Returned by Sales Management" || currentStatus == "Revision Requested by SCM" || currentStatus == "Revised Draft"))
+							{
+								newStatus = "Submitted to Sales Management";
+								auditAction = "Submitted";
+								shouldAudit = true;
+							}
+							else if(actionValue == "Approve" && currentStatus == "Submitted to Sales Management")
+							{
+								newStatus = "Sales Approved";
+								input.Sales_Approved_By = zoho.loginuserid;
+								input.Sales_Approved_On = zoho.currenttime;
+								auditAction = "Approved";
+								shouldAudit = true;
+							}
+							else if(actionValue == "Return" && currentStatus == "Submitted to Sales Management")
+							{
+								newStatus = "Returned by Sales Management";
+								input.Iteration_Count = ifNull(input.Iteration_Count,0) + 1;
+								auditAction = "Returned";
+								shouldAudit = true;
+							}
+							else if(actionValue == "Create Revision Copy")
+							{
+								newStatus = "Revised Draft";
+								input.Iteration_Count = ifNull(input.Iteration_Count,0) + 1;
+								auditAction = "Revision Copy Created";
+								shouldAudit = true;
+							}
+							else if(actionValue == "Lock")
+							{
+								newStatus = "Locked";
+								input.Locked = true;
+								auditAction = "Locked";
+								shouldAudit = true;
+							}
+							latestAudit = Approval_Audit_Log[Module_Name == "Sales Plans" && Related_Record_ID == input.ID] sort by Action_On desc range from 0 to 0;
+							if(latestAudit.count() == 0)
+							{
+								createdAuditId = insert into Approval_Audit_Log
+								[
+									Budget_Cycle=input.Budget_Cycle
+									Module_Name="Sales Plans"
+									Related_Record_ID=input.ID
+									Related_Record_Display="Sales Plan " + input.Sales_Plan_No
+									Action="Created"
+									From_Status=""
+									To_Status=currentStatus
+									Iteration_Number=input.Iteration_Count
+									Actor_Email=zoho.loginuserid
+									Action_On=zoho.currenttime
+									Remarks="Sales plan created."
+									Added_User=zoho.loginuser
+								];
+							}
+							if(shouldAudit == true)
+							{
+								input.Status = newStatus;
+								auditRecordId = insert into Approval_Audit_Log
+								[
+									Budget_Cycle=input.Budget_Cycle
+									Module_Name="Sales Plans"
+									Related_Record_ID=input.ID
+									Related_Record_Display="Sales Plan " + input.Sales_Plan_No
+									Action=auditAction
+									From_Status=currentStatus
+									To_Status=newStatus
+									Iteration_Number=input.Iteration_Count
+									Actor_Email=zoho.loginuserid
+									Action_On=zoho.currenttime
+									Remarks=input.Approval_Remarks
+									Added_User=zoho.loginuser
+								];
+								if(newStatus == "Sales Approved")
+								{
+									cycleRec = Budget_Cycles[ID == input.Budget_Cycle];
+									if(cycleRec.count() > 0)
+									{
+										cycleRec.Sales_Approved = true;
+										if(cycleRec.Operations_Approved == true)
+										{
+											cycleRec.Status = "Pending SCM";
+										}
+										else
+										{
+											cycleRec.Status = "Pending Operations";
+										}
+									}
+								}
+								input.Approver_Action = null;
+							}
+						)
+					}
+				}
+
+			
+}

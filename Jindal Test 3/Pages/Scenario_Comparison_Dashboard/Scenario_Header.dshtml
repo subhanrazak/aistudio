@@ -1,0 +1,36 @@
+<%
+	selectedCycle = Budget_Cycles[ID != 0] sort by Opened_Date desc;
+	if(input.Budget_Cycle_ID != null && input.Budget_Cycle_ID > 0)
+	{
+		requestedCycle = Budget_Cycles[ID == input.Budget_Cycle_ID];
+		if(requestedCycle.count() > 0)
+		{
+			selectedCycle = requestedCycle;
+		}
+	}
+	cycleCode = "No cycle selected";
+	cycleName = "Select a Budget Cycle to review.";
+	cycleStatus = "No Data";
+	fyName = "-";
+	if(selectedCycle.count() > 0)
+	{
+		cycleCode = ifNull(selectedCycle.Cycle_Code,"-");
+		cycleName = ifNull(selectedCycle.Cycle_Name,"-");
+		cycleStatus = ifNull(selectedCycle.Status,"-");
+		fyRecords = Financial_Years[ID == selectedCycle.Financial_Year];
+		if(fyRecords.count() > 0)
+		{
+			fyName = ifNull(fyRecords.Year_Name,"-");
+		}
+	}
+%>
+<style>
+.scenario-page{font-family:var(--zc-page-font-family,Arial,sans-serif);background:#f3f3f4;padding:16px;box-sizing:border-box}.scenario-hero{background:linear-gradient(135deg,var(--zcs_brand_color),#1c3d5a);border-radius:16px;color:#fff;padding:24px}.scenario-hero h2{margin:0 0 6px;font-size:24px}.scenario-hero p{margin:0;font-size:14px;opacity:.9}.scenario-pill{display:inline-block;margin-top:14px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.35);border-radius:999px;padding:6px 12px;font-size:13px}.scenario-section{background:#fff;border:1px solid var(--zcs_tertiary_border_color);border-radius:14px;padding:18px;box-sizing:border-box}.scenario-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.scenario-card{border:1px solid var(--zcs_tertiary_border_color);border-radius:12px;padding:14px;background:#fff}.scenario-label{font-size:12px;color:var(--zcs_secondary_text_color)}.scenario-value{font-size:22px;font-weight:700;color:var(--zcs_primary_text_color);margin-top:4px}.scenario-table{width:100%;border-collapse:collapse}.scenario-table th,.scenario-table td{border-top:1px solid var(--zcs_tertiary_border_color);padding:10px;text-align:left}.scenario-table th{background:#f9fafe;color:var(--zcs_primary_text_color)}@media(max-width:900px){.scenario-grid{grid-template-columns:1fr}}
+</style>
+<div class="scenario-page">
+	<div class="scenario-hero">
+		<h2>Scenario Comparison</h2>
+		<p>Financial year <%=fyName%> | Cycle <%=cycleCode%> | Status <%=cycleStatus%></p>
+		<span class="scenario-pill"><%=cycleName%></span>
+	</div>
+</div>

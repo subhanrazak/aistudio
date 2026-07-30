@@ -1,0 +1,36 @@
+<%
+	plants = Plants[Active == true] sort by Plant_Name asc;
+	financialTotal = Financial_Consolidations[ID != 0].count();
+	financialDone = Financial_Consolidations[Status == "Approved Final" || Status == "Completed" || Status == "Locked"].count();
+	financialPct = 0;
+	if(financialTotal != 0)
+	{
+		financialPct = financialDone * 100 / financialTotal;
+	}
+%>
+<div class="ebd-section-card">
+	<div class="ebd-section-title"><h2>Plant Status Matrix</h2><span class="ebd-muted">Financial sign-off <%=financialPct%>%</span></div>
+	<div class="ebd-matrix-grid">
+		<div class="ebd-matrix-head">Plant</div><div class="ebd-matrix-head">Operations availability</div><div class="ebd-matrix-head">Operations production</div><div class="ebd-matrix-head">SCM reviews</div>
+<%
+	if(plants.count() == 0)
+	{
+%>
+		<div class="ebd-matrix-cell" style="grid-column:1 / -1;">No active plants configured.</div>
+<%
+	}
+	else
+	{
+		for each plant in plants
+		{
+			avail = Capacity_TEP_Plans[Plant == plant.ID && Status == "Operations Approved"].count();
+			prod = Operations_Production_Plans[Plant == plant.ID && Status == "Operations Approved"].count();
+			scm = Volume_Consolidations[Plant == plant.ID && Status != "Waiting for Sales and Operations Approval"].count();
+%>
+		<div class="ebd-matrix-cell"><strong><%=plant.Plant_Name%></strong></div><div class="ebd-matrix-cell"><%=avail%> approved</div><div class="ebd-matrix-cell"><%=prod%> approved</div><div class="ebd-matrix-cell"><%=scm%> active/final</div>
+<%
+		}
+	}
+%>
+	</div>
+</div>

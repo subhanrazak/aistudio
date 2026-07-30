@@ -1,0 +1,75 @@
+Budget_Cycles_After_Save as "Budget Cycles After Save"
+{
+
+				type = form
+				form = Budget_Cycles
+
+				record event = on add or edit
+
+				on success
+				{
+					actions
+					{
+						custom deluge script
+						(
+							fy_status = input.Status;
+							if(input.Status == "Draft")
+							{
+								fy_status = "Draft";
+							}
+							financial_year_rec = Financial_Years[ID == input.Financial_Year];
+							if(financial_year_rec.count() > 0)
+							{
+								financial_year_rec.Status = fy_status;
+								if(input.Status == "Completed")
+								{
+									financial_year_rec.Status = "Completed";
+									financial_year_rec.Completion_Date = input.Completion_Date;
+								}
+							}
+							latestAudit = Approval_Audit_Log[Module_Name == "Budget Cycles" && Related_Record_ID == input.ID] sort by Action_On desc range from 0 to 0;
+							previousStatus = "";
+							if(latestAudit.count() > 0)
+							{
+								previousStatus = latestAudit.To_Status;
+							}
+							if(previousStatus != input.Status)
+							{
+								auditAction = "Updated";
+								if(previousStatus == "")
+								{
+									auditAction = "Created";
+								}
+								if(input.Status == "Completed")
+								{
+									auditAction = "Completed";
+								}
+								else if(input.Status == "Closed")
+								{
+									auditAction = "Locked";
+								}
+								else if(input.Status == "Revision Requested")
+								{
+									auditAction = "Revision Requested";
+								}
+								auditRecordId = insert into Approval_Audit_Log
+								[
+									Budget_Cycle=input.ID
+									Module_Name="Budget Cycles"
+									Related_Record_ID=input.ID
+									Related_Record_Display=input.Cycle_Code
+									Action=auditAction
+									From_Status=previousStatus
+									To_Status=input.Status
+									Actor_Email=zoho.loginuserid
+									Action_On=zoho.currenttime
+									Remarks=input.Finance_Notes
+									Added_User=zoho.loginuser
+								];
+							}
+						)
+					}
+				}
+
+			
+}

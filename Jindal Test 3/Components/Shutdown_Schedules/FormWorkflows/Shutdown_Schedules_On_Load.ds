@@ -1,0 +1,64 @@
+Shutdown_Schedules_On_Load as "Shutdown Schedules On Load"
+{
+
+				type =  form
+				form = Shutdown_Schedules
+
+				record event = on add or edit
+
+				on load
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Owner_Email == null)
+										{
+											input.Owner_Email = zoho.loginuserid;
+										}
+										if(input.Status == null)
+										{
+											input.Status = "Draft";
+										}
+										disable Status;
+										disable Annual_Shutdown_Days;
+										disable Annual_Shutdown_Hours;
+										disable Locked;
+										hide Approver_Action;
+										hide Approval_Remarks;
+										disable Approver_Action;
+										disable Approval_Remarks;
+										isOperationsPPC = thisapp.permissions.isUserInProfile("Operations_PPC");
+										isCentralPPC = thisapp.permissions.isUserInProfile("SCM_Central_PPC");
+										isFinance = thisapp.permissions.isUserInProfile("Finance_Costing");
+										isAdmin = thisapp.permissions.isUserInProfile("System_Administrator");
+										canAction = isOperationsPPC || isCentralPPC || isFinance || isAdmin;
+										if(canAction)
+										{
+											show Approver_Action;
+											enable Approver_Action;
+											if(input.Approver_Action == "Reopen")
+											{
+												show Approval_Remarks;
+												enable Approval_Remarks;
+											}
+										}
+										if(input.Locked == true)
+										{
+											disable Budget_Cycle;
+											disable Plant;
+											disable Owner_Email;
+											if(!isAdmin)
+											{
+												hide Approver_Action;
+												hide Approval_Remarks;
+												disable Approver_Action;
+												disable Approval_Remarks;
+											}
+										}
+						)
+					}
+				}
+
+			
+}

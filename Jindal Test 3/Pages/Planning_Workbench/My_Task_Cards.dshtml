@@ -1,0 +1,184 @@
+<%
+	loginEmail = zoho.loginuserid;
+	loginName = zoho.loginuser;
+	isAdmin = thisapp.permissions.isUserInProfile("System_Administrator");
+	isFinance = thisapp.permissions.isUserInProfile("Finance_Costing");
+	isSales = thisapp.permissions.isUserInProfile("Sales_Team");
+	isCOE = thisapp.permissions.isUserInProfile("COE_Team");
+	isSCM = thisapp.permissions.isUserInProfile("SCM_Central_PPC");
+	isOps = thisapp.permissions.isUserInProfile("Operations_PPC");
+	isSMS = thisapp.permissions.isUserInProfile("SMS_Team");
+	isSourcing = thisapp.permissions.isUserInProfile("Sourcing_Team");
+	isPlantOps = thisapp.permissions.isUserInProfile("Plant_Operations");
+	isSalesMgmt = thisapp.permissions.isUserInProfile("Sales_Management");
+	isExec = thisapp.permissions.isUserInProfile("Executive_Management");
+	isAuditor = thisapp.permissions.isUserInProfile("Auditor");
+	profileText = "";
+	if(isAdmin)
+	{
+		profileText = profileText + "System Administrator, ";
+	}
+	if(isFinance)
+	{
+		profileText = profileText + "Finance Costing, ";
+	}
+	if(isSales)
+	{
+		profileText = profileText + "Sales Team, ";
+	}
+	if(isCOE)
+	{
+		profileText = profileText + "COE Team, ";
+	}
+	if(isSCM)
+	{
+		profileText = profileText + "SCM Central PPC, ";
+	}
+	if(isOps)
+	{
+		profileText = profileText + "Operations PPC, ";
+	}
+	if(isSMS)
+	{
+		profileText = profileText + "SMS Team, ";
+	}
+	if(isSourcing)
+	{
+		profileText = profileText + "Sourcing Team, ";
+	}
+	if(isPlantOps)
+	{
+		profileText = profileText + "Plant Operations, ";
+	}
+	if(isSalesMgmt)
+	{
+		profileText = profileText + "Sales Management, ";
+	}
+	if(isExec)
+	{
+		profileText = profileText + "Executive Management, ";
+	}
+	if(isAuditor)
+	{
+		profileText = profileText + "Auditor, ";
+	}
+	if(profileText == "")
+	{
+		profileText = "Operational user";
+	}
+	mySalesItems = Sales_Plans[Owner_Email == loginEmail || Owner_Email == loginName && Status == "Draft" || Status == "Returned by Sales Management" || Status == "Revision Requested by SCM" || Status == "Revised Draft"].count();
+	myShutdownItems = Shutdown_Schedules[Owner_Email == loginEmail || Owner_Email == loginName && Status == "Draft" || Status == "Reopened"].count();
+	myCapacityItems = Capacity_TEP_Plans[Owner_Email == loginEmail || Owner_Email == loginName && Status == "Draft" || Status == "Returned by Operations Approval" || Status == "Revision Requested by SCM" || Status == "Revised Draft"].count();
+	mySMSItems = SMS_Capacity_Plans[Owner_Email == loginEmail || Owner_Email == loginName && Status == "Draft" || Status == "Reopened"].count();
+	myVolumeItems = Volume_Consolidations[Owner_Email == loginEmail || Owner_Email == loginName && Status == "Under SCM Review" || Status == "Revision Requested"].count();
+	myRMItems = Raw_Material_Budgets[Owner_Email == loginEmail || Owner_Email == loginName && Status == "Draft" || Status == "Returned by Sourcing Manager" || Status == "Returned by Finance"].count();
+	myConsumableItems = Consumables_Budgets[Owner_Email == loginEmail || Owner_Email == loginName && Status == "Draft" || Status == "Reopened"].count();
+	myFinanceItems = Financial_Consolidations[Owner_Email == loginEmail || Owner_Email == loginName && Status == "Draft" || Status == "Returned by Management" || Status == "Reopened"].count();
+	myReplanningItems = Replanning_Requests[Requested_By_Email == loginEmail || Requested_By_Email == loginName && Status == "Draft" || Status == "Rejected"].count();
+	myEntryItems = mySalesItems + myShutdownItems + myCapacityItems + mySMSItems + myVolumeItems + myRMItems + myConsumableItems + myFinanceItems + myReplanningItems;
+	returnedItems = mySalesItems + myCapacityItems + mySMSItems + myVolumeItems + myRMItems + myConsumableItems + myFinanceItems;
+	approvalItems = 0;
+	if(isCOE || isAdmin)
+	{
+		approvalItems = approvalItems + Sales_Plans[Status == "Submitted to Sales Management"].count();
+	}
+	if(isSCM || isAdmin)
+	{
+		approvalItems = approvalItems + Volume_Consolidations[Status == "Under SCM Review"].count();
+	}
+	if(isOps || isAdmin)
+	{
+		approvalItems = approvalItems + Capacity_TEP_Plans[Status == "Submitted to Operations Approval"].count() + Operations_Production_Plans[Status == "Submitted to Operations Approval"].count();
+	}
+	if(isSalesMgmt || isAdmin)
+	{
+		approvalItems = approvalItems + Sales_Plans[Status == "Submitted to Sales Management"].count();
+	}
+	if(isSCM || isAdmin)
+	{
+		approvalItems = approvalItems + Volume_Consolidations[Status == "Under SCM Review"].count();
+	}
+	if(isFinance || isAdmin)
+	{
+		approvalItems = approvalItems + Raw_Material_Budgets[Status == "Submitted to Finance"].count() + Consumables_Budgets[Status == "Submitted to Finance"].count() + Replanning_Requests[Status == "Submitted to Finance" || Status == "Finance Approved"].count();
+	}
+	if(isExec || isAdmin)
+	{
+		approvalItems = approvalItems + Financial_Consolidations[Status == "Submitted to Management"].count();
+	}
+	shortfallItems = Volume_Consolidations[Status == "Revision Requested" || Status == "Sales Revision Pending" || Status == "Operations Revision Pending" || Status == "Both Revisions Pending"].count();
+	criticalEvents = Approval_Audit_Log[Action == "Returned" || Action == "Reopened" || Action == "Locked" || Action == "Final Approved" || Action == "Completed"].count();
+	criticalEvents = Approval_Audit_Log[Action in {"Returned","Reopened","Locked","Final Approved"}].count();
+	activeReplans = Replanning_Requests[Status in {"Submitted to Finance","Finance Approved","Revision Created"}].count();
+	%>
+<style>
+/* ===== zcs-global.css ===== */
+:root { --zcs-theme-brand-color: var(--zcs_brand_color); --zcs-page-bg-color: #F3F3F4; --zcs-primary-text-color: var(--zcs_primary_text_color); --zcs-secondary-text-color: var(--zcs_secondary_text_color); --zcs-teritiary-text-color: var(--zcs_tertiary_text_color); --zcs-border-color: var(--zcs_tertiary_border_color); --zcs-white-color: #FFFFFF; --zcs-black-color: #000000; --zcs-thead-color: #F9FAFE; --zcs-tr-h-color: #F9FAFE; }
+.zcs-row{display:flex;flex-wrap:wrap}.zcs-row-wrap{flex-wrap:wrap}.zcs-flex{display:flex}.zcs-inline-flex{display:inline-flex}.zcs-direction-column{flex-direction:column}.zcs-align-items-center{align-items:center}.zcs-align-items-start{align-items:flex-start}.zcs-justify-center{justify-content:center}.zcs-justify-space-between{justify-content:space-between}.zcs-col-common{flex:1 1 0}.zcs-no-shrink{flex-shrink:0}.zcs-w-full{width:100%}.zcs-h-full{height:100%}.zcs-wh-full{width:100%;height:100%}.zcs-box-border{box-sizing:border-box}.zcs-relative{position:relative}.zcs-sticky{position:sticky}.zcs-ellipsis{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.zcs-overflow-auto{overflow:auto}.zcs-cursor-pointer{cursor:pointer}.zcs-card{background-color:var(--zcs-white-color);border:1px solid #e7e7ee;border-radius:12px}.zcs-m-0{margin:0}.zcs-mt-16{margin-top:1rem}.zcs-p-0{padding:0}.zcs-p-2{padding:.125rem}.zcs-p-8{padding:.5rem}.zcs-p-10{padding:.625rem}.zcs-p-12{padding:.75rem}.zcs-p-16{padding:1rem}.zcs-p-20{padding:1.25rem}.zcs-p-24{padding:1.5rem}.zcs-px-6{padding-left:.375rem;padding-right:.375rem}.zcs-px-8{padding-left:.5rem;padding-right:.5rem}.zcs-px-10{padding-left:.625rem;padding-right:.625rem}.zcs-px-12{padding-left:.75rem;padding-right:.75rem}.zcs-px-16{padding-left:1rem;padding-right:1rem}.zcs-px-24{padding-left:1.5rem;padding-right:1.5rem}.zcs-px-30{padding-left:1.875rem;padding-right:1.875rem}.zcs-py-2{padding-top:.125rem;padding-bottom:.125rem}.zcs-py-4{padding-top:.25rem;padding-bottom:.25rem}.zcs-py-8{padding-top:.5rem;padding-bottom:.5rem}.zcs-py-10{padding-top:.625rem;padding-bottom:.625rem}.zcs-py-12{padding-top:.75rem;padding-bottom:.75rem}.zcs-py-16{padding-top:1rem;padding-bottom:1rem}.zcs-pb-0{padding-bottom:0}.zcs-pl-24{padding-left:1.5rem}.zcs-gap-4{gap:.25rem}.zcs-gap-6{gap:.375rem}.zcs-gap-8{gap:.5rem}.zcs-gap-10{gap:.625rem}.zcs-gap-12{gap:.75rem}.zcs-gap-16{gap:1rem}.zcs-gap-20{gap:1.25rem}.zcs-gap-24{gap:1.5rem}.zcs-rounded-sm{border-radius:.25rem}.zcs-rounded-md{border-radius:.375rem}.zcs-rounded-lg{border-radius:.5rem}.zcs-rounded-xl{border-radius:.75rem}.zcs-font-11{font-size:.6875rem}.zcs-font-12{font-size:.75rem}.zcs-font-13{font-size:.8125rem}.zcs-font-14{font-size:.875rem}.zcs-font-15{font-size:.9375rem}.zcs-font-16{font-size:1rem}.zcs-font-18{font-size:1.125rem}.zcs-font-20{font-size:1.25rem}.zcs-font-22{font-size:1.375rem}.zcs-font-28{font-size:1.75rem}.zcs-font-normal{font-weight:400}.zcs-font-medium{font-weight:500}.zcs-font-semibold{font-weight:600}.zcs-font-bold{font-weight:700}.zcs-lh-body{line-height:1.5}.zcs-lh-heading{line-height:1.25}.zcs-uppercase{text-transform:uppercase}.zcs-text-left{text-align:left}.zcs-text-right{text-align:right}.zcs-text-center{text-align:center}.zcs-color-theme{color:var(--zcs_brand_color)}.zcs-color-primary{color:var(--zcs_primary_text_color)}.zcs-color-secondary{color:var(--zcs_secondary_text_color)}.zcs-color-tertiary{color:var(--zcs_tertiary_text_color)}.zcs-color-white{color:var(--zcs-white-color)}a{text-decoration:none}.zcs-color-green{color:#179E6C}.zcs-color-red{color:#FE455D}.zcs-color-yellow{color:#b8770d}.zcs-color-blue{color:#09598E}.zcs-color-l_blue{color:#1094C5}
+/* Badge with Icon */
+.zcs-badge{width:auto}.zcs-badge-filled-outline,.zcs-badge-outline{border:1px solid}.zcs-badge-filled-outline.zcs-badge-theme{background-color:var(--zcs_component_hover_color);border-color:var(--zcs_brand_color);color:var(--zcs_brand_color)}.zcs-badge-filled-outline.zcs-badge-green{background-color:#E4FCF3;border-color:#179E6C;color:#179E6C}.zcs-badge-filled-outline.zcs-badge-red{background-color:#FDE3E6;border-color:#FE455D;color:#FE455D}.zcs-badge-filled-outline.zcs-badge-yellow{background-color:#FCF4E6;border-color:#FAAE13;color:#b8770d}.zcs-badge-filled-outline.zcs-badge-blue{background-color:#E8EFFF;border-color:#2A6FFC;color:#2A6FFC}.zcs-badge-filled-outline.zcs-badge-grey{background-color:#e8e8e8;border-color:#242424;color:#242424}
+/* Primary Outline Button No Icon */
+.zcs-button{width:auto;min-width:5rem;min-height:36px}.zcs-primary-outline-button{border:1px solid var(--zcs_brand_color);background-color:var(--zcs-white-color);color:var(--zcs_brand_color)}.zcs-primary-outline-button:hover{background-color:var(--zcs_component_hover_color);border-color:var(--zcs_brand_color);color:var(--zcs_brand_color)}.zcs-primary-button{background-color:var(--zcs_brand_color);color:var(--zcs_brand_foreground_color)}.zcs-primary-button:hover{background-color:var(--zcs_brand_dark_color)}.zcs-fw-button{width:100%}
+/* Simple Table */
+.zcs-table-wrapper{border:1px solid var(--zcs_tertiary_border_color);background-color:var(--zcs-white-color);overflow:auto}.zcs-table-wrapper table{line-height:normal;border-collapse:collapse}.zcs-table-wrapper table thead{top:0}.zcs-table-wrapper table thead tr th{background-color:var(--zcs-thead-color);box-shadow:0 -1px 0 0 var(--zcs_tertiary_border_color) inset;white-space:nowrap}.zcs-table-wrapper table tbody tr td{border-top:1px solid var(--zcs_tertiary_border_color)}.zcs-table-wrapper table tbody tr:first-child td{border-color:transparent}.zcs-table-wrapper table tbody tr:hover td{background-color:var(--zcs-tr-h-color)}.zcs-table-wrapper table tbody tr td.zcs-green{color:#179e6c}.zcs-table-wrapper table tbody tr td.zcs-red{color:#fe455d}.zcs-table-wrapper table tbody tr td.zcs-yellow{color:#b8770d}.zcs-table-wrapper table tbody tr td.zcs-l_blue{color:#1094c5}
+/* Outline Banner with Icon */
+.zcs-outline-toast{border:1px solid}.zcs-theme-toast{background-color:var(--zcs_component_hover_color)}.zcs-outline-toast.zcs-theme-toast{border:1px solid var(--zcs_brand_color)}.zcs-warning-toast{background-color:#fef4e5;color:#663c01}.zcs-info-toast{background-color:#e4f6fd;color:#024361}.zcs-toast-link:hover{text-decoration:underline}
+/* Card Type Quick Actions */
+.zcs-quick-action-item{list-style-type:none}.zcs-quick-action-item.zcs-card:hover{border-color:var(--zcs_brand_color)}.zcs-quick-action-item:hover .zcs-quick-action-link{color:var(--zcs_brand_color)}.zcs-quick-action-item:hover .zcs-quick-action-text{text-decoration:none}
+/* Notes With List */
+.zcs-notes-wrapper ul{list-style-type:disc}.zcs-notes-wrapper ul li::marker{color:var(--zcs_tertiary_text_color)}
+/* Planning Workbench custom layout */
+.pw-shell{background:var(--zcs-page-bg-color);padding:20px;box-sizing:border-box}.pw-hero{background:linear-gradient(135deg,var(--zcs_brand_color),#1c3d5a);color:var(--zcs_brand_foreground_color);border-radius:16px;padding:22px;box-sizing:border-box;overflow:hidden;position:relative}.pw-hero:after{content:"";position:absolute;right:-70px;top:-80px;width:220px;height:220px;border:32px solid rgba(255,255,255,.12);border-radius:50%}.pw-hero h2{margin:0 0 6px 0;font-size:24px;line-height:1.2}.pw-hero p{margin:0;opacity:.88}.pw-card-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-top:16px}.pw-metric-card{min-height:126px}.pw-metric-icon{width:42px;height:42px;border-radius:12px;background:var(--zcs_component_hover_color);color:var(--zcs_brand_color)}.pw-metric-value{font-size:30px;font-weight:700;line-height:1;color:var(--zcs_primary_text_color)}.pw-metric-label{color:var(--zcs_secondary_text_color)}.pw-small-link{color:var(--zcs_brand_color);font-size:13px;font-weight:500}.pw-queue-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.pw-queue-card{min-height:210px}.pw-queue-card h5{margin:0}.pw-queue-actions{margin-top:auto}.pw-muted{color:var(--zcs_tertiary_text_color)}.pw-report-note{margin:12px 0 0}.pw-guidance-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.pw-step{border-left:3px solid var(--zcs_brand_color);padding-left:12px}.pw-report-wrap{padding:8px 20px;background:var(--zcs-page-bg-color)}
+@media(max-width:1100px){.pw-card-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.pw-queue-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:700px){.pw-shell{padding:12px}.pw-card-grid,.pw-queue-grid,.pw-guidance-grid{grid-template-columns:1fr}.pw-hero{padding:18px}}
+</style>
+<div class='pw-shell'>
+	<div class='pw-hero zcs-flex zcs-justify-space-between zcs-gap-16 zcs-align-items-center'>
+		<div class='zcs-col-common'>
+			<h2>Planning Workbench</h2>
+			<p>Signed in as <strong><%=loginName%></strong>. Queues are inferred from your profile, delegated authority and record status.</p>
+		</div>
+		<div class='zcs-badge zcs-badge-filled-outline zcs-badge-theme zcs-inline-flex zcs-align-items-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border'>
+			<i class='zcs-badge-icon zc-li-outline users-single-01'></i>
+			<span class='zcs-badge-text zcs-font-14'><%=profileText%></span>
+		</div>
+	</div>
+	<div class='pw-card-grid'>
+		<div class='pw-metric-card zcs-card zcs-p-20 zcs-box-border zcs-flex zcs-direction-column zcs-gap-12'>
+			<div class='zcs-flex zcs-justify-space-between zcs-align-items-center'>
+				<div class='pw-metric-icon zcs-flex zcs-align-items-center zcs-justify-center'><i class='zc-li-outline ui-2-time zcs-font-22'></i></div>
+				<span class='zcs-badge zcs-badge-filled-outline zcs-badge-blue zcs-inline-flex zcs-align-items-center zcs-gap-6 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-font-13'>Open</span>
+			</div>
+			<div class='pw-metric-value'><%=myEntryItems%></div>
+			<div class='pw-metric-label zcs-font-14'>My draft, returned or reopened entries</div>
+			<a class='pw-small-link' href='#Report:My_Sales_Plan_Workqueue'>Open my sales workqueue</a>
+		</div>
+		<div class='pw-metric-card zcs-card zcs-p-20 zcs-box-border zcs-flex zcs-direction-column zcs-gap-12'>
+			<div class='zcs-flex zcs-justify-space-between zcs-align-items-center'>
+				<div class='pw-metric-icon zcs-flex zcs-align-items-center zcs-justify-center'><i class='zc-li-outline ui-1-check-circle-08 zcs-font-22'></i></div>
+				<span class='zcs-badge zcs-badge-filled-outline zcs-badge-green zcs-inline-flex zcs-align-items-center zcs-gap-6 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-font-13'>Action</span>
+			</div>
+			<div class='pw-metric-value'><%=approvalItems%></div>
+			<div class='pw-metric-label zcs-font-14'>Approval or validation items visible to your role</div>
+			<a class='pw-small-link' href='#Report:Sales_Plan_Approval_Queue'>Open sales approval queue</a>
+		</div>
+		<div class='pw-metric-card zcs-card zcs-p-20 zcs-box-border zcs-flex zcs-direction-column zcs-gap-12'>
+			<div class='zcs-flex zcs-justify-space-between zcs-align-items-center'>
+				<div class='pw-metric-icon zcs-flex zcs-align-items-center zcs-justify-center'><i class='zc-li-outline ui-3-alert zcs-font-22'></i></div>
+				<span class='zcs-badge zcs-badge-filled-outline zcs-badge-yellow zcs-inline-flex zcs-align-items-center zcs-gap-6 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-font-13'>Exception</span>
+			</div>
+			<div class='pw-metric-value'><%=shortfallItems%></div>
+			<div class='pw-metric-label zcs-font-14'>Amber or red volume shortfall buckets</div>
+			<a class='pw-small-link' href='#Report:Shortfall_Buckets'>Review shortfalls</a>
+		</div>
+		<div class='pw-metric-card zcs-card zcs-p-20 zcs-box-border zcs-flex zcs-direction-column zcs-gap-12'>
+			<div class='zcs-flex zcs-justify-space-between zcs-align-items-center'>
+				<div class='pw-metric-icon zcs-flex zcs-align-items-center zcs-justify-center'><i class='zc-li-outline arrows-1-refresh-69 zcs-font-22'></i></div>
+				<span class='zcs-badge zcs-badge-filled-outline zcs-badge-red zcs-inline-flex zcs-align-items-center zcs-gap-6 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-font-13'>Audit</span>
+			</div>
+			<div class='pw-metric-value'><%=activeReplans%></div>
+			<div class='pw-metric-label zcs-font-14'>Active replanning requests; <%=criticalEvents%> critical audit events logged</div>
+			<a class='pw-small-link' href='#Report:Active_Replanning_Requests'>Open replanning queue</a>
+		</div>
+	</div>
+</div>

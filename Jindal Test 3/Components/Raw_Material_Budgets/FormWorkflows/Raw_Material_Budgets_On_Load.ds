@@ -1,0 +1,96 @@
+Raw_Material_Budgets_On_Load as "Raw Material Budgets On Load"
+{
+
+				type =  form
+				form = Raw_Material_Budgets
+
+				record event = on add or edit
+
+				on load
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Owner_Email == null)
+										{
+											input.Owner_Email = zoho.loginuserid;
+										}
+										if(input.Status == null)
+										{
+											input.Status = "Draft";
+										}
+										disable Annual_Requirement_MT;
+										disable Available_Raw_Material_Total_MT;
+										disable To_Be_Raised_Total_MT;
+										disable Cost_Forecast_Total;
+										disable Status;
+										disable Iteration_Count;
+										disable Locked;
+										disable Owner_Email;
+										hide Approver_Action;
+										hide Approval_Remarks;
+										disable Approver_Action;
+										disable Approval_Remarks;
+										if(input.Budget_Cycle != null && input.Requested_Financial_Year == null)
+										{
+											cycleRecForFY = Budget_Cycles[ID == input.Budget_Cycle];
+											if(cycleRecForFY.count() > 0)
+											{
+												input.Requested_Financial_Year = cycleRecForFY.Financial_Year;
+											}
+										}
+										if(input.Locked == true)
+										{
+											disable Budget_Cycle;
+											disable Requested_Financial_Year;
+											disable Plant;
+											disable Material;
+											disable Previous_Year_Price;
+											disable Market_Price_Month_1;
+											disable Market_Price_Month_2;
+											disable Market_Price_Month_3;
+											disable Lead_Time_Days;
+											disable In_Plant_Inventory_MT;
+											disable In_Transit_Inventory_MT;
+										}
+										isSourcing = thisapp.permissions.isUserInProfile("Sourcing_Team");
+										isSourcingManager = thisapp.permissions.isUserInProfile("SCM_Central_PPC");
+										isFinance = thisapp.permissions.isUserInProfile("Finance_Costing");
+										isAdmin = thisapp.permissions.isUserInProfile("System_Administrator");
+										delegatedSourcing = Approval_Delegations[Delegate_Email == zoho.loginuserid && Profile_Name == "Sourcing_Team" && Module_Name == "Raw Material Budget" && Active == true && Start_Date <= zoho.currentdate && End_Date >= zoho.currentdate].count() > 0;
+										delegatedManager = Approval_Delegations[Delegate_Email == zoho.loginuserid && Profile_Name == "SCM_Central_PPC" && Module_Name == "Raw Material Budget" && Active == true && Start_Date <= zoho.currentdate && End_Date >= zoho.currentdate].count() > 0;
+										delegatedFinance = Approval_Delegations[Delegate_Email == zoho.loginuserid && Profile_Name == "Finance_Costing" && Module_Name == "Raw Material Budget" && Active == true && Start_Date <= zoho.currentdate && End_Date >= zoho.currentdate].count() > 0;
+										canAct = false;
+										if(input.Status == "Draft" || input.Status == "Returned by Sourcing Manager" || input.Status == "Returned by Finance" || input.Status == "Reopened" && isSourcing || isAdmin || delegatedSourcing)
+										{
+											canAct = true;
+										}
+										else if(input.Status == "Submitted to Sourcing Manager" && isSourcingManager || isAdmin || delegatedManager)
+										{
+											canAct = true;
+										}
+										else if(input.Status == "Submitted to Finance" || input.Status == "Approved" && isFinance || isAdmin || delegatedFinance)
+										{
+											canAct = true;
+										}
+										else if(input.Status == "Locked" && isFinance || isAdmin || delegatedFinance)
+										{
+											canAct = true;
+										}
+										if(canAct == true)
+										{
+											show Approver_Action;
+											enable Approver_Action;
+											if(input.Approver_Action == "Return" || input.Approver_Action == "Reopen")
+											{
+												show Approval_Remarks;
+												enable Approval_Remarks;
+											}
+										}
+						)
+					}
+				}
+
+			
+}

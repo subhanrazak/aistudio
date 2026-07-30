@@ -1,0 +1,176 @@
+Raw_Material_Budgets_After_Save as "Raw Material Budgets After Save"
+{
+
+				type =  form
+				form = Raw_Material_Budgets
+
+				record event = on add or edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Owner_Email == null)
+										{
+											input.Owner_Email = zoho.loginuserid;
+										}
+										currentStatus = input.Status;
+										actionValue = input.Approver_Action;
+										newStatus = currentStatus;
+										auditAction = "";
+										shouldAudit = false;
+										isReturn = false;
+										isFinalApproval = false;
+										isFinalLock = false;
+										if(actionValue == "Submit" && currentStatus == "Draft" || currentStatus == "Returned by Sourcing Manager" || currentStatus == "Returned by Finance" || currentStatus == "Reopened")
+										{
+											newStatus = "Submitted to Sourcing Manager";
+											auditAction = "Submitted";
+											shouldAudit = true;
+										}
+										else if(actionValue == "Approve" && currentStatus == "Submitted to Sourcing Manager")
+										{
+											newStatus = "Submitted to Finance";
+											auditAction = "Approved";
+											shouldAudit = true;
+										}
+										else if(actionValue == "Approve" && currentStatus == "Submitted to Finance")
+										{
+											newStatus = "Approved";
+											auditAction = "Approved";
+											shouldAudit = true;
+											isFinalApproval = true;
+										}
+										else if(actionValue == "Lock" && currentStatus == "Submitted to Finance" || currentStatus == "Approved")
+										{
+											newStatus = "Locked";
+											input.Locked = true;
+											auditAction = "Locked";
+											shouldAudit = true;
+											isFinalApproval = true;
+											isFinalLock = true;
+										}
+										else if(actionValue == "Return")
+										{
+											isReturn = true;
+											auditAction = "Returned";
+											shouldAudit = true;
+											if(currentStatus == "Submitted to Sourcing Manager")
+											{
+												newStatus = "Returned by Sourcing Manager";
+											}
+											else if(currentStatus == "Submitted to Finance")
+											{
+												newStatus = "Returned by Finance";
+											}
+										}
+										else if(actionValue == "Reopen" && currentStatus == "Locked")
+										{
+											newStatus = "Reopened";
+											input.Locked = false;
+											isReturn = true;
+											auditAction = "Reopened";
+											shouldAudit = true;
+										}
+										latestAudit = Approval_Audit_Log[Module_Name == "Raw Material Budget" && Related_Record_ID == input.ID] sort by Action_On desc range from 0 to 0;
+										if(latestAudit.count() == 0)
+										{
+											createdAuditId = insert into Approval_Audit_Log
+											[
+												Budget_Cycle=input.Budget_Cycle
+												Module_Name="Raw Material Budget"
+												Related_Record_ID=input.ID
+												Related_Record_Display="RM Budget " + input.RM_Budget_No
+												Action="Created"
+												From_Status=""
+												To_Status=currentStatus
+												Iteration_Number=input.Iteration_Count
+												Actor_Email=zoho.loginuserid
+												Action_On=zoho.currenttime
+												Remarks="Raw material budget created."
+												Added_User=zoho.loginuser
+											];
+										}
+										if(shouldAudit == true)
+										{
+											if(isReturn == true)
+											{
+												input.Iteration_Count = ifNull(input.Iteration_Count,0) + 1;
+											}
+											input.Status = newStatus;
+											auditRecordId = insert into Approval_Audit_Log
+											[
+												Budget_Cycle=input.Budget_Cycle
+												Module_Name="Raw Material Budget"
+												Related_Record_ID=input.ID
+												Related_Record_Display="RM Budget " + input.RM_Budget_No
+												Action=auditAction
+												From_Status=currentStatus
+												To_Status=newStatus
+												Iteration_Number=input.Iteration_Count
+												Actor_Email=zoho.loginuserid
+												Action_On=zoho.currenttime
+												Remarks=input.Approval_Remarks
+												Added_User=zoho.loginuser
+											];
+											if(isReturn == true && input.Owner_Email != null)
+											{
+												sendmail
+												[
+													from :zoho.adminuserid
+													to :input.Owner_Email
+													subject :"Raw Material Budget Returned: " + input.RM_Budget_No
+													message :"Your Raw Material Budget has been returned from " + currentStatus + ". Remarks: " + input.Approval_Remarks
+												]
+											}
+											if(isFinalApproval == true)
+											{
+												input.Status = newStatus;
+												approvedRawMaterialCost = 0.0;
+												approvedRawMaterialBudgets = Raw_Material_Budgets[Budget_Cycle == input.Budget_Cycle && Status in {"Approved","Locked"}];
+												for each  approvedRawMaterialBudget in approvedRawMaterialBudgets
+												{
+													approvedRawMaterialCost = approvedRawMaterialCost + ifNull(approvedRawMaterialBudget.Cost_Forecast_Total,0);
+												}
+												financialConsolidations = Financial_Consolidations[Budget_Cycle == input.Budget_Cycle];
+												for each  financialConsolidation in financialConsolidations
+												{
+													financialConsolidation.Raw_Material_Cost=approvedRawMaterialCost;
+												}
+												recalculationAuditId = insert into Approval_Audit_Log
+												[
+													Budget_Cycle=input.Budget_Cycle
+													Module_Name="Financial Consolidation"
+													Related_Record_ID=input.Budget_Cycle
+													Related_Record_Display="Raw Material Cost Refresh"
+													Action="System Recalculated"
+													From_Status="Raw Material Budget"
+													To_Status=newStatus
+													Iteration_Number=input.Iteration_Count
+													Actor_Email=zoho.loginuserid
+													Action_On=zoho.currenttime
+													Remarks="Raw_Material_Cost refreshed from approved raw material budgets."
+													Added_User=zoho.loginuser
+												];
+											}
+											if(isFinalLock == true)
+											{
+												sendmail
+												[
+													from :zoho.adminuserid
+													to :zoho.adminuserid
+													cc:input.Owner_Email
+													subject :"Raw Material Budget Locked: " + input.RM_Budget_No
+													message :"Raw Material Budget " + input.RM_Budget_No + " is approved and locked. Financial Consolidations have been refreshed with approved raw-material cost."
+												]
+											}
+											input.Approver_Action = null;
+										}
+						)
+					}
+				}
+
+			
+}
