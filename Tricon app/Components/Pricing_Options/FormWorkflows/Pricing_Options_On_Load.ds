@@ -1,0 +1,52 @@
+Pricing_Options_On_Load as "Pricing Options On Load"
+{
+
+				type =  form
+				form = Pricing_Options
+
+				record event = on add or edit
+
+				on load
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											disable Calculated_On;
+										if(input.Pricing_Request != null)
+										{
+											reqRec = Pricing_Requests[ID == input.Pricing_Request];
+											if(reqRec.count() > 0)
+											{
+												if(input.Customer == null)
+												{
+													input.Customer = reqRec.Customer;
+												}
+												if(input.Customer_Branch == null && reqRec.Primary_Branch != null)
+												{
+													input.Customer_Branch = reqRec.Primary_Branch;
+												}
+												if(input.Quote_Currency == null || input.Quote_Currency == "")
+												{
+													input.Quote_Currency = reqRec.Quote_Currency;
+												}
+											}
+										}
+										if(input.Customer != null && input.Margin_Percent == null || input.Margin_Percent == 0)
+										{
+											agr = Customer_Commercial_Agreements[Customer == input.Customer && Agreement_Status == "Active" && Effective_From <= zoho.currentdate && Effective_To == null || Effective_To >= zoho.currentdate] sort by Effective_From desc range from 0 to 1;
+											if(agr.count() > 0 && agr.Default_Margin_Percent != null)
+											{
+												input.Margin_Percent = agr.Default_Margin_Percent;
+											}
+										}
+										if(input.Calculation_Status == null || input.Calculation_Status == "")
+										{
+											input.Calculation_Status = "Draft";
+										}
+						)
+					}
+				}
+
+			
+}

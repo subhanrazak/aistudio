@@ -1,0 +1,32 @@
+Customers_On_Success as "Customers On Success"
+{
+
+				type =  form
+				form = Customers
+
+				record event = on add or edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											actionText = "Updated";
+										insert into Audit_Logs
+										[
+											Added_User=zoho.loginuser
+											Module_Name="Customers"
+											Record_Display=input.Customer_Name
+											Record_ID_Text=input.ID.toString()
+											Action_Type=actionText
+											Changed_By=zoho.loginuser
+											Summary="Customer " + input.Customer_Code + " - " + input.Customer_Name + " saved with status " + input.Customer_Status + "."
+											Severity="Info"
+										]
+						)
+					}
+				}
+
+			
+}

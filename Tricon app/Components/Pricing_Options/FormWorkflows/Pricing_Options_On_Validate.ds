@@ -1,0 +1,85 @@
+Pricing_Options_On_Validate as "Pricing Options On Validate"
+{
+
+				type =  form
+				form = Pricing_Options
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Total_Quantity_KG <= 0)
+										{
+											alert "Total quantity must be greater than zero.";
+											cancel submit;
+										}
+										if(input.Margin_Percent < 0 || input.Margin_Percent >= 100)
+										{
+											alert "Margin percent must be at least 0 and less than 100.";
+											cancel submit;
+										}
+										if(input.Pricing_Request != null)
+										{
+											reqRec = Pricing_Requests[ID == input.Pricing_Request];
+											if(reqRec.count() > 0)
+											{
+												if(!thisapp.permissions.isUserInProfile("Pricing_Admin") && reqRec.Request_Status == "Approved" || reqRec.Request_Status == "Quote Generated" || reqRec.Request_Status == "Sent" || reqRec.Request_Status == "Expired" || reqRec.Request_Status == "Cancelled")
+												{
+													alert "This pricing request is locked for non-admin edits.";
+													cancel submit;
+												}
+											}
+										}
+										prodRec = Product_Catalog[ID == input.Product];
+										if(prodRec.count() == 0 || prodRec.Product_Status != "Active")
+										{
+											alert "Pricing options require an active product.";
+											cancel submit;
+										}
+										branchRec = Customer_Branches[ID == input.Customer_Branch];
+										if(branchRec.count() == 0 || branchRec.Branch_Status != "Active")
+										{
+											alert "Pricing options require an active customer branch.";
+											cancel submit;
+										}
+										portRec = Arrival_Ports[ID == input.Arrival_Port];
+										if(portRec.count() == 0 || portRec.Port_Status != "Active")
+										{
+											alert "Pricing options require an active arrival port.";
+											cancel submit;
+										}
+										packRec = Packaging_Options[ID == input.Packaging];
+										if(packRec.count() == 0 || packRec.Packaging_Status != "Active")
+										{
+											alert "Pricing options require an active packaging option.";
+											cancel submit;
+										}
+										deliveryRec = Delivery_Models[ID == input.Delivery_Model];
+										if(deliveryRec.count() == 0 || deliveryRec.Delivery_Status != "Active")
+										{
+											alert "Pricing options require an active delivery model.";
+											cancel submit;
+										}
+										if(input.Option_Code == null || input.Option_Code == "")
+										{
+											reqText = "REQ";
+											if(input.Pricing_Request != null)
+											{
+												reqRecForCode = Pricing_Requests[ID == input.Pricing_Request];
+												if(reqRecForCode.count() > 0)
+												{
+													reqText = reqRecForCode.Request_Number.toString();
+												}
+											}
+											input.Option_Code = reqText + "-OPT-" + zoho.currenttime.toString("yyyyMMddHHmmss");
+										}
+						)
+					}
+				}
+
+			
+}

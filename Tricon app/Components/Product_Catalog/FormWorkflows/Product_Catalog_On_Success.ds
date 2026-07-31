@@ -1,0 +1,32 @@
+Product_Catalog_On_Success as "Product Catalog On Success"
+{
+
+				type =  form
+				form = Product_Catalog
+
+				record event = on add or edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											actionText = "Updated";
+										insert into Audit_Logs
+										[
+											Added_User=zoho.loginuser
+											Module_Name="Product_Catalog"
+											Record_Display=input.Product_Code
+											Record_ID_Text=input.ID.toString()
+											Action_Type=actionText
+											Changed_By=zoho.loginuser
+											Summary="Product " + input.Product_Code + " saved as " + input.Application_Category + " / " + input.Resin_Subcategory + " with status " + input.Product_Status + "."
+											Severity="Info"
+										]
+						)
+					}
+				}
+
+			
+}

@@ -1,0 +1,31 @@
+FX_Rates_On_Validate as "FX Rates On Validate"
+{
+
+				type =  form
+				form = FX_Rates
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											input.Rate_Key = input.From_Currency + "-" + input.To_Currency + "-" + input.Rate_Date.toString("yyyyMMdd");
+										if(input.Exchange_Rate <= 0)
+										{
+											alert "Exchange Rate must be greater than zero.";
+											cancel submit;
+										}
+										if(input.From_Currency == input.To_Currency && input.Exchange_Rate != 1)
+										{
+											alert "Same-currency exchange rates must equal 1.";
+											cancel submit;
+										}
+						)
+					}
+				}
+
+			
+}

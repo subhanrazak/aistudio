@@ -1,0 +1,31 @@
+FX_Rates_On_Success as "FX Rates On Success"
+{
+
+				type =  form
+				form = FX_Rates
+
+				record event = on add or edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											insert into Audit_Logs
+										[
+											Module_Name="FX_Rates"
+											Record_Display=input.Rate_Key
+											Record_ID_Text=input.ID.toString()
+											Action_Type="Updated"
+											Changed_By=zoho.loginuser
+											Summary="FX rate " + input.Rate_Key + " saved at " + input.Exchange_Rate + "."
+											Severity="Info"
+											Added_User=zoho.loginuser
+										]
+						)
+					}
+				}
+
+			
+}

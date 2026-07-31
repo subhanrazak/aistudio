@@ -1,0 +1,34 @@
+Quote_Documents_Pricing_Request_On_User_Input as "Quote Documents Pricing Request On User Input"
+{
+
+				type =  form
+				form = Quote_Documents
+
+				record event = on add or edit
+
+				on user input of Pricing_Request
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Pricing_Request != null)
+										{
+											reqRec = Pricing_Requests[ID == input.Pricing_Request];
+											if(reqRec.count() > 0)
+											{
+												input.Customer = reqRec.Customer;
+												input.Quote_Currency = reqRec.Quote_Currency;
+												input.Valid_Until = reqRec.Valid_Until;
+												input.Payment_Terms = reqRec.Payment_Terms;
+												input.Quote_Title = "Quote for request " + reqRec.Request_Number.toString();
+											}
+											calculatedOptions = Pricing_Options[Pricing_Request == input.Pricing_Request && Calculation_Status == "Calculated"];
+											input.Total_Options = calculatedOptions.count();
+										}
+						)
+					}
+				}
+
+			
+}

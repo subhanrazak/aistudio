@@ -1,0 +1,353 @@
+Pricing_Request_Approval as "Pricing Request Approval"
+{
+
+        			type = Blueprint
+        			form = Pricing_Requests
+        			start
+        			{
+            			start stage = "Draft"
+        			}
+        			stages
+        			{
+           			"Draft"
+           			{
+           			}
+           			"Calculated"
+           			{
+           			}
+           			"Submitted for Approval"
+           			{
+           			}
+           			"Approved"
+           			{
+           			}
+           			"Rejected"
+           			{
+           			}
+           			"Quote Generated"
+           			{
+           			}
+           			"Sent"
+           			{
+           			}
+           			"Expired"
+           			{
+           			}
+           			"Cancelled"
+           			{
+           			}
+        			}
+        			transitions
+        			{
+    				Approve_Request as "Approve Request"
+    				{
+         				type = normal
+         				from stage = "Submitted for Approval"
+         				to stage = "Approved"
+         				before
+         				{
+            				transition owner
+            				(
+                				permissions = {"Management_Approver"}
+             				)
+         				}
+         				after
+         				{
+							actions 
+							{
+								custom deluge script
+								(
+															input.Approved_By = zoho.loginuser;
+														input.Approved_On = zoho.currenttime;
+														insert into Audit_Logs
+														[
+															Module_Name="Pricing_Requests"
+															Record_Display=input.Request_Number.toString()
+															Record_ID_Text=input.ID.toString()
+															Action_Type="Approved"
+															Changed_By=zoho.loginuser
+															Summary="Pricing request approved."
+															Related_Customer=input.Customer
+															Related_Request=input.ID
+															Severity="Info"
+															Added_User=zoho.loginuser
+														]
+								)
+							}
+         				}
+  				}
+    				Cancel_Request as "Cancel Request"
+    				{
+         				type = common
+         				from stage = "Draft"
+         				to stage = "Cancelled"
+         				common stages = {"Quote Generated", "Approved", "Calculated", "Rejected", "Submitted for Approval", "Sent"}
+         				before
+         				{
+            				transition owner
+            				(
+                				permissions = {"Pricing_Admin"}
+             				)
+         				}
+         				after
+         				{
+							actions 
+							{
+								custom deluge script
+								(
+															insert into Audit_Logs
+														[
+															Module_Name="Pricing_Requests"
+															Record_Display=input.Request_Number.toString()
+															Record_ID_Text=input.ID.toString()
+															Action_Type="Cancelled"
+															Changed_By=zoho.loginuser
+															Summary="Pricing request cancelled."
+															Related_Customer=input.Customer
+															Related_Request=input.ID
+															Severity="Warning"
+															Added_User=zoho.loginuser
+														]
+								)
+							}
+         				}
+  				}
+    				Expire_Request as "Expire Request"
+    				{
+         				type = common
+         				from stage = "Quote Generated"
+         				to stage = "Expired"
+         				common stages = {"Sent"}
+         				before
+         				{
+            				transition owner
+            				(
+                				permissions = {"Pricing_Admin"}
+             				)
+         				}
+         				after
+         				{
+							actions 
+							{
+								custom deluge script
+								(
+															insert into Audit_Logs
+														[
+															Module_Name="Pricing_Requests"
+															Record_Display=input.Request_Number.toString()
+															Record_ID_Text=input.ID.toString()
+															Action_Type="Expired"
+															Changed_By=zoho.loginuser
+															Summary="Pricing request expired."
+															Related_Customer=input.Customer
+															Related_Request=input.ID
+															Severity="Info"
+															Added_User=zoho.loginuser
+														]
+								)
+							}
+         				}
+  				}
+    				Generate_Quote as "Generate Quote"
+    				{
+         				type = normal
+         				from stage = "Approved"
+         				to stage = "Quote Generated"
+         				before
+         				{
+            				transition owner
+            				(
+                				permissions = {"Pricing_Admin"}
+             				)
+         				}
+         				after
+         				{
+							actions 
+							{
+								custom deluge script
+								(
+															quoteCheck = Quote_Documents[Pricing_Request == input.ID];
+														if(quoteCheck.count() == 0)
+														{
+															insert into Quote_Documents
+															[
+																Pricing_Request=input.ID
+																Customer=input.Customer
+																Quote_Date=zoho.currentdate
+																Valid_Until=input.Valid_Until
+																Quote_Status="Draft"
+																Quote_Currency=input.Quote_Currency
+																Payment_Terms=input.Payment_Terms
+																Quote_Title="Pricing Offer " + input.Request_Number
+																Generated_By=zoho.loginuser
+																Generated_On=zoho.currenttime
+																Added_User=zoho.loginuser
+															]
+														}
+														insert into Audit_Logs
+														[
+															Module_Name="Pricing_Requests"
+															Record_Display=input.Request_Number.toString()
+															Record_ID_Text=input.ID.toString()
+															Action_Type="Generated Quote"
+															Changed_By=zoho.loginuser
+															Summary="Quote document generated from approved request."
+															Related_Customer=input.Customer
+															Related_Request=input.ID
+															Severity="Info"
+															Added_User=zoho.loginuser
+														]
+								)
+							}
+         				}
+  				}
+    				Mark_Calculated as "Mark Calculated"
+    				{
+         				type = normal
+         				from stage = "Draft"
+         				to stage = "Calculated"
+         				before
+         				{
+            				transition owner
+            				(
+                				permissions = {"Pricing_Admin", "Sales_Trader"}
+             				)
+            				transition criteria = (Request_Status == "Draft")
+         				}
+         				after
+         				{
+							actions 
+							{
+								custom deluge script
+								(
+															insert into Audit_Logs
+														[
+															Module_Name="Pricing_Requests"
+															Record_Display=input.Request_Number.toString()
+															Record_ID_Text=input.ID.toString()
+															Action_Type="Calculated"
+															Changed_By=zoho.loginuser
+															Summary="Pricing request marked calculated."
+															Related_Customer=input.Customer
+															Related_Request=input.ID
+															Severity="Info"
+															Added_User=zoho.loginuser
+														]
+								)
+							}
+         				}
+  				}
+    				Mark_Sent as "Mark Sent"
+    				{
+         				type = normal
+         				from stage = "Quote Generated"
+         				to stage = "Sent"
+         				before
+         				{
+            				transition owner
+            				(
+                				permissions = {"Pricing_Admin", "Sales_Trader"}
+             				)
+         				}
+         				after
+         				{
+							actions 
+							{
+								custom deluge script
+								(
+															insert into Audit_Logs
+														[
+															Module_Name="Pricing_Requests"
+															Record_Display=input.Request_Number.toString()
+															Record_ID_Text=input.ID.toString()
+															Action_Type="Sent"
+															Changed_By=zoho.loginuser
+															Summary="Pricing quote marked sent."
+															Related_Customer=input.Customer
+															Related_Request=input.ID
+															Severity="Info"
+															Added_User=zoho.loginuser
+														]
+								)
+							}
+         				}
+  				}
+    				Reject_Request as "Reject Request"
+    				{
+         				type = normal
+         				from stage = "Submitted for Approval"
+         				to stage = "Rejected"
+         				before
+         				{
+            				transition owner
+            				(
+                				permissions = {"Management_Approver"}
+             				)
+         				}
+         				during
+         				{
+            				action = update_fields
+            				workflow status = true
+            				visible fields = [Approval_Comments]
+         				}
+         				after
+         				{
+							actions 
+							{
+								custom deluge script
+								(
+															insert into Audit_Logs
+														[
+															Module_Name="Pricing_Requests"
+															Record_Display=input.Request_Number.toString()
+															Record_ID_Text=input.ID.toString()
+															Action_Type="Rejected"
+															Changed_By=zoho.loginuser
+															Summary="Pricing request rejected. " + ifnull(input.Approval_Comments,"")
+															Related_Customer=input.Customer
+															Related_Request=input.ID
+															Severity="Warning"
+															Added_User=zoho.loginuser
+														]
+								)
+							}
+         				}
+  				}
+    				Submit_For_Approval as "Submit for Approval"
+    				{
+         				type = normal
+         				from stage = "Calculated"
+         				to stage = "Submitted for Approval"
+         				before
+         				{
+            				transition owner
+            				(
+                				permissions = {"Pricing_Admin", "Sales_Trader"}
+             				)
+         				}
+         				after
+         				{
+							actions 
+							{
+								custom deluge script
+								(
+															insert into Audit_Logs
+														[
+															Module_Name="Pricing_Requests"
+															Record_Display=input.Request_Number.toString()
+															Record_ID_Text=input.ID.toString()
+															Action_Type="Submitted"
+															Changed_By=zoho.loginuser
+															Summary="Pricing request submitted for approval."
+															Related_Customer=input.Customer
+															Related_Request=input.ID
+															Severity="Info"
+															Added_User=zoho.loginuser
+														]
+								)
+							}
+         				}
+  				}
+        			}
+    			
+}

@@ -1,0 +1,31 @@
+Arrival_Ports_On_Success as "Arrival Ports On Success"
+{
+
+				type =  form
+				form = Arrival_Ports
+
+				record event = on add or edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											insert into Audit_Logs
+										[
+											Added_User=zoho.loginuser
+											Module_Name="Arrival_Ports"
+											Record_Display=input.Port_Name
+											Record_ID_Text=input.ID.toString()
+											Action_Type="Updated"
+											Changed_By=zoho.loginuser
+											Summary="Arrival port " + input.Port_Code + " - " + input.Port_Name + " saved with status " + input.Port_Status + "."
+											Severity="Info"
+										]
+						)
+					}
+				}
+
+			
+}

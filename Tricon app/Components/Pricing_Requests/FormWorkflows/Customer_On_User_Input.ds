@@ -1,0 +1,40 @@
+Customer_On_User_Input as "Customer On User Input"
+{
+
+				type =  form
+				form = Pricing_Requests
+
+				record event = on add or edit
+
+				on user input of Customer
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											custRec = Customers[ID == input.Customer];
+										if(custRec.count() > 0)
+										{
+											input.Quote_Currency = custRec.Preferred_Quote_Currency;
+											input.Customer_Email = custRec.Primary_Email;
+											input.Payment_Terms = custRec.Default_Payment_Terms;
+										}
+										agr = Customer_Commercial_Agreements[Customer == input.Customer && Agreement_Status == "Active" && Effective_From <= zoho.currentdate && Effective_To == null || Effective_To >= zoho.currentdate] sort by Effective_From desc;
+										if(agr.count() > 0)
+										{
+											if(agr.Preferred_Quote_Currency != null && agr.Preferred_Quote_Currency != "")
+											{
+												input.Quote_Currency = agr.Preferred_Quote_Currency;
+											}
+											input.Payment_Terms = agr.Payment_Terms;
+											if(agr.Default_Validity_Days != null)
+											{
+												input.Valid_Until = zoho.currentdate.addDay(agr.Default_Validity_Days);
+											}
+										}
+						)
+					}
+				}
+
+			
+}

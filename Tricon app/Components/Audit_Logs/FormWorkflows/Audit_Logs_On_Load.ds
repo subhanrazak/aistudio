@@ -1,0 +1,32 @@
+Audit_Logs_On_Load as "Audit Logs On Load"
+{
+
+				type =  form
+				form = Audit_Logs
+
+				record event = on add
+
+				on load
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Audit_DateTime == null)
+										{
+											input.Audit_DateTime = zoho.currenttime;
+										}
+										if(input.Changed_By == null || input.Changed_By == "")
+										{
+											input.Changed_By = zoho.loginuser;
+										}
+										if(input.Severity == null || input.Severity == "")
+										{
+											input.Severity = "Info";
+										}
+						)
+					}
+				}
+
+			
+}

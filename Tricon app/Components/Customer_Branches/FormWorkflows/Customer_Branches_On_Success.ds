@@ -1,0 +1,33 @@
+Customer_Branches_On_Success as "Customer Branches On Success"
+{
+
+				type =  form
+				form = Customer_Branches
+
+				record event = on add or edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											actionText = "Updated";
+										insert into Audit_Logs
+										[
+											Added_User=zoho.loginuser
+											Module_Name="Customer_Branches"
+											Record_Display=input.Branch_Name
+											Record_ID_Text=input.ID.toString()
+											Action_Type=actionText
+											Changed_By=zoho.loginuser
+											Summary="Branch " + input.Branch_Code + " for customer " + input.Customer.Customer_Name + " saved for " + input.City + ", " + input.Country + "."
+											Related_Customer=input.Customer
+											Severity="Info"
+										]
+						)
+					}
+				}
+
+			
+}

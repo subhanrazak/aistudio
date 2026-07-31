@@ -1,0 +1,31 @@
+Pricing_Requests_On_Validate as "Pricing Requests On Validate"
+{
+
+				type =  form
+				form = Pricing_Requests
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											custRec = Customers[ID == input.Customer];
+										if(custRec.count() == 0 || custRec.Customer_Status != "Active")
+										{
+											alert "Pricing request must be linked to an active customer.";
+											cancel submit;
+										}
+										if(input.Valid_Until != null && input.Valid_Until < input.Request_Date)
+										{
+											alert "Quote Valid Until cannot be before Request Date.";
+											cancel submit;
+										}
+						)
+					}
+				}
+
+			
+}

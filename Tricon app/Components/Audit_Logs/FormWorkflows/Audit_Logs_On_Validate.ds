@@ -1,0 +1,43 @@
+Audit_Logs_On_Validate as "Audit Logs On Validate"
+{
+
+				type =  form
+				form = Audit_Logs
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Summary == null || input.Summary == "")
+										{
+											alert "Audit summary is required.";
+											cancel submit;
+										}
+										if(input.Module_Name == null || input.Module_Name == "")
+										{
+											alert "Module Name is required.";
+											cancel submit;
+										}
+										if(input.Action_Type == null || input.Action_Type == "")
+										{
+											alert "Action Type is required.";
+											cancel submit;
+										}
+										if(input.Audit_DateTime == null)
+										{
+											input.Audit_DateTime = zoho.currenttime;
+										}
+										if(input.Severity == null || input.Severity == "")
+										{
+											input.Severity = "Info";
+										}
+						)
+					}
+				}
+
+			
+}

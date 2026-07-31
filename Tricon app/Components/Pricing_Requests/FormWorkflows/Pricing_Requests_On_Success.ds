@@ -1,0 +1,33 @@
+Pricing_Requests_On_Success as "Pricing Requests On Success"
+{
+
+				type =  form
+				form = Pricing_Requests
+
+				record event = on add or edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											insert into Audit_Logs
+										[
+											Module_Name="Pricing_Requests"
+											Record_Display=input.Request_Number.toString()
+											Record_ID_Text=input.ID.toString()
+											Action_Type="Updated"
+											Changed_By=zoho.loginuser
+											Summary="Pricing request " + input.Request_Number + " saved with status " + input.Request_Status + "."
+											Related_Customer=input.Customer
+											Related_Request=input.ID
+											Severity="Info"
+											Added_User=zoho.loginuser
+										]
+						)
+					}
+				}
+
+			
+}

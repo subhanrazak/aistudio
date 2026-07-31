@@ -1,0 +1,32 @@
+Customer_Commercial_Agreements_On_Success as "Customer Commercial Agreements On Success"
+{
+
+				type =  form
+				form = Customer_Commercial_Agreements
+
+				record event = on add or edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											insert into Audit_Logs
+										[
+											Module_Name="Customer_Commercial_Agreements"
+											Record_Display=input.Agreement_Code
+											Record_ID_Text=input.ID.toString()
+											Action_Type="Updated"
+											Changed_By=zoho.loginuser
+											Summary="Commercial agreement " + input.Agreement_Code + " saved with status " + input.Agreement_Status + "."
+											Related_Customer=input.Customer
+											Severity="Info"
+											Added_User=zoho.loginuser
+										]
+						)
+					}
+				}
+
+			
+}

@@ -1,0 +1,44 @@
+Customer_Product_Profiles_On_Validate as "Customer Product Profiles On Validate"
+{
+
+				type =  form
+				form = Customer_Product_Profiles
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Monthly_Consumption_Tons < 0)
+										{
+											alert "Monthly Consumption Tons cannot be negative.";
+											cancel submit;
+										}
+										if(input.Effective_To != null && input.Effective_To < input.Effective_From)
+										{
+											alert "Effective To cannot be before Effective From.";
+											cancel submit;
+										}
+										input.Calculated_Tier = "Unassigned";
+										input.Tier_Rule_Used = null;
+										rules = Customer_Tier_Rules[Rule_Status == "Active" && Application_Category == input.Application_Category && Resin_Subcategory == input.Resin_Subcategory && Effective_From <= input.Effective_From && Effective_To == null || Effective_To >= input.Effective_From] sort by Minimum_Monthly_Tons desc;
+										for each  ruleRec in rules
+										{
+											minOk = ruleRec.Minimum_Monthly_Tons == null || input.Monthly_Consumption_Tons >= ruleRec.Minimum_Monthly_Tons;
+											maxOk = ruleRec.Maximum_Monthly_Tons == null || input.Monthly_Consumption_Tons < ruleRec.Maximum_Monthly_Tons;
+											if(minOk && maxOk)
+											{
+												input.Calculated_Tier = ruleRec.Tier;
+												input.Tier_Rule_Used = ruleRec.ID;
+												break;
+											}
+										}
+						)
+					}
+				}
+
+			
+}
