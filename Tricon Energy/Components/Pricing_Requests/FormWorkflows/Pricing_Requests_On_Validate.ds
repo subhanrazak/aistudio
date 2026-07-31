@@ -1,0 +1,80 @@
+Pricing_Requests_On_Validate as "Pricing Requests On Validate"
+{
+    type = form
+    form = Pricing_Requests
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                custRec = Customers[ID == input.Customer];
+                if(custRec.count() == 0 || custRec.Customer_Status != "Active")
+                {
+                    alert "Pricing request must be linked to an active customer.";
+                    cancel submit;
+                }
+                if(input.Valid_Until != null && input.Valid_Until < input.Request_Date)
+                {
+                    alert "Quote Valid Until cannot be before Request Date.";
+                    cancel submit;
+                }
+                if(input.Options != null)
+                {
+                    rowNum = 0;
+                    for each optRow in input.Options
+                    {
+                        rowNum = rowNum + 1;
+                        if(optRow.Product == null)
+                        {
+                            alert "Option row " + rowNum.toString() + " requires a product.";
+                            cancel submit;
+                        }
+                        if(optRow.Customer_Branch == null)
+                        {
+                            alert "Option row " + rowNum.toString() + " requires a customer branch / site.";
+                            cancel submit;
+                        }
+                        if(optRow.Arrival_Port == null)
+                        {
+                            alert "Option row " + rowNum.toString() + " requires an arrival port.";
+                            cancel submit;
+                        }
+                        if(optRow.Packaging == null)
+                        {
+                            alert "Option row " + rowNum.toString() + " requires packaging.";
+                            cancel submit;
+                        }
+                        if(optRow.Delivery_Model == null)
+                        {
+                            alert "Option row " + rowNum.toString() + " requires a delivery model.";
+                            cancel submit;
+                        }
+                        if(optRow.Container_Size == null || optRow.Container_Size == "")
+                        {
+                            alert "Option row " + rowNum.toString() + " requires a container size.";
+                            cancel submit;
+                        }
+                        if(ifnull(optRow.Total_Quantity_KG,0) <= 0)
+                        {
+                            alert "Option row " + rowNum.toString() + " requires total quantity greater than zero.";
+                            cancel submit;
+                        }
+                        if(ifnull(optRow.Margin_Percent,-1) < 0)
+                        {
+                            alert "Option row " + rowNum.toString() + " requires margin percent at least 0 and less than 100.";
+                            cancel submit;
+                        }
+                        if(ifnull(optRow.Margin_Percent,0) >= 100)
+                        {
+                            alert "Option row " + rowNum.toString() + " requires margin percent at least 0 and less than 100.";
+                            cancel submit;
+                        }
+                    }
+                }
+            )
+        }
+    }
+}

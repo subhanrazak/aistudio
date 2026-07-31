@@ -1,0 +1,132 @@
+<%
+issueCount = Pricing_Options[Calculation_Status == "Missing Inputs" || Calculation_Status == "Error"].count();
+%>
+<style>
+:root { --zcs-thead-color: #F9FAFE; --zcs-tr-h-color: #F9FAFE; }
+.zcs-table-wrapper { border: 1px solid var(--zcs-border-color); background-color: var(--zcs-white-color); overflow: auto; }
+.zcs-table-wrapper table { line-height: normal; border-collapse: collapse; min-width: 900px; }
+.zcs-table-wrapper table thead { top: 0px; }
+.zcs-table-wrapper table thead tr th { background-color: var(--zcs-thead-color); box-shadow: 0px -1px 0px 0px var(--zcs-border-color) inset; white-space: nowrap; }
+.zcs-table-wrapper table thead tr.zcs-tspace th { background-color: var(--zcs-white-color); box-shadow: none; }
+.zcs-table-wrapper table tbody tr td { border-top: 1px solid var(--zcs-border-color); vertical-align: top; }
+.zcs-table-wrapper table tbody tr:first-child td { border-color: transparent; }
+.zcs-table-wrapper table tbody tr:hover td { background-color: var(--zcs-tr-h-color); }
+.zcs-table-wrapper table tbody tr:first-child:hover td { border-color: var(--zcs-border-color); }
+.missing-shell { padding: 0 0 0 18px; background: var(--zcs-page-bg-color, #F3F3F4); }
+.dashboard-section-card { padding: 20px; }
+.issue-status { display: inline-flex; align-items: center; gap: 6px; padding: 2px 8px; border-radius: 4px; border: 1px solid; font-size: 12px; white-space: nowrap; }
+.issue-status.missing { color: #B8770D; background: #FCF4E6; border-color: #FAAE13; }
+.issue-status.error { color: #FE455D; background: #FDE3E6; border-color: #FE455D; }
+.empty-state { border: 1px dashed var(--zcs-border-color); border-radius: 12px; padding: 22px; background: #fff; }
+.option-link { color: var(--zcs-theme-brand-color); font-weight: 600; }
+.message-cell { max-width: 320px; white-space: normal; }
+@media (max-width: 900px) { .missing-shell { padding: 0 12px; } }
+</style>
+<div class="missing-shell">
+    <section class="dashboard-section-card zcs-card">
+        <div class="zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12 zcs-mb-16">
+            <div>
+                <h2 class="zcs-font-20 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0">Pricing options needing attention</h2>
+                <p class="zcs-font-13 zcs-color-tertiary zcs-mt-4 zcs-mb-0">Options where Calculation_Status is Missing Inputs or Error.</p>
+            </div>
+            <a class="zcs-font-14 zcs-font-medium zcs-color-theme" href="#Report:Pricing_Options_By_Request" target="_self">Open options report</a>
+        </div>
+        <% if(issueCount == 0) { %>
+            <div class="empty-state zcs-flex zcs-align-items-center zcs-gap-12">
+                <i class="zc-li-outline ui-1-check-circle-08 zcs-color-green zcs-font-24"></i>
+                <div>
+                    <h3 class="zcs-font-16 zcs-font-semibold zcs-color-primary zcs-m-0">No missing input or calculation error options</h3>
+                    <p class="zcs-font-14 zcs-color-tertiary zcs-mt-4 zcs-mb-0">The pricing option queue is currently clear.</p>
+                </div>
+            </div>
+        <% } else { %>
+            <div class="zcs-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative">
+                <table class="zcs-w-full">
+                    <thead class="zcs-sticky">
+                        <tr>
+                            <th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Option code</th>
+                            <th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Request</th>
+                            <th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Customer</th>
+                            <th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Product</th>
+                            <th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Status</th>
+                            <th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Missing message</th>
+                            <th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Calculated date</th>
+                        </tr>
+                        <tr class="zcs-tspace"><th class="zcs-p-2 zcs-box-border" colspan="7"></th></tr>
+                    </thead>
+                    <tbody>
+                        <%
+                        shown = 0;
+                        for each opt in Pricing_Options[Calculation_Status == "Missing Inputs" || Calculation_Status == "Error"] sort by Calculated_On desc
+                        {
+                            if(shown < 10)
+                            {
+                                reqLabel = "-";
+                                custName = "-";
+                                productName = "-";
+                                calcDate = "-";
+                                if(opt.Pricing_Request != null)
+                                {
+                                    reqRec = Pricing_Requests[ID == opt.Pricing_Request];
+                                    if(reqRec.count() > 0)
+                                    {
+                                        reqLabel = ifnull(reqRec.Request_Number,"-");
+                                        if(reqRec.Customer != null)
+                                        {
+                                            reqCustRec = Customers[ID == reqRec.Customer];
+                                            if(reqCustRec.count() > 0)
+                                            {
+                                                custName = ifnull(reqCustRec.Customer_Name,"-");
+                                            }
+                                        }
+                                    }
+                                }
+                                if(opt.Customer != null)
+                                {
+                                    optCustRec = Customers[ID == opt.Customer];
+                                    if(optCustRec.count() > 0)
+                                    {
+                                        custName = ifnull(optCustRec.Customer_Name,custName);
+                                    }
+                                }
+                                if(opt.Product != null)
+                                {
+                                    prodRec = Product_Catalog[ID == opt.Product];
+                                    if(prodRec.count() > 0)
+                                    {
+                                        productName = ifnull(prodRec.Product_Name,"-");
+                                    }
+                                }
+                                if(opt.Calculated_On != null)
+                                {
+                                    calcDate = opt.Calculated_On.toString("dd-MMM-yyyy HH:mm");
+                                }
+                                statusClass = "missing";
+                                statusIcon = "ui-2-time";
+                                if(opt.Calculation_Status == "Error")
+                                {
+                                    statusClass = "error";
+                                    statusIcon = "ui-1-circle-remove";
+                                }
+                                optionUrl = "#Report:Pricing_Options_By_Request?ID=" + opt.ID + "&zc_LoadIn=dialog&zc_Header=true";
+                                %>
+                                <tr>
+                                    <td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"><a class="option-link" href="<%=optionUrl%>"><%=ifnull(opt.Option_Code,"-")%></a></td>
+                                    <td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"><%=reqLabel%></td>
+                                    <td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"><%=custName%></td>
+                                    <td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"><%=productName%></td>
+                                    <td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body"><span class="issue-status <%=statusClass%>"><i class="zc-li-outline <%=statusIcon%>"></i><%=opt.Calculation_Status%></span></td>
+                                    <td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary message-cell"><%=ifnull(opt.Calculation_Message,"Review option inputs and supporting rule data.")%></td>
+                                    <td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary"><%=calcDate%></td>
+                                </tr>
+                                <%
+                                shown = shown + 1;
+                            }
+                        }
+                        %>
+                    </tbody>
+                </table>
+            </div>
+        <% } %>
+    </section>
+</div>

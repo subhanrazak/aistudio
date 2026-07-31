@@ -1,0 +1,26 @@
+Customers_On_Validate as "Customers On Validate"
+{
+    type = form
+    form = Customers
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Customer_Status == "Active" && (input.Primary_Email == null || input.Primary_Email == ""))
+                {
+                    alert "Primary Email is required for active customers.";
+                    cancel submit;
+                }
+                if(input.Preferred_Quote_Currency != "AUD" && input.Preferred_Quote_Currency != "NZD" && input.Preferred_Quote_Currency != "USD")
+                {
+                    alert "Preferred Quote Currency must be AUD, NZD, or USD.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}

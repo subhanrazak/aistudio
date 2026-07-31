@@ -1,0 +1,31 @@
+Customer_Branches_On_Validate as "Customer Branches On Validate"
+{
+    type = form
+    form = Customer_Branches
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if((input.Suburb == null || input.Suburb == "") && (input.Delivery_Region == null || input.Delivery_Region == ""))
+                {
+                    alert "Pricing Delivery Region is required when suburb is blank.";
+                    cancel submit;
+                }
+                custRec = Customers[ID == input.Customer];
+                if(custRec.count() == 0 || custRec.Customer_Status != "Active")
+                {
+                    alert "Branch must be linked to an active customer.";
+                    cancel submit;
+                }
+                if(input.Historical_Location == true && input.Branch_Status == "Active")
+                {
+                    alert "Historical locations should be inactive unless they are available for future deliveries.";
+                }
+            )
+        }
+    }
+}

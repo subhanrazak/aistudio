@@ -1,0 +1,31 @@
+Packaging_On_User_Input as "Packaging On User Input"
+{
+    type = form
+    form = Pricing_Options
+    record event = on add or edit
+
+    on user input of Packaging
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Packaging != null)
+                {
+                    packRec = Packaging_Options[ID == input.Packaging];
+                    if(packRec.count() > 0)
+                    {
+                        if(input.Qty_Per_Pallet_KG == null || input.Qty_Per_Pallet_KG == 0)
+                        {
+                            input.Qty_Per_Pallet_KG = packRec.Default_Qty_Per_Pallet_KG;
+                        }
+                        if(input.Qty_Per_Container_KG == null || input.Qty_Per_Container_KG == 0)
+                        {
+                            input.Qty_Per_Container_KG = packRec.Default_Qty_Per_Container_KG;
+                        }
+                    }
+                }
+            )
+        }
+    }
+}

@@ -1,0 +1,27 @@
+Customer_Tier_Rules_On_Success as "Customer Tier Rules On Success"
+{
+    type = form
+    form = Customer_Tier_Rules
+    record event = on add or edit
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                insert into Audit_Logs
+                [
+                    Added_User = zoho.loginuser
+                    Module_Name = "Customer_Tier_Rules"
+                    Record_Display = input.Rule_Code
+                    Record_ID_Text = input.ID.toString()
+                    Action_Type = "Updated"
+                    Changed_By = zoho.loginuser
+                    Summary = "Tier rule " + input.Rule_Code + " saved for " + input.Application_Category + " / " + input.Resin_Subcategory + " / " + input.Tier + "."
+                    Severity = "Info"
+                ];
+            )
+        }
+    }
+}

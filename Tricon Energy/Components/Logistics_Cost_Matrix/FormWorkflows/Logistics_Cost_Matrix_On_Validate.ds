@@ -1,0 +1,40 @@
+Logistics_Cost_Matrix_On_Validate as "Logistics Cost Matrix On Validate"
+{
+    type = form
+    form = Logistics_Cost_Matrix
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if((input.Wharf_Clearance_AUD_MT != null && input.Wharf_Clearance_AUD_MT < 0) || (input.Port_Fees_Transport_WH_AUD_MT != null && input.Port_Fees_Transport_WH_AUD_MT < 0) || (input.Repacking_Costs_AUD_MT != null && input.Repacking_Costs_AUD_MT < 0) || (input.Est_Storage_Cost_AUD_MT != null && input.Est_Storage_Cost_AUD_MT < 0) || (input.Additional_Charges_AUD_MT != null && input.Additional_Charges_AUD_MT < 0) || (input.Est_Delivery_Cost_AUD_MT != null && input.Est_Delivery_Cost_AUD_MT < 0))
+                {
+                    alert "Cost amounts cannot be negative.";
+                    cancel submit;
+                }
+                if((input.Fuel_Levy_Percent != null && input.Fuel_Levy_Percent < 0) || (input.Financing_Percent != null && input.Financing_Percent < 0))
+                {
+                    alert "Percentage values cannot be negative.";
+                    cancel submit;
+                }
+                if(input.Effective_To != null && input.Effective_To < input.Effective_From)
+                {
+                    alert "Effective To cannot be before Effective From.";
+                    cancel submit;
+                }
+                if(input.Matrix_Status == "Active")
+                {
+                    portRec = Arrival_Ports[ID == input.Arrival_Port];
+                    if(portRec.count() == 0 || portRec.Port_Status != "Active")
+                    {
+                        alert "Active matrix rows require an active arrival port.";
+                        cancel submit;
+                    }
+                }
+            )
+        }
+    }
+}

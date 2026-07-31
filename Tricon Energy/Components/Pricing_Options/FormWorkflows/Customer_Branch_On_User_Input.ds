@@ -1,0 +1,37 @@
+Customer_Branch_On_User_Input as "Customer Branch On User Input"
+{
+    type = form
+    form = Pricing_Options
+    record event = on add or edit
+
+    on user input of Customer_Branch
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Customer_Branch != null)
+                {
+                    branchRec = Customer_Branches[ID == input.Customer_Branch];
+                    if(branchRec.count() > 0)
+                    {
+                        input.Customer = branchRec.Customer;
+                        input.Delivery_Region = branchRec.Delivery_Region;
+                        if(branchRec.Default_Arrival_Port != null)
+                        {
+                            input.Arrival_Port = branchRec.Default_Arrival_Port;
+                        }
+                        if(branchRec.Preferred_Packaging != null)
+                        {
+                            input.Packaging = branchRec.Preferred_Packaging;
+                        }
+                        if(branchRec.Preferred_Container_Size != null && branchRec.Preferred_Container_Size != "")
+                        {
+                            input.Container_Size = branchRec.Preferred_Container_Size;
+                        }
+                    }
+                }
+            )
+        }
+    }
+}

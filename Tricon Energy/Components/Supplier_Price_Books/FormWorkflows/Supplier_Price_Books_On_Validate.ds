@@ -1,0 +1,41 @@
+Supplier_Price_Books_On_Validate as "Supplier Price Books On Validate"
+{
+    type = form
+    form = Supplier_Price_Books
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Buy_Price_CIF_Curr_MT <= 0)
+                {
+                    alert "Buy Price CIF must be greater than zero.";
+                    cancel submit;
+                }
+                if(input.Effective_To != null && input.Effective_To < input.Effective_From)
+                {
+                    alert "Effective To cannot be before Effective From.";
+                    cancel submit;
+                }
+                if(input.Price_Status == "Active")
+                {
+                    prodRec = Product_Catalog[ID == input.Product];
+                    venRec = Vendors[ID == input.Vendor];
+                    if(prodRec.count() == 0 || prodRec.Product_Status != "Active")
+                    {
+                        alert "Active supplier prices require an active product.";
+                        cancel submit;
+                    }
+                    if(venRec.count() == 0 || venRec.Vendor_Status != "Active")
+                    {
+                        alert "Active supplier prices require an active vendor.";
+                        cancel submit;
+                    }
+                }
+            )
+        }
+    }
+}

@@ -1,0 +1,48 @@
+Pricing_Options_On_Load as "Pricing Options On Load"
+{
+    type = form
+    form = Pricing_Options
+    record event = on add or edit
+
+    on load
+    {
+        actions
+        {
+            custom deluge script
+            (
+                disable Supplier_Price_Record, Logistics_Matrix_Record, FX_Rate_Record, Exchange_Rate, Exchange_Rate_Description, Buy_Price_CIF_Curr_MT, Buy_Currency, Supplier_Price_AUD_MT, Duty_AUD_MT, Wharf_Clearance_AUD_MT, Port_Fees_Transport_WH_AUD_MT, Repacking_Costs_AUD_MT, Est_Storage_Cost_AUD_MT, Additional_Charges_AUD_MT, Fuel_Levy_Percent, Est_Delivery_Cost_AUD_MT, Financing_Percent, Cost_Adders_AUD_MT, Overall_Product_Cost_AUD_MT, Margin_AUD_MT, Quoted_Price_MT, Calculation_Status, Calculation_Message, Calculated_On;
+                if(input.Pricing_Request != null)
+                {
+                    reqRec = Pricing_Requests[ID == input.Pricing_Request];
+                    if(reqRec.count() > 0)
+                    {
+                        if(input.Customer == null)
+                        {
+                            input.Customer = reqRec.Customer;
+                        }
+                        if(input.Customer_Branch == null && reqRec.Primary_Branch != null)
+                        {
+                            input.Customer_Branch = reqRec.Primary_Branch;
+                        }
+                        if(input.Quote_Currency == null || input.Quote_Currency == "")
+                        {
+                            input.Quote_Currency = reqRec.Quote_Currency;
+                        }
+                    }
+                }
+                if(input.Customer != null && (input.Margin_Percent == null || input.Margin_Percent == 0))
+                {
+                    agr = Customer_Commercial_Agreements[Customer == input.Customer && Agreement_Status == "Active" && Effective_From <= zoho.currentdate && (Effective_To == null || Effective_To >= zoho.currentdate)] sort by Effective_From desc range from 0 to 1;
+                    if(agr.count() > 0 && agr.Default_Margin_Percent != null)
+                    {
+                        input.Margin_Percent = agr.Default_Margin_Percent;
+                    }
+                }
+                if(input.Calculation_Status == null || input.Calculation_Status == "")
+                {
+                    input.Calculation_Status = "Draft";
+                }
+            )
+        }
+    }
+}

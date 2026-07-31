@@ -1,0 +1,88 @@
+Quote_Documents_On_Success as "Quote Documents On Success"
+{
+    type = form
+    form = Quote_Documents
+    record event = on add or edit
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                reqRec = Pricing_Requests[ID == input.Pricing_Request];
+                quoteHtml = "<div style='font-family:Arial,sans-serif;color:#1f2937;'>";
+                quoteHtml = quoteHtml + "<h2 style='margin:0 0 8px 0;'>" + input.Quote_Title + "</h2>";
+                quoteHtml = quoteHtml + "<p><b>Quote Date:</b> " + input.Quote_Date.toString() + " &nbsp; <b>Valid Until:</b> " + input.Valid_Until.toString() + "</p>";
+                quoteHtml = quoteHtml + "<p><b>Currency:</b> " + input.Quote_Currency + " &nbsp; <b>Payment Terms:</b> " + input.Payment_Terms + "</p>";
+                quoteHtml = quoteHtml + "<table style='width:100%;border-collapse:collapse;margin-top:16px;' border='1' cellpadding='6'>";
+                quoteHtml = quoteHtml + "<tr style='background:#f3f4f6;'><th>Option</th><th>Product</th><th>Packaging</th><th>Quantity KG</th><th>Delivery Region</th><th>Delivery Model</th><th>Container</th><th>FX</th><th>Price / MT</th></tr>";
+                calculatedOptions = Pricing_Options[Pricing_Request == input.Pricing_Request && Calculation_Status == "Calculated"] sort by Option_Code;
+                for each opt in calculatedOptions
+                {
+                    productText = "";
+                    packText = "";
+                    deliveryText = "";
+                    prodRec = Product_Catalog[ID == opt.Product];
+                    if(prodRec.count() > 0)
+                    {
+                        productText = prodRec.Product_Code;
+                    }
+                    packRec = Packaging_Options[ID == opt.Packaging];
+                    if(packRec.count() > 0)
+                    {
+                        packText = packRec.Packaging_Name;
+                    }
+                    deliveryRec = Delivery_Models[ID == opt.Delivery_Model];
+                    if(deliveryRec.count() > 0)
+                    {
+                        deliveryText = deliveryRec.Delivery_Model_Name;
+                    }
+                    quoteHtml = quoteHtml + "<tr>";
+                    quoteHtml = quoteHtml + "<td>" + opt.Option_Name + "</td>";
+                    quoteHtml = quoteHtml + "<td>" + productText + "</td>";
+                    quoteHtml = quoteHtml + "<td>" + packText + "</td>";
+                    quoteHtml = quoteHtml + "<td style='text-align:right;'>" + opt.Total_Quantity_KG.toString() + "</td>";
+                    quoteHtml = quoteHtml + "<td>" + opt.Delivery_Region + "</td>";
+                    quoteHtml = quoteHtml + "<td>" + deliveryText + "</td>";
+                    quoteHtml = quoteHtml + "<td>" + opt.Container_Size + "</td>";
+                    quoteHtml = quoteHtml + "<td>" + opt.Exchange_Rate_Description + "</td>";
+                    quoteHtml = quoteHtml + "<td style='text-align:right;'>" + opt.Quoted_Price_MT.toString() + " " + opt.Quote_Currency + "</td>";
+                    quoteHtml = quoteHtml + "</tr>";
+                }
+                quoteHtml = quoteHtml + "</table>";
+                quoteHtml = quoteHtml + "<p style='margin-top:16px;'>Prices are based on the approved pricing snapshot at generation time and remain subject to agreed validity, payment terms, and final contract terms.</p>";
+                if(input.Quote_Summary != null && input.Quote_Summary != "")
+                {
+                    quoteHtml = quoteHtml + "<p><b>Summary:</b> " + input.Quote_Summary + "</p>";
+                }
+                quoteHtml = quoteHtml + "</div>";
+                update Quote_Documents[ID == input.ID]
+                [
+                    Quote_HTML_Snapshot = quoteHtml
+                    Quote_Status = "Generated"
+                    Quote_Detail_Link = "<a href=\"#Page:Quote_Detail?Quote_ID=" + input.ID.toString() + "\" target=\"_self\">View Quote Detail</a>"
+                    Generated_By = zoho.loginuser
+                    Generated_On = zoho.currenttime
+                    Total_Options = calculatedOptions.count()
+                ];
+                update Pricing_Requests[ID == input.Pricing_Request]
+                [
+                    Request_Status = "Quote Generated"
+                ];
+                insert into Audit_Logs
+                [
+                    Module_Name = "Quote_Documents"
+                    Record_Display = input.Quote_Number.toString()
+                    Record_ID_Text = input.ID.toString()
+                    Action_Type = "Generated Quote"
+                    Changed_By = zoho.loginuser
+                    Summary = "Quote document generated for pricing request " + input.Pricing_Request.toString() + " with " + calculatedOptions.count().toString() + " calculated option(s)."
+                    Related_Customer = input.Customer
+                    Related_Request = input.Pricing_Request
+                    Severity = "Info"
+                ];
+            )
+        }
+    }
+}

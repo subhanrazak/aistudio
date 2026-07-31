@@ -1,0 +1,30 @@
+Pricing_Requests_Options_Product_On_User_Input as "Pricing Request Option Product On User Input"
+{
+    type = form
+    form = Pricing_Requests
+    record event = on add or edit
+
+    on user input of Options.Product
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(row.Product != null)
+                {
+                    prodRec = Product_Catalog[ID == row.Product];
+                    if(prodRec.count() > 0)
+                    {
+                        if(row.Vendor == null && prodRec.Default_Vendor != null)
+                        {
+                            row.Vendor = prodRec.Default_Vendor;
+                        }
+                    }
+                }
+                row.Calculation_Status = "Draft";
+                row.Calculation_Message = "Calculation will refresh after saving the pricing request.";
+                row.Quoted_Price_MT = null;
+            )
+        }
+    }
+}

@@ -1,0 +1,38 @@
+PR_Options_Branch_Input as "Pricing Request Option Branch On User Input"
+{
+    type = form
+    form = Pricing_Requests
+    record event = on add or edit
+
+    on user input of Options.Customer_Branch
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(row.Customer_Branch != null)
+                {
+                    branchRec = Customer_Branches[ID == row.Customer_Branch];
+                    if(branchRec.count() > 0)
+                    {
+                        if(row.Arrival_Port == null && branchRec.Default_Arrival_Port != null)
+                        {
+                            row.Arrival_Port = branchRec.Default_Arrival_Port;
+                        }
+                        if(row.Packaging == null && branchRec.Preferred_Packaging != null)
+                        {
+                            row.Packaging = branchRec.Preferred_Packaging;
+                        }
+                        if((row.Container_Size == null || row.Container_Size == "") && branchRec.Preferred_Container_Size != null && branchRec.Preferred_Container_Size != "")
+                        {
+                            row.Container_Size = branchRec.Preferred_Container_Size;
+                        }
+                    }
+                }
+                row.Calculation_Status = "Draft";
+                row.Calculation_Message = "Calculation will refresh after saving the pricing request.";
+                row.Quoted_Price_MT = null;
+            )
+        }
+    }
+}

@@ -1,0 +1,38 @@
+Quote_Documents_On_Validate as "Quote Documents On Validate"
+{
+    type = form
+    form = Quote_Documents
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                reqRec = Pricing_Requests[ID == input.Pricing_Request];
+                if(reqRec.count() == 0)
+                {
+                    alert "A valid pricing request is required.";
+                    cancel submit;
+                }
+                if(reqRec.count() > 0 && reqRec.Request_Status != "Approved" && reqRec.Request_Status != "Quote Generated")
+                {
+                    alert "Quotes can only be generated from approved pricing requests.";
+                    cancel submit;
+                }
+                calculatedOptions = Pricing_Options[Pricing_Request == input.Pricing_Request && Calculation_Status == "Calculated"];
+                if(calculatedOptions.count() == 0)
+                {
+                    alert "At least one calculated pricing option is required before generating a quote.";
+                    cancel submit;
+                }
+                if(input.Quote_Status == "Sent" && !thisapp.permissions.isUserInProfile("Pricing_Admin"))
+                {
+                    alert "Sent quote snapshots can only be changed by Pricing Admin users.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}

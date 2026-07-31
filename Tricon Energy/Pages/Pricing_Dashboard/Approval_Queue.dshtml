@@ -1,0 +1,84 @@
+<%
+approvalCount = Pricing_Requests[Request_Status == "Submitted for Approval"].count();
+%>
+<style>
+.approval-shell { padding: 0 18px 0 0; background: var(--zcs-page-bg-color, #F3F3F4); }
+.dashboard-section-card { padding: 20px; }
+.approval-list { display: grid; gap: 10px; }
+.approval-row { border: 1px solid var(--zcs-border-color); border-radius: 10px; padding: 12px 14px; background: #fff; }
+.approval-row:hover { background: #F9FAFE; }
+.approval-status-pill { display: inline-flex; align-items: center; gap: 6px; color: #B8770D; background: #FCF4E6; border: 1px solid #FAAE13; padding: 2px 8px; border-radius: 4px; font-size: 12px; }
+.approval-meta { display: grid; grid-template-columns: repeat(3, minmax(90px, 1fr)); gap: 10px; margin-top: 10px; }
+.empty-state { border: 1px dashed var(--zcs-border-color); border-radius: 12px; padding: 22px; background: #fff; }
+.request-link { color: var(--zcs-theme-brand-color); font-weight: 600; }
+@media (max-width: 900px) { .approval-shell { padding: 0 12px; } .approval-meta { grid-template-columns: 1fr; } }
+</style>
+<div class="approval-shell">
+    <section class="dashboard-section-card zcs-card">
+        <div class="zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12 zcs-mb-16">
+            <div>
+                <h2 class="zcs-font-20 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0">Pending approval queue</h2>
+                <p class="zcs-font-13 zcs-color-tertiary zcs-mt-4 zcs-mb-0">Pricing requests submitted for management approval.</p>
+            </div>
+            <a class="zcs-font-14 zcs-font-medium zcs-color-theme" href="#Report:Pending_Approvals" target="_self">Open queue</a>
+        </div>
+        <% if(approvalCount == 0) { %>
+            <div class="empty-state zcs-flex zcs-align-items-center zcs-gap-12">
+                <i class="zc-li-outline ui-1-check-circle-08 zcs-color-green zcs-font-24"></i>
+                <div>
+                    <h3 class="zcs-font-16 zcs-font-semibold zcs-color-primary zcs-m-0">No requests waiting for approval</h3>
+                    <p class="zcs-font-14 zcs-color-tertiary zcs-mt-4 zcs-mb-0">Submitted requests will appear here as soon as they enter approval status.</p>
+                </div>
+            </div>
+        <% } else { %>
+            <div class="approval-list">
+                <%
+                shown = 0;
+                for each req in Pricing_Requests[Request_Status == "Submitted for Approval"] sort by Valid_Until asc
+                {
+                    if(shown < 8)
+                    {
+                        custName = "-";
+                        offerMonth = "-";
+                        validUntil = "-";
+                        if(req.Customer != null)
+                        {
+                            custRec = Customers[ID == req.Customer];
+                            if(custRec.count() > 0)
+                            {
+                                custName = ifnull(custRec.Customer_Name,"-");
+                            }
+                        }
+                        if(req.Offer_Month != null)
+                        {
+                            offerMonth = req.Offer_Month.toString("MMM-yyyy");
+                        }
+                        if(req.Valid_Until != null)
+                        {
+                            validUntil = req.Valid_Until.toString("dd-MMM-yyyy");
+                        }
+                        reqUrl = "#Report:Pending_Approvals?ID=" + req.ID + "&zc_LoadIn=dialog&zc_Header=true";
+                        %>
+                        <div class="approval-row">
+                            <div class="zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12">
+                                <div class="zcs-col-common zcs-ellipsis">
+                                    <a class="request-link zcs-font-16" href="<%=reqUrl%>"><%=ifnull(req.Request_Number,"Request")%></a>
+                                    <div class="zcs-font-14 zcs-color-primary zcs-ellipsis zcs-mt-4"><%=custName%></div>
+                                </div>
+                                <span class="approval-status-pill zcs-no-shrink"><i class="zc-li-outline ui-2-time"></i>Submitted for Approval</span>
+                            </div>
+                            <div class="approval-meta">
+                                <div><span class="zcs-font-12 zcs-color-tertiary zcs-uppercase">Offer month</span><div class="zcs-font-14 zcs-color-primary"><%=offerMonth%></div></div>
+                                <div><span class="zcs-font-12 zcs-color-tertiary zcs-uppercase">Valid until</span><div class="zcs-font-14 zcs-color-primary"><%=validUntil%></div></div>
+                                <div><span class="zcs-font-12 zcs-color-tertiary zcs-uppercase">Requested by</span><div class="zcs-font-14 zcs-color-primary zcs-ellipsis"><%=ifnull(req.Requested_By,"-")%></div></div>
+                            </div>
+                        </div>
+                        <%
+                        shown = shown + 1;
+                    }
+                }
+                %>
+            </div>
+        <% } %>
+    </section>
+</div>

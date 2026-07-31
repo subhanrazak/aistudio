@@ -1,0 +1,31 @@
+Customer_Commercial_Agreements_On_Validate as "Customer Commercial Agreements On Validate"
+{
+    type = form
+    form = Customer_Commercial_Agreements
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Default_Margin_Percent != null && (input.Default_Margin_Percent < 0 || input.Default_Margin_Percent > 100))
+                {
+                    alert "Default Margin % must be between 0 and 100.";
+                    cancel submit;
+                }
+                if(input.Effective_To != null && input.Effective_To < input.Effective_From)
+                {
+                    alert "Effective To cannot be before Effective From.";
+                    cancel submit;
+                }
+                if(input.Agreement_Status == "Active" && (input.Payment_Terms == null || input.Payment_Terms == ""))
+                {
+                    alert "Payment Terms are required for active agreements.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}

@@ -1,0 +1,26 @@
+Pricing_Options_Pricing_Request_On_User_Input as "Pricing Options Pricing Request On User Input"
+{
+    type = form
+    form = Pricing_Options
+    record event = on add or edit
+
+    on user input of Pricing_Request
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Pricing_Request != null)
+                {
+                    reqRec = Pricing_Requests[ID == input.Pricing_Request];
+                    if(reqRec.count() > 0)
+                    {
+                        input.Customer = reqRec.Customer;
+                        input.Customer_Branch = reqRec.Primary_Branch;
+                        input.Quote_Currency = reqRec.Quote_Currency;
+                    }
+                }
+            )
+        }
+    }
+}

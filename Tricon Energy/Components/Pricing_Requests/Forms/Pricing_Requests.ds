@@ -1,0 +1,298 @@
+form Pricing_Requests
+{
+    displayname = "Pricing Requests"
+    Request_Details
+    (
+        type = section
+        displayname = "Request Details"
+        row = 1
+        column = 0
+    )
+    Request_Number
+    (
+        type = autonumber
+        displayname = "Request Number"
+        start index = 1000
+        row = 1
+        column = 1
+        width = medium
+    )
+    must have Request_Date
+    (
+        type = date
+        displayname = "Request Date"
+        initial value = "${zoho.currentdate}"
+        row = 1
+        column = 2
+        width = medium
+    )
+    Requested_By
+    (
+        type = email
+        displayname = "Requested By"
+        row = 1
+        column = 1
+        width = medium
+    )
+    must have Customer
+    (
+        type = picklist
+        displayname = "Customer"
+        values = Customers.ID
+        displayformat = [Customer_Name]
+        searchable = true
+        row = 1
+        column = 2
+        width = medium
+    )
+    Primary_Branch
+    (
+        type = picklist
+        displayname = "Primary Branch"
+        values = Customer_Branches.ID
+        displayformat = [Branch_Name]
+        searchable = true
+        row = 1
+        column = 1
+        width = medium
+    )
+    must have Offer_Month
+    (
+        type = date
+        displayname = "Offer / Billing Month"
+        row = 1
+        column = 2
+        width = medium
+    )
+    must have Request_Source
+    (
+        type = picklist
+        displayname = "Request Source"
+        values = {"Email","Manual","Future CRM"}
+        initial value = "Email"
+        row = 1
+        column = 1
+        width = medium
+    )
+    must have Quote_Currency
+    (
+        type = picklist
+        displayname = "Quote Currency"
+        values = {"AUD","NZD","USD"}
+        initial value = "AUD"
+        row = 1
+        column = 2
+        width = medium
+    )
+    must have Request_Status
+    (
+        type = picklist
+        displayname = "Request Status"
+        values = {"Draft","Calculated","Submitted for Approval","Approved","Rejected","Quote Generated","Sent","Expired","Cancelled"}
+        initial value = "Draft"
+        row = 1
+        column = 1
+        width = medium
+    )
+    Valid_Until
+    (
+        type = date
+        displayname = "Quote Valid Until"
+        row = 1
+        column = 2
+        width = medium
+    )
+    Customer_Email
+    (
+        type = email
+        displayname = "Customer Email"
+        row = 1
+        column = 1
+        width = medium
+    )
+    Payment_Terms
+    (
+        type = text
+        displayname = "Payment Terms"
+        maxchar = 150
+        row = 1
+        column = 2
+        width = medium
+    )
+    Approval_Comments
+    (
+        type = textarea
+        displayname = "Approval Comments"
+        row = 1
+        column = 1
+        width = medium
+    )
+    Approved_By
+    (
+        type = email
+        displayname = "Approved By"
+        row = 1
+        column = 2
+        width = medium
+    )
+    Approved_On
+    (
+        type = datetime
+        displayname = "Approved On"
+        row = 1
+        column = 1
+        width = medium
+    )
+    Request_Notes
+    (
+        type = textarea
+        displayname = "Request Notes"
+        row = 1
+        column = 2
+        width = medium
+    )
+    Pricing_Option_Rows
+    (
+        type = section
+        displayname = "Pricing Option Rows"
+        visibility = false
+        row = 2
+        column = 1
+    )
+    Options
+    (
+        type = grid
+        displayname = "Pricing Options"
+        defaultrow = 1
+        maxrow = 25
+        auto width = false
+        viewtype = "list"
+        sorttype = custom
+        Option_Name
+        (
+            type = text
+            displayname = "Option Name"
+            maxchar = 150
+        )
+        Customer_Branch
+        (
+            type = picklist
+            displayname = "Customer Branch / Site"
+            values = Customer_Branches.ID
+            displayformat = [Branch_Name]
+            searchable = true
+        )
+        Product
+        (
+            type = picklist
+            displayname = "Product"
+            values = Product_Catalog.ID
+            displayformat = [Product_Code]
+            searchable = true
+        )
+        Vendor
+        (
+            type = picklist
+            displayname = "Vendor"
+            values = Vendors.ID
+            displayformat = [Vendor_Name]
+            searchable = true
+        )
+        Arrival_Port
+        (
+            type = picklist
+            displayname = "Arrival Port"
+            values = Arrival_Ports.ID
+            displayformat = [Port_Name]
+            searchable = true
+        )
+        Packaging
+        (
+            type = picklist
+            displayname = "Packaging"
+            values = Packaging_Options.ID
+            displayformat = [Packaging_Name]
+            searchable = true
+        )
+        Delivery_Model
+        (
+            type = picklist
+            displayname = "Delivery Model"
+            values = Delivery_Models.ID
+            displayformat = [Delivery_Model_Name]
+            searchable = true
+        )
+        Container_Size
+        (
+            type = picklist
+            displayname = "Container Size"
+            values = {"20GP","40HC","Other"}
+        )
+        Total_Quantity_KG
+        (
+            type = decimal
+            displayname = "Total Quantity (KG)"
+            decimalplace = 2
+        )
+        Margin_Percent
+        (
+            type = decimal
+            displayname = "Margin %"
+            decimalplace = 4
+        )
+        Calculation_Status
+        (
+            type = picklist
+            displayname = "Calculation Status"
+            values = {"Draft","Calculated","Missing Inputs","Error"}
+            initial value = "Draft"
+        )
+        Quoted_Price_MT
+        (
+            type = decimal
+            displayname = "Quoted Price / MT"
+            decimalplace = 2
+        )
+        Calculation_Message
+        (
+            type = textarea
+            displayname = "Calculation Message"
+        )
+        row = 2
+        column = 1
+        width = medium
+    )
+    actions
+    {
+        on add
+        {
+            Submit
+            (
+                type = submit
+                displayname = "Submit"
+            )
+            Reset
+            (
+                type = reset
+                displayname = "Reset"
+            )
+        }
+        on edit
+        {
+            Update
+            (
+                type = submit
+                displayname = "Update"
+            )
+            Cancel
+            (
+                type = cancel
+                displayname = "Cancel"
+            )
+        }
+    }
+    blueprint components
+    {
+        stages = {"Draft","Calculated","Submitted for Approval","Approved","Rejected","Quote Generated","Sent","Expired","Cancelled"}
+    }
+}

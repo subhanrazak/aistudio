@@ -1,0 +1,76 @@
+<%
+auditCount = Audit_Logs[ID != 0].count();
+%>
+<style>
+.audit-shell { padding: 0 18px 0 0; background: var(--zcs-page-bg-color, #F3F3F4); }
+.dashboard-section-card { padding: 20px; }
+.zcs-tl-indicator { width: 60px; left: 16.6666666667%; }
+.zcs-tl-dot { width: 12px; height: 12px; background-color: var(--zcs_brand_color); border: 1px solid var(--zcs-white-color); box-shadow: 0px 2px 6px 0px #C4DEE4; }
+.zcs-tl-li:not(:last-child) .zcs-tl-indicator:before { content: ''; display: flex; position: absolute; width: 1px; height: calc(100% + 24px); background-color: #E1E1E1; top: 5px; }
+.audit-timeline-scroll { max-height: 610px; overflow: auto; padding-right: 4px; }
+.audit-action { display: inline-flex; align-items: center; gap: 6px; padding: 2px 8px; border-radius: 4px; border: 1px solid var(--zcs-border-color); color: var(--zcs-theme-brand-color); background: var(--zcs_component_hover_color); }
+.audit-summary { color: var(--zcs-secondary-text-color); }
+.empty-state { border: 1px dashed var(--zcs-border-color); border-radius: 12px; padding: 22px; background: #fff; }
+@media (max-width: 768px) {
+    .audit-shell { padding: 0 12px; }
+    .zcs-tl-li { flex-direction: column; }
+    .zcs-tl-indicator { left: 0px; }
+    .zcs-tl-time { text-align: left; padding: 0px 60px; margin-bottom: 12px; }
+}
+</style>
+<div class="audit-shell">
+    <section class="dashboard-section-card zcs-card">
+        <div class="zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12 zcs-mb-16">
+            <div>
+                <h2 class="zcs-font-20 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0">Recent audit activity</h2>
+                <p class="zcs-font-13 zcs-color-tertiary zcs-mt-4 zcs-mb-0">Latest 10 audit events across pricing rules, options, requests, and quotes.</p>
+            </div>
+            <a class="zcs-font-14 zcs-font-medium zcs-color-theme" href="#Report:Audit_Log_Report" target="_self">Open audit report</a>
+        </div>
+        <% if(auditCount == 0) { %>
+            <div class="empty-state zcs-flex zcs-align-items-center zcs-gap-12">
+                <i class="zc-li-outline ui-2-time zcs-color-tertiary zcs-font-24"></i>
+                <div>
+                    <h3 class="zcs-font-16 zcs-font-semibold zcs-color-primary zcs-m-0">No audit events recorded yet</h3>
+                    <p class="zcs-font-14 zcs-color-tertiary zcs-mt-4 zcs-mb-0">Rule maintenance and quote generation audit entries will appear here.</p>
+                </div>
+            </div>
+        <% } else { %>
+            <div class="zcs-timeline-wrapper audit-timeline-scroll">
+                <ul class="zcs-flex zcs-direction-column zcs-gap-24 zcs-p-0 zcs-m-0">
+                    <%
+                    shown = 0;
+                    for each auditRec in Audit_Logs[ID != 0] sort by Audit_DateTime desc
+                    {
+                        if(shown < 10)
+                        {
+                            eventTime = "-";
+                            if(auditRec.Audit_DateTime != null)
+                            {
+                                eventTime = auditRec.Audit_DateTime.toString("dd-MMM-yyyy HH:mm");
+                            }
+                            %>
+                            <li class="zcs-tl-li zcs-row zcs-gap-0 zcs-relative">
+                                <div class="zcs-tl-indicator zcs-h-full zcs-flex zcs-justify-center zcs-absolute">
+                                    <span class="zcs-tl-dot zcs-rounded-half zcs-mt-5 zcs-box-border zcs-relative"></span>
+                                </div>
+                                <span class="zcs-col-2 zcs-col-sm-12 zcs-tl-time zcs-font-13 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-text-right"><%=eventTime%></span>
+                                <div class="zcs-flex zcs-direction-column zcs-col-10 zcs-col-sm-12 zcs-px-60 zcs-box-border">
+                                    <div class="zcs-flex zcs-align-items-center zcs-row-wrap zcs-gap-8">
+                                        <h6 class="zcs-font-16 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0"><%=ifnull(auditRec.Module_Name,"Module")%></h6>
+                                        <span class="audit-action zcs-font-12"><i class="zc-li-outline ui-1-edit-72"></i><%=ifnull(auditRec.Action_Type,"Action")%></span>
+                                    </div>
+                                    <p class="audit-summary zcs-font-14 zcs-font-normal zcs-lh-body zcs-mt-8 zcs-mx-0 zcs-mb-0"><%=ifnull(auditRec.Summary,"No summary provided.")%></p>
+                                    <div class="zcs-font-12 zcs-color-tertiary zcs-mt-6">User: <%=ifnull(auditRec.Changed_By,"-")%></div>
+                                </div>
+                            </li>
+                            <%
+                            shown = shown + 1;
+                        }
+                    }
+                    %>
+                </ul>
+            </div>
+        <% } %>
+    </section>
+</div>

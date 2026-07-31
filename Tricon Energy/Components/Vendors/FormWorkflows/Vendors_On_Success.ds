@@ -1,0 +1,27 @@
+Vendors_On_Success as "Vendors On Success"
+{
+    type = form
+    form = Vendors
+    record event = on add or edit
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                insert into Audit_Logs
+                [
+                    Added_User = zoho.loginuser
+                    Module_Name = "Vendors"
+                    Record_Display = input.Vendor_Name
+                    Record_ID_Text = input.ID.toString()
+                    Action_Type = "Updated"
+                    Changed_By = zoho.loginuser
+                    Summary = "Vendor " + input.Vendor_Code + " - " + input.Vendor_Name + " saved with status " + input.Vendor_Status + "."
+                    Severity = "Info"
+                ];
+            )
+        }
+    }
+}

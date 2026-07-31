@@ -1,0 +1,33 @@
+Customer_Product_Profiles_On_Success as "Customer Product Profiles On Success"
+{
+    type = form
+    form = Customer_Product_Profiles
+    record event = on add or edit
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                custRec = Customers[ID == input.Customer];
+                if(custRec.count() > 0 && (custRec.Default_Tier == null || custRec.Default_Tier == "" || custRec.Default_Tier == "Unassigned") && input.Calculated_Tier != null && input.Calculated_Tier != "Unassigned")
+                {
+                    custRec.Default_Tier = input.Calculated_Tier;
+                }
+                insert into Audit_Logs
+                [
+                    Added_User = zoho.loginuser
+                    Module_Name = "Customer_Product_Profiles"
+                    Record_Display = input.Profile_Code
+                    Record_ID_Text = input.ID.toString()
+                    Action_Type = "Updated"
+                    Changed_By = zoho.loginuser
+                    Summary = "Customer product profile " + input.Profile_Code + " calculated as " + input.Calculated_Tier + "."
+                    Related_Customer = input.Customer
+                    Severity = "Info"
+                ];
+            )
+        }
+    }
+}

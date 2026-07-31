@@ -1,0 +1,36 @@
+Customer_Tier_Rules_On_Validate as "Customer Tier Rules On Validate"
+{
+    type = form
+    form = Customer_Tier_Rules
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Minimum_Monthly_Tons != null && input.Minimum_Monthly_Tons < 0)
+                {
+                    alert "Minimum Monthly Tons cannot be negative.";
+                    cancel submit;
+                }
+                if(input.Maximum_Monthly_Tons != null && input.Maximum_Monthly_Tons < 0)
+                {
+                    alert "Maximum Monthly Tons cannot be negative.";
+                    cancel submit;
+                }
+                if(input.Minimum_Monthly_Tons != null && input.Maximum_Monthly_Tons != null && input.Maximum_Monthly_Tons <= input.Minimum_Monthly_Tons)
+                {
+                    alert "Maximum Monthly Tons must be greater than Minimum Monthly Tons.";
+                    cancel submit;
+                }
+                if(input.Effective_To != null && input.Effective_To < input.Effective_From)
+                {
+                    alert "Effective To cannot be before Effective From.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}

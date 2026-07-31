@@ -1,0 +1,260 @@
+Pricing_Requests_On_Success as "Pricing Requests On Success"
+{
+    type = form
+    form = Pricing_Requests
+    record event = on add or edit
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                rowCount = 0;
+                calculatedCount = 0;
+                issueCount = 0;
+                if(input.Request_Status == "Draft" && input.Options != null)
+                {
+                    for each optRow in input.Options
+                    {
+                        rowCount = rowCount + 1;
+                        statusText = "Calculated";
+                        messageText = "Calculation completed.";
+                        optionNameText = ifnull(optRow.Option_Name,"Option " + rowCount.toString());
+                        optionCodeText = input.Request_Number.toString() + "-OPT-" + rowCount.toString();
+                        branchValue = optRow.Customer_Branch;
+                        deliveryRegionText = "";
+                        if(branchValue != null)
+                        {
+                            branchRec = Customer_Branches[ID == branchValue];
+                            if(branchRec.count() > 0)
+                            {
+                                deliveryRegionText = ifnull(branchRec.Delivery_Region,"");
+                            }
+                        }
+                        vendorValue = optRow.Vendor;
+                        dutyAmt = 0.0;
+                        sourceCurrency = "USD";
+                        buyPrice = 0.0;
+                        if(optRow.Product != null)
+                        {
+                            prodRec = Product_Catalog[ID == optRow.Product];
+                            if(prodRec.count() > 0)
+                            {
+                                if(vendorValue == null)
+                                {
+                                    vendorValue = prodRec.Default_Vendor;
+                                }
+                                dutyAmt = ifnull(prodRec.Default_Duty_AUD_MT,0).toDecimal();
+                                if(prodRec.Default_Currency != null && prodRec.Default_Currency != "")
+                                {
+                                    sourceCurrency = prodRec.Default_Currency;
+                                }
+                            }
+                        }
+                        supplierRec = Supplier_Price_Books[Product == optRow.Product && Vendor == vendorValue && Price_Status == "Active" && Effective_From <= input.Offer_Month && (Effective_To == null || Effective_To >= input.Offer_Month)] sort by Effective_From desc range from 0 to 1;
+                        if(supplierRec.count() == 0 && optRow.Arrival_Port != null)
+                        {
+                            supplierRec = Supplier_Price_Books[Product == optRow.Product && Vendor == vendorValue && Arrival_Port == optRow.Arrival_Port && Price_Status == "Active" && Effective_From <= input.Offer_Month && (Effective_To == null || Effective_To >= input.Offer_Month)] sort by Effective_From desc range from 0 to 1;
+                        }
+                        if(supplierRec.count() > 0)
+                        {
+                            sourceCurrency = supplierRec.Currency;
+                            buyPrice = supplierRec.Buy_Price_CIF_Curr_MT;
+                        }
+                        else
+                        {
+                            statusText = "Missing Inputs";
+                            messageText = "No active supplier price book matches this product and vendor for the request offer month.";
+                        }
+                        matrixRec = Logistics_Cost_Matrix[Arrival_Port == optRow.Arrival_Port && Delivery_Region == deliveryRegionText && Packaging == optRow.Packaging && Delivery_Model == optRow.Delivery_Model && Container_Size == optRow.Container_Size && Matrix_Status == "Active" && Effective_From <= input.Offer_Month && (Effective_To == null || Effective_To >= input.Offer_Month)] sort by Effective_From desc range from 0 to 1;
+                        if(matrixRec.count() == 0)
+                        {
+                            statusText = "Missing Inputs";
+                            messageText = "No active logistics cost matrix matches this arrival port, delivery region, packaging, delivery model, and container size.";
+                        }
+                        fxRate = 1.0;
+                        fxDescription = "AUD base currency";
+                        fxRec = FX_Rates[From_Currency == sourceCurrency && To_Currency == "AUD" && Is_Approved == true && Rate_Date <= input.Request_Date] sort by Rate_Date desc range from 0 to 1;
+                        if(sourceCurrency != "AUD")
+                        {
+                            if(fxRec.count() == 0)
+                            {
+                                statusText = "Missing Inputs";
+                                messageText = "No approved FX rate is available from " + sourceCurrency + " to AUD on or before the request date.";
+                            }
+                            else
+                            {
+                                fxRate = fxRec.Exchange_Rate;
+                                fxDescription = fxRec.Rate_Description;
+                            }
+                        }
+                        quoteFxRate = 1.0;
+                        quoteFxRec = FX_Rates[From_Currency == "AUD" && To_Currency == input.Quote_Currency && Is_Approved == true && Rate_Date <= input.Request_Date] sort by Rate_Date desc range from 0 to 1;
+                        if(input.Quote_Currency != "AUD")
+                        {
+                            if(quoteFxRec.count() == 0)
+                            {
+                                statusText = "Missing Inputs";
+                                messageText = "No approved FX rate is available from AUD to " + input.Quote_Currency + " on or before the request date.";
+                            }
+                            else
+                            {
+                                quoteFxRate = quoteFxRec.Exchange_Rate;
+                            }
+                        }
+                        supplierAud = 0.0;
+                        costAdders = 0.0;
+                        overallCost = 0.0;
+                        marginAud = 0.0;
+                        quotedPrice = 0.0;
+                        wharfAmt = 0.0;
+                        portTransportAmt = 0.0;
+                        repackAmt = 0.0;
+                        storageAmt = 0.0;
+                        additionalAmt = 0.0;
+                        fuelPct = 0.0;
+                        deliveryAmt = 0.0;
+                        financePct = 0.0;
+                        if(matrixRec.count() > 0)
+                        {
+                            wharfAmt = ifnull(matrixRec.Wharf_Clearance_AUD_MT,0).toDecimal();
+                            portTransportAmt = ifnull(matrixRec.Port_Fees_Transport_WH_AUD_MT,0).toDecimal();
+                            repackAmt = ifnull(matrixRec.Repacking_Costs_AUD_MT,0).toDecimal();
+                            storageAmt = ifnull(matrixRec.Est_Storage_Cost_AUD_MT,0).toDecimal();
+                            additionalAmt = ifnull(matrixRec.Additional_Charges_AUD_MT,0).toDecimal();
+                            fuelPct = ifnull(matrixRec.Fuel_Levy_Percent,0).toDecimal() / 100.0;
+                            deliveryAmt = ifnull(matrixRec.Est_Delivery_Cost_AUD_MT,0).toDecimal();
+                            financePct = ifnull(matrixRec.Financing_Percent,0).toDecimal() / 100.0;
+                        }
+                        if(statusText == "Calculated")
+                        {
+                            supplierAud = buyPrice.toDecimal() / fxRate.toDecimal();
+                            portFuelAdder = portTransportAmt * (1.0 + fuelPct);
+                            deliveryFuelAdder = deliveryAmt * (1.0 + fuelPct);
+                            costAdders = dutyAmt + wharfAmt + portFuelAdder + repackAmt + storageAmt + additionalAmt + deliveryFuelAdder;
+                            preFinanceCost = supplierAud + costAdders;
+                            overallCost = preFinanceCost * (1.0 + financePct);
+                            marginPct = optRow.Margin_Percent.toDecimal() / 100.0;
+                            marginAud = overallCost * marginPct;
+                            quotedPrice = (overallCost / (1.0 - marginPct)) * quoteFxRate.toDecimal();
+                            calculatedCount = calculatedCount + 1;
+                        }
+                        else
+                        {
+                            issueCount = issueCount + 1;
+                        }
+                        existingOption = Pricing_Options[Pricing_Request == input.ID && Option_Code == optionCodeText];
+                        if(existingOption.count() > 0)
+                        {
+                            update Pricing_Options[ID == existingOption.ID]
+                            [
+                                Option_Name = optionNameText
+                                Customer = input.Customer
+                                Customer_Branch = branchValue
+                                Delivery_Region = deliveryRegionText
+                                Product = optRow.Product
+                                Vendor = vendorValue
+                                Arrival_Port = optRow.Arrival_Port
+                                Packaging = optRow.Packaging
+                                Delivery_Model = optRow.Delivery_Model
+                                Total_Quantity_KG = optRow.Total_Quantity_KG
+                                Container_Size = optRow.Container_Size
+                                Quote_Currency = input.Quote_Currency
+                                Margin_Percent = optRow.Margin_Percent
+                                Supplier_Price_Record = if(supplierRec.count() > 0,supplierRec.ID,null)
+                                Logistics_Matrix_Record = if(matrixRec.count() > 0,matrixRec.ID,null)
+                                FX_Rate_Record = if(fxRec.count() > 0,fxRec.ID,null)
+                                Exchange_Rate = fxRate
+                                Exchange_Rate_Description = fxDescription
+                                Buy_Price_CIF_Curr_MT = buyPrice
+                                Buy_Currency = sourceCurrency
+                                Supplier_Price_AUD_MT = supplierAud
+                                Duty_AUD_MT = dutyAmt
+                                Wharf_Clearance_AUD_MT = wharfAmt
+                                Port_Fees_Transport_WH_AUD_MT = portTransportAmt
+                                Repacking_Costs_AUD_MT = repackAmt
+                                Est_Storage_Cost_AUD_MT = storageAmt
+                                Additional_Charges_AUD_MT = additionalAmt
+                                Fuel_Levy_Percent = fuelPct * 100
+                                Est_Delivery_Cost_AUD_MT = deliveryAmt
+                                Financing_Percent = financePct * 100
+                                Cost_Adders_AUD_MT = costAdders
+                                Overall_Product_Cost_AUD_MT = overallCost
+                                Margin_AUD_MT = marginAud
+                                Quoted_Price_MT = quotedPrice
+                                Calculation_Status = statusText
+                                Calculation_Message = messageText
+                                Calculated_On = zoho.currenttime
+                            ];
+                        }
+                        else
+                        {
+                            insert into Pricing_Options
+                            [
+                                Option_Code = optionCodeText
+                                Pricing_Request = input.ID
+                                Option_Name = optionNameText
+                                Customer = input.Customer
+                                Customer_Branch = branchValue
+                                Delivery_Region = deliveryRegionText
+                                Product = optRow.Product
+                                Vendor = vendorValue
+                                Arrival_Port = optRow.Arrival_Port
+                                Packaging = optRow.Packaging
+                                Delivery_Model = optRow.Delivery_Model
+                                Total_Quantity_KG = optRow.Total_Quantity_KG
+                                Container_Size = optRow.Container_Size
+                                Quote_Currency = input.Quote_Currency
+                                Margin_Percent = optRow.Margin_Percent
+                                Supplier_Price_Record = if(supplierRec.count() > 0,supplierRec.ID,null)
+                                Logistics_Matrix_Record = if(matrixRec.count() > 0,matrixRec.ID,null)
+                                FX_Rate_Record = if(fxRec.count() > 0,fxRec.ID,null)
+                                Exchange_Rate = fxRate
+                                Exchange_Rate_Description = fxDescription
+                                Buy_Price_CIF_Curr_MT = buyPrice
+                                Buy_Currency = sourceCurrency
+                                Supplier_Price_AUD_MT = supplierAud
+                                Duty_AUD_MT = dutyAmt
+                                Wharf_Clearance_AUD_MT = wharfAmt
+                                Port_Fees_Transport_WH_AUD_MT = portTransportAmt
+                                Repacking_Costs_AUD_MT = repackAmt
+                                Est_Storage_Cost_AUD_MT = storageAmt
+                                Additional_Charges_AUD_MT = additionalAmt
+                                Fuel_Levy_Percent = fuelPct * 100
+                                Est_Delivery_Cost_AUD_MT = deliveryAmt
+                                Financing_Percent = financePct * 100
+                                Cost_Adders_AUD_MT = costAdders
+                                Overall_Product_Cost_AUD_MT = overallCost
+                                Margin_AUD_MT = marginAud
+                                Quoted_Price_MT = quotedPrice
+                                Calculation_Status = statusText
+                                Calculation_Message = messageText
+                                Calculated_On = zoho.currenttime
+                            ];
+                        }
+                    }
+                }
+                if(rowCount > 0 && calculatedCount == rowCount && issueCount == 0 && input.Request_Status == "Draft")
+                {
+                    update Pricing_Requests[ID == input.ID]
+                    [
+                        Request_Status = "Calculated"
+                    ];
+                }
+                insert into Audit_Logs
+                [
+                    Module_Name = "Pricing_Requests"
+                    Record_Display = input.Request_Number.toString()
+                    Record_ID_Text = input.ID.toString()
+                    Action_Type = "Updated"
+                    Changed_By = zoho.loginuser
+                    Summary = "Pricing request " + input.Request_Number + " saved with " + rowCount.toString() + " option row(s) synced for backend calculation."
+                    Related_Customer = input.Customer
+                    Related_Request = input.ID
+                    Severity = if(issueCount > 0,"Warning","Info")
+                ];
+            )
+        }
+    }
+}

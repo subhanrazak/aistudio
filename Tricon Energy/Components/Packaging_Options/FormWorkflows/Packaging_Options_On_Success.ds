@@ -1,0 +1,27 @@
+Packaging_Options_On_Success as "Packaging Options On Success"
+{
+    type = form
+    form = Packaging_Options
+    record event = on add or edit
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                insert into Audit_Logs
+                [
+                    Added_User = zoho.loginuser
+                    Module_Name = "Packaging_Options"
+                    Record_Display = input.Packaging_Name
+                    Record_ID_Text = input.ID.toString()
+                    Action_Type = "Updated"
+                    Changed_By = zoho.loginuser
+                    Summary = "Packaging " + input.Packaging_Code + " - " + input.Packaging_Name + " saved as " + input.Packaging_Type + "."
+                    Severity = "Info"
+                ];
+            )
+        }
+    }
+}

@@ -1,0 +1,189 @@
+<%
+quoteRec = Quote_Documents[ID == input.Quote_ID];
+quoteFound = quoteRec.count() > 0;
+requestFound = false;
+customerName = "";
+requestNumber = "";
+requestStatus = "";
+if(quoteFound)
+{
+    reqRec = Pricing_Requests[ID == quoteRec.Pricing_Request];
+    requestFound = reqRec.count() > 0;
+    if(requestFound)
+    {
+        requestNumber = reqRec.Request_Number.toString();
+        requestStatus = reqRec.Request_Status;
+    }
+    custRec = Customers[ID == quoteRec.Customer];
+    if(custRec.count() > 0)
+    {
+        customerName = custRec.Customer_Name;
+    }
+    options = Pricing_Options[Pricing_Request == quoteRec.Pricing_Request && Calculation_Status == "Calculated"] sort by Option_Code;
+}
+%>
+<style>
+:root { --zcs-theme-brand-color: var(--zcs_brand_color); --zcs-light-bg-color: var(--zcs_brand_light_color); --zcs-page-bg-color: #F3F3F4; --zcs-primary-text-color: var(--zcs_primary_text_color); --zcs-secondary-text-color: var(--zcs_secondary_text_color); --zcs-teritiary-text-color: var(--zcs_tertiary_text_color); --zcs-border-color: var(--zcs_tertiary_border_color); --zcs-white-color: #FFFFFF; }
+a { text-decoration: none; }
+.zcs-row { display:flex; flex-wrap:wrap; }
+.zcs-flex { display:flex; }
+.zcs-inline-flex { display:inline-flex; }
+.zcs-align-items-center { align-items:center; }
+.zcs-justify-space-between { justify-content:space-between; }
+.zcs-justify-center { justify-content:center; }
+.zcs-gap-8 { gap:.5rem; }
+.zcs-gap-12 { gap:.75rem; }
+.zcs-gap-16 { gap:1rem; }
+.zcs-p-0 { padding:0; }
+.zcs-p-20 { padding:1.25rem; }
+.zcs-px-10 { padding-left:.625rem; padding-right:.625rem; }
+.zcs-px-16 { padding-left:1rem; padding-right:1rem; }
+.zcs-px-24 { padding-left:1.5rem; padding-right:1.5rem; }
+.zcs-px-30 { padding-left:1.875rem; padding-right:1.875rem; }
+.zcs-py-2 { padding-top:.125rem; padding-bottom:.125rem; }
+.zcs-py-8 { padding-top:.5rem; padding-bottom:.5rem; }
+.zcs-py-16 { padding-top:1rem; padding-bottom:1rem; }
+.zcs-py-24 { padding-top:1.5rem; padding-bottom:1.5rem; }
+.zcs-m-0 { margin:0; }
+.zcs-mt-4 { margin-top:.25rem; }
+.zcs-mt-10 { margin-top:.625rem; }
+.zcs-mt-16 { margin-top:1rem; }
+.zcs-mb-0 { margin-bottom:0; }
+.zcs-mb-16 { margin-bottom:1rem; }
+.zcs-w-full { width:100%; }
+.zcs-box-border { box-sizing:border-box; }
+.zcs-rounded-sm { border-radius:.25rem; }
+.zcs-rounded-md { border-radius:.375rem; }
+.zcs-rounded-lg { border-radius:.5rem; }
+.zcs-font-12 { font-size:.75rem; }
+.zcs-font-13 { font-size:.8125rem; }
+.zcs-font-14 { font-size:.875rem; }
+.zcs-font-18 { font-size:1.125rem; }
+.zcs-font-20 { font-size:1.25rem; }
+.zcs-font-normal { font-weight:400; }
+.zcs-font-medium { font-weight:500; }
+.zcs-font-semibold { font-weight:600; }
+.zcs-font-bold { font-weight:700; }
+.zcs-lh-body { line-height:1.5; }
+.zcs-lh-heading { line-height:1.25; }
+.zcs-color-primary { color:var(--zcs-primary-text-color); }
+.zcs-color-tertiary { color:var(--zcs-teritiary-text-color); }
+.zcs-color-theme { color:var(--zcs-theme-brand-color); }
+.zcs-text-left { text-align:left; }
+.zcs-text-right { text-align:right; }
+.zcs-text-center { text-align:center; }
+.zcs-uppercase { text-transform:uppercase; }
+.zcs-card { background:#fff; border:1px solid #e7e7ee; border-radius:12px; }
+.zcs-button { width:auto; min-width:5rem; min-height:36px; }
+.zcs-primary-outline-button { border:1px solid var(--zcs_brand_color); background-color:#fff; color:var(--zcs_brand_color); }
+.zcs-primary-outline-button:hover { background-color:var(--zcs_component_hover_color); }
+.zcs-badge { width:auto; }
+.zcs-badge-filled-outline { border:1px solid; }
+.zcs-badge-filled-outline.zcs-badge-theme { background-color:var(--zcs_component_hover_color); border-color:var(--zcs_brand_color); color:var(--zcs_brand_color); }
+.zcs-badge-filled-outline.zcs-badge-green { background-color:#E4FCF3; border-color:#179E6C; color:#179E6C; }
+.zcs-badge-filled-outline.zcs-badge-red { background-color:#FDE3E6; border-color:#FE455D; color:#FE455D; }
+.zcs-badge-filled-outline.zcs-badge-yellow { background-color:#FCF4E6; border-color:#FAAE13; color:#B8770D; }
+.quote-page { padding:0 18px 24px; background:var(--zcs-page-bg-color); min-height:100%; }
+.quote-grid { display:grid; grid-template-columns:1.2fr .8fr; gap:16px; }
+.kv-grid { display:grid; grid-template-columns:repeat(3,minmax(150px,1fr)); gap:12px; }
+.kv-card { border:1px solid var(--zcs-border-color); border-radius:10px; padding:12px; background:#fff; }
+.quote-total-card { background:linear-gradient(135deg,var(--zcs_brand_color),#0b5fb3); color:#fff; border-radius:12px; padding:18px; }
+.quote-total-card span { color:rgba(255,255,255,.78); }
+.zcs-table-wrapper { border:1px solid var(--zcs-border-color); background:#fff; overflow:auto; border-radius:10px; }
+.zcs-table-wrapper table { line-height:normal; border-collapse:collapse; min-width:980px; }
+.zcs-table-wrapper table thead tr th { background-color:#F9FAFE; box-shadow:0 -1px 0 0 var(--zcs-border-color) inset; white-space:nowrap; }
+.zcs-table-wrapper table tbody tr td { border-top:1px solid var(--zcs-border-color); }
+.zcs-table-wrapper table tbody tr:hover td { background:#F9FAFE; }
+.snapshot-box { background:#fff; border:1px solid var(--zcs-border-color); border-radius:10px; padding:16px; overflow:auto; }
+@media (max-width: 900px) { .quote-grid, .kv-grid { grid-template-columns:1fr; } .quote-page { padding:0 12px 20px; } }
+</style>
+<div class="quote-page">
+<% if(!quoteFound) { %>
+    <div class="zcs-card zcs-p-20 zcs-box-border zcs-text-center">
+        <h2 class="zcs-font-20 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0">Quote not found</h2>
+        <p class="zcs-font-14 zcs-color-tertiary zcs-mt-10 zcs-mb-0">Pass a valid URL such as #Page:Quote_Detail?Quote_ID=1234567890.</p>
+    </div>
+<% } else { %>
+    <div class="zcs-page-header zcs-w-full zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-8 zcs-px-30 zcs-py-24 zcs-box-border">
+        <div>
+            <h1 class="zcs-font-20 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0"><%=quoteRec.Quote_Title%></h1>
+            <p class="zcs-font-13 zcs-color-tertiary zcs-mt-4 zcs-mb-0">Quote <%=quoteRec.Quote_Number%> for request <%=requestNumber%></p>
+        </div>
+        <div class="zcs-flex zcs-align-items-center zcs-gap-12">
+            <span class="zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-theme"><span class="zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body"><%=quoteRec.Quote_Status%></span></span>
+            <a class="zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body" href="#Report:Generated_Quotes" target="_self"><i class="zcs-button-icon zc-li-outline arrows-1-tail-left"></i><span>Back to Quotes</span></a>
+        </div>
+    </div>
+    <div class="quote-grid zcs-mb-16">
+        <section class="zcs-card zcs-p-20 zcs-box-border">
+            <div class="kv-grid">
+                <div class="kv-card"><label class="zcs-font-13 zcs-color-tertiary">Customer</label><div class="zcs-font-14 zcs-font-medium zcs-color-primary zcs-mt-4"><%=customerName%></div></div>
+                <div class="kv-card"><label class="zcs-font-13 zcs-color-tertiary">Quote Date</label><div class="zcs-font-14 zcs-font-medium zcs-color-primary zcs-mt-4"><%=quoteRec.Quote_Date%></div></div>
+                <div class="kv-card"><label class="zcs-font-13 zcs-color-tertiary">Valid Until</label><div class="zcs-font-14 zcs-font-medium zcs-color-primary zcs-mt-4"><%=quoteRec.Valid_Until%></div></div>
+                <div class="kv-card"><label class="zcs-font-13 zcs-color-tertiary">Currency</label><div class="zcs-font-14 zcs-font-medium zcs-color-primary zcs-mt-4"><%=quoteRec.Quote_Currency%></div></div>
+                <div class="kv-card"><label class="zcs-font-13 zcs-color-tertiary">Payment Terms</label><div class="zcs-font-14 zcs-font-medium zcs-color-primary zcs-mt-4"><%=quoteRec.Payment_Terms%></div></div>
+                <div class="kv-card"><label class="zcs-font-13 zcs-color-tertiary">Request Status</label><div class="zcs-font-14 zcs-font-medium zcs-color-primary zcs-mt-4"><%=requestStatus%></div></div>
+            </div>
+        </section>
+        <aside class="quote-total-card">
+            <span class="zcs-font-13 zcs-uppercase">Calculated Options</span>
+            <div class="zcs-font-30 zcs-font-bold zcs-lh-heading zcs-mt-10"><%=quoteRec.Total_Options%></div>
+            <p class="zcs-font-13 zcs-mt-10 zcs-mb-0">Generated by <%=quoteRec.Generated_By%> on <%=quoteRec.Generated_On%>.</p>
+        </aside>
+    </div>
+    <section class="zcs-card zcs-p-20 zcs-box-border zcs-mb-16">
+        <div class="zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12 zcs-mb-16">
+            <div>
+                <h2 class="zcs-font-18 zcs-font-semibold zcs-color-primary zcs-m-0">Quoted Options</h2>
+                <p class="zcs-font-13 zcs-color-tertiary zcs-mt-4 zcs-mb-0">Only calculated backend pricing snapshots are included.</p>
+            </div>
+        </div>
+        <% if(options.count() == 0) { %>
+            <div class="zcs-p-20 zcs-text-center zcs-color-tertiary">No calculated options are available for this quote.</div>
+        <% } else { %>
+            <div class="zcs-table-wrapper zcs-box-border zcs-relative">
+                <table class="zcs-w-full">
+                    <thead>
+                        <tr>
+                            <th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Option</th>
+                            <th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Product</th>
+                            <th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Site / Region</th>
+                            <th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Delivery</th>
+                            <th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-color-primary">Qty KG</th>
+                            <th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-color-primary">Cost AUD/MT</th>
+                            <th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-color-primary">Price / MT</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    <% for each opt in options { 
+                        productText = "";
+                        branchText = "";
+                        deliveryText = "";
+                        prodRec2 = Product_Catalog[ID == opt.Product];
+                        if(prodRec2.count() > 0) { productText = prodRec2.Product_Code; }
+                        branchRec2 = Customer_Branches[ID == opt.Customer_Branch];
+                        if(branchRec2.count() > 0) { branchText = branchRec2.Branch_Name; }
+                        deliveryRec2 = Delivery_Models[ID == opt.Delivery_Model];
+                        if(deliveryRec2.count() > 0) { deliveryText = deliveryRec2.Delivery_Model_Name; }
+                    %>
+                        <tr>
+                            <td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-color-primary"><%=opt.Option_Name%></td>
+                            <td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-color-primary"><%=productText%></td>
+                            <td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-color-primary"><%=branchText%><br><span class="zcs-font-12 zcs-color-tertiary"><%=opt.Delivery_Region%></span></td>
+                            <td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-color-primary"><%=deliveryText%><br><span class="zcs-font-12 zcs-color-tertiary"><%=opt.Container_Size%></span></td>
+                            <td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-color-primary"><%=opt.Total_Quantity_KG%></td>
+                            <td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-color-primary"><%=opt.Overall_Product_Cost_AUD_MT%></td>
+                            <td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-semibold zcs-color-theme"><%=opt.Quoted_Price_MT%> <%=opt.Quote_Currency%></td>
+                        </tr>
+                    <% } %>
+                    </tbody>
+                </table>
+            </div>
+        <% } %>
+    </section>
+    <section class="zcs-card zcs-p-20 zcs-box-border">
+        <h2 class="zcs-font-18 zcs-font-semibold zcs-color-primary zcs-m-0">Generated Quote Snapshot</h2>
+        <div class="snapshot-box zcs-mt-16"><%=quoteRec.Quote_HTML_Snapshot%></div>
+    </section>
+<% } %>
+</div>

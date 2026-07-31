@@ -1,0 +1,26 @@
+Logistics_Cost_Matrix_On_Success as "Logistics Cost Matrix On Success"
+{
+    type = form
+    form = Logistics_Cost_Matrix
+    record event = on add or edit
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                insert into Audit_Logs
+                [
+                    Module_Name = "Logistics_Cost_Matrix"
+                    Record_Display = input.Matrix_Code
+                    Record_ID_Text = input.ID.toString()
+                    Action_Type = "Updated"
+                    Changed_By = zoho.loginuser
+                    Summary = "Logistics matrix " + input.Matrix_Code + " saved for " + input.Delivery_Region + " / " + input.Container_Size + "."
+                    Severity = "Info"
+                ];
+            )
+        }
+    }
+}
