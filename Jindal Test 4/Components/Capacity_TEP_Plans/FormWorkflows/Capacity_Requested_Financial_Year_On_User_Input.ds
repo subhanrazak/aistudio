@@ -1,0 +1,38 @@
+Capacity_Requested_Financial_Year_On_User_Input as "Capacity Requested Financial Year On User Input"
+{
+
+				type =  form
+				form = Capacity_TEP_Plans
+
+				record event = on add or edit
+
+				on user input of Requested_Financial_Year
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											input.Budget_Cycle = null;
+										if(input.Requested_Financial_Year != null)
+										{
+											activeCycle = Budget_Cycles[Financial_Year == input.Requested_Financial_Year && Status != "Completed" && Status != "Closed"] sort by Opened_Date desc range from 0 to 0;
+											if(activeCycle.count() > 0)
+											{
+												input.Budget_Cycle = activeCycle.ID;
+											}
+											else
+											{
+												alert "No active Budget Cycle exists for the selected Financial Year.";
+											}
+											fyMonths = Financial_Year_Months[Financial_Year == input.Requested_Financial_Year && Included == true] sort by Month_Order;
+											if(fyMonths.count() == 0)
+											{
+												alert "No included months are configured for the selected Financial Year.";
+											}
+										}
+						)
+					}
+				}
+
+			
+}

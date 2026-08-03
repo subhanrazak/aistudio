@@ -1,0 +1,86 @@
+SMS_Capacity_Plans_On_Load as "SMS Capacity Plans On Load"
+{
+
+				type =  form
+				form = SMS_Capacity_Plans
+
+				record event = on add or edit
+
+				on load
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Owner_Email == null)
+										{
+											input.Owner_Email = zoho.loginuserid;
+										}
+										if(input.Status == null)
+										{
+											input.Status = "Draft";
+										}
+										disable Total_Steel_Availability_BTV;
+										disable Status;
+										disable Iteration_Count;
+										disable Locked;
+										disable Owner_Email;
+										hide Approval_Status;
+										hide Approver_Action;
+										hide Approval_Remarks;
+										hide Iteration_Count;
+										hide Locked;
+										hide Owner_Email;
+										disable Approver_Action;
+										disable Approval_Remarks;
+										isSMS = thisapp.permissions.isUserInProfile("SMS_Team");
+										isCentralPPC = thisapp.permissions.isUserInProfile("SCM_Central_PPC");
+										isFinance = thisapp.permissions.isUserInProfile("Finance_Costing");
+										isAdmin = thisapp.permissions.isUserInProfile("System_Administrator");
+										canAct = false;
+										if((input.Status == "Draft" || input.Status == "Returned by Central PPC" || input.Status == "Reopened" && isSMS) || isAdmin)
+										{
+											canAct = true;
+										}
+										else if((input.Status == "Submitted to Central PPC" && isCentralPPC) || isAdmin)
+										{
+											canAct = true;
+										}
+										else if((input.Status == "Accepted" || input.Status == "Locked" && isCentralPPC || isFinance) || isAdmin)
+										{
+											canAct = true;
+										}
+										if(input.ID != null && canAct == true)
+										{
+											show Approval_Status;
+											show Approver_Action;
+											show Status;
+											show Iteration_Count;
+											show Locked;
+											show Owner_Email;
+											enable Approver_Action;
+										}
+										if(input.Approver_Action == "Return" || input.Approver_Action == "Reopen")
+										{
+											show Approval_Remarks;
+											enable Approval_Remarks;
+										}
+										if(input.Locked == true || input.Status == "Locked")
+										{
+											disable Budget_Cycle;
+											disable Plant;
+											disable Melting_Unit;
+											if(isCentralPPC == false && isFinance == false && isAdmin == false)
+											{
+												hide Approver_Action;
+												hide Approval_Remarks;
+												disable Approver_Action;
+												disable Approval_Remarks;
+											}
+										}
+						)
+					}
+				}
+
+			
+}

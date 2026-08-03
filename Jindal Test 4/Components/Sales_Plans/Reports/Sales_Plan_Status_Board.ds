@@ -1,0 +1,85 @@
+kanban Sales_Plan_Status_Board
+{
+
+			displayName = "Sales Plan Status Board"
+			show all rows from Sales_Plans    
+			(
+				Sales_Plan_No
+				Requested_Financial_Year
+				Budget_Cycle
+				Revision_No
+				Total_Grade_Target_Tons
+				Total_Product_Required_Tons
+				Variance_Tons
+				Status
+				Owner_Email
+				Locked
+				custom action "Submit Plan"
+				(
+	  			workflow = WF_Sales_Submit_Plan
+				column header = "Submit Plan"
+				success message = "Sales plan submitted to Sales Management."
+				condition = (Status == "Draft" || Status == "Returned by Sales Management" || Status == "Revision Requested by SCM" || Status == "Revised Draft")
+				)
+				custom action "Approve Sales Plan"
+				(
+	  			workflow = WF_Sales_Approve_Plan
+				column header = "Approve Sales Plan"
+				success message = "Sales plan approved."
+				condition = (Status == "Submitted to Sales Management")
+				)
+				custom action "Return Sales Plan"
+				(
+	  			workflow = WF_Sales_Return_Plan
+				column header = "Return Sales Plan"
+				success message = "Sales plan returned."
+				condition = (Status == "Submitted to Sales Management")
+				)
+				custom action "Create Revision Copy"
+				(
+	  			workflow = WF_Sales_Create_Revision_Copy
+				column header = "Create Revision Copy"
+				success message = "Sales plan moved to revised draft."
+				condition = (Status == "Revision Requested by SCM" || Status == "Returned by Sales Management")
+				)
+				custom action "Lock Sales Plan"
+				(
+	  			workflow = WF_Sales_Lock_Plan
+				column header = "Lock Sales Plan"
+				success message = "Sales plan locked."
+				condition = (Status == "Sales Approved" && Locked == false)
+				)
+				custom action "Open Scenario Comparison"
+				(
+	  			workflow = WF_Sales_Open_Scenario_Comparison
+				column header = "Open Scenario Comparison"
+				success message = "Opening scenario comparison."
+				)
+				custom action "Open Financial Summary"
+				(
+	  			workflow = WF_Sales_Open_Financial_Summary
+				column header = "Open Financial Summary"
+				success message = "Opening financial summary."
+				)
+			)
+			filters
+			(
+				Requested_Financial_Year
+				Budget_Cycle
+				Status
+				Owner_Email
+				Locked
+			)
+			sort by
+			(
+				Sales_Plan_No descending
+			)
+			options
+			(
+	 			display field = Status
+	 			emptycolumn = "No Status"
+				sort order  = custom
+				record count  = enable
+	 		)
+		
+}

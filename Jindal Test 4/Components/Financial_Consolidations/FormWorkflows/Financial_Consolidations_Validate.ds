@@ -1,0 +1,103 @@
+Financial_Consolidations_Validate as "Financial Consolidations Validate"
+{
+
+				type =  form
+				form = Financial_Consolidations
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											isFinance = thisapp.permissions.isUserInProfile("Finance_Costing");
+										isManagement = thisapp.permissions.isUserInProfile("Executive_Management");
+										isAdmin = thisapp.permissions.isUserInProfile("System_Administrator");
+										delegatedFinance = Approval_Delegations[Delegate_Email == zoho.loginuserid && Profile_Name == "Finance_Costing" && Module_Name == "Financial Consolidation" && Active == true && Start_Date <= zoho.currentdate && End_Date >= zoho.currentdate].count() > 0;
+										delegatedManagement = Approval_Delegations[Delegate_Email == zoho.loginuserid && Profile_Name == "Executive_Management" && Module_Name == "Financial Consolidation" && Active == true && Start_Date <= zoho.currentdate && End_Date >= zoho.currentdate].count() > 0;
+										if(input.Approver_Action == "Return" && input.Approval_Remarks == null || input.Approval_Remarks == "")
+										{
+											alert "Approval remarks are required for Return actions.";
+											cancel submit;
+										}
+										if(input.SCM_Consolidation == null)
+										{
+											alert "SCM Consolidation is required before Financial Consolidation can proceed.";
+											cancel submit;
+										}
+										scmConsolidationRec = Volume_Consolidations[ID == input.SCM_Consolidation];
+										if(scmConsolidationRec.count() == 0 || !(scmConsolidationRec.Status == "SCM Approved" || scmConsolidationRec.Status == "Submitted to Finance" || scmConsolidationRec.Status == "Locked"))
+										{
+											alert "Linked SCM Consolidation must be SCM Approved or Submitted to Finance.";
+											cancel submit;
+										}
+										if(input.Approver_Action == "Submit")
+										{
+											if(!(isFinance || isAdmin || delegatedFinance))
+											{
+												alert "Only Finance Costing or System Administrator can submit Financial Consolidations to Management.";
+												cancel submit;
+											}
+											if(!(input.Status == "Draft" || input.Status == "Returned by Management" || input.Status == "Reopened"))
+											{
+												alert "Financial Consolidations can be submitted only from Draft, Returned by Management, or Reopened status.";
+												cancel submit;
+											}
+										}
+										if(input.Approver_Action == "Approve Final" || input.Approver_Action == "Lock")
+										{
+											if(!(isManagement || isAdmin || delegatedManagement))
+											{
+												alert "Only Executive Management or System Administrator can approve the final Financial Consolidation.";
+												cancel submit;
+											}
+											if(input.Status != "Submitted to Management" && !(input.Approver_Action == "Lock" && input.Status == "Approved Final" || input.Status == "Completed"))
+											{
+												alert "Final approval or lock is allowed only from Submitted to Management, Approved Final, or Completed status.";
+												cancel submit;
+											}
+											if(input.Management_Decision == null || input.Management_Decision == "" || input.Management_Decision == "Pending" || input.Management_Decision == "Rejected")
+											{
+												alert "Select a final Management Decision before approving the final budget.";
+												cancel submit;
+											}
+										}
+										if(input.Approver_Action == "Complete Budget")
+										{
+											if(!(isFinance || isAdmin || delegatedFinance))
+											{
+												alert "Only Finance Costing or System Administrator can complete the budget.";
+												cancel submit;
+											}
+											if(!(input.Status == "Approved Final" || input.Status == "Completed"))
+											{
+												alert "Complete Budget is allowed only after final approval.";
+												cancel submit;
+											}
+										}
+										if(input.Approver_Action == "Return")
+										{
+											if(!(isManagement || isAdmin || delegatedManagement))
+											{
+												alert "Only Executive Management or System Administrator can return Financial Consolidations.";
+												cancel submit;
+											}
+											if(input.Status != "Submitted to Management")
+											{
+												alert "Financial Consolidations can be returned only from Submitted to Management status.";
+												cancel submit;
+											}
+										}
+										if(input.Locked == true && input.Approver_Action != "Lock")
+										{
+											alert "This Financial Consolidation is locked.";
+											cancel submit;
+										}
+						)
+					}
+				}
+
+			
+}

@@ -1,0 +1,37 @@
+WF_Budget_Mark_Pending_Finance as "Mark Pending Finance"
+{
+
+				type =  functions
+				form = Budget_Cycles
+				execution type = for each record	
+				on start
+				{
+					actions 
+					{
+					on click
+					(
+						oldStatus = input.Status;
+										if(oldStatus == "Pending SCM")
+										{
+											input.Status = "Pending Finance";
+											auditId = insert into Approval_Audit_Log
+											[
+												Budget_Cycle=input.ID
+												Module_Name="Budget Cycles"
+												Related_Record_ID=input.ID
+												Related_Record_Display="Budget Cycle " + input.Cycle_Code
+												Action="Submitted"
+												From_Status=oldStatus
+												To_Status="Pending Finance"
+												Iteration_Number=0
+												Actor_Email=zoho.loginuserid
+												Action_On=zoho.currenttime
+												Remarks="Marked pending finance from report action."
+												Added_User=zoho.loginuser
+											];
+										}
+					)
+					}
+				}
+			
+}

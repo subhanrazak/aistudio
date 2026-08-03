@@ -1,0 +1,61 @@
+default list All_Shutdown_Schedules
+{
+
+			displayName = "All Shutdown Schedules"
+			show all rows from Shutdown_Schedules    
+			(
+				Shutdown_No
+				Budget_Cycle
+				Plant
+				Production_Line
+				Shutdown_Type
+				Annual_Shutdown_Days
+				Annual_Shutdown_Hours
+				Status
+				Locked
+				Owner_Email
+				custom action "Submit Shutdown"
+				(
+	  			workflow = WF_Shutdown_Submit
+				column header = "Submit Shutdown"
+				success message = "Shutdown schedule submitted."
+				condition = (Status == "Draft" || Status == "Reopened")
+				)
+				custom action "Mark Available to Capacity"
+				(
+	  			workflow = WF_Shutdown_Approve
+				column header = "Mark Available to Capacity"
+				success message = "Shutdown schedule made available to capacity."
+				condition = (Status == "Submitted")
+				)
+				custom action "Reopen Shutdown"
+				(
+	  			workflow = WF_Shutdown_Reopen
+				column header = "Reopen Shutdown"
+				success message = "Shutdown schedule reopened."
+				condition = (Status == "Locked")
+				)
+				custom action "Lock Shutdown"
+				(
+	  			workflow = WF_Shutdown_Lock
+				column header = "Lock Shutdown"
+				success message = "Shutdown schedule locked."
+				condition = (Status == "Available to Capacity" && Locked == false)
+				)
+			)
+			filters
+			(
+				Budget_Cycle
+				Plant
+				Production_Line
+				Shutdown_Type
+				Status
+				Locked
+			)
+			sort by
+			(
+				Budget_Cycle descending
+				Production_Line ascending
+			)
+		
+}

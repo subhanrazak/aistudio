@@ -1,0 +1,49 @@
+list My_Sales_Plan_Workqueue
+{
+
+			displayName = "My Sales Plan Workqueue"
+			show all rows from Sales_Plans  [Owner_Email == zoho.loginuserid || Owner_Email == zoho.loginuser && Status == "Draft" || Status == "Returned by Sales Management" || Status == "Revision Requested by SCM" || Status == "Revised Draft"]  
+			(
+				Sales_Plan_No
+				Requested_Financial_Year
+				Budget_Cycle
+				Revision_No
+				Total_Grade_Target_Tons
+				Total_Product_Required_Tons
+				Variance_Tons
+				Status
+				Owner_Email
+				custom action "Submit Plan"
+				(
+	  			workflow = WF_Sales_Submit_Plan
+				column header = "Submit Plan"
+				success message = "Sales plan submitted to Sales Management."
+				condition = (Status == "Draft" || Status == "Returned by Sales Management" || Status == "Revision Requested by SCM" || Status == "Revised Draft")
+				confirmation before execution
+				(
+					message for individual record = "Submit this sales plan to Sales Management?"
+					confirm button text = "Submit"		
+					cancel button text = "Cancel"
+				)
+				)
+				custom action "Open Scenario Comparison"
+				(
+	  			workflow = WF_Sales_Open_Scenario_Comparison
+				column header = "Open Scenario Comparison"
+				success message = "Opening scenario comparison."
+				)
+			)
+			filters
+			(
+				Requested_Financial_Year
+				Budget_Cycle
+				Status
+				Owner_Email
+			)
+			sort by
+			(
+				Status ascending
+				Sales_Plan_No descending
+			)
+		
+}

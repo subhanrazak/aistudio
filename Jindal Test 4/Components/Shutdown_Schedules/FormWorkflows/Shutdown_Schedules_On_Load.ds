@@ -1,0 +1,72 @@
+Shutdown_Schedules_On_Load as "Shutdown Schedules On Load"
+{
+
+				type =  form
+				form = Shutdown_Schedules
+
+				record event = on add or edit
+
+				on load
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Owner_Email == null)
+										{
+											input.Owner_Email = zoho.loginuserid;
+										}
+										if(input.Status == null)
+										{
+											input.Status = "Draft";
+										}
+										hide Approval_Status;
+										hide Approver_Action;
+										hide Approval_Remarks;
+										hide Locked;
+										hide Owner_Email;
+										disable Status;
+										disable Annual_Shutdown_Days;
+										disable Annual_Shutdown_Hours;
+										disable Locked;
+										disable Owner_Email;
+										disable Approval_Remarks;
+										isOperationsPPC = thisapp.permissions.isUserInProfile("Operations_PPC");
+										isCentralPPC = thisapp.permissions.isUserInProfile("SCM_Central_PPC");
+										isFinance = thisapp.permissions.isUserInProfile("Finance_Costing");
+										isAdmin = thisapp.permissions.isUserInProfile("System_Administrator");
+										canAction = isOperationsPPC || isCentralPPC || isFinance || isAdmin;
+										if(input.ID != null && canAction == true && input.Status in {"Draft","Submitted","Available to Capacity","Reopened","Locked"})
+										{
+											show Approval_Status;
+											show Approver_Action;
+											show Status;
+											show Locked;
+											show Owner_Email;
+											enable Approver_Action;
+										}
+										if(input.Approver_Action == "Reopen")
+										{
+											show Approval_Remarks;
+											enable Approval_Remarks;
+										}
+										if(input.Locked == true || input.Status == "Locked")
+										{
+											disable Budget_Cycle;
+											disable Plant;
+											disable Production_Line;
+											disable Owner_Email;
+											if(isAdmin == false)
+											{
+												hide Approver_Action;
+												hide Approval_Remarks;
+												disable Approver_Action;
+												disable Approval_Remarks;
+											}
+										}
+						)
+					}
+				}
+
+			
+}

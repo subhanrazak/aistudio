@@ -1,0 +1,83 @@
+list Scenario_Financial_Summary
+{
+
+			displayName = "Scenario Financial Summary"
+			show all rows from Financial_Consolidations    
+			(
+				Budget_Cycle
+				Scenario
+				Volume_MT
+				(
+					display = total	
+				)
+				Revenue
+				(
+					display = total	
+				)
+				Raw_Material_Cost
+				(
+					display = total	
+				)
+				Consumables_Cost
+				(
+					display = total	
+				)
+				Total_Other_Cost
+				(
+					display = total	
+				)
+				Total_Cost
+				(
+					display = total	
+				)
+				EBITDA
+				(
+					display = total	
+				)
+				EBITDA_Margin_Percent
+				Management_Decision
+				Status
+				Locked
+				custom action "Approve Final"
+				(
+	  			workflow = WF_Finance_Approve_Final
+				column header = "Approve Final"
+				success message = "Final budget approved."
+				condition = (Status == "Submitted to Management")
+				)
+				custom action "Return Consolidation"
+				(
+	  			workflow = WF_Finance_Return_Consolidation
+				column header = "Return Consolidation"
+				success message = "Financial consolidation returned."
+				condition = (Status == "Submitted to Management")
+				)
+				custom action "Open Scenario Comparison"
+				(
+	  			workflow = WF_Finance_Open_Scenario_Comparison
+				column header = "Open Scenario Comparison"
+				success message = "Opening scenario comparison."
+				)
+			)
+			filters
+			(
+				Budget_Cycle
+				Scenario
+				Management_Decision
+				Status
+				Locked
+			)
+			group by
+			(
+				properties
+    			(
+  	    			display record count = true
+   				)
+				Scenario ascending
+			)
+			sort by
+			(
+				Scenario ascending
+			)
+		
+}

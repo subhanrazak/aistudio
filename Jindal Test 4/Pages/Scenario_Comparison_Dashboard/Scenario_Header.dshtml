@@ -1,0 +1,77 @@
+<%
+	selectedCycle = Budget_Cycles[Status != "Completed" && Status != "Closed" && Status != "Locked" && Status != "Approved Final" && Baseline_Locked != true && Approved_Scenario != true] sort by Opened_Date desc;
+	cycleSource = "Latest active/open cycle";
+	if(input.Budget_Cycle_ID != null && input.Budget_Cycle_ID > 0)
+	{
+		requestedCycle = Budget_Cycles[ID == input.Budget_Cycle_ID];
+		if(requestedCycle.count() > 0)
+		{
+			selectedCycle = requestedCycle;
+			cycleSource = "Selected cycle";
+		}
+	}
+	cycleCode = "No active cycle";
+	cycleName = "No active/open Budget Cycle is available for scenario comparison.";
+	cycleStatus = "No Data";
+	fyName = "-";
+	hasCycle = selectedCycle.count() > 0;
+	comparisonUrl = "";
+	if(hasCycle)
+	{
+		comparisonUrl = "#Page:Scenario_Comparison_Dashboard?Budget_Cycle_ID=" + selectedCycle.ID;
+		cycleCode = ifNull(selectedCycle.Cycle_Code,"-");
+		cycleName = ifNull(selectedCycle.Cycle_Name,"-");
+		cycleStatus = ifNull(selectedCycle.Status,"-");
+		fyRecords = Financial_Years[ID == selectedCycle.Financial_Year];
+		if(fyRecords.count() > 0)
+		{
+			fyName = ifNull(fyRecords.Year_Name,"-");
+		}
+	}
+	%>
+<style>
+.scenario-page{font-family:var(--zc-page-font-family,Arial,sans-serif);background:#f3f3f4;padding:16px;box-sizing:border-box}.scenario-hero{background:linear-gradient(135deg,var(--zcs_brand_color),#1c3d5a);border-radius:16px;color:#fff;padding:24px;display:flex;align-items:flex-start;justify-content:space-between;gap:18px;flex-wrap:wrap}.scenario-hero h2{margin:0 0 6px;font-size:24px}.scenario-hero p{margin:0;font-size:14px;opacity:.9}.scenario-pill{display:inline-block;margin-top:14px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.35);border-radius:999px;padding:6px 12px;font-size:13px}.scenario-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap;min-width:260px}.scenario-actions .zcs-button{width:auto;min-width:5rem;min-height:36px;text-decoration:none}.scenario-actions .zcs-primary-button{background:#fff;color:var(--zcs_brand_color)}.scenario-actions .zcs-primary-outline-button{border:1px solid rgba(255,255,255,.55);background:rgba(255,255,255,.12);color:#fff}.scenario-actions .zcs-button-icon{width:16px;max-height:16px}.scenario-empty{background:#fff;border:1px dashed var(--zcs_tertiary_border_color);border-radius:14px;padding:18px;color:var(--zcs_primary_text_color);display:flex;gap:12px;align-items:flex-start}.scenario-empty i{color:var(--zcs_brand_color);font-size:22px}.scenario-section{background:#fff;border:1px solid var(--zcs_tertiary_border_color);border-radius:14px;padding:18px;box-sizing:border-box}.scenario-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.scenario-card{border:1px solid var(--zcs_tertiary_border_color);border-radius:12px;padding:14px;background:#fff}.scenario-label{font-size:12px;color:var(--zcs_secondary_text_color)}.scenario-value{font-size:22px;font-weight:700;color:var(--zcs_primary_text_color);margin-top:4px}.scenario-table{width:100%;border-collapse:collapse}.scenario-table th,.scenario-table td{border-top:1px solid var(--zcs_tertiary_border_color);padding:10px;text-align:left}.scenario-table th{background:#f9fafe;color:var(--zcs_primary_text_color)}@media(max-width:900px){.scenario-grid{grid-template-columns:1fr}.scenario-hero{display:block}.scenario-actions{justify-content:flex-start;margin-top:16px}}
+</style>
+<div class="scenario-page">
+	<div class="scenario-hero">
+		<div>
+			<h2>Scenario Comparison</h2>
+			<p>Financial year <%=fyName%> | Cycle <%=cycleCode%> | Status <%=cycleStatus%></p>
+			<span class="scenario-pill"><%=cycleSource%>: <%=cycleName%></span>
+		</div>
+		<div class="scenario-actions">
+<%
+	if(hasCycle)
+	{
+		%>
+<a class='zcs-button zcs-primary-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body' href='<%=comparisonUrl%>'>
+				<i class='zcs-button-icon zc-li-outline business-chart-pie-36'></i><span class='zcs-button-text'>Open Comparison</span>
+			</a>
+<%
+	}
+	else
+	{
+		%>
+<span class='zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body' style='opacity:.68;cursor:not-allowed;'>
+				<i class='zcs-button-icon zc-li-outline ui-1-circle-remove'></i><span class='zcs-button-text'>No Active Cycle</span>
+			</span>
+<%
+	}
+	%>
+<a class='zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body' href='#Report:Scenario_Financial_Summary?zc_LoadIn=dialog'>
+				<i class='zcs-button-icon zc-li-outline business-signature'></i><span class='zcs-button-text'>Financial Summary</span>
+			</a>
+		</div>
+	</div>
+<%
+	if(!hasCycle)
+	{
+		%>
+<div class="scenario-empty" style="margin-top:16px;">
+		<i class="zc-li-outline travel-info"></i>
+		<div><strong>No comparison cycle available</strong><br><span>No selected cycle was supplied and no active/open Budget Cycle is available. Create or reopen a cycle before making scenario decisions.</span></div>
+	</div>
+<%
+	}
+	%>
+</div>

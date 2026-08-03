@@ -1,0 +1,75 @@
+kanban Financial_Status_Board
+{
+
+			displayName = "Financial Status Board"
+			show all rows from Financial_Consolidations    
+			(
+				Financial_Consolidation_No
+				Budget_Cycle
+				Scenario
+				Volume_MT
+				Revenue
+				Total_Cost
+				EBITDA
+				EBITDA_Margin_Percent
+				Management_Decision
+				Status
+				Owner_Email
+				Locked
+				custom action "Submit to Management"
+				(
+	  			workflow = WF_Finance_Submit_To_Management
+				column header = "Submit to Management"
+				success message = "Financial consolidation submitted to management."
+				condition = (Status == "Draft" || Status == "Returned by Management" || Status == "Reopened")
+				)
+				custom action "Approve Final"
+				(
+	  			workflow = WF_Finance_Approve_Final
+				column header = "Approve Final"
+				success message = "Final budget approved."
+				condition = (Status == "Submitted to Management")
+				)
+				custom action "Complete Budget"
+				(
+	  			workflow = WF_Finance_Complete_Budget
+				column header = "Complete Budget"
+				success message = "Budget completed."
+				condition = (Status == "Approved Final")
+				)
+				custom action "Lock Final Budget"
+				(
+	  			workflow = WF_Finance_Lock_Final_Budget
+				column header = "Lock Final Budget"
+				success message = "Final budget locked."
+				condition = (Status == "Approved Final" || Status == "Completed" && Locked == false)
+				)
+				custom action "Open Scenario Comparison"
+				(
+	  			workflow = WF_Finance_Open_Scenario_Comparison
+				column header = "Open Scenario Comparison"
+				success message = "Opening scenario comparison."
+				)
+			)
+			filters
+			(
+				Budget_Cycle
+				Scenario
+				Management_Decision
+				Status
+				Owner_Email
+				Locked
+			)
+			sort by
+			(
+				Financial_Consolidation_No descending
+			)
+			options
+			(
+	 			display field = Status
+	 			emptycolumn = "No Status"
+				sort order  = ascending
+				record count  = enable
+	 		)
+		
+}

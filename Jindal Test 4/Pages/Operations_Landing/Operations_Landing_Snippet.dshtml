@@ -1,0 +1,415 @@
+<%
+	loginName = zoho.loginuser;
+	loginEmail = zoho.loginuserid;
+	profileText = "Operations PPC";
+	if(thisapp.permissions.isUserInProfile("System_Administrator"))
+	{
+		profileText = "System Administrator";
+	}
+	selectedFYId = 0;
+	selectedFYName = "No active financial year";
+	selectedPlantId = 0;
+	selectedLineId = 0;
+	selectedPlantName = "All plants";
+	selectedLineName = "All production lines";
+	if(input.Financial_Year != null && input.Financial_Year != 0)
+	{
+		fyRows = Financial_Years[ID == input.Financial_Year];
+		for each  fyRec in fyRows
+		{
+			if(selectedFYId == 0)
+			{
+				selectedFYId = fyRec.ID;
+				selectedFYName = fyRec.Year_Name;
+			}
+		}
+	}
+	if(selectedFYId == 0)
+	{
+		fyRows = Financial_Years[Active == true] sort by Start_Date desc;
+		for each  fyRec in fyRows
+		{
+			if(selectedFYId == 0)
+			{
+				selectedFYId = fyRec.ID;
+				selectedFYName = fyRec.Year_Name;
+			}
+		}
+	}
+	if(input.Plant != null && input.Plant != 0)
+	{
+		selectedPlantId = input.Plant;
+		plantRows = Plants[ID == selectedPlantId];
+		for each  plantRec in plantRows
+		{
+			selectedPlantName = plantRec.Plant_Name;
+		}
+	}
+	if(input.Production_Line != null && input.Production_Line != 0)
+	{
+		selectedLineId = input.Production_Line;
+		lineRows = Production_Lines[ID == selectedLineId];
+		for each  lineRec in lineRows
+		{
+			selectedLineName = lineRec.Line_Name;
+		}
+	}
+	selectedScopeText = selectedFYName + " / " + selectedPlantName + " / " + selectedLineName;
+	monthCount = 0;
+	if(selectedFYId != 0)
+	{
+		monthCount = Financial_Year_Months[Financial_Year == selectedFYId && Included == true].count();
+	}
+	if(selectedFYId == 0)
+	{
+		availabilityPlans = Capacity_TEP_Plans[ID == 0];
+		productionPlans = Operations_Production_Plans[ID == 0];
+	}
+	else if(selectedPlantId != 0 && selectedLineId != 0)
+	{
+		availabilityPlans = Capacity_TEP_Plans[Requested_Financial_Year == selectedFYId && Plant == selectedPlantId && Production_Line == selectedLineId];
+		productionPlans = Operations_Production_Plans[Requested_Financial_Year == selectedFYId && Plant == selectedPlantId && Production_Line == selectedLineId];
+	}
+	else if(selectedPlantId != 0)
+	{
+		availabilityPlans = Capacity_TEP_Plans[Requested_Financial_Year == selectedFYId && Plant == selectedPlantId];
+		productionPlans = Operations_Production_Plans[Requested_Financial_Year == selectedFYId && Plant == selectedPlantId];
+	}
+	else if(selectedLineId != 0)
+	{
+		availabilityPlans = Capacity_TEP_Plans[Requested_Financial_Year == selectedFYId && Production_Line == selectedLineId];
+		productionPlans = Operations_Production_Plans[Requested_Financial_Year == selectedFYId && Production_Line == selectedLineId];
+	}
+	else
+	{
+		availabilityPlans = Capacity_TEP_Plans[Requested_Financial_Year == selectedFYId];
+		productionPlans = Operations_Production_Plans[Requested_Financial_Year == selectedFYId];
+	}
+	avDraft = 0;
+	avRevisedDraft = 0;
+	avSubmitted = 0;
+	avRevision = 0;
+	avApprovedFinal = 0;
+	prodDraft = 0;
+	prodRevisedDraft = 0;
+	prodSubmitted = 0;
+	prodRevision = 0;
+	prodApprovedFinal = 0;
+	totalAvailableHours = 0.0;
+	totalNetRunningHours = 0.0;
+	availabilityPctTotal = 0.0;
+	availabilityPctCount = 0;
+	utilizationPctTotal = 0.0;
+	utilizationPctCount = 0;
+	for each  capPlan in availabilityPlans
+	{
+		if(capPlan.Status == "Operations Approved" || capPlan.Status == "Locked")
+		{
+			avApprovedFinal = avApprovedFinal + 1;
+			totalAvailableHours = totalAvailableHours + ifnull(capPlan.Annual_Available_Hours,0.0);
+			totalNetRunningHours = totalNetRunningHours + ifnull(capPlan.Annual_Net_Running_Hours,0.0);
+			availabilityPctTotal = availabilityPctTotal + ifnull(capPlan.Average_Equipment_Availability_Percent,0.0);
+			availabilityPctCount = availabilityPctCount + 1;
+			utilizationPctTotal = utilizationPctTotal + ifnull(capPlan.Average_Equipment_Utilization_Percent,0.0);
+			utilizationPctCount = utilizationPctCount + 1;
+		}
+		else if(capPlan.Status == "Submitted to Operations Approval")
+		{
+			avSubmitted = avSubmitted + 1;
+		}
+		else if(capPlan.Status == "Revision Requested by SCM")
+		{
+			avRevision = avRevision + 1;
+		}
+		else if(capPlan.Status == "Revised Draft")
+		{
+			avRevisedDraft = avRevisedDraft + 1;
+		}
+		else if(capPlan.Status == "Draft")
+		{
+			avDraft = avDraft + 1;
+		}
+	}
+	totalProductionTons = 0.0;
+	for each  prodPlan in productionPlans
+	{
+		if(prodPlan.Status == "Operations Approved" || prodPlan.Status == "Locked")
+		{
+			prodApprovedFinal = prodApprovedFinal + 1;
+			totalProductionTons = totalProductionTons + ifnull(prodPlan.Total_FY_Production_Tons,0.0);
+		}
+		else if(prodPlan.Status == "Submitted to Operations Approval")
+		{
+			prodSubmitted = prodSubmitted + 1;
+		}
+		else if(prodPlan.Status == "Revision Requested by SCM")
+		{
+			prodRevision = prodRevision + 1;
+		}
+		else if(prodPlan.Status == "Revised Draft")
+		{
+			prodRevisedDraft = prodRevisedDraft + 1;
+		}
+		else if(prodPlan.Status == "Draft")
+		{
+			prodDraft = prodDraft + 1;
+		}
+	}
+	avPending = avDraft + avRevisedDraft + avSubmitted + avRevision;
+	prodPending = prodDraft + prodRevisedDraft + prodSubmitted + prodRevision;
+	totalPending = avPending + prodPending;
+	draftTotal = avDraft + prodDraft;
+	revisedDraftTotal = avRevisedDraft + prodRevisedDraft;
+	submittedTotal = avSubmitted + prodSubmitted;
+	revisionTotal = avRevision + prodRevision;
+	approvedFinalTotal = avApprovedFinal + prodApprovedFinal;
+	avgAvailability = 0.0;
+	if(availabilityPctCount > 0)
+	{
+		avgAvailability = availabilityPctTotal / availabilityPctCount;
+	}
+	avgUtilization = 0.0;
+	if(utilizationPctCount > 0)
+	{
+		avgUtilization = utilizationPctTotal / utilizationPctCount;
+	}
+	focusMessage = "Capacity and production planning are clear for the selected scope.";
+	if(totalPending > 0)
+	{
+		focusMessage = "Close pending drafts, submissions, and SCM revision requests before relying on the matrices below.";
+	}
+	else if(approvedFinalTotal == 0)
+	{
+		focusMessage = "No approved or final operational plans exist yet for this scope.";
+	}
+	%>
+<style>
+/* zcs-global.css utilities used by this page */
+:root{--zcs-theme-brand-color:var(--zcs_brand_color);--zcs-light-bg-color:var(--zcs_brand_light_color);--zcs-page-bg-color:#F3F3F4;--zcs-primary-text-color:var(--zcs_primary_text_color);--zcs-secondary-text-color:var(--zcs_secondary_text_color);--zcs-teritiary-text-color:var(--zcs_tertiary_text_color);--zcs-border-color:var(--zcs_tertiary_border_color);--zcs-white-color:#FFFFFF;--zcs-black-color:#000000;--zcs-thead-color:#F9FAFE;--zcs-tr-h-color:#F9FAFE;font-size:16px;line-height:1.5}.zcs-row{display:flex;flex-wrap:wrap}.zcs-flex{display:flex}.zcs-inline-flex{display:inline-flex}.zcs-direction-column{flex-direction:column}.zcs-align-items-start{align-items:flex-start}.zcs-align-items-center{align-items:center}.zcs-justify-center{justify-content:center}.zcs-justify-space-between{justify-content:space-between}.zcs-gap-6{gap:.375rem}.zcs-gap-8{gap:.5rem}.zcs-gap-10{gap:.625rem}.zcs-gap-12{gap:.75rem}.zcs-gap-16{gap:1rem}.zcs-w-full{width:100%}.zcs-wh-full{width:100%;height:100%}.zcs-p-2{padding:.125rem}.zcs-p-8{padding:.5rem}.zcs-p-10{padding:.625rem}.zcs-p-16{padding:1rem}.zcs-p-20{padding:1.25rem}.zcs-px-10{padding-left:.625rem;padding-right:.625rem}.zcs-px-12{padding-left:.75rem;padding-right:.75rem}.zcs-px-16{padding-left:1rem;padding-right:1rem}.zcs-py-2{padding-top:.125rem;padding-bottom:.125rem}.zcs-py-4{padding-top:.25rem;padding-bottom:.25rem}.zcs-py-8{padding-top:.5rem;padding-bottom:.5rem}.zcs-m-0{margin:0}.zcs-mt-10{margin-top:.625rem}.zcs-mt-12{margin-top:.75rem}.zcs-mx-0{margin-left:0;margin-right:0}.zcs-mb-0{margin-bottom:0}.zcs-box-border{box-sizing:border-box}.zcs-rounded-sm{border-radius:.25rem}.zcs-rounded-md{border-radius:.375rem}.zcs-rounded-lg{border-radius:.5rem}.zcs-rounded-xl{border-radius:.75rem}.zcs-font-11{font-size:.6875rem}.zcs-font-12{font-size:.75rem}.zcs-font-13{font-size:.8125rem}.zcs-font-14{font-size:.875rem}.zcs-font-16{font-size:1rem}.zcs-font-18{font-size:1.125rem}.zcs-font-20{font-size:1.25rem}.zcs-font-24{font-size:1.5rem}.zcs-font-normal{font-weight:400}.zcs-font-medium{font-weight:500}.zcs-font-semibold{font-weight:600}.zcs-font-bold{font-weight:700}.zcs-uppercase{text-transform:uppercase}.zcs-lh-body{line-height:1.5}.zcs-lh-heading{line-height:1.25}.zcs-color-theme{color:var(--zcs-theme-brand-color)}.zcs-color-primary{color:var(--zcs-primary-text-color)}.zcs-color-secondary{color:var(--zcs-secondary-text-color)}.zcs-color-tertiary{color:var(--zcs-teritiary-text-color)}.zcs-color-white{color:var(--zcs-white-color)}.zcs-text-left{text-align:left}.zcs-text-right{text-align:right}.zcs-text-center{text-align:center}.zcs-relative{position:relative}.zcs-absolute{position:absolute}.zcs-sticky{position:sticky}.zcs-overflow-auto{overflow:auto}.zcs-ellipsis{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}a{text-decoration:none}.zcs-card{background-color:var(--zcs-white-color);border:1px solid #e7e7ee;border-radius:12px}.zcs-template-card{width:260px;height:250px;overflow:hidden}.zcs-card-header{border-bottom:1px solid var(--zcs_tertiary_border_color)}.zcs-card-content{box-sizing:border-box}.zcs-button{width:auto;min-width:5rem;min-height:36px}.zcs-primary-button{background-color:var(--zcs_brand_color);color:var(--zcs_brand_foreground_color)}.zcs-primary-button:hover{background-color:var(--zcs_brand_dark_color)}.zcs-primary-outline-button{border:1px solid var(--zcs_brand_color);background-color:var(--zcs-white-color);color:var(--zcs_brand_color)}.zcs-primary-outline-button:hover{background-color:var(--zcs_component_hover_color);border-color:var(--zcs_brand_color);color:var(--zcs_brand_color)}.zcs-button-icon{width:16px;max-height:16px}.zcs-badge{width:auto}.zcs-badge-filled{border:1px solid transparent}.zcs-badge-filled.zcs-badge-theme{background-color:var(--zcs_brand_color);border-color:var(--zcs_brand_color);color:var(--zcs-white-color)}.zcs-badge-filled.zcs-badge-green{background-color:#179E6C;border-color:#179E6C;color:var(--zcs-white-color)}.zcs-badge-filled.zcs-badge-red{background-color:#FE455D;border-color:#FE455D;color:var(--zcs-white-color)}.zcs-badge-filled.zcs-badge-grey{background-color:#242424;border-color:#242424;color:var(--zcs-white-color)}.zcs-badge-filled.zcs-badge-yellow{background-color:#FAAE13;border-color:#FAAE13;color:var(--zcs-white-color)}.zcs-badge-filled.zcs-badge-blue{background-color:#2A6FFC;border-color:#2A6FFC;color:var(--zcs-white-color)}.zcs-badge-filled.zcs-badge-orange{background-color:#F4660C;border-color:#F4660C;color:var(--zcs-white-color)}.zcs-table-wrapper{border:1px solid var(--zcs_tertiary_border_color);background-color:var(--zcs-white-color);overflow:auto}.zcs-table-wrapper table{line-height:normal;border-collapse:collapse}.zcs-table-wrapper table thead{top:0;z-index:3}.zcs-table-wrapper table thead tr th{background-color:var(--zcs-thead-color);box-shadow:0 -1px 0 0 var(--zcs_tertiary_border_color) inset;white-space:nowrap}.zcs-table-wrapper table thead tr.zcs-tspace th{background-color:var(--zcs-white-color);box-shadow:none}.zcs-table-wrapper table tbody tr td{border-top:1px solid var(--zcs_tertiary_border_color)}.zcs-table-wrapper table tbody tr:first-child td{border-color:transparent}.zcs-table-wrapper table tbody tr:hover td{background-color:var(--zcs-tr-h-color)}.zcs-table-wrapper table tbody tr td.zcs-green,.zcs-table-wrapper table tbody tr td .zcs-green{color:#179e6c}.zcs-table-wrapper table tbody tr td.zcs-yellow,.zcs-table-wrapper table tbody tr td .zcs-yellow{color:#b8770d}.zcs-table-wrapper table tbody tr td.zcs-blue,.zcs-table-wrapper table tbody tr td .zcs-blue{color:#09598e}.zcs-table-wrapper table tbody tr td.zcs-l_blue,.zcs-table-wrapper table tbody tr td .zcs-l_blue{color:#1094c5}.zcs-nodata-wrapper{min-height:220px}
+/* Operations command-center style */
+.op-shell{background:var(--zcs-page-bg-color);padding:20px;box-sizing:border-box;color:var(--zcs-primary-text-color)}.op-command-hero{position:relative;overflow:hidden;border-radius:18px;padding:24px;background:linear-gradient(135deg,var(--zcs_brand_color),#162B4D 62%,#0F172A);color:var(--zcs_brand_foreground_color);display:flex;justify-content:space-between;gap:18px;align-items:flex-start}.op-command-hero:after{content:"";position:absolute;right:-70px;top:-110px;width:320px;height:320px;border:54px solid rgba(255,255,255,.08);border-radius:50%}.op-command-hero:before{content:"";position:absolute;right:210px;bottom:-90px;width:230px;height:230px;border:38px solid rgba(255,255,255,.06);border-radius:50%}.op-hero-copy,.op-hero-actions{position:relative;z-index:1}.op-kicker{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;opacity:.88}.op-command-hero h2{margin:0 0 8px;font-size:28px;line-height:1.18;font-weight:700}.op-command-hero p{margin:0;max-width:760px;opacity:.9}.op-hero-meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}.op-hero-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;min-width:310px}.op-hero-actions .zcs-button{box-shadow:0 10px 28px rgba(0,0,0,.16)}.op-kpi-strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-top:16px}.op-kpi{width:auto;height:auto;min-height:132px;overflow:hidden}.op-kpi .zcs-card-header{padding:13px 15px}.op-kpi .zcs-card-content{padding:15px}.op-kpi-title{display:flex;align-items:center;gap:8px}.op-kpi-title i{color:var(--zcs_brand_color)}.op-kpi-value{display:block;font-size:30px;line-height:1.05;font-weight:800;color:var(--zcs-primary-text-color);margin-bottom:8px}.op-kpi-caption{display:block;color:var(--zcs-secondary-text-color);font-size:13px;line-height:1.35}.op-workbench{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(320px,.85fr);gap:16px;margin-top:16px}.op-section,.op-filter-card{padding:18px;box-sizing:border-box}.op-section-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;margin-bottom:14px}.op-section-head h3,.op-filter-card h3,.op-card-title{margin:0 0 5px;font-size:19px;color:var(--zcs-primary-text-color);font-weight:700}.op-section-head p,.op-filter-card p,.op-card-subtitle{margin:0;color:var(--zcs-secondary-text-color);font-size:13px;line-height:1.5}.op-focus-card{background:linear-gradient(180deg,#FFFFFF,#FBFCFF);border-left:4px solid var(--zcs_brand_color)}.op-focus-main{display:grid;grid-template-columns:160px 1fr;gap:16px;align-items:center}.op-focus-score{border-radius:14px;background:var(--zcs_component_hover_color);padding:18px;text-align:center}.op-focus-score strong{display:block;font-size:44px;line-height:1;color:var(--zcs_brand_color)}.op-focus-score span{display:block;margin-top:8px;color:var(--zcs-secondary-text-color);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}.op-focus-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:14px}.op-mini-stat{border:1px solid var(--zcs_tertiary_border_color);border-radius:10px;padding:11px 12px;background:#fff}.op-mini-stat b{display:block;font-size:22px;line-height:1.1;color:var(--zcs-primary-text-color)}.op-mini-stat span{display:block;margin-top:4px;color:var(--zcs-secondary-text-color);font-size:12px}.op-quick-grid{display:grid;grid-template-columns:1fr;gap:10px}.op-quick-card{border:1px solid var(--zcs_tertiary_border_color);border-radius:12px;background:#fff;padding:13px;display:flex;align-items:center;justify-content:space-between;gap:12px}.op-quick-copy{display:flex;gap:10px;align-items:center;min-width:0}.op-quick-icon{width:38px;height:38px;border-radius:12px;background:var(--zcs_component_hover_color);display:flex;align-items:center;justify-content:center;color:var(--zcs_brand_color);flex:0 0 38px}.op-quick-copy strong{display:block;color:var(--zcs-primary-text-color);font-size:14px;line-height:1.25}.op-quick-copy span{display:block;color:var(--zcs-secondary-text-color);font-size:12px;margin-top:2px}.op-filter-row{display:flex;align-items:flex-start;gap:12px;margin-top:12px;flex-wrap:wrap}.op-filter-label{min-width:126px;color:var(--zcs-secondary-text-color);font-size:13px;font-weight:700;padding-top:6px}.op-chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--zcs_tertiary_border_color);border-radius:999px;padding:6px 11px;text-decoration:none;color:var(--zcs-primary-text-color);background:#fff;font-size:13px;line-height:1.25}.op-chip:hover,.op-chip.active{border-color:var(--zcs_brand_color);color:var(--zcs_brand_color);background:var(--zcs_component_hover_color)}.op-status-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:12px}.op-status-box{border:1px solid var(--zcs_tertiary_border_color);border-radius:12px;padding:13px;background:#fff}.op-status-box b{display:block;font-size:24px;line-height:1.1;margin:10px 0 5px;color:var(--zcs-primary-text-color)}.op-status-box small{display:block;color:var(--zcs-secondary-text-color);font-size:12px;line-height:1.35}.op-tables-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;margin-top:16px}.op-table-note{display:block;color:var(--zcs-secondary-text-color);font-size:12px;margin-top:9px}.op-insight-value{font-weight:700;color:var(--zcs-primary-text-color)}.op-empty{border:1px dashed var(--zcs_tertiary_border_color);border-radius:12px;background:#fbfcff}.op-empty-icon{font-size:42px;color:var(--zcs_brand_color)}.op-empty p{margin:8px auto 0;max-width:560px;color:var(--zcs-secondary-text-color)}.op-matrix-wrapper{max-height:620px}.op-matrix-table{min-width:980px}.op-matrix-table th,.op-matrix-table td{white-space:nowrap}.op-sticky-col{position:sticky;left:0;z-index:2;background:#fff;min-width:230px}.op-matrix-table thead .op-sticky-col{z-index:4;background:var(--zcs-thead-color)}.op-total-cell{background:#fbfcff;font-weight:600}.op-product-col{min-width:210px}.op-product-col strong{display:block}.op-product-col span{display:block;color:var(--zcs-secondary-text-color);font-size:12px;margin-top:2px}@media(max-width:1160px){.op-kpi-strip,.op-status-grid,.op-tables-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.op-workbench{grid-template-columns:1fr}.op-command-hero{flex-direction:column}.op-hero-actions{justify-content:flex-start;min-width:0}.op-focus-list{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(max-width:720px){.op-shell{padding:12px}.op-kpi-strip,.op-status-grid,.op-tables-grid,.op-focus-list{grid-template-columns:1fr}.op-focus-main{grid-template-columns:1fr}.op-filter-label{min-width:100%}.op-command-hero h2{font-size:24px}.op-quick-card{align-items:flex-start;flex-direction:column}.op-hero-actions .zcs-button{width:100%}}
+</style>
+<div class='op-shell'>
+	<div class='op-command-hero'>
+		<div class='op-hero-copy'>
+			<div class='op-kicker'><i class='zc-li-outline ui-2-time'></i><span>Operations command center</span></div>
+			<h2>Pending planning actions and approved-capacity insight</h2>
+			<p>Signed in as <strong><%=loginName%></strong> (<%=loginEmail%>). Use the same Financial Year, Plant, and Production Line filters to focus action queues and approved operational capacity.</p>
+			<div class='op-hero-meta'>
+				<span class='zcs-badge zcs-badge-filled zcs-badge-theme zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border'><i class='zc-li-outline users-single-01'></i><span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'><%=profileText%></span></span>
+				<span class='zcs-badge zcs-badge-filled zcs-badge-blue zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border'><i class='zc-li-outline ui-1-calendar-grid-58'></i><span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'><%=selectedFYName%></span></span>
+				<span class='zcs-badge zcs-badge-filled zcs-badge-grey zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border'><span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'><%=selectedPlantName%></span></span>
+				<span class='zcs-badge zcs-badge-filled zcs-badge-grey zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border'><span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'><%=selectedLineName%></span></span>
+			</div>
+		</div>
+		<div class='op-hero-actions'>
+			<a class='zcs-button zcs-primary-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body' href='#Form:Capacity_TEP_Plans?zc_LoadIn=dialog'><i class='zcs-button-icon zc-li-outline ui-1-simple-add'></i><span class='zcs-button-text'>Capacity TEP Plan</span></a>
+			<a class='zcs-button zcs-primary-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body' href='#Form:Operations_Production_Plans?zc_LoadIn=dialog'><i class='zcs-button-icon zc-li-outline ui-1-simple-add'></i><span class='zcs-button-text'>Production Plan</span></a>
+			<a class='zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body' href='#Report:Capacity_By_Line'><i class='zcs-button-icon zc-li-outline ui-1-eye-17'></i><span class='zcs-button-text'>Capacity by Line</span></a>
+			<a class='zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body' href='#Report:Operations_Production_By_Product'><i class='zcs-button-icon zc-li-outline ui-1-eye-17'></i><span class='zcs-button-text'>Production by Product</span></a>
+		</div>
+	</div>
+	<div class='op-kpi-strip'>
+		<div class='zcs-template-card zcs-card zcs-flex zcs-direction-column zcs-relative op-kpi'><div class='zcs-card-header zcs-box-border'><h6 class='op-kpi-title zcs-font-16 zcs-font-normal zcs-lh-heading zcs-color-primary zcs-m-0'><i class='zc-li-outline ui-2-time'></i><span>Pending Capacity</span></h6></div><div class='zcs-card-content zcs-box-border'><span class='op-kpi-value'><%=avPending%></span><span class='op-kpi-caption'>Draft, revised draft, submitted, and SCM revision Capacity TEP plans.</span></div></div>
+		<div class='zcs-template-card zcs-card zcs-flex zcs-direction-column zcs-relative op-kpi'><div class='zcs-card-header zcs-box-border'><h6 class='op-kpi-title zcs-font-16 zcs-font-normal zcs-lh-heading zcs-color-primary zcs-m-0'><i class='zc-li-outline ui-2-time'></i><span>Pending Production</span></h6></div><div class='zcs-card-content zcs-box-border'><span class='op-kpi-value'><%=prodPending%></span><span class='op-kpi-caption'>Open Operations Production Plans requiring preparation or approval movement.</span></div></div>
+		<div class='zcs-template-card zcs-card zcs-flex zcs-direction-column zcs-relative op-kpi'><div class='zcs-card-header zcs-box-border'><h6 class='op-kpi-title zcs-font-16 zcs-font-normal zcs-lh-heading zcs-color-primary zcs-m-0'><i class='zc-li-outline ui-1-check-circle-08'></i><span>Approved Capacity</span></h6></div><div class='zcs-card-content zcs-box-border'><span class='op-kpi-value'><%=avApprovedFinal%></span><span class='op-kpi-caption'><%=totalAvailableHours%> available hours and <%=totalNetRunningHours%> net running hours.</span></div></div>
+		<div class='zcs-template-card zcs-card zcs-flex zcs-direction-column zcs-relative op-kpi'><div class='zcs-card-header zcs-box-border'><h6 class='op-kpi-title zcs-font-16 zcs-font-normal zcs-lh-heading zcs-color-primary zcs-m-0'><i class='zc-li-outline ui-1-check-circle-08'></i><span>Approved Production</span></h6></div><div class='zcs-card-content zcs-box-border'><span class='op-kpi-value'><%=totalProductionTons%></span><span class='op-kpi-caption'>FY production tons from <%=prodApprovedFinal%> approved or final plans.</span></div></div>
+	</div>
+<%
+	if(selectedFYId == 0 || monthCount == 0)
+	{
+		%>
+<div class='op-empty zcs-nodata-wrapper zcs-wh-full zcs-flex zcs-align-items-center zcs-justify-center zcs-text-center op-filter-card'>
+		<div class='zcs-nodata-content zcs-p-20 zcs-box-border'>
+			<i class='zc-li-outline ui-1-calendar-date op-empty-icon'></i>
+			<h5 class='zcs-nodata-header zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-mt-10 zcs-mx-0 zcs-mb-0'>Active FY or month setup is incomplete</h5>
+			<p>Set one Financial Year as active and add included Financial Year Months. The action queue and matrices below will populate when operational plan records exist.</p>
+		</div>
+	</div>
+<%
+	}
+	%>
+<div class='op-workbench'>
+		<div class='op-section op-focus-card zcs-card'>
+			<div class='op-section-head'>
+				<div>
+					<h3>Planning focus</h3>
+					<p><%=focusMessage%></p>
+				</div>
+				<span class='zcs-badge zcs-badge-filled zcs-badge-blue zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border'><span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'>
+<%
+	if(totalPending > 0)
+	{
+		%>
+Action Required
+<%
+	}
+	else
+	{
+		%>
+Clear
+<%
+	}
+	%>
+</span></span>
+			</div>
+			<div class='op-focus-main'>
+				<div class='op-focus-score'><strong><%=totalPending%></strong><span>Pending actions</span></div>
+				<div>
+					<p class='op-card-subtitle'>Scope: <strong><%=selectedScopeText%></strong>. Approved and final rows are reserved for insight metrics; pending lists below include only Draft, Revised Draft, Submitted to Operations Approval, and Revision Requested by SCM.</p>
+					<div class='op-focus-list'>
+						<div class='op-mini-stat'><b><%=monthCount%></b><span>Included FY months</span></div>
+						<div class='op-mini-stat'><b><%=avgAvailability%>%</b><span>Avg approved availability</span></div>
+						<div class='op-mini-stat'><b><%=avgUtilization%>%</b><span>Avg approved utilization</span></div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class='op-section zcs-card'>
+			<div class='op-section-head'>
+				<div><h3>Quick links</h3><p>Open entry dialogs or the retained operational reports.</p></div>
+			</div>
+			<div class='op-quick-grid'>
+				<div class='op-quick-card'><div class='op-quick-copy'><span class='op-quick-icon'><i class='zc-li-outline ui-1-simple-add'></i></span><div><strong>Create Capacity TEP Plan</strong><span>Capture or revise available capacity.</span></div></div><a class='zcs-button zcs-primary-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-12 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-13 zcs-font-normal zcs-lh-body' href='#Form:Capacity_TEP_Plans?zc_LoadIn=dialog'><span class='zcs-button-text'>Open</span></a></div>
+				<div class='op-quick-card'><div class='op-quick-copy'><span class='op-quick-icon'><i class='zc-li-outline ui-1-simple-add'></i></span><div><strong>Create Production Plan</strong><span>Enter product-wise FY production.</span></div></div><a class='zcs-button zcs-primary-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-12 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-13 zcs-font-normal zcs-lh-body' href='#Form:Operations_Production_Plans?zc_LoadIn=dialog'><span class='zcs-button-text'>Open</span></a></div>
+				<div class='op-quick-card'><div class='op-quick-copy'><span class='op-quick-icon'><i class='zc-li-outline ui-1-eye-17'></i></span><div><strong>Capacity by Line</strong><span>Review line-level approved and pending records.</span></div></div><a class='zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-12 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-13 zcs-font-normal zcs-lh-body' href='#Report:Capacity_By_Line'><span class='zcs-button-text'>View</span></a></div>
+				<div class='op-quick-card'><div class='op-quick-copy'><span class='op-quick-icon'><i class='zc-li-outline ui-1-eye-17'></i></span><div><strong>Production by Product</strong><span>Review product-wise production plans.</span></div></div><a class='zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-12 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-13 zcs-font-normal zcs-lh-body' href='#Report:Operations_Production_By_Product'><span class='zcs-button-text'>View</span></a></div>
+			</div>
+		</div>
+	</div>
+	<div class='op-filter-card zcs-card'>
+		<h3>Filters</h3>
+		<p>Current filter: <strong><%=selectedFYName%></strong>, <strong><%=selectedPlantName%></strong>, <strong><%=selectedLineName%></strong>. These links preserve the existing URL-parameter behavior.</p>
+		<div class='op-filter-row'><span class='op-filter-label'>Financial Year</span><a class='op-chip' href='#Page:Operations_Landing'>Active FY</a>
+<%
+	fyFilterRows = Financial_Years[Status != "Archived"] sort by Start_Date desc;
+	for each  fyOpt in fyFilterRows
+	{
+		fyUrl = "#Page:Operations_Landing?Financial_Year=" + fyOpt.ID;
+		if(selectedPlantId != 0)
+		{
+			fyUrl = fyUrl + "&Plant=" + selectedPlantId;
+		}
+		if(selectedLineId != 0)
+		{
+			fyUrl = fyUrl + "&Production_Line=" + selectedLineId;
+		}
+		chipClass = "op-chip";
+		if(fyOpt.ID == selectedFYId)
+		{
+			chipClass = "op-chip active";
+		}
+		%>
+<a class='<%=chipClass%>' href='<%=fyUrl%>'><%=fyOpt.Year_Name%></a>
+<%
+	}
+	%>
+</div>
+		<div class='op-filter-row'><span class='op-filter-label'>Plant</span>
+<%
+	allPlantUrl = "#Page:Operations_Landing";
+	if(selectedFYId != 0)
+	{
+		allPlantUrl = allPlantUrl + "?Financial_Year=" + selectedFYId;
+	}
+	%>
+<a class='op-chip' href='<%=allPlantUrl%>'>All plants</a>
+<%
+	plantRows = Plants[Active == true] sort by Plant_Name;
+	for each  plantOpt in plantRows
+	{
+		plantUrl = "#Page:Operations_Landing?Financial_Year=" + selectedFYId + "&Plant=" + plantOpt.ID;
+		chipClass = "op-chip";
+		if(plantOpt.ID == selectedPlantId)
+		{
+			chipClass = "op-chip active";
+		}
+		%>
+<a class='<%=chipClass%>' href='<%=plantUrl%>'><%=plantOpt.Plant_Name%></a>
+<%
+	}
+	%>
+</div>
+		<div class='op-filter-row'><span class='op-filter-label'>Production Line</span>
+<%
+	allLineUrl = "#Page:Operations_Landing?Financial_Year=" + selectedFYId;
+	if(selectedPlantId != 0)
+	{
+		allLineUrl = allLineUrl + "&Plant=" + selectedPlantId;
+	}
+	%>
+<a class='op-chip' href='<%=allLineUrl%>'>All lines</a>
+<%
+	if(selectedPlantId != 0)
+	{
+		lineFilterRows = Production_Lines[Active == true && Plant == selectedPlantId] sort by Line_Name;
+	}
+	else
+	{
+		lineFilterRows = Production_Lines[Active == true] sort by Line_Name;
+	}
+	for each  lineOpt in lineFilterRows
+	{
+		lineUrl = "#Page:Operations_Landing?Financial_Year=" + selectedFYId;
+		if(selectedPlantId != 0)
+		{
+			lineUrl = lineUrl + "&Plant=" + selectedPlantId;
+		}
+		lineUrl = lineUrl + "&Production_Line=" + lineOpt.ID;
+		chipClass = "op-chip";
+		if(lineOpt.ID == selectedLineId)
+		{
+			chipClass = "op-chip active";
+		}
+		%>
+<a class='<%=chipClass%>' href='<%=lineUrl%>'><%=lineOpt.Line_Name%></a>
+<%
+	}
+	%>
+</div>
+	</div>
+	<div class='op-section zcs-card'>
+		<div class='op-section-head'>
+			<div><h3>Pending status mix</h3><p>Only statuses that require planning action are shown here.</p></div>
+		</div>
+		<div class='op-status-grid'>
+			<div class='op-status-box'><span class='zcs-badge zcs-badge-filled zcs-badge-grey zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border'><span>Draft</span></span><b><%=draftTotal%></b><small>Capacity <%=avDraft%>, Production <%=prodDraft%></small></div>
+			<div class='op-status-box'><span class='zcs-badge zcs-badge-filled zcs-badge-yellow zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border'><span>Revised Draft</span></span><b><%=revisedDraftTotal%></b><small>Capacity <%=avRevisedDraft%>, Production <%=prodRevisedDraft%></small></div>
+			<div class='op-status-box'><span class='zcs-badge zcs-badge-filled zcs-badge-blue zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border'><span>Submitted</span></span><b><%=submittedTotal%></b><small>Capacity <%=avSubmitted%>, Production <%=prodSubmitted%></small></div>
+			<div class='op-status-box'><span class='zcs-badge zcs-badge-filled zcs-badge-orange zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border'><span>SCM Revision</span></span><b><%=revisionTotal%></b><small>Capacity <%=avRevision%>, Production <%=prodRevision%></small></div>
+		</div>
+	</div>
+	<div class='op-tables-grid'>
+		<div class='op-section zcs-card'>
+			<div class='op-section-head'><div><h3>Pending action table</h3><p>Approved, locked, superseded, and returned records are intentionally excluded.</p></div></div>
+			<div class='zcs-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative'>
+				<table class='zcs-w-full'>
+					<thead class='zcs-sticky'><tr><th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Status</th><th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Capacity TEP</th><th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Production</th><th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Next action</th></tr><tr class='zcs-tspace'><th class='zcs-p-2 zcs-box-border' colspan='4'> </th></tr></thead>
+					<tbody>
+						<tr><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'>Draft</td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=avDraft%></td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=prodDraft%></td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-yellow'>Complete plan data</td></tr>
+						<tr><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'>Revised Draft</td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=avRevisedDraft%></td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=prodRevisedDraft%></td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-yellow'>Submit revised version</td></tr>
+						<tr><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'>Submitted to Operations Approval</td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=avSubmitted%></td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=prodSubmitted%></td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-l_blue'>Review approval queue</td></tr>
+						<tr><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'>Revision Requested by SCM</td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=avRevision%></td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=prodRevision%></td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-yellow'>Address SCM comments</td></tr>
+					</tbody>
+				</table>
+			</div>
+			<span class='op-table-note'>Pending total: <strong><%=totalPending%></strong> across Capacity TEP and Operations Production plans.</span>
+		</div>
+		<div class='op-section zcs-card'>
+			<div class='op-section-head'><div><h3>Approved-capacity insights</h3><p>Approved or final records contribute here only, keeping action lists focused.</p></div></div>
+			<div class='zcs-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative'>
+				<table class='zcs-w-full'>
+					<thead class='zcs-sticky'><tr><th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Insight</th><th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Value</th><th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Basis</th></tr><tr class='zcs-tspace'><th class='zcs-p-2 zcs-box-border' colspan='3'> </th></tr></thead>
+					<tbody>
+						<tr><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'>Capacity plans approved/final</td><td class='op-insight-value zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-lh-body'><%=avApprovedFinal%></td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-secondary'>Capacity_TEP_Plans</td></tr>
+						<tr><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'>Annual available hours</td><td class='op-insight-value zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-lh-body'><%=totalAvailableHours%></td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-secondary'>Approved/final capacity rows</td></tr>
+						<tr><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'>Annual net running hours</td><td class='op-insight-value zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-lh-body'><%=totalNetRunningHours%></td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-secondary'>After planned and unplanned downtime</td></tr>
+						<tr><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'>Average availability / utilization</td><td class='op-insight-value zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-lh-body'><%=avgAvailability%>% / <%=avgUtilization%>%</td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-secondary'>Approved/final capacity averages</td></tr>
+						<tr><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'>Production tons approved/final</td><td class='op-insight-value zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-lh-body'><%=totalProductionTons%></td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-secondary'><%=prodApprovedFinal%> Operations_Production_Plans</td></tr>
+					</tbody>
+				</table>
+			</div>
+			<span class='op-table-note'>Use the embedded matrices below for month-wise approved capacity and production distribution.</span>
+		</div>
+	</div>
+</div>

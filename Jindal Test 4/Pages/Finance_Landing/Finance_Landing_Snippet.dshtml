@@ -1,0 +1,281 @@
+<%
+	loginName = zoho.loginuser;
+	loginEmail = zoho.loginuserid;
+	profileText = "Finance Costing";
+	if(thisapp.permissions.isUserInProfile("System_Administrator"))
+	{
+		profileText = "System Administrator";
+	}
+	activeCycles = Budget_Cycles[Status != "Completed" && Status != "Closed" && Status != "Locked" && Status != "Approved Final"].count();
+	pendingFinanceCycles = Budget_Cycles[Status == "Pending Finance" && Finance_Completed != true && Baseline_Locked != true && Status != "Completed" && Status != "Closed" && Status != "Locked" && Status != "Approved Final"].count();
+	financeDrafts = Financial_Consolidations[Owner_Email == loginEmail || Owner_Email == loginName && Status == "Draft" || Status.contains("Returned") || Status == "Reopened" && Status != "Completed" && Status != "Locked" && Status != "Approved Final" && Locked != true].count();
+	managementQueue = Financial_Consolidations[Status == "Submitted to Management" && Status != "Completed" && Status != "Closed" && Status != "Locked" && Status != "Approved Final" && Locked != true].count();
+	financeSubmissionQueue = financeDrafts + managementQueue;
+	replanFinanceAction = Replanning_Requests[Status == "Submitted to Finance" || Status == "Finance Approved" || Status == "Revision Created" && Status != "Completed" && Status != "Closed" && Status != "Locked"].count();
+	finalConsolidations = Financial_Consolidations[Status == "Approved Final" || Status == "Completed" || Status == "Locked" || Locked == true].count();
+	approvedFinal = Financial_Consolidations[Status == "Approved Final"].count();
+	completedFinance = Financial_Consolidations[Status == "Completed"].count();
+	lockedFinance = Financial_Consolidations[Status == "Locked" || Locked == true].count();
+	lockedBaselines = Budget_Cycles[Baseline_Locked == true].count();
+	financeCompletedCycles = Budget_Cycles[Finance_Completed == true].count();
+	criticalExceptions = Approval_Audit_Log[Action == "Revision Requested" || Action == "Revision Copy Created" || Action == "Locked" || Action == "Final Approved" || Action == "Completed" || Action == "Cancelled"].count();
+	pendingFinanceTotal = pendingFinanceCycles + financeDrafts + replanFinanceAction;
+	scenarioCycleId = 0;
+	scenarioCycleName = "";
+	for each  cycleRec in Budget_Cycles[Status != "Completed" && Status != "Closed" && Status != "Locked" && Status != "Approved Final" && Baseline_Locked != true && Approved_Scenario != true] sort by Opened_Date desc range from 0 to 0
+	{
+		scenarioCycleId = cycleRec.ID;
+		scenarioCycleName = ifNull(cycleRec.Cycle_Name,ifNull(cycleRec.Cycle_Code,"Active cycle"));
+	}
+	scenarioComparisonUrl = "";
+	if(scenarioCycleId != 0)
+	{
+		scenarioComparisonUrl = "#Page:Scenario_Comparison_Dashboard?Budget_Cycle_ID=" + scenarioCycleId;
+	}
+	%>
+<style>
+:root{--zcs-theme-brand-color:var(--zcs_brand_color);--zcs-light-bg-color:var(--zcs_brand_light_color);--zcs-page-bg-color:#F3F3F4;--zcs-primary-text-color:var(--zcs_primary_text_color);--zcs-secondary-text-color:var(--zcs_secondary_text_color);--zcs-teritiary-text-color:var(--zcs_tertiary_text_color);--zcs-border-color:var(--zcs_tertiary_border_color);--zcs-white-color:#FFFFFF;--zcs-primary-btn-color:var(--zcs_brand_color);--zcs-primary-btn-text-color:var(--zcs_brand_foreground_color);font-size:16px;line-height:1.5}.zcs-row{display:flex;flex-wrap:wrap}.zcs-flex{display:flex}.zcs-inline-flex{display:inline-flex}.zcs-direction-column{flex-direction:column}.zcs-align-items-center{align-items:center}.zcs-align-items-start{align-items:flex-start}.zcs-justify-center{justify-content:center}.zcs-justify-space-between{justify-content:space-between}.zcs-col-common{flex:1 1 0}.zcs-col-5{flex:0 0 calc(41.666% - 10px);max-width:calc(41.666% - 10px)}.zcs-col-7{flex:0 0 calc(58.333% - 8px);max-width:calc(58.333% - 8px)}.zcs-gap-4{gap:.25rem}.zcs-gap-6{gap:.375rem}.zcs-gap-8{gap:.5rem}.zcs-gap-10{gap:.625rem}.zcs-gap-12{gap:.75rem}.zcs-gap-16{gap:1rem}.zcs-gap-20{gap:1.25rem}.zcs-gap-24{gap:1.5rem}.zcs-p-0{padding:0}.zcs-p-8{padding:.5rem}.zcs-p-12{padding:.75rem}.zcs-p-16{padding:1rem}.zcs-p-20{padding:1.25rem}.zcs-p-24{padding:1.5rem}.zcs-px-10{padding-left:.625rem;padding-right:.625rem}.zcs-px-12{padding-left:.75rem;padding-right:.75rem}.zcs-px-16{padding-left:1rem;padding-right:1rem}.zcs-px-30{padding-left:1.875rem;padding-right:1.875rem}.zcs-py-2{padding-top:.125rem;padding-bottom:.125rem}.zcs-py-8{padding-top:.5rem;padding-bottom:.5rem}.zcs-py-10{padding-top:.625rem;padding-bottom:.625rem}.zcs-py-14{padding-top:.875rem;padding-bottom:.875rem}.zcs-py-16{padding-top:1rem;padding-bottom:1rem}.zcs-py-24{padding-top:1.5rem;padding-bottom:1.5rem}.zcs-m-0{margin:0}.zcs-mt-8{margin-top:.5rem}.zcs-mt-10{margin-top:.625rem}.zcs-mt-12{margin-top:.75rem}.zcs-mb-0{margin-bottom:0}.zcs-mx-0{margin-left:0;margin-right:0}.zcs-w-full{width:100%}.zcs-wh-full{width:100%;height:100%}.zcs-font-12{font-size:.75rem}.zcs-font-13{font-size:.8125rem}.zcs-font-14{font-size:.875rem}.zcs-font-15{font-size:.9375rem}.zcs-font-16{font-size:1rem}.zcs-font-18{font-size:1.125rem}.zcs-font-20{font-size:1.25rem}.zcs-font-22{font-size:1.375rem}.zcs-font-24{font-size:1.5rem}.zcs-font-30{font-size:1.875rem}.zcs-font-40{font-size:40px}.zcs-font-normal{font-weight:400}.zcs-font-medium{font-weight:500}.zcs-font-semibold{font-weight:600}.zcs-font-bold{font-weight:700}.zcs-uppercase{text-transform:uppercase}.zcs-lh-body{line-height:1.5}.zcs-lh-heading{line-height:1.25}.zcs-text-left{text-align:left}.zcs-text-right{text-align:right}.zcs-text-center{text-align:center}.zcs-color-primary{color:var(--zcs-primary-text-color)}.zcs-color-secondary{color:var(--zcs-secondary-text-color)}.zcs-color-tertiary{color:var(--zcs-teritiary-text-color)}.zcs-color-theme{color:var(--zcs-theme-brand-color)}.zcs-color-white{color:var(--zcs-white-color)}.zcs-rounded-sm{border-radius:.25rem}.zcs-rounded-md{border-radius:.375rem}.zcs-rounded-lg{border-radius:.5rem}.zcs-rounded-xl{border-radius:.75rem}.zcs-rounded-2xl{border-radius:1rem}.zcs-box-border{box-sizing:border-box}.zcs-cursor-pointer{cursor:pointer}.zcs-no-shrink{flex-shrink:0}.zcs-relative{position:relative}.zcs-sticky{position:sticky}.zcs-card{background-color:var(--zcs-white-color);border:1px solid var(--zcs-border-color);border-radius:12px}a{text-decoration:none}.zcs-page-header{background:linear-gradient(135deg,var(--zcs_brand_color),var(--zcs_brand_dark_color,#1c3d5a));border:0;border-radius:16px}.zcs-button{width:auto;min-width:5rem;min-height:36px}.zcs-primary-button{background-color:var(--zcs_brand_color);color:var(--zcs_brand_foreground_color)}.zcs-primary-outline-button{border:1px solid var(--zcs_brand_color);background-color:var(--zcs-white-color);color:var(--zcs_brand_color)}.zcs-primary-button.zcs-button:hover{background-color:var(--zcs_brand_dark_color)}.zcs-primary-outline-button:hover{background-color:var(--zcs_component_hover_color);border-color:var(--zcs_brand_color);color:var(--zcs_brand_color)}.zcs-button-icon{width:16px;max-height:16px}.zcs-badge{width:auto}.zcs-badge-filled{border:1px solid transparent}.zcs-badge-filled-outline{border:1px solid}.zcs-badge-filled.zcs-badge-theme{background-color:var(--zcs_brand_color);border-color:var(--zcs_brand_color);color:var(--zcs-white-color)}.zcs-badge-filled-outline.zcs-badge-theme{background-color:rgba(255,255,255,.15);border-color:rgba(255,255,255,.42);color:var(--zcs-white-color)}.zcs-badge-filled-outline.zcs-badge-blue{background-color:#E8EFFF;border-color:#2A6FFC;color:#2A6FFC}.zcs-badge-filled-outline.zcs-badge-green{background-color:#E4FCF3;border-color:#179E6C;color:#179E6C}.zcs-badge-filled-outline.zcs-badge-yellow{background-color:#FCF4E6;border-color:#FAAE13;color:#9B6400}.zcs-badge-filled-outline.zcs-badge-orange{background-color:#F8F0EB;border-color:#F4660C;color:#F4660C}.zcs-badge-filled-outline.zcs-badge-red{background-color:#FDE3E6;border-color:#FE455D;color:#FE455D}.zcs-badge-filled-outline.zcs-badge-grey{background-color:#F1F2F4;border-color:#D7DCE2;color:#525967}.zcs-quick-action-item{list-style-type:none}.zcs-quick-action-item.zcs-card:hover{border-color:var(--zcs_brand_color)}.zcs-quick-action-item:hover .zcs-quick-action-link{color:var(--zcs_brand_color)}.zcs-table-wrapper{border:1px solid var(--zcs_tertiary_border_color);background-color:var(--zcs-white-color);overflow:auto}.zcs-table-wrapper table{line-height:normal;border-collapse:collapse}.zcs-table-wrapper table thead{top:0}.zcs-table-wrapper table thead tr th{background-color:#F9FAFE;box-shadow:0 -1px 0 0 var(--zcs_tertiary_border_color) inset;white-space:nowrap}.zcs-table-wrapper table tbody tr td{border-top:1px solid var(--zcs_tertiary_border_color)}.zcs-table-wrapper table tbody tr:first-child td{border-color:transparent}.zcs-table-wrapper table tbody tr:hover td{background-color:#F9FAFE}.zcs-table-wrapper table tbody tr td.zcs-green,.zcs-green{color:#179e6c}.zcs-table-wrapper table tbody tr td.zcs-yellow,.zcs-yellow{color:#b8770d}.zcs-table-wrapper table tbody tr td.zcs-red,.zcs-red{color:#fe455d}.fl-shell{background:var(--zcs-page-bg-color);padding:20px;box-sizing:border-box;min-height:100%;color:var(--zcs-primary-text-color)}.fl-hero{box-shadow:0 14px 28px rgba(20,29,51,.12);overflow:hidden;position:relative}.fl-hero:after{content:"";position:absolute;right:-58px;top:-78px;width:220px;height:220px;border:34px solid rgba(255,255,255,.12);border-radius:50%;pointer-events:none}.fl-hero-title{color:var(--zcs_brand_foreground_color);font-size:28px}.fl-hero-copy{max-width:820px;color:var(--zcs_brand_foreground_color);opacity:.9}.fl-eyebrow{letter-spacing:.08em;color:var(--zcs_brand_foreground_color);opacity:.78}.fl-hero .zcs-primary-button{background:var(--zcs-white-color);color:var(--zcs_brand_color)}.fl-kpi-grid{margin-top:16px}.fl-kpi{flex:1 1 180px;min-width:180px;min-height:158px;color:inherit;transition:border-color .15s ease,transform .15s ease,box-shadow .15s ease}.fl-kpi:hover{border-color:var(--zcs_brand_color);transform:translateY(-1px);box-shadow:0 10px 22px rgba(20,29,51,.08)}.fl-kpi-top{min-height:34px}.fl-icon{width:38px;height:38px;border-radius:12px;background:var(--zcs_component_hover_color);color:var(--zcs_brand_color);font-size:18px}.fl-kpi-value{font-size:34px;line-height:1;color:var(--zcs-primary-text-color)}.fl-kpi-note{min-height:40px}.fl-content{margin-top:16px}.fl-panel{min-height:100%}.fl-section-head{margin-bottom:14px}.fl-action-list{list-style:none}.fl-action-card{border-radius:12px;transition:border-color .15s ease,background-color .15s ease}.fl-action-card.is-primary{background:linear-gradient(0deg,var(--zcs_component_hover_color),var(--zcs-white-color))}.fl-action-link{color:inherit;width:100%}.fl-action-title{display:block;color:var(--zcs-primary-text-color)}.fl-action-meta{display:block;color:var(--zcs-secondary-text-color);margin-top:2px}.fl-action-count{min-width:48px;text-align:center;border-radius:999px;background:var(--zcs_component_hover_color);color:var(--zcs_brand_color);padding:6px 10px}.fl-arrow{color:var(--zcs-teritiary-text-color)}.fl-insight-list{list-style:none}.fl-insight-item{border-top:1px solid var(--zcs-border-color)}.fl-insight-item:first-child{border-top:0}.fl-insight-link{color:var(--zcs_brand_color);font-weight:600}.fl-footer-links{border-top:1px solid var(--zcs-border-color);margin-top:14px;padding-top:14px}.fl-footer-links a,.fl-table-link{color:var(--zcs_brand_color);font-weight:600}.fl-dashboard-card{color:inherit;transition:border-color .15s ease,box-shadow .15s ease}.fl-dashboard-card:hover{border-color:var(--zcs_brand_color);box-shadow:0 10px 22px rgba(20,29,51,.08)}.fl-nodata{min-height:136px;background:var(--zcs-white-color);border:1px dashed var(--zcs-border-color);border-radius:12px}.fl-nav{margin-top:16px}.fl-table-wrapper{max-height:365px}@media(max-width:992px){.zcs-col-md-12{flex:0 0 100%;max-width:100%}.fl-hero{align-items:flex-start;flex-direction:column}.fl-hero-actions{width:100%;justify-content:flex-start}.fl-kpi{flex:1 1 calc(50% - 8px)}}@media(max-width:576px){.fl-shell{padding:12px}.zcs-col-xs-12,.zcs-col-5,.zcs-col-7,.fl-kpi{flex:0 0 100%;max-width:100%}.fl-hero{padding:18px}.fl-hero-actions{flex-direction:column;align-items:stretch}.fl-hero-actions .zcs-button{width:100%}.fl-kpi-value{font-size:30px}.fl-action-link{align-items:flex-start}.fl-action-count{min-width:40px}.fl-dashboard-row{flex-direction:column}}
+</style>
+<div class='fl-shell'>
+	<div class='zcs-page-header fl-hero zcs-w-full zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-16 zcs-px-30 zcs-py-24 zcs-box-border'>
+		<div class='zcs-flex zcs-direction-column zcs-gap-6 zcs-col-common'>
+			<div class='fl-eyebrow zcs-font-12 zcs-font-semibold zcs-uppercase'>Finance budget workspace</div>
+			<h2 class='fl-hero-title zcs-font-bold zcs-lh-heading zcs-m-0'>Finance Landing</h2>
+			<p class='fl-hero-copy zcs-font-14 zcs-lh-body zcs-m-0'>Signed in as <strong><%=loginName%></strong> (<%=loginEmail%>). Track active budget cycles, finance consolidation work, replanning decisions, and final budget readiness without mixing locked or approved records into pending actions.</p>
+		</div>
+		<div class='fl-hero-actions zcs-flex zcs-align-items-center zcs-gap-12'>
+			<div class='zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-theme'>
+				<i class='zcs-badge-icon zcs-no-shrink zc-li-outline users-single-01'></i>
+				<span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'><%=profileText%></span>
+			</div>
+			<a class='zcs-button zcs-primary-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-medium zcs-lh-body' href='#Form:Financial_Consolidations?zc_LoadIn=dialog'>
+				<i class='zcs-button-icon zc-li-outline ui-1-simple-add'></i>
+				<span class='zcs-button-text'>Add Consolidation</span>
+			</a>
+		</div>
+	</div>
+
+	<div class='fl-kpi-grid zcs-row zcs-gap-16'>
+		<a class='fl-kpi zcs-card zcs-flex zcs-direction-column zcs-justify-space-between zcs-gap-12 zcs-p-20 zcs-box-border' href='#Report:Active_Budget_Cycles?zc_LoadIn=dialog'>
+			<div class='fl-kpi-top zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-8'>
+				<span class='fl-icon zcs-inline-flex zcs-align-items-center zcs-justify-center'><i class='zc-li-outline business-progress'></i></span>
+				<span class='zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-gap-6 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-blue'><i class='zc-li-outline loader-dots-06'></i><span class='zcs-font-12'>Active</span></span>
+			</div>
+			<div>
+				<div class='zcs-font-13 zcs-font-semibold zcs-color-secondary zcs-uppercase'>Active budget cycles</div>
+				<strong class='fl-kpi-value zcs-font-bold'><%=activeCycles%></strong>
+			</div>
+			<div class='fl-kpi-note zcs-font-13 zcs-color-secondary'>Uses the Active Budget Cycles report criteria: not Completed and not Closed.</div>
+		</a>
+		<a class='fl-kpi zcs-card zcs-flex zcs-direction-column zcs-justify-space-between zcs-gap-12 zcs-p-20 zcs-box-border' href='#Report:All_Financial_Consolidations?zc_LoadIn=dialog'>
+			<div class='fl-kpi-top zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-8'>
+				<span class='fl-icon zcs-inline-flex zcs-align-items-center zcs-justify-center'><i class='zc-li-outline business-money-growth'></i></span>
+				<span class='zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-gap-6 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-yellow'><i class='zc-li-outline design-todo'></i><span class='zcs-font-12'>Queue</span></span>
+			</div>
+			<div>
+				<div class='zcs-font-13 zcs-font-semibold zcs-color-secondary zcs-uppercase'>Finance submission queue</div>
+				<strong class='fl-kpi-value zcs-font-bold'><%=financeSubmissionQueue%></strong>
+			</div>
+			<div class='fl-kpi-note zcs-font-13 zcs-color-secondary'>Draft, returned, reopened, and management-submitted consolidations; final and locked rows excluded.</div>
+		</a>
+		<a class='fl-kpi zcs-card zcs-flex zcs-direction-column zcs-justify-space-between zcs-gap-12 zcs-p-20 zcs-box-border' href='#Report:Active_Replanning_Requests?zc_LoadIn=dialog'>
+			<div class='fl-kpi-top zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-8'>
+				<span class='fl-icon zcs-inline-flex zcs-align-items-center zcs-justify-center'><i class='zc-li-outline arrows-1-refresh-69'></i></span>
+				<span class='zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-gap-6 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-orange'><i class='zc-li-outline ui-2-time'></i><span class='zcs-font-12'>Finance</span></span>
+			</div>
+			<div>
+				<div class='zcs-font-13 zcs-font-semibold zcs-color-secondary zcs-uppercase'>Replanning action</div>
+				<strong class='fl-kpi-value zcs-font-bold'><%=replanFinanceAction%></strong>
+			</div>
+			<div class='fl-kpi-note zcs-font-13 zcs-color-secondary'>Submitted to Finance, Finance Approved, or Revision Created requests; Locked excluded.</div>
+		</a>
+		<a class='fl-kpi zcs-card zcs-flex zcs-direction-column zcs-justify-space-between zcs-gap-12 zcs-p-20 zcs-box-border' href='#Report:Approved_Final_Budgets?zc_LoadIn=dialog'>
+			<div class='fl-kpi-top zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-8'>
+				<span class='fl-icon zcs-inline-flex zcs-align-items-center zcs-justify-center'><i class='zc-li-outline files-archive-check'></i></span>
+				<span class='zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-gap-6 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-green'><i class='zc-li-outline ui-1-check-circle-08'></i><span class='zcs-font-12'>Final</span></span>
+			</div>
+			<div>
+				<div class='zcs-font-13 zcs-font-semibold zcs-color-secondary zcs-uppercase'>Approved, final, locked</div>
+				<strong class='fl-kpi-value zcs-font-bold'><%=finalConsolidations%></strong>
+			</div>
+			<div class='fl-kpi-note zcs-font-13 zcs-color-secondary'>Approved Final, Completed, Locked, or Locked flag records shown only as readiness metrics.</div>
+		</a>
+		<a class='fl-kpi zcs-card zcs-flex zcs-direction-column zcs-justify-space-between zcs-gap-12 zcs-p-20 zcs-box-border' href='#Report:Critical_Audit_Events?zc_LoadIn=dialog'>
+			<div class='fl-kpi-top zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-8'>
+				<span class='fl-icon zcs-inline-flex zcs-align-items-center zcs-justify-center'><i class='zc-li-outline ui-3-alert'></i></span>
+				<span class='zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-gap-6 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-red'><i class='zc-li-outline files-single-paragraph'></i><span class='zcs-font-12'>Audit</span></span>
+			</div>
+			<div>
+				<div class='zcs-font-13 zcs-font-semibold zcs-color-secondary zcs-uppercase'>Critical exceptions</div>
+				<strong class='fl-kpi-value zcs-font-bold'><%=criticalExceptions%></strong>
+			</div>
+			<div class='fl-kpi-note zcs-font-13 zcs-color-secondary'>Uses the existing Critical Audit Events report actions already surfaced on executive pages.</div>
+		</a>
+	</div>
+
+	<div class='fl-content zcs-row zcs-gap-16'>
+		<section class='zcs-quick-actions-wrapper fl-panel zcs-card zcs-col-7 zcs-col-md-12 zcs-col-xs-12 zcs-flex zcs-direction-column zcs-gap-16 zcs-p-20 zcs-box-border'>
+			<div class='fl-section-head zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12'>
+				<div>
+					<h3 class='zcs-font-18 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0'>Pending finance actions</h3>
+					<p class='zcs-font-13 zcs-color-secondary zcs-m-0 zcs-mt-8'>Only active finance work is listed here. Completed, Closed, Locked, and Approved Final records are excluded from this queue.</p>
+				</div>
+				<span class='zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-gap-6 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-grey'><i class='zc-li-outline design-todo'></i><span class='zcs-font-12'><%=pendingFinanceTotal%> open</span></span>
+			</div>
+<%
+	if(pendingFinanceTotal == 0)
+	{
+		%>
+<div class='zcs-nodata-wrapper fl-nodata zcs-wh-full zcs-flex zcs-align-items-center zcs-justify-center zcs-text-center'>
+				<div class='zcs-nodata-content zcs-p-20 zcs-box-border'>
+					<i class='zc-li-outline ui-1-check-circle-08 zcs-font-30 zcs-color-theme'></i>
+					<h5 class='zcs-nodata-header zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-mt-10 zcs-mx-0 zcs-mb-0'>No pending finance actions</h5>
+				</div>
+			</div>
+<%
+	}
+	else
+	{
+		%>
+<ul class='fl-action-list zcs-flex zcs-direction-column zcs-gap-12 zcs-p-0 zcs-m-0'>
+				<li class='zcs-quick-action-item fl-action-card is-primary zcs-card zcs-px-16 zcs-py-16 zcs-box-border'>
+					<a class='zcs-quick-action-link fl-action-link zcs-flex zcs-align-items-center zcs-gap-12 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary zcs-cursor-pointer' href='#Report:Active_Budget_Cycles?zc_LoadIn=dialog'>
+						<span class='fl-icon zcs-inline-flex zcs-align-items-center zcs-justify-center'><i class='zc-li-outline business-progress'></i></span>
+						<span class='zcs-col-common'><strong class='fl-action-title zcs-font-16 zcs-font-semibold'>Budget cycles needing finance completion</strong><span class='fl-action-meta zcs-font-13'>Cycles in Pending Finance with Finance Completed not checked; completed, closed, and locked baselines are not counted.</span></span>
+						<span class='fl-action-count zcs-font-16 zcs-font-bold'><%=pendingFinanceCycles%></span>
+						<i class='fl-arrow zc-li-outline arrows-1-tail-right'></i>
+					</a>
+				</li>
+				<li class='zcs-quick-action-item fl-action-card zcs-card zcs-px-16 zcs-py-16 zcs-box-border'>
+					<a class='zcs-quick-action-link fl-action-link zcs-flex zcs-align-items-center zcs-gap-12 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary zcs-cursor-pointer' href='#Report:All_Financial_Consolidations?zc_LoadIn=dialog'>
+						<span class='fl-icon zcs-inline-flex zcs-align-items-center zcs-justify-center'><i class='zc-li-outline business-money-growth'></i></span>
+						<span class='zcs-col-common'><strong class='fl-action-title zcs-font-16 zcs-font-semibold'>Complete or resubmit financial consolidations</strong><span class='fl-action-meta zcs-font-13'>Rows owned by this user in Draft, Returned by Management, or Reopened status. Approved Final, Completed, and Locked rows are excluded.</span></span>
+						<span class='fl-action-count zcs-font-16 zcs-font-bold'><%=financeDrafts%></span>
+						<i class='fl-arrow zc-li-outline arrows-1-tail-right'></i>
+					</a>
+				</li>
+				<li class='zcs-quick-action-item fl-action-card zcs-card zcs-px-16 zcs-py-16 zcs-box-border'>
+					<a class='zcs-quick-action-link fl-action-link zcs-flex zcs-align-items-center zcs-gap-12 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary zcs-cursor-pointer' href='#Report:Active_Replanning_Requests?zc_LoadIn=dialog'>
+						<span class='fl-icon zcs-inline-flex zcs-align-items-center zcs-justify-center'><i class='zc-li-outline arrows-1-refresh-69'></i></span>
+						<span class='zcs-col-common'><strong class='fl-action-title zcs-font-16 zcs-font-semibold'>Act on replanning requests</strong><span class='fl-action-meta zcs-font-13'>Finance statuses: Submitted to Finance, Finance Approved, or Revision Created. Locked requests stay out of the pending list.</span></span>
+						<span class='fl-action-count zcs-font-16 zcs-font-bold'><%=replanFinanceAction%></span>
+						<i class='fl-arrow zc-li-outline arrows-1-tail-right'></i>
+					</a>
+				</li>
+			</ul>
+<%
+	}
+	%>
+<div class='fl-footer-links zcs-flex zcs-gap-12 zcs-row zcs-font-13'>
+				<a class='zcs-inline-flex zcs-align-items-center zcs-gap-6' href='#Form:Financial_Consolidations?zc_LoadIn=dialog'><i class='zc-li-outline ui-1-simple-add'></i>New consolidation</a>
+				<a class='zcs-inline-flex zcs-align-items-center zcs-gap-6' href='#Form:Replanning_Requests?zc_LoadIn=dialog'><i class='zc-li-outline arrows-1-refresh-69'></i>New replanning request</a>
+				<a class='zcs-inline-flex zcs-align-items-center zcs-gap-6' href='#Form:Budget_Cycles?zc_LoadIn=dialog'><i class='zc-li-outline business-progress'></i>Open budget cycle form</a>
+			</div>
+		</section>
+
+		<section class='fl-panel zcs-card zcs-col-5 zcs-col-md-12 zcs-col-xs-12 zcs-flex zcs-direction-column zcs-gap-16 zcs-p-20 zcs-box-border'>
+			<div class='fl-section-head zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12'>
+				<div>
+					<h3 class='zcs-font-18 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0'>Final readiness &amp; locked records</h3>
+					<p class='zcs-font-13 zcs-color-secondary zcs-m-0 zcs-mt-8'>Approved, completed, and locked records are tracked as readiness metrics, not pending work.</p>
+				</div>
+			</div>
+			<div class='zcs-table-wrapper fl-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative'>
+				<table class='zcs-w-full'>
+					<thead class='zcs-sticky'>
+						<tr>
+							<th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Record set</th>
+							<th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Count</th>
+							<th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Open</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td class='zcs-px-16 zcs-py-10 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><span class='zcs-green'><i class='zc-li-outline ui-1-check-circle-08'></i></span> Approved Final consolidations</td>
+							<td class='zcs-px-16 zcs-py-10 zcs-box-border zcs-text-right zcs-font-14 zcs-font-bold zcs-lh-body zcs-green'><%=approvedFinal%></td>
+							<td class='zcs-px-16 zcs-py-10 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body'><a class='fl-table-link' href='#Report:Approved_Final_Budgets?zc_LoadIn=dialog'>View</a></td>
+						</tr>
+						<tr>
+							<td class='zcs-px-16 zcs-py-10 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><span class='zcs-green'><i class='zc-li-outline files-archive-check'></i></span> Completed consolidations</td>
+							<td class='zcs-px-16 zcs-py-10 zcs-box-border zcs-text-right zcs-font-14 zcs-font-bold zcs-lh-body zcs-green'><%=completedFinance%></td>
+							<td class='zcs-px-16 zcs-py-10 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body'><a class='fl-table-link' href='#Report:Approved_Final_Budgets?zc_LoadIn=dialog'>View</a></td>
+						</tr>
+						<tr>
+							<td class='zcs-px-16 zcs-py-10 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><span class='zcs-yellow'><i class='zc-li-outline ui-1-lock'></i></span> Locked financial consolidations</td>
+							<td class='zcs-px-16 zcs-py-10 zcs-box-border zcs-text-right zcs-font-14 zcs-font-bold zcs-lh-body zcs-yellow'><%=lockedFinance%></td>
+							<td class='zcs-px-16 zcs-py-10 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body'><a class='fl-table-link' href='#Report:Approved_Final_Budgets?zc_LoadIn=dialog'>View</a></td>
+						</tr>
+						<tr>
+							<td class='zcs-px-16 zcs-py-10 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><span class='zcs-yellow'><i class='zc-li-outline business-chart-bar-32'></i></span> Locked budget baselines</td>
+							<td class='zcs-px-16 zcs-py-10 zcs-box-border zcs-text-right zcs-font-14 zcs-font-bold zcs-lh-body zcs-yellow'><%=lockedBaselines%></td>
+							<td class='zcs-px-16 zcs-py-10 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body'><a class='fl-table-link' href='#Report:Locked_Baselines?zc_LoadIn=dialog'>View</a></td>
+						</tr>
+						<tr>
+							<td class='zcs-px-16 zcs-py-10 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><span class='zcs-red'><i class='zc-li-outline ui-3-alert'></i></span> Critical audit events</td>
+							<td class='zcs-px-16 zcs-py-10 zcs-box-border zcs-text-right zcs-font-14 zcs-font-bold zcs-lh-body zcs-red'><%=criticalExceptions%></td>
+							<td class='zcs-px-16 zcs-py-10 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body'><a class='fl-table-link' href='#Report:Critical_Audit_Events?zc_LoadIn=dialog'>View</a></td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+			<ul class='fl-insight-list zcs-flex zcs-direction-column zcs-p-0 zcs-m-0'>
+				<li class='fl-insight-item zcs-flex zcs-direction-column zcs-gap-8 zcs-py-10 zcs-box-border'>
+					<label class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary'>Management handoff</label>
+					<div class='zcs-flex zcs-gap-8 zcs-align-items-start'>
+						<i class='zcs-lh-body zcs-color-theme zc-li-outline business-handshake'></i>
+						<span class='zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'><a class='fl-insight-link' href='#Report:Scenario_Financial_Summary?zc_LoadIn=dialog'><%=managementQueue%> submitted consolidations</a> are with management and kept out of finance pending actions.</span>
+					</div>
+				</li>
+				<li class='fl-insight-item zcs-flex zcs-direction-column zcs-gap-8 zcs-py-10 zcs-box-border'>
+					<label class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary'>Finance completed cycles</label>
+					<div class='zcs-flex zcs-gap-8 zcs-align-items-start'>
+						<i class='zcs-lh-body zcs-color-theme zc-li-outline ui-1-check-circle-08'></i>
+						<span class='zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'><%=financeCompletedCycles%> budget cycles have Finance Completed checked.</span>
+					</div>
+				</li>
+			</ul>
+		</section>
+	</div>
+
+	<section class='fl-nav zcs-card zcs-flex zcs-direction-column zcs-gap-16 zcs-p-20 zcs-box-border'>
+		<div class='fl-section-head zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12'>
+			<div>
+				<h3 class='zcs-font-18 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0'>Dashboard links</h3>
+				<p class='zcs-font-13 zcs-color-secondary zcs-m-0 zcs-mt-8'>Executive dashboards and comparison pages are quick navigation only and are not treated as pending finance actions.</p>
+			</div>
+		</div>
+		<div class='fl-dashboard-row zcs-flex zcs-gap-12'>
+			<a class='fl-dashboard-card zcs-card zcs-col-common zcs-flex zcs-align-items-center zcs-gap-12 zcs-px-16 zcs-py-14 zcs-box-border' href='#Page:Executive_Budget_Dashboard'>
+				<span class='fl-icon zcs-inline-flex zcs-align-items-center zcs-justify-center'><i class='zc-li-outline business-chart'></i></span>
+				<span class='zcs-col-common'><strong class='fl-action-title zcs-font-16 zcs-font-semibold'>Executive Budget Dashboard</strong><span class='fl-action-meta zcs-font-13'>Enterprise readiness and audit visibility.</span></span>
+				<i class='fl-arrow zc-li-outline arrows-1-tail-right'></i>
+			</a>
+<%
+	if(scenarioCycleId != 0)
+	{
+		%>
+<a class='fl-dashboard-card zcs-card zcs-col-common zcs-flex zcs-align-items-center zcs-gap-12 zcs-px-16 zcs-py-14 zcs-box-border' href='<%=scenarioComparisonUrl%>'>
+				<span class='fl-icon zcs-inline-flex zcs-align-items-center zcs-justify-center'><i class='zc-li-outline business-chart-pie-36'></i></span>
+				<span class='zcs-col-common'><strong class='fl-action-title zcs-font-16 zcs-font-semibold'>Scenario Comparison Dashboard</strong><span class='fl-action-meta zcs-font-13'>Compare <%=scenarioCycleName%> scenarios.</span></span>
+				<i class='fl-arrow zc-li-outline arrows-1-tail-right'></i>
+			</a>
+<%
+	}
+	else
+	{
+		%>
+<div class='fl-dashboard-card zcs-card zcs-col-common zcs-flex zcs-align-items-center zcs-gap-12 zcs-px-16 zcs-py-14 zcs-box-border' style='opacity:.72;'>
+				<span class='fl-icon zcs-inline-flex zcs-align-items-center zcs-justify-center'><i class='zc-li-outline ui-1-circle-remove'></i></span>
+				<span class='zcs-col-common'><strong class='fl-action-title zcs-font-16 zcs-font-semibold'>Scenario Comparison Dashboard</strong><span class='fl-action-meta zcs-font-13'>No active/open Budget Cycle is available for comparison.</span></span>
+			</div>
+<%
+	}
+	%>
+<a class='fl-dashboard-card zcs-card zcs-col-common zcs-flex zcs-align-items-center zcs-gap-12 zcs-px-16 zcs-py-14 zcs-box-border' href='#Report:Scenario_Financial_Summary?zc_LoadIn=dialog'>
+				<span class='fl-icon zcs-inline-flex zcs-align-items-center zcs-justify-center'><i class='zc-li-outline business-signature'></i></span>
+				<span class='zcs-col-common'><strong class='fl-action-title zcs-font-16 zcs-font-semibold'>Scenario Financial Summary</strong><span class='fl-action-meta zcs-font-13'>Open submitted scenario financials in dialog.</span></span>
+				<i class='fl-arrow zc-li-outline arrows-1-tail-right'></i>
+			</a>
+		</div>
+	</section>
+</div>

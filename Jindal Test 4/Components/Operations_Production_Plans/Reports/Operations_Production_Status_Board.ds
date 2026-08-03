@@ -1,0 +1,74 @@
+kanban Operations_Production_Status_Board
+{
+
+			displayName = "Operations Production Status Board"
+			show all rows from Operations_Production_Plans    
+			(
+				Operations_Production_No
+				Requested_Financial_Year
+				Budget_Cycle
+				Plant
+				Production_Line
+				Total_FY_Production_Tons
+				Average_Productivity_MTPH
+				Status
+				Owner_Email
+				Locked
+				custom action "Submit Production"
+				(
+	  			workflow = WF_OP_Submit_Production
+				column header = "Submit Production"
+				success message = "Production plan submitted."
+				condition = (Status == "Draft" || Status == "Returned by Operations Approval" || Status == "Revision Requested by SCM" || Status == "Revised Draft")
+				)
+				custom action "Approve Production"
+				(
+	  			workflow = WF_OP_Approve_Production
+				column header = "Approve Production"
+				success message = "Production plan approved."
+				condition = (Status == "Submitted to Operations Approval")
+				)
+				custom action "Return Production"
+				(
+	  			workflow = WF_OP_Return_Production
+				column header = "Return Production"
+				success message = "Production plan returned."
+				condition = (Status == "Submitted to Operations Approval")
+				)
+				custom action "Create Revision Copy"
+				(
+	  			workflow = WF_OP_Create_Revision_Copy
+				column header = "Create Revision Copy"
+				success message = "Production revision copy created."
+				condition = (Status == "Revision Requested by SCM" || Status == "Returned by Operations Approval")
+				)
+				custom action "Lock Production"
+				(
+	  			workflow = WF_OP_Lock_Production
+				column header = "Lock Production"
+				success message = "Production plan locked."
+				condition = (Status == "Operations Approved" && Locked == false)
+				)
+			)
+			filters
+			(
+				Requested_Financial_Year
+				Budget_Cycle
+				Plant
+				Production_Line
+				Status
+				Locked
+			)
+			sort by
+			(
+				Operations_Production_No descending
+			)
+			options
+			(
+	 			display field = Status
+	 			emptycolumn = "No Status"
+				sort order  = custom
+				record count  = enable
+	 		)
+		
+}

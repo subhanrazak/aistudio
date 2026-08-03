@@ -1,0 +1,40 @@
+Log_Financial_Year_Status_Change as "Log Financial Year Status Change"
+{
+
+				type =  form
+				form = Financial_Years
+
+				record event = on add or edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Status == "Completed")
+										{
+											prior_completed_log_count = Approval_Audit_Log[Module_Name == "Financial Years" && Related_Record_ID == input.ID && Action == "Completed"].count();
+											if(prior_completed_log_count == 0)
+											{
+												insert into Approval_Audit_Log
+												[
+													Module_Name="Financial Years"
+													Related_Record_ID=input.ID
+													Related_Record_Display=input.Year_Code
+													Action="Completed"
+													From_Status=""
+													To_Status=input.Status
+													Actor_Email=zoho.loginuserid
+													Action_On=zoho.currenttime
+													Remarks=ifnull(input.Completion_Remarks,"Financial year completed.")
+													Added_User=zoho.loginuser
+												]
+											}
+										}
+						)
+					}
+				}
+
+			
+}

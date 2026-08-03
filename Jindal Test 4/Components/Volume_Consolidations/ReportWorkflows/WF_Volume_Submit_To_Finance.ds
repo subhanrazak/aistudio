@@ -1,0 +1,44 @@
+WF_Volume_Submit_To_Finance as "Submit to Finance"
+{
+
+				type =  functions
+				form = Volume_Consolidations
+				execution type = for each record	
+				on start
+				{
+					actions 
+					{
+					on click
+					(
+						oldStatus = input.Status;
+										if(oldStatus == "SCM Approved")
+										{
+											input.Status = "Submitted to Finance";
+											input.Approver_Action = null;
+											cycleRec = Budget_Cycles[ID == input.Budget_Cycle];
+											if(cycleRec.count() > 0)
+											{
+												cycleRec.SCM_Approved=true;
+												cycleRec.Status="Pending Finance";
+											}
+											auditId = insert into Approval_Audit_Log
+											[
+												Budget_Cycle=input.Budget_Cycle
+												Module_Name="SCM Review"
+												Related_Record_ID=input.ID
+												Related_Record_Display="SCM Review " + input.Consolidation_No
+												Action="Submitted"
+												From_Status=oldStatus
+												To_Status="Submitted to Finance"
+												Iteration_Number=input.Iteration_Count
+												Actor_Email=zoho.loginuserid
+												Action_On=zoho.currenttime
+												Remarks="Submitted to finance from report action."
+												Added_User=zoho.loginuser
+											];
+										}
+					)
+					}
+				}
+			
+}

@@ -1,0 +1,55 @@
+list Finalised_Consolidations
+{
+
+			displayName = "Finalised Consolidations"
+			show all rows from Volume_Consolidations  [Status == "SCM Approved" || Status == "Submitted to Finance" || Status == "Locked"]  
+			(
+				Consolidation_No
+				Requested_Financial_Year
+				Budget_Cycle
+				Plant
+				Sales_Plan
+				Operations_Production_Plan
+				SCM_Decision
+				SCM_Approved_By
+				SCM_Approved_On
+				Status
+				Locked
+				Owner_Email
+				custom action "Submit to Finance"
+				(
+	  			workflow = WF_Volume_Submit_To_Finance
+				column header = "Submit to Finance"
+				success message = "Consolidation submitted to finance."
+				condition = (Status == "SCM Approved")
+				)
+				custom action "Lock Consolidation"
+				(
+	  			workflow = WF_Volume_Lock_Consolidation
+				column header = "Lock Consolidation"
+				success message = "Consolidation locked."
+				condition = (Status == "SCM Approved" || Status == "Submitted to Finance" && Locked == false)
+				)
+				custom action "Open Scenario Comparison"
+				(
+	  			workflow = WF_Volume_Open_Scenario_Comparison
+				column header = "Open Scenario Comparison"
+				success message = "Opening scenario comparison."
+				)
+			)
+			filters
+			(
+				Requested_Financial_Year
+				Budget_Cycle
+				Plant
+				SCM_Decision
+				Status
+				Locked
+				Owner_Email
+			)
+			sort by
+			(
+				Consolidation_No descending
+			)
+		
+}

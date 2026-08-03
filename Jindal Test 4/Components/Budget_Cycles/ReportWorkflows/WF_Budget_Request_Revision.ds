@@ -1,0 +1,37 @@
+WF_Budget_Request_Revision as "Request Revision"
+{
+
+				type =  functions
+				form = Budget_Cycles
+				execution type = for each record	
+				on start
+				{
+					actions 
+					{
+					on click
+					(
+						oldStatus = input.Status;
+										if(oldStatus != "Completed" && oldStatus != "Closed")
+										{
+											input.Status = "Revision Requested";
+											auditId = insert into Approval_Audit_Log
+											[
+												Budget_Cycle=input.ID
+												Module_Name="Budget Cycles"
+												Related_Record_ID=input.ID
+												Related_Record_Display="Budget Cycle " + input.Cycle_Code
+												Action="Revision Requested"
+												From_Status=oldStatus
+												To_Status="Revision Requested"
+												Iteration_Number=0
+												Actor_Email=zoho.loginuserid
+												Action_On=zoho.currenttime
+												Remarks="Revision requested from report action. Select reopened modules on the form if needed."
+												Added_User=zoho.loginuser
+											];
+										}
+					)
+					}
+				}
+			
+}

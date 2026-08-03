@@ -1,0 +1,44 @@
+WF_Sales_Return_Plan as "Return Sales Plan"
+{
+
+				type =  functions
+				form = Sales_Plans
+				execution type = for each record	
+				on start
+				{
+					actions 
+					{
+					on click
+					(
+						oldStatus = input.Status;
+										if(oldStatus == "Submitted to Sales Management")
+										{
+											input.Status = "Returned by Sales Management";
+											input.Iteration_Count = ifnull(input.Iteration_Count,0) + 1;
+											remarksText = input.Approval_Remarks;
+											if(remarksText == null || remarksText == "")
+											{
+												remarksText = "Returned from report action. Add detailed remarks on the form if required.";
+											}
+											input.Approver_Action = null;
+											auditId = insert into Approval_Audit_Log
+											[
+												Budget_Cycle=input.Budget_Cycle
+												Module_Name="Sales Plans"
+												Related_Record_ID=input.ID
+												Related_Record_Display="Sales Plan " + input.Sales_Plan_No
+												Action="Returned"
+												From_Status=oldStatus
+												To_Status="Returned by Sales Management"
+												Iteration_Number=input.Iteration_Count
+												Actor_Email=zoho.loginuserid
+												Action_On=zoho.currenttime
+												Remarks=remarksText
+												Added_User=zoho.loginuser
+											];
+										}
+					)
+					}
+				}
+			
+}

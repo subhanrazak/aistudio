@@ -1,0 +1,241 @@
+<%
+	selectedFYId = 0;
+	selectedFYName = "No active financial year";
+	if(input.Financial_Year != null && input.Financial_Year != 0)
+	{
+		fyRows = Financial_Years[ID == input.Financial_Year];
+		for each  fyRec in fyRows
+		{
+			if(selectedFYId == 0)
+			{
+				selectedFYId = fyRec.ID;
+				selectedFYName = fyRec.Year_Name;
+			}
+		}
+	}
+	if(selectedFYId == 0)
+	{
+		fyRows = Financial_Years[Active == true] sort by Start_Date desc;
+		for each  fyRec in fyRows
+		{
+			if(selectedFYId == 0)
+			{
+				selectedFYId = fyRec.ID;
+				selectedFYName = fyRec.Year_Name;
+			}
+		}
+	}
+	selectedPlantId = 0;
+	if(input.Plant != null && input.Plant != 0)
+	{
+		selectedPlantId = input.Plant;
+	}
+	selectedLineId = 0;
+	if(input.Production_Line != null && input.Production_Line != 0)
+	{
+		selectedLineId = input.Production_Line;
+	}
+	monthRows = Financial_Year_Months[ID == 0];
+	if(selectedFYId != 0)
+	{
+		monthRows = Financial_Year_Months[Financial_Year == selectedFYId && Included == true] sort by Month_Order;
+	}
+	if(selectedFYId == 0)
+	{
+		approvedAvailabilityPlans = Capacity_TEP_Plans[ID == 0];
+	}
+	else if(selectedPlantId != 0 && selectedLineId != 0)
+	{
+		approvedAvailabilityPlans = Capacity_TEP_Plans[Requested_Financial_Year == selectedFYId && Plant == selectedPlantId && Production_Line == selectedLineId && Status == "Operations Approved"] sort by Operations_Approved_On desc;
+	}
+	else if(selectedPlantId != 0)
+	{
+		approvedAvailabilityPlans = Capacity_TEP_Plans[Requested_Financial_Year == selectedFYId && Plant == selectedPlantId && Status == "Operations Approved"] sort by Operations_Approved_On desc;
+	}
+	else if(selectedLineId != 0)
+	{
+		approvedAvailabilityPlans = Capacity_TEP_Plans[Requested_Financial_Year == selectedFYId && Production_Line == selectedLineId && Status == "Operations Approved"] sort by Operations_Approved_On desc;
+	}
+	else
+	{
+		approvedAvailabilityPlans = Capacity_TEP_Plans[Requested_Financial_Year == selectedFYId && Status == "Operations Approved"] sort by Operations_Approved_On desc;
+	}
+	%>
+<div class='op-section zcs-card'>
+	<div class='op-section-head'>
+		<div>
+			<h3>Plant and Line Availability Matrix</h3>
+			<p>Approved capacity TEP plans across configured FY months for <strong><%=selectedFYName%></strong>.</p>
+		</div>
+		<span class='zcs-badge zcs-badge-filled zcs-badge-green zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border'><span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'><%=approvedAvailabilityPlans.count()%> Approved</span></span>
+	</div>
+<%
+	if(selectedFYId == 0 || monthRows.count() == 0)
+	{
+		%>
+<div class='zcs-nodata-wrapper zcs-wh-full zcs-flex zcs-align-items-center zcs-justify-center zcs-text-center op-empty'>
+		<div class='zcs-nodata-content zcs-p-20 zcs-box-border'>
+			<i class='zc-li-outline files-2-folder-15 op-empty-icon'></i>
+			<h5 class='zcs-nodata-header zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-mt-10 zcs-mx-0 zcs-mb-0'>No FY month setup found</h5>
+			<p>Mark a financial year as active and configure included Financial Year Months before reviewing availability.</p>
+		</div>
+	</div>
+<%
+	}
+	else if(approvedAvailabilityPlans.count() == 0)
+	{
+		%>
+<div class='zcs-nodata-wrapper zcs-wh-full zcs-flex zcs-align-items-center zcs-justify-center zcs-text-center op-empty'>
+		<div class='zcs-nodata-content zcs-p-20 zcs-box-border'>
+			<i class='zc-li-outline ui-1-ban-bold op-empty-icon'></i>
+			<h5 class='zcs-nodata-header zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-mt-10 zcs-mx-0 zcs-mb-0'>No approved availability plan</h5>
+			<p>Adjust filters or approve a Capacity TEP Plan for the selected FY, plant, and production line.</p>
+		</div>
+	</div>
+<%
+	}
+	else
+	{
+		%>
+<div class='zcs-table-wrapper op-matrix-wrapper zcs-rounded-sm zcs-box-border zcs-relative'>
+		<table class='zcs-w-full op-matrix-table'>
+			<thead class='zcs-sticky'>
+				<tr>
+					<th class='op-sticky-col zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Availability Metric</th>
+<%
+		for each  monthRec in monthRows
+		{
+			%>
+<th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'><%=monthRec.Month_Label%></th>
+<%
+		}
+		%>
+<th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>FY Total</th>
+				</tr>
+				<tr class='zcs-tspace'><th class='zcs-p-2 zcs-box-border' colspan='<%=monthRows.count() + 2%>'> </th></tr>
+			</thead>
+			<tbody>
+<%
+		metrics = {"Calendar Hrs","Holidays","Planned Down Time","Capital Shutdown","Setup Change Time","Steckel Mill Work Roll Change","Roughing Mill Work Roll Change","Available Hrs","Unforeseen Delay/Breakdowns","Net Running Hrs","Equipment Availability","Equipment Utilization"};
+		for each  metric in metrics
+		{
+			isPercent = metric == "Equipment Availability" || metric == "Equipment Utilization";
+			fyTotal = 0.0;
+			fyCount = 0;
+			%>
+<tr>
+					<td class='op-sticky-col zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=metric%></td>
+<%
+			for each  monthRec in monthRows
+			{
+				cellValue = 0.0;
+				cellCount = 0;
+				for each  planRec in approvedAvailabilityPlans
+				{
+					for each  monthLine in planRec.Monthly_Availability_Lines_Existing
+					{
+						if(monthLine.Month_Order == monthRec.Month_Order)
+						{
+							lineValue = 0.0;
+							if(metric == "Calendar Hrs")
+							{
+								lineValue = ifnull(monthLine.Calendar_Hours,0.0);
+							}
+							else if(metric == "Holidays")
+							{
+								lineValue = ifnull(monthLine.Holidays_Hours,0.0);
+							}
+							else if(metric == "Planned Down Time")
+							{
+								lineValue = ifnull(monthLine.Planned_Down_Time_Hours,0.0);
+							}
+							else if(metric == "Capital Shutdown")
+							{
+								lineValue = ifnull(monthLine.Capital_Shutdown_Hours,0.0);
+							}
+							else if(metric == "Setup Change Time")
+							{
+								lineValue = ifnull(monthLine.Setup_Change_Time_Hours,0.0);
+							}
+							else if(metric == "Steckel Mill Work Roll Change")
+							{
+								lineValue = ifnull(monthLine.Steckel_Mill_Work_Roll_Change_Hours,0.0);
+							}
+							else if(metric == "Roughing Mill Work Roll Change")
+							{
+								lineValue = ifnull(monthLine.Roughing_Mill_Work_Roll_Change_Hours,0.0);
+							}
+							else if(metric == "Available Hrs")
+							{
+								lineValue = ifnull(monthLine.Available_Hours,0.0);
+							}
+							else if(metric == "Unforeseen Delay/Breakdowns")
+							{
+								lineValue = ifnull(monthLine.Unforeseen_Delay_Breakdowns_Hours,0.0);
+							}
+							else if(metric == "Net Running Hrs")
+							{
+								lineValue = ifnull(monthLine.Net_Running_Hours,0.0);
+							}
+							else if(metric == "Equipment Availability")
+							{
+								lineValue = ifnull(monthLine.Equipment_Availability_Percent,0.0);
+							}
+							else if(metric == "Equipment Utilization")
+							{
+								lineValue = ifnull(monthLine.Equipment_Utilization_Percent,0.0);
+							}
+							cellValue = cellValue + lineValue;
+							cellCount = cellCount + 1;
+						}
+					}
+				}
+				if(isPercent && cellCount > 0)
+				{
+					cellValue = cellValue / cellCount;
+					fyTotal = fyTotal + cellValue;
+					fyCount = fyCount + 1;
+				}
+				else if(!isPercent)
+				{
+					fyTotal = fyTotal + cellValue;
+				}
+				%>
+<td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=cellValue%>
+<%
+				if(isPercent)
+				{
+					%>
+%
+<%
+				}
+				%>
+</td>
+<%
+			}
+			if(isPercent && fyCount > 0)
+			{
+				fyTotal = fyTotal / fyCount;
+			}
+			%>
+<td class='op-total-cell zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'><%=fyTotal%>
+<%
+			if(isPercent)
+			{
+				%>
+%
+<%
+			}
+			%>
+</td>
+				</tr>
+<%
+		}
+		%>
+</tbody>
+		</table>
+	</div>
+<%
+	}
+	%>
+</div>

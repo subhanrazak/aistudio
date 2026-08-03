@@ -1,0 +1,97 @@
+Consumables_Budgets_Validate as "Consumables Budgets Validate"
+{
+
+				type =  form
+				form = Consumables_Budgets
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Override_Norm != null && input.Override_Justification == null)
+										{
+											alert(Override_Justification,"Override justification is required when Override Norm is entered.");
+											cancel submit;
+										}
+										if(input.Override_Norm != null && input.Override_Justification != null && input.Override_Justification == "")
+										{
+											alert(Override_Justification,"Override justification is required when Override Norm is entered.");
+											cancel submit;
+										}
+										if(input.Half_Year_Split == "Separate H1 and H2" && input.H1_Norm == null || input.H2_Norm == null)
+										{
+											alert "H1 Norm and H2 Norm are required when Half Year Split is Separate H1 and H2.";
+											cancel submit;
+										}
+										if(ifNull(input.Previous_Year_Budget_Norm,0) < 0 || ifNull(input.Previous_Year_Actual_Average,0) < 0 || ifNull(input.Best_Three_Month_Average,0) < 0 || ifNull(input.Override_Norm,0) < 0 || ifNull(input.H1_Norm,0) < 0 || ifNull(input.H2_Norm,0) < 0 || ifNull(input.Budget_Price_Per_Unit,0) < 0 || ifNull(input.Production_Basis_MT,0) < 0)
+										{
+											alert "Consumable norms, price and production basis cannot be negative.";
+											cancel submit;
+										}
+										if(input.Approver_Action == "Return" || input.Approver_Action == "Reopen" && input.Approval_Remarks == null || input.Approval_Remarks == "")
+										{
+											alert(Approval_Remarks,"Approval remarks are required for Return/Reopen actions.");
+											cancel submit;
+										}
+										isPlantOps = thisapp.permissions.isUserInProfile("Plant_Operations");
+										isOperationsPPC = thisapp.permissions.isUserInProfile("Operations_PPC");
+										isFinance = thisapp.permissions.isUserInProfile("Finance_Costing");
+										isAdmin = thisapp.permissions.isUserInProfile("System_Administrator");
+										delegatedPlantOps = Approval_Delegations[Delegate_Email == zoho.loginuserid && Profile_Name == "Plant_Operations" && Module_Name == "Consumables Budget" && Active == true && Start_Date <= zoho.currentdate && End_Date >= zoho.currentdate].count() > 0;
+										delegatedPlantManager = Approval_Delegations[Delegate_Email == zoho.loginuserid && Profile_Name == "Operations_PPC" && Module_Name == "Consumables Budget" && Active == true && Start_Date <= zoho.currentdate && End_Date >= zoho.currentdate].count() > 0;
+										delegatedFinance = Approval_Delegations[Delegate_Email == zoho.loginuserid && Profile_Name == "Finance_Costing" && Module_Name == "Consumables Budget" && Active == true && Start_Date <= zoho.currentdate && End_Date >= zoho.currentdate].count() > 0;
+										if(input.Approver_Action != null && input.Approver_Action != "")
+										{
+											actionValid = false;
+											roleAllowed = false;
+											if(input.Status == "Draft" || input.Status == "Returned by Plant Manager" || input.Status == "Returned by Finance" || input.Status == "Reopened" && input.Approver_Action == "Submit")
+											{
+												actionValid = true;
+												roleAllowed = isPlantOps || isAdmin || delegatedPlantOps;
+											}
+											else if(input.Status == "Submitted to Plant Manager" && input.Approver_Action == "Approve" || input.Approver_Action == "Return")
+											{
+												actionValid = true;
+												roleAllowed = isOperationsPPC || isAdmin || delegatedPlantManager;
+											}
+											else if(input.Status == "Submitted to Finance" && input.Approver_Action == "Approve" || input.Approver_Action == "Return" || input.Approver_Action == "Lock")
+											{
+												actionValid = true;
+												roleAllowed = isFinance || isAdmin || delegatedFinance;
+											}
+											else if(input.Status == "Approved" && input.Approver_Action == "Lock" || input.Approver_Action == "Reopen")
+											{
+												actionValid = true;
+												roleAllowed = isFinance || isAdmin || delegatedFinance;
+											}
+											else if(input.Status == "Locked" && input.Approver_Action == "Reopen")
+											{
+												actionValid = true;
+												roleAllowed = isFinance || isAdmin || delegatedFinance;
+											}
+											if(actionValid == false)
+											{
+												alert(Approver_Action,"The selected action is not valid for the current Consumables Budget status.");
+												cancel submit;
+											}
+											if(roleAllowed == false)
+											{
+												alert "Your profile or active delegation is not authorised for this Consumables Budget action.";
+												cancel submit;
+											}
+										}
+										if(input.Locked == true && !((input.Approver_Action == "Reopen" && input.Status == "Locked" && isFinance) || isAdmin || delegatedFinance))
+										{
+											alert "This Consumables Budget is locked. Reopen it through Approver Action = Reopen before editing.";
+											cancel submit;
+										}
+						)
+					}
+				}
+
+			
+}

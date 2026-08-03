@@ -1,0 +1,93 @@
+Capacity_TEP_Plans_On_Load as "Capacity TEP Plans On Load"
+{
+
+				type =  form
+				form = Capacity_TEP_Plans
+
+				record event = on add or edit
+
+				on load
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Owner_Email == null)
+										{
+											input.Owner_Email = zoho.loginuserid;
+										}
+										if(input.Status == null)
+										{
+											input.Status = "Draft";
+										}
+										if(input.Requested_Financial_Year != null && input.Budget_Cycle == null)
+										{
+											activeCycle = Budget_Cycles[Financial_Year == input.Requested_Financial_Year && Status != "Completed" && Status != "Closed"] sort by Opened_Date desc range from 0 to 0;
+											if(activeCycle.count() > 0)
+											{
+												input.Budget_Cycle = activeCycle.ID;
+											}
+										}
+										hide Approval_Status;
+										hide Approver_Action;
+										hide Approval_Remarks;
+										hide Iteration_Count;
+										hide Locked;
+										hide Owner_Email;
+										hide Operations_Approved_By;
+										hide Operations_Approved_On;
+										disable Budget_Cycle;
+										disable Annual_Calendar_Hours;
+										disable Annual_Available_Hours;
+										disable Annual_Net_Running_Hours;
+										disable Average_Equipment_Availability_Percent;
+										disable Average_Equipment_Utilization_Percent;
+										disable Status;
+										disable Iteration_Count;
+										disable Locked;
+										disable Owner_Email;
+										disable Operations_Approved_By;
+										disable Operations_Approved_On;
+										disable Parent_Availability_Plan;
+										if(input.ID != null && input.Status in {"Draft","Returned by Operations Approval","Revision Requested by SCM","Revised Draft","Submitted to Operations Approval","Operations Approved"})
+										{
+											show Approval_Status;
+											show Approver_Action;
+											show Status;
+											show Iteration_Count;
+											show Locked;
+											show Owner_Email;
+										}
+										if(input.Status == "Operations Approved")
+										{
+											show Operations_Approved_By;
+											show Operations_Approved_On;
+										}
+										if(input.Approver_Action == "Return" || input.Approver_Action == "Create Revision Copy")
+										{
+											show Approval_Remarks;
+											enable Approval_Remarks;
+										}
+										else
+										{
+											disable Approval_Remarks;
+										}
+										if(input.Locked == true || input.Status == "Locked" || input.Status == "Superseded")
+										{
+											hide Approval_Status;
+											hide Approver_Action;
+											hide Approval_Remarks;
+											disable Requested_Financial_Year;
+											disable Plant;
+											disable Production_Line;
+											disable Revision_No;
+											disable Parent_Availability_Plan;
+											disable Approver_Action;
+											disable Approval_Remarks;
+										}
+						)
+					}
+				}
+
+			
+}

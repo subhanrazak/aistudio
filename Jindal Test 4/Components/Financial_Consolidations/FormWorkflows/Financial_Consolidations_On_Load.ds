@@ -1,0 +1,97 @@
+Financial_Consolidations_On_Load as "Financial Consolidations On Load"
+{
+
+				type =  form
+				form = Financial_Consolidations
+
+				record event = on add or edit
+
+				on load
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Owner_Email == null)
+										{
+											input.Owner_Email = zoho.loginuserid;
+										}
+										if(input.Status == null)
+										{
+											input.Status = "Draft";
+										}
+										if(input.Management_Decision == null)
+										{
+											input.Management_Decision = "Pending";
+										}
+										if(input.Budget_Cycle != null && input.Requested_Financial_Year == null)
+										{
+											cycleRecords = Budget_Cycles[ID == input.Budget_Cycle];
+											if(cycleRecords.count() > 0)
+											{
+												input.Requested_Financial_Year = cycleRecords.Financial_Year;
+											}
+										}
+										if(input.SCM_Consolidation == null && input.Budget_Cycle != null)
+										{
+											scmRec = Volume_Consolidations[Budget_Cycle == input.Budget_Cycle && Status == "SCM Approved" || Status == "Submitted to Finance"] sort by SCM_Approved_On desc range from 0 to 0;
+											if(scmRec.count() > 0)
+											{
+												input.SCM_Consolidation = scmRec.ID;
+											}
+										}
+										hide Approver_Action;
+										hide Approval_Remarks;
+										hide Management_Decision;
+										hide Status;
+										hide Iteration_Count;
+										hide Locked;
+										hide Owner_Email;
+										disable Volume_MT;
+										disable Revenue;
+										disable Raw_Material_Cost;
+										disable Consumables_Cost;
+										disable Status;
+										disable Iteration_Count;
+										disable Locked;
+										disable Owner_Email;
+										disable Management_Decision;
+										disable Approval_Remarks;
+										if(input.ID != null && input.Status in {"Draft","Submitted to Management","Returned by Management","Approved Final","Completed","Reopened"})
+										{
+											show Approver_Action;
+											show Status;
+											show Iteration_Count;
+											show Locked;
+											show Owner_Email;
+											enable Approver_Action;
+										}
+										if(input.Status == "Submitted to Management")
+										{
+											show Management_Decision;
+											enable Management_Decision;
+										}
+										if(input.Approver_Action == "Return" || input.Management_Decision == "Rejected")
+										{
+											show Approval_Remarks;
+											enable Approval_Remarks;
+										}
+										if(input.Locked == true || input.Status == "Locked")
+										{
+											hide Approver_Action;
+											hide Approval_Remarks;
+											disable Requested_Financial_Year;
+											disable Budget_Cycle;
+											disable SCM_Consolidation;
+											disable Scenario;
+											disable HR_Cost;
+											disable Logistics_Cost;
+											disable IT_Cost;
+											disable Other_Support_Costs;
+										}
+						)
+					}
+				}
+
+			
+}

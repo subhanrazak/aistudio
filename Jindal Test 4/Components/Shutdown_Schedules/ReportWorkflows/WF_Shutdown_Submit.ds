@@ -1,0 +1,38 @@
+WF_Shutdown_Submit as "Submit Shutdown"
+{
+
+				type =  functions
+				form = Shutdown_Schedules
+				execution type = for each record	
+				on start
+				{
+					actions 
+					{
+					on click
+					(
+						oldStatus = input.Status;
+										if(oldStatus == "Draft" || oldStatus == "Reopened")
+										{
+											input.Status = "Submitted";
+											input.Approver_Action = null;
+											auditId = insert into Approval_Audit_Log
+											[
+												Budget_Cycle=input.Budget_Cycle
+												Module_Name="Shutdown Schedule"
+												Related_Record_ID=input.ID
+												Related_Record_Display="Shutdown " + input.Shutdown_No
+												Action="Submitted"
+												From_Status=oldStatus
+												To_Status="Submitted"
+												Iteration_Number=0
+												Actor_Email=zoho.loginuserid
+												Action_On=zoho.currenttime
+												Remarks="Submitted from report action."
+												Added_User=zoho.loginuser
+											];
+										}
+					)
+					}
+				}
+			
+}

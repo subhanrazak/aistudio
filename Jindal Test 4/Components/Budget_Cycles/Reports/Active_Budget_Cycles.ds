@@ -1,0 +1,59 @@
+list Active_Budget_Cycles
+{
+
+			displayName = "Active Budget Cycles"
+			show all rows from Budget_Cycles  [Status != "Completed" && Status != "Closed"]  
+			(
+				Cycle_Code
+				Cycle_Name
+				Financial_Year
+				Cycle_Type
+				Scenario
+				Opened_Date
+				Status
+				Sales_Approved
+				Operations_Approved
+				SCM_Approved
+				Finance_Completed
+				Owner_Email
+				custom action "Open Cycle"
+				(
+	  			workflow = WF_Budget_Open_Cycle
+				column header = "Open Cycle"
+				success message = "Cycle opened."
+				condition = (Status == "Draft")
+				)
+				custom action "Request Revision"
+				(
+	  			workflow = WF_Budget_Request_Revision
+				column header = "Request Revision"
+				success message = "Revision requested."
+				condition = (Status != "Completed" && Status != "Closed")
+				)
+				custom action "Open Scenario Comparison"
+				(
+	  			workflow = WF_Budget_Open_Scenario_Comparison
+				column header = "Open Scenario Comparison"
+				success message = "Opening scenario comparison."
+				)
+				custom action "Open Financial Summary"
+				(
+	  			workflow = WF_Budget_Open_Financial_Summary
+				column header = "Open Financial Summary"
+				success message = "Opening financial summary."
+				)
+			)
+			filters
+			(
+				Financial_Year
+				Cycle_Type
+				Scenario
+				Status
+			)
+			sort by
+			(
+				Opened_Date descending
+				Cycle_Code ascending
+			)
+		
+}

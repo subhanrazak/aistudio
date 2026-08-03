@@ -1,0 +1,100 @@
+SMS_Capacity_Plans_After_Save as "SMS Capacity Plans After Save"
+{
+
+				type =  form
+				form = SMS_Capacity_Plans
+
+				record event = on add or edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											actionDecision = input.Approver_Action;
+										latestAudit = Approval_Audit_Log[Module_Name == "SMS Capacity Plan" && Related_Record_ID == input.ID] sort by Action_On desc range from 0 to 0;
+										previousStatus = "";
+										if(latestAudit.count() > 0)
+										{
+											previousStatus = latestAudit.To_Status;
+										}
+										fromStatus = input.Status;
+										auditAction = "";
+										if(actionDecision == "Submit")
+										{
+											input.Status = "Submitted to Central PPC";
+											auditAction = "Submitted";
+										}
+										else if(actionDecision == "Approve")
+										{
+											input.Status = "Accepted";
+											auditAction = "Approved";
+										}
+										else if(actionDecision == "Return")
+										{
+											input.Status = "Returned by Central PPC";
+											if(input.Iteration_Count == null)
+											{
+												input.Iteration_Count = 0;
+											}
+											input.Iteration_Count = input.Iteration_Count + 1;
+											auditAction = "Returned";
+										}
+										else if(actionDecision == "Lock")
+										{
+											input.Status = "Locked";
+											input.Locked = true;
+											auditAction = "Locked";
+										}
+										else if(actionDecision == "Reopen")
+										{
+											input.Status = "Reopened";
+											input.Locked = false;
+											if(input.Iteration_Count == null)
+											{
+												input.Iteration_Count = 0;
+											}
+											input.Iteration_Count = input.Iteration_Count + 1;
+											auditAction = "Reopened";
+										}
+										else
+										{
+											if(previousStatus == "")
+											{
+												auditAction = "Created";
+											}
+											else if(previousStatus != input.Status)
+											{
+												auditAction = "Updated";
+											}
+										}
+										if(auditAction != "")
+										{
+											auditRecordId = insert into Approval_Audit_Log
+											[
+												Budget_Cycle=input.Budget_Cycle
+												Module_Name="SMS Capacity Plan"
+												Related_Record_ID=input.ID
+												Related_Record_Display="SMS Plan " + input.ID
+												Action=auditAction
+												From_Status=fromStatus
+												To_Status=input.Status
+												Iteration_Number=input.Iteration_Count
+												Actor_Email=zoho.loginuserid
+												Action_On=zoho.currenttime
+												Remarks=input.Approval_Remarks
+												Added_User=zoho.loginuser
+											];
+											if(actionDecision != null && actionDecision != "")
+											{
+												input.Approver_Action = null;
+											}
+										}
+										// SMS BTV no longer writes to parent-level Volume_Consolidations fields in the rebuilt SCM review model.
+						)
+					}
+				}
+
+			
+}

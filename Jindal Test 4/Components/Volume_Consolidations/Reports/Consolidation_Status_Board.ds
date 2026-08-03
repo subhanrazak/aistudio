@@ -1,0 +1,82 @@
+kanban Consolidation_Status_Board
+{
+
+			displayName = "Consolidation Status Board"
+			show all rows from Volume_Consolidations    
+			(
+				Consolidation_No
+				Requested_Financial_Year
+				Budget_Cycle
+				Plant
+				Sales_Plan
+				Operations_Production_Plan
+				SCM_Decision
+				Latest_Revision_No
+				Status
+				Owner_Email
+				Locked
+				custom action "Start SCM Review"
+				(
+	  			workflow = WF_Volume_Start_SCM_Review
+				column header = "Start SCM Review"
+				success message = "SCM review started."
+				condition = (Status == "Waiting for Sales and Operations Approval")
+				)
+				custom action "Approve SCM"
+				(
+	  			workflow = WF_Volume_Approve_SCM
+				column header = "Approve SCM"
+				success message = "SCM review approved."
+				condition = (Status == "Under SCM Review")
+				)
+				custom action "Request Revision"
+				(
+	  			workflow = WF_Volume_Request_Revision
+				column header = "Request Revision"
+				success message = "SCM revision requested."
+				condition = (Status == "Under SCM Review")
+				)
+				custom action "Submit to Finance"
+				(
+	  			workflow = WF_Volume_Submit_To_Finance
+				column header = "Submit to Finance"
+				success message = "Consolidation submitted to finance."
+				condition = (Status == "SCM Approved")
+				)
+				custom action "Lock Consolidation"
+				(
+	  			workflow = WF_Volume_Lock_Consolidation
+				column header = "Lock Consolidation"
+				success message = "Consolidation locked."
+				condition = (Status == "SCM Approved" || Status == "Submitted to Finance" && Locked == false)
+				)
+				custom action "Open Scenario Comparison"
+				(
+	  			workflow = WF_Volume_Open_Scenario_Comparison
+				column header = "Open Scenario Comparison"
+				success message = "Opening scenario comparison."
+				)
+			)
+			filters
+			(
+				Requested_Financial_Year
+				Budget_Cycle
+				Plant
+				SCM_Decision
+				Status
+				Locked
+				Owner_Email
+			)
+			sort by
+			(
+				Consolidation_No descending
+			)
+			options
+			(
+	 			display field = Status
+	 			emptycolumn = "No Status"
+				sort order  = custom
+				record count  = enable
+	 		)
+		
+}

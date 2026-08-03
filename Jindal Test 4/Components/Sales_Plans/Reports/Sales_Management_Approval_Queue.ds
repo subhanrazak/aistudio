@@ -1,0 +1,61 @@
+list Sales_Management_Approval_Queue
+{
+
+			displayName = "Sales Management Approval Queue"
+			show all rows from Sales_Plans  [Status == "Submitted to Sales Management"]  
+			(
+				Sales_Plan_No
+				Requested_Financial_Year
+				Budget_Cycle
+				Revision_No
+				Total_Grade_Target_Tons
+				Total_Product_Required_Tons
+				Variance_Tons
+				Status
+				Owner_Email
+				custom action "Approve Sales Plan"
+				(
+	  			workflow = WF_Sales_Approve_Plan
+				column header = "Approve Sales Plan"
+				success message = "Sales plan approved."
+				condition = (Status == "Submitted to Sales Management")
+				confirmation before execution
+				(
+					message for individual record = "Approve this sales plan?"
+					confirm button text = "Approve"		
+					cancel button text = "Cancel"
+				)
+				)
+				custom action "Return Sales Plan"
+				(
+	  			workflow = WF_Sales_Return_Plan
+				column header = "Return Sales Plan"
+				success message = "Sales plan returned."
+				condition = (Status == "Submitted to Sales Management")
+				confirmation before execution
+				(
+					message for individual record = "Return this sales plan? Add remarks on the form first if a specific reason is required."
+					confirm button text = "Return"		
+					cancel button text = "Cancel"
+				)
+				)
+				custom action "Open Scenario Comparison"
+				(
+	  			workflow = WF_Sales_Open_Scenario_Comparison
+				column header = "Open Scenario Comparison"
+				success message = "Opening scenario comparison."
+				)
+			)
+			filters
+			(
+				Requested_Financial_Year
+				Budget_Cycle
+				Status
+				Owner_Email
+			)
+			sort by
+			(
+				Sales_Plan_No ascending
+			)
+		
+}

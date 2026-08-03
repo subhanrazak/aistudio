@@ -1,0 +1,44 @@
+WF_Capacity_Return_Availability as "Return Availability"
+{
+
+				type =  functions
+				form = Capacity_TEP_Plans
+				execution type = for each record	
+				on start
+				{
+					actions 
+					{
+					on click
+					(
+						oldStatus = input.Status;
+										if(oldStatus == "Submitted to Operations Approval")
+										{
+											input.Status = "Returned by Operations Approval";
+											input.Iteration_Count = ifnull(input.Iteration_Count,0) + 1;
+											remarksText = input.Approval_Remarks;
+											if(remarksText == null || remarksText == "")
+											{
+												remarksText = "Returned from report action. Add detailed remarks on the form if required.";
+											}
+											input.Approver_Action = null;
+											auditId = insert into Approval_Audit_Log
+											[
+												Budget_Cycle=input.Budget_Cycle
+												Module_Name="Operations Availability"
+												Related_Record_ID=input.ID
+												Related_Record_Display="Availability Plan " + input.Capacity_No
+												Action="Returned"
+												From_Status=oldStatus
+												To_Status="Returned by Operations Approval"
+												Iteration_Number=input.Iteration_Count
+												Actor_Email=zoho.loginuserid
+												Action_On=zoho.currenttime
+												Remarks=remarksText
+												Added_User=zoho.loginuser
+											];
+										}
+					)
+					}
+				}
+			
+}

@@ -1,0 +1,38 @@
+WF_Replanning_Close as "Close Replanning Request"
+{
+
+				type =  functions
+				form = Replanning_Requests
+				execution type = for each record	
+				on start
+				{
+					actions 
+					{
+					on click
+					(
+						oldStatus = input.Status;
+										if(oldStatus == "Revision Created" || oldStatus == "Resubmitted to SCM" || oldStatus == "Finance Approved")
+										{
+											input.Status = "Locked";
+											input.Approver_Action = null;
+											auditId = insert into Approval_Audit_Log
+											[
+												Budget_Cycle=input.Parent_Budget_Cycle
+												Module_Name="Replanning Requests"
+												Related_Record_ID=input.ID
+												Related_Record_Display="Replanning Request " + input.Replan_No
+												Action="Completed"
+												From_Status=oldStatus
+												To_Status="Locked"
+												Iteration_Number=0
+												Actor_Email=zoho.loginuserid
+												Action_On=zoho.currenttime
+												Remarks=ifnull(input.Approval_Remarks,"Closed from report action.")
+												Added_User=zoho.loginuser
+											];
+										}
+					)
+					}
+				}
+			
+}

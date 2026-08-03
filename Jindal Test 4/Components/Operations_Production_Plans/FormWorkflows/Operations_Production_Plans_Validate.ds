@@ -1,0 +1,126 @@
+Operations_Production_Plans_Validate as "Operations Production Plans Validate"
+{
+
+				type =  form
+				form = Operations_Production_Plans
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Locked == true || input.Status == "Locked" || input.Status == "Superseded")
+										{
+											alert "This Operations production plan is locked or superseded and cannot be edited.";
+											cancel submit;
+										}
+										if(input.Budget_Cycle == null)
+										{
+											activeCycle = Budget_Cycles[Financial_Year == input.Requested_Financial_Year && Status != "Completed" && Status != "Closed"] sort by Opened_Date desc range from 0 to 0;
+											if(activeCycle.count() > 0)
+											{
+												input.Budget_Cycle = activeCycle.ID;
+											}
+											else
+											{
+												alert "An active Budget Cycle is required for the selected Financial Year.";
+												cancel submit;
+											}
+										}
+										totalProduction = 0;
+										productivityTotal = 0;
+										productivityRows = 0;
+										productionRows = 0;
+										for each  productionRow in input.Product_Production_Lines_Existing
+										{
+											if(productionRow.Product == null)
+											{
+												alert "Product is required in every production row.";
+												cancel submit;
+											}
+											if(productionRow.Month == null)
+											{
+												alert "Month is required in every production row.";
+												cancel submit;
+											}
+											if(ifNull(productionRow.Production_Tons,0) < 0 || ifNull(productionRow.Productivity_MTPH,0) < 0 || ifNull(productionRow.Thickness,0) < 0)
+											{
+												alert "Production tons, productivity, and thickness values cannot be negative.";
+												cancel submit;
+											}
+											if(productionRow.Month != null)
+											{
+												monthRec = Financial_Year_Months[ID == productionRow.Month];
+												if(monthRec.count() == 0 || monthRec.Financial_Year != input.Requested_Financial_Year || monthRec.Included != true)
+												{
+													alert "Every production month must belong to the selected Financial Year and be marked Included.";
+													cancel submit;
+												}
+												else
+												{
+													productionRow.Month_Order=monthRec.Month_Order;
+												}
+											}
+											if(productionRow.Product != null)
+											{
+												productRec = Steel_Grades[ID == productionRow.Product];
+												if(productRec.count() > 0 && productionRow.Series == null || productionRow.Series == "")
+												{
+													productionRow.Series=productRec.Grade_Series;
+												}
+											}
+											totalProduction = totalProduction + ifNull(productionRow.Production_Tons,0);
+											if(productionRow.Productivity_MTPH != null)
+											{
+												productivityTotal = productivityTotal + productionRow.Productivity_MTPH;
+												productivityRows = productivityRows + 1;
+											}
+											productionRows = productionRows + 1;
+										}
+										input.Total_FY_Production_Tons = totalProduction;
+										if(productivityRows > 0)
+										{
+											input.Average_Productivity_MTPH = productivityTotal / productivityRows;
+										}
+										else
+										{
+											input.Average_Productivity_MTPH = 0;
+										}
+										if(input.Approver_Action == "Submit" || input.Approver_Action == "Approve" && productionRows == 0)
+										{
+											alert "At least one production row is required before submitting or approving.";
+											cancel submit;
+										}
+										if(input.Approver_Action == "Return" || input.Approver_Action == "Create Revision Copy" && input.Approval_Remarks == null || input.Approval_Remarks == "")
+										{
+											alert "Approval remarks are required for Return or Create Revision Copy actions.";
+											cancel submit;
+										}
+										if(input.Approver_Action == "Approve")
+										{
+											if(input.Linked_Availability_Plan == null)
+											{
+												alert "An approved linked Operations availability plan is required before approving production.";
+												cancel submit;
+											}
+											availabilityRec = Capacity_TEP_Plans[ID == input.Linked_Availability_Plan];
+											if(availabilityRec.count() == 0 || availabilityRec.Status != "Operations Approved")
+											{
+												alert "The linked Operations availability plan must be Operations Approved.";
+												cancel submit;
+											}
+											else if(availabilityRec.Requested_Financial_Year != input.Requested_Financial_Year || availabilityRec.Plant != input.Plant || availabilityRec.Production_Line != input.Production_Line)
+											{
+												alert "The linked availability plan must match the same Financial Year, Plant, and Production Line.";
+												cancel submit;
+											}
+										}
+						)
+					}
+				}
+
+			
+}

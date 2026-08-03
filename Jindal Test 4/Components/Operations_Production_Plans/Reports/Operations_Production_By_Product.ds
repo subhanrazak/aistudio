@@ -1,0 +1,60 @@
+list Operations_Production_By_Product
+{
+
+			displayName = "Operations Production By Product"
+			show all rows from Operations_Production_Plans    
+			(
+				Operations_Production_No
+				Requested_Financial_Year
+				Budget_Cycle
+				Plant
+				Production_Line
+				Product_Production_Lines_Existing
+				Total_FY_Production_Tons
+				(
+					display = total	
+				)
+				Average_Productivity_MTPH
+				(
+					display = average	
+				)
+				Status
+				Locked
+				custom action "Submit Production"
+				(
+	  			workflow = WF_OP_Submit_Production
+				column header = "Submit Production"
+				success message = "Production plan submitted."
+				condition = (Status == "Draft" || Status == "Returned by Operations Approval" || Status == "Revision Requested by SCM" || Status == "Revised Draft")
+				)
+				custom action "Approve Production"
+				(
+	  			workflow = WF_OP_Approve_Production
+				column header = "Approve Production"
+				success message = "Production plan approved."
+				condition = (Status == "Submitted to Operations Approval")
+				)
+			)
+			filters
+			(
+				Requested_Financial_Year
+				Budget_Cycle
+				Plant
+				Production_Line
+				Status
+			)
+			group by
+			(
+				properties
+    			(
+  	    			display record count = true
+   				)
+				Requested_Financial_Year ascending
+				Plant ascending
+			)
+			sort by
+			(
+				Operations_Production_No descending
+			)
+		
+}

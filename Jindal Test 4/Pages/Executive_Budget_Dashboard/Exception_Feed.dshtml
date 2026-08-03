@@ -1,0 +1,47 @@
+<%
+	revisions = Volume_Consolidations[Status == "Revision Requested" || Status == "Sales Revision Pending" || Status == "Operations Revision Pending" || Status == "Both Revisions Pending"] sort by Consolidation_No desc range from 0 to 5;
+	returnedApprovals = Approval_Audit_Log[Action == "Returned" || Action == "Revision Requested"] sort by Action_On desc range from 0 to 5;
+	%>
+<div class="ebd-section-card">
+	<div class="ebd-section-title"><h2>Exception Feed</h2><span class="ebd-muted">Revision requests and returned approvals</span></div>
+	<div class="ebd-feed">
+		<div><strong>SCM revision requests</strong>
+<%
+	if(revisions.count() == 0)
+	{
+		%>
+<div class="ebd-feed-item ebd-muted">No active SCM revision requests.</div>
+<%
+	}
+	else
+	{
+		for each  vc in revisions
+		{
+			%>
+<div class="ebd-feed-item"><div class="ebd-feed-title"><strong><%=vc.Consolidation_No%></strong><span class="ebd-muted ebd-small"><%=vc.Status%></span></div><div class="ebd-muted ebd-small"><%=vc.Requested_Financial_Year.Year_Name%> | <%=vc.Plant.Plant_Name%></div><div><%=vc.SCM_Decision%></div></div>
+<%
+		}
+	}
+	%>
+</div>
+		<div><strong>Audit exceptions</strong>
+<%
+	if(returnedApprovals.count() == 0)
+	{
+		%>
+<div class="ebd-feed-item ebd-muted">No returned approvals in the audit log.</div>
+<%
+	}
+	else
+	{
+		for each  audit in returnedApprovals
+		{
+			%>
+<div class="ebd-feed-item"><div class="ebd-feed-title"><strong><%=audit.Module_Name%></strong><span class="ebd-muted ebd-small"><%=audit.Action_On%></span></div><div><%=audit.Related_Record_Display%></div><div class="ebd-muted ebd-small"><%=audit.From_Status%> to <%=audit.To_Status%></div></div>
+<%
+		}
+	}
+	%>
+</div>
+	</div>
+</div>

@@ -1,0 +1,275 @@
+<%
+	loginName = zoho.loginuser;
+	loginEmail = zoho.loginuserid;
+	profileText = "Sales Team";
+	if(thisapp.permissions.isUserInProfile("Sales_Management"))
+	{
+		profileText = "Sales Management";
+	}
+	if(thisapp.permissions.isUserInProfile("System_Administrator"))
+	{
+		profileText = "System Administrator";
+	}
+	myActiveWork = Sales_Plans[Owner_Email == loginEmail || Owner_Email == loginName && Locked != true && Status == "Draft" || Status == "Revised Draft" || Status == "Returned by Sales Management" || Status == "Revision Requested by SCM" || Status == "Reopened"].count();
+	myDrafts = Sales_Plans[Owner_Email == loginEmail || Owner_Email == loginName && Locked != true && Status == "Draft" || Status == "Revised Draft"].count();
+	needsRevision = Sales_Plans[Owner_Email == loginEmail || Owner_Email == loginName && Locked != true && Status == "Returned by Sales Management" || Status == "Revision Requested by SCM" || Status == "Reopened"].count();
+	reopenedCount = Sales_Plans[Owner_Email == loginEmail || Owner_Email == loginName && Locked != true && Status == "Reopened"].count();
+	mySubmitted = Sales_Plans[Owner_Email == loginEmail || Owner_Email == loginName && Locked != true && Status == "Submitted to Sales Management"].count();
+	submittedQueue = Sales_Plans[Status == "Submitted to Sales Management" && Locked != true].count();
+	approvedFinal = Sales_Plans[Status == "Sales Approved" || Status == "Locked" || Status == "Superseded" || Locked == true].count();
+	focusTitle = "Queue is clear";
+	focusText = "No draft, returned or reopened sales-plan rows are waiting for you. Use the status board for monitoring only.";
+	focusTone = "green";
+	if(needsRevision > 0)
+	{
+		focusTitle = "Revision work first";
+		focusText = needsRevision + " returned, reopened or SCM revision row(s) need remarks review before any resubmission.";
+		focusTone = "red";
+	}
+	else if(myDrafts > 0)
+	{
+		focusTitle = "Drafts need submission";
+		focusText = myDrafts + " draft or revised draft row(s) are still with you and should be completed before monitoring approvals.";
+		focusTone = "yellow";
+	}
+	else if(mySubmitted > 0)
+	{
+		focusTitle = "Submitted plans are moving";
+		focusText = mySubmitted + " of your plan row(s) are with Sales Management. Track them without changing workflow state.";
+		focusTone = "blue";
+	}
+	priorityLabel = "Normal";
+	if(needsRevision > 0 || reopenedCount > 0)
+	{
+		priorityLabel = "High";
+	}
+	else if(myDrafts > 0 || mySubmitted > 0)
+	{
+		priorityLabel = "Medium";
+	}
+	%>
+<style>
+/* zcs-global.css core utilities included once for this page */
+:root{--zcs-theme-brand-color:var(--zcs_brand_color);--zcs-light-bg-color:var(--zcs_brand_light_color);--zcs-page-bg-color:#F3F3F4;--zcs-primary-text-color:var(--zcs_primary_text_color);--zcs-secondary-text-color:var(--zcs_secondary_text_color);--zcs-teritiary-text-color:var(--zcs_tertiary_text_color);--zcs-border-color:var(--zcs_tertiary_border_color);--zcs-white-color:#FFFFFF;--zcs-black-color:#000000;font-size:16px;line-height:1.5}a{text-decoration:none}.zcs-card{background-color:var(--zcs-white-color);border:1px solid #e7e7ee;border-radius:12px}.zcs-flex{display:flex}.zcs-inline-flex{display:inline-flex}.zcs-direction-column{flex-direction:column}.zcs-row{display:flex;flex-wrap:wrap}.zcs-align-items-center{align-items:center}.zcs-align-items-start{align-items:flex-start}.zcs-justify-center{justify-content:center}.zcs-justify-space-between{justify-content:space-between}.zcs-gap-4{gap:.25rem}.zcs-gap-8{gap:.5rem}.zcs-gap-10{gap:.625rem}.zcs-gap-12{gap:.75rem}.zcs-gap-16{gap:1rem}.zcs-gap-20{gap:1.25rem}.zcs-gap-24{gap:1.5rem}.zcs-p-0{padding:0}.zcs-p-8{padding:.5rem}.zcs-p-12{padding:.75rem}.zcs-p-16{padding:1rem}.zcs-p-20{padding:1.25rem}.zcs-p-24{padding:1.5rem}.zcs-px-10{padding-left:.625rem;padding-right:.625rem}.zcs-px-12{padding-left:.75rem;padding-right:.75rem}.zcs-px-16{padding-left:1rem;padding-right:1rem}.zcs-py-2{padding-top:.125rem;padding-bottom:.125rem}.zcs-py-8{padding-top:.5rem;padding-bottom:.5rem}.zcs-py-10{padding-top:.625rem;padding-bottom:.625rem}.zcs-py-12{padding-top:.75rem;padding-bottom:.75rem}.zcs-m-0{margin:0}.zcs-mt-4{margin-top:.25rem}.zcs-mt-8{margin-top:.5rem}.zcs-mt-12{margin-top:.75rem}.zcs-mt-16{margin-top:1rem}.zcs-mt-20{margin-top:1.25rem}.zcs-w-full{width:100%}.zcs-box-border{box-sizing:border-box}.zcs-rounded-sm{border-radius:.25rem}.zcs-rounded-md{border-radius:.375rem}.zcs-rounded-lg{border-radius:.5rem}.zcs-rounded-xl{border-radius:.75rem}.zcs-rounded-2xl{border-radius:1rem}.zcs-rounded-half{border-radius:50%}.zcs-font-11{font-size:.6875rem}.zcs-font-12{font-size:.75rem}.zcs-font-13{font-size:.8125rem}.zcs-font-14{font-size:.875rem}.zcs-font-15{font-size:.9375rem}.zcs-font-16{font-size:1rem}.zcs-font-18{font-size:1.125rem}.zcs-font-20{font-size:1.25rem}.zcs-font-22{font-size:1.375rem}.zcs-font-24{font-size:1.5rem}.zcs-font-30{font-size:1.875rem}.zcs-font-40{font-size:2.5rem}.zcs-font-normal{font-weight:400}.zcs-font-medium{font-weight:500}.zcs-font-semibold{font-weight:600}.zcs-font-bold{font-weight:700}.zcs-lh-body{line-height:1.5}.zcs-lh-heading{line-height:1.25}.zcs-uppercase{text-transform:uppercase}.zcs-text-left{text-align:left}.zcs-text-right{text-align:right}.zcs-text-center{text-align:center}.zcs-color-theme{color:var(--zcs_brand_color)}.zcs-color-primary{color:var(--zcs_primary_text_color)}.zcs-color-secondary{color:var(--zcs_secondary_text_color)}.zcs-color-tertiary{color:var(--zcs_tertiary_text_color)}.zcs-color-white{color:var(--zcs-white-color)}.zcs-ellipsis{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.zcs-no-shrink{flex-shrink:0}.zcs-col-common{flex:1 1 0%;min-width:0}.zcs-relative{position:relative}.zcs-sticky{position:sticky}.zcs-cursor-pointer{cursor:pointer}
+/* ZCS component CSS: button, badge, quick-actions and simple-table */
+.zcs-button{width:auto;min-width:5rem;min-height:36px}.zcs-primary-button{background-color:var(--zcs_brand_color);color:var(--zcs_brand_foreground_color)}.zcs-primary-outline-button{border:1px solid var(--zcs_brand_color);background-color:var(--zcs-white-color);color:var(--zcs_brand_color)}.zcs-secondary-button{border:1px solid var(--zcs_primary_border_color);background-color:var(--zcs_light_grey_color);color:var(--zcs_primary_text_color)}.zcs-primary-button.zcs-button:hover{background-color:var(--zcs_brand_dark_color)}.zcs-primary-outline-button:hover{background-color:var(--zcs_component_hover_color);border-color:var(--zcs_brand_color);color:var(--zcs_brand_color)}.zcs-button-icon{width:16px;max-height:16px}.zcs-badge{width:auto}.zcs-badge-filled-outline,.zcs-badge-outline{border:1px solid}.zcs-badge-filled-outline.zcs-badge-theme{background-color:var(--zcs_component_hover_color);border-color:var(--zcs_brand_color);color:var(--zcs_brand_color)}.zcs-badge-filled-outline.zcs-badge-green{background-color:#E4FCF3;border-color:#179E6C;color:#179E6C}.zcs-badge-filled-outline.zcs-badge-red{background-color:#FDE3E6;border-color:#FE455D;color:#FE455D}.zcs-badge-filled-outline.zcs-badge-yellow{background-color:#FCF4E6;border-color:#FAAE13;color:#A06A00}.zcs-badge-filled-outline.zcs-badge-blue{background-color:#E8EFFF;border-color:#2A6FFC;color:#2A6FFC}.zcs-badge-filled-outline.zcs-badge-orange{background-color:#F8F0EB;border-color:#F4660C;color:#C94F07}.zcs-quick-action-item{list-style-type:none}.zcs-quick-action-item.zcs-card:hover{border-color:var(--zcs_brand_color)}.zcs-quick-action-item:hover .zcs-quick-action-link{color:var(--zcs_brand_color)}.zcs-table-wrapper{border:1px solid var(--zcs_tertiary_border_color);background-color:var(--zcs-white-color);overflow:auto}.zcs-table-wrapper table{line-height:normal;border-collapse:collapse}.zcs-table-wrapper table thead{top:0}.zcs-table-wrapper table thead tr th{background-color:#F9FAFE;box-shadow:0 -1px 0 0 var(--zcs_tertiary_border_color) inset;white-space:nowrap}.zcs-table-wrapper table tbody tr td{border-top:1px solid var(--zcs_tertiary_border_color)}.zcs-table-wrapper table tbody tr:first-child td{border-color:transparent}.zcs-table-wrapper table tbody tr:hover td{background-color:#F9FAFE}.zcs-table-wrapper table tbody tr td.zcs-yellow,.zcs-table-wrapper table tbody tr td .zcs-yellow{color:#b8770d}.zcs-table-wrapper table tbody tr td.zcs-green,.zcs-table-wrapper table tbody tr td .zcs-green{color:#179e6c}.zcs-table-wrapper table tbody tr td.zcs-blue,.zcs-table-wrapper table tbody tr td .zcs-blue{color:#09598e}.zcs-table-wrapper table tbody tr td.zcs-red,.zcs-table-wrapper table tbody tr td .zcs-red{color:#fe455d}
+/* Sales landing command-center layout */
+div#zppagesLive,div#elementsContainer,.Layout.elemContainment,div#row_1,.zc-pb-formreport-placeholder{height:100%!important;padding:0!important}.sl-shell{min-height:100vh;background:radial-gradient(circle at 85% 8%,rgba(255,255,255,.95) 0,rgba(255,255,255,0) 34%),linear-gradient(135deg,#f8fbff 0%,var(--zcs_brand_light_color) 48%,#f3f3f4 100%);padding:24px;box-sizing:border-box;color:var(--zcs_primary_text_color)}.sl-container{max-width:1480px;margin:0 auto}.sl-hero{background:linear-gradient(135deg,var(--zcs_brand_color),var(--zcs_brand_dark_color));border-radius:22px;padding:24px;box-shadow:0 18px 48px rgba(16,24,40,.14);color:var(--zcs_brand_foreground_color);position:relative;overflow:hidden}.sl-hero:after{content:"";position:absolute;width:320px;height:320px;border:1px solid rgba(255,255,255,.22);border-radius:50%;right:-120px;top:-150px;box-shadow:0 0 0 34px rgba(255,255,255,.06),0 0 0 78px rgba(255,255,255,.04)}.sl-hero-inner{position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:20px}.sl-title{font-size:30px;font-weight:700;line-height:1.2;margin:0 0 8px}.sl-subtitle{max-width:780px;margin:0;color:rgba(255,255,255,.88)}.sl-profile-pill{border:1px solid rgba(255,255,255,.38);border-radius:999px;padding:8px 12px;background:rgba(255,255,255,.12);white-space:nowrap}.sl-hero-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}.sl-hero-actions .zcs-button{border-color:rgba(255,255,255,.58);background:rgba(255,255,255,.14);color:var(--zcs_brand_foreground_color)}.sl-hero-actions .sl-primary-hero{background:var(--zcs-white-color);border-color:var(--zcs-white-color);color:var(--zcs_brand_color)}.sl-kpi-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-top:18px}.sl-kpi{padding:18px;min-height:140px;box-shadow:0 12px 28px rgba(16,24,40,.06);transition:border-color .18s ease,transform .18s ease}.sl-kpi:hover{border-color:var(--zcs_brand_color);transform:translateY(-1px)}.sl-kpi-top{display:flex;align-items:center;justify-content:space-between;gap:12px}.sl-icon-tile{width:42px;height:42px;border-radius:14px;background:var(--zcs_component_hover_color);color:var(--zcs_brand_color);display:flex;align-items:center;justify-content:center;font-size:20px}.sl-kpi-value{font-size:38px;font-weight:800;line-height:1;margin-top:16px}.sl-kpi-label{font-size:13px;color:var(--zcs_secondary_text_color);margin-top:8px}.sl-main-grid{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(320px,.9fr);gap:16px;margin-top:16px}.sl-panel{padding:18px;box-shadow:0 12px 28px rgba(16,24,40,.05)}.sl-section-title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}.sl-action-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.sl-action-card{display:flex;align-items:flex-start;gap:12px;padding:14px;border:1px solid var(--zcs_tertiary_border_color);border-radius:14px;background:#fff;color:inherit}.sl-action-card:hover{border-color:var(--zcs_brand_color);background:var(--zcs_component_hover_color)}.sl-action-card strong{display:block;margin-bottom:4px}.sl-focus{border-left:4px solid var(--zcs_brand_color);background:linear-gradient(180deg,#fff,#fbfcff)}.sl-focus.red{border-left-color:#FE455D}.sl-focus.yellow{border-left-color:#FAAE13}.sl-focus.green{border-left-color:#179E6C}.sl-focus.blue{border-left-color:#2A6FFC}.sl-quick-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-top:16px}.sl-quick-card{padding:16px;display:flex;gap:12px;align-items:flex-start;color:inherit;min-height:116px}.sl-quick-card:hover{border-color:var(--zcs_brand_color);background:var(--zcs_component_hover_color)}.sl-secondary{opacity:.88}.sl-table-link{display:inline-flex;align-items:center;gap:6px;color:var(--zcs_brand_color);font-weight:600}.sl-muted{color:var(--zcs_secondary_text_color)}.sl-note{background:rgba(255,255,255,.74);border:1px dashed var(--zcs_tertiary_border_color);border-radius:14px;padding:12px;margin-top:12px}.sl-empty{padding:24px;text-align:center;color:var(--zcs_secondary_text_color)}@media(max-width:1180px){.sl-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.sl-main-grid{grid-template-columns:1fr}.sl-quick-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:760px){.sl-shell{padding:14px}.sl-hero-inner{flex-direction:column;align-items:flex-start}.sl-title{font-size:24px}.sl-kpi-grid,.sl-action-cards,.sl-quick-grid{grid-template-columns:1fr}.zcs-table-wrapper table{min-width:760px}}
+</style>
+<div class='sl-shell'>
+	<div class='sl-container'>
+		<section class='sl-hero'>
+			<div class='sl-hero-inner'>
+				<div>
+					<div class='zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-theme'>
+						<i class='zcs-badge-icon zcs-no-shrink zc-li-outline business-chart-growth'></i>
+						<span class='zcs-badge-text zcs-font-13 zcs-font-normal zcs-lh-body'>Sales command center</span>
+					</div>
+					<h1 class='sl-title'>Welcome, <%=loginName%></h1>
+					<p class='sl-subtitle zcs-font-15 zcs-lh-body'>Draft, returned, reopened and submission work is surfaced first. Approved, locked and superseded rows stay out of pending counts so the landing page stays actionable.</p>
+					<div class='sl-hero-actions'>
+						<a class='zcs-button zcs-primary-button sl-primary-hero zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-medium zcs-lh-body' href='#Form:Sales_Plans?zc_LoadIn=dialog'>
+							<i class='zcs-button-icon zc-li-outline ui-1-simple-add'></i><span>Create sales plan</span>
+						</a>
+						<a class='zcs-button zcs-primary-outline-button zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-medium zcs-lh-body' href='#Report:My_Sales_Plan_Workqueue'>
+							<i class='zcs-button-icon zc-li-outline business-agenda'></i><span>My pending work</span>
+						</a>
+						<a class='zcs-button zcs-primary-outline-button zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-medium zcs-lh-body' href='#Report:Sales_Plan_Status_Board'>
+							<i class='zcs-button-icon zc-li-outline business-progress'></i><span>Status board</span>
+						</a>
+					</div>
+				</div>
+				<div class='sl-profile-pill zcs-inline-flex zcs-align-items-center zcs-gap-8 zcs-font-14 zcs-font-medium'>
+					<i class='zc-li-outline users-single-01'></i><span><%=profileText%></span>
+				</div>
+			</div>
+		</section>
+
+		<section class='sl-kpi-grid'>
+			<a class='sl-kpi zcs-card zcs-box-border' href='#Report:My_Sales_Plan_Workqueue'>
+				<div class='sl-kpi-top'><span class='zcs-font-14 zcs-font-semibold zcs-color-secondary'>My active work</span><span class='sl-icon-tile'><i class='zc-li-outline ui-2-time'></i></span></div>
+				<div class='sl-kpi-value'><%=myActiveWork%></div>
+				<div class='sl-kpi-label'>Draft, revised draft, returned, SCM revision or reopened rows owned by you</div>
+			</a>
+			<a class='sl-kpi zcs-card zcs-box-border' href='#Report:My_Sales_Plan_Workqueue?zc_LoadIn=dialog'>
+				<div class='sl-kpi-top'><span class='zcs-font-14 zcs-font-semibold zcs-color-secondary'>Needs revision</span><span class='sl-icon-tile'><i class='zc-li-outline ui-3-alert'></i></span></div>
+				<div class='sl-kpi-value'><%=needsRevision%></div>
+				<div class='sl-kpi-label'>Returned, reopened or SCM revision rows. Open in dialog to review remarks.</div>
+			</a>
+			<a class='sl-kpi zcs-card zcs-box-border' href='#Report:Sales_Plan_Status_Board'>
+				<div class='sl-kpi-top'><span class='zcs-font-14 zcs-font-semibold zcs-color-secondary'>Submitted queue</span><span class='sl-icon-tile'><i class='zc-li-outline loader-dots-06'></i></span></div>
+				<div class='sl-kpi-value'><%=submittedQueue%></div>
+				<div class='sl-kpi-label'>Rows submitted to Sales Management and not locked</div>
+			</a>
+			<div class='sl-kpi zcs-card zcs-box-border'>
+				<div class='sl-kpi-top'><span class='zcs-font-14 zcs-font-semibold zcs-color-secondary'>Final rows hidden</span><span class='sl-icon-tile'><i class='zc-li-outline ui-1-check-circle-08'></i></span></div>
+				<div class='sl-kpi-value'><%=approvedFinal%></div>
+				<div class='sl-kpi-label'>Approved, superseded or locked rows are excluded from pending work</div>
+			</div>
+		</section>
+
+		<section class='sl-main-grid'>
+			<div class='sl-panel zcs-card zcs-box-border'>
+				<div class='sl-section-title'>
+					<div>
+						<h2 class='zcs-font-20 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0'>Pending actions</h2>
+						<p class='zcs-font-14 zcs-color-secondary zcs-m-0 zcs-mt-4'>Open forms and reports in dialog when remarks or revisions may be required.</p>
+					</div>
+					<div class='zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-blue'>
+						<i class='zcs-badge-icon zcs-no-shrink zc-li-outline ui-2-time'></i><span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'>Priority: <%=priorityLabel%></span>
+					</div>
+				</div>
+				<div class='sl-action-cards'>
+					<a class='sl-action-card' href='#Report:My_Sales_Plan_Workqueue?zc_LoadIn=dialog'>
+						<span class='sl-icon-tile'><i class='zc-li-outline ui-3-alert'></i></span>
+						<span><strong>Revise returned work</strong><span class='sl-muted zcs-font-13'><%=needsRevision%> row(s) need remarks review or a revised draft.</span></span>
+					</a>
+					<a class='sl-action-card' href='#Report:My_Sales_Plan_Workqueue'>
+						<span class='sl-icon-tile'><i class='zc-li-outline ui-1-edit-72'></i></span>
+						<span><strong>Finish drafts</strong><span class='sl-muted zcs-font-13'><%=myDrafts%> draft row(s) are still not submitted.</span></span>
+					</a>
+					<a class='sl-action-card' href='#Report:Sales_Plan_Status_Board'>
+						<span class='sl-icon-tile'><i class='zc-li-outline business-progress'></i></span>
+						<span><strong>Monitor submissions</strong><span class='sl-muted zcs-font-13'><%=submittedQueue%> row(s) are with Sales Management.</span></span>
+					</a>
+				</div>
+				<div class='zcs-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative zcs-mt-16'>
+					<table class='zcs-w-full'>
+						<thead class='zcs-sticky'>
+							<tr>
+								<th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Action</th>
+								<th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Why it matters</th>
+								<th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Count</th>
+								<th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Open</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td class='zcs-px-16 zcs-py-10 zcs-box-border zcs-font-14 zcs-color-primary'>Review returned or reopened rows</td>
+								<td class='zcs-px-16 zcs-py-10 zcs-box-border zcs-font-14 zcs-color-secondary'>Remarks and revision details must be checked before updates.</td>
+								<td class='zcs-px-16 zcs-py-10 zcs-box-border zcs-text-right zcs-font-14 zcs-font-semibold zcs-red'><%=needsRevision%></td>
+								<td class='zcs-px-16 zcs-py-10 zcs-box-border zcs-font-14'><a class='sl-table-link' href='#Report:My_Sales_Plan_Workqueue?zc_LoadIn=dialog'><i class='zc-li-outline arrows-1-tail-right'></i>Open dialog</a></td>
+							</tr>
+							<tr>
+								<td class='zcs-px-16 zcs-py-10 zcs-box-border zcs-font-14 zcs-color-primary'>Complete draft submissions</td>
+								<td class='zcs-px-16 zcs-py-10 zcs-box-border zcs-font-14 zcs-color-secondary'>Draft and revised draft rows are still editable by the owner.</td>
+								<td class='zcs-px-16 zcs-py-10 zcs-box-border zcs-text-right zcs-font-14 zcs-font-semibold zcs-yellow'><%=myDrafts%></td>
+								<td class='zcs-px-16 zcs-py-10 zcs-box-border zcs-font-14'><a class='sl-table-link' href='#Report:My_Sales_Plan_Workqueue'><i class='zc-li-outline arrows-1-tail-right'></i>Open queue</a></td>
+							</tr>
+							<tr>
+								<td class='zcs-px-16 zcs-py-10 zcs-box-border zcs-font-14 zcs-color-primary'>Track submitted queue</td>
+								<td class='zcs-px-16 zcs-py-10 zcs-box-border zcs-font-14 zcs-color-secondary'>Submitted rows should be monitored, not mutated from the landing page.</td>
+								<td class='zcs-px-16 zcs-py-10 zcs-box-border zcs-text-right zcs-font-14 zcs-font-semibold zcs-blue'><%=submittedQueue%></td>
+								<td class='zcs-px-16 zcs-py-10 zcs-box-border zcs-font-14'><a class='sl-table-link' href='#Report:Sales_Plan_Status_Board'><i class='zc-li-outline arrows-1-tail-right'></i>Status board</a></td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+
+			<aside class='sl-panel sl-focus <%=focusTone%> zcs-card zcs-box-border'>
+				<div class='zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12'>
+					<div>
+						<h2 class='zcs-font-20 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0'><%=focusTitle%></h2>
+						<p class='zcs-font-14 zcs-color-secondary zcs-m-0 zcs-mt-8'><%=focusText%></p>
+					</div>
+					<span class='sl-icon-tile'><i class='zc-li-outline ui-1-zoom'></i></span>
+				</div>
+				<div class='zcs-quick-actions-wrapper zcs-card zcs-flex zcs-direction-column zcs-gap-16 zcs-p-16 zcs-box-border zcs-mt-16'>
+					<h3 class='zcs-font-18 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0'>Quick actions</h3>
+					<ul class='zcs-flex zcs-direction-column zcs-gap-12 zcs-p-0 zcs-m-0'>
+						<li class='zcs-quick-action-item zcs-card zcs-px-12 zcs-py-8 zcs-box-border'><a class='zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary zcs-cursor-pointer' href='#Form:Sales_Plans?zc_LoadIn=dialog'><i class='zcs-quick-action-icon zcs-font-medium zc-li-outline ui-1-simple-add'></i><span class='zcs-quick-action-text'>Create a new sales plan</span></a></li>
+						<li class='zcs-quick-action-item zcs-card zcs-px-12 zcs-py-8 zcs-box-border'><a class='zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary zcs-cursor-pointer' href='#Report:My_Sales_Plan_Workqueue'><i class='zcs-quick-action-icon zcs-font-medium zc-li-outline business-agenda'></i><span class='zcs-quick-action-text'>Open my sales-plan workqueue</span></a></li>
+						<li class='zcs-quick-action-item zcs-card zcs-px-12 zcs-py-8 zcs-box-border'><a class='zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary zcs-cursor-pointer' href='#Report:Sales_Plan_Status_Board'><i class='zcs-quick-action-icon zcs-font-medium zc-li-outline business-progress'></i><span class='zcs-quick-action-text'>Monitor status board</span></a></li>
+					</ul>
+				</div>
+				<div class='sl-note zcs-font-13 zcs-color-secondary'><strong class='zcs-color-primary'>Insight only:</strong> <%=approvedFinal%> approved, locked or superseded row(s) exist but are intentionally excluded from pending counts.</div>
+			</aside>
+		</section>
+
+		<section class='sl-panel zcs-card zcs-box-border zcs-mt-16'>
+			<div class='sl-section-title'>
+				<div>
+					<h2 class='zcs-font-20 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0'>Recent and priority work rows</h2>
+					<p class='zcs-font-14 zcs-color-secondary zcs-m-0 zcs-mt-4'>Only your non-final working statuses are listed. Use the dialog link where remarks or revision details may be involved.</p>
+				</div>
+				<a class='zcs-button zcs-primary-outline-button zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-medium zcs-lh-body' href='#Report:My_Sales_Plan_Workqueue'><i class='zcs-button-icon zc-li-outline files-2-doc'></i><span>View all</span></a>
+			</div>
+			<div class='zcs-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative'>
+				<table class='zcs-w-full'>
+					<thead class='zcs-sticky'>
+						<tr>
+							<th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Plan</th>
+							<th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Status</th>
+							<th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Grade MT</th>
+							<th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Product MT</th>
+							<th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Next action</th>
+							<th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Open</th>
+						</tr>
+					</thead>
+					<tbody>
+<%
+	rowCount = 0;
+	for each  plan in Sales_Plans[Owner_Email == loginEmail || Owner_Email == loginName && Locked != true && Status == "Returned by Sales Management" || Status == "Revision Requested by SCM" || Status == "Reopened" || Status == "Draft" || Status == "Revised Draft"] sort by Added_Time desc
+	{
+		if(rowCount < 6)
+		{
+			rowCount = rowCount + 1;
+			statusText = ifnull(plan.Status,"Draft");
+			statusClass = "zcs-badge-blue";
+			statusIcon = "zc-li-outline loader-dots-06";
+			nextStep = "Review status";
+			if(statusText == "Returned by Sales Management" || statusText == "Revision Requested by SCM")
+			{
+				statusClass = "zcs-badge-orange";
+				statusIcon = "zc-li-outline ui-3-alert";
+				nextStep = "Open remarks and revise";
+			}
+			else if(statusText == "Reopened")
+			{
+				statusClass = "zcs-badge-red";
+				statusIcon = "zc-li-outline ui-3-alert";
+				nextStep = "Review reopened plan";
+			}
+			else if(statusText == "Draft" || statusText == "Revised Draft")
+			{
+				statusClass = "zcs-badge-yellow";
+				statusIcon = "zc-li-outline ui-1-edit-72";
+				nextStep = "Complete and submit";
+			}
+			planUrl = "#Report:My_Sales_Plan_Workqueue?ID=" + plan.ID + "&zc_LoadIn=dialog";
+			%>
+<tr>
+							<td class='zcs-px-16 zcs-py-12 zcs-box-border zcs-font-14 zcs-color-primary'><strong>SP-<%=ifnull(plan.Sales_Plan_No,"Draft")%></strong><div class='zcs-font-12 zcs-color-secondary'>Revision <%=ifnull(plan.Revision_No,0)%></div></td>
+							<td class='zcs-px-16 zcs-py-12 zcs-box-border zcs-font-14'><div class='zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border <%=statusClass%>'><i class='zcs-badge-icon zcs-no-shrink <%=statusIcon%>'></i><span class='zcs-badge-text zcs-font-13 zcs-font-normal zcs-lh-body'><%=statusText%></span></div></td>
+							<td class='zcs-px-16 zcs-py-12 zcs-box-border zcs-text-right zcs-font-14 zcs-color-primary'><%=ifnull(plan.Total_Grade_Target_Tons,0)%></td>
+							<td class='zcs-px-16 zcs-py-12 zcs-box-border zcs-text-right zcs-font-14 zcs-color-primary'><%=ifnull(plan.Total_Product_Required_Tons,0)%></td>
+							<td class='zcs-px-16 zcs-py-12 zcs-box-border zcs-font-14 zcs-color-primary'><%=nextStep%><div class='zcs-font-12 zcs-color-secondary'>Variance: <%=ifnull(plan.Variance_Tons,0)%></div></td>
+							<td class='zcs-px-16 zcs-py-12 zcs-box-border zcs-font-14'><a class='sl-table-link' href='<%=planUrl%>'><i class='zc-li-outline arrows-1-tail-right'></i>Open dialog</a></td>
+						</tr>
+<%
+		}
+	}
+	if(rowCount == 0)
+	{
+		%>
+<tr>
+							<td class='sl-empty zcs-px-16 zcs-py-12 zcs-box-border zcs-font-14' colspan='6'><i class='zc-li-outline ui-1-check-circle-08'></i> No draft, returned, reopened or revision rows are waiting for you.</td>
+						</tr>
+<%
+	}
+	%>
+</tbody>
+				</table>
+			</div>
+		</section>
+
+		<section class='sl-quick-grid'>
+			<a class='sl-quick-card zcs-card zcs-box-border' href='#Form:Sales_Plans?zc_LoadIn=dialog'><span class='sl-icon-tile'><i class='zc-li-outline ui-1-simple-add'></i></span><span><strong class='zcs-color-primary'>Create plan</strong><span class='sl-muted zcs-font-13'>Start the new/create flow in dialog.</span></span></a>
+			<a class='sl-quick-card zcs-card zcs-box-border' href='#Report:My_Sales_Plan_Workqueue'><span class='sl-icon-tile'><i class='zc-li-outline business-agenda'></i></span><span><strong class='zcs-color-primary'>My workqueue</strong><span class='sl-muted zcs-font-13'>Personal pending work only.</span></span></a>
+			<a class='sl-quick-card zcs-card zcs-box-border' href='#Report:Sales_Plan_Status_Board'><span class='sl-icon-tile'><i class='zc-li-outline business-progress'></i></span><span><strong class='zcs-color-primary'>Status monitoring</strong><span class='sl-muted zcs-font-13'>Track submitted rows and workflow state.</span></span></a>
+			<a class='sl-quick-card sl-secondary zcs-card zcs-box-border' href='#Report:Approved_Sales_Plans'><span class='sl-icon-tile'><i class='zc-li-outline files-check'></i></span><span><strong class='zcs-color-primary'>Approved plans</strong><span class='sl-muted zcs-font-13'>Secondary reference; not pending work.</span></span></a>
+			<a class='sl-quick-card sl-secondary zcs-card zcs-box-border' href='#Report:All_Sales_Plans'><span class='sl-icon-tile'><i class='zc-li-outline files-2-doc'></i></span><span><strong class='zcs-color-primary'>All sales plans</strong><span class='sl-muted zcs-font-13'>Secondary audit and search view.</span></span></a>
+		</section>
+	</div>
+</div>

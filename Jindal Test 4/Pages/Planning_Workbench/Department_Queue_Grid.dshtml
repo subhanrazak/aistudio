@@ -1,0 +1,156 @@
+<%
+	loginEmail = zoho.loginuserid;
+	loginName = zoho.loginuser;
+	isAdmin = thisapp.permissions.isUserInProfile("System_Administrator");
+	isFinance = thisapp.permissions.isUserInProfile("Finance_Costing");
+	isSales = thisapp.permissions.isUserInProfile("Sales_Team");
+	isCOE = thisapp.permissions.isUserInProfile("COE_Team");
+	isSCM = thisapp.permissions.isUserInProfile("SCM_Central_PPC");
+	isOps = thisapp.permissions.isUserInProfile("Operations_PPC");
+	isSMS = thisapp.permissions.isUserInProfile("SMS_Team");
+	isSourcing = thisapp.permissions.isUserInProfile("Sourcing_Team");
+	isPlantOps = thisapp.permissions.isUserInProfile("Plant_Operations");
+	isSalesMgmt = thisapp.permissions.isUserInProfile("Sales_Management");
+	isExec = thisapp.permissions.isUserInProfile("Executive_Management");
+	isAuditor = thisapp.permissions.isUserInProfile("Auditor");
+	salesMine = Sales_Plans[Owner_Email == loginEmail || Owner_Email == loginName && Status == "Draft" || Status == "Returned by Sales Management" || Status == "Revision Requested by SCM" || Status == "Revised Draft"].count();
+	salesApproval = Sales_Plans[Status == "Submitted to Sales Management"].count();
+	shutdownMine = Shutdown_Schedules[Owner_Email == loginEmail || Owner_Email == loginName && Status == "Draft" || Status == "Reopened"].count();
+	shutdownReady = Shutdown_Schedules[Status == "Submitted"].count();
+	capacityMine = Capacity_TEP_Plans[Owner_Email == loginEmail || Owner_Email == loginName && Status == "Draft" || Status == "Returned by Operations Approval" || Status == "Revision Requested by SCM" || Status == "Revised Draft"].count();
+	capacityApproval = Capacity_TEP_Plans[Status == "Submitted to Operations Approval"].count();
+	smsMine = SMS_Capacity_Plans[Owner_Email == loginEmail || Owner_Email == loginName && Status == "Draft" || Status == "Reopened"].count();
+	smsApproval = SMS_Capacity_Plans[Status == "Submitted to Central PPC"].count();
+	volumeMine = Volume_Consolidations[Owner_Email == loginEmail || Owner_Email == loginName && Status == "Under SCM Review" || Status == "Revision Requested"].count();
+	volumeApproval = Volume_Consolidations[Status == "Under SCM Review"].count();
+	volumeShortfalls = Volume_Consolidations[Status == "Revision Requested" || Status == "Sales Revision Pending" || Status == "Operations Revision Pending" || Status == "Both Revisions Pending"].count();
+	rmMine = Raw_Material_Budgets[Owner_Email == loginEmail || Owner_Email == loginName && Status == "Draft" || Status == "Returned by Sourcing Manager" || Status == "Returned by Finance"].count();
+	rmApproval = Raw_Material_Budgets[Status == "Submitted to Sourcing Manager" || Status == "Submitted to Finance"].count();
+	consMine = Consumables_Budgets[Owner_Email == loginEmail || Owner_Email == loginName && Status == "Draft" || Status.contains("Returned") || Status == "Reopened"].count();
+	consApproval = Consumables_Budgets[Status == "Submitted to Plant Manager" || Status == "Submitted to Finance"].count();
+	financeMine = Financial_Consolidations[Owner_Email == loginEmail || Owner_Email == loginName && Status == "Draft" || Status.contains("Returned") || Status == "Reopened" && Status != "Completed" && Status != "Closed" && Status != "Locked" && Status != "Approved Final" && Locked != true].count();
+	financeApproval = Financial_Consolidations[Status == "Submitted to Management" && Status != "Completed" && Status != "Closed" && Status != "Locked" && Status != "Approved Final" && Locked != true].count();
+	replanMine = Replanning_Requests[Requested_By_Email == loginEmail || Requested_By_Email == loginName && Status == "Draft" || Status == "Rejected" && Status != "Completed" && Status != "Closed" && Status != "Locked"].count();
+	replanApproval = Replanning_Requests[Status == "Submitted to Finance" || Status == "Finance Approved" || Status == "Revision Created" && Status != "Completed" && Status != "Closed" && Status != "Locked"].count();
+	scenarioCycleId = 0;
+	scenarioCycleName = "";
+	for each  cycleRec in Budget_Cycles[Status != "Completed" && Status != "Closed" && Status != "Locked" && Status != "Approved Final" && Baseline_Locked != true && Approved_Scenario != true] sort by Opened_Date desc range from 0 to 0
+	{
+		scenarioCycleId = cycleRec.ID;
+		scenarioCycleName = ifNull(cycleRec.Cycle_Name,ifNull(cycleRec.Cycle_Code,"Active cycle"));
+	}
+	scenarioComparisonUrl = "";
+	if(scenarioCycleId != 0)
+	{
+		scenarioComparisonUrl = "#Page:Scenario_Comparison_Dashboard?Budget_Cycle_ID=" + scenarioCycleId;
+	}
+	%>
+<div class='pw-shell'>
+	<div class='zcs-flex zcs-justify-space-between zcs-align-items-center zcs-gap-16 zcs-pb-0'>
+		<div>
+			<h3 class='zcs-font-20 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0'>Department queues</h3>
+			<p class='zcs-font-14 zcs-color-secondary zcs-m-0'>Each card exposes the report and entry form for modules your profile can operate. Counts are based on ownership, approval status and exception status.</p>
+		</div>
+		<a class='zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-lh-body' href='#Report:Critical_Audit_Events'>Audit events</a>
+	</div>
+	<div class='pw-queue-grid zcs-py-16'>
+<%
+	if(isSales || isCOE || isSCM || isOps || isSalesMgmt || isFinance || isAdmin || isAuditor)
+	{
+		%>
+<div class='pw-queue-card zcs-card zcs-p-20 zcs-box-border zcs-flex zcs-direction-column zcs-gap-12'>
+			<div class='zcs-flex zcs-justify-space-between zcs-align-items-start zcs-gap-12'>
+				<div><h5 class='zcs-font-18 zcs-font-medium zcs-color-primary'>Sales Plans</h5><p class='zcs-font-14 zcs-color-secondary zcs-m-0'>Sales entry, COE, SCM, Operations and management approval stages.</p></div>
+				<i class='zc-li-outline business-chart-bar-32 zcs-font-28 zcs-color-theme'></i>
+			</div>
+			<div class='zcs-flex zcs-gap-8 zcs-row-wrap'>
+				<span class='zcs-badge zcs-badge-filled-outline zcs-badge-blue zcs-inline-flex zcs-align-items-center zcs-gap-6 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-font-13'><i class='zc-li-outline ui-2-time'></i>Mine <%=salesMine%></span>
+				<span class='zcs-badge zcs-badge-filled-outline zcs-badge-green zcs-inline-flex zcs-align-items-center zcs-gap-6 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-font-13'><i class='zc-li-outline ui-1-check-circle-08'></i>Approvals <%=salesApproval%></span>
+			</div>
+			<div class='pw-queue-actions zcs-flex zcs-gap-8 zcs-row-wrap'><a class='zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14' href='#Report:My_Sales_Plan_Workqueue'>My workqueue</a><a class='zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14' href='#Form:Sales_Plans?zc_LoadIn=dialog'>New plan</a></div>
+		</div>
+<%
+	}
+	if(isOps || isSCM || isFinance || isAdmin || isAuditor)
+	{
+		%>
+<div class='pw-queue-card zcs-card zcs-p-20 zcs-box-border zcs-flex zcs-direction-column zcs-gap-12'>
+			<div class='zcs-flex zcs-justify-space-between zcs-align-items-start zcs-gap-12'><div><h5 class='zcs-font-18 zcs-font-medium zcs-color-primary'>Shutdowns</h5><p class='zcs-font-14 zcs-color-secondary zcs-m-0'>Planned downtime by line feeding capacity.</p></div><i class='zc-li-outline transport-traffic zcs-font-28 zcs-color-theme'></i></div>
+			<div class='zcs-flex zcs-gap-8 zcs-row-wrap'><span class='zcs-badge zcs-badge-filled-outline zcs-badge-blue zcs-inline-flex zcs-align-items-center zcs-gap-6 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-font-13'>Mine <%=shutdownMine%></span><span class='zcs-badge zcs-badge-filled-outline zcs-badge-yellow zcs-inline-flex zcs-align-items-center zcs-gap-6 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-font-13'>Submitted <%=shutdownReady%></span></div>
+			<div class='pw-queue-actions zcs-flex zcs-gap-8 zcs-row-wrap'><a class='zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14' href='#Report:All_Shutdown_Schedules'>Open report</a><a class='zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14' href='#Form:Shutdown_Schedules?zc_LoadIn=dialog'>New shutdown</a></div>
+		</div>
+<%
+	}
+	if(isOps || isSCM || isFinance || isAdmin || isAuditor)
+	{
+		%>
+<div class='pw-queue-card zcs-card zcs-p-20 zcs-box-border zcs-flex zcs-direction-column zcs-gap-12'>
+			<div class='zcs-flex zcs-justify-space-between zcs-align-items-start zcs-gap-12'><div><h5 class='zcs-font-18 zcs-font-medium zcs-color-primary'>Capacity</h5><p class='zcs-font-14 zcs-color-secondary zcs-m-0'>Capacity and TEP plans validated by Central PPC.</p></div><i class='zc-li-outline design-2-ruler-pencil zcs-font-28 zcs-color-theme'></i></div>
+			<div class='zcs-flex zcs-gap-8 zcs-row-wrap'><span class='zcs-badge zcs-badge-filled-outline zcs-badge-blue zcs-inline-flex zcs-align-items-center zcs-gap-6 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-font-13'>Mine <%=capacityMine%></span><span class='zcs-badge zcs-badge-filled-outline zcs-badge-green zcs-inline-flex zcs-align-items-center zcs-gap-6 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-font-13'>Central PPC <%=capacityApproval%></span></div>
+			<div class='pw-queue-actions zcs-flex zcs-gap-8 zcs-row-wrap'><a class='zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14' href='#Report:All_Capacity_TEP_Plans'>Open report</a><a class='zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14' href='#Form:Capacity_TEP_Plans?zc_LoadIn=dialog'>New capacity</a></div>
+		</div>
+<%
+	}
+	if(isSMS || isSCM || isFinance || isAdmin || isAuditor)
+	{
+		%>
+<div class='pw-queue-card zcs-card zcs-p-20 zcs-box-border zcs-flex zcs-direction-column zcs-gap-12'>
+			<div class='zcs-flex zcs-justify-space-between zcs-align-items-start zcs-gap-12'><div><h5 class='zcs-font-18 zcs-font-medium zcs-color-primary'>SMS</h5><p class='zcs-font-14 zcs-color-secondary zcs-m-0'>Liquid steel availability and BTV ceiling.</p></div><i class='zc-li-outline industry zcs-font-28 zcs-color-theme'></i></div>
+			<div class='zcs-flex zcs-gap-8 zcs-row-wrap'><span class='zcs-badge zcs-badge-filled-outline zcs-badge-blue zcs-inline-flex zcs-align-items-center zcs-gap-6 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-font-13'>Mine <%=smsMine%></span><span class='zcs-badge zcs-badge-filled-outline zcs-badge-green zcs-inline-flex zcs-align-items-center zcs-gap-6 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-font-13'>Central PPC <%=smsApproval%></span></div>
+			<div class='pw-queue-actions zcs-flex zcs-gap-8 zcs-row-wrap'><a class='zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14' href='#Report:All_SMS_Capacity_Plans'>Open report</a><a class='zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14' href='#Form:SMS_Capacity_Plans?zc_LoadIn=dialog'>New SMS plan</a></div>
+		</div>
+<%
+	}
+	if(isSCM || isSales || isFinance || isAdmin || isAuditor)
+	{
+		%>
+<div class='pw-queue-card zcs-card zcs-p-20 zcs-box-border zcs-flex zcs-direction-column zcs-gap-12'>
+			<div class='zcs-flex zcs-justify-space-between zcs-align-items-start zcs-gap-12'><div><h5 class='zcs-font-18 zcs-font-medium zcs-color-primary'>Volume Consolidation</h5><p class='zcs-font-14 zcs-color-secondary zcs-m-0'>Demand-capacity balancing and shortfall return loop.</p></div><i class='zc-li-outline business-chart-pie-36 zcs-font-28 zcs-color-theme'></i></div>
+			<div class='zcs-flex zcs-gap-8 zcs-row-wrap'><span class='zcs-badge zcs-badge-filled-outline zcs-badge-blue zcs-inline-flex zcs-align-items-center zcs-gap-6 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-font-13'>Mine <%=volumeMine%></span><span class='zcs-badge zcs-badge-filled-outline zcs-badge-red zcs-inline-flex zcs-align-items-center zcs-gap-6 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-font-13'>Shortfalls <%=volumeShortfalls%></span></div>
+			<div class='pw-queue-actions zcs-flex zcs-gap-8 zcs-row-wrap'><a class='zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14' href='#Report:Shortfall_Buckets'>Shortfalls</a><a class='zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14' href='#Form:Volume_Consolidations?zc_LoadIn=dialog'>New bucket</a></div>
+		</div>
+<%
+	}
+	if(isSourcing || isSCM || isFinance || isAdmin || isAuditor)
+	{
+		%>
+<div class='pw-queue-card zcs-card zcs-p-20 zcs-box-border zcs-flex zcs-direction-column zcs-gap-12'>
+			<div class='zcs-flex zcs-justify-space-between zcs-align-items-start zcs-gap-12'><div><h5 class='zcs-font-18 zcs-font-medium zcs-color-primary'>RM</h5><p class='zcs-font-14 zcs-color-secondary zcs-m-0'>Raw material budget and sourcing approvals.</p></div><i class='zc-li-outline shopping-bag-20 zcs-font-28 zcs-color-theme'></i></div>
+			<div class='zcs-flex zcs-gap-8 zcs-row-wrap'><span class='zcs-badge zcs-badge-filled-outline zcs-badge-blue zcs-inline-flex zcs-align-items-center zcs-gap-6 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-font-13'>Mine <%=rmMine%></span><span class='zcs-badge zcs-badge-filled-outline zcs-badge-green zcs-inline-flex zcs-align-items-center zcs-gap-6 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-font-13'>Approvals <%=rmApproval%></span></div>
+			<div class='pw-queue-actions zcs-flex zcs-gap-8 zcs-row-wrap'><a class='zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14' href='#Report:All_Raw_Material_Budgets'>Open report</a><a class='zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14' href='#Form:Raw_Material_Budgets?zc_LoadIn=dialog'>New RM budget</a></div>
+		</div>
+<%
+	}
+	if(isPlantOps || isOps || isFinance || isAdmin || isAuditor)
+	{
+		%>
+<div class='pw-queue-card zcs-card zcs-p-20 zcs-box-border zcs-flex zcs-direction-column zcs-gap-12'>
+			<div class='zcs-flex zcs-justify-space-between zcs-align-items-start zcs-gap-12'><div><h5 class='zcs-font-18 zcs-font-medium zcs-color-primary'>Consumables</h5><p class='zcs-font-14 zcs-color-secondary zcs-m-0'>Consumables norms, usage budgets and approvals.</p></div><i class='zc-li-outline e-commerce-shopping-cart-simple zcs-font-28 zcs-color-theme'></i></div>
+			<div class='zcs-flex zcs-gap-8 zcs-row-wrap'><span class='zcs-badge zcs-badge-filled-outline zcs-badge-blue zcs-inline-flex zcs-align-items-center zcs-gap-6 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-font-13'>Mine <%=consMine%></span><span class='zcs-badge zcs-badge-filled-outline zcs-badge-green zcs-inline-flex zcs-align-items-center zcs-gap-6 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-font-13'>Approvals <%=consApproval%></span></div>
+			<div class='pw-queue-actions zcs-flex zcs-gap-8 zcs-row-wrap'><a class='zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14' href='#Report:All_Consumables_Budgets'>Open report</a><a class='zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14' href='#Form:Consumables_Budgets?zc_LoadIn=dialog'>New budget</a></div>
+		</div>
+<%
+	}
+	if(isFinance || isExec || isAdmin || isAuditor)
+	{
+		%>
+<div class='pw-queue-card zcs-card zcs-p-20 zcs-box-border zcs-flex zcs-direction-column zcs-gap-12'>
+			<div class='zcs-flex zcs-justify-space-between zcs-align-items-start zcs-gap-12'><div><h5 class='zcs-font-18 zcs-font-medium zcs-color-primary'>Finance</h5><p class='zcs-font-14 zcs-color-secondary zcs-m-0'>Financial consolidation and management decision stages.</p></div><i class='zc-li-outline business-coins zcs-font-28 zcs-color-theme'></i></div>
+			<div class='zcs-flex zcs-gap-8 zcs-row-wrap'><span class='zcs-badge zcs-badge-filled-outline zcs-badge-blue zcs-inline-flex zcs-align-items-center zcs-gap-6 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-font-13'>Mine <%=financeMine%></span><span class='zcs-badge zcs-badge-filled-outline zcs-badge-green zcs-inline-flex zcs-align-items-center zcs-gap-6 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-font-13'>Mgmt <%=financeApproval%></span></div>
+			<div class='pw-queue-actions zcs-flex zcs-gap-8 zcs-row-wrap'><a class='zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14' href='#Report:All_Financial_Consolidations'>Open report</a><a class='zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14' href='#Form:Financial_Consolidations?zc_LoadIn=dialog'>New consolidation</a></div>
+		</div>
+<%
+	}
+	if(isFinance || isAdmin || isExec || isAuditor)
+	{
+		%>
+<div class='pw-queue-card zcs-card zcs-p-20 zcs-box-border zcs-flex zcs-direction-column zcs-gap-12'>
+			<div class='zcs-flex zcs-justify-space-between zcs-align-items-start zcs-gap-12'><div><h5 class='zcs-font-18 zcs-font-medium zcs-color-primary'>Replanning</h5><p class='zcs-font-14 zcs-color-secondary zcs-m-0'>Annual revision requests and reopened modules.</p></div><i class='zc-li-outline arrows-1-refresh-69 zcs-font-28 zcs-color-theme'></i></div>
+			<div class='zcs-flex zcs-gap-8 zcs-row-wrap'><span class='zcs-badge zcs-badge-filled-outline zcs-badge-blue zcs-inline-flex zcs-align-items-center zcs-gap-6 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-font-13'>Mine <%=replanMine%></span><span class='zcs-badge zcs-badge-filled-outline zcs-badge-yellow zcs-inline-flex zcs-align-items-center zcs-gap-6 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-font-13'>Active <%=replanApproval%></span></div>
+			<div class='pw-queue-actions zcs-flex zcs-gap-8 zcs-row-wrap'><a class='zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14' href='#Report:Active_Replanning_Requests'>Active requests</a><a class='zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14' href='#Form:Replanning_Requests?zc_LoadIn=dialog'>New request</a></div>
+		</div>
+<%
+	}
+	%>
+</div>
+</div>

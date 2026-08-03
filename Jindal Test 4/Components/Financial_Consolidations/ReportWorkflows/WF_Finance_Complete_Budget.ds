@@ -1,0 +1,48 @@
+WF_Finance_Complete_Budget as "Complete Budget"
+{
+
+				type =  functions
+				form = Financial_Consolidations
+				execution type = for each record	
+				on start
+				{
+					actions 
+					{
+					on click
+					(
+						oldStatus = input.Status;
+										if(oldStatus == "Approved Final")
+										{
+											input.Status = "Completed";
+											input.Locked = true;
+											input.Approver_Action = null;
+											cycleRecords = Budget_Cycles[ID == input.Budget_Cycle];
+											if(cycleRecords.count() > 0)
+											{
+												cycleRecords.Approved_Scenario=true;
+												cycleRecords.Status="Completed";
+												cycleRecords.Finance_Completed=true;
+												cycleRecords.Completion_Date=zoho.currentdate;
+												cycleRecords.Baseline_Locked=true;
+											}
+											auditId = insert into Approval_Audit_Log
+											[
+												Budget_Cycle=input.Budget_Cycle
+												Module_Name="Financial Consolidation"
+												Related_Record_ID=input.ID
+												Related_Record_Display="Financial Consolidation " + input.Financial_Consolidation_No
+												Action="Completed"
+												From_Status=oldStatus
+												To_Status="Completed"
+												Iteration_Number=input.Iteration_Count
+												Actor_Email=zoho.loginuserid
+												Action_On=zoho.currenttime
+												Remarks="Completed from report action."
+												Added_User=zoho.loginuser
+											];
+										}
+					)
+					}
+				}
+			
+}

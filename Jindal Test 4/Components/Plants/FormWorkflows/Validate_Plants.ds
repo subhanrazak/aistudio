@@ -1,0 +1,45 @@
+Validate_Plants as "Validate Plants"
+{
+
+				type =  form
+				form = Plants
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Active == true)
+										{
+											if(input.Plant_Code in {""," ","null"} || input.Plant_Name in {""," ","null"})
+											{
+												alert "Active plants must have both Plant Code and Plant Name.";
+												cancel submit;
+											}
+										}
+										if(input.Active == false)
+										{
+											isSystemAdmin = thisapp.permissions.isUserInProfile("System_Administrator");
+											activeBudgetRecords = 0;
+											activeBudgetRecords = activeBudgetRecords + Sales_Plans[Locked == false].count();
+											activeBudgetRecords = activeBudgetRecords + Shutdown_Schedules[Plant == input.ID && Locked == false].count();
+											activeBudgetRecords = activeBudgetRecords + Capacity_TEP_Plans[Plant == input.ID && Locked == false].count();
+											activeBudgetRecords = activeBudgetRecords + SMS_Capacity_Plans[Plant == input.ID && Locked == false].count();
+											activeBudgetRecords = activeBudgetRecords + Volume_Consolidations[Plant == input.ID && Locked == false].count();
+											activeBudgetRecords = activeBudgetRecords + Raw_Material_Budgets[Plant == input.ID && Locked == false].count();
+											activeBudgetRecords = activeBudgetRecords + Consumables_Budgets[Plant == input.ID && Locked == false].count();
+											if(activeBudgetRecords > 0 && isSystemAdmin == false)
+											{
+												alert "This plant cannot be deactivated while active budget records exist.";
+												cancel submit;
+											}
+										}
+						)
+					}
+				}
+
+			
+}

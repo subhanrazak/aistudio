@@ -1,0 +1,43 @@
+list Shortfall_Buckets
+{
+
+			displayName = "Shortfall Buckets"
+			show all rows from Volume_Consolidations  [Status != "Locked"]  
+			(
+				Consolidation_No
+				Requested_Financial_Year
+				Budget_Cycle
+				Plant
+				SCM_Review_Lines_Existing
+				SCM_Decision
+				Status
+				Owner_Email
+				custom action "Request Revision"
+				(
+	  			workflow = WF_Volume_Request_Revision
+				column header = "Request Revision"
+				success message = "SCM revision requested."
+				condition = (Status == "Under SCM Review")
+				)
+				custom action "Open Scenario Comparison"
+				(
+	  			workflow = WF_Volume_Open_Scenario_Comparison
+				column header = "Open Scenario Comparison"
+				success message = "Opening scenario comparison."
+				)
+			)
+			filters
+			(
+				Requested_Financial_Year
+				Budget_Cycle
+				Plant
+				SCM_Decision
+				Status
+				Owner_Email
+			)
+			sort by
+			(
+				Consolidation_No descending
+			)
+		
+}

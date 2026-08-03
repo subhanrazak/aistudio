@@ -1,0 +1,67 @@
+default list All_SMS_Capacity_Plans
+{
+
+			displayName = "All SMS Capacity Plans"
+			show all rows from SMS_Capacity_Plans    
+			(
+				SMS_Plan_No
+				Budget_Cycle
+				Plant
+				Melting_Unit
+				Previous_Year_Output_MT
+				Total_Steel_Availability_BTV
+				Status
+				Iteration_Count
+				Locked
+				Owner_Email
+				custom action "Submit SMS"
+				(
+	  			workflow = WF_SMS_Submit
+				column header = "Submit SMS"
+				success message = "SMS capacity submitted."
+				condition = (Status == "Draft" || Status == "Returned by Central PPC" || Status == "Reopened")
+				)
+				custom action "Accept SMS"
+				(
+	  			workflow = WF_SMS_Accept
+				column header = "Accept SMS"
+				success message = "SMS capacity accepted."
+				condition = (Status == "Submitted to Central PPC")
+				)
+				custom action "Return SMS"
+				(
+	  			workflow = WF_SMS_Return
+				column header = "Return SMS"
+				success message = "SMS capacity returned."
+				condition = (Status == "Submitted to Central PPC")
+				)
+				custom action "Reopen SMS"
+				(
+	  			workflow = WF_SMS_Reopen
+				column header = "Reopen SMS"
+				success message = "SMS capacity reopened."
+				condition = (Status == "Locked")
+				)
+				custom action "Lock SMS"
+				(
+	  			workflow = WF_SMS_Lock
+				column header = "Lock SMS"
+				success message = "SMS capacity locked."
+				condition = (Status == "Accepted" && Locked == false)
+				)
+			)
+			filters
+			(
+				Budget_Cycle
+				Plant
+				Melting_Unit
+				Status
+				Owner_Email
+				Locked
+			)
+			sort by
+			(
+				SMS_Plan_No descending
+			)
+		
+}

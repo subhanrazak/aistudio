@@ -1,0 +1,99 @@
+<%
+	selectedCycle = Budget_Cycles[Status != "Completed" && Status != "Closed" && Status != "Locked" && Status != "Approved Final" && Baseline_Locked != true && Approved_Scenario != true] sort by Opened_Date desc;
+	if(input.Budget_Cycle_ID != null && input.Budget_Cycle_ID > 0)
+	{
+		requestedCycle = Budget_Cycles[ID == input.Budget_Cycle_ID];
+		if(requestedCycle.count() > 0)
+		{
+			selectedCycle = requestedCycle;
+		}
+	}
+	volumeCycle = Budget_Cycles[ID == 0];
+	ebitdaCycle = Budget_Cycles[ID == 0];
+	volumeFinancial = Financial_Consolidations[ID == 0];
+	ebitdaFinancial = Financial_Consolidations[ID == 0];
+	scenarioSetCode = "";
+	if(selectedCycle.count() > 0)
+	{
+		scenarioSetCode = ifNull(selectedCycle.Scenario_Set_Code,"");
+		if(scenarioSetCode != "")
+		{
+			volumeCycle = Budget_Cycles[Scenario_Set_Code == scenarioSetCode && Scenario == "Volume Maximising"];
+			ebitdaCycle = Budget_Cycles[Scenario_Set_Code == scenarioSetCode && Scenario == "EBITDA Maximising"];
+		}
+		if(volumeCycle.count() == 0 && selectedCycle.Scenario == "Volume Maximising")
+		{
+			volumeCycle = selectedCycle;
+		}
+		if(ebitdaCycle.count() == 0 && selectedCycle.Scenario == "EBITDA Maximising")
+		{
+			ebitdaCycle = selectedCycle;
+		}
+		if(volumeCycle.count() > 0)
+		{
+			volumeFinancial = Financial_Consolidations[Budget_Cycle == volumeCycle.ID && Scenario == "Volume Maximising"] sort by Financial_Consolidation_No desc;
+		}
+		if(ebitdaCycle.count() > 0)
+		{
+			ebitdaFinancial = Financial_Consolidations[Budget_Cycle == ebitdaCycle.ID && Scenario == "EBITDA Maximising"] sort by Financial_Consolidation_No desc;
+		}
+	}
+	vVolume = ifNull(volumeFinancial.Volume_MT,0);
+	vRevenue = ifNull(volumeFinancial.Revenue,0);
+	vRaw = ifNull(volumeFinancial.Raw_Material_Cost,0);
+	vCons = ifNull(volumeFinancial.Consumables_Cost,0);
+	vTotal = ifNull(volumeFinancial.Total_Cost,0);
+	vEbitda = ifNull(volumeFinancial.EBITDA,0);
+	vMargin = ifNull(volumeFinancial.EBITDA_Margin_Percent,0);
+	eVolume = ifNull(ebitdaFinancial.Volume_MT,0);
+	eRevenue = ifNull(ebitdaFinancial.Revenue,0);
+	eRaw = ifNull(ebitdaFinancial.Raw_Material_Cost,0);
+	eCons = ifNull(ebitdaFinancial.Consumables_Cost,0);
+	eTotal = ifNull(ebitdaFinancial.Total_Cost,0);
+	eEbitda = ifNull(ebitdaFinancial.EBITDA,0);
+	eMargin = ifNull(ebitdaFinancial.EBITDA_Margin_Percent,0);
+	%>
+<div class="scenario-page" style="padding-top:0;">
+		<div class="scenario-section">
+				<div class="scenario-card-title">
+						<div>
+								<h5 class="zcs-font-20 zcs-font-semibold zcs-m-0 zcs-color-primary">Scenario KPI Cards</h5>
+								<p class="zcs-font-13 zcs-color-secondary zcs-m-0 zcs-mt-8">Side-by-side financial comparison for management review. Currency values are shown as entered in Financial Consolidations.</p>
+						</div>
+				</div>
+				<div class="scenario-grid-2">
+						<div class="zcs-card zcs-p-20 zcs-box-border">
+								<div class="scenario-card-title">
+										<div class="zcs-flex zcs-align-items-center zcs-gap-10">
+												<span class="scenario-icon" style="background:var(--zcs_component_hover_color);color:var(--zcs_brand_color);"><i class="zc-li-outline arrows-1-tail-right"></i></span>
+												<div><h6 class="zcs-font-18 zcs-font-semibold zcs-m-0 zcs-color-primary">Volume Maximising</h6><span class="scenario-muted"><%=ifNull(volumeCycle.Cycle_Code,"No cycle")%></span></div>
+										</div>
+										<span class="zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-blue"><span class="zcs-badge-text zcs-font-12 zcs-font-normal zcs-lh-body"><%=ifNull(volumeFinancial.Status,"Not Created")%></span></span>
+								</div>
+								<div class="metric-line"><span class="metric-label">Volume MT</span><strong class="metric-value"><%=vVolume%></strong></div>
+								<div class="metric-line"><span class="metric-label">Revenue</span><strong class="metric-value">INR <%=vRevenue%></strong></div>
+								<div class="metric-line"><span class="metric-label">Raw Material Cost</span><strong class="metric-value">INR <%=vRaw%></strong></div>
+								<div class="metric-line"><span class="metric-label">Consumables Cost</span><strong class="metric-value">INR <%=vCons%></strong></div>
+								<div class="metric-line"><span class="metric-label">Total Cost</span><strong class="metric-value">INR <%=vTotal%></strong></div>
+								<div class="metric-line"><span class="metric-label">EBITDA</span><strong class="metric-value">INR <%=vEbitda%></strong></div>
+								<div class="metric-line"><span class="metric-label">EBITDA Margin Percent</span><strong class="metric-value"><%=vMargin%>%</strong></div>
+						</div>
+						<div class="zcs-card zcs-p-20 zcs-box-border">
+								<div class="scenario-card-title">
+										<div class="zcs-flex zcs-align-items-center zcs-gap-10">
+												<span class="scenario-icon" style="background:var(--zcs_component_hover_color);color:var(--zcs_brand_color);"><i class="zc-li-outline ui-1-check-circle-08"></i></span>
+												<div><h6 class="zcs-font-18 zcs-font-semibold zcs-m-0 zcs-color-primary">EBITDA Maximising</h6><span class="scenario-muted"><%=ifNull(ebitdaCycle.Cycle_Code,"No cycle")%></span></div>
+										</div>
+										<span class="zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-green"><span class="zcs-badge-text zcs-font-12 zcs-font-normal zcs-lh-body"><%=ifNull(ebitdaFinancial.Status,"Not Created")%></span></span>
+								</div>
+								<div class="metric-line"><span class="metric-label">Volume MT</span><strong class="metric-value"><%=eVolume%></strong></div>
+								<div class="metric-line"><span class="metric-label">Revenue</span><strong class="metric-value">INR <%=eRevenue%></strong></div>
+								<div class="metric-line"><span class="metric-label">Raw Material Cost</span><strong class="metric-value">INR <%=eRaw%></strong></div>
+								<div class="metric-line"><span class="metric-label">Consumables Cost</span><strong class="metric-value">INR <%=eCons%></strong></div>
+								<div class="metric-line"><span class="metric-label">Total Cost</span><strong class="metric-value">INR <%=eTotal%></strong></div>
+								<div class="metric-line"><span class="metric-label">EBITDA</span><strong class="metric-value">INR <%=eEbitda%></strong></div>
+								<div class="metric-line"><span class="metric-label">EBITDA Margin Percent</span><strong class="metric-value"><%=eMargin%>%</strong></div>
+						</div>
+				</div>
+		</div>
+</div>

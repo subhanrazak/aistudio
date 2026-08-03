@@ -1,0 +1,52 @@
+Budget_Cycles_Validate_Edit as "Budget Cycles Validate Edit"
+{
+
+				type =  form
+				form = Budget_Cycles
+
+				record event = on edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(old.Baseline_Locked == true && input.Status != "Completed" && input.Status != "Closed")
+										{
+											alert "This baseline is locked. Reopen through Finance before editing an active stage.";
+											cancel submit;
+										}
+										if(input.Cycle_Type == "Revision" && input.Parent_Cycle == null)
+										{
+											alert "Parent Cycle is required for revision cycles.";
+											cancel submit;
+										}
+										if(input.Cycle_Type != "Revision")
+										{
+											active_cycle_count = Budget_Cycles[Financial_Year == input.Financial_Year && Status != "Completed" && Status != "Closed" && ID != input.ID].count();
+											if(active_cycle_count > 0)
+											{
+												alert "Only one active non-closed budget cycle is allowed for a financial year unless this is a Revision cycle.";
+												cancel submit;
+											}
+										}
+										if(input.Status == "Revision Requested" && input.Reopened_Modules == null || input.Reopened_Modules.size() == 0)
+										{
+											alert "Select at least one reopened module when revision is requested.";
+											cancel submit;
+										}
+										if(input.Status == "Completed")
+										{
+											input.Finance_Completed = true;
+											if(input.Completion_Date == null)
+											{
+												input.Completion_Date = zoho.currentdate;
+											}
+										}
+						)
+					}
+				}
+
+			
+}

@@ -1,0 +1,53 @@
+WF_Sales_Approve_Plan as "Approve Sales Plan"
+{
+
+				type =  functions
+				form = Sales_Plans
+				execution type = for each record	
+				on start
+				{
+					actions 
+					{
+					on click
+					(
+						oldStatus = input.Status;
+										if(oldStatus == "Submitted to Sales Management")
+										{
+											input.Status = "Sales Approved";
+											input.Sales_Approved_By = zoho.loginuserid;
+											input.Sales_Approved_On = zoho.currenttime;
+											input.Approver_Action = null;
+											auditId = insert into Approval_Audit_Log
+											[
+												Budget_Cycle=input.Budget_Cycle
+												Module_Name="Sales Plans"
+												Related_Record_ID=input.ID
+												Related_Record_Display="Sales Plan " + input.Sales_Plan_No
+												Action="Approved"
+												From_Status=oldStatus
+												To_Status="Sales Approved"
+												Iteration_Number=input.Iteration_Count
+												Actor_Email=zoho.loginuserid
+												Action_On=zoho.currenttime
+												Remarks="Approved from report action."
+												Added_User=zoho.loginuser
+											];
+											cycleRec = Budget_Cycles[ID == input.Budget_Cycle];
+											if(cycleRec.count() > 0)
+											{
+												cycleRec.Sales_Approved=true;
+												if(cycleRec.Operations_Approved == true)
+												{
+													cycleRec.Status="Pending SCM";
+												}
+												else
+												{
+													cycleRec.Status="Pending Operations";
+												}
+											}
+										}
+					)
+					}
+				}
+			
+}

@@ -1,0 +1,69 @@
+kanban Consumables_Status_Board
+{
+
+			displayName = "Consumables Status Board"
+			show all rows from Consumables_Budgets    
+			(
+				Consumables_Budget_No
+				Budget_Cycle
+				Plant
+				Production_Line
+				Consumable
+				Applied_Norm
+				Total_Consumable_Cost
+				Status
+				Owner_Email
+				Iteration_Count
+				Locked
+				custom action "Submit Consumables"
+				(
+	  			workflow = WF_Consumables_Submit
+				column header = "Submit Consumables"
+				success message = "Consumables budget submitted."
+				condition = (Status == "Draft" || Status == "Returned by Plant Manager" || Status == "Returned by Finance" || Status == "Reopened")
+				)
+				custom action "Approve Consumables"
+				(
+	  			workflow = WF_Consumables_Approve
+				column header = "Approve Consumables"
+				success message = "Consumables budget approved or moved forward."
+				condition = (Status == "Submitted to Plant Manager" || Status == "Submitted to Finance")
+				)
+				custom action "Return Consumables"
+				(
+	  			workflow = WF_Consumables_Return
+				column header = "Return Consumables"
+				success message = "Consumables budget returned."
+				condition = (Status == "Submitted to Plant Manager" || Status == "Submitted to Finance")
+				)
+				custom action "Lock Consumables"
+				(
+	  			workflow = WF_Consumables_Lock
+				column header = "Lock Consumables"
+				success message = "Consumables budget locked."
+				condition = (Status == "Submitted to Finance" || Status == "Approved" && Locked == false)
+				)
+			)
+			filters
+			(
+				Budget_Cycle
+				Plant
+				Production_Line
+				Consumable
+				Status
+				Owner_Email
+				Locked
+			)
+			sort by
+			(
+				Consumables_Budget_No descending
+			)
+			options
+			(
+	 			display field = Status
+	 			emptycolumn = "No Status"
+				sort order  = ascending
+				record count  = enable
+	 		)
+		
+}

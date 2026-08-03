@@ -1,0 +1,56 @@
+Budget_Cycles_On_Load as "Budget Cycles On Load"
+{
+
+				type =  form
+				form = Budget_Cycles
+
+				record event = on add or edit
+
+				on load
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											isFinance = thisapp.permissions.isUserInProfile("Finance_Costing");
+										isAdmin = thisapp.permissions.isUserInProfile("System_Administrator");
+										if(input.Owner_Email == null)
+										{
+											input.Owner_Email = zoho.loginuserid;
+										}
+										hide Flow_Status;
+										hide Reopened_Modules;
+										hide Owner_Email;
+										disable Owner_Email;
+										disable Sales_Approved;
+										disable Operations_Approved;
+										disable SCM_Approved;
+										disable Finance_Completed;
+										if(input.ID != null)
+										{
+											show Flow_Status;
+											show Owner_Email;
+										}
+										if(input.Status == "Revision Requested")
+										{
+											show Reopened_Modules;
+											enable Reopened_Modules;
+										}
+										if(!(isFinance || isAdmin))
+										{
+											disable Baseline_Locked;
+											disable Approved_Scenario;
+										}
+										if(input.Status == "Completed" || input.Status == "Closed" || input.Baseline_Locked == true)
+										{
+											disable Status;
+											disable Reopened_Modules;
+											disable Baseline_Locked;
+											disable Approved_Scenario;
+										}
+						)
+					}
+				}
+
+			
+}

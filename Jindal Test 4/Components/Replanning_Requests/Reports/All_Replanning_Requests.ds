@@ -1,0 +1,69 @@
+default list All_Replanning_Requests
+{
+
+			displayName = "All Replanning Requests"
+			show all rows from Replanning_Requests    
+			(
+				Replan_No
+				Parent_Budget_Cycle
+				New_Revision_Cycle
+				Requested_Financial_Year
+				Trigger_Reason
+				Affected_Modules
+				Source_Module
+				Source_Record_ID
+				New_Revision_Record_ID
+				Requested_By_Email
+				Request_Date
+				Status
+				custom action "Submit Replanning Request"
+				(
+	  			workflow = WF_Replanning_Submit
+				column header = "Submit Replanning Request"
+				success message = "Replanning request submitted."
+				condition = (Status == "Draft")
+				)
+				custom action "Finance Approve"
+				(
+	  			workflow = WF_Replanning_Finance_Approve
+				column header = "Finance Approve"
+				success message = "Replanning request finance approved."
+				condition = (Status == "Submitted to Finance")
+				)
+				custom action "Reject Request"
+				(
+	  			workflow = WF_Replanning_Reject
+				column header = "Reject Request"
+				success message = "Replanning request rejected."
+				condition = (Status == "Submitted to Finance" || Status == "Finance Approved" || Status == "Draft")
+				)
+				custom action "Mark Revision Created"
+				(
+	  			workflow = WF_Replanning_Mark_Revision_Created
+				column header = "Mark Revision Created"
+				success message = "Revision marked created."
+				condition = (Status == "Finance Approved" || Status == "In Team Revision" || Status == "Submitted to Finance")
+				)
+				custom action "Close Request"
+				(
+	  			workflow = WF_Replanning_Close
+				column header = "Close Request"
+				success message = "Replanning request closed."
+				condition = (Status == "Revision Created" || Status == "Resubmitted to SCM" || Status == "Finance Approved")
+				)
+			)
+			filters
+			(
+				Parent_Budget_Cycle
+				Requested_Financial_Year
+				Source_Module
+				Status
+				Requested_By_Email
+				Request_Date
+			)
+			sort by
+			(
+				Request_Date descending
+			)
+		
+}

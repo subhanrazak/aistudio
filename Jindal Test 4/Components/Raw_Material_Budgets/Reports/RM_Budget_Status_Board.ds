@@ -1,0 +1,71 @@
+kanban RM_Budget_Status_Board
+{
+
+			displayName = "RM Budget Status Board"
+			show all rows from Raw_Material_Budgets    
+			(
+				RM_Budget_No
+				Requested_Financial_Year
+				Budget_Cycle
+				Plant
+				Material
+				Budget_Price
+				Annual_Requirement_MT
+				Available_Raw_Material_Total_MT
+				To_Be_Raised_Total_MT
+				Cost_Forecast_Total
+				Status
+				Owner_Email
+				Locked
+				custom action "Submit RM Budget"
+				(
+	  			workflow = WF_RM_Submit
+				column header = "Submit RM Budget"
+				success message = "RM budget submitted."
+				condition = (Status == "Draft" || Status == "Returned by Sourcing Manager" || Status == "Returned by Finance" || Status == "Reopened")
+				)
+				custom action "Approve RM Budget"
+				(
+	  			workflow = WF_RM_Approve
+				column header = "Approve RM Budget"
+				success message = "RM budget approved or moved forward."
+				condition = (Status == "Submitted to Sourcing Manager" || Status == "Submitted to Finance")
+				)
+				custom action "Return RM Budget"
+				(
+	  			workflow = WF_RM_Return
+				column header = "Return RM Budget"
+				success message = "RM budget returned."
+				condition = (Status == "Submitted to Sourcing Manager" || Status == "Submitted to Finance")
+				)
+				custom action "Lock RM Budget"
+				(
+	  			workflow = WF_RM_Lock
+				column header = "Lock RM Budget"
+				success message = "RM budget locked."
+				condition = (Status == "Submitted to Finance" || Status == "Approved" && Locked == false)
+				)
+			)
+			filters
+			(
+				Requested_Financial_Year
+				Budget_Cycle
+				Plant
+				Material
+				Status
+				Owner_Email
+				Locked
+			)
+			sort by
+			(
+				RM_Budget_No descending
+			)
+			options
+			(
+	 			display field = Status
+	 			emptycolumn = "No Status"
+				sort order  = ascending
+				record count  = enable
+	 		)
+		
+}

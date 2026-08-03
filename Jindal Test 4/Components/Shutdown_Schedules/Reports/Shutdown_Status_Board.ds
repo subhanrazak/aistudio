@@ -1,0 +1,58 @@
+kanban Shutdown_Status_Board
+{
+
+			displayName = "Shutdown Status Board"
+			show all rows from Shutdown_Schedules    
+			(
+				Shutdown_No
+				Budget_Cycle
+				Plant
+				Production_Line
+				Shutdown_Type
+				Annual_Shutdown_Days
+				Status
+				Owner_Email
+				custom action "Submit Shutdown"
+				(
+	  			workflow = WF_Shutdown_Submit
+				column header = "Submit Shutdown"
+				success message = "Shutdown schedule submitted."
+				condition = (Status == "Draft" || Status == "Reopened")
+				)
+				custom action "Mark Available to Capacity"
+				(
+	  			workflow = WF_Shutdown_Approve
+				column header = "Mark Available to Capacity"
+				success message = "Shutdown schedule made available to capacity."
+				condition = (Status == "Submitted")
+				)
+				custom action "Lock Shutdown"
+				(
+	  			workflow = WF_Shutdown_Lock
+				column header = "Lock Shutdown"
+				success message = "Shutdown schedule locked."
+				condition = (Status == "Available to Capacity")
+				)
+			)
+			filters
+			(
+				Budget_Cycle
+				Plant
+				Production_Line
+				Shutdown_Type
+				Status
+			)
+			sort by
+			(
+				Budget_Cycle descending
+				Production_Line ascending
+			)
+			options
+			(
+	 			display field = Status
+	 			emptycolumn = "No Status"
+				sort order  = ascending
+				record count  = enable
+	 		)
+		
+}

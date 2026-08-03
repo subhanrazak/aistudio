@@ -1,0 +1,174 @@
+<%
+	loginName = zoho.loginuser;
+	loginEmail = zoho.loginuserid;
+	profileText = "Plant Operations";
+	if(thisapp.permissions.isUserInProfile("System_Administrator"))
+	{
+		profileText = "System Administrator";
+	}
+	myConsumables = Consumables_Budgets[Owner_Email == loginEmail || Owner_Email == loginName && Status == "Draft" || Status == "Returned by Plant Manager" || Status == "Returned by Finance" || Status == "Reopened" && Status != "Approved" && Status != "Locked" && Status != "Completed" && Locked != true].count();
+	plantApproval = Consumables_Budgets[Status == "Submitted to Plant Manager" && Status != "Completed" && Locked != true].count();
+	financeApproval = Consumables_Budgets[Status == "Submitted to Finance" && Status != "Completed" && Locked != true].count();
+	approvedLocked = Consumables_Budgets[Status == "Approved" || Status == "Locked" || Locked == true && Status != "Completed"].count();
+	consumables = Consumables[Active == true].count();
+	openWork = myConsumables + plantApproval + financeApproval;
+	%>
+<style>
+:root{--zcs-theme-brand-color:var(--zcs_brand_color);--zcs-light-bg-color:var(--zcs_brand_light_color);--zcs-page-bg-color:#F3F3F4;--zcs-primary-text-color:var(--zcs_primary_text_color);--zcs-secondary-text-color:var(--zcs_secondary_text_color);--zcs-teritiary-text-color:var(--zcs_tertiary_text_color);--zcs-border-color:var(--zcs_tertiary_border_color);--zcs-white-color:#FFFFFF;--zcs-primary-btn-color:var(--zcs_brand_color);--zcs-primary-btn-text-color:var(--zcs_brand_foreground_color);font-size:16px;line-height:1.5}.zcs-row{display:flex;flex-wrap:wrap}.zcs-flex{display:flex}.zcs-inline-flex{display:inline-flex}.zcs-direction-column{flex-direction:column}.zcs-align-items-center{align-items:center}.zcs-align-items-start{align-items:flex-start}.zcs-justify-center{justify-content:center}.zcs-justify-space-between{justify-content:space-between}.zcs-col-common{flex:1 1 0}.zcs-col-3{flex:0 0 calc(25% - 12px);max-width:calc(25% - 12px)}.zcs-col-5{flex:0 0 calc(41.666% - 10px);max-width:calc(41.666% - 10px)}.zcs-col-7{flex:0 0 calc(58.333% - 8px);max-width:calc(58.333% - 8px)}.zcs-gap-4{gap:.25rem}.zcs-gap-6{gap:.375rem}.zcs-gap-8{gap:.5rem}.zcs-gap-10{gap:.625rem}.zcs-gap-12{gap:.75rem}.zcs-gap-16{gap:1rem}.zcs-gap-20{gap:1.25rem}.zcs-p-0{padding:0}.zcs-p-8{padding:.5rem}.zcs-p-10{padding:.625rem}.zcs-p-12{padding:.75rem}.zcs-p-16{padding:1rem}.zcs-p-20{padding:1.25rem}.zcs-px-10{padding-left:.625rem;padding-right:.625rem}.zcs-px-12{padding-left:.75rem;padding-right:.75rem}.zcs-px-16{padding-left:1rem;padding-right:1rem}.zcs-px-20{padding-left:1.25rem;padding-right:1.25rem}.zcs-px-30{padding-left:1.875rem;padding-right:1.875rem}.zcs-py-2{padding-top:.125rem;padding-bottom:.125rem}.zcs-py-4{padding-top:.25rem;padding-bottom:.25rem}.zcs-py-8{padding-top:.5rem;padding-bottom:.5rem}.zcs-py-10{padding-top:.625rem;padding-bottom:.625rem}.zcs-py-16{padding-top:1rem;padding-bottom:1rem}.zcs-py-24{padding-top:1.5rem;padding-bottom:1.5rem}.zcs-m-0{margin:0}.zcs-mt-8{margin-top:.5rem}.zcs-mt-12{margin-top:.75rem}.zcs-w-full{width:100%}.zcs-font-11{font-size:.6875rem}.zcs-font-12{font-size:.75rem}.zcs-font-13{font-size:.8125rem}.zcs-font-14{font-size:.875rem}.zcs-font-15{font-size:.9375rem}.zcs-font-16{font-size:1rem}.zcs-font-18{font-size:1.125rem}.zcs-font-20{font-size:1.25rem}.zcs-font-22{font-size:1.375rem}.zcs-font-28{font-size:1.75rem}.zcs-font-30{font-size:1.875rem}.zcs-font-normal{font-weight:400}.zcs-font-medium{font-weight:500}.zcs-font-semibold{font-weight:600}.zcs-font-bold{font-weight:700}.zcs-uppercase{text-transform:uppercase}.zcs-lh-body{line-height:1.5}.zcs-lh-heading{line-height:1.25}.zcs-color-primary{color:var(--zcs-primary-text-color)}.zcs-color-secondary{color:var(--zcs-secondary-text-color)}.zcs-color-tertiary{color:var(--zcs-teritiary-text-color)}.zcs-color-theme{color:var(--zcs-theme-brand-color)}.zcs-color-white{color:var(--zcs-white-color)}.zcs-rounded-sm{border-radius:.25rem}.zcs-rounded-md{border-radius:.375rem}.zcs-rounded-lg{border-radius:.5rem}.zcs-rounded-xl{border-radius:.75rem}.zcs-box-border{box-sizing:border-box}.zcs-cursor-pointer{cursor:pointer}.zcs-no-shrink{flex-shrink:0}.zcs-ellipsis{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.zcs-card{background-color:var(--zcs-white-color);border:1px solid var(--zcs-border-color);border-radius:12px}a{text-decoration:none}.zcs-page-header{background:linear-gradient(135deg,var(--zcs_brand_color),var(--zcs_brand_dark_color,#1c3d5a));border:0;border-radius:16px}.zcs-button{width:auto;min-width:5rem;min-height:36px}.zcs-primary-button{background-color:var(--zcs_brand_color);color:var(--zcs_brand_foreground_color)}.zcs-primary-outline-button{border:1px solid var(--zcs_brand_color);background-color:var(--zcs-white-color);color:var(--zcs_brand_color)}.zcs-primary-button.zcs-button:hover{background-color:var(--zcs_brand_dark_color)}.zcs-primary-outline-button:hover{background-color:var(--zcs_component_hover_color);border-color:var(--zcs_brand_color);color:var(--zcs_brand_color)}.zcs-button-icon{width:16px;max-height:16px}.zcs-badge{width:auto}.zcs-badge-filled-outline{border:1px solid}.zcs-badge-filled-outline.zcs-badge-theme{background-color:rgba(255,255,255,.15);border-color:rgba(255,255,255,.42);color:var(--zcs-white-color)}.zcs-badge-filled-outline.zcs-badge-blue{background-color:#E8EFFF;border-color:#2A6FFC;color:#2A6FFC}.zcs-badge-filled-outline.zcs-badge-green{background-color:#E4FCF3;border-color:#179E6C;color:#179E6C}.zcs-badge-filled-outline.zcs-badge-yellow{background-color:#FCF4E6;border-color:#FAAE13;color:#9B6400}.zcs-badge-filled-outline.zcs-badge-grey{background-color:#F1F2F4;border-color:#D7DCE2;color:#525967}.zcs-quick-action-item{list-style-type:none}.zcs-quick-action-item.zcs-card:hover{border-color:var(--zcs_brand_color)}.zcs-quick-action-item:hover .zcs-quick-action-link{color:var(--zcs_brand_color)}.zcs-labelvalue-wrapper .zcs-labelvalue-color-green{color:#179e6c}.zcs-labelvalue-wrapper .zcs-labelvalue-color-blue{color:#2a6ffc}.zcs-labelvalue-wrapper .zcs-labelvalue-color-orange{color:#F4660C}.zcs-labelvalue-wrapper .zcs-labelvalue-color-yellow{color:#9B6400}.pl-ops-shell{background:var(--zcs-page-bg-color);padding:20px;box-sizing:border-box;min-height:100%;color:var(--zcs-primary-text-color)}.pl-ops-hero{box-shadow:0 14px 28px rgba(20,29,51,.12);overflow:hidden;position:relative}.pl-ops-hero:after{content:"";position:absolute;right:-54px;top:-72px;width:210px;height:210px;border:34px solid rgba(255,255,255,.12);border-radius:50%;pointer-events:none}.pl-ops-hero-title{color:var(--zcs_brand_foreground_color);font-size:28px}.pl-ops-hero-copy{max-width:760px;color:var(--zcs_brand_foreground_color);opacity:.9}.pl-ops-eyebrow{letter-spacing:.08em;color:var(--zcs_brand_foreground_color);opacity:.78}.pl-ops-hero .zcs-primary-button{background:var(--zcs-white-color);color:var(--zcs_brand_color)}.pl-ops-kpi-grid{margin-top:16px}.pl-ops-kpi{min-height:158px;color:inherit;transition:border-color .15s ease,transform .15s ease,box-shadow .15s ease}.pl-ops-kpi:hover{border-color:var(--zcs_brand_color);transform:translateY(-1px);box-shadow:0 10px 22px rgba(20,29,51,.08)}.pl-ops-kpi-top{min-height:34px}.pl-ops-icon{width:38px;height:38px;border-radius:12px;background:var(--zcs_component_hover_color);color:var(--zcs_brand_color);font-size:18px}.pl-ops-kpi-value{font-size:34px;line-height:1;color:var(--zcs-primary-text-color)}.pl-ops-kpi-note{min-height:40px}.pl-ops-content{margin-top:16px}.pl-ops-panel{min-height:100%}.pl-ops-section-head{margin-bottom:14px}.pl-ops-action-list{list-style:none}.pl-ops-action-card{border-radius:12px;transition:border-color .15s ease,background-color .15s ease}.pl-ops-action-card.is-primary{background:linear-gradient(0deg,var(--zcs_component_hover_color),var(--zcs-white-color))}.pl-ops-action-link{color:inherit;width:100%}.pl-ops-action-title{display:block;color:var(--zcs-primary-text-color)}.pl-ops-action-meta{display:block;color:var(--zcs-secondary-text-color);margin-top:2px}.pl-ops-action-count{min-width:48px;text-align:center;border-radius:999px;background:var(--zcs_component_hover_color);color:var(--zcs_brand_color);padding:6px 10px}.pl-ops-arrow{color:var(--zcs-teritiary-text-color)}.pl-ops-insight-list{list-style:none}.pl-ops-insight-item{border-top:1px solid var(--zcs-border-color)}.pl-ops-insight-item:first-child{border-top:0}.pl-ops-insight-link{color:var(--zcs_brand_color);font-weight:600}.pl-ops-footer-links{border-top:1px solid var(--zcs-border-color);margin-top:14px;padding-top:14px}.pl-ops-footer-links a{color:var(--zcs_brand_color)}@media(max-width:992px){.zcs-col-md-12{flex:0 0 100%;max-width:100%}.pl-ops-hero{align-items:flex-start;flex-direction:column}.pl-ops-hero-actions{width:100%;justify-content:flex-start}.zcs-col-3{flex:0 0 calc(50% - 8px);max-width:calc(50% - 8px)}}@media(max-width:576px){.pl-ops-shell{padding:12px}.zcs-col-xs-12,.zcs-col-3,.zcs-col-5,.zcs-col-7{flex:0 0 100%;max-width:100%}.pl-ops-hero{padding:18px}.pl-ops-hero-actions{flex-direction:column;align-items:stretch}.pl-ops-hero-actions .zcs-button{width:100%}.pl-ops-kpi-value{font-size:30px}.pl-ops-action-link{align-items:flex-start}.pl-ops-action-count{min-width:40px}}
+</style>
+<div class='pl-ops-shell'>
+	<div class='zcs-page-header pl-ops-hero zcs-w-full zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-16 zcs-px-30 zcs-py-24 zcs-box-border'>
+		<div class='zcs-flex zcs-direction-column zcs-gap-6 zcs-col-common'>
+			<div class='pl-ops-eyebrow zcs-font-12 zcs-font-semibold zcs-uppercase'>Consumables budget workspace</div>
+			<h2 class='pl-ops-hero-title zcs-font-bold zcs-lh-heading zcs-m-0'>Plant Operations Landing</h2>
+			<p class='pl-ops-hero-copy zcs-font-14 zcs-lh-body zcs-m-0'>Signed in as <strong><%=loginName%></strong> (<%=loginEmail%>). Create, update and review consumables budgets without mixing final records into pending queues.</p>
+		</div>
+		<div class='pl-ops-hero-actions zcs-flex zcs-align-items-center zcs-gap-12'>
+			<div class='zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-theme'>
+				<i class='zcs-badge-icon zcs-no-shrink zc-li-outline users-single-01'></i>
+				<span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'><%=profileText%></span>
+			</div>
+			<a class='zcs-button zcs-primary-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-medium zcs-lh-body' href='#Form:Consumables_Budgets?zc_LoadIn=dialog'>
+				<i class='zcs-button-icon zc-li-outline ui-1-simple-add'></i>
+				<span class='zcs-button-text'>Add Consumables Budget</span>
+			</a>
+		</div>
+	</div>
+
+	<div class='pl-ops-kpi-grid zcs-row zcs-gap-16'>
+		<a class='pl-ops-kpi zcs-card zcs-col-3 zcs-col-md-12 zcs-col-xs-12 zcs-flex zcs-direction-column zcs-justify-space-between zcs-gap-12 zcs-p-20 zcs-box-border' href='#Report:All_Consumables_Budgets?zc_LoadIn=dialog'>
+			<div class='pl-ops-kpi-top zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-8'>
+				<span class='pl-ops-icon zcs-inline-flex zcs-align-items-center zcs-justify-center'><i class='zc-li-outline business-math'></i></span>
+				<span class='zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-gap-6 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-blue'><i class='zc-li-outline ui-1-edit-72'></i><span class='zcs-font-12'>Mine</span></span>
+			</div>
+			<div>
+				<div class='zcs-font-13 zcs-font-semibold zcs-color-secondary zcs-uppercase'>My drafts, returned, reopened</div>
+				<strong class='pl-ops-kpi-value zcs-font-bold'><%=myConsumables%></strong>
+			</div>
+			<div class='pl-ops-kpi-note zcs-font-13 zcs-color-secondary'>Only my editable consumables budget rows; final and locked rows are excluded.</div>
+		</a>
+		<a class='pl-ops-kpi zcs-card zcs-col-3 zcs-col-md-12 zcs-col-xs-12 zcs-flex zcs-direction-column zcs-justify-space-between zcs-gap-12 zcs-p-20 zcs-box-border' href='#Report:Consumables_Status_Board?zc_LoadIn=dialog'>
+			<div class='pl-ops-kpi-top zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-8'>
+				<span class='pl-ops-icon zcs-inline-flex zcs-align-items-center zcs-justify-center'><i class='zc-li-outline business-progress'></i></span>
+				<span class='zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-gap-6 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-yellow'><i class='zc-li-outline loader-dots-06'></i><span class='zcs-font-12'>Queue</span></span>
+			</div>
+			<div>
+				<div class='zcs-font-13 zcs-font-semibold zcs-color-secondary zcs-uppercase'>Submitted to plant manager</div>
+				<strong class='pl-ops-kpi-value zcs-font-bold'><%=plantApproval%></strong>
+			</div>
+			<div class='pl-ops-kpi-note zcs-font-13 zcs-color-secondary'>Plant review queue using Submitted to Plant Manager only.</div>
+		</a>
+		<a class='pl-ops-kpi zcs-card zcs-col-3 zcs-col-md-12 zcs-col-xs-12 zcs-flex zcs-direction-column zcs-justify-space-between zcs-gap-12 zcs-p-20 zcs-box-border' href='#Report:Consumables_Status_Board?zc_LoadIn=dialog'>
+			<div class='pl-ops-kpi-top zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-8'>
+				<span class='pl-ops-icon zcs-inline-flex zcs-align-items-center zcs-justify-center'><i class='zc-li-outline business-hierarchy-55'></i></span>
+				<span class='zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-gap-6 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-yellow'><i class='zc-li-outline ui-2-time'></i><span class='zcs-font-12'>Queue</span></span>
+			</div>
+			<div>
+				<div class='zcs-font-13 zcs-font-semibold zcs-color-secondary zcs-uppercase'>Submitted to finance</div>
+				<strong class='pl-ops-kpi-value zcs-font-bold'><%=financeApproval%></strong>
+			</div>
+			<div class='pl-ops-kpi-note zcs-font-13 zcs-color-secondary'>Finance review queue using Submitted to Finance only.</div>
+		</a>
+		<a class='pl-ops-kpi zcs-card zcs-col-3 zcs-col-md-12 zcs-col-xs-12 zcs-flex zcs-direction-column zcs-justify-space-between zcs-gap-12 zcs-p-20 zcs-box-border' href='#Report:Approved_Consumables_Budgets?zc_LoadIn=dialog'>
+			<div class='pl-ops-kpi-top zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-8'>
+				<span class='pl-ops-icon zcs-inline-flex zcs-align-items-center zcs-justify-center'><i class='zc-li-outline files-archive-check'></i></span>
+				<span class='zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-gap-6 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-green'><i class='zc-li-outline ui-1-check-circle-08'></i><span class='zcs-font-12'>Final</span></span>
+			</div>
+			<div>
+				<div class='zcs-font-13 zcs-font-semibold zcs-color-secondary zcs-uppercase'>Approved or locked</div>
+				<strong class='pl-ops-kpi-value zcs-font-bold'><%=approvedLocked%></strong>
+			</div>
+			<div class='pl-ops-kpi-note zcs-font-13 zcs-color-secondary'>Final consumables budgets shown separately from pending work.</div>
+		</a>
+	</div>
+
+	<div class='pl-ops-content zcs-row zcs-gap-16'>
+		<section class='zcs-quick-actions-wrapper pl-ops-panel zcs-card zcs-col-7 zcs-col-md-12 zcs-col-xs-12 zcs-flex zcs-direction-column zcs-gap-16 zcs-p-20 zcs-box-border'>
+			<div class='pl-ops-section-head zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12'>
+				<div>
+					<h3 class='zcs-font-18 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0'>Pending actions</h3>
+					<p class='zcs-font-13 zcs-color-secondary zcs-m-0 zcs-mt-8'>Action cards only count non-final statuses. Approved, locked and completed records stay out of these queues.</p>
+				</div>
+				<span class='zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-gap-6 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-grey'><i class='zc-li-outline design-todo'></i><span class='zcs-font-12'><%=openWork%> open</span></span>
+			</div>
+			<ul class='pl-ops-action-list zcs-flex zcs-direction-column zcs-gap-12 zcs-p-0 zcs-m-0'>
+				<li class='zcs-quick-action-item pl-ops-action-card is-primary zcs-card zcs-px-16 zcs-py-16 zcs-box-border'>
+					<a class='zcs-quick-action-link pl-ops-action-link zcs-flex zcs-align-items-center zcs-gap-12 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary zcs-cursor-pointer' href='#Form:Consumables_Budgets?zc_LoadIn=dialog'>
+						<span class='pl-ops-icon zcs-inline-flex zcs-align-items-center zcs-justify-center'><i class='zc-li-outline ui-1-simple-add'></i></span>
+						<span class='zcs-col-common'><strong class='pl-ops-action-title zcs-font-16 zcs-font-semibold'>Add Consumables Budget</strong><span class='pl-ops-action-meta zcs-font-13'>Create a consumables budget draft for a plant, line and consumable.</span></span>
+						<span class='pl-ops-action-count zcs-font-13 zcs-font-semibold'>New</span>
+						<i class='pl-ops-arrow zc-li-outline arrows-1-tail-right'></i>
+					</a>
+				</li>
+				<li class='zcs-quick-action-item pl-ops-action-card zcs-card zcs-px-16 zcs-py-16 zcs-box-border'>
+					<a class='zcs-quick-action-link pl-ops-action-link zcs-flex zcs-align-items-center zcs-gap-12 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary zcs-cursor-pointer' href='#Report:All_Consumables_Budgets?zc_LoadIn=dialog'>
+						<span class='pl-ops-icon zcs-inline-flex zcs-align-items-center zcs-justify-center'><i class='zc-li-outline ui-1-edit-72'></i></span>
+						<span class='zcs-col-common'><strong class='pl-ops-action-title zcs-font-16 zcs-font-semibold'>Update My Budgets</strong><span class='pl-ops-action-meta zcs-font-13'>Continue my draft, returned or reopened consumables budget rows.</span></span>
+						<span class='pl-ops-action-count zcs-font-16 zcs-font-bold'><%=myConsumables%></span>
+						<i class='pl-ops-arrow zc-li-outline arrows-1-tail-right'></i>
+					</a>
+				</li>
+				<li class='zcs-quick-action-item pl-ops-action-card zcs-card zcs-px-16 zcs-py-16 zcs-box-border'>
+					<a class='zcs-quick-action-link pl-ops-action-link zcs-flex zcs-align-items-center zcs-gap-12 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary zcs-cursor-pointer' href='#Report:Consumables_Status_Board?zc_LoadIn=dialog'>
+						<span class='pl-ops-icon zcs-inline-flex zcs-align-items-center zcs-justify-center'><i class='zc-li-outline business-progress'></i></span>
+						<span class='zcs-col-common'><strong class='pl-ops-action-title zcs-font-16 zcs-font-semibold'>Plant Approval</strong><span class='pl-ops-action-meta zcs-font-13'>Review rows submitted to plant manager; locked and final rows are excluded.</span></span>
+						<span class='pl-ops-action-count zcs-font-16 zcs-font-bold'><%=plantApproval%></span>
+						<i class='pl-ops-arrow zc-li-outline arrows-1-tail-right'></i>
+					</a>
+				</li>
+				<li class='zcs-quick-action-item pl-ops-action-card zcs-card zcs-px-16 zcs-py-16 zcs-box-border'>
+					<a class='zcs-quick-action-link pl-ops-action-link zcs-flex zcs-align-items-center zcs-gap-12 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary zcs-cursor-pointer' href='#Report:Consumables_Status_Board?zc_LoadIn=dialog'>
+						<span class='pl-ops-icon zcs-inline-flex zcs-align-items-center zcs-justify-center'><i class='zc-li-outline business-hierarchy-55'></i></span>
+						<span class='zcs-col-common'><strong class='pl-ops-action-title zcs-font-16 zcs-font-semibold'>Finance Review</strong><span class='pl-ops-action-meta zcs-font-13'>Review rows submitted to finance; final and locked records stay separate.</span></span>
+						<span class='pl-ops-action-count zcs-font-16 zcs-font-bold'><%=financeApproval%></span>
+						<i class='pl-ops-arrow zc-li-outline arrows-1-tail-right'></i>
+					</a>
+				</li>
+			</ul>
+		</section>
+
+		<section class='zcs-labelvalue-wrapper pl-ops-panel zcs-card zcs-col-5 zcs-col-md-12 zcs-col-xs-12 zcs-flex zcs-direction-column zcs-gap-16 zcs-p-20 zcs-box-border'>
+			<div class='pl-ops-section-head zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12'>
+				<div>
+					<h3 class='zcs-font-18 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0'>Concise insights</h3>
+					<p class='zcs-font-13 zcs-color-secondary zcs-m-0 zcs-mt-8'>Budget signals for the current consumables workflow.</p>
+				</div>
+			</div>
+			<ul class='pl-ops-insight-list zcs-flex zcs-direction-column zcs-p-0 zcs-m-0'>
+				<li class='pl-ops-insight-item zcs-flex zcs-direction-column zcs-gap-8 zcs-py-10 zcs-box-border'>
+					<label class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary'>Review split</label>
+					<div class='zcs-flex zcs-gap-8 zcs-align-items-start'>
+						<i class='zcs-lh-body zcs-labelvalue-color-yellow zc-li-outline business-progress'></i>
+						<span class='zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'><%=plantApproval%> at plant review and <%=financeApproval%> at finance review.</span>
+					</div>
+				</li>
+				<li class='pl-ops-insight-item zcs-flex zcs-direction-column zcs-gap-8 zcs-py-10 zcs-box-border'>
+					<label class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary'>My editable work</label>
+					<div class='zcs-flex zcs-gap-8 zcs-align-items-start'>
+						<i class='zcs-lh-body zcs-labelvalue-color-blue zc-li-outline ui-1-edit-72'></i>
+						<span class='zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'><%=myConsumables%> records are draft, returned or reopened for this user.</span>
+					</div>
+				</li>
+				<li class='pl-ops-insight-item zcs-flex zcs-direction-column zcs-gap-8 zcs-py-10 zcs-box-border'>
+					<label class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary'>Consumables master data</label>
+					<div class='zcs-flex zcs-gap-8 zcs-align-items-start'>
+						<i class='zcs-lh-body zcs-labelvalue-color-green zc-li-outline business-stock'></i>
+						<span class='zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'><a class='pl-ops-insight-link' href='#Report:Active_Consumables?zc_LoadIn=dialog'><%=consumables%> active consumables</a> are available to support budget entry.</span>
+					</div>
+				</li>
+				<li class='pl-ops-insight-item zcs-flex zcs-direction-column zcs-gap-8 zcs-py-10 zcs-box-border'>
+					<label class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary'>Final archive</label>
+					<div class='zcs-flex zcs-gap-8 zcs-align-items-start'>
+						<i class='zcs-lh-body zcs-labelvalue-color-green zc-li-outline files-archive-check'></i>
+						<span class='zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'><a class='pl-ops-insight-link' href='#Report:Approved_Consumables_Budgets?zc_LoadIn=dialog'><%=approvedLocked%> approved or locked budgets</a> are excluded from pending work.</span>
+					</div>
+				</li>
+			</ul>
+			<div class='pl-ops-footer-links zcs-flex zcs-gap-12 zcs-row-wrap zcs-font-13'>
+				<a class='zcs-inline-flex zcs-align-items-center zcs-gap-6' href='#Report:All_Consumables_Budgets?zc_LoadIn=dialog'><i class='zc-li-outline files-chart-pie'></i>All budgets</a>
+				<a class='zcs-inline-flex zcs-align-items-center zcs-gap-6' href='#Report:Consumables_Status_Board?zc_LoadIn=dialog'><i class='zc-li-outline business-progress'></i>Status board</a>
+				<a class='zcs-inline-flex zcs-align-items-center zcs-gap-6' href='#Report:Active_Consumables?zc_LoadIn=dialog'><i class='zc-li-outline business-stock'></i>Active consumables</a>
+			</div>
+		</section>
+	</div>
+</div>

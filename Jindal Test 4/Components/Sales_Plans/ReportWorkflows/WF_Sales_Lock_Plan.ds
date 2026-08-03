@@ -1,0 +1,39 @@
+WF_Sales_Lock_Plan as "Lock Sales Plan"
+{
+
+				type =  functions
+				form = Sales_Plans
+				execution type = for each record	
+				on start
+				{
+					actions 
+					{
+					on click
+					(
+						oldStatus = input.Status;
+										if(oldStatus == "Sales Approved" && input.Locked != true)
+										{
+											input.Status = "Locked";
+											input.Locked = true;
+											input.Approver_Action = null;
+											auditId = insert into Approval_Audit_Log
+											[
+												Budget_Cycle=input.Budget_Cycle
+												Module_Name="Sales Plans"
+												Related_Record_ID=input.ID
+												Related_Record_Display="Sales Plan " + input.Sales_Plan_No
+												Action="Locked"
+												From_Status=oldStatus
+												To_Status="Locked"
+												Iteration_Number=input.Iteration_Count
+												Actor_Email=zoho.loginuserid
+												Action_On=zoho.currenttime
+												Remarks="Locked from report action."
+												Added_User=zoho.loginuser
+											];
+										}
+					)
+					}
+				}
+			
+}

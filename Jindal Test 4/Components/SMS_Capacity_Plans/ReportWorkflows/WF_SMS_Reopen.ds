@@ -1,0 +1,39 @@
+WF_SMS_Reopen as "Reopen SMS"
+{
+
+				type =  functions
+				form = SMS_Capacity_Plans
+				execution type = for each record	
+				on start
+				{
+					actions 
+					{
+					on click
+					(
+						oldStatus = input.Status;
+										if(oldStatus == "Locked")
+										{
+											input.Status = "Reopened";
+											input.Locked = false;
+											input.Approver_Action = null;
+											auditId = insert into Approval_Audit_Log
+											[
+												Budget_Cycle=input.Budget_Cycle
+												Module_Name="SMS Capacity Plan"
+												Related_Record_ID=input.ID
+												Related_Record_Display="SMS Plan " + input.ID
+												Action="Reopened"
+												From_Status=oldStatus
+												To_Status="Reopened"
+												Iteration_Number=input.Iteration_Count
+												Actor_Email=zoho.loginuserid
+												Action_On=zoho.currenttime
+												Remarks="Reopened from report action."
+												Added_User=zoho.loginuser
+											];
+										}
+					)
+					}
+				}
+			
+}

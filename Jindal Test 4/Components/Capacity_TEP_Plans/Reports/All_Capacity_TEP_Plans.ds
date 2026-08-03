@@ -1,0 +1,72 @@
+default list All_Capacity_TEP_Plans
+{
+
+			displayName = "All Operations Availability Plans"
+			show all rows from Capacity_TEP_Plans    
+			(
+				Capacity_No
+				Requested_Financial_Year
+				Budget_Cycle
+				Plant
+				Production_Line
+				Revision_No
+				Annual_Calendar_Hours
+				Annual_Available_Hours
+				Annual_Net_Running_Hours
+				Average_Equipment_Availability_Percent
+				Average_Equipment_Utilization_Percent
+				Status
+				Iteration_Count
+				Locked
+				Owner_Email
+				custom action "Submit Availability"
+				(
+	  			workflow = WF_Capacity_Submit_Availability
+				column header = "Submit Availability"
+				success message = "Availability plan submitted."
+				condition = (Status == "Draft" || Status == "Returned by Operations Approval" || Status == "Revision Requested by SCM" || Status == "Revised Draft")
+				)
+				custom action "Approve Availability"
+				(
+	  			workflow = WF_Capacity_Approve_Availability
+				column header = "Approve Availability"
+				success message = "Availability plan approved."
+				condition = (Status == "Submitted to Operations Approval")
+				)
+				custom action "Return Availability"
+				(
+	  			workflow = WF_Capacity_Return_Availability
+				column header = "Return Availability"
+				success message = "Availability plan returned."
+				condition = (Status == "Submitted to Operations Approval")
+				)
+				custom action "Create Revision Copy"
+				(
+	  			workflow = WF_Capacity_Create_Revision_Copy
+				column header = "Create Revision Copy"
+				success message = "Availability plan moved to revised draft."
+				condition = (Status == "Revision Requested by SCM" || Status == "Returned by Operations Approval")
+				)
+				custom action "Lock Availability"
+				(
+	  			workflow = WF_Capacity_Lock_Availability
+				column header = "Lock Availability"
+				success message = "Availability plan locked."
+				condition = (Status == "Operations Approved" && Locked == false)
+				)
+			)
+			filters
+			(
+				Requested_Financial_Year
+				Budget_Cycle
+				Plant
+				Production_Line
+				Status
+				Locked
+			)
+			sort by
+			(
+				Capacity_No descending
+			)
+		
+}

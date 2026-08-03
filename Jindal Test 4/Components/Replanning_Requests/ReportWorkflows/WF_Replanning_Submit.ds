@@ -1,0 +1,38 @@
+WF_Replanning_Submit as "Submit Replanning Request"
+{
+
+				type =  functions
+				form = Replanning_Requests
+				execution type = for each record	
+				on start
+				{
+					actions 
+					{
+					on click
+					(
+						oldStatus = input.Status;
+										if(oldStatus == "Draft")
+										{
+											input.Status = "Submitted to Finance";
+											input.Approver_Action = null;
+											auditId = insert into Approval_Audit_Log
+											[
+												Budget_Cycle=input.Parent_Budget_Cycle
+												Module_Name="Replanning Requests"
+												Related_Record_ID=input.ID
+												Related_Record_Display="Replanning Request " + input.Replan_No
+												Action="Submitted"
+												From_Status=oldStatus
+												To_Status="Submitted to Finance"
+												Iteration_Number=0
+												Actor_Email=zoho.loginuserid
+												Action_On=zoho.currenttime
+												Remarks="Submitted from report action."
+												Added_User=zoho.loginuser
+											];
+										}
+					)
+					}
+				}
+			
+}

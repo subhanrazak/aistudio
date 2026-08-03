@@ -1,0 +1,68 @@
+<%
+	scenarioCycleId = 0;
+	scenarioCycleName = "";
+	for each  cycleRec in Budget_Cycles[Status != "Completed" && Status != "Closed" && Status != "Locked" && Status != "Approved Final" && Baseline_Locked != true && Approved_Scenario != true] sort by Opened_Date desc range from 0 to 0
+	{
+		scenarioCycleId = cycleRec.ID;
+		scenarioCycleName = ifNull(cycleRec.Cycle_Name,ifNull(cycleRec.Cycle_Code,"Active cycle"));
+	}
+	scenarioComparisonUrl = "";
+	if(scenarioCycleId != 0)
+	{
+		scenarioComparisonUrl = "#Page:Scenario_Comparison_Dashboard?Budget_Cycle_ID=" + scenarioCycleId;
+	}
+	%>
+<div class='pw-shell'>
+	<div class='zcs-toast zcs-outline-toast zcs-theme-toast zcs-w-full zcs-flex zcs-gap-8 zcs-px-16 zcs-py-12 zcs-rounded-sm zcs-box-border zcs-font-14 zcs-lh-body zcs-color-primary'>
+		<i class='zcs-toast-icon zcs-no-shrink zcs-lh-body zc-li-outline travel-info'></i>
+		<div class='zcs-toast-text'>
+			<p class='zcs-m-0'>This workbench does not use report custom-action workflows. Users act by opening the record, selecting <strong>Approver Action</strong>, entering <strong>Approval Remarks</strong> where required and saving. Form workflows validate the profile, delegation and current status before routing the record.</p>
+		</div>
+	</div>
+	<div class='pw-guidance-grid zcs-py-16'>
+		<div class='zcs-card zcs-p-20 zcs-box-border zcs-flex zcs-direction-column zcs-gap-16'>
+			<h3 class='zcs-font-20 zcs-font-semibold zcs-color-primary zcs-m-0'>Status and action pattern</h3>
+			<div class='pw-step'><h5 class='zcs-font-16 zcs-font-medium zcs-m-0'>1. Find the queue</h5><p class='zcs-font-14 zcs-color-secondary zcs-m-0'>Department cards and embedded reports show records where your profile can enter, approve, return, reopen or lock records.</p></div>
+			<div class='pw-step'><h5 class='zcs-font-16 zcs-font-medium zcs-m-0'>2. Compare scenarios before decisions</h5><p class='zcs-font-14 zcs-color-secondary zcs-m-0'>When a management decision is expected, use the Scenario Comparison Dashboard and Scenario Financial Summary links. These are navigation only and do not change record status.</p><div class='zcs-flex zcs-gap-8 zcs-row-wrap zcs-mt-16'>
+<%
+	if(scenarioCycleId != 0)
+	{
+		%>
+<a class='zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14' href='<%=scenarioComparisonUrl%>'><i class='zc-li-outline business-chart-pie-36'></i>Scenario dashboard</a>
+<%
+	}
+	else
+	{
+		%>
+<span class='zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14' style='opacity:.65;cursor:not-allowed;'><i class='zc-li-outline ui-1-circle-remove'></i>No active cycle</span>
+<%
+	}
+	%>
+<a class='zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14' href='#Report:Scenario_Financial_Summary?zc_LoadIn=dialog'><i class='zc-li-outline business-signature'></i>Financial summary</a></div></div>
+			<div class='pw-step'><h5 class='zcs-font-16 zcs-font-medium zcs-m-0'>3. Edit the record</h5><p class='zcs-font-14 zcs-color-secondary zcs-m-0'>Open the report row or module form. The form on-load workflow enables only the relevant planning and action fields for the current status.</p></div>
+			<div class='pw-step'><h5 class='zcs-font-16 zcs-font-medium zcs-m-0'>4. Save to route</h5><p class='zcs-font-14 zcs-color-secondary zcs-m-0'>The on-validate and on-success workflows route the status, increment iterations on returns, lock approved baselines and write audit entries.</p></div>
+		</div>
+		<div class='zcs-card zcs-p-20 zcs-box-border'>
+			<div class='zcs-notes-wrapper'>
+				<span class='zcs-notes-title zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-tertiary'>Operational rules:</span>
+				<ul class='zcs-m-0 zcs-pl-24 zcs-box-border'>
+					<li class='zcs-pt-8 zcs-px-8 zcs-pb-0 zcs-box-border'><p class='zcs-notes-text zcs-m-0 zcs-font-14 zcs-color-primary'>Use <strong>Submit</strong> from draft or returned records to move work to the next department.</p></li>
+					<li class='zcs-pt-8 zcs-px-8 zcs-pb-0 zcs-box-border'><p class='zcs-notes-text zcs-m-0 zcs-font-14 zcs-color-primary'>Use <strong>Approve</strong>, <strong>Finalise</strong> or <strong>Approve Final</strong> only when the profile owns the current approval stage.</p></li>
+					<li class='zcs-pt-8 zcs-px-8 zcs-pb-0 zcs-box-border'><p class='zcs-notes-text zcs-m-0 zcs-font-14 zcs-color-primary'>Use <strong>Return</strong> with remarks for corrections; returned records reappear in the originator's workqueue.</p></li>
+					<li class='zcs-pt-8 zcs-px-8 zcs-pb-0 zcs-box-border'><p class='zcs-notes-text zcs-m-0 zcs-font-14 zcs-color-primary'>Use <strong>Reopen</strong> or <strong>Lock</strong> only where Finance or administrators are explicitly allowed by the module workflow.</p></li>
+				</ul>
+			</div>
+			<div class='zcs-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative zcs-mt-16'>
+				<table class='zcs-w-full'>
+					<thead class='zcs-sticky'><tr><th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary'>Field</th><th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary'>Purpose</th></tr></thead>
+					<tbody>
+						<tr><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary'>Status</td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary'>Current workflow state and queue placement.</td></tr>
+						<tr><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary'>Approver Action</td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary'>User-selected transition such as Submit, Approve, Return, Reopen, Lock or Finalise.</td></tr>
+						<tr><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary'>Approval Remarks</td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary'>Mandatory explanation for returns and reopen requests.</td></tr>
+						<tr><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary'>Locked</td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary'>Prevents further planning edits after approval or baseline lock.</td></tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+</div>
