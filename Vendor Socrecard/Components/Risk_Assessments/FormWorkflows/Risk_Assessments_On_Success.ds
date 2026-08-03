@@ -1,0 +1,34 @@
+Risk_Assessments_On_Success as "Update Vendor From Risk Assessment"
+{
+    type = form
+    form = Risk_Assessments
+    record event = on add or edit
+    description = "Updates vendor risk summary and lifecycle stage."
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                totalRisk = input.Weighted_Risk_Score;
+                if(totalRisk == null)
+                {
+                    totalRisk = (input.Financial_Risk_Score + input.Compliance_Risk_Score + input.Operational_Risk_Score + input.Cyber_Risk_Score) / 4;
+                }
+                vendorRec = Vendors[ID == input.Vendor];
+                if(vendorRec.count() > 0)
+                {
+                    vendorRec.Latest_Risk_Tier = input.Risk_Tier;
+                    vendorRec.Latest_Risk_Status = input.Risk_Status;
+                    if(input.Risk_Status == "Acceptable" && vendorRec.Stage == "Evaluated")
+                    {
+                        vendorRec.Stage = "Risk Assessed";
+                        vendorRec.Vendor_Status = "Pending Review";
+                    }
+                    vendorRec.Lifecycle_Notes = ifnull(vendorRec.Lifecycle_Notes,"") + "\n" + zoho.currentdate.toString() + " - Risk score " + totalRisk + " (" + input.Risk_Tier + ") recorded by " + zoho.loginuser;
+                }
+            )
+        }
+    }
+}

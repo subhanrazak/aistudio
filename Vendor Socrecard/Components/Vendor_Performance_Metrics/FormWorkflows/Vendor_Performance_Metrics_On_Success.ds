@@ -1,0 +1,78 @@
+Vendor_Performance_Metrics_On_Success as "Update Vendor From Performance"
+{
+    type = form
+    form = Vendor_Performance_Metrics
+    record event = on add or edit
+    description = "Updates vendor latest performance score and lifecycle status."
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                score = input.Performance_Score;
+                if(score == null)
+                {
+                    score = (input.On_Time_Delivery_Percent * 0.30) + (input.Quality_Acceptance_Percent * 0.30) + (input.SLA_Compliance_Percent * 0.20) + (input.Service_Response_Score * 0.20) - (input.Return_Defect_Rate_Percent * 0.30) - (input.Issue_Count * 1.00);
+                    if(score < 0)
+                    {
+                        score = 0;
+                    }
+                    if(score > 100)
+                    {
+                        score = 100;
+                    }
+                    input.Performance_Score = score;
+                }
+                if(input.Performance_Band == null || input.Performance_Band == "")
+                {
+                    if(score >= 90)
+                    {
+                        input.Performance_Band = "Excellent";
+                    }
+                    else if(score >= 70)
+                    {
+                        input.Performance_Band = "Good";
+                    }
+                    else if(score >= 50)
+                    {
+                        input.Performance_Band = "Watchlist";
+                    }
+                    else
+                    {
+                        input.Performance_Band = "Poor";
+                    }
+                }
+                watchlistScore = 70.0;
+                performanceScales = Rating_Scales[Process_Area == "Performance Review" && Active == true];
+                for each scaleRec in performanceScales
+                {
+                    if(scaleRec.Result_Status == "Watchlist" && scaleRec.Max_Value != null)
+                    {
+                        watchlistScore = scaleRec.Max_Value;
+                    }
+                }
+                vendorRec = Vendors[ID == input.Vendor];
+                if(vendorRec.count() > 0)
+                {
+                    vendorRec.Latest_Performance_Score = score;
+                    vendorRec.Last_Review_Month = input.Review_Month;
+                    if(vendorRec.Stage == "Active")
+                    {
+                        vendorRec.Stage = "Performance Reviewed";
+                    }
+                    if(score < watchlistScore || input.Performance_Band == "Watchlist" || input.Performance_Band == "Poor")
+                    {
+                        vendorRec.Qualification_Status = "Watchlist";
+                    }
+                    else
+                    {
+                        vendorRec.Qualification_Status = "Qualified";
+                    }
+                    vendorRec.Lifecycle_Notes = ifnull(vendorRec.Lifecycle_Notes,"") + "\n" + zoho.currentdate.toString() + " - Monthly performance score " + score + " (" + input.Performance_Band + ") recorded by " + zoho.loginuser;
+                }
+            )
+        }
+    }
+}

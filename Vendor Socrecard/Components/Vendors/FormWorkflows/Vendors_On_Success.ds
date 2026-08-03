@@ -1,0 +1,42 @@
+Vendors_On_Success as "Record Vendor Lifecycle Notes"
+{
+    type = form
+    form = Vendors
+    record event = on add or edit
+    description = "Maintains master defaults and lifecycle note trail."
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Stage == null || input.Stage == "")
+                {
+                    input.Stage = "Registered";
+                }
+                if(input.Qualification_Status == null || input.Qualification_Status == "")
+                {
+                    input.Qualification_Status = "Pending";
+                }
+                if(input.Vendor_Status == null || input.Vendor_Status == "")
+                {
+                    input.Vendor_Status = "Draft";
+                }
+                if(input.Stage == "Registered" && input.Vendor_Status == "Draft" && input.Contact_Email != null)
+                {
+                    input.Vendor_Status = "Pending Review";
+                }
+                noteLine = zoho.currentdate.toString() + " - " + zoho.loginuser + " saved vendor at stage " + input.Stage;
+                if(input.Lifecycle_Notes == null || input.Lifecycle_Notes == "")
+                {
+                    input.Lifecycle_Notes = noteLine;
+                }
+                else
+                {
+                    input.Lifecycle_Notes = input.Lifecycle_Notes + "\n" + noteLine;
+                }
+            )
+        }
+    }
+}

@@ -1,0 +1,139 @@
+On_Time_Delivery_Percent_On_User_Input as "Recalculate Performance From Delivery"
+{
+    type = form
+    form = Vendor_Performance_Metrics
+    record event = on add or edit
+    description = "Recalculates monthly score while entering delivery performance."
+
+    on user input of On_Time_Delivery_Percent
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.On_Time_Delivery_Percent != null && input.Quality_Acceptance_Percent != null && input.SLA_Compliance_Percent != null && input.Service_Response_Score != null && input.Return_Defect_Rate_Percent != null && input.Issue_Count != null)
+                {
+                    score = (input.On_Time_Delivery_Percent * 0.30) + (input.Quality_Acceptance_Percent * 0.30) + (input.SLA_Compliance_Percent * 0.20) + (input.Service_Response_Score * 0.20) - (input.Return_Defect_Rate_Percent * 0.30) - (input.Issue_Count * 1.00);
+                    configuredScore = 0.0;
+                    configuredWeight = 0.0;
+                    configuredCriteria = 0;
+                    performanceWeights = Weightages[Process_Area == "Performance Review" && Active == true];
+                    for each weightRec in performanceWeights
+                    {
+                        criteriaRec = Criteria[ID == weightRec.Criteria && Active == true];
+                        if(criteriaRec.count() > 0)
+                        {
+                            rawValue = 0.0;
+                            hasRawValue = false;
+                            if(criteriaRec.Criteria_Code == "On_Time_Delivery")
+                            {
+                                rawValue = input.On_Time_Delivery_Percent.toDecimal();
+                                hasRawValue = true;
+                            }
+                            else if(criteriaRec.Criteria_Code == "Quality_Acceptance")
+                            {
+                                rawValue = input.Quality_Acceptance_Percent.toDecimal();
+                                hasRawValue = true;
+                            }
+                            else if(criteriaRec.Criteria_Code == "SLA_Compliance")
+                            {
+                                rawValue = input.SLA_Compliance_Percent.toDecimal();
+                                hasRawValue = true;
+                            }
+                            else if(criteriaRec.Criteria_Code == "Service_Response")
+                            {
+                                rawValue = input.Service_Response_Score.toDecimal();
+                                hasRawValue = true;
+                            }
+                            else if(criteriaRec.Criteria_Code == "Return_Defect_Rate")
+                            {
+                                rawValue = input.Return_Defect_Rate_Percent.toDecimal();
+                                hasRawValue = true;
+                            }
+                            else if(criteriaRec.Criteria_Code == "Issue_Count")
+                            {
+                                rawValue = input.Issue_Count.toDecimal();
+                                hasRawValue = true;
+                            }
+                            if(hasRawValue == true)
+                            {
+                                normalizedValue = rawValue;
+                                if(criteriaRec.Score_Direction == "Lower is Better")
+                                {
+                                    if(criteriaRec.Criteria_Code == "Issue_Count")
+                                    {
+                                        normalizedValue = 100.0 - (rawValue * 10.0);
+                                    }
+                                    else
+                                    {
+                                        normalizedValue = 100.0 - rawValue;
+                                    }
+                                }
+                                if(normalizedValue < 0)
+                                {
+                                    normalizedValue = 0;
+                                }
+                                if(normalizedValue > 100)
+                                {
+                                    normalizedValue = 100;
+                                }
+                                configuredScore = configuredScore + (normalizedValue * weightRec.Weight_Percent);
+                                configuredWeight = configuredWeight + weightRec.Weight_Percent;
+                                configuredCriteria = configuredCriteria + 1;
+                            }
+                        }
+                    }
+                    if(configuredCriteria >= 6 && configuredWeight > 0)
+                    {
+                        score = configuredScore / configuredWeight;
+                        input.Configured_Score_Used = true;
+                        input.Score_Notes = "Performance score calculated from complete active Performance Review criteria and weightages.";
+                    }
+                    else
+                    {
+                        input.Configured_Score_Used = false;
+                        input.Score_Notes = "Performance score calculated using default fallback formula because performance configuration is incomplete.";
+                    }
+                    if(score < 0)
+                    {
+                        score = 0;
+                    }
+                    if(score > 100)
+                    {
+                        score = 100;
+                    }
+                    input.Performance_Score = score;
+                    bandMatched = false;
+                    performanceScales = Rating_Scales[Process_Area == "Performance Review" && Active == true];
+                    for each scaleRec in performanceScales
+                    {
+                        if(score >= scaleRec.Min_Value && score <= scaleRec.Max_Value && !bandMatched)
+                        {
+                            input.Performance_Band = scaleRec.Result_Status;
+                            bandMatched = true;
+                        }
+                    }
+                    if(!bandMatched)
+                    {
+                        if(score >= 90)
+                        {
+                            input.Performance_Band = "Excellent";
+                        }
+                        else if(score >= 70)
+                        {
+                            input.Performance_Band = "Good";
+                        }
+                        else if(score >= 50)
+                        {
+                            input.Performance_Band = "Watchlist";
+                        }
+                        else
+                        {
+                            input.Performance_Band = "Poor";
+                        }
+                    }
+                }
+            )
+        }
+    }
+}

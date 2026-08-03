@@ -1,0 +1,31 @@
+Activate_After_Onboarding_On_User_Input as "Toggle Activation Date"
+{
+    type = form
+    form = Vendor_Onboarding
+    record event = on add or edit
+    description = "Shows Active From only when immediate activation is requested."
+
+    on user input of Activate_After_Onboarding
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Activate_After_Onboarding == true)
+                {
+                    show Active_From;
+                    enable Active_From;
+                    if(input.Active_From == null)
+                    {
+                        input.Active_From = zoho.currentdate;
+                    }
+                }
+                else
+                {
+                    input.Active_From = null;
+                    hide Active_From;
+                }
+            )
+        }
+    }
+}

@@ -1,0 +1,103 @@
+Compliance_Risk_Score_On_User_Input as "Recalculate Risk From Compliance Score"
+{
+    type = form
+    form = Risk_Assessments
+    record event = on add or edit
+    description = "Recalculates weighted risk tier and status while entering compliance risk."
+
+    on user input of Compliance_Risk_Score
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Financial_Risk_Score != null && input.Compliance_Risk_Score != null && input.Operational_Risk_Score != null && input.Cyber_Risk_Score != null)
+                {
+                    financialWeight = 25.0;
+                    complianceWeight = 25.0;
+                    operationalWeight = 25.0;
+                    cyberWeight = 25.0;
+                    configuredTotal = 0.0;
+                    weights = Weightages[Process_Area == "Risk Assessment" && Active == true];
+                    for each weightRec in weights
+                    {
+                        criteriaRec = Criteria[ID == weightRec.Criteria];
+                        if(criteriaRec.count() > 0)
+                        {
+                            if(criteriaRec.Criteria_Code == "Financial_Risk")
+                            {
+                                financialWeight = weightRec.Weight_Percent;
+                                configuredTotal = configuredTotal + weightRec.Weight_Percent;
+                            }
+                            else if(criteriaRec.Criteria_Code == "Compliance_Risk")
+                            {
+                                complianceWeight = weightRec.Weight_Percent;
+                                configuredTotal = configuredTotal + weightRec.Weight_Percent;
+                            }
+                            else if(criteriaRec.Criteria_Code == "Operational_Risk")
+                            {
+                                operationalWeight = weightRec.Weight_Percent;
+                                configuredTotal = configuredTotal + weightRec.Weight_Percent;
+                            }
+                            else if(criteriaRec.Criteria_Code == "Cyber_Risk")
+                            {
+                                cyberWeight = weightRec.Weight_Percent;
+                                configuredTotal = configuredTotal + weightRec.Weight_Percent;
+                            }
+                        }
+                    }
+                    if(configuredTotal <= 0)
+                    {
+                        configuredTotal = 100.0;
+                    }
+                    totalRisk = ((input.Financial_Risk_Score * financialWeight) + (input.Compliance_Risk_Score * complianceWeight) + (input.Operational_Risk_Score * operationalWeight) + (input.Cyber_Risk_Score * cyberWeight)) / configuredTotal;
+                    input.Weighted_Risk_Score = totalRisk;
+                    scaleMatched = false;
+                    scales = Rating_Scales[Process_Area == "Risk Assessment" && Active == true];
+                    for each scaleRec in scales
+                    {
+                        if(totalRisk >= scaleRec.Min_Value && totalRisk <= scaleRec.Max_Value)
+                        {
+                            if(scaleRec.Result_Status == "Low" || scaleRec.Result_Status == "Medium" || scaleRec.Result_Status == "High" || scaleRec.Result_Status == "Critical")
+                            {
+                                input.Risk_Tier = scaleRec.Result_Status;
+                            }
+                            if(scaleRec.Acceptable == true)
+                            {
+                                input.Risk_Status = "Acceptable";
+                            }
+                            else
+                            {
+                                input.Risk_Status = "Unacceptable";
+                            }
+                            scaleMatched = true;
+                        }
+                    }
+                    if(scaleMatched == false || input.Risk_Tier == null || input.Risk_Tier == "")
+                    {
+                        if(totalRisk < 30)
+                        {
+                            input.Risk_Tier = "Low";
+                            input.Risk_Status = "Acceptable";
+                        }
+                        else if(totalRisk < 60)
+                        {
+                            input.Risk_Tier = "Medium";
+                            input.Risk_Status = "Acceptable";
+                        }
+                        else if(totalRisk < 80)
+                        {
+                            input.Risk_Tier = "High";
+                            input.Risk_Status = "Unacceptable";
+                        }
+                        else
+                        {
+                            input.Risk_Tier = "Critical";
+                            input.Risk_Status = "Unacceptable";
+                        }
+                    }
+                }
+            )
+        }
+    }
+}

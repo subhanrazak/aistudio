@@ -1,0 +1,134 @@
+Risk_Assessments_On_Validate as "Validate Risk Assessment"
+{
+    type = form
+    form = Risk_Assessments
+    record event = on add or edit
+    description = "Validates risk scores and derives weighted risk result from configuration where available."
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                scores = {input.Financial_Risk_Score,input.Compliance_Risk_Score,input.Operational_Risk_Score,input.Cyber_Risk_Score};
+                for each score in scores
+                {
+                    if(score == null)
+                    {
+                        alert "All risk scores are required.";
+                        cancel submit;
+                    }
+                    if(score < 0 || score > 100)
+                    {
+                        alert "Each risk score must be between 0 and 100.";
+                        cancel submit;
+                    }
+                }
+                financialWeight = 25.0;
+                complianceWeight = 25.0;
+                operationalWeight = 25.0;
+                cyberWeight = 25.0;
+                configuredTotal = 0.0;
+                weights = Weightages[Process_Area == "Risk Assessment" && Active == true];
+                for each weightRec in weights
+                {
+                    criteriaRec = Criteria[ID == weightRec.Criteria];
+                    if(criteriaRec.count() > 0)
+                    {
+                        if(criteriaRec.Criteria_Code == "Financial_Risk")
+                        {
+                            financialWeight = weightRec.Weight_Percent;
+                            configuredTotal = configuredTotal + weightRec.Weight_Percent;
+                        }
+                        else if(criteriaRec.Criteria_Code == "Compliance_Risk")
+                        {
+                            complianceWeight = weightRec.Weight_Percent;
+                            configuredTotal = configuredTotal + weightRec.Weight_Percent;
+                        }
+                        else if(criteriaRec.Criteria_Code == "Operational_Risk")
+                        {
+                            operationalWeight = weightRec.Weight_Percent;
+                            configuredTotal = configuredTotal + weightRec.Weight_Percent;
+                        }
+                        else if(criteriaRec.Criteria_Code == "Cyber_Risk")
+                        {
+                            cyberWeight = weightRec.Weight_Percent;
+                            configuredTotal = configuredTotal + weightRec.Weight_Percent;
+                        }
+                    }
+                }
+                if(configuredTotal <= 0)
+                {
+                    configuredTotal = 100.0;
+                }
+                totalRisk = ((input.Financial_Risk_Score * financialWeight) + (input.Compliance_Risk_Score * complianceWeight) + (input.Operational_Risk_Score * operationalWeight) + (input.Cyber_Risk_Score * cyberWeight)) / configuredTotal;
+                input.Weighted_Risk_Score = totalRisk;
+                scaleMatched = false;
+                scales = Rating_Scales[Process_Area == "Risk Assessment" && Active == true];
+                for each scaleRec in scales
+                {
+                    if(totalRisk >= scaleRec.Min_Value && totalRisk <= scaleRec.Max_Value)
+                    {
+                        if(scaleRec.Result_Status == "Low" || scaleRec.Result_Status == "Medium" || scaleRec.Result_Status == "High" || scaleRec.Result_Status == "Critical")
+                        {
+                            input.Risk_Tier = scaleRec.Result_Status;
+                        }
+                        if(scaleRec.Acceptable == true)
+                        {
+                            input.Risk_Status = "Acceptable";
+                        }
+                        else
+                        {
+                            input.Risk_Status = "Unacceptable";
+                        }
+                        scaleMatched = true;
+                    }
+                }
+                if(scaleMatched == false || input.Risk_Tier == null || input.Risk_Tier == "")
+                {
+                    if(totalRisk < 30)
+                    {
+                        input.Risk_Tier = "Low";
+                        input.Risk_Status = "Acceptable";
+                    }
+                    else if(totalRisk < 60)
+                    {
+                        input.Risk_Tier = "Medium";
+                        input.Risk_Status = "Acceptable";
+                    }
+                    else if(totalRisk < 80)
+                    {
+                        input.Risk_Tier = "High";
+                        input.Risk_Status = "Unacceptable";
+                    }
+                    else
+                    {
+                        input.Risk_Tier = "Critical";
+                        input.Risk_Status = "Unacceptable";
+                    }
+                }
+                if(input.Assessment_Status == null || input.Assessment_Status == "" || input.Assessment_Status == "Draft")
+                {
+                    input.Assessment_Status = "Completed";
+                }
+                if((input.Risk_Tier == "High" || input.Risk_Tier == "Critical") && (input.Mitigation_Plan == null || input.Mitigation_Plan == ""))
+                {
+                    alert "Mitigation Plan is required for High or Critical risk.";
+                    cancel submit;
+                }
+                vendorRec = Vendors[ID == input.Vendor];
+                if(vendorRec.count() == 0)
+                {
+                    alert "Select a valid vendor before submitting the risk assessment.";
+                    cancel submit;
+                }
+                if(vendorRec.Stage == "Registered")
+                {
+                    alert "Vendor must reach the Evaluated stage before risk assessment.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}

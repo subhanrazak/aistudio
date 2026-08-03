@@ -1,0 +1,65 @@
+Weightages_On_Validate as "Validate Weightage"
+{
+    type = form
+    form = Weightages
+    record event = on add or edit
+    description = "Validates weight percentage and active process total."
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Weight_Percent == null || input.Weight_Percent <= 0 || input.Weight_Percent > 100)
+                {
+                    alert "Weight % must be greater than 0 and not more than 100.";
+                    cancel submit;
+                }
+                if(input.Effective_From == null)
+                {
+                    input.Effective_From = zoho.currentdate;
+                }
+                if(input.Effective_To != null && input.Effective_To < input.Effective_From)
+                {
+                    alert "Effective To must be greater than or equal to Effective From.";
+                    cancel submit;
+                }
+                if(input.Active == true)
+                {
+                    activeWeights = Weightages[Process_Area == input.Process_Area && Active == true && ID != input.ID];
+                    totalWeight = input.Weight_Percent;
+                    for each weightRec in activeWeights
+                    {
+                        includeWeight = false;
+                        if(input.Effective_To == null && weightRec.Effective_To == null)
+                        {
+                            includeWeight = true;
+                        }
+                        else if(input.Effective_To == null && weightRec.Effective_To != null && weightRec.Effective_To >= input.Effective_From)
+                        {
+                            includeWeight = true;
+                        }
+                        else if(input.Effective_To != null && weightRec.Effective_To == null && weightRec.Effective_From <= input.Effective_To)
+                        {
+                            includeWeight = true;
+                        }
+                        else if(input.Effective_To != null && weightRec.Effective_To != null && weightRec.Effective_From <= input.Effective_To && weightRec.Effective_To >= input.Effective_From)
+                        {
+                            includeWeight = true;
+                        }
+                        if(includeWeight == true)
+                        {
+                            totalWeight = totalWeight + ifnull(weightRec.Weight_Percent,0);
+                        }
+                    }
+                    if(totalWeight > 100)
+                    {
+                        alert "Total active weightages for this process area and effective period cannot exceed 100%.";
+                        cancel submit;
+                    }
+                }
+            )
+        }
+    }
+}

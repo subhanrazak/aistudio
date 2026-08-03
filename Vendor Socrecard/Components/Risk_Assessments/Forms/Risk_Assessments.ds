@@ -1,0 +1,216 @@
+form Risk_Assessments
+{
+    displayname = "Risk Assessment"
+    success message = "Risk assessment saved successfully."
+    Assessment_Details
+    (
+        type = section
+        displayname = "Assessment Details"
+        row = 1
+        column = 0
+    )
+    Risk_Assessment_ID
+    (
+        type = autonumber
+        displayname = "Risk Assessment ID"
+        start index = 1
+        row = 1
+        column = 1
+        width = medium
+    )
+    must have Vendor
+    (
+        type = picklist
+        displayname = "Vendor"
+        values = Vendors.ID
+        displayformat = [Vendor_Name]
+        searchable = true
+        row = 1
+        column = 1
+        width = medium
+    )
+    Risk_Category
+    (
+        type = picklist
+        displayname = "Risk Category"
+        values = Categories[Category_Type == "Risk Category" && Active == true].ID
+        displayformat = [Category_Name]
+        searchable = true
+        row = 1
+        column = 2
+        width = medium
+    )
+    must have Assessment_Date
+    (
+        type = date
+        displayname = "Assessment Date"
+        initial value = "${zoho.currentdate}"
+        row = 1
+        column = 1
+        width = medium
+    )
+    Assessment_Status
+    (
+        type = picklist
+        displayname = "Assessment Status"
+        values = {"Draft","Completed","Returned","Cancelled"}
+        initial value = "Draft"
+        row = 1
+        column = 2
+        width = medium
+    )
+    Assessor_Email
+    (
+        type = email
+        displayname = "Assessor Email"
+        row = 1
+        column = 1
+        width = medium
+    )
+    Risk_Scores
+    (
+        type = section
+        displayname = "Risk Scores"
+        visibility = true
+        row = 2
+        column = 1
+    )
+    Financial_Risk_Score
+    (
+        type = decimal
+        displayname = "Financial Risk Score"
+        decimalplace = 2
+        row = 2
+        column = 1
+        width = medium
+    )
+    Compliance_Risk_Score
+    (
+        type = decimal
+        displayname = "Compliance Risk Score"
+        decimalplace = 2
+        row = 2
+        column = 2
+        width = medium
+    )
+    Operational_Risk_Score
+    (
+        type = decimal
+        displayname = "Operational Risk Score"
+        decimalplace = 2
+        row = 2
+        column = 1
+        width = medium
+    )
+    Cyber_Risk_Score
+    (
+        type = decimal
+        displayname = "Cyber Risk Score"
+        decimalplace = 2
+        row = 2
+        column = 2
+        width = medium
+    )
+    Overall_Risk_Score
+    (
+        type = formula
+        displayname = "Overall Risk Score"
+        value = (Financial_Risk_Score + Compliance_Risk_Score + Operational_Risk_Score + Cyber_Risk_Score) / 4
+        visibility = true
+        row = 2
+        column = 1
+        width = medium
+    )
+    Weighted_Risk_Score
+    (
+        type = decimal
+        displayname = "Weighted Risk Score"
+        decimalplace = 2
+        row = 2
+        column = 2
+        width = medium
+    )
+    Risk_Tier
+    (
+        type = picklist
+        displayname = "Risk Tier"
+        values = {"Low","Medium","High","Critical"}
+        row = 2
+        column = 1
+        width = medium
+    )
+    Risk_Status
+    (
+        type = picklist
+        displayname = "Risk Status"
+        values = {"Acceptable","Unacceptable"}
+        row = 2
+        column = 2
+        width = medium
+    )
+    Mitigation
+    (
+        type = section
+        displayname = "Mitigation"
+        visibility = true
+        row = 3
+        column = 1
+    )
+    Mitigation_Plan
+    (
+        type = textarea
+        displayname = "Mitigation Plan"
+        height = 120px
+        row = 3
+        column = 1
+        width = medium
+    )
+    Assessment_Notes
+    (
+        type = textarea
+        displayname = "Assessment Notes"
+        height = 120px
+        row = 3
+        column = 2
+        width = medium
+    )
+    Risk_Document
+    (
+        type = upload file
+        displayname = "Risk Document"
+        file count = 1
+        browse = local_drive, google_docs, zoho_docs
+        row = 3
+        column = 1
+        width = medium
+    )
+    actions
+    {
+        on add
+        {
+            Submit
+            (
+                type = submit
+                displayname = "Submit"
+            )
+            Reset
+            (
+                type = reset
+                displayname = "Reset"
+            )
+        }
+        on edit
+        {
+            Update
+            (
+                type = submit
+                displayname = "Update"
+            )
+            Cancel
+            (
+                type = cancel
+                displayname = "Cancel"
+            )
+        }
+    }
+}

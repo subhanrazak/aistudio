@@ -1,0 +1,108 @@
+Vendor_Evaluations_On_Validate as "Validate Evaluation"
+{
+    type = form
+    form = Vendor_Evaluations
+    record event = on add or edit
+    description = "Validates ratings and derives weighted evaluation result from configuration where available."
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Evaluation_End_Date < input.Evaluation_Start_Date)
+                {
+                    alert "Evaluation End Date must be on or after Evaluation Start Date.";
+                    cancel submit;
+                }
+                ratings = {input.Product_Service_Fit_Rating,input.Quality_Capability_Rating,input.Commercial_Rating,input.Compliance_Rating};
+                for each rating in ratings
+                {
+                    if(rating == null || rating < 1 || rating > 5)
+                    {
+                        alert "Each evaluation rating must be between 1 and 5.";
+                        cancel submit;
+                    }
+                }
+                productWeight = 25.0;
+                qualityWeight = 25.0;
+                commercialWeight = 25.0;
+                complianceWeight = 25.0;
+                configuredTotal = 0.0;
+                weights = Weightages[Process_Area == "Evaluation" && Active == true];
+                for each weightRec in weights
+                {
+                    criteriaRec = Criteria[ID == weightRec.Criteria];
+                    if(criteriaRec.count() > 0)
+                    {
+                        if(criteriaRec.Criteria_Code == "Product_Service_Fit")
+                        {
+                            productWeight = weightRec.Weight_Percent;
+                            configuredTotal = configuredTotal + weightRec.Weight_Percent;
+                        }
+                        else if(criteriaRec.Criteria_Code == "Quality_Capability")
+                        {
+                            qualityWeight = weightRec.Weight_Percent;
+                            configuredTotal = configuredTotal + weightRec.Weight_Percent;
+                        }
+                        else if(criteriaRec.Criteria_Code == "Commercial")
+                        {
+                            commercialWeight = weightRec.Weight_Percent;
+                            configuredTotal = configuredTotal + weightRec.Weight_Percent;
+                        }
+                        else if(criteriaRec.Criteria_Code == "Compliance")
+                        {
+                            complianceWeight = weightRec.Weight_Percent;
+                            configuredTotal = configuredTotal + weightRec.Weight_Percent;
+                        }
+                    }
+                }
+                if(configuredTotal <= 0)
+                {
+                    configuredTotal = 100.0;
+                }
+                weightedScore = ((input.Product_Service_Fit_Rating * productWeight) + (input.Quality_Capability_Rating * qualityWeight) + (input.Commercial_Rating * commercialWeight) + (input.Compliance_Rating * complianceWeight)) / configuredTotal;
+                input.Weighted_Overall_Rating = weightedScore;
+                scaleMatched = false;
+                scales = Rating_Scales[Process_Area == "Evaluation" && Active == true];
+                for each scaleRec in scales
+                {
+                    if(weightedScore >= scaleRec.Min_Value && weightedScore <= scaleRec.Max_Value)
+                    {
+                        input.Evaluation_Result = scaleRec.Result_Status;
+                        scaleMatched = true;
+                    }
+                }
+                if(scaleMatched == false)
+                {
+                    if(weightedScore >= 3)
+                    {
+                        input.Evaluation_Result = "Acceptable";
+                    }
+                    else if(weightedScore >= 2)
+                    {
+                        input.Evaluation_Result = "Needs Improvement";
+                    }
+                    else
+                    {
+                        input.Evaluation_Result = "Rejected";
+                    }
+                }
+                if(input.Evaluation_Status == null || input.Evaluation_Status == "")
+                {
+                    input.Evaluation_Status = "Completed";
+                }
+                if(input.Evaluation_Status == "Draft")
+                {
+                    input.Evaluation_Status = "Completed";
+                }
+                if((input.Evaluation_Result == "Needs Improvement" || input.Evaluation_Result == "Rejected") && (input.Recommendation_Notes == null || input.Recommendation_Notes == ""))
+                {
+                    alert "Recommendation is required when an evaluation is not acceptable.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}

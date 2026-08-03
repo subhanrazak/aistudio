@@ -1,0 +1,27 @@
+Vendor_Evaluations_On_Load as "Prepare Evaluation Form"
+{
+    type = form
+    form = Vendor_Evaluations
+    record event = on add or edit
+    description = "Sets evaluator and protects calculated evaluation fields."
+
+    on load
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Evaluator_Email == null || input.Evaluator_Email == "")
+                {
+                    input.Evaluator_Email = zoho.loginuser;
+                }
+                if(input.Evaluation_Status == null || input.Evaluation_Status == "")
+                {
+                    input.Evaluation_Status = "Draft";
+                }
+                disable Evaluation_Result;
+                disable Weighted_Overall_Rating;
+            )
+        }
+    }
+}

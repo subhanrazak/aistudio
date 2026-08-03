@@ -1,0 +1,34 @@
+Vendor_Evaluations_On_Success as "Update Vendor From Evaluation"
+{
+    type = form
+    form = Vendor_Evaluations
+    record event = on add or edit
+    description = "Updates the vendor score summary after evaluation."
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                evaluationScore = input.Weighted_Overall_Rating;
+                if(evaluationScore == null)
+                {
+                    evaluationScore = (input.Product_Service_Fit_Rating + input.Quality_Capability_Rating + input.Commercial_Rating + input.Compliance_Rating) / 4;
+                }
+                vendorRec = Vendors[ID == input.Vendor];
+                if(vendorRec.count() > 0)
+                {
+                    vendorRec.Current_Evaluation_Rating = evaluationScore;
+                    vendorRec.Evaluation_Result = input.Evaluation_Result;
+                    if(evaluationScore >= 3 && input.Evaluation_Result == "Acceptable" && vendorRec.Stage == "Registered")
+                    {
+                        vendorRec.Stage = "Evaluated";
+                        vendorRec.Vendor_Status = "Pending Review";
+                    }
+                    vendorRec.Lifecycle_Notes = ifnull(vendorRec.Lifecycle_Notes,"") + "\n" + zoho.currentdate.toString() + " - Evaluation score " + evaluationScore + " recorded by " + zoho.loginuser;
+                }
+            )
+        }
+    }
+}

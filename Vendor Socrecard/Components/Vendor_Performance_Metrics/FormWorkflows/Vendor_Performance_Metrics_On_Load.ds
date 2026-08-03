@@ -1,0 +1,28 @@
+Vendor_Performance_Metrics_On_Load as "Prepare Performance Metrics"
+{
+    type = form
+    form = Vendor_Performance_Metrics
+    record event = on add or edit
+    description = "Sets reviewer, defaults review status, and protects calculated performance fields."
+
+    on load
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Reviewer_Email == null || input.Reviewer_Email == "")
+                {
+                    input.Reviewer_Email = zoho.loginuser;
+                }
+                if(input.Review_Status == null || input.Review_Status == "")
+                {
+                    input.Review_Status = "Draft";
+                }
+                disable Performance_Score;
+                disable Performance_Band;
+                disable Configured_Score_Used;
+            )
+        }
+    }
+}

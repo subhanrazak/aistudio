@@ -1,0 +1,164 @@
+Vendor_Lifecycle as "Vendor Lifecycle"
+{
+    type = blueprint
+    form = Vendors
+
+    start
+    {
+        start stage = "Registered"
+    }
+
+    stages
+    {
+        "Registered" { }
+        "Evaluated" { }
+        "Risk Assessed" { }
+        "Onboarded" { }
+        "Active" { }
+        "Performance Reviewed" { }
+    }
+
+    transitions
+    {
+        Complete_Evaluation as "Complete Evaluation"
+        {
+            type = normal
+            from stage = "Registered"
+            to stage = "Evaluated"
+            before
+            {
+                transition owner
+                (
+                    permissions = {"Vendor_Evaluation_Specialist","Procurement_Manager"}
+                )
+                transition criteria = (Current_Evaluation_Rating >= 3 && Evaluation_Result == "Acceptable")
+            }
+            after
+            {
+                actions
+                {
+                    custom deluge script
+                    (
+                    input.Vendor_Status = "Pending Review";
+                    input.Qualification_Status = "Pending";
+                    input.Lifecycle_Notes = ifnull(input.Lifecycle_Notes,"") + "\n" + zoho.currentdate.toString() + " - Evaluation completed by " + zoho.loginuser;
+                    )
+                }
+            }
+        }
+
+        Complete_Risk_Assessment as "Complete Risk Assessment"
+        {
+            type = normal
+            from stage = "Evaluated"
+            to stage = "Risk Assessed"
+            before
+            {
+                transition owner
+                (
+                    permissions = {"Vendor_Evaluation_Specialist","Procurement_Manager"}
+                )
+                transition criteria = (Latest_Risk_Status == "Acceptable" && (Latest_Risk_Tier == "Low" || Latest_Risk_Tier == "Medium"))
+            }
+            after
+            {
+                actions
+                {
+                    custom deluge script
+                    (
+                    input.Vendor_Status = "Pending Review";
+                    input.Lifecycle_Notes = ifnull(input.Lifecycle_Notes,"") + "\n" + zoho.currentdate.toString() + " - Risk assessment accepted by " + zoho.loginuser;
+                    )
+                }
+            }
+        }
+
+        Complete_Onboarding as "Complete Onboarding"
+        {
+            type = normal
+            from stage = "Risk Assessed"
+            to stage = "Onboarded"
+            before
+            {
+                transition owner
+                (
+                    permissions = {"Vendor_Manager","Procurement_Manager"}
+                )
+                transition criteria = (Onboarding_Baseline_Score >= 70)
+            }
+            after
+            {
+                actions
+                {
+                    custom deluge script
+                    (
+                    input.Vendor_Status = "Approved";
+                    input.Qualification_Status = "Qualified";
+                    input.Lifecycle_Notes = ifnull(input.Lifecycle_Notes,"") + "\n" + zoho.currentdate.toString() + " - Onboarding completed by " + zoho.loginuser;
+                    )
+                }
+            }
+        }
+
+        Activate_Vendor as "Activate Vendor"
+        {
+            type = normal
+            from stage = "Onboarded"
+            to stage = "Active"
+            before
+            {
+                transition owner
+                (
+                    permissions = {"Vendor_Manager","Procurement_Manager"}
+                )
+                transition criteria = (Active_From is not null)
+            }
+            after
+            {
+                actions
+                {
+                    custom deluge script
+                    (
+                    input.Vendor_Status = "Approved";
+                    input.Lifecycle_Notes = ifnull(input.Lifecycle_Notes,"") + "\n" + zoho.currentdate.toString() + " - Vendor activated by " + zoho.loginuser;
+                    )
+                }
+            }
+        }
+
+        Record_Performance_Review as "Record Performance Review"
+        {
+            type = normal
+            from stage = "Active"
+            to stage = "Performance Reviewed"
+            before
+            {
+                transition owner
+                (
+                    permissions = {"Procurement_Manager","Vendor_Manager"}
+                )
+                transition criteria = (Latest_Performance_Score is not null)
+            }
+            after
+            {
+                actions
+                {
+                    custom deluge script
+                    (
+                    if(input.Latest_Performance_Score < 70)
+                    {
+                        input.Qualification_Status = "Watchlist";
+                        input.Vendor_Status = "Pending Review";
+                    }
+                    else
+                    {
+                        input.Qualification_Status = "Qualified";
+                        input.Vendor_Status = "Approved";
+                    }
+                    input.Lifecycle_Notes = ifnull(input.Lifecycle_Notes,"") + "\n" + zoho.currentdate.toString() + " - Performance reviewed by " + zoho.loginuser;
+                    )
+                }
+            }
+        }
+    }
+}

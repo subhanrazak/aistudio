@@ -1,0 +1,28 @@
+Products_Services_On_Validate as "Validate Product / Service"
+{
+    type = form
+    form = Products_Services
+    record event = on add or edit
+    description = "Blocks duplicate active offering names for the same vendor."
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Offering_Name == null || input.Offering_Name == "")
+                {
+                    alert "Product / Service Name is required.";
+                    cancel submit;
+                }
+                duplicateOffering = Products_Services[Vendor == input.Vendor && Offering_Name == input.Offering_Name && Active == true && ID != input.ID];
+                if(input.Active == true && duplicateOffering.count() > 0)
+                {
+                    alert "An active product / service with this name already exists for this vendor.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}

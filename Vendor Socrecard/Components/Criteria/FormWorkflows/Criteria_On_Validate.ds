@@ -1,0 +1,32 @@
+Criteria_On_Validate as "Validate Criteria"
+{
+    type = form
+    form = Criteria
+    record event = on add or edit
+    description = "Validates criteria score range and active code uniqueness."
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Max_Score == null || input.Min_Score == null || input.Max_Score <= input.Min_Score)
+                {
+                    alert "Max Score must be greater than Min Score.";
+                    cancel submit;
+                }
+                if(input.Criteria_Code != null && input.Criteria_Code != "")
+                {
+                    input.Criteria_Code = input.Criteria_Code.trim().toUpperCase();
+                    duplicateCriteria = Criteria[Process_Area == input.Process_Area && Criteria_Code == input.Criteria_Code && Active == true && ID != input.ID];
+                    if(input.Active == true && duplicateCriteria.count() > 0)
+                    {
+                        alert "An active criteria record with this code already exists for the selected process area.";
+                        cancel submit;
+                    }
+                }
+            )
+        }
+    }
+}

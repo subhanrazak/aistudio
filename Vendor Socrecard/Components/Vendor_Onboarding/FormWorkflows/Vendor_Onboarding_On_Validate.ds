@@ -1,0 +1,153 @@
+Vendor_Onboarding_On_Validate as "Validate Onboarding"
+{
+    type = form
+    form = Vendor_Onboarding
+    record event = on add or edit
+    description = "Validates onboarding checklist, configurable score, and activation readiness."
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                vendorRec = Vendors[ID == input.Vendor];
+                if(vendorRec.count() == 0)
+                {
+                    alert "Select a valid vendor before submitting onboarding.";
+                    cancel submit;
+                }
+                if(vendorRec.Stage != "Risk Assessed" && vendorRec.Stage != "Onboarded" && vendorRec.Stage != "Active" && vendorRec.Stage != "Performance Reviewed")
+                {
+                    alert "Vendor must reach Risk Assessed before onboarding.";
+                    cancel submit;
+                }
+                if(vendorRec.Latest_Risk_Status != "Acceptable" || vendorRec.Current_Evaluation_Rating < 3)
+                {
+                    alert "Vendor evaluation and risk must be acceptable before onboarding.";
+                    cancel submit;
+                }
+                if(input.Onboarding_Score != null && (input.Onboarding_Score < 0 || input.Onboarding_Score > 100))
+                {
+                    alert "Onboarding Score must be between 0 and 100.";
+                    cancel submit;
+                }
+                contractWeight = 25.0;
+                complianceWeight = 25.0;
+                bankWeight = 25.0;
+                trainingWeight = 25.0;
+                configuredTotal = 0.0;
+                weights = Weightages[Process_Area == "Onboarding" && Active == true];
+                for each weightRec in weights
+                {
+                    criteriaRec = Criteria[ID == weightRec.Criteria];
+                    if(criteriaRec.count() > 0)
+                    {
+                        if(criteriaRec.Criteria_Code == "Contract_Signed")
+                        {
+                            contractWeight = weightRec.Weight_Percent;
+                            configuredTotal = configuredTotal + weightRec.Weight_Percent;
+                        }
+                        else if(criteriaRec.Criteria_Code == "Compliance_Documents_Verified")
+                        {
+                            complianceWeight = weightRec.Weight_Percent;
+                            configuredTotal = configuredTotal + weightRec.Weight_Percent;
+                        }
+                        else if(criteriaRec.Criteria_Code == "Bank_Details_Verified")
+                        {
+                            bankWeight = weightRec.Weight_Percent;
+                            configuredTotal = configuredTotal + weightRec.Weight_Percent;
+                        }
+                        else if(criteriaRec.Criteria_Code == "Training_Completed")
+                        {
+                            trainingWeight = weightRec.Weight_Percent;
+                            configuredTotal = configuredTotal + weightRec.Weight_Percent;
+                        }
+                    }
+                }
+                if(configuredTotal <= 0)
+                {
+                    configuredTotal = 100.0;
+                }
+                earnedScore = 0.0;
+                if(input.Contract_Signed == true)
+                {
+                    earnedScore = earnedScore + contractWeight;
+                }
+                if(input.Compliance_Documents_Verified == true)
+                {
+                    earnedScore = earnedScore + complianceWeight;
+                }
+                if(input.Bank_Details_Verified == true)
+                {
+                    earnedScore = earnedScore + bankWeight;
+                }
+                if(input.Training_Completed == true)
+                {
+                    earnedScore = earnedScore + trainingWeight;
+                }
+                calculatedScore = (earnedScore * 100.0) / configuredTotal;
+                input.Calculated_Onboarding_Score = calculatedScore;
+                if(input.Onboarding_Score == null)
+                {
+                    input.Onboarding_Score = calculatedScore;
+                }
+                finalScore = calculatedScore;
+                scaleMatched = false;
+                scales = Rating_Scales[Process_Area == "Onboarding" && Active == true];
+                for each scaleRec in scales
+                {
+                    if(finalScore >= scaleRec.Min_Value && finalScore <= scaleRec.Max_Value)
+                    {
+                        if(scaleRec.Acceptable == true)
+                        {
+                            input.Onboarding_Result = "Qualified";
+                        }
+                        else if(scaleRec.Result_Status == "Blocked")
+                        {
+                            input.Onboarding_Result = "Blocked";
+                        }
+                        else
+                        {
+                            input.Onboarding_Result = "Unqualified";
+                        }
+                        scaleMatched = true;
+                    }
+                }
+                if(scaleMatched == false)
+                {
+                    if(finalScore >= 70)
+                    {
+                        input.Onboarding_Result = "Qualified";
+                    }
+                    else
+                    {
+                        input.Onboarding_Result = "Unqualified";
+                    }
+                }
+                if(input.Onboarding_Status == "Completed")
+                {
+                    if(input.Contract_Signed != true || input.Compliance_Documents_Verified != true || input.Bank_Details_Verified != true || input.Training_Completed != true)
+                    {
+                        alert "All onboarding checklist items must be complete before marking onboarding Completed.";
+                        cancel submit;
+                    }
+                    if(input.Onboarding_Result != "Qualified")
+                    {
+                        alert "Onboarding must be qualified before marking it Completed.";
+                        cancel submit;
+                    }
+                }
+                if(input.Activate_After_Onboarding == true && input.Active_From == null)
+                {
+                    alert "Active From is required when Activate After Onboarding is selected.";
+                    cancel submit;
+                }
+                if(input.Onboarding_Result == "Qualified")
+                {
+                    input.Baseline_Score = finalScore;
+                }
+            )
+        }
+    }
+}

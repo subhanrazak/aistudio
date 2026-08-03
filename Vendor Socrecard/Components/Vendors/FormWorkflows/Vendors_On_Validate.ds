@@ -1,0 +1,71 @@
+Vendors_On_Validate as "Validate Vendor Lifecycle"
+{
+    type = form
+    form = Vendors
+    record event = on add or edit
+    description = "Validates vendor master defaults and lifecycle consistency before saving."
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Vendor_Name == null || input.Vendor_Name == "")
+                {
+                    alert "Vendor Name is required.";
+                    cancel submit;
+                }
+                if(input.Stage == null || input.Stage == "")
+                {
+                    input.Stage = "Registered";
+                }
+                if(input.Qualification_Status == null || input.Qualification_Status == "")
+                {
+                    input.Qualification_Status = "Pending";
+                }
+                if(input.Vendor_Status == null || input.Vendor_Status == "")
+                {
+                    input.Vendor_Status = "Draft";
+                }
+                if(input.Stage == "Evaluated" || input.Stage == "Risk Assessed" || input.Stage == "Onboarded" || input.Stage == "Active" || input.Stage == "Performance Reviewed")
+                {
+                    if(input.Current_Evaluation_Rating == null || input.Current_Evaluation_Rating < 3 || input.Evaluation_Result != "Acceptable")
+                    {
+                        alert "Vendor cannot move beyond Registered until an acceptable evaluation is recorded.";
+                        cancel submit;
+                    }
+                }
+                if(input.Stage == "Risk Assessed" || input.Stage == "Onboarded" || input.Stage == "Active" || input.Stage == "Performance Reviewed")
+                {
+                    if(input.Latest_Risk_Status != "Acceptable" || (input.Latest_Risk_Tier != "Low" && input.Latest_Risk_Tier != "Medium"))
+                    {
+                        alert "Vendor cannot move beyond Evaluated until risk is acceptable.";
+                        cancel submit;
+                    }
+                }
+                if(input.Stage == "Onboarded" || input.Stage == "Active" || input.Stage == "Performance Reviewed")
+                {
+                    if(input.Onboarding_Baseline_Score == null || input.Onboarding_Baseline_Score < 70)
+                    {
+                        alert "Vendor cannot move beyond Risk Assessed until onboarding reaches the required baseline score.";
+                        cancel submit;
+                    }
+                }
+                if(input.Stage == "Active" || input.Stage == "Performance Reviewed")
+                {
+                    if(input.Active_From == null)
+                    {
+                        alert "Active From is required before activating a vendor.";
+                        cancel submit;
+                    }
+                }
+                if(input.Stage == "Performance Reviewed" && input.Latest_Performance_Score == null)
+                {
+                    alert "Latest Performance Score is required before marking performance reviewed.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}

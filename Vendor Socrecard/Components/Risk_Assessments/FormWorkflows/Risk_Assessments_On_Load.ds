@@ -1,0 +1,28 @@
+Risk_Assessments_On_Load as "Prepare Risk Assessment"
+{
+    type = form
+    form = Risk_Assessments
+    record event = on add or edit
+    description = "Sets assessor and protects calculated risk fields."
+
+    on load
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Assessor_Email == null || input.Assessor_Email == "")
+                {
+                    input.Assessor_Email = zoho.loginuser;
+                }
+                if(input.Assessment_Status == null || input.Assessment_Status == "")
+                {
+                    input.Assessment_Status = "Draft";
+                }
+                disable Weighted_Risk_Score;
+                disable Risk_Tier;
+                disable Risk_Status;
+            )
+        }
+    }
+}

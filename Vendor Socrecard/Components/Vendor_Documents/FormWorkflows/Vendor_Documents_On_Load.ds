@@ -1,0 +1,28 @@
+Vendor_Documents_On_Load as "Prepare Document Verification"
+{
+    type = form
+    form = Vendor_Documents
+    record event = on add or edit
+    description = "Defaults verifier details when a verified document opens without them."
+
+    on load
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Verification_Status == "Verified")
+                {
+                    if(input.Verified_By == null || input.Verified_By == "")
+                    {
+                        input.Verified_By = zoho.loginuser;
+                    }
+                    if(input.Verified_On == null)
+                    {
+                        input.Verified_On = zoho.currentdate;
+                    }
+                }
+            )
+        }
+    }
+}

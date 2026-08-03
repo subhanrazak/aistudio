@@ -1,0 +1,35 @@
+Rating_Scales_On_Validate as "Validate Rating Scale"
+{
+    type = form
+    form = Rating_Scales
+    record event = on add or edit
+    description = "Validates rating scale ranges and overlap."
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Min_Value == null || input.Max_Value == null || input.Max_Value <= input.Min_Value)
+                {
+                    alert "Max Value must be greater than Min Value.";
+                    cancel submit;
+                }
+                if(input.Scale_Code != null && input.Scale_Code != "")
+                {
+                    input.Scale_Code = input.Scale_Code.trim().toUpperCase();
+                }
+                if(input.Active == true)
+                {
+                    overlappingScales = Rating_Scales[Process_Area == input.Process_Area && Active == true && Min_Value < input.Max_Value && Max_Value > input.Min_Value && ID != input.ID];
+                    if(overlappingScales.count() > 0)
+                    {
+                        alert "An active rating scale range already overlaps this process area and value range.";
+                        cancel submit;
+                    }
+                }
+            )
+        }
+    }
+}

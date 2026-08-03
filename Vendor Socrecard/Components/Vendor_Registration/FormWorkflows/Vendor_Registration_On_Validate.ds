@@ -1,0 +1,62 @@
+Vendor_Registration_On_Validate as "Validate Registration"
+{
+    type = form
+    form = Vendor_Registration
+    record event = on add or edit
+    description = "Validates registration readiness and prevents obvious duplicates."
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Registration_Status == null || input.Registration_Status == "")
+                {
+                    input.Registration_Status = "Draft";
+                }
+                if(input.Vendor_Name == null || input.Vendor_Name == "")
+                {
+                    alert "Vendor Name is required.";
+                    cancel submit;
+                }
+                if(input.Registration_Status == "Submitted" || input.Registration_Status == "Accepted" || input.Registration_Status == "Converted")
+                {
+                    if(input.Contact_Email == null || input.Contact_Email == "")
+                    {
+                        alert "Contact Email is required before submitting or accepting registration.";
+                        cancel submit;
+                    }
+                }
+                if(input.Registration_Status == "Accepted" || input.Registration_Status == "Converted")
+                {
+                    if(input.Vendor_Type == null || input.Vendor_Type == "")
+                    {
+                        alert "Vendor Type is required before conversion.";
+                        cancel submit;
+                    }
+                }
+                duplicateVendor = Vendors[Vendor_Name == input.Vendor_Name && ID != input.Linked_Vendor];
+                if(duplicateVendor.count() > 0 && input.Linked_Vendor == null)
+                {
+                    if(input.Tax_ID != null && input.Tax_ID != "" && duplicateVendor.Tax_ID == input.Tax_ID)
+                    {
+                        alert "A vendor with this name and Tax ID already exists.";
+                        cancel submit;
+                    }
+                    if(input.Business_Registration_Number != null && input.Business_Registration_Number != "" && duplicateVendor.Business_Registration_Number == input.Business_Registration_Number)
+                    {
+                        alert "A vendor with this name and business registration number already exists.";
+                        cancel submit;
+                    }
+                }
+                duplicateRegistration = Vendor_Registration[Vendor_Name == input.Vendor_Name && Registration_Status != "Rejected" && ID != input.ID];
+                if(input.Registration_Status != "Rejected" && duplicateRegistration.count() > 0 && input.Linked_Vendor == null)
+                {
+                    alert "Another active registration already exists for this vendor name.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}

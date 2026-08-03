@@ -1,0 +1,26 @@
+Vendor_Documents_On_Success as "Record Document Lifecycle Note"
+{
+    type = form
+    form = Vendor_Documents
+    record event = on add or edit
+    description = "Appends a vendor lifecycle note when a document is verified or rejected."
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Verification_Status == "Verified" || input.Verification_Status == "Rejected")
+                {
+                    vendorRec = Vendors[ID == input.Vendor];
+                    if(vendorRec.count() > 0)
+                    {
+                        noteLine = zoho.currentdate.toString() + " - Document " + input.Document_Name + " marked " + input.Verification_Status + " by " + zoho.loginuser;
+                        vendorRec.Lifecycle_Notes = ifnull(vendorRec.Lifecycle_Notes,"") + "\n" + noteLine;
+                    }
+                }
+            )
+        }
+    }
+}

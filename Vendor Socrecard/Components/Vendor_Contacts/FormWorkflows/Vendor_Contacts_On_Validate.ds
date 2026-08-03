@@ -1,0 +1,26 @@
+Vendor_Contacts_On_Validate as "Validate Contact"
+{
+    type = form
+    form = Vendor_Contacts
+    record event = on add or edit
+    description = "Prevents more than one active primary contact for a vendor."
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Primary_Contact == true && input.Active == true)
+                {
+                    duplicatePrimary = Vendor_Contacts[Vendor == input.Vendor && Primary_Contact == true && Active == true && ID != input.ID];
+                    if(duplicatePrimary.count() > 0)
+                    {
+                        alert "This vendor already has an active primary contact.";
+                        cancel submit;
+                    }
+                }
+            )
+        }
+    }
+}

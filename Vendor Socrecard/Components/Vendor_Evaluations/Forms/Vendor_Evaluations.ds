@@ -1,0 +1,215 @@
+form Vendor_Evaluations
+{
+    displayname = "Evaluation"
+    success message = "Vendor evaluation saved successfully."
+    Evaluation_Details
+    (
+        type = section
+        displayname = "Evaluation Details"
+        row = 1
+        column = 0
+    )
+    Evaluation_ID
+    (
+        type = autonumber
+        displayname = "Evaluation ID"
+        start index = 1
+        row = 1
+        column = 1
+        width = medium
+    )
+    must have Vendor
+    (
+        type = picklist
+        displayname = "Vendor"
+        values = Vendors.ID
+        displayformat = [Vendor_Name]
+        searchable = true
+        row = 1
+        column = 1
+        width = medium
+    )
+    Evaluation_Category
+    (
+        type = picklist
+        displayname = "Evaluation Category"
+        values = Categories[Category_Type == "Evaluation Category" && Active == true].ID
+        displayformat = [Category_Name]
+        searchable = true
+        row = 1
+        column = 2
+        width = medium
+    )
+    must have Evaluation_Start_Date
+    (
+        type = date
+        displayname = "Evaluation Start Date"
+        row = 1
+        column = 1
+        width = medium
+    )
+    must have Evaluation_End_Date
+    (
+        type = date
+        displayname = "Evaluation End Date"
+        row = 1
+        column = 2
+        width = medium
+    )
+    Evaluation_Status
+    (
+        type = picklist
+        displayname = "Evaluation Status"
+        values = {"Draft","Completed","Returned","Cancelled"}
+        initial value = "Draft"
+        row = 1
+        column = 1
+        width = medium
+    )
+    Evaluation_Period_Notes
+    (
+        type = textarea
+        displayname = "Evaluation Period Notes"
+        height = 100px
+        row = 1
+        column = 2
+        width = medium
+    )
+    Rating_Details
+    (
+        type = section
+        displayname = "Rating Details"
+        visibility = true
+        row = 2
+        column = 1
+    )
+    Product_Service_Fit_Rating
+    (
+        type = decimal
+        displayname = "Product / Service Fit Rating"
+        decimalplace = 2
+        row = 2
+        column = 1
+        width = medium
+    )
+    Quality_Capability_Rating
+    (
+        type = decimal
+        displayname = "Quality Capability Rating"
+        decimalplace = 2
+        row = 2
+        column = 2
+        width = medium
+    )
+    Commercial_Rating
+    (
+        type = decimal
+        displayname = "Commercial Rating"
+        decimalplace = 2
+        row = 2
+        column = 1
+        width = medium
+    )
+    Compliance_Rating
+    (
+        type = decimal
+        displayname = "Compliance Rating"
+        decimalplace = 2
+        row = 2
+        column = 2
+        width = medium
+    )
+    Overall_Rating
+    (
+        type = formula
+        displayname = "Overall Rating"
+        value = (Product_Service_Fit_Rating + Quality_Capability_Rating + Commercial_Rating + Compliance_Rating) / 4
+        visibility = true
+        row = 2
+        column = 1
+        width = medium
+    )
+    Weighted_Overall_Rating
+    (
+        type = decimal
+        displayname = "Weighted Overall Rating"
+        decimalplace = 2
+        row = 2
+        column = 2
+        width = medium
+    )
+    Evaluation_Result
+    (
+        type = picklist
+        displayname = "Evaluation Result"
+        values = {"Draft","Acceptable","Needs Improvement","Rejected"}
+        initial value = "Draft"
+        row = 2
+        column = 1
+        width = medium
+    )
+    Recommendation
+    (
+        type = section
+        displayname = "Recommendation"
+        visibility = true
+        row = 3
+        column = 1
+    )
+    Recommendation_Notes
+    (
+        type = textarea
+        displayname = "Recommendation"
+        height = 120px
+        row = 3
+        column = 1
+        width = medium
+    )
+    Evaluator_Email
+    (
+        type = email
+        displayname = "Evaluator Email"
+        row = 3
+        column = 2
+        width = medium
+    )
+    Evaluation_Document
+    (
+        type = upload file
+        displayname = "Evaluation Document"
+        file count = 1
+        browse = local_drive, google_docs, zoho_docs
+        row = 3
+        column = 1
+        width = medium
+    )
+    actions
+    {
+        on add
+        {
+            Submit
+            (
+                type = submit
+                displayname = "Submit"
+            )
+            Reset
+            (
+                type = reset
+                displayname = "Reset"
+            )
+        }
+        on edit
+        {
+            Update
+            (
+                type = submit
+                displayname = "Update"
+            )
+            Cancel
+            (
+                type = cancel
+                displayname = "Cancel"
+            )
+        }
+    }
+}

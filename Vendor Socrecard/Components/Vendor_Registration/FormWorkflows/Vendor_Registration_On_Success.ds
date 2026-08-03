@@ -1,0 +1,98 @@
+Vendor_Registration_On_Success as "Convert Registration"
+{
+    type = form
+    form = Vendor_Registration
+    record event = on add or edit
+    description = "Creates or updates vendor and primary contact records when a registration is accepted."
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Registration_Status == "Accepted" || input.Registration_Status == "Converted")
+                {
+                    vendorId = input.Linked_Vendor;
+                    if(vendorId == null)
+                    {
+                        vendorId = insert into Vendors
+                        [
+                            Vendor_Name = input.Vendor_Name
+                            Vendor_Category_Config = input.Vendor_Category
+                            Primary_Product_Service_Category = input.Primary_Product_Service_Category
+                            Vendor_Type = input.Vendor_Type
+                            Registration_Date = input.Registration_Date
+                            Stage = "Registered"
+                            Qualification_Status = "Pending"
+                            Vendor_Status = "Pending Review"
+                            Contact_Person = input.Contact_Name
+                            Contact_Email = input.Contact_Email
+                            Contact_Phone = input.Contact_Phone
+                            Vendor_Address = input.Vendor_Address
+                            Tax_ID = input.Tax_ID
+                            Business_Registration_Number = input.Business_Registration_Number
+                            Registration_Document = input.Registration_Document
+                            Compliance_Document = input.Compliance_Document
+                            Lifecycle_Notes = zoho.currentdate.toString() + " - Vendor created from registration " + input.Registration_ID
+                        ];
+                        input.Linked_Vendor = vendorId;
+                    }
+                    else
+                    {
+                        vendorRec = Vendors[ID == vendorId];
+                        if(vendorRec.count() > 0)
+                        {
+                            vendorRec.Vendor_Name = input.Vendor_Name;
+                            vendorRec.Vendor_Category_Config = input.Vendor_Category;
+                            vendorRec.Primary_Product_Service_Category = input.Primary_Product_Service_Category;
+                            vendorRec.Vendor_Type = input.Vendor_Type;
+                            vendorRec.Contact_Person = input.Contact_Name;
+                            vendorRec.Contact_Email = input.Contact_Email;
+                            vendorRec.Contact_Phone = input.Contact_Phone;
+                            vendorRec.Vendor_Address = input.Vendor_Address;
+                            vendorRec.Tax_ID = input.Tax_ID;
+                            vendorRec.Business_Registration_Number = input.Business_Registration_Number;
+                            vendorRec.Vendor_Status = "Pending Review";
+                            vendorRec.Lifecycle_Notes = ifnull(vendorRec.Lifecycle_Notes,"") + "\n" + zoho.currentdate.toString() + " - Vendor updated from registration " + input.Registration_ID;
+                        }
+                    }
+                    if(input.Contact_Email != null && input.Contact_Email != "")
+                    {
+                        existingContact = Vendor_Contacts[Vendor == vendorId && Email == input.Contact_Email];
+                        if(existingContact.count() > 0)
+                        {
+                            existingContact.Contact_Name = input.Contact_Name;
+                            existingContact.Contact_Role = "Primary";
+                            existingContact.Phone = input.Contact_Phone;
+                            existingContact.Primary_Contact = true;
+                            existingContact.Active = true;
+                        }
+                        else
+                        {
+                            insert into Vendor_Contacts
+                            [
+                                Vendor = vendorId
+                                Contact_Name = input.Contact_Name
+                                Contact_Role = "Primary"
+                                Email = input.Contact_Email
+                                Phone = input.Contact_Phone
+                                Primary_Contact = true
+                                Active = true
+                            ];
+                        }
+                    }
+                    if(input.Registration_Document != null || input.Compliance_Document != null)
+                    {
+                        vendorForNote = Vendors[ID == vendorId];
+                        if(vendorForNote.count() > 0)
+                        {
+                            vendorForNote.Lifecycle_Notes = ifnull(vendorForNote.Lifecycle_Notes,"") + "\n" + zoho.currentdate.toString() + " - Initial registration documents retained on registration record " + input.Registration_ID;
+                        }
+                    }
+                    input.Registration_Status = "Converted";
+                }
+            )
+        }
+    }
+}

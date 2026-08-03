@@ -1,0 +1,37 @@
+Vendor_Onboarding_On_Load as "Prepare Onboarding Form"
+{
+    type = form
+    form = Vendor_Onboarding
+    record event = on add or edit
+    description = "Sets manager and dynamic activation fields."
+
+    on load
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Onboarding_Manager_Email == null || input.Onboarding_Manager_Email == "")
+                {
+                    input.Onboarding_Manager_Email = zoho.loginuser;
+                }
+                if(input.Onboarding_Result == null || input.Onboarding_Result == "")
+                {
+                    input.Onboarding_Result = "Pending";
+                }
+                disable Baseline_Score;
+                disable Calculated_Onboarding_Score;
+                disable Onboarding_Result;
+                if(input.Activate_After_Onboarding == true)
+                {
+                    show Active_From;
+                    enable Active_From;
+                }
+                else
+                {
+                    hide Active_From;
+                }
+            )
+        }
+    }
+}

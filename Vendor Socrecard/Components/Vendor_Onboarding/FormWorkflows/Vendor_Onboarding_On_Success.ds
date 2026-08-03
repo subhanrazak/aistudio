@@ -1,0 +1,43 @@
+Vendor_Onboarding_On_Success as "Update Vendor From Onboarding"
+{
+    type = form
+    form = Vendor_Onboarding
+    record event = on add or edit
+    description = "Stores baseline score and activates qualified vendors."
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                finalScore = input.Calculated_Onboarding_Score;
+                if(finalScore == null)
+                {
+                    finalScore = input.Onboarding_Score;
+                }
+                vendorRec = Vendors[ID == input.Vendor];
+                if(vendorRec.count() > 0)
+                {
+                    vendorRec.Onboarding_Baseline_Score = finalScore;
+                    if(input.Onboarding_Status == "Completed" && input.Onboarding_Result == "Qualified")
+                    {
+                        vendorRec.Qualification_Status = "Qualified";
+                        vendorRec.Vendor_Status = "Approved";
+                        if(vendorRec.Stage == "Risk Assessed")
+                        {
+                            vendorRec.Stage = "Onboarded";
+                        }
+                    }
+                    if(input.Activate_After_Onboarding == true && input.Active_From != null && input.Onboarding_Result == "Qualified")
+                    {
+                        vendorRec.Active_From = input.Active_From;
+                        vendorRec.Stage = "Active";
+                        vendorRec.Vendor_Status = "Approved";
+                    }
+                    vendorRec.Lifecycle_Notes = ifnull(vendorRec.Lifecycle_Notes,"") + "\n" + zoho.currentdate.toString() + " - Onboarding score " + finalScore + " (" + input.Onboarding_Result + ") recorded by " + zoho.loginuser;
+                }
+            )
+        }
+    }
+}

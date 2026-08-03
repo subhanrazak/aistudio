@@ -1,0 +1,29 @@
+App_Users_On_Validate as "Validate User"
+{
+    type = form
+    form = App_Users
+    record event = on add or edit
+    description = "Validates active user email uniqueness."
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.User_Email == null || input.User_Email == "")
+                {
+                    alert "User Email is required.";
+                    cancel submit;
+                }
+                input.User_Email = input.User_Email.trim().toLowerCase();
+                duplicateUser = App_Users[User_Email == input.User_Email && Active == true && ID != input.ID];
+                if(input.Active == true && duplicateUser.count() > 0)
+                {
+                    alert "An active user with this email already exists.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}

@@ -1,0 +1,46 @@
+Vendor_Documents_On_Validate as "Validate Document"
+{
+    type = form
+    form = Vendor_Documents
+    record event = on add or edit
+    description = "Validates document dates and verification requirements."
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Issue_Date != null && input.Expiry_Date != null && input.Expiry_Date < input.Issue_Date)
+                {
+                    alert "Expiry Date cannot be earlier than Issue Date.";
+                    cancel submit;
+                }
+                if(input.Verification_Status == null || input.Verification_Status == "")
+                {
+                    input.Verification_Status = "Pending";
+                }
+                if(input.Expiry_Date != null && input.Expiry_Date < zoho.currentdate && input.Verification_Status != "Rejected")
+                {
+                    input.Verification_Status = "Expired";
+                }
+                if(input.Verification_Status == "Verified")
+                {
+                    if(input.Document_File == null)
+                    {
+                        alert "Document File is required before a document can be verified.";
+                        cancel submit;
+                    }
+                    if(input.Verified_By == null || input.Verified_By == "")
+                    {
+                        input.Verified_By = zoho.loginuser;
+                    }
+                    if(input.Verified_On == null)
+                    {
+                        input.Verified_On = zoho.currentdate;
+                    }
+                }
+            )
+        }
+    }
+}

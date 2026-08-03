@@ -1,0 +1,26 @@
+Vendor_Contacts_On_Success as "Update Vendor Primary Contact"
+{
+    type = form
+    form = Vendor_Contacts
+    record event = on add or edit
+    description = "Updates the vendor summary from the active primary contact."
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Primary_Contact == true && input.Active == true)
+                {
+                    update Vendors[ID == input.Vendor]
+                    [
+                        Contact_Person = input.Contact_Name
+                        Contact_Email = input.Email
+                        Contact_Phone = input.Phone
+                    ];
+                }
+            )
+        }
+    }
+}

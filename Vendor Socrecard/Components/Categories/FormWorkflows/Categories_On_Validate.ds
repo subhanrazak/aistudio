@@ -1,0 +1,32 @@
+Categories_On_Validate as "Validate Category"
+{
+    type = form
+    form = Categories
+    record event = on add or edit
+    description = "Validates category name and active code uniqueness."
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Category_Name == null || input.Category_Name == "")
+                {
+                    alert "Category Name is required.";
+                    cancel submit;
+                }
+                if(input.Category_Code != null && input.Category_Code != "")
+                {
+                    input.Category_Code = input.Category_Code.trim().toUpperCase();
+                    duplicateCode = Categories[Category_Type == input.Category_Type && Category_Code == input.Category_Code && Active == true && ID != input.ID];
+                    if(input.Active == true && duplicateCode.count() > 0)
+                    {
+                        alert "An active category with this code already exists for the selected category type.";
+                        cancel submit;
+                    }
+                }
+            )
+        }
+    }
+}
