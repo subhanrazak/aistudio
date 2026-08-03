@@ -1,0 +1,36 @@
+Workflow_Configuration_On_Validate as "Workflow Configuration On Validate"
+{
+    type = form
+    form = Workflow_Configuration
+    record event = on add or edit
+    description = "Validates configured process status rows."
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if (ifnull(input.Status_Order,0) < 0)
+                {
+                    alert "Status Order cannot be negative.";
+                    cancel submit;
+                }
+                if (ifnull(input.SLA_Days,0) < 0)
+                {
+                    alert "SLA Days cannot be negative.";
+                    cancel submit;
+                }
+                if (input.Status == "Active")
+                {
+                    dup = Workflow_Configuration[ID != input.ID && Process_Area == input.Process_Area && Status_Name == input.Status_Name && Status == "Active"];
+                    if (dup.count() > 0)
+                    {
+                        alert "An active status already exists for this process area.";
+                        cancel submit;
+                    }
+                }
+            )
+        }
+    }
+}

@@ -1,0 +1,22 @@
+Users_On_Validate as "Users On Validate"
+{
+    type = form
+    form = Users
+    record event = on add or edit
+    description = "Validates active internal user master rows."
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if (input.Active == true && ifnull(input.User_Profile,"") == "")
+                {
+                    alert "User Profile is required for active users.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}

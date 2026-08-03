@@ -1,0 +1,27 @@
+Documents_On_Validate as "Documents On Validate"
+{
+    type = form
+    form = Documents
+    record event = on add or edit
+    description = "Validates document dates and rejection details."
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if (input.Issue_Date != null && input.Expiry_Date != null && input.Expiry_Date < input.Issue_Date)
+                {
+                    alert "Expiry Date cannot be before Issue Date.";
+                    cancel submit;
+                }
+                if (input.Verification_Status == "Rejected" && input.Rejection_Reason in ["", " ", "null"])
+                {
+                    alert "Rejection Reason is required when a document is rejected.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}

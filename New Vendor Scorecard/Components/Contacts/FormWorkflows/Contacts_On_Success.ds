@@ -1,0 +1,24 @@
+Contacts_On_Success as "Contacts On Success"
+{
+    type = form
+    form = Contacts
+    record event = on add or edit
+    description = "Keeps only one primary contact per vendor."
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if (input.Is_Primary_Contact == true)
+                {
+                    for each  contactRec in Contacts[ID != input.ID && Vendor == input.Vendor]
+                    {
+                        contactRec.Is_Primary_Contact = false;
+                    }
+                }
+            )
+        }
+    }
+}

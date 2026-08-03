@@ -1,0 +1,35 @@
+Verification_Status_On_User_Input as "Verification Status On User Input"
+{
+    type = form
+    form = Documents
+    record event = on add or edit
+    description = "Sets verifier metadata and controls rejection reason visibility."
+
+    on user input of Verification_Status
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if (input.Verification_Status == "Verified")
+                {
+                    input.Verified_On = zoho.currentdate;
+                    userRec = Users[Email == zoho.loginuserid];
+                    if (userRec.count() > 0)
+                    {
+                        input.Verified_By = userRec.ID;
+                    }
+                    hide Rejection_Reason;
+                }
+                else if (input.Verification_Status == "Rejected")
+                {
+                    show Rejection_Reason;
+                }
+                else
+                {
+                    hide Rejection_Reason;
+                }
+            )
+        }
+    }
+}

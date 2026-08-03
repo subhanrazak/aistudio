@@ -1,0 +1,52 @@
+<style>
+.vendor-mini-chart { background:#FFFFFF; border:1px solid #E7E7EE; border-radius:12px; padding:18px; box-sizing:border-box; min-height:320px; }
+.vendor-mini-chart-title { color:var(--zcs_primary_text_color); font-size:16px; font-weight:700; margin-bottom:6px; }
+.vendor-mini-chart-subtitle { color:var(--zcs_tertiary_text_color); font-size:12px; margin-bottom:16px; }
+.vendor-chart-row { margin-bottom:12px; }
+.vendor-chart-label { display:flex; justify-content:space-between; gap:12px; color:var(--zcs_primary_text_color); font-size:13px; margin-bottom:5px; }
+.vendor-chart-track { height:10px; background:#E8EFFF; border-radius:999px; overflow:hidden; }
+.vendor-chart-fill { height:100%; background:#2A6FFC; border-radius:999px; }
+.vendor-empty-state { color:var(--zcs_tertiary_text_color); font-size:14px; padding:20px 0; }
+</style>
+<%
+evalRows = Evaluation[Vendor == input.Vendor_ID];
+%>
+<div class="vendor-mini-chart">
+  <div class="vendor-mini-chart-title">Evaluation Weighted Score by Category</div>
+  <div class="vendor-mini-chart-subtitle">Vendor-filtered score rows rendered without native page criteria.</div>
+<%
+if(evalRows.count() == 0)
+{
+%>
+  <div class="vendor-empty-state">No evaluation score rows found for this vendor.</div>
+<%
+}
+else
+{
+  for each evalRec in evalRows
+  {
+    categoryName = "Uncategorised";
+    if(evalRec.Category != null)
+    {
+      categoryName = ifnull(evalRec.Category.Category_Name,"Uncategorised");
+    }
+    scoreValue = ifnull(evalRec.Weighted_Score,0);
+    scoreWidth = scoreValue;
+    if(scoreWidth < 0)
+    {
+      scoreWidth = 0;
+    }
+    if(scoreWidth > 100)
+    {
+      scoreWidth = 100;
+    }
+%>
+  <div class="vendor-chart-row">
+    <div class="vendor-chart-label"><span><%=categoryName%></span><strong><%=scoreValue%></strong></div>
+    <div class="vendor-chart-track"><div class="vendor-chart-fill" style="width:<%=scoreWidth%>%;"></div></div>
+  </div>
+<%
+  }
+}
+%>
+</div>

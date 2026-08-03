@@ -1,0 +1,37 @@
+Registration_On_Validate as "Registration On Validate"
+{
+    type = form
+    form = Registration
+    record event = on add or edit
+    description = "Validates declaration and non-negative business metrics."
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if (input.Registration_Status in {"Submitted","Under Review","Clarification Required","Accepted","Rejected"} && input.Declaration_Accepted == false)
+                {
+                    alert "Declaration must be accepted before submission or review.";
+                    cancel submit;
+                }
+                if (ifnull(input.Years_In_Business,0) < 0)
+                {
+                    alert "Years In Business cannot be negative.";
+                    cancel submit;
+                }
+                if (ifnull(input.Employee_Count,0) < 0)
+                {
+                    alert "Employee Count cannot be negative.";
+                    cancel submit;
+                }
+                if (ifnull(input.Annual_Turnover,0) < 0)
+                {
+                    alert "Annual Turnover cannot be negative.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}

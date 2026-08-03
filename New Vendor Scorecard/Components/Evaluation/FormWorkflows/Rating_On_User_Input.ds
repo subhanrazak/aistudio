@@ -1,0 +1,31 @@
+Evaluation_Rating_On_User_Input as "Evaluation Rating On User Input"
+{
+    type = form
+    form = Evaluation
+    record event = on add or edit
+    description = "Loads rating score percentage and recalculates weighted score."
+
+    on user input of Rating
+    {
+        actions
+        {
+            custom deluge script
+            (
+                input.Rating_Score_Percentage = 0;
+                if (input.Rating != null)
+                {
+                    ratingRec = Rating_Scales[ID == input.Rating && Status == "Active" && (Process_Area == "Evaluation" || Process_Area == "General")];
+                    if (ratingRec.count() > 0)
+                    {
+                        input.Rating_Score_Percentage = ifnull(ratingRec.Score_Percentage,0);
+                    }
+                    else
+                    {
+                        alert "Selected rating scale is not active for Evaluation.";
+                    }
+                }
+                input.Weighted_Score = (ifnull(input.Weight_Percentage,0) * ifnull(input.Rating_Score_Percentage,0)) / 100;
+            )
+        }
+    }
+}

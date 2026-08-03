@@ -1,0 +1,34 @@
+Performance_Review_On_Validate as "Performance Review On Validate"
+{
+    type = form
+    form = Performance_Review
+    record event = on add or edit
+    description = "Validates performance review readiness and recomputes weighted score."
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                critRec = Criteria[ID == input.Criteria];
+                if (critRec.count() > 0 && critRec.Applies_To != "Performance Review")
+                {
+                    alert "Selected criterion is not configured for Performance Review.";
+                    cancel submit;
+                }
+                if (input.Review_Status in {"Submitted","Reviewed","Finalized"} && input.Rating == null)
+                {
+                    alert "Rating is required before submission.";
+                    cancel submit;
+                }
+                if (input.Review_Date != null && input.Next_Review_Date != null && input.Next_Review_Date < input.Review_Date)
+                {
+                    alert "Next Review Date cannot be before Review Date.";
+                    cancel submit;
+                }
+                input.Weighted_Score = (ifnull(input.Weight_Percentage,0) * ifnull(input.Rating_Score_Percentage,0)) / 100;
+            )
+        }
+    }
+}

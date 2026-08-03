@@ -1,0 +1,37 @@
+Evaluation_On_Validate as "Evaluation On Validate"
+{
+    type = form
+    form = Evaluation
+    record event = on add or edit
+    description = "Validates evaluation readiness and recomputes weighted score."
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                critRec = Criteria[ID == input.Criteria];
+                if (critRec.count() > 0 && critRec.Applies_To != "Evaluation")
+                {
+                    alert "Selected criterion is not configured for Evaluation.";
+                    cancel submit;
+                }
+                if (input.Evaluation_Status in {"Submitted","Reviewed","Finalized"})
+                {
+                    if (ifnull(input.Weight_Percentage,0) <= 0)
+                    {
+                        alert "Weight Percentage must be configured before submission.";
+                        cancel submit;
+                    }
+                    if (input.Rating == null)
+                    {
+                        alert "Rating is required before submission.";
+                        cancel submit;
+                    }
+                }
+                input.Weighted_Score = (ifnull(input.Weight_Percentage,0) * ifnull(input.Rating_Score_Percentage,0)) / 100;
+            )
+        }
+    }
+}

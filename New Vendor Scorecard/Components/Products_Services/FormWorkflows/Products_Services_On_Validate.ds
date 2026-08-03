@@ -1,0 +1,27 @@
+Products_Services_On_Validate as "Products Services On Validate"
+{
+    type = form
+    form = Products_Services
+    record event = on add or edit
+    description = "Validates effective dates and approval readiness."
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if (input.Effective_From != null && input.Effective_To != null && input.Effective_To < input.Effective_From)
+                {
+                    alert "Effective To cannot be before Effective From.";
+                    cancel submit;
+                }
+                if (input.Approval_Status == "Approved" && input.Effective_From == null)
+                {
+                    alert "Effective From is required before approval.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}

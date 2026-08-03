@@ -1,0 +1,56 @@
+Onboarding_On_Success as "Onboarding On Success"
+{
+    type = form
+    form = Onboarding
+    record event = on add or edit
+    description = "Computes onboarding score and updates vendor onboarding status."
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                completedChecks = 0;
+                if (input.Bank_Details_Received == true)
+                {
+                    completedChecks = completedChecks + 1;
+                }
+                if (input.Contract_Signed == true)
+                {
+                    completedChecks = completedChecks + 1;
+                }
+                if (input.Compliance_Clearance == true)
+                {
+                    completedChecks = completedChecks + 1;
+                }
+                if (input.ERP_Created == true)
+                {
+                    completedChecks = completedChecks + 1;
+                }
+                score = (completedChecks * 100) / 4;
+                onboardRec = Onboarding[ID == input.ID];
+                if (onboardRec.count() > 0)
+                {
+                    onboardRec.Onboarding_Score = score;
+                }
+                vendorRec = Vendors[ID == input.Vendor];
+                if (vendorRec.count() > 0)
+                {
+                    if (input.Onboarding_Status == "Completed")
+                    {
+                        vendorRec.Vendor_Status = "Onboarded";
+                    }
+                    else if (input.Onboarding_Status == "Rejected")
+                    {
+                        vendorRec.Vendor_Status = "Rejected";
+                    }
+                    else if (input.Onboarding_Status == "In Progress" || input.Onboarding_Status == "Pending Documents" || input.Onboarding_Status == "Pending Approval")
+                    {
+                        vendorRec.Vendor_Status = "Onboarding";
+                    }
+                }
+            )
+        }
+    }
+}
