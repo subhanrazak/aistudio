@@ -1,0 +1,88 @@
+<%
+  recentComments = Comments[ID != 0] sort by Added_Time desc range from 1 to 7;
+%>
+<style>
+/* ZCS Timeline Without Time component */
+.zcs-tl-indicator { width:42px; left:0; }
+.zcs-tl-dot { width:12px; height:12px; background-color:var(--zcs-theme-brand-color); border:1px solid var(--zcs-white-color); box-shadow:0 2px 6px 0 #C4DEE4; }
+.zcs-tl-li:not(:last-child) .zcs-tl-indicator:before { content:''; display:flex; position:absolute; width:1px; height:calc(100% + 24px); background-color:#E1E1E1; top:5px; }
+.activity-card { min-height:410px; }
+.activity-feed { max-height:365px; overflow:auto; padding-right:4px; }
+.activity-feed .zcs-tl-li { list-style:none; }
+.activity-body { padding-left:46px; }
+.activity-title-line { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+.activity-badge { display:inline-flex; align-items:center; gap:5px; padding:3px 8px; border-radius:999px; background:#E8EFFF; color:#2A6FFC; font-size:11px; font-weight:600; white-space:nowrap; }
+.activity-badge.blocker { background:#FCF4E6; color:#B8770D; }
+.activity-badge.resolution { background:#E4FCF3; color:#179E6C; }
+.activity-badge.question { background:#F6F1FF; color:#6B46C1; }
+.activity-badge.progress { background:#EAF2FF; color:#1652BB; }
+.activity-comment { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.activity-followup { display:inline-flex; align-items:center; gap:6px; margin-top:8px; color:#B8770D; background:#FCF4E6; border-radius:8px; padding:4px 8px; font-size:12px; }
+.activity-empty { border:1px dashed var(--zcs-border-color); background:var(--task-muted-bg); border-radius:12px; padding:24px; text-align:center; }
+</style>
+<div class="zcs-card activity-card zcs-p-24 zcs-box-border zcs-flex zcs-direction-column zcs-gap-16">
+    <div class="zcs-flex zcs-justify-space-between zcs-align-items-center zcs-gap-12">
+        <div>
+            <h5 class="zcs-font-18 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0">Recent Activity</h5>
+            <p class="zcs-font-13 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-mt-8 zcs-mb-0 zcs-mx-0">Latest comments and task updates</p>
+        </div>
+        <i class="zc-li-outline ui-2-chat-round-content zcs-font-24 zcs-color-theme"></i>
+    </div>
+    <div class="zcs-timeline-wrapper zcs-without-time activity-feed">
+        <%
+          if(recentComments.count() == 0)
+          {
+        %>
+        <div class="activity-empty">
+            <i class="zc-li-outline ui-2-chat-round-content zcs-font-28 zcs-color-tertiary"></i>
+            <p class="zcs-font-14 zcs-color-tertiary zcs-mt-8 zcs-mb-0 zcs-mx-0">No comments have been added yet.</p>
+        </div>
+        <%
+          }
+          else
+          {
+        %>
+        <ul class="zcs-flex zcs-direction-column zcs-gap-24 zcs-p-0 zcs-m-0">
+            <%
+              for each commentRec in recentComments
+              {
+                updateType = ifnull(commentRec.Update_Type,"General Update");
+                updateClass = updateType.toLowerCase().replaceAll(" ","-");
+                if(updateClass == "general-update")
+                {
+                    updateClass = "general";
+                }
+                taskTitle = ifnull(commentRec.Task.Task_Title,"Task not selected");
+                commentText = ifnull(commentRec.Comment,"No comment text");
+            %>
+            <li class="zcs-tl-li zcs-row zcs-gap-0 zcs-relative">
+                <div class="zcs-tl-indicator zcs-h-full zcs-flex zcs-justify-center zcs-absolute"><span class="zcs-tl-dot zcs-rounded-half zcs-mt-5 zcs-box-border zcs-relative"></span></div>
+                <div class="activity-body zcs-flex zcs-direction-column zcs-col-12 zcs-box-border">
+                    <div class="activity-title-line">
+                        <h6 class="zcs-font-15 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0"><%= taskTitle %></h6>
+                        <span class="activity-badge <%= updateClass %>"><i class="zc-li-outline ui-1-tag"></i><%= updateType %></span>
+                    </div>
+                    <p class="activity-comment zcs-font-13 zcs-font-normal zcs-lh-body zcs-color-secondary zcs-mt-8 zcs-mx-0 zcs-mb-0"><%= commentText %></p>
+                    <div class="zcs-flex zcs-justify-space-between zcs-align-items-center zcs-gap-8 zcs-mt-8">
+                        <span class="zcs-font-12 zcs-color-tertiary"><i class="zc-li-outline users-single-03"></i> <%= ifnull(commentRec.Added_User,"User") %></span>
+                        <span class="zcs-font-12 zcs-color-tertiary"><%= commentRec.Added_Time %></span>
+                    </div>
+                    <%
+                      if(commentRec.Follow_Up_Date != null)
+                      {
+                    %>
+                    <span class="activity-followup"><i class="zc-li-outline ui-1-calendar-grid-58"></i>Follow-up: <%= commentRec.Follow_Up_Date %></span>
+                    <%
+                      }
+                    %>
+                </div>
+            </li>
+            <%
+              }
+            %>
+        </ul>
+        <%
+          }
+        %>
+    </div>
+</div>

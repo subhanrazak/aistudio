@@ -1,0 +1,2033 @@
+application "Task-manaegment-app"
+{
+	date format = "dd-MMM-yyyy"
+	time zone = "Asia/Kolkata"
+	time format = "24-hr"
+
+
+
+	forms
+	{
+		form Comments
+		{
+		    displayname = "Comments"
+		    success message = "Comment added successfully."
+		    record owner = Added_User
+		    Comment_Details
+		    (
+		        type = section
+		        displayname = "Comment Details"
+		        row = 1
+		        column = 0
+		    )
+		    must have Task
+		    (
+		        type = picklist
+		        displayname = "Task"
+		        values = Tasks.ID
+		        displayformat = [Task_Title]
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		    must have Comment
+		    (
+		        type = textarea
+		        displayname = "Comment"
+		        height = 140px
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		    Update_Type
+		    (
+		        type = picklist
+		        displayname = "Update Type"
+		        values = {"General Update","Progress","Blocker","Question","Resolution"}
+		        initial value = "General Update"
+		        row = 1
+		        column = 2
+		        width = medium
+		    )
+		    Follow_Up_Required
+		    (
+		        type = checkbox
+		        displayname = "Follow Up Required"
+		        initial value = false
+		        row = 1
+		        column = 2
+		        width = medium
+		    )
+		    Follow_Up_Date
+		    (
+		        type = date
+		        displayname = "Follow Up Date"
+		        row = 1
+		        column = 2
+		        width = medium
+		    )
+		    actions
+		    {
+		        on add
+		        {
+		            Submit
+		            (
+		                type = submit
+		                displayname = "Add Comment"
+		            )
+		            Reset
+		            (
+		                type = reset
+		                displayname = "Reset"
+		            )
+		        }
+		        on edit
+		        {
+		            Update
+		            (
+		                type = submit
+		                displayname = "Update Comment"
+		            )
+		            Cancel
+		            (
+		                type = cancel
+		                displayname = "Cancel"
+		            )
+		        }
+		    }
+		}
+
+		form Projects
+		{
+		    displayname = "Projects"
+		    success message = "Project saved successfully."
+		    record owner = Project_Manager
+		    Project_Information
+		    (
+		        type = section
+		        displayname = "Project Information"
+		        row = 1
+		        column = 0
+		    )
+		    must have unique Project_Code
+		    (
+		        type = text
+		        displayname = "Project Code"
+		        maxchar = 30
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		    must have Project_Name
+		    (
+		        type = text
+		        displayname = "Project Name"
+		        maxchar = 150
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		    must have Project_Manager
+		    (
+		        type = picklist
+		        displayname = "Project Manager"
+		        module = users
+		        displayformat = [name]
+		        row = 1
+		        column = 2
+		        width = medium
+		    )
+		    must have Status
+		    (
+		        type = picklist
+		        displayname = "Status"
+		        values = {"Planned","Active","On Hold","Completed","Cancelled"}
+		        initial value = "Planned"
+		        row = 1
+		        column = 2
+		        width = medium
+		    )
+		    must have Start_Date
+		    (
+		        type = date
+		        displayname = "Start Date"
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		    Due_Date
+		    (
+		        type = date
+		        displayname = "Due Date"
+		        row = 1
+		        column = 2
+		        width = medium
+		    )
+		    Details
+		    (
+		        type = section
+		        displayname = "Details"
+		        visibility = true
+		        row = 2
+		        column = 1
+		    )
+		    Description
+		    (
+		        type = textarea
+		        displayname = "Description"
+		        height = 120px
+		        row = 2
+		        column = 1
+		        width = medium
+		    )
+		    Priority
+		    (
+		        type = picklist
+		        displayname = "Priority"
+		        values = {"Low","Medium","High","Critical"}
+		        initial value = "Medium"
+		        row = 2
+		        column = 2
+		        width = medium
+		    )
+		    Budget_Hours
+		    (
+		        type = decimal
+		        displayname = "Budget Hours"
+		        decimalplace = 2
+		        row = 2
+		        column = 1
+		        width = medium
+		    )
+		    actions
+		    {
+		        on add
+		        {
+		            Submit
+		            (
+		                type = submit
+		                displayname = "Save Project"
+		            )
+		            Reset
+		            (
+		                type = reset
+		                displayname = "Reset"
+		            )
+		        }
+		        on edit
+		        {
+		            Update
+		            (
+		                type = submit
+		                displayname = "Update Project"
+		            )
+		            Cancel
+		            (
+		                type = cancel
+		                displayname = "Cancel"
+		            )
+		        }
+		    }
+		}
+
+		form Tasks
+		{
+		    displayname = "Tasks"
+		    success message = "Task saved successfully."
+		    record owner = Assigned_To
+		    Task_Information
+		    (
+		        type = section
+		        displayname = "Task Information"
+		        row = 1
+		        column = 0
+		    )
+		    Task_ID
+		    (
+		        type = autonumber
+		        displayname = "Task ID"
+		        start index = 1001
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		    must have Task_Title
+		    (
+		        type = text
+		        displayname = "Task Title"
+		        maxchar = 150
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		    must have Project
+		    (
+		        type = picklist
+		        displayname = "Project"
+		        values = Projects.ID
+		        displayformat = [Project_Name]
+		        row = 1
+		        column = 2
+		        width = medium
+		    )
+		    must have Assigned_To
+		    (
+		        type = picklist
+		        displayname = "Assigned To"
+		        module = users
+		        displayformat = [name]
+		        row = 1
+		        column = 2
+		        width = medium
+		    )
+		    must have Status
+		    (
+		        type = picklist
+		        displayname = "Status"
+		        values = {"To Do","In Progress","Blocked","Done","Cancelled"}
+		        initial value = "To Do"
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		    must have Priority
+		    (
+		        type = picklist
+		        displayname = "Priority"
+		        values = {"Low","Medium","High","Critical"}
+		        initial value = "Medium"
+		        row = 1
+		        column = 2
+		        width = medium
+		    )
+		    Scheduling
+		    (
+		        type = section
+		        displayname = "Scheduling"
+		        visibility = true
+		        row = 2
+		        column = 1
+		    )
+		    Start_Date
+		    (
+		        type = date
+		        displayname = "Start Date"
+		        initial value = "${zoho.currentdate}"
+		        row = 2
+		        column = 1
+		        width = medium
+		    )
+		    Due_Date
+		    (
+		        type = date
+		        displayname = "Due Date"
+		        row = 2
+		        column = 2
+		        width = medium
+		    )
+		    Completed_Date
+		    (
+		        type = date
+		        displayname = "Completed Date"
+		        row = 2
+		        column = 2
+		        width = medium
+		    )
+		    Estimated_Hours
+		    (
+		        type = decimal
+		        displayname = "Estimated Hours"
+		        decimalplace = 2
+		        row = 2
+		        column = 1
+		        width = medium
+		    )
+		    Actual_Hours
+		    (
+		        type = decimal
+		        displayname = "Actual Hours"
+		        decimalplace = 2
+		        row = 2
+		        column = 2
+		        width = medium
+		    )
+		    Details
+		    (
+		        type = section
+		        displayname = "Details"
+		        visibility = true
+		        row = 3
+		        column = 1
+		    )
+		    Description
+		    (
+		        type = textarea
+		        displayname = "Description"
+		        height = 140px
+		        row = 3
+		        column = 1
+		        width = medium
+		    )
+		    Blocker_Reason
+		    (
+		        type = textarea
+		        displayname = "Blocker Reason"
+		        height = 90px
+		        row = 3
+		        column = 2
+		        width = medium
+		    )
+		    actions
+		    {
+		        on add
+		        {
+		            Submit
+		            (
+		                type = submit
+		                displayname = "Save Task"
+		            )
+		            Reset
+		            (
+		                type = reset
+		                displayname = "Reset"
+		            )
+		        }
+		        on edit
+		        {
+		            Update
+		            (
+		                type = submit
+		                displayname = "Update Task"
+		            )
+		            Cancel
+		            (
+		                type = cancel
+		                displayname = "Cancel"
+		            )
+		        }
+		    }
+		}
+	}
+
+	reports
+	{
+		default list All_Comments
+		{
+		    displayName = "All Comments"
+		    show all rows from Comments
+		    (
+		        Task
+		        Update_Type
+		        Follow_Up_Required
+		        Follow_Up_Date
+		        Comment
+		    )
+		    filters
+		    (
+		        Task
+		        Update_Type
+		        Follow_Up_Required
+		    )
+		    sort by
+		    (
+		        Follow_Up_Date ascending
+		    )
+		}
+
+		list Follow_Up_Comments
+		{
+		    displayName = "Follow Up Comments"
+		    show all rows from Comments [Follow_Up_Required == true]
+		    (
+		        Task
+		        Update_Type
+		        Follow_Up_Date
+		        Comment
+		    )
+		    filters
+		    (
+		        Task
+		        Update_Type
+		    )
+		    sort by
+		    (
+		        Follow_Up_Date ascending
+		    )
+		}
+
+		list Active_Projects
+		{
+		    displayName = "Active Projects"
+		    show all rows from Projects [Status == "Active"]
+		    (
+		        Project_Code
+		        Project_Name
+		        Project_Manager
+		        Priority
+		        Start_Date
+		        Due_Date
+		        Budget_Hours
+		    )
+		    filters
+		    (
+		        Project_Manager
+		        Priority
+		    )
+		    sort by
+		    (
+		        Due_Date ascending
+		    )
+		}
+
+		default list All_Projects
+		{
+		    displayName = "All Projects"
+		    show all rows from Projects
+		    (
+		        Project_Code
+		        Project_Name
+		        Project_Manager
+		        Status
+		        Priority
+		        Start_Date
+		        Due_Date
+		        Budget_Hours
+		    )
+		    filters
+		    (
+		        Project_Manager
+		        Status
+		        Priority
+		    )
+		    group by
+		    (
+		        properties
+		        (
+		            display record count = true
+		        )
+		        Status ascending
+		    )
+		    sort by
+		    (
+		        Due_Date ascending
+		        Project_Name ascending
+		    )
+		}
+
+		calendar Project_Calendar
+		{
+		    displayName = "Project Calendar"
+		    show all rows from Projects [Status != "Cancelled"]
+		    (
+		        Project_Name
+		        Project_Manager
+		        Status
+		        Start_Date
+		        Due_Date
+		    )
+		    filters
+		    (
+		        Project_Manager
+		        Status
+		    )
+		    options
+		    (
+		        display type = month
+		        week start day = monday
+		        display field = Project_Name
+		        start date = Start_Date
+		        end date = Due_Date
+		        default date
+		        (
+		            day   = Today
+		            month = Currentmonth
+		            year  = Currentyear
+		        )
+		    )
+		}
+
+		default list All_Tasks
+		{
+		    displayName = "All Tasks"
+		    show all rows from Tasks
+		    (
+		        Task_ID
+		        Task_Title
+		        Project
+		        Assigned_To
+		        Status
+		        Priority
+		        Start_Date
+		        Due_Date
+		        Completed_Date
+		        Estimated_Hours
+		        Actual_Hours
+		    )
+		    filters
+		    (
+		        Project
+		        Assigned_To
+		        Status
+		        Priority
+		    )
+		    group by
+		    (
+		        properties
+		        (
+		            display record count = true
+		        )
+		        Status ascending
+		    )
+		    sort by
+		    (
+		        Due_Date ascending
+		        Priority descending
+		    )
+		}
+
+		list My_Open_Tasks
+		{
+		    displayName = "My Open Tasks"
+		    show all rows from Tasks [Status != "Done" && Status != "Cancelled"]
+		    (
+		        Task_ID
+		        Task_Title
+		        Project
+		        Assigned_To
+		        Status
+		        Priority
+		        Due_Date
+		        Estimated_Hours
+		    )
+		    filters
+		    (
+		        Project
+		        Status
+		        Priority
+		    )
+		    sort by
+		    (
+		        Due_Date ascending
+		    )
+		}
+
+		list Overdue_Tasks
+		{
+		    displayName = "Overdue Tasks"
+		    show all rows from Tasks [Due_Date < zoho.currentdate && Status != "Done" && Status != "Cancelled"]
+		    (
+		        Task_ID
+		        Task_Title
+		        Project
+		        Assigned_To
+		        Status
+		        Priority
+		        Due_Date
+		    )
+		    filters
+		    (
+		        Project
+		        Assigned_To
+		        Priority
+		    )
+		    sort by
+		    (
+		        Due_Date ascending
+		    )
+		}
+
+		kanban Task_Board
+		{
+		    displayName = "Task Board"
+		    show all rows from Tasks [Status != "Cancelled"]
+		    (
+		        Task_ID
+		        Task_Title
+		        Project
+		        Assigned_To
+		        Status
+		        Priority
+		        Due_Date
+		    )
+		    filters
+		    (
+		        Project
+		        Assigned_To
+		        Priority
+		    )
+		    sort by
+		    (
+		        Due_Date ascending
+		    )
+		    options
+		    (
+		        display field = Status
+		        emptycolumn = "No Status"
+		        sort order = ascending
+		        record count = enable
+		    )
+		}
+
+		calendar Task_Calendar
+		{
+		    displayName = "Task Calendar"
+		    show all rows from Tasks [Status != "Cancelled"]
+		    (
+		        Task_Title
+		        Project
+		        Assigned_To
+		        Status
+		        Priority
+		        Start_Date
+		        Due_Date
+		    )
+		    filters
+		    (
+		        Project
+		        Assigned_To
+		        Status
+		        Priority
+		    )
+		    options
+		    (
+		        display type = month
+		        week start day = monday
+		        display field = Task_Title
+		        start date = Start_Date
+		        end date = Due_Date
+		        default date
+		        (
+		            day   = Today
+		            month = Currentmonth
+		            year  = Currentyear
+		        )
+		    )
+		}
+	}
+
+	pages
+	{
+		page Task_Dashboard
+		{
+					displayname = "Task Dashboard"
+					Content="<zml>\n\t<layout>\n\t\t<row>\n\t\t\t<column width='100%'>\n\t\t\t\t<dsp id='Dashboard_Header' elementName='Dashboard_Header'>\n\t\t\t\t\t<![CDATA[htmlpage Dashboard_Header()\n\t\t\t\t\t\tcontent\n\t\t\t\t\t\t &lt;%{%&gt;\n\t\t\t\t\t\t\t\t &lt;%\n\ttotalProjects = Projects[ID != 0].count();\n\tactiveProjects = Projects[Status == &quot;Active&quot;].count();\n\ttotalTasks = Tasks[ID != 0].count();\n\topenTasks = Tasks[Status != &quot;Done&quot; &amp;&amp; Status != &quot;Cancelled&quot;].count();\n\toverdueTasks = Tasks[Due_Date != null &amp;&amp; Due_Date &lt; zoho.currentdate &amp;&amp; Status != &quot;Done&quot; &amp;&amp; Status != &quot;Cancelled&quot;].count();\n\tcompletedTasks = Tasks[Status == &quot;Done&quot;].count();\n\tblockedTasks = Tasks[Status == &quot;Blocked&quot;].count();\n%&gt;\n&lt;style&gt;\n/* ZCS Global Utility Stylesheet included once for Task_Dashboard. Compact utility subset from zcs-global used by this page. */\n:root {\n\t\t--zcs-theme-brand-color: var(--zcs_brand_color, #2A6FFC);\n\t\t--zcs-light-bg-color: var(--zcs_brand_light_color, #E8EFFF);\n\t\t--zcs-page-bg-color: #F3F3F4;\n\t\t--zcs-primary-text-color: var(--zcs_primary_text_color, #12132B);\n\t\t--zcs-secondary-text-color: var(--zcs_secondary_text_color, #505166);\n\t\t--zcs-teritiary-text-color: var(--zcs_tertiary_text_color, #71718C);\n\t\t--zcs-border-color: var(--zcs_tertiary_border_color, #E7E7EE);\n\t\t--zcs-white-color: #FFFFFF;\n\t\t--zcs-black-color: #000000;\n\t\t--task-blue: #2A6FFC;\n\t\t--task-red: #FE455D;\n\t\t--task-amber: #B8770D;\n\t\t--task-green: #179E6C;\n\t\t--task-muted-bg: #F9FAFE;\n\t\tfont-size: 16px;\n\t\tline-height: 1.5;\n\t\t--column-gap: 0px;\n}\n.zcs-row { display:flex; flex-wrap:wrap; }\n.zcs-flex { display:flex; }\n.zcs-inline-flex { display:inline-flex; }\n.zcs-direction-column { flex-direction:column; }\n.zcs-align-items-center, .zcs-align-center { align-items:center; }\n.zcs-align-items-start { align-items:flex-start; }\n.zcs-justify-center { justify-content:center; }\n.zcs-justify-space-between { justify-content:space-between; }\n.zcs-col-3 { flex:0 0 calc(25% - var(--column-gap) * .75); max-width:calc(25% - var(--column-gap) * .75); }\n.zcs-col-4 { flex:0 0 calc(33.333% - var(--column-gap) * .666); max-width:calc(33.333% - var(--column-gap) * .666); }\n.zcs-col-5 { flex:0 0 calc(41.666% - var(--column-gap) * .583); max-width:calc(41.666% - var(--column-gap) * .583); }\n.zcs-col-6 { flex:0 0 calc(50% - var(--column-gap) * .5); max-width:calc(50% - var(--column-gap) * .5); }\n.zcs-col-7 { flex:0 0 calc(58.333% - var(--column-gap) * .416); max-width:calc(58.333% - var(--column-gap) * .416); }\n.zcs-col-12 { flex:0 0 100%; max-width:100%; }\n.zcs-w-full { width:100%; }\n.zcs-h-full { height:100%; }\n.zcs-wh-full { width:100%; height:100%; }\n.zcs-box-border { box-sizing:border-box; }\n.zcs-relative { position:relative; }\n.zcs-absolute { position:absolute; }\n.zcs-sticky { position:sticky; }\n.zcs-overflow-auto { overflow:auto; }\n.zcs-overflow-hidden { overflow:hidden; }\n.zcs-ellipsis { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }\n.zcs-rounded-sm { border-radius:4px; }\n.zcs-rounded-md { border-radius:6px; }\n.zcs-rounded-lg { border-radius:8px; }\n.zcs-rounded-xl { border-radius:12px; }\n.zcs-rounded-2xl { border-radius:16px; }\n.zcs-rounded-half { border-radius:50%; }\n.zcs-p-0 { padding:0; }\n.zcs-p-2 { padding:.125rem; }\n.zcs-p-5 { padding:.3125rem; }\n.zcs-p-6 { padding:.375rem; }\n.zcs-p-8 { padding:.5rem; }\n.zcs-p-10 { padding:.625rem; }\n.zcs-p-12 { padding:.75rem; }\n.zcs-p-16 { padding:1rem; }\n.zcs-p-20 { padding:1.25rem; }\n.zcs-p-24 { padding:1.5rem; }\n.zcs-px-8 { padding-left:.5rem; padding-right:.5rem; }\n.zcs-px-10 { padding-left:.625rem; padding-right:.625rem; }\n.zcs-px-12 { padding-left:.75rem; padding-right:.75rem; }\n.zcs-px-16 { padding-left:1rem; padding-right:1rem; }\n.zcs-px-20 { padding-left:1.25rem; padding-right:1.25rem; }\n.zcs-px-24 { padding-left:1.5rem; padding-right:1.5rem; }\n.zcs-px-60 { padding-left:3.75rem; padding-right:3.75rem; }\n.zcs-py-4 { padding-top:.25rem; padding-bottom:.25rem; }\n.zcs-py-6 { padding-top:.375rem; padding-bottom:.375rem; }\n.zcs-py-8 { padding-top:.5rem; padding-bottom:.5rem; }\n.zcs-py-10 { padding-top:.625rem; padding-bottom:.625rem; }\n.zcs-py-12 { padding-top:.75rem; padding-bottom:.75rem; }\n.zcs-py-14 { padding-top:.875rem; padding-bottom:.875rem; }\n.zcs-py-16 { padding-top:1rem; padding-bottom:1rem; }\n.zcs-m-0 { margin:0; }\n.zcs-mt-5 { margin-top:.3125rem; }\n.zcs-mt-8 { margin-top:.5rem; }\n.zcs-mx-0 { margin-left:0; margin-right:0; }\n.zcs-mb-0 { margin-bottom:0; }\n.zcs-gap-0 { gap:0; --column-gap:0; }\n.zcs-gap-6 { gap:.375rem; --column-gap:.375rem; }\n.zcs-gap-8 { gap:.5rem; --column-gap:.5rem; }\n.zcs-gap-10 { gap:.625rem; --column-gap:.625rem; }\n.zcs-gap-12 { gap:.75rem; --column-gap:.75rem; }\n.zcs-gap-14 { gap:.875rem; --column-gap:.875rem; }\n.zcs-gap-16 { gap:1rem; --column-gap:1rem; }\n.zcs-gap-20 { gap:1.25rem; --column-gap:1.25rem; }\n.zcs-gap-24 { gap:1.5rem; --column-gap:1.5rem; }\n.zcs-gap-32 { gap:2rem; --column-gap:2rem; }\n.zcs-font-11 { font-size:.6875rem; }\n.zcs-font-12 { font-size:.75rem; }\n.zcs-font-13 { font-size:.8125rem; }\n.zcs-font-14 { font-size:.875rem; }\n.zcs-font-15 { font-size:.9375rem; }\n.zcs-font-16 { font-size:1rem; }\n.zcs-font-18 { font-size:1.125rem; }\n.zcs-font-20 { font-size:1.25rem; }\n.zcs-font-22 { font-size:1.375rem; }\n.zcs-font-24 { font-size:1.5rem; }\n.zcs-font-28 { font-size:1.75rem; }\n.zcs-font-30 { font-size:1.875rem; }\n.zcs-font-normal { font-weight:400; }\n.zcs-font-medium { font-weight:500; }\n.zcs-font-semibold { font-weight:600; }\n.zcs-font-bold { font-weight:700; }\n.zcs-lh-heading { line-height:1.25; }\n.zcs-lh-body { line-height:1.5; }\n.zcs-uppercase { text-transform:uppercase; }\n.zcs-text-left { text-align:left; }\n.zcs-text-right { text-align:right; }\n.zcs-text-center { text-align:center; }\n.zcs-color-theme { color:var(--zcs-theme-brand-color); }\n.zcs-color-primary { color:var(--zcs-primary-text-color); }\n.zcs-color-secondary { color:var(--zcs-secondary-text-color); }\n.zcs-color-tertiary { color:var(--zcs-teritiary-text-color); }\n.zcs-color-white { color:var(--zcs-white-color); }\n.zcs-color-green { color:var(--task-green); }\n.zcs-color-red { color:var(--task-red); }\n.zcs-color-yellow { color:var(--task-amber); }\n.zcs-color-blue { color:var(--task-blue); }\n.zcs-card { background-color:var(--zcs-white-color); border:1px solid var(--zcs-border-color); border-radius:12px; }\n.zcs-list-none { list-style-type:none; }\na { text-decoration:none; }\n.zc-pb-page-content-wrapper div#zppagesLive,\n.zc-pb-page-content-wrapper div#elementsContainer,\n.zc-pb-page-content-wrapper .elemContainment,\n.zc-pb-page-content-wrapper .zcpage-elemContainer { height:100%; }\n.zc-container-wrapper .zc-main-content .inner .zc-page-content-wrapper .zc-pb-page-content-wrapper .elemContainment,\n.zc-full-height .zc-page-content-wrapper .zc-pb-page-content-wrapper .elemContainment,\n.zc-pb-page-content-wrapper .zc-pb-tile-container { padding:0; }\n#splash-screen { display:none !important; }\n@media (max-width:992px) { .zcs-col-md-6 { flex:0 0 calc(50% - var(--column-gap) * .5); max-width:calc(50% - var(--column-gap) * .5); } .zcs-col-md-12 { flex:0 0 100%; max-width:100%; } }\n@media (max-width:768px) { .zcs-col-sm-6 { flex:0 0 calc(50% - var(--column-gap) * .5); max-width:calc(50% - var(--column-gap) * .5); } .zcs-col-sm-12 { flex:0 0 100%; max-width:100%; } }\n@media (max-width:576px) { .zcs-col-xs-12 { flex:0 0 100%; max-width:100%; } }\n\n/* ZCS Legend With Count component */\n.zcs-legend-wrapper li { list-style-type:none; }\n.zcs-legend-wrapper li label { min-width:100px; }\n.zcs-legend-wrapper li label:before { content:&apos;&apos;; display:inline-block; vertical-align:top; width:10px; height:10px; margin:5px 10px 5px 0; border-radius:50%; }\n.zcs-legend-wrapper li:nth-child(1) label:before { background-color:var(--task-blue); }\n.zcs-legend-wrapper li:nth-child(2) label:before { background-color:#1094C5; }\n.zcs-legend-wrapper li:nth-child(3) label:before { background-color:var(--task-amber); }\n.zcs-legend-wrapper li:nth-child(4) label:before { background-color:var(--task-red); }\n.zcs-legend-wrapper li:nth-child(5) label:before { background-color:var(--task-green); }\n\n.task-dashboard-band { width:100%; box-sizing:border-box; padding:0 0 12px 0; }\n.task-dash-header-card { overflow:hidden; position:relative; border:0; background:linear-gradient(135deg, var(--zcs-theme-brand-color) 0%, #15295F 100%); box-shadow:0 14px 34px rgba(21,41,95,.16); }\n.task-dash-header-card:after { content:&apos;&apos;; position:absolute; width:360px; height:360px; right:-120px; top:-170px; border-radius:50%; border:42px solid rgba(255,255,255,.08); }\n.task-dash-header-card:before { content:&apos;&apos;; position:absolute; width:180px; height:180px; right:130px; bottom:-100px; border-radius:50%; background:rgba(255,255,255,.08); }\n.task-dash-title-area, .task-header-metrics, .task-status-legend { position:relative; z-index:1; }\n.task-dash-title { color:#FFFFFF; font-size:30px; font-weight:700; line-height:1.15; margin:0; letter-spacing:-.02em; }\n.task-dash-subtitle { color:rgba(255,255,255,.82); font-size:14px; margin:8px 0 0; }\n.task-header-metrics { display:grid; grid-template-columns:repeat(5, minmax(118px, 1fr)); gap:10px; margin-top:22px; }\n.task-header-metric { background:rgba(255,255,255,.13); border:1px solid rgba(255,255,255,.20); border-radius:14px; padding:12px; backdrop-filter:blur(6px); }\n.task-header-metric span { display:block; color:rgba(255,255,255,.78); font-size:12px; }\n.task-header-metric strong { display:flex; align-items:center; gap:8px; color:#FFFFFF; font-size:22px; margin-top:4px; }\n.task-header-metric i { font-size:18px; }\n.task-status-legend { background:#FFFFFF; border-radius:14px; padding:14px 16px; min-width:250px; box-shadow:0 8px 26px rgba(10,17,40,.14); }\n.task-status-legend h6 { margin:0 0 12px; color:var(--zcs-primary-text-color); font-size:14px; }\n.task-status-legend ul { gap:9px; }\n.task-status-legend li { justify-content:space-between; }\n.task-status-legend label { color:var(--zcs-secondary-text-color); }\n.task-status-legend span { color:var(--zcs-primary-text-color); }\n@media (max-width:992px) { .task-dash-header-card &gt; .zcs-flex { flex-direction:column; align-items:stretch; } .task-header-metrics { grid-template-columns:repeat(2, minmax(0,1fr)); } .task-status-legend { width:100%; box-sizing:border-box; } }\n@media (max-width:576px) { .task-dash-title { font-size:24px; } .task-header-metrics { grid-template-columns:1fr; } }\n&lt;/style&gt;\n&lt;div class=&quot;task-dashboard-band&quot;&gt;\n\t\t&lt;div class=&quot;task-dash-header-card zcs-card zcs-p-24 zcs-box-border&quot;&gt;\n\t\t\t\t&lt;div class=&quot;zcs-flex zcs-justify-space-between zcs-align-items-start zcs-gap-24&quot;&gt;\n\t\t\t\t\t\t&lt;div class=&quot;task-dash-title-area zcs-col-common&quot;&gt;\n\t\t\t\t\t\t\t\t&lt;h1 class=&quot;task-dash-title&quot;&gt;Task Dashboard&lt;/h1&gt;\n\t\t\t\t\t\t\t\t&lt;p class=&quot;task-dash-subtitle&quot;&gt;Project workload and task status at a glance&lt;/p&gt;\n\t\t\t\t\t\t\t\t&lt;div class=&quot;task-header-metrics&quot;&gt;\n\t\t\t\t\t\t\t\t\t\t&lt;div class=&quot;task-header-metric&quot;&gt;&lt;span&gt;Total Projects&lt;/span&gt;&lt;strong&gt;&lt;i class=&quot;zc-li-outline files-folder-13&quot;&gt;&lt;/i&gt;&lt;%= totalProjects %&gt;&lt;/strong&gt;&lt;/div&gt;\n\t\t\t\t\t\t\t\t\t\t&lt;div class=&quot;task-header-metric&quot;&gt;&lt;span&gt;Active Projects&lt;/span&gt;&lt;strong&gt;&lt;i class=&quot;zc-li-outline loader-dots-06&quot;&gt;&lt;/i&gt;&lt;%= activeProjects %&gt;&lt;/strong&gt;&lt;/div&gt;\n\t\t\t\t\t\t\t\t\t\t&lt;div class=&quot;task-header-metric&quot;&gt;&lt;span&gt;Open Tasks&lt;/span&gt;&lt;strong&gt;&lt;i class=&quot;zc-li-outline arrows-4-restore&quot;&gt;&lt;/i&gt;&lt;%= openTasks %&gt;&lt;/strong&gt;&lt;/div&gt;\n\t\t\t\t\t\t\t\t\t\t&lt;div class=&quot;task-header-metric&quot;&gt;&lt;span&gt;Overdue Tasks&lt;/span&gt;&lt;strong&gt;&lt;i class=&quot;zc-li-outline ui-2-time&quot;&gt;&lt;/i&gt;&lt;%= overdueTasks %&gt;&lt;/strong&gt;&lt;/div&gt;\n\t\t\t\t\t\t\t\t\t\t&lt;div class=&quot;task-header-metric&quot;&gt;&lt;span&gt;Completed Tasks&lt;/span&gt;&lt;strong&gt;&lt;i class=&quot;zc-li-outline ui-1-check-circle-08&quot;&gt;&lt;/i&gt;&lt;%= completedTasks %&gt;&lt;/strong&gt;&lt;/div&gt;\n\t\t\t\t\t\t\t\t&lt;/div&gt;\n\t\t\t\t\t\t&lt;/div&gt;\n\t\t\t\t\t\t&lt;div class=&quot;zcs-legend-wrapper zcs-legend-with-count task-status-legend&quot;&gt;\n\t\t\t\t\t\t\t\t&lt;h6 class=&quot;zcs-font-semibold zcs-lh-heading&quot;&gt;Status legend&lt;/h6&gt;\n\t\t\t\t\t\t\t\t&lt;ul class=&quot;zcs-flex zcs-direction-column zcs-p-0 zcs-m-0&quot;&gt;\n\t\t\t\t\t\t\t\t\t\t&lt;li class=&quot;zcs-flex zcs-align-center zcs-gap-8&quot;&gt;&lt;label class=&quot;zcs-font-14 zcs-font-normal zcs-lh-body&quot;&gt;Open&lt;/label&gt;&lt;span class=&quot;zcs-font-14 zcs-font-semibold zcs-lh-body&quot;&gt;&lt;%= openTasks %&gt;&lt;/span&gt;&lt;/li&gt;\n\t\t\t\t\t\t\t\t\t\t&lt;li class=&quot;zcs-flex zcs-align-center zcs-gap-8&quot;&gt;&lt;label class=&quot;zcs-font-14 zcs-font-normal zcs-lh-body&quot;&gt;Active&lt;/label&gt;&lt;span class=&quot;zcs-font-14 zcs-font-semibold zcs-lh-body&quot;&gt;&lt;%= activeProjects %&gt;&lt;/span&gt;&lt;/li&gt;\n\t\t\t\t\t\t\t\t\t\t&lt;li class=&quot;zcs-flex zcs-align-center zcs-gap-8&quot;&gt;&lt;label class=&quot;zcs-font-14 zcs-font-normal zcs-lh-body&quot;&gt;Blocked&lt;/label&gt;&lt;span class=&quot;zcs-font-14 zcs-font-semibold zcs-lh-body&quot;&gt;&lt;%= blockedTasks %&gt;&lt;/span&gt;&lt;/li&gt;\n\t\t\t\t\t\t\t\t\t\t&lt;li class=&quot;zcs-flex zcs-align-center zcs-gap-8&quot;&gt;&lt;label class=&quot;zcs-font-14 zcs-font-normal zcs-lh-body&quot;&gt;Overdue&lt;/label&gt;&lt;span class=&quot;zcs-font-14 zcs-font-semibold zcs-lh-body&quot;&gt;&lt;%= overdueTasks %&gt;&lt;/span&gt;&lt;/li&gt;\n\t\t\t\t\t\t\t\t\t\t&lt;li class=&quot;zcs-flex zcs-align-center zcs-gap-8&quot;&gt;&lt;label class=&quot;zcs-font-14 zcs-font-normal zcs-lh-body&quot;&gt;Done&lt;/label&gt;&lt;span class=&quot;zcs-font-14 zcs-font-semibold zcs-lh-body&quot;&gt;&lt;%= completedTasks %&gt;&lt;/span&gt;&lt;/li&gt;\n\t\t\t\t\t\t\t\t&lt;/ul&gt;\n\t\t\t\t\t\t&lt;/div&gt;\n\t\t\t\t&lt;/div&gt;\n\t\t&lt;/div&gt;\n&lt;/div&gt;\n\t\t\t\t\t\t &lt;%}%&gt;\n\t\t\t\t\t]]>\n\t\t\t\t</dsp>\n\t\t\t</column>\n\t\t</row>\n\t\t<row>\n\t\t\t<column width='100%'>\n\t\t\t\t<dsp id='Task_KPI_Cards' elementName='Task_KPI_Cards'>\n\t\t\t\t\t<![CDATA[htmlpage Task_KPI_Cards()\n\t\t\t\t\t\tcontent\n\t\t\t\t\t\t &lt;%{%&gt;\n\t\t\t\t\t\t\t\t &lt;%\n\tactiveProjects = Projects[Status == &quot;Active&quot;].count();\n\topenTasks = Tasks[Status != &quot;Done&quot; &amp;&amp; Status != &quot;Cancelled&quot;].count();\n\toverdueTasks = Tasks[Due_Date != null &amp;&amp; Due_Date &lt; zoho.currentdate &amp;&amp; Status != &quot;Done&quot; &amp;&amp; Status != &quot;Cancelled&quot;].count();\n\tblockedTasks = Tasks[Status == &quot;Blocked&quot;].count();\n\tcompletedTasks = Tasks[Status == &quot;Done&quot;].count();\n%&gt;\n&lt;style&gt;\n/* ZCS Layout Dashboard panel/card styles */\n.zcs-panel-wrapper ul li { list-style-type:none; }\n.zcs-panel { border:1px solid var(--zcs-border-color); box-shadow:0 2px 12px 0 rgba(20,20,60,.06); background-color:var(--zcs-white-color); transition:border-color .2s ease, transform .2s ease, box-shadow .2s ease; }\n.zcs-panel-icon-wrapper { width:44px; height:44px; }\n.zcs-panel-icon { width:24px; height:24px; line-height:24px; }\n.zcs-panel.zcs-panel-green .zcs-panel-icon-wrapper { background-color:#E4FCF3; color:#179E6C; }\n.zcs-panel.zcs-panel-yellow .zcs-panel-icon-wrapper { background-color:#FCF4E6; color:#B8770D; }\n.zcs-panel.zcs-panel-red .zcs-panel-icon-wrapper { background-color:#FDE3E6; color:#FE455D; }\n.zcs-panel.zcs-panel-d_blue .zcs-panel-icon-wrapper { background-color:#EAF2FF; color:#1652BB; }\n.zcs-panel.zcs-panel-l_blue .zcs-panel-icon-wrapper { background-color:#E8EFFF; color:#2A6FFC; }\n.zcs-panel-wrapper li:hover .zcs-panel { border-color:var(--zcs-theme-brand-color); transform:translateY(-2px); box-shadow:0 12px 30px rgba(20,20,60,.10); }\n.task-kpi-section { width:100%; box-sizing:border-box; padding:0 0 12px; }\n.task-kpi-section .zcs-panel { min-height:134px; }\n.task-kpi-meta { display:flex; align-items:center; gap:6px; margin-top:6px; font-size:12px; color:var(--zcs-teritiary-text-color); }\n.task-kpi-meta i { font-size:14px; }\n.task-kpi-open { color:var(--task-blue); }\n.task-kpi-overdue { color:var(--task-red); }\n.task-kpi-blocked { color:var(--task-amber); }\n.task-kpi-completed { color:var(--task-green); }\n.task-kpi-section .zcs-panel h4 { font-size:28px; }\n@media (max-width:1200px) { .task-kpi-section .zcs-panel-wrapper li { flex:0 0 calc(33.333% - var(--column-gap) * .666); max-width:calc(33.333% - var(--column-gap) * .666); } }\n@media (max-width:768px) { .task-kpi-section .zcs-panel-wrapper li { flex:0 0 100%; max-width:100%; } }\n&lt;/style&gt;\n&lt;div class=&quot;task-kpi-section&quot;&gt;\n\t\t&lt;div class=&quot;zcs-panel-wrapper&quot;&gt;\n\t\t\t\t&lt;ul class=&quot;zcs-row zcs-justify-space-between zcs-gap-16 zcs-p-0 zcs-m-0&quot;&gt;\n\t\t\t\t\t\t&lt;li class=&quot;zcs-col zcs-relative&quot;&gt;\n\t\t\t\t\t\t\t\t&lt;div class=&quot;zcs-panel zcs-panel-l_blue zcs-wh-full zcs-flex zcs-direction-column zcs-gap-10 zcs-rounded-xl zcs-p-20 zcs-box-border&quot;&gt;\n\t\t\t\t\t\t\t\t\t\t&lt;div class=&quot;zcs-flex zcs-align-items-center zcs-gap-10&quot;&gt;\n\t\t\t\t\t\t\t\t\t\t\t\t&lt;div class=&quot;zcs-panel-icon-wrapper zcs-flex zcs-align-items-center zcs-justify-center zcs-no-shrink zcs-rounded-lg&quot;&gt;&lt;i class=&quot;zcs-panel-icon zcs-font-24 zc-li-outline files-folder-13&quot;&gt;&lt;/i&gt;&lt;/div&gt;\n\t\t\t\t\t\t\t\t\t\t\t\t&lt;h4 class=&quot;zcs-font-28 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0&quot;&gt;&lt;%= activeProjects %&gt;&lt;/h4&gt;\n\t\t\t\t\t\t\t\t\t\t&lt;/div&gt;\n\t\t\t\t\t\t\t\t\t\t&lt;p class=&quot;zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0&quot;&gt;Active Projects&lt;/p&gt;\n\t\t\t\t\t\t\t\t\t\t&lt;div class=&quot;task-kpi-meta task-kpi-open&quot;&gt;&lt;i class=&quot;zc-li-outline ui-1-check-circle-08&quot;&gt;&lt;/i&gt;&lt;span&gt;Currently in progress&lt;/span&gt;&lt;/div&gt;\n\t\t\t\t\t\t\t\t&lt;/div&gt;\n\t\t\t\t\t\t&lt;/li&gt;\n\t\t\t\t\t\t&lt;li class=&quot;zcs-col zcs-relative&quot;&gt;\n\t\t\t\t\t\t\t\t&lt;div class=&quot;zcs-panel zcs-panel-d_blue zcs-wh-full zcs-flex zcs-direction-column zcs-gap-10 zcs-rounded-xl zcs-p-20 zcs-box-border&quot;&gt;\n\t\t\t\t\t\t\t\t\t\t&lt;div class=&quot;zcs-flex zcs-align-items-center zcs-gap-10&quot;&gt;\n\t\t\t\t\t\t\t\t\t\t\t\t&lt;div class=&quot;zcs-panel-icon-wrapper zcs-flex zcs-align-items-center zcs-justify-center zcs-no-shrink zcs-rounded-lg&quot;&gt;&lt;i class=&quot;zcs-panel-icon zcs-font-24 zc-li-outline arrows-4-restore&quot;&gt;&lt;/i&gt;&lt;/div&gt;\n\t\t\t\t\t\t\t\t\t\t\t\t&lt;h4 class=&quot;zcs-font-28 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0&quot;&gt;&lt;%= openTasks %&gt;&lt;/h4&gt;\n\t\t\t\t\t\t\t\t\t\t&lt;/div&gt;\n\t\t\t\t\t\t\t\t\t\t&lt;p class=&quot;zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0&quot;&gt;Open Tasks&lt;/p&gt;\n\t\t\t\t\t\t\t\t\t\t&lt;div class=&quot;task-kpi-meta task-kpi-open&quot;&gt;&lt;i class=&quot;zc-li-outline loader-dots-06&quot;&gt;&lt;/i&gt;&lt;span&gt;To Do, In Progress, Blocked&lt;/span&gt;&lt;/div&gt;\n\t\t\t\t\t\t\t\t&lt;/div&gt;\n\t\t\t\t\t\t&lt;/li&gt;\n\t\t\t\t\t\t&lt;li class=&quot;zcs-col zcs-relative&quot;&gt;\n\t\t\t\t\t\t\t\t&lt;div class=&quot;zcs-panel zcs-panel-red zcs-wh-full zcs-flex zcs-direction-column zcs-gap-10 zcs-rounded-xl zcs-p-20 zcs-box-border&quot;&gt;\n\t\t\t\t\t\t\t\t\t\t&lt;div class=&quot;zcs-flex zcs-align-items-center zcs-gap-10&quot;&gt;\n\t\t\t\t\t\t\t\t\t\t\t\t&lt;div class=&quot;zcs-panel-icon-wrapper zcs-flex zcs-align-items-center zcs-justify-center zcs-no-shrink zcs-rounded-lg&quot;&gt;&lt;i class=&quot;zcs-panel-icon zcs-font-24 zc-li-outline ui-2-time&quot;&gt;&lt;/i&gt;&lt;/div&gt;\n\t\t\t\t\t\t\t\t\t\t\t\t&lt;h4 class=&quot;zcs-font-28 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0&quot;&gt;&lt;%= overdueTasks %&gt;&lt;/h4&gt;\n\t\t\t\t\t\t\t\t\t\t&lt;/div&gt;\n\t\t\t\t\t\t\t\t\t\t&lt;p class=&quot;zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0&quot;&gt;Overdue Tasks&lt;/p&gt;\n\t\t\t\t\t\t\t\t\t\t&lt;div class=&quot;task-kpi-meta task-kpi-overdue&quot;&gt;&lt;i class=&quot;zc-li-outline ui-1-alert-circle-i&quot;&gt;&lt;/i&gt;&lt;span&gt;Past due and still open&lt;/span&gt;&lt;/div&gt;\n\t\t\t\t\t\t\t\t&lt;/div&gt;\n\t\t\t\t\t\t&lt;/li&gt;\n\t\t\t\t\t\t&lt;li class=&quot;zcs-col zcs-relative&quot;&gt;\n\t\t\t\t\t\t\t\t&lt;div class=&quot;zcs-panel zcs-panel-yellow zcs-wh-full zcs-flex zcs-direction-column zcs-gap-10 zcs-rounded-xl zcs-p-20 zcs-box-border&quot;&gt;\n\t\t\t\t\t\t\t\t\t\t&lt;div class=&quot;zcs-flex zcs-align-items-center zcs-gap-10&quot;&gt;\n\t\t\t\t\t\t\t\t\t\t\t\t&lt;div class=&quot;zcs-panel-icon-wrapper zcs-flex zcs-align-items-center zcs-justify-center zcs-no-shrink zcs-rounded-lg&quot;&gt;&lt;i class=&quot;zcs-panel-icon zcs-font-24 zc-li-outline ui-1-lock&quot;&gt;&lt;/i&gt;&lt;/div&gt;\n\t\t\t\t\t\t\t\t\t\t\t\t&lt;h4 class=&quot;zcs-font-28 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0&quot;&gt;&lt;%= blockedTasks %&gt;&lt;/h4&gt;\n\t\t\t\t\t\t\t\t\t\t&lt;/div&gt;\n\t\t\t\t\t\t\t\t\t\t&lt;p class=&quot;zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0&quot;&gt;Blocked Tasks&lt;/p&gt;\n\t\t\t\t\t\t\t\t\t\t&lt;div class=&quot;task-kpi-meta task-kpi-blocked&quot;&gt;&lt;i class=&quot;zc-li-outline ui-2-settings-90&quot;&gt;&lt;/i&gt;&lt;span&gt;Need intervention&lt;/span&gt;&lt;/div&gt;\n\t\t\t\t\t\t\t\t&lt;/div&gt;\n\t\t\t\t\t\t&lt;/li&gt;\n\t\t\t\t\t\t&lt;li class=&quot;zcs-col zcs-relative&quot;&gt;\n\t\t\t\t\t\t\t\t&lt;div class=&quot;zcs-panel zcs-panel-green zcs-wh-full zcs-flex zcs-direction-column zcs-gap-10 zcs-rounded-xl zcs-p-20 zcs-box-border&quot;&gt;\n\t\t\t\t\t\t\t\t\t\t&lt;div class=&quot;zcs-flex zcs-align-items-center zcs-gap-10&quot;&gt;\n\t\t\t\t\t\t\t\t\t\t\t\t&lt;div class=&quot;zcs-panel-icon-wrapper zcs-flex zcs-align-items-center zcs-justify-center zcs-no-shrink zcs-rounded-lg&quot;&gt;&lt;i class=&quot;zcs-panel-icon zcs-font-24 zc-li-outline ui-1-check-circle-08&quot;&gt;&lt;/i&gt;&lt;/div&gt;\n\t\t\t\t\t\t\t\t\t\t\t\t&lt;h4 class=&quot;zcs-font-28 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0&quot;&gt;&lt;%= completedTasks %&gt;&lt;/h4&gt;\n\t\t\t\t\t\t\t\t\t\t&lt;/div&gt;\n\t\t\t\t\t\t\t\t\t\t&lt;p class=&quot;zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0&quot;&gt;Completed Tasks&lt;/p&gt;\n\t\t\t\t\t\t\t\t\t\t&lt;div class=&quot;task-kpi-meta task-kpi-completed&quot;&gt;&lt;i class=&quot;zc-li-outline arrows-1-tail-right&quot;&gt;&lt;/i&gt;&lt;span&gt;Marked Done&lt;/span&gt;&lt;/div&gt;\n\t\t\t\t\t\t\t\t&lt;/div&gt;\n\t\t\t\t\t\t&lt;/li&gt;\n\t\t\t\t&lt;/ul&gt;\n\t\t&lt;/div&gt;\n&lt;/div&gt;\n\t\t\t\t\t\t &lt;%}%&gt;\n\t\t\t\t\t]]>\n\t\t\t\t</dsp>\n\t\t\t</column>\n\t\t</row>\n\t\t<row>\n\t\t\t<column width='50%'>\n\t\t\t\t<dsp id='Status_Breakdown' elementName='Status_Breakdown'>\n\t\t\t\t\t<![CDATA[htmlpage Status_Breakdown()\n\t\t\t\t\t\tcontent\n\t\t\t\t\t\t &lt;%{%&gt;\n\t\t\t\t\t\t\t\t &lt;%\n\ttodoCount = Tasks[Status == &quot;To Do&quot;].count();\n\tinProgressCount = Tasks[Status == &quot;In Progress&quot;].count();\n\tblockedCount = Tasks[Status == &quot;Blocked&quot;].count();\n\tdoneCount = Tasks[Status == &quot;Done&quot;].count();\n\tcancelledCount = Tasks[Status == &quot;Cancelled&quot;].count();\n\tstatusTotal = todoCount + inProgressCount + blockedCount + doneCount + cancelledCount;\n\tif(statusTotal == 0)\n\t{\n\t\t\tstatusTotal = 1;\n\t}\n\ttodoPct = (todoCount * 100) / statusTotal;\n\tprogressPct = (inProgressCount * 100) / statusTotal;\n\tblockedPct = (blockedCount * 100) / statusTotal;\n\tdonePct = (doneCount * 100) / statusTotal;\n\tcancelledPct = (cancelledCount * 100) / statusTotal;\n%&gt;\n&lt;style&gt;\n/* ZCS Range Bar With Text component */\n.zcs-progress-bar { height:8px; background-color:var(--zcs_component_hover_color, #EEF1F7); overflow:hidden; }\n.zcs-progress-bar-indicator { height:inherit; border-radius:inherit; background-color:var(--zcs-theme-brand-color); }\n.task-status-card { min-height:330px; }\n.task-status-list li { list-style:none; }\n.task-status-row { padding:10px 0; border-bottom:1px solid var(--zcs-border-color); }\n.task-status-row:last-child { border-bottom:0; }\n.task-status-label { display:flex; align-items:center; gap:9px; }\n.task-status-dot { width:10px; height:10px; border-radius:50%; display:inline-block; }\n.task-status-dot.todo { background:var(--task-blue); }\n.task-status-dot.progress { background:#1094C5; }\n.task-status-dot.blocked { background:var(--task-amber); }\n.task-status-dot.done { background:var(--task-green); }\n.task-status-dot.cancelled { background:#7A8194; }\n.task-status-row.todo .zcs-progress-bar-indicator { background:var(--task-blue); }\n.task-status-row.progress .zcs-progress-bar-indicator { background:#1094C5; }\n.task-status-row.blocked .zcs-progress-bar-indicator { background:var(--task-amber); }\n.task-status-row.done .zcs-progress-bar-indicator { background:var(--task-green); }\n.task-status-row.cancelled .zcs-progress-bar-indicator { background:#7A8194; }\n.task-status-summary { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:14px; }\n.task-status-tile { background:var(--task-muted-bg); border:1px solid var(--zcs-border-color); border-radius:12px; padding:12px; }\n@media (max-width:576px) { .task-status-summary { grid-template-columns:1fr; } }\n&lt;/style&gt;\n&lt;div class=&quot;zcs-card task-status-card zcs-p-24 zcs-box-border zcs-flex zcs-direction-column zcs-gap-16&quot;&gt;\n\t\t&lt;div class=&quot;zcs-flex zcs-justify-space-between zcs-align-items-center zcs-gap-12&quot;&gt;\n\t\t\t\t&lt;div&gt;\n\t\t\t\t\t\t&lt;h5 class=&quot;zcs-font-18 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0&quot;&gt;Status Breakdown&lt;/h5&gt;\n\t\t\t\t\t\t&lt;p class=&quot;zcs-font-13 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-mt-8 zcs-mb-0 zcs-mx-0&quot;&gt;Task distribution by current workflow state&lt;/p&gt;\n\t\t\t\t&lt;/div&gt;\n\t\t\t\t&lt;i class=&quot;zc-li-outline design-graph zcs-font-24 zcs-color-theme&quot;&gt;&lt;/i&gt;\n\t\t&lt;/div&gt;\n\t\t&lt;ul class=&quot;task-status-list zcs-flex zcs-direction-column zcs-p-0 zcs-m-0&quot;&gt;\n\t\t\t\t&lt;li class=&quot;task-status-row todo&quot;&gt;\n\t\t\t\t\t\t&lt;div class=&quot;zcs-flex zcs-justify-space-between zcs-align-items-center zcs-gap-8 zcs-font-14 zcs-color-primary&quot;&gt;&lt;span class=&quot;task-status-label&quot;&gt;&lt;span class=&quot;task-status-dot todo&quot;&gt;&lt;/span&gt;To Do&lt;/span&gt;&lt;strong&gt;&lt;%= todoCount %&gt;&lt;/strong&gt;&lt;/div&gt;\n\t\t\t\t\t\t&lt;div class=&quot;zcs-progress-bar-wrapper zcs-flex zcs-direction-column zcs-gap-6 zcs-mt-8&quot;&gt;&lt;div class=&quot;zcs-progress-bar zcs-rounded-sm&quot;&gt;&lt;div class=&quot;zcs-progress-bar-indicator&quot; style=&quot;width:&lt;%= todoPct %&gt;%;&quot;&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;\n\t\t\t\t&lt;/li&gt;\n\t\t\t\t&lt;li class=&quot;task-status-row progress&quot;&gt;\n\t\t\t\t\t\t&lt;div class=&quot;zcs-flex zcs-justify-space-between zcs-align-items-center zcs-gap-8 zcs-font-14 zcs-color-primary&quot;&gt;&lt;span class=&quot;task-status-label&quot;&gt;&lt;span class=&quot;task-status-dot progress&quot;&gt;&lt;/span&gt;In Progress&lt;/span&gt;&lt;strong&gt;&lt;%= inProgressCount %&gt;&lt;/strong&gt;&lt;/div&gt;\n\t\t\t\t\t\t&lt;div class=&quot;zcs-progress-bar-wrapper zcs-flex zcs-direction-column zcs-gap-6 zcs-mt-8&quot;&gt;&lt;div class=&quot;zcs-progress-bar zcs-rounded-sm&quot;&gt;&lt;div class=&quot;zcs-progress-bar-indicator&quot; style=&quot;width:&lt;%= progressPct %&gt;%;&quot;&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;\n\t\t\t\t&lt;/li&gt;\n\t\t\t\t&lt;li class=&quot;task-status-row blocked&quot;&gt;\n\t\t\t\t\t\t&lt;div class=&quot;zcs-flex zcs-justify-space-between zcs-align-items-center zcs-gap-8 zcs-font-14 zcs-color-primary&quot;&gt;&lt;span class=&quot;task-status-label&quot;&gt;&lt;span class=&quot;task-status-dot blocked&quot;&gt;&lt;/span&gt;Blocked&lt;/span&gt;&lt;strong&gt;&lt;%= blockedCount %&gt;&lt;/strong&gt;&lt;/div&gt;\n\t\t\t\t\t\t&lt;div class=&quot;zcs-progress-bar-wrapper zcs-flex zcs-direction-column zcs-gap-6 zcs-mt-8&quot;&gt;&lt;div class=&quot;zcs-progress-bar zcs-rounded-sm&quot;&gt;&lt;div class=&quot;zcs-progress-bar-indicator&quot; style=&quot;width:&lt;%= blockedPct %&gt;%;&quot;&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;\n\t\t\t\t&lt;/li&gt;\n\t\t\t\t&lt;li class=&quot;task-status-row done&quot;&gt;\n\t\t\t\t\t\t&lt;div class=&quot;zcs-flex zcs-justify-space-between zcs-align-items-center zcs-gap-8 zcs-font-14 zcs-color-primary&quot;&gt;&lt;span class=&quot;task-status-label&quot;&gt;&lt;span class=&quot;task-status-dot done&quot;&gt;&lt;/span&gt;Done&lt;/span&gt;&lt;strong&gt;&lt;%= doneCount %&gt;&lt;/strong&gt;&lt;/div&gt;\n\t\t\t\t\t\t&lt;div class=&quot;zcs-progress-bar-wrapper zcs-flex zcs-direction-column zcs-gap-6 zcs-mt-8&quot;&gt;&lt;div class=&quot;zcs-progress-bar zcs-rounded-sm&quot;&gt;&lt;div class=&quot;zcs-progress-bar-indicator&quot; style=&quot;width:&lt;%= donePct %&gt;%;&quot;&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;\n\t\t\t\t&lt;/li&gt;\n\t\t\t\t&lt;li class=&quot;task-status-row cancelled&quot;&gt;\n\t\t\t\t\t\t&lt;div class=&quot;zcs-flex zcs-justify-space-between zcs-align-items-center zcs-gap-8 zcs-font-14 zcs-color-primary&quot;&gt;&lt;span class=&quot;task-status-label&quot;&gt;&lt;span class=&quot;task-status-dot cancelled&quot;&gt;&lt;/span&gt;Cancelled&lt;/span&gt;&lt;strong&gt;&lt;%= cancelledCount %&gt;&lt;/strong&gt;&lt;/div&gt;\n\t\t\t\t\t\t&lt;div class=&quot;zcs-progress-bar-wrapper zcs-flex zcs-direction-column zcs-gap-6 zcs-mt-8&quot;&gt;&lt;div class=&quot;zcs-progress-bar zcs-rounded-sm&quot;&gt;&lt;div class=&quot;zcs-progress-bar-indicator&quot; style=&quot;width:&lt;%= cancelledPct %&gt;%;&quot;&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;\n\t\t\t\t&lt;/li&gt;\n\t\t&lt;/ul&gt;\n\t\t&lt;div class=&quot;task-status-summary&quot;&gt;\n\t\t\t\t&lt;div class=&quot;task-status-tile&quot;&gt;&lt;span class=&quot;zcs-font-12 zcs-color-tertiary&quot;&gt;Open&lt;/span&gt;&lt;strong class=&quot;zcs-font-20 zcs-color-blue&quot;&gt;&lt;%= todoCount + inProgressCount + blockedCount %&gt;&lt;/strong&gt;&lt;/div&gt;\n\t\t\t\t&lt;div class=&quot;task-status-tile&quot;&gt;&lt;span class=&quot;zcs-font-12 zcs-color-tertiary&quot;&gt;Closed&lt;/span&gt;&lt;strong class=&quot;zcs-font-20 zcs-color-green&quot;&gt;&lt;%= doneCount + cancelledCount %&gt;&lt;/strong&gt;&lt;/div&gt;\n\t\t\t\t&lt;div class=&quot;task-status-tile&quot;&gt;&lt;span class=&quot;zcs-font-12 zcs-color-tertiary&quot;&gt;Total&lt;/span&gt;&lt;strong class=&quot;zcs-font-20 zcs-color-primary&quot;&gt;&lt;%= todoCount + inProgressCount + blockedCount + doneCount + cancelledCount %&gt;&lt;/strong&gt;&lt;/div&gt;\n\t\t&lt;/div&gt;\n&lt;/div&gt;\n\t\t\t\t\t\t &lt;%}%&gt;\n\t\t\t\t\t]]>\n\t\t\t\t</dsp>\n\t\t\t</column>\n\t\t\t<column width='50%'>\n\t\t\t\t<dsp id='Priority_Workload' elementName='Priority_Workload'>\n\t\t\t\t\t<![CDATA[htmlpage Priority_Workload()\n\t\t\t\t\t\tcontent\n\t\t\t\t\t\t &lt;%{%&gt;\n\t\t\t\t\t\t\t\t &lt;%\n\tlowCount = Tasks[Priority == &quot;Low&quot;].count();\n\tmediumCount = Tasks[Priority == &quot;Medium&quot;].count();\n\thighCount = Tasks[Priority == &quot;High&quot;].count();\n\tcriticalCount = Tasks[Priority == &quot;Critical&quot;].count();\n\tpriorityTotal = lowCount + mediumCount + highCount + criticalCount;\n\tif(priorityTotal == 0)\n\t{\n\t\t\tpriorityTotal = 1;\n\t}\n\tlowPct = (lowCount * 100) / priorityTotal;\n\tmediumPct = (mediumCount * 100) / priorityTotal;\n\thighPct = (highCount * 100) / priorityTotal;\n\tcriticalPct = (criticalCount * 100) / priorityTotal;\n\topenTaskList = Tasks[Status != &quot;Done&quot; &amp;&amp; Status != &quot;Cancelled&quot;] sort by Due_Date asc range from 1 to 6;\n%&gt;\n&lt;style&gt;\n/* ZCS Fleets Performance Metrics + Simple Table components */\n.zcs-progress-bar { height:8px; background-color:var(--zcs_component_hover_color, #EEF1F7); overflow:hidden; }\n.zcs-progress-bar-indicator { height:inherit; border-radius:inherit; background-color:var(--zcs-theme-brand-color); }\n.zcs-table-wrapper { border:1px solid var(--zcs-border-color); background-color:var(--zcs-white-color); overflow:auto; }\n.zcs-table-wrapper table { line-height:normal; border-collapse:collapse; }\n.zcs-table-wrapper table thead { top:0; }\n.zcs-table-wrapper table thead tr th { background-color:#F9FAFE; box-shadow:0 -1px 0 0 var(--zcs-border-color) inset; white-space:nowrap; }\n.zcs-table-wrapper table tbody tr td { border-top:1px solid var(--zcs-border-color); }\n.zcs-table-wrapper table tbody tr:first-child td { border-color:transparent; }\n.zcs-table-wrapper table tbody tr:hover td { background-color:#F9FAFE; }\n.zcs-table-wrapper table tbody tr td.zcs-green, .zcs-green { color:#179E6C; }\n.zcs-table-wrapper table tbody tr td.zcs-red, .zcs-red { color:#FE455D; }\n.zcs-table-wrapper table tbody tr td.zcs-yellow, .zcs-yellow { color:#B8770D; }\n.zcs-table-wrapper table tbody tr td.zcs-l_blue, .zcs-l_blue { color:#1094C5; }\n.priority-workload-card { min-height:330px; }\n.priority-bars { display:grid; grid-template-columns:1fr 1fr; gap:14px; }\n.priority-low .zcs-progress-bar-indicator { background:#179E6C; }\n.priority-medium .zcs-progress-bar-indicator { background:#2A6FFC; }\n.priority-high .zcs-progress-bar-indicator { background:#B8770D; }\n.priority-critical .zcs-progress-bar-indicator { background:#FE455D; }\n.task-mini-badge { display:inline-flex; align-items:center; gap:5px; padding:3px 8px; border-radius:999px; font-size:11px; font-weight:600; background:#F3F5FA; }\n.task-mini-badge.critical { color:#FE455D; background:#FDE3E6; }\n.task-mini-badge.high { color:#B8770D; background:#FCF4E6; }\n.task-mini-badge.medium { color:#2A6FFC; background:#E8EFFF; }\n.task-mini-badge.low { color:#179E6C; background:#E4FCF3; }\n.workload-table-shell { max-height:235px; }\n@media (max-width:576px) { .priority-bars { grid-template-columns:1fr; } }\n&lt;/style&gt;\n&lt;div class=&quot;zcs-card priority-workload-card zcs-p-24 zcs-box-border zcs-flex zcs-direction-column zcs-gap-16&quot;&gt;\n\t\t&lt;div class=&quot;zcs-flex zcs-justify-space-between zcs-align-items-center zcs-gap-12&quot;&gt;\n\t\t\t\t&lt;div&gt;\n\t\t\t\t\t\t&lt;h5 class=&quot;zcs-font-18 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0&quot;&gt;Priority and Workload&lt;/h5&gt;\n\t\t\t\t\t\t&lt;p class=&quot;zcs-font-13 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-mt-8 zcs-mb-0 zcs-mx-0&quot;&gt;Priority mix and near-term open assignments&lt;/p&gt;\n\t\t\t\t&lt;/div&gt;\n\t\t\t\t&lt;i class=&quot;zc-li-outline ui-2-settings-90 zcs-font-24 zcs-color-theme&quot;&gt;&lt;/i&gt;\n\t\t&lt;/div&gt;\n\t\t&lt;div class=&quot;priority-bars&quot;&gt;\n\t\t\t\t&lt;div class=&quot;zcs-progress-bar-wrapper priority-low zcs-flex zcs-direction-column zcs-gap-6&quot;&gt;\n\t\t\t\t\t\t&lt;p class=&quot;zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-8 zcs-font-13 zcs-m-0&quot;&gt;&lt;span class=&quot;zcs-color-tertiary&quot;&gt;Low&lt;/span&gt;&lt;strong class=&quot;zcs-color-green&quot;&gt;&lt;%= lowCount %&gt;&lt;/strong&gt;&lt;/p&gt;\n\t\t\t\t\t\t&lt;div class=&quot;zcs-progress-bar zcs-rounded-sm&quot;&gt;&lt;div class=&quot;zcs-progress-bar-indicator&quot; style=&quot;width:&lt;%= lowPct %&gt;%;&quot;&gt;&lt;/div&gt;&lt;/div&gt;\n\t\t\t\t&lt;/div&gt;\n\t\t\t\t&lt;div class=&quot;zcs-progress-bar-wrapper priority-medium zcs-flex zcs-direction-column zcs-gap-6&quot;&gt;\n\t\t\t\t\t\t&lt;p class=&quot;zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-8 zcs-font-13 zcs-m-0&quot;&gt;&lt;span class=&quot;zcs-color-tertiary&quot;&gt;Medium&lt;/span&gt;&lt;strong class=&quot;zcs-color-blue&quot;&gt;&lt;%= mediumCount %&gt;&lt;/strong&gt;&lt;/p&gt;\n\t\t\t\t\t\t&lt;div class=&quot;zcs-progress-bar zcs-rounded-sm&quot;&gt;&lt;div class=&quot;zcs-progress-bar-indicator&quot; style=&quot;width:&lt;%= mediumPct %&gt;%;&quot;&gt;&lt;/div&gt;&lt;/div&gt;\n\t\t\t\t&lt;/div&gt;\n\t\t\t\t&lt;div class=&quot;zcs-progress-bar-wrapper priority-high zcs-flex zcs-direction-column zcs-gap-6&quot;&gt;\n\t\t\t\t\t\t&lt;p class=&quot;zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-8 zcs-font-13 zcs-m-0&quot;&gt;&lt;span class=&quot;zcs-color-tertiary&quot;&gt;High&lt;/span&gt;&lt;strong class=&quot;zcs-color-yellow&quot;&gt;&lt;%= highCount %&gt;&lt;/strong&gt;&lt;/p&gt;\n\t\t\t\t\t\t&lt;div class=&quot;zcs-progress-bar zcs-rounded-sm&quot;&gt;&lt;div class=&quot;zcs-progress-bar-indicator&quot; style=&quot;width:&lt;%= highPct %&gt;%;&quot;&gt;&lt;/div&gt;&lt;/div&gt;\n\t\t\t\t&lt;/div&gt;\n\t\t\t\t&lt;div class=&quot;zcs-progress-bar-wrapper priority-critical zcs-flex zcs-direction-column zcs-gap-6&quot;&gt;\n\t\t\t\t\t\t&lt;p class=&quot;zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-8 zcs-font-13 zcs-m-0&quot;&gt;&lt;span class=&quot;zcs-color-tertiary&quot;&gt;Critical&lt;/span&gt;&lt;strong class=&quot;zcs-color-red&quot;&gt;&lt;%= criticalCount %&gt;&lt;/strong&gt;&lt;/p&gt;\n\t\t\t\t\t\t&lt;div class=&quot;zcs-progress-bar zcs-rounded-sm&quot;&gt;&lt;div class=&quot;zcs-progress-bar-indicator&quot; style=&quot;width:&lt;%= criticalPct %&gt;%;&quot;&gt;&lt;/div&gt;&lt;/div&gt;\n\t\t\t\t&lt;/div&gt;\n\t\t&lt;/div&gt;\n\t\t&lt;div&gt;\n\t\t\t\t&lt;h6 class=&quot;zcs-font-14 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0&quot;&gt;Upcoming open work&lt;/h6&gt;\n\t\t\t\t&lt;div class=&quot;zcs-table-wrapper workload-table-shell zcs-rounded-sm zcs-box-border zcs-relative zcs-mt-8&quot;&gt;\n\t\t\t\t\t\t&lt;table class=&quot;zcs-w-full&quot;&gt;\n\t\t\t\t\t\t\t\t&lt;thead class=&quot;zcs-sticky&quot;&gt;\n\t\t\t\t\t\t\t\t\t\t&lt;tr&gt;\n\t\t\t\t\t\t\t\t\t\t\t\t&lt;th class=&quot;zcs-px-12 zcs-py-8 zcs-box-border zcs-text-left zcs-font-13 zcs-font-medium zcs-lh-body zcs-color-primary&quot;&gt;Task&lt;/th&gt;\n\t\t\t\t\t\t\t\t\t\t\t\t&lt;th class=&quot;zcs-px-12 zcs-py-8 zcs-box-border zcs-text-left zcs-font-13 zcs-font-medium zcs-lh-body zcs-color-primary&quot;&gt;Assigned To&lt;/th&gt;\n\t\t\t\t\t\t\t\t\t\t\t\t&lt;th class=&quot;zcs-px-12 zcs-py-8 zcs-box-border zcs-text-left zcs-font-13 zcs-font-medium zcs-lh-body zcs-color-primary&quot;&gt;Due&lt;/th&gt;\n\t\t\t\t\t\t\t\t\t\t\t\t&lt;th class=&quot;zcs-px-12 zcs-py-8 zcs-box-border zcs-text-left zcs-font-13 zcs-font-medium zcs-lh-body zcs-color-primary&quot;&gt;Priority&lt;/th&gt;\n\t\t\t\t\t\t\t\t\t\t&lt;/tr&gt;\n\t\t\t\t\t\t\t\t&lt;/thead&gt;\n\t\t\t\t\t\t\t\t&lt;tbody&gt;\n\t\t\t\t\t\t\t\t\t\t&lt;%\n\t\t\t\t\t\t\t\t\t\t\tif(openTaskList.count() == 0)\n\t\t\t\t\t\t\t\t\t\t\t{\n\t\t\t\t\t\t\t\t\t\t%&gt;\n\t\t\t\t\t\t\t\t\t\t&lt;tr&gt;&lt;td colspan=&quot;4&quot; class=&quot;zcs-px-12 zcs-py-14 zcs-box-border zcs-text-center zcs-font-13 zcs-color-tertiary&quot;&gt;No open tasks found.&lt;/td&gt;&lt;/tr&gt;\n\t\t\t\t\t\t\t\t\t\t&lt;%\n\t\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\t\telse\n\t\t\t\t\t\t\t\t\t\t\t{\n\t\t\t\t\t\t\t\t\t\t\t\tfor each taskRec in openTaskList\n\t\t\t\t\t\t\t\t\t\t\t\t{\n\t\t\t\t\t\t\t\t\t\t\t\t\tpriorityClass = taskRec.Priority.toLowerCase();\n\t\t\t\t\t\t\t\t\t\t\t\t\tdueText = ifnull(taskRec.Due_Date,&quot;No due date&quot;);\n\t\t\t\t\t\t\t\t\t\t%&gt;\n\t\t\t\t\t\t\t\t\t\t&lt;tr&gt;\n\t\t\t\t\t\t\t\t\t\t\t\t&lt;td class=&quot;zcs-px-12 zcs-py-8 zcs-box-border zcs-text-left zcs-font-13 zcs-font-normal zcs-lh-body zcs-color-primary&quot;&gt;&lt;%= taskRec.Task_Title %&gt;&lt;/td&gt;\n\t\t\t\t\t\t\t\t\t\t\t\t&lt;td class=&quot;zcs-px-12 zcs-py-8 zcs-box-border zcs-text-left zcs-font-13 zcs-font-normal zcs-lh-body zcs-color-secondary&quot;&gt;&lt;%= ifnull(taskRec.Assigned_To.User_name,&quot;Unassigned&quot;) %&gt;&lt;/td&gt;\n\t\t\t\t\t\t\t\t\t\t\t\t&lt;td class=&quot;zcs-px-12 zcs-py-8 zcs-box-border zcs-text-left zcs-font-13 zcs-font-normal zcs-lh-body zcs-color-secondary&quot;&gt;&lt;%= dueText %&gt;&lt;/td&gt;\n\t\t\t\t\t\t\t\t\t\t\t\t&lt;td class=&quot;zcs-px-12 zcs-py-8 zcs-box-border zcs-text-left&quot;&gt;&lt;span class=&quot;task-mini-badge &lt;%= priorityClass %&gt;&quot;&gt;&lt;%= taskRec.Priority %&gt;&lt;/span&gt;&lt;/td&gt;\n\t\t\t\t\t\t\t\t\t\t&lt;/tr&gt;\n\t\t\t\t\t\t\t\t\t\t&lt;%\n\t\t\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\t%&gt;\n\t\t\t\t\t\t\t\t&lt;/tbody&gt;\n\t\t\t\t\t\t&lt;/table&gt;\n\t\t\t\t&lt;/div&gt;\n\t\t&lt;/div&gt;\n&lt;/div&gt;\n\t\t\t\t\t\t &lt;%}%&gt;\n\t\t\t\t\t]]>\n\t\t\t\t</dsp>\n\t\t\t</column>\n\t\t</row>\n\t\t<row>\n\t\t\t<column width='40%'>\n\t\t\t\t<dsp id='Recent_Activity' elementName='Recent_Activity'>\n\t\t\t\t\t<![CDATA[htmlpage Recent_Activity()\n\t\t\t\t\t\tcontent\n\t\t\t\t\t\t &lt;%{%&gt;\n\t\t\t\t\t\t\t\t &lt;%\n\trecentComments = Comments[ID != 0] sort by Added_Time desc range from 1 to 7;\n%&gt;\n&lt;style&gt;\n/* ZCS Timeline Without Time component */\n.zcs-tl-indicator { width:42px; left:0; }\n.zcs-tl-dot { width:12px; height:12px; background-color:var(--zcs-theme-brand-color); border:1px solid var(--zcs-white-color); box-shadow:0 2px 6px 0 #C4DEE4; }\n.zcs-tl-li:not(:last-child) .zcs-tl-indicator:before { content:&apos;&apos;; display:flex; position:absolute; width:1px; height:calc(100% + 24px); background-color:#E1E1E1; top:5px; }\n.activity-card { min-height:410px; }\n.activity-feed { max-height:365px; overflow:auto; padding-right:4px; }\n.activity-feed .zcs-tl-li { list-style:none; }\n.activity-body { padding-left:46px; }\n.activity-title-line { display:flex; align-items:center; justify-content:space-between; gap:8px; }\n.activity-badge { display:inline-flex; align-items:center; gap:5px; padding:3px 8px; border-radius:999px; background:#E8EFFF; color:#2A6FFC; font-size:11px; font-weight:600; white-space:nowrap; }\n.activity-badge.blocker { background:#FCF4E6; color:#B8770D; }\n.activity-badge.resolution { background:#E4FCF3; color:#179E6C; }\n.activity-badge.question { background:#F6F1FF; color:#6B46C1; }\n.activity-badge.progress { background:#EAF2FF; color:#1652BB; }\n.activity-comment { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }\n.activity-followup { display:inline-flex; align-items:center; gap:6px; margin-top:8px; color:#B8770D; background:#FCF4E6; border-radius:8px; padding:4px 8px; font-size:12px; }\n.activity-empty { border:1px dashed var(--zcs-border-color); background:var(--task-muted-bg); border-radius:12px; padding:24px; text-align:center; }\n&lt;/style&gt;\n&lt;div class=&quot;zcs-card activity-card zcs-p-24 zcs-box-border zcs-flex zcs-direction-column zcs-gap-16&quot;&gt;\n\t\t&lt;div class=&quot;zcs-flex zcs-justify-space-between zcs-align-items-center zcs-gap-12&quot;&gt;\n\t\t\t\t&lt;div&gt;\n\t\t\t\t\t\t&lt;h5 class=&quot;zcs-font-18 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0&quot;&gt;Recent Activity&lt;/h5&gt;\n\t\t\t\t\t\t&lt;p class=&quot;zcs-font-13 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-mt-8 zcs-mb-0 zcs-mx-0&quot;&gt;Latest comments and task updates&lt;/p&gt;\n\t\t\t\t&lt;/div&gt;\n\t\t\t\t&lt;i class=&quot;zc-li-outline ui-2-chat-round-content zcs-font-24 zcs-color-theme&quot;&gt;&lt;/i&gt;\n\t\t&lt;/div&gt;\n\t\t&lt;div class=&quot;zcs-timeline-wrapper zcs-without-time activity-feed&quot;&gt;\n\t\t\t\t&lt;%\n\t\t\t\t\tif(recentComments.count() == 0)\n\t\t\t\t\t{\n\t\t\t\t%&gt;\n\t\t\t\t&lt;div class=&quot;activity-empty&quot;&gt;\n\t\t\t\t\t\t&lt;i class=&quot;zc-li-outline ui-2-chat-round-content zcs-font-28 zcs-color-tertiary&quot;&gt;&lt;/i&gt;\n\t\t\t\t\t\t&lt;p class=&quot;zcs-font-14 zcs-color-tertiary zcs-mt-8 zcs-mb-0 zcs-mx-0&quot;&gt;No comments have been added yet.&lt;/p&gt;\n\t\t\t\t&lt;/div&gt;\n\t\t\t\t&lt;%\n\t\t\t\t\t}\n\t\t\t\t\telse\n\t\t\t\t\t{\n\t\t\t\t%&gt;\n\t\t\t\t&lt;ul class=&quot;zcs-flex zcs-direction-column zcs-gap-24 zcs-p-0 zcs-m-0&quot;&gt;\n\t\t\t\t\t\t&lt;%\n\t\t\t\t\t\t\tfor each commentRec in recentComments\n\t\t\t\t\t\t\t{\n\t\t\t\t\t\t\t\tupdateType = ifnull(commentRec.Update_Type,&quot;General Update&quot;);\n\t\t\t\t\t\t\t\tupdateClass = updateType.toLowerCase().replaceAll(&quot; &quot;,&quot;-&quot;);\n\t\t\t\t\t\t\t\tif(updateClass == &quot;general-update&quot;)\n\t\t\t\t\t\t\t\t{\n\t\t\t\t\t\t\t\t\t\tupdateClass = &quot;general&quot;;\n\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\ttaskTitle = ifnull(commentRec.Task.Task_Title,&quot;Task not selected&quot;);\n\t\t\t\t\t\t\t\tcommentText = ifnull(commentRec.Comment,&quot;No comment text&quot;);\n\t\t\t\t\t\t%&gt;\n\t\t\t\t\t\t&lt;li class=&quot;zcs-tl-li zcs-row zcs-gap-0 zcs-relative&quot;&gt;\n\t\t\t\t\t\t\t\t&lt;div class=&quot;zcs-tl-indicator zcs-h-full zcs-flex zcs-justify-center zcs-absolute&quot;&gt;&lt;span class=&quot;zcs-tl-dot zcs-rounded-half zcs-mt-5 zcs-box-border zcs-relative&quot;&gt;&lt;/span&gt;&lt;/div&gt;\n\t\t\t\t\t\t\t\t&lt;div class=&quot;activity-body zcs-flex zcs-direction-column zcs-col-12 zcs-box-border&quot;&gt;\n\t\t\t\t\t\t\t\t\t\t&lt;div class=&quot;activity-title-line&quot;&gt;\n\t\t\t\t\t\t\t\t\t\t\t\t&lt;h6 class=&quot;zcs-font-15 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0&quot;&gt;&lt;%= taskTitle %&gt;&lt;/h6&gt;\n\t\t\t\t\t\t\t\t\t\t\t\t&lt;span class=&quot;activity-badge &lt;%= updateClass %&gt;&quot;&gt;&lt;i class=&quot;zc-li-outline ui-1-tag&quot;&gt;&lt;/i&gt;&lt;%= updateType %&gt;&lt;/span&gt;\n\t\t\t\t\t\t\t\t\t\t&lt;/div&gt;\n\t\t\t\t\t\t\t\t\t\t&lt;p class=&quot;activity-comment zcs-font-13 zcs-font-normal zcs-lh-body zcs-color-secondary zcs-mt-8 zcs-mx-0 zcs-mb-0&quot;&gt;&lt;%= commentText %&gt;&lt;/p&gt;\n\t\t\t\t\t\t\t\t\t\t&lt;div class=&quot;zcs-flex zcs-justify-space-between zcs-align-items-center zcs-gap-8 zcs-mt-8&quot;&gt;\n\t\t\t\t\t\t\t\t\t\t\t\t&lt;span class=&quot;zcs-font-12 zcs-color-tertiary&quot;&gt;&lt;i class=&quot;zc-li-outline users-single-03&quot;&gt;&lt;/i&gt; &lt;%= ifnull(commentRec.Added_User,&quot;User&quot;) %&gt;&lt;/span&gt;\n\t\t\t\t\t\t\t\t\t\t\t\t&lt;span class=&quot;zcs-font-12 zcs-color-tertiary&quot;&gt;&lt;%= commentRec.Added_Time %&gt;&lt;/span&gt;\n\t\t\t\t\t\t\t\t\t\t&lt;/div&gt;\n\t\t\t\t\t\t\t\t\t\t&lt;%\n\t\t\t\t\t\t\t\t\t\t\tif(commentRec.Follow_Up_Date != null)\n\t\t\t\t\t\t\t\t\t\t\t{\n\t\t\t\t\t\t\t\t\t\t%&gt;\n\t\t\t\t\t\t\t\t\t\t&lt;span class=&quot;activity-followup&quot;&gt;&lt;i class=&quot;zc-li-outline ui-1-calendar-grid-58&quot;&gt;&lt;/i&gt;Follow-up: &lt;%= commentRec.Follow_Up_Date %&gt;&lt;/span&gt;\n\t\t\t\t\t\t\t\t\t\t&lt;%\n\t\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\t%&gt;\n\t\t\t\t\t\t\t\t&lt;/div&gt;\n\t\t\t\t\t\t&lt;/li&gt;\n\t\t\t\t\t\t&lt;%\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t%&gt;\n\t\t\t\t&lt;/ul&gt;\n\t\t\t\t&lt;%\n\t\t\t\t\t}\n\t\t\t\t%&gt;\n\t\t&lt;/div&gt;\n&lt;/div&gt;\n\t\t\t\t\t\t &lt;%}%&gt;\n\t\t\t\t\t]]>\n\t\t\t\t</dsp>\n\t\t\t</column>\n\t\t\t<column width='60%'>\n\t\t\t\t<report elementName='Embedded_Overdue_Tasks'\n\t\t\t\ttitle='Overdue Tasks'\n\t\t\t\ttitleColor='#12132B'\n\t\t\t\tboldTitle='true'\n\t\t\t\tappLinkName='thisapp'\n\t\t\t\tlinkName='Overdue_Tasks'\n\t\t\t\tiszreport='false'\n\t\t\t\tzc_Footer='true'\n\t\t\t\tzc_AddRec='false'\n\t\t\t\tzc_EditRec='false'\n\t\t\t\tzc_Print='false'\n\t\t\t\tzc_Export='false'\n\t\t\t\tzc_DelRec='false'\n\t\t\t\tzc_DuplRec='false'\n\t\t\t\tzc_Search='true'\n\t\t\t\tzc_EditBulkRec='false'\n\t\t\t\tzc_BulkDelete='false'\n\t\t\t\tzc_BulkDuplicate='false'\n\t\t\t\theightType='custom'\n\t\t\t\theightValue='430' />\n\t\t\t</column>\n\t\t</row>\n\t\t<row>\n\t\t\t<column width='100%'>\n\t\t\t\t<report elementName='Embedded_Task_Board'\n\t\t\t\ttitle='Task Board'\n\t\t\t\ttitleColor='#12132B'\n\t\t\t\tboldTitle='true'\n\t\t\t\tappLinkName='thisapp'\n\t\t\t\tlinkName='Task_Board'\n\t\t\t\tiszreport='false'\n\t\t\t\tzc_Footer='true'\n\t\t\t\tzc_AddRec='false'\n\t\t\t\tzc_EditRec='false'\n\t\t\t\tzc_Print='false'\n\t\t\t\tzc_Export='false'\n\t\t\t\tzc_DelRec='false'\n\t\t\t\tzc_DuplRec='false'\n\t\t\t\tzc_Search='true'\n\t\t\t\tzc_EditBulkRec='false'\n\t\t\t\tzc_BulkDelete='false'\n\t\t\t\tzc_BulkDuplicate='false'\n\t\t\t\theightType='custom'\n\t\t\t\theightValue='620' />\n\t\t\t</column>\n\t\t</row>\n\t</layout>\n</zml>"
+		}
+	}
+
+	workflow
+	{
+		form
+		{
+			Comments_On_Load as "Comments On Load"
+			{
+			    type = form
+			    form = Comments
+			    record event = on add or edit
+			    description = "Sets follow-up date visibility when the comment form opens."
+			
+			    on load
+			    {
+			        actions
+			        {
+			            custom deluge script
+			            (
+			                if (input.Follow_Up_Required == true)
+			                {
+			                    show Follow_Up_Date;
+			                }
+			                else
+			                {
+			                    hide Follow_Up_Date;
+			                }
+			            )
+			        }
+			    }
+			}
+
+			Comments_On_Validate as "Comments On Validate"
+			{
+			    type = form
+			    form = Comments
+			    record event = on add or edit
+			    description = "Validates follow-up date requirements for comments."
+			
+			    on validate
+			    {
+			        actions
+			        {
+			            custom deluge script
+			            (
+			                if (input.Follow_Up_Required == true && input.Follow_Up_Date == null)
+			                {
+			                    alert "Please enter a follow-up date.";
+			                    cancel submit;
+			                }
+			                if (input.Follow_Up_Date != null && input.Follow_Up_Date < zoho.currentdate)
+			                {
+			                    alert "Follow-up date cannot be in the past.";
+			                    cancel submit;
+			                }
+			            )
+			        }
+			    }
+			}
+
+			Follow_Up_Required_On_User_Input as "Follow Up Required On User Input"
+			{
+			    type = form
+			    form = Comments
+			    record event = on add or edit
+			    description = "Shows or clears the follow-up date when follow-up is toggled."
+			
+			    on user input of Follow_Up_Required
+			    {
+			        actions
+			        {
+			            custom deluge script
+			            (
+			                if (input.Follow_Up_Required == true)
+			                {
+			                    show Follow_Up_Date;
+			                }
+			                else
+			                {
+			                    hide Follow_Up_Date;
+			                    input.Follow_Up_Date = null;
+			                }
+			            )
+			        }
+			    }
+			}
+
+			Projects_On_Validate as "Projects On Validate"
+			{
+			    type = form
+			    form = Projects
+			    record event = on add or edit
+			    description = "Validates project date consistency."
+			
+			    on validate
+			    {
+			        actions
+			        {
+			            custom deluge script
+			            (
+			                if (input.Due_Date != null && input.Due_Date < input.Start_Date)
+			                {
+			                    alert "Due date cannot be earlier than start date.";
+			                    cancel submit;
+			                }
+			            )
+			        }
+			    }
+			}
+
+			Status_On_User_Input as "Status On User Input"
+			{
+			    type = form
+			    form = Tasks
+			    record event = on add or edit
+			    description = "Updates task helper fields when status changes."
+			
+			    on user input of Status
+			    {
+			        actions
+			        {
+			            custom deluge script
+			            (
+			                if (input.Status == "Done")
+			                {
+			                    show Completed_Date;
+			                    if (input.Completed_Date == null)
+			                    {
+			                        input.Completed_Date = zoho.currentdate;
+			                    }
+			                }
+			                else
+			                {
+			                    hide Completed_Date;
+			                    input.Completed_Date = null;
+			                }
+			                if (input.Status == "Blocked")
+			                {
+			                    show Blocker_Reason;
+			                }
+			                else
+			                {
+			                    hide Blocker_Reason;
+			                    input.Blocker_Reason = "";
+			                }
+			            )
+			        }
+			    }
+			}
+
+			Tasks_On_Load as "Tasks On Load"
+			{
+			    type = form
+			    form = Tasks
+			    record event = on add or edit
+			    description = "Sets task field visibility when the form opens."
+			
+			    on load
+			    {
+			        actions
+			        {
+			            custom deluge script
+			            (
+			                if (input.Status == "Done")
+			                {
+			                    show Completed_Date;
+			                }
+			                else
+			                {
+			                    hide Completed_Date;
+			                }
+			                if (input.Status == "Blocked")
+			                {
+			                    show Blocker_Reason;
+			                }
+			                else
+			                {
+			                    hide Blocker_Reason;
+			                }
+			            )
+			        }
+			    }
+			}
+
+			Tasks_On_Validate as "Tasks On Validate"
+			{
+			    type = form
+			    form = Tasks
+			    record event = on add or edit
+			    description = "Validates task dates, blocker notes, and hour values."
+			
+			    on validate
+			    {
+			        actions
+			        {
+			            custom deluge script
+			            (
+			                if (input.Due_Date != null && input.Start_Date != null && input.Due_Date < input.Start_Date)
+			                {
+			                    alert "Due date cannot be earlier than start date.";
+			                    cancel submit;
+			                }
+			                if (input.Status == "Done" && input.Completed_Date == null)
+			                {
+			                    input.Completed_Date = zoho.currentdate;
+			                }
+			                if (input.Status == "Blocked" && input.Blocker_Reason in ["", " ", "null"])
+			                {
+			                    alert "Please enter a blocker reason.";
+			                    cancel submit;
+			                }
+			                if (input.Actual_Hours != null && input.Actual_Hours < 0)
+			                {
+			                    alert "Actual hours cannot be negative.";
+			                    cancel submit;
+			                }
+			                if (input.Estimated_Hours != null && input.Estimated_Hours < 0)
+			                {
+			                    alert "Estimated hours cannot be negative.";
+			                    cancel submit;
+			                }
+			            )
+			        }
+			    }
+			}
+		}
+	}
+
+	share_settings
+	{
+	"Project_Manager"
+	{
+	    name        = "Project_Manager"
+	    type        = Users_Permissions
+	    permissions = { Chat:true, Predefined:false, ApiAccess:true, PIIAccess:false, ePHIAccess:false }
+	    description = "Project managers oversee projects, assign work, and manage task progress. Module permissions are added in the final Permissions segment."
+	    ModulePermissions
+	    {
+	        Projects
+	        {
+	            enabled          = Create,Viewall,Modifyall,Import,Export,Tab,View,Edit,Delete,Search,read_comm,write_comm,create_new_report
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Projects={"View","Edit","Delete"}
+	                Active_Projects={"View","Edit","Delete"}
+	                Project_Calendar={"View"}
+	            }
+	        }
+	        Tasks
+	        {
+	            enabled          = Create,Viewall,Modifyall,Import,Export,Tab,View,Edit,Delete,Search,read_comm,write_comm,create_new_report
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Tasks={"View","Edit","Delete"}
+	                My_Open_Tasks={"View","Edit","Delete"}
+	                Task_Board={"View","Edit","Delete"}
+	                Overdue_Tasks={"View","Edit","Delete"}
+	                Task_Calendar={"View"}
+	            }
+	        }
+	        Comments
+	        {
+	            enabled          = Create,Viewall,Modifyall,Import,Export,Tab,View,Edit,Delete,Search,read_comm,write_comm,create_new_report
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Comments={"View","Edit","Delete"}
+	                Follow_Up_Comments={"View","Edit","Delete"}
+	            }
+	        }
+	        Task_Dashboard
+	        {
+	            enabled = tab
+	        }
+	    }
+	}
+	"Team_Member"
+	{
+	    name        = "Team_Member"
+	    type        = Users_Permissions
+	    permissions = { Chat:true, Predefined:false, ApiAccess:false, PIIAccess:false, ePHIAccess:false }
+	    description = "Team members can create and update their assigned work and view project/task information. Module permissions are added in the final Permissions segment."
+	    ModulePermissions
+	    {
+	        Projects
+	        {
+	            enabled          = Viewall,Tab,View,Search,read_comm,write_comm
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Projects={"View"}
+	                Active_Projects={"View"}
+	                Project_Calendar={"View"}
+	            }
+	        }
+	        Tasks
+	        {
+	            enabled          = Create,Viewall,Modifyall,Tab,View,Edit,Search,read_comm,write_comm
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Tasks={"View","Edit"}
+	                My_Open_Tasks={"View","Edit"}
+	                Task_Board={"View","Edit"}
+	                Overdue_Tasks={"View","Edit"}
+	                Task_Calendar={"View"}
+	            }
+	        }
+	        Comments
+	        {
+	            enabled          = Create,Viewall,Modifyall,Tab,View,Edit,Search,read_comm,write_comm
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Comments={"View","Edit"}
+	                Follow_Up_Comments={"View","Edit"}
+	            }
+	        }
+	        Task_Dashboard
+	        {
+	            enabled = tab
+	        }
+	    }
+	}
+	}
+
+	web
+	{
+	forms
+	{
+	    form Projects
+	    {
+	        label placement = left
+	    }
+	    form Tasks
+	    {
+	        label placement = left
+	    }
+	    form Comments
+	    {
+	        label placement = left
+	    }
+	}
+	reports
+	{
+		report All_Comments
+		{
+		    quickview
+		    (
+		        layout
+		        (
+		            type = -1
+		            datablock1
+		            (
+		                layout type = -1
+		                fields
+		                (
+		                    Task
+		                    Update_Type
+		                    Follow_Up_Required
+		                    Follow_Up_Date
+		                    Comment
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		            record
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		        action
+		        (
+		            on click
+		            (
+		                View Record
+		            )
+		            on right click
+		            (
+		                Edit
+		                Delete
+		                Duplicate
+		                View Record
+		            )
+		        )
+		    )
+		    detailview
+		    (
+		        layout
+		        (
+		            type = 1
+		            datablock1
+		            (
+		                layout type = -2
+		                fields
+		                (
+		                    Task
+		                    Update_Type
+		                    Follow_Up_Required
+		                    Follow_Up_Date
+		                    Comment
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		    )
+		}
+	
+		report Follow_Up_Comments
+		{
+		    quickview
+		    (
+		        layout
+		        (
+		            type = -1
+		            datablock1
+		            (
+		                layout type = -1
+		                fields
+		                (
+		                    Task
+		                    Update_Type
+		                    Follow_Up_Date
+		                    Comment
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		            record
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		        action
+		        (
+		            on click
+		            (
+		                View Record
+		            )
+		            on right click
+		            (
+		                Edit
+		                Delete
+		                Duplicate
+		                View Record
+		            )
+		        )
+		    )
+		    detailview
+		    (
+		        layout
+		        (
+		            type = 1
+		            datablock1
+		            (
+		                layout type = -2
+		                fields
+		                (
+		                    Task
+		                    Update_Type
+		                    Follow_Up_Date
+		                    Comment
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		    )
+		}
+	
+		report Active_Projects
+		{
+		    quickview
+		    (
+		        layout
+		        (
+		            type = -1
+		            datablock1
+		            (
+		                layout type = -1
+		                fields
+		                (
+		                    Project_Code
+		                    Project_Name
+		                    Project_Manager
+		                    Priority
+		                    Start_Date
+		                    Due_Date
+		                    Budget_Hours
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		            record
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		        action
+		        (
+		            on click
+		            (
+		                View Record
+		            )
+		            on right click
+		            (
+		                Edit
+		                Delete
+		                Duplicate
+		                View Record
+		            )
+		        )
+		    )
+		    detailview
+		    (
+		        layout
+		        (
+		            type = 1
+		            datablock1
+		            (
+		                layout type = -2
+		                fields
+		                (
+		                    Project_Code
+		                    Project_Name
+		                    Project_Manager
+		                    Priority
+		                    Start_Date
+		                    Due_Date
+		                    Budget_Hours
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		    )
+		}
+	
+		report All_Projects
+		{
+		    quickview
+		    (
+		        layout
+		        (
+		            type = -1
+		            datablock1
+		            (
+		                layout type = -1
+		                fields
+		                (
+		                    Project_Code
+		                    Project_Name
+		                    Project_Manager
+		                    Status
+		                    Priority
+		                    Start_Date
+		                    Due_Date
+		                    Budget_Hours
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		            record
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		        action
+		        (
+		            on click
+		            (
+		                View Record
+		            )
+		            on right click
+		            (
+		                Edit
+		                Delete
+		                Duplicate
+		                View Record
+		            )
+		        )
+		    )
+		    detailview
+		    (
+		        layout
+		        (
+		            type = 1
+		            datablock1
+		            (
+		                layout type = -2
+		                fields
+		                (
+		                    Project_Code
+		                    Project_Name
+		                    Project_Manager
+		                    Status
+		                    Priority
+		                    Start_Date
+		                    Due_Date
+		                    Budget_Hours
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		    )
+		}
+	
+		report Project_Calendar
+		{
+		    quickview
+		    (
+		        layout
+		        (
+		            type = -1
+		            datablock1
+		            (
+		                layout type = -1
+		                fields
+		                (
+		                    Project_Name
+		                    Project_Manager
+		                    Status
+		                    Start_Date
+		                    Due_Date
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		            record
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		        action
+		        (
+		            on click
+		            (
+		                View Record
+		            )
+		            on right click
+		            (
+		                Edit
+		                Delete
+		                Duplicate
+		                View Record
+		            )
+		        )
+		    )
+		    detailview
+		    (
+		        layout
+		        (
+		            type = 1
+		            datablock1
+		            (
+		                layout type = -2
+		                fields
+		                (
+		                    Project_Name
+		                    Project_Manager
+		                    Status
+		                    Start_Date
+		                    Due_Date
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		    )
+		}
+	
+		report All_Tasks
+		{
+		    quickview
+		    (
+		        layout
+		        (
+		            type = -1
+		            datablock1
+		            (
+		                layout type = -1
+		                fields
+		                (
+		                    Task_ID
+		                    Task_Title
+		                    Project
+		                    Assigned_To
+		                    Status
+		                    Priority
+		                    Start_Date
+		                    Due_Date
+		                    Completed_Date
+		                    Estimated_Hours
+		                    Actual_Hours
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		            record
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		        action
+		        (
+		            on click
+		            (
+		                View Record
+		            )
+		            on right click
+		            (
+		                Edit
+		                Delete
+		                Duplicate
+		                View Record
+		            )
+		        )
+		    )
+		    detailview
+		    (
+		        layout
+		        (
+		            type = 1
+		            datablock1
+		            (
+		                layout type = -2
+		                fields
+		                (
+		                    Task_ID
+		                    Task_Title
+		                    Project
+		                    Assigned_To
+		                    Status
+		                    Priority
+		                    Start_Date
+		                    Due_Date
+		                    Completed_Date
+		                    Estimated_Hours
+		                    Actual_Hours
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		    )
+		}
+	
+		report My_Open_Tasks
+		{
+		    quickview
+		    (
+		        layout
+		        (
+		            type = -1
+		            datablock1
+		            (
+		                layout type = -1
+		                fields
+		                (
+		                    Task_ID
+		                    Task_Title
+		                    Project
+		                    Assigned_To
+		                    Status
+		                    Priority
+		                    Due_Date
+		                    Estimated_Hours
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		            record
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		        action
+		        (
+		            on click
+		            (
+		                View Record
+		            )
+		            on right click
+		            (
+		                Edit
+		                Delete
+		                Duplicate
+		                View Record
+		            )
+		        )
+		    )
+		    detailview
+		    (
+		        layout
+		        (
+		            type = 1
+		            datablock1
+		            (
+		                layout type = -2
+		                fields
+		                (
+		                    Task_ID
+		                    Task_Title
+		                    Project
+		                    Assigned_To
+		                    Status
+		                    Priority
+		                    Due_Date
+		                    Estimated_Hours
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		    )
+		}
+	
+		report Overdue_Tasks
+		{
+		    quickview
+		    (
+		        layout
+		        (
+		            type = -1
+		            datablock1
+		            (
+		                layout type = -1
+		                fields
+		                (
+		                    Task_ID
+		                    Task_Title
+		                    Project
+		                    Assigned_To
+		                    Status
+		                    Priority
+		                    Due_Date
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		            record
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		        action
+		        (
+		            on click
+		            (
+		                View Record
+		            )
+		            on right click
+		            (
+		                Edit
+		                Delete
+		                Duplicate
+		                View Record
+		            )
+		        )
+		    )
+		    detailview
+		    (
+		        layout
+		        (
+		            type = 1
+		            datablock1
+		            (
+		                layout type = -2
+		                fields
+		                (
+		                    Task_ID
+		                    Task_Title
+		                    Project
+		                    Assigned_To
+		                    Status
+		                    Priority
+		                    Due_Date
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		    )
+		}
+	
+		report Task_Board
+		{
+		    quickview
+		    (
+		        layout
+		        (
+		            type = -1
+		            datablock1
+		            (
+		                layout type = -1
+		                fields
+		                (
+		                    Task_ID
+		                    Task_Title
+		                    Project
+		                    Assigned_To
+		                    Priority
+		                    Due_Date
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		            record
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		        action
+		        (
+		            on click
+		            (
+		                View Record
+		            )
+		            on right click
+		            (
+		                Edit
+		                Delete
+		                Duplicate
+		                View Record
+		            )
+		        )
+		    )
+		    detailview
+		    (
+		        layout
+		        (
+		            type = 1
+		            datablock1
+		            (
+		                layout type = -2
+		                fields
+		                (
+		                    Task_ID
+		                    Task_Title
+		                    Project
+		                    Assigned_To
+		                    Priority
+		                    Due_Date
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		    )
+		}
+	
+		report Task_Calendar
+		{
+		    quickview
+		    (
+		        layout
+		        (
+		            type = -1
+		            datablock1
+		            (
+		                layout type = -1
+		                fields
+		                (
+		                    Task_Title
+		                    Project
+		                    Assigned_To
+		                    Status
+		                    Priority
+		                    Start_Date
+		                    Due_Date
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		            record
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		        action
+		        (
+		            on click
+		            (
+		                View Record
+		            )
+		            on right click
+		            (
+		                Edit
+		                Delete
+		                Duplicate
+		                View Record
+		            )
+		        )
+		    )
+		    detailview
+		    (
+		        layout
+		        (
+		            type = 1
+		            datablock1
+		            (
+		                layout type = -2
+		                fields
+		                (
+		                    Task_Title
+		                    Project
+		                    Assigned_To
+		                    Status
+		                    Priority
+		                    Start_Date
+		                    Due_Date
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		    )
+		}
+	}
+	menu
+	{
+	    space Task_Management
+	    {
+	        displayname = "Task Management"
+	        icon = "business-briefcase-25"
+	
+	        section Dashboard_Section
+	        {
+	            displayname = "Dashboard"
+	            icon = "business-chart-bar-33"
+	
+	            page Task_Dashboard
+	            {
+	                icon = "business-chart"
+	            }
+	        }
+	
+	        section Projects_Section
+	        {
+	            displayname = "Projects"
+	            icon = "files-folder-15"
+	
+	            form Projects
+	            {
+	                icon = "files-folder-add"
+	            }
+	            report All_Projects
+	            {
+	                icon = "files-folder-14"
+	            }
+	            report Active_Projects
+	            {
+	                icon = "business-progress"
+	            }
+	            report Project_Calendar
+	            {
+	                icon = "business-agenda"
+	            }
+	        }
+	
+	        section Tasks_Section
+	        {
+	            displayname = "Tasks"
+	            icon = "files-check"
+	
+	            form Tasks
+	            {
+	                icon = "files-add"
+	            }
+	            report All_Tasks
+	            {
+	                icon = "files-single-content-03"
+	            }
+	            report My_Open_Tasks
+	            {
+	                icon = "files-user"
+	            }
+	            report Task_Board
+	            {
+	                icon = "business-board-27"
+	            }
+	            report Overdue_Tasks
+	            {
+	                icon = "files-exclamation"
+	            }
+	            report Task_Calendar
+	            {
+	                icon = "business-agenda"
+	            }
+	        }
+	
+	        section Comments_Section
+	        {
+	            displayname = "Comments"
+	            icon = "business-notes"
+	
+	            form Comments
+	            {
+	                icon = "files-edit"
+	            }
+	            report All_Comments
+	            {
+	                icon = "files-single-paragraph"
+	            }
+	            report Follow_Up_Comments
+	            {
+	                icon = "files-time"
+	            }
+	        }
+	
+	        section SharedAnalytics_Section
+	        {
+	            type = shared_user_report_section
+	            displayname = "Reports"
+	            icon = "business-chart-bar-33"
+	        }
+	    }
+	
+	    preference
+	    {
+	        icon
+	        {
+	            style = outline
+	            show = {space,section,component}
+	        }
+	    }
+	}
+	customize
+	{
+	    layout
+	    {
+	        theme = "theme_2"
+	        variant = "variant_2"
+	    }
+	
+	    font = "lato"
+	
+	    color options
+	    {
+	        color = "11"
+	    }
+	
+	    logo
+	    {
+	        preference = "app_icon"
+	        placement = "left"
+	    }
+	
+	    custom css
+	    {
+	        content = ".zc-app-header { background: #1E3A8A; } .zc-menu { font-weight: 500; }"
+	    }
+	}
+	}
+}

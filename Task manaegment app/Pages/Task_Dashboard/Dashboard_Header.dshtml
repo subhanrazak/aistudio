@@ -1,0 +1,203 @@
+<%
+  totalProjects = Projects[ID != 0].count();
+  activeProjects = Projects[Status == "Active"].count();
+  totalTasks = Tasks[ID != 0].count();
+  openTasks = Tasks[Status != "Done" && Status != "Cancelled"].count();
+  overdueTasks = Tasks[Due_Date != null && Due_Date < zoho.currentdate && Status != "Done" && Status != "Cancelled"].count();
+  completedTasks = Tasks[Status == "Done"].count();
+  blockedTasks = Tasks[Status == "Blocked"].count();
+%>
+<style>
+/* ZCS Global Utility Stylesheet included once for Task_Dashboard. Compact utility subset from zcs-global used by this page. */
+:root {
+    --zcs-theme-brand-color: var(--zcs_brand_color, #2A6FFC);
+    --zcs-light-bg-color: var(--zcs_brand_light_color, #E8EFFF);
+    --zcs-page-bg-color: #F3F3F4;
+    --zcs-primary-text-color: var(--zcs_primary_text_color, #12132B);
+    --zcs-secondary-text-color: var(--zcs_secondary_text_color, #505166);
+    --zcs-teritiary-text-color: var(--zcs_tertiary_text_color, #71718C);
+    --zcs-border-color: var(--zcs_tertiary_border_color, #E7E7EE);
+    --zcs-white-color: #FFFFFF;
+    --zcs-black-color: #000000;
+    --task-blue: #2A6FFC;
+    --task-red: #FE455D;
+    --task-amber: #B8770D;
+    --task-green: #179E6C;
+    --task-muted-bg: #F9FAFE;
+    font-size: 16px;
+    line-height: 1.5;
+    --column-gap: 0px;
+}
+.zcs-row { display:flex; flex-wrap:wrap; }
+.zcs-flex { display:flex; }
+.zcs-inline-flex { display:inline-flex; }
+.zcs-direction-column { flex-direction:column; }
+.zcs-align-items-center, .zcs-align-center { align-items:center; }
+.zcs-align-items-start { align-items:flex-start; }
+.zcs-justify-center { justify-content:center; }
+.zcs-justify-space-between { justify-content:space-between; }
+.zcs-col-3 { flex:0 0 calc(25% - var(--column-gap) * .75); max-width:calc(25% - var(--column-gap) * .75); }
+.zcs-col-4 { flex:0 0 calc(33.333% - var(--column-gap) * .666); max-width:calc(33.333% - var(--column-gap) * .666); }
+.zcs-col-5 { flex:0 0 calc(41.666% - var(--column-gap) * .583); max-width:calc(41.666% - var(--column-gap) * .583); }
+.zcs-col-6 { flex:0 0 calc(50% - var(--column-gap) * .5); max-width:calc(50% - var(--column-gap) * .5); }
+.zcs-col-7 { flex:0 0 calc(58.333% - var(--column-gap) * .416); max-width:calc(58.333% - var(--column-gap) * .416); }
+.zcs-col-12 { flex:0 0 100%; max-width:100%; }
+.zcs-w-full { width:100%; }
+.zcs-h-full { height:100%; }
+.zcs-wh-full { width:100%; height:100%; }
+.zcs-box-border { box-sizing:border-box; }
+.zcs-relative { position:relative; }
+.zcs-absolute { position:absolute; }
+.zcs-sticky { position:sticky; }
+.zcs-overflow-auto { overflow:auto; }
+.zcs-overflow-hidden { overflow:hidden; }
+.zcs-ellipsis { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.zcs-rounded-sm { border-radius:4px; }
+.zcs-rounded-md { border-radius:6px; }
+.zcs-rounded-lg { border-radius:8px; }
+.zcs-rounded-xl { border-radius:12px; }
+.zcs-rounded-2xl { border-radius:16px; }
+.zcs-rounded-half { border-radius:50%; }
+.zcs-p-0 { padding:0; }
+.zcs-p-2 { padding:.125rem; }
+.zcs-p-5 { padding:.3125rem; }
+.zcs-p-6 { padding:.375rem; }
+.zcs-p-8 { padding:.5rem; }
+.zcs-p-10 { padding:.625rem; }
+.zcs-p-12 { padding:.75rem; }
+.zcs-p-16 { padding:1rem; }
+.zcs-p-20 { padding:1.25rem; }
+.zcs-p-24 { padding:1.5rem; }
+.zcs-px-8 { padding-left:.5rem; padding-right:.5rem; }
+.zcs-px-10 { padding-left:.625rem; padding-right:.625rem; }
+.zcs-px-12 { padding-left:.75rem; padding-right:.75rem; }
+.zcs-px-16 { padding-left:1rem; padding-right:1rem; }
+.zcs-px-20 { padding-left:1.25rem; padding-right:1.25rem; }
+.zcs-px-24 { padding-left:1.5rem; padding-right:1.5rem; }
+.zcs-px-60 { padding-left:3.75rem; padding-right:3.75rem; }
+.zcs-py-4 { padding-top:.25rem; padding-bottom:.25rem; }
+.zcs-py-6 { padding-top:.375rem; padding-bottom:.375rem; }
+.zcs-py-8 { padding-top:.5rem; padding-bottom:.5rem; }
+.zcs-py-10 { padding-top:.625rem; padding-bottom:.625rem; }
+.zcs-py-12 { padding-top:.75rem; padding-bottom:.75rem; }
+.zcs-py-14 { padding-top:.875rem; padding-bottom:.875rem; }
+.zcs-py-16 { padding-top:1rem; padding-bottom:1rem; }
+.zcs-m-0 { margin:0; }
+.zcs-mt-5 { margin-top:.3125rem; }
+.zcs-mt-8 { margin-top:.5rem; }
+.zcs-mx-0 { margin-left:0; margin-right:0; }
+.zcs-mb-0 { margin-bottom:0; }
+.zcs-gap-0 { gap:0; --column-gap:0; }
+.zcs-gap-6 { gap:.375rem; --column-gap:.375rem; }
+.zcs-gap-8 { gap:.5rem; --column-gap:.5rem; }
+.zcs-gap-10 { gap:.625rem; --column-gap:.625rem; }
+.zcs-gap-12 { gap:.75rem; --column-gap:.75rem; }
+.zcs-gap-14 { gap:.875rem; --column-gap:.875rem; }
+.zcs-gap-16 { gap:1rem; --column-gap:1rem; }
+.zcs-gap-20 { gap:1.25rem; --column-gap:1.25rem; }
+.zcs-gap-24 { gap:1.5rem; --column-gap:1.5rem; }
+.zcs-gap-32 { gap:2rem; --column-gap:2rem; }
+.zcs-font-11 { font-size:.6875rem; }
+.zcs-font-12 { font-size:.75rem; }
+.zcs-font-13 { font-size:.8125rem; }
+.zcs-font-14 { font-size:.875rem; }
+.zcs-font-15 { font-size:.9375rem; }
+.zcs-font-16 { font-size:1rem; }
+.zcs-font-18 { font-size:1.125rem; }
+.zcs-font-20 { font-size:1.25rem; }
+.zcs-font-22 { font-size:1.375rem; }
+.zcs-font-24 { font-size:1.5rem; }
+.zcs-font-28 { font-size:1.75rem; }
+.zcs-font-30 { font-size:1.875rem; }
+.zcs-font-normal { font-weight:400; }
+.zcs-font-medium { font-weight:500; }
+.zcs-font-semibold { font-weight:600; }
+.zcs-font-bold { font-weight:700; }
+.zcs-lh-heading { line-height:1.25; }
+.zcs-lh-body { line-height:1.5; }
+.zcs-uppercase { text-transform:uppercase; }
+.zcs-text-left { text-align:left; }
+.zcs-text-right { text-align:right; }
+.zcs-text-center { text-align:center; }
+.zcs-color-theme { color:var(--zcs-theme-brand-color); }
+.zcs-color-primary { color:var(--zcs-primary-text-color); }
+.zcs-color-secondary { color:var(--zcs-secondary-text-color); }
+.zcs-color-tertiary { color:var(--zcs-teritiary-text-color); }
+.zcs-color-white { color:var(--zcs-white-color); }
+.zcs-color-green { color:var(--task-green); }
+.zcs-color-red { color:var(--task-red); }
+.zcs-color-yellow { color:var(--task-amber); }
+.zcs-color-blue { color:var(--task-blue); }
+.zcs-card { background-color:var(--zcs-white-color); border:1px solid var(--zcs-border-color); border-radius:12px; }
+.zcs-list-none { list-style-type:none; }
+a { text-decoration:none; }
+.zc-pb-page-content-wrapper div#zppagesLive,
+.zc-pb-page-content-wrapper div#elementsContainer,
+.zc-pb-page-content-wrapper .elemContainment,
+.zc-pb-page-content-wrapper .zcpage-elemContainer { height:100%; }
+.zc-container-wrapper .zc-main-content .inner .zc-page-content-wrapper .zc-pb-page-content-wrapper .elemContainment,
+.zc-full-height .zc-page-content-wrapper .zc-pb-page-content-wrapper .elemContainment,
+.zc-pb-page-content-wrapper .zc-pb-tile-container { padding:0; }
+#splash-screen { display:none !important; }
+@media (max-width:992px) { .zcs-col-md-6 { flex:0 0 calc(50% - var(--column-gap) * .5); max-width:calc(50% - var(--column-gap) * .5); } .zcs-col-md-12 { flex:0 0 100%; max-width:100%; } }
+@media (max-width:768px) { .zcs-col-sm-6 { flex:0 0 calc(50% - var(--column-gap) * .5); max-width:calc(50% - var(--column-gap) * .5); } .zcs-col-sm-12 { flex:0 0 100%; max-width:100%; } }
+@media (max-width:576px) { .zcs-col-xs-12 { flex:0 0 100%; max-width:100%; } }
+
+/* ZCS Legend With Count component */
+.zcs-legend-wrapper li { list-style-type:none; }
+.zcs-legend-wrapper li label { min-width:100px; }
+.zcs-legend-wrapper li label:before { content:''; display:inline-block; vertical-align:top; width:10px; height:10px; margin:5px 10px 5px 0; border-radius:50%; }
+.zcs-legend-wrapper li:nth-child(1) label:before { background-color:var(--task-blue); }
+.zcs-legend-wrapper li:nth-child(2) label:before { background-color:#1094C5; }
+.zcs-legend-wrapper li:nth-child(3) label:before { background-color:var(--task-amber); }
+.zcs-legend-wrapper li:nth-child(4) label:before { background-color:var(--task-red); }
+.zcs-legend-wrapper li:nth-child(5) label:before { background-color:var(--task-green); }
+
+.task-dashboard-band { width:100%; box-sizing:border-box; padding:0 0 12px 0; }
+.task-dash-header-card { overflow:hidden; position:relative; border:0; background:linear-gradient(135deg, var(--zcs-theme-brand-color) 0%, #15295F 100%); box-shadow:0 14px 34px rgba(21,41,95,.16); }
+.task-dash-header-card:after { content:''; position:absolute; width:360px; height:360px; right:-120px; top:-170px; border-radius:50%; border:42px solid rgba(255,255,255,.08); }
+.task-dash-header-card:before { content:''; position:absolute; width:180px; height:180px; right:130px; bottom:-100px; border-radius:50%; background:rgba(255,255,255,.08); }
+.task-dash-title-area, .task-header-metrics, .task-status-legend { position:relative; z-index:1; }
+.task-dash-title { color:#FFFFFF; font-size:30px; font-weight:700; line-height:1.15; margin:0; letter-spacing:-.02em; }
+.task-dash-subtitle { color:rgba(255,255,255,.82); font-size:14px; margin:8px 0 0; }
+.task-header-metrics { display:grid; grid-template-columns:repeat(5, minmax(118px, 1fr)); gap:10px; margin-top:22px; }
+.task-header-metric { background:rgba(255,255,255,.13); border:1px solid rgba(255,255,255,.20); border-radius:14px; padding:12px; backdrop-filter:blur(6px); }
+.task-header-metric span { display:block; color:rgba(255,255,255,.78); font-size:12px; }
+.task-header-metric strong { display:flex; align-items:center; gap:8px; color:#FFFFFF; font-size:22px; margin-top:4px; }
+.task-header-metric i { font-size:18px; }
+.task-status-legend { background:#FFFFFF; border-radius:14px; padding:14px 16px; min-width:250px; box-shadow:0 8px 26px rgba(10,17,40,.14); }
+.task-status-legend h6 { margin:0 0 12px; color:var(--zcs-primary-text-color); font-size:14px; }
+.task-status-legend ul { gap:9px; }
+.task-status-legend li { justify-content:space-between; }
+.task-status-legend label { color:var(--zcs-secondary-text-color); }
+.task-status-legend span { color:var(--zcs-primary-text-color); }
+@media (max-width:992px) { .task-dash-header-card > .zcs-flex { flex-direction:column; align-items:stretch; } .task-header-metrics { grid-template-columns:repeat(2, minmax(0,1fr)); } .task-status-legend { width:100%; box-sizing:border-box; } }
+@media (max-width:576px) { .task-dash-title { font-size:24px; } .task-header-metrics { grid-template-columns:1fr; } }
+</style>
+<div class="task-dashboard-band">
+    <div class="task-dash-header-card zcs-card zcs-p-24 zcs-box-border">
+        <div class="zcs-flex zcs-justify-space-between zcs-align-items-start zcs-gap-24">
+            <div class="task-dash-title-area zcs-col-common">
+                <h1 class="task-dash-title">Task Dashboard</h1>
+                <p class="task-dash-subtitle">Project workload and task status at a glance</p>
+                <div class="task-header-metrics">
+                    <div class="task-header-metric"><span>Total Projects</span><strong><i class="zc-li-outline files-folder-13"></i><%= totalProjects %></strong></div>
+                    <div class="task-header-metric"><span>Active Projects</span><strong><i class="zc-li-outline loader-dots-06"></i><%= activeProjects %></strong></div>
+                    <div class="task-header-metric"><span>Open Tasks</span><strong><i class="zc-li-outline arrows-4-restore"></i><%= openTasks %></strong></div>
+                    <div class="task-header-metric"><span>Overdue Tasks</span><strong><i class="zc-li-outline ui-2-time"></i><%= overdueTasks %></strong></div>
+                    <div class="task-header-metric"><span>Completed Tasks</span><strong><i class="zc-li-outline ui-1-check-circle-08"></i><%= completedTasks %></strong></div>
+                </div>
+            </div>
+            <div class="zcs-legend-wrapper zcs-legend-with-count task-status-legend">
+                <h6 class="zcs-font-semibold zcs-lh-heading">Status legend</h6>
+                <ul class="zcs-flex zcs-direction-column zcs-p-0 zcs-m-0">
+                    <li class="zcs-flex zcs-align-center zcs-gap-8"><label class="zcs-font-14 zcs-font-normal zcs-lh-body">Open</label><span class="zcs-font-14 zcs-font-semibold zcs-lh-body"><%= openTasks %></span></li>
+                    <li class="zcs-flex zcs-align-center zcs-gap-8"><label class="zcs-font-14 zcs-font-normal zcs-lh-body">Active</label><span class="zcs-font-14 zcs-font-semibold zcs-lh-body"><%= activeProjects %></span></li>
+                    <li class="zcs-flex zcs-align-center zcs-gap-8"><label class="zcs-font-14 zcs-font-normal zcs-lh-body">Blocked</label><span class="zcs-font-14 zcs-font-semibold zcs-lh-body"><%= blockedTasks %></span></li>
+                    <li class="zcs-flex zcs-align-center zcs-gap-8"><label class="zcs-font-14 zcs-font-normal zcs-lh-body">Overdue</label><span class="zcs-font-14 zcs-font-semibold zcs-lh-body"><%= overdueTasks %></span></li>
+                    <li class="zcs-flex zcs-align-center zcs-gap-8"><label class="zcs-font-14 zcs-font-normal zcs-lh-body">Done</label><span class="zcs-font-14 zcs-font-semibold zcs-lh-body"><%= completedTasks %></span></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>

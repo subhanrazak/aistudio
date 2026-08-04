@@ -1,0 +1,77 @@
+<%
+  todoCount = Tasks[Status == "To Do"].count();
+  inProgressCount = Tasks[Status == "In Progress"].count();
+  blockedCount = Tasks[Status == "Blocked"].count();
+  doneCount = Tasks[Status == "Done"].count();
+  cancelledCount = Tasks[Status == "Cancelled"].count();
+  statusTotal = todoCount + inProgressCount + blockedCount + doneCount + cancelledCount;
+  if(statusTotal == 0)
+  {
+      statusTotal = 1;
+  }
+  todoPct = (todoCount * 100) / statusTotal;
+  progressPct = (inProgressCount * 100) / statusTotal;
+  blockedPct = (blockedCount * 100) / statusTotal;
+  donePct = (doneCount * 100) / statusTotal;
+  cancelledPct = (cancelledCount * 100) / statusTotal;
+%>
+<style>
+/* ZCS Range Bar With Text component */
+.zcs-progress-bar { height:8px; background-color:var(--zcs_component_hover_color, #EEF1F7); overflow:hidden; }
+.zcs-progress-bar-indicator { height:inherit; border-radius:inherit; background-color:var(--zcs-theme-brand-color); }
+.task-status-card { min-height:330px; }
+.task-status-list li { list-style:none; }
+.task-status-row { padding:10px 0; border-bottom:1px solid var(--zcs-border-color); }
+.task-status-row:last-child { border-bottom:0; }
+.task-status-label { display:flex; align-items:center; gap:9px; }
+.task-status-dot { width:10px; height:10px; border-radius:50%; display:inline-block; }
+.task-status-dot.todo { background:var(--task-blue); }
+.task-status-dot.progress { background:#1094C5; }
+.task-status-dot.blocked { background:var(--task-amber); }
+.task-status-dot.done { background:var(--task-green); }
+.task-status-dot.cancelled { background:#7A8194; }
+.task-status-row.todo .zcs-progress-bar-indicator { background:var(--task-blue); }
+.task-status-row.progress .zcs-progress-bar-indicator { background:#1094C5; }
+.task-status-row.blocked .zcs-progress-bar-indicator { background:var(--task-amber); }
+.task-status-row.done .zcs-progress-bar-indicator { background:var(--task-green); }
+.task-status-row.cancelled .zcs-progress-bar-indicator { background:#7A8194; }
+.task-status-summary { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:14px; }
+.task-status-tile { background:var(--task-muted-bg); border:1px solid var(--zcs-border-color); border-radius:12px; padding:12px; }
+@media (max-width:576px) { .task-status-summary { grid-template-columns:1fr; } }
+</style>
+<div class="zcs-card task-status-card zcs-p-24 zcs-box-border zcs-flex zcs-direction-column zcs-gap-16">
+    <div class="zcs-flex zcs-justify-space-between zcs-align-items-center zcs-gap-12">
+        <div>
+            <h5 class="zcs-font-18 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0">Status Breakdown</h5>
+            <p class="zcs-font-13 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-mt-8 zcs-mb-0 zcs-mx-0">Task distribution by current workflow state</p>
+        </div>
+        <i class="zc-li-outline design-graph zcs-font-24 zcs-color-theme"></i>
+    </div>
+    <ul class="task-status-list zcs-flex zcs-direction-column zcs-p-0 zcs-m-0">
+        <li class="task-status-row todo">
+            <div class="zcs-flex zcs-justify-space-between zcs-align-items-center zcs-gap-8 zcs-font-14 zcs-color-primary"><span class="task-status-label"><span class="task-status-dot todo"></span>To Do</span><strong><%= todoCount %></strong></div>
+            <div class="zcs-progress-bar-wrapper zcs-flex zcs-direction-column zcs-gap-6 zcs-mt-8"><div class="zcs-progress-bar zcs-rounded-sm"><div class="zcs-progress-bar-indicator" style="width:<%= todoPct %>%;"></div></div></div>
+        </li>
+        <li class="task-status-row progress">
+            <div class="zcs-flex zcs-justify-space-between zcs-align-items-center zcs-gap-8 zcs-font-14 zcs-color-primary"><span class="task-status-label"><span class="task-status-dot progress"></span>In Progress</span><strong><%= inProgressCount %></strong></div>
+            <div class="zcs-progress-bar-wrapper zcs-flex zcs-direction-column zcs-gap-6 zcs-mt-8"><div class="zcs-progress-bar zcs-rounded-sm"><div class="zcs-progress-bar-indicator" style="width:<%= progressPct %>%;"></div></div></div>
+        </li>
+        <li class="task-status-row blocked">
+            <div class="zcs-flex zcs-justify-space-between zcs-align-items-center zcs-gap-8 zcs-font-14 zcs-color-primary"><span class="task-status-label"><span class="task-status-dot blocked"></span>Blocked</span><strong><%= blockedCount %></strong></div>
+            <div class="zcs-progress-bar-wrapper zcs-flex zcs-direction-column zcs-gap-6 zcs-mt-8"><div class="zcs-progress-bar zcs-rounded-sm"><div class="zcs-progress-bar-indicator" style="width:<%= blockedPct %>%;"></div></div></div>
+        </li>
+        <li class="task-status-row done">
+            <div class="zcs-flex zcs-justify-space-between zcs-align-items-center zcs-gap-8 zcs-font-14 zcs-color-primary"><span class="task-status-label"><span class="task-status-dot done"></span>Done</span><strong><%= doneCount %></strong></div>
+            <div class="zcs-progress-bar-wrapper zcs-flex zcs-direction-column zcs-gap-6 zcs-mt-8"><div class="zcs-progress-bar zcs-rounded-sm"><div class="zcs-progress-bar-indicator" style="width:<%= donePct %>%;"></div></div></div>
+        </li>
+        <li class="task-status-row cancelled">
+            <div class="zcs-flex zcs-justify-space-between zcs-align-items-center zcs-gap-8 zcs-font-14 zcs-color-primary"><span class="task-status-label"><span class="task-status-dot cancelled"></span>Cancelled</span><strong><%= cancelledCount %></strong></div>
+            <div class="zcs-progress-bar-wrapper zcs-flex zcs-direction-column zcs-gap-6 zcs-mt-8"><div class="zcs-progress-bar zcs-rounded-sm"><div class="zcs-progress-bar-indicator" style="width:<%= cancelledPct %>%;"></div></div></div>
+        </li>
+    </ul>
+    <div class="task-status-summary">
+        <div class="task-status-tile"><span class="zcs-font-12 zcs-color-tertiary">Open</span><strong class="zcs-font-20 zcs-color-blue"><%= todoCount + inProgressCount + blockedCount %></strong></div>
+        <div class="task-status-tile"><span class="zcs-font-12 zcs-color-tertiary">Closed</span><strong class="zcs-font-20 zcs-color-green"><%= doneCount + cancelledCount %></strong></div>
+        <div class="task-status-tile"><span class="zcs-font-12 zcs-color-tertiary">Total</span><strong class="zcs-font-20 zcs-color-primary"><%= todoCount + inProgressCount + blockedCount + doneCount + cancelledCount %></strong></div>
+    </div>
+</div>

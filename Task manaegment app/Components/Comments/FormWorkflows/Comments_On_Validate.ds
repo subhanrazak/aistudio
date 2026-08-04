@@ -1,0 +1,27 @@
+Comments_On_Validate as "Comments On Validate"
+{
+    type = form
+    form = Comments
+    record event = on add or edit
+    description = "Validates follow-up date requirements for comments."
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if (input.Follow_Up_Required == true && input.Follow_Up_Date == null)
+                {
+                    alert "Please enter a follow-up date.";
+                    cancel submit;
+                }
+                if (input.Follow_Up_Date != null && input.Follow_Up_Date < zoho.currentdate)
+                {
+                    alert "Follow-up date cannot be in the past.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}

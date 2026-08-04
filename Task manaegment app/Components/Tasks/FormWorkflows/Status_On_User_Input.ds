@@ -1,0 +1,39 @@
+Status_On_User_Input as "Status On User Input"
+{
+    type = form
+    form = Tasks
+    record event = on add or edit
+    description = "Updates task helper fields when status changes."
+
+    on user input of Status
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if (input.Status == "Done")
+                {
+                    show Completed_Date;
+                    if (input.Completed_Date == null)
+                    {
+                        input.Completed_Date = zoho.currentdate;
+                    }
+                }
+                else
+                {
+                    hide Completed_Date;
+                    input.Completed_Date = null;
+                }
+                if (input.Status == "Blocked")
+                {
+                    show Blocker_Reason;
+                }
+                else
+                {
+                    hide Blocker_Reason;
+                    input.Blocker_Reason = "";
+                }
+            )
+        }
+    }
+}

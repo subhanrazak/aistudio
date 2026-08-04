@@ -1,0 +1,41 @@
+Tasks_On_Validate as "Tasks On Validate"
+{
+    type = form
+    form = Tasks
+    record event = on add or edit
+    description = "Validates task dates, blocker notes, and hour values."
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if (input.Due_Date != null && input.Start_Date != null && input.Due_Date < input.Start_Date)
+                {
+                    alert "Due date cannot be earlier than start date.";
+                    cancel submit;
+                }
+                if (input.Status == "Done" && input.Completed_Date == null)
+                {
+                    input.Completed_Date = zoho.currentdate;
+                }
+                if (input.Status == "Blocked" && input.Blocker_Reason in ["", " ", "null"])
+                {
+                    alert "Please enter a blocker reason.";
+                    cancel submit;
+                }
+                if (input.Actual_Hours != null && input.Actual_Hours < 0)
+                {
+                    alert "Actual hours cannot be negative.";
+                    cancel submit;
+                }
+                if (input.Estimated_Hours != null && input.Estimated_Hours < 0)
+                {
+                    alert "Estimated hours cannot be negative.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}
