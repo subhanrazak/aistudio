@@ -1,0 +1,157 @@
+<%
+  ownerEmail = zoho.loginuser;
+%>
+<style>
+:root {
+  --zcs-thead-color: #F9FAFE;
+  --zcs-tr-h-color: #F9FAFE;
+  --zcs-tgroup-color: #F1F2F8;
+  --zcs-tgroup-h-color: #F1F2F8;
+  --zcs-zebra-head-color: #F1F2F8;
+  --zcs-zebra-odd-color: var(--zcs-white-color);
+  --zcs-zebra-even-color: #F9FAFE;
+  --zcs-zebra-h-color: #F1F2F8;
+}
+.zcs-table-wrapper { border: 1px solid var(--zcs_tertiary_border_color); background-color: var(--zcs-white-color); overflow: auto; }
+.zcs-table-wrapper table { line-height: normal; border-collapse: collapse; }
+.zcs-table-wrapper table thead { top: 0px; }
+.zcs-table-wrapper table thead tr th { background-color: var(--zcs-thead-color); box-shadow: 0px -1px 0px 0px var(--zcs_tertiary_border_color) inset; white-space: nowrap; }
+.zcs-table-wrapper table thead tr.zcs-tspace th { background-color: var(--zcs-white-color); box-shadow: none; }
+.zcs-table-wrapper table tbody tr td { border-top: 1px solid var(--zcs_tertiary_border_color); }
+.zcs-table-wrapper table tbody tr:first-child td { border-color: transparent; }
+.zcs-table-wrapper table tbody tr:hover td { background-color: var(--zcs-tr-h-color); }
+.zcs-table-wrapper table tbody tr:first-child:hover td { border-color: var(--zcs_tertiary_border_color); }
+.zcs-badge { width: auto; }
+.zcs-badge-filled { border: 1px solid transparent; }
+.zcs-badge-filled.zcs-badge-theme { background-color: var(--zcs_brand_color); border-color: var(--zcs_brand_color); color: var(--zcs-white-color); }
+.zcs-badge-filled.zcs-badge-green { background-color: #179E6C; border-color: #179E6C; color: var(--zcs-white-color); }
+.zcs-badge-filled.zcs-badge-red { background-color: #FE455D; border-color: #FE455D; color: var(--zcs-white-color); }
+.zcs-badge-filled.zcs-badge-grey { background-color: #242424; border-color: #242424; color: var(--zcs-white-color); }
+.zcs-badge-filled.zcs-badge-yellow { background-color: #FAAE13; border-color: #FAAE13; color: var(--zcs-white-color); }
+.zcs-badge-filled.zcs-badge-blue { background-color: #2A6FFC; border-color: #2A6FFC; color: var(--zcs-white-color); }
+.zcs-badge-filled.zcs-badge-orange { background-color: #F4660C; border-color: #F4660C; color: var(--zcs-white-color); }
+.activity-shell { padding: 0 10px 20px 20px; background: var(--zcs-page-bg-color); box-sizing: border-box; }
+.activity-card { height: 100%; min-height: 460px; box-shadow: 0 10px 26px rgba(18,19,43,0.05); }
+.activity-section-title { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 12px; }
+.activity-section-title h6 { margin: 0; }
+.activity-list { display: flex; flex-direction: column; gap: 10px; }
+.activity-item { border: 1px solid var(--zcs_tertiary_border_color); border-radius: 10px; padding: 12px; box-sizing: border-box; background: var(--zcs-white-color); }
+.activity-item-top { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
+.activity-item-title { margin: 0; color: var(--zcs-primary-text-color); font-size: 14px; font-weight: 600; line-height: 1.3; }
+.activity-item-meta { margin: 4px 0 0; color: var(--zcs-secondary-text-color); font-size: 12px; line-height: 1.4; }
+.activity-item-desc { margin: 8px 0 0; color: var(--zcs-teritiary-text-color); font-size: 12px; line-height: 1.45; }
+.activity-empty { border: 1px dashed var(--zcs_tertiary_border_color); border-radius: 10px; padding: 18px; color: var(--zcs-secondary-text-color); text-align: center; font-size: 13px; }
+.activity-link { color: var(--zcs_brand_color); font-size: 12px; white-space: nowrap; }
+@media (max-width: 900px) { .activity-shell { padding: 0 12px 12px; } .activity-card { min-height: auto; } }
+</style>
+<div class="activity-shell">
+  <div class="activity-card zcs-card zcs-flex zcs-direction-column zcs-gap-18 zcs-p-16 zcs-box-border">
+    <div class="zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12">
+      <h5 class="zcs-font-18 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0">Recent activity</h5>
+      <a class="activity-link" href="#Report:Health_Record_Timeline">View timeline</a>
+    </div>
+
+    <div>
+      <div class="activity-section-title">
+        <h6 class="zcs-font-15 zcs-font-semibold zcs-lh-heading zcs-color-primary">Latest health records</h6>
+        <a class="activity-link" href="#Report:All_Health_Records">All records</a>
+      </div>
+      <div class="activity-list">
+        <%
+          recordCount = 0;
+          for each rec in Health_Records[Owner_Email == ownerEmail] sort by Record_Date desc
+          {
+            if(recordCount < 5)
+            {
+              recordCount = recordCount + 1;
+              memberName = ifnull(rec.Member.Full_Name,"Family member");
+              recordType = ifnull(rec.Record_Type,"Health record");
+              recordDate = if(rec.Record_Date != null,rec.Record_Date.toString("dd-MMM-yyyy"),"No date");
+              descText = ifnull(rec.Description,"");
+        %>
+        <div class="activity-item">
+          <div class="activity-item-top">
+            <div>
+              <p class="activity-item-title"><%= recordType %></p>
+              <p class="activity-item-meta"><%= memberName %> | <%= recordDate %></p>
+            </div>
+            <a class="activity-link" href="#Report:All_Health_Records?ID=<%= rec.ID %>">Open</a>
+          </div>
+          <% if(descText != "") { %>
+          <p class="activity-item-desc"><%= descText %></p>
+          <% } %>
+        </div>
+        <%
+            }
+          }
+          if(recordCount == 0)
+          {
+        %>
+        <div class="activity-empty">No health records yet. Use Add Health Record to start the timeline.</div>
+        <% } %>
+      </div>
+    </div>
+
+    <div>
+      <div class="activity-section-title">
+        <h6 class="zcs-font-15 zcs-font-semibold zcs-lh-heading zcs-color-primary">Recent prescription scans</h6>
+        <a class="activity-link" href="#Report:All_Prescription_Scans">All scans</a>
+      </div>
+      <div class="zcs-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative">
+        <table class="zcs-w-full">
+          <thead class="zcs-sticky">
+            <tr>
+              <th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Member</th>
+              <th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Scan date</th>
+              <th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">OCR status</th>
+            </tr>
+            <tr class="zcs-tspace"><th class="zcs-p-2 zcs-box-border" colspan="3"> </th></tr>
+          </thead>
+          <tbody>
+          <%
+            scanCount = 0;
+            for each scan in Prescription_Scans[Owner_Email == ownerEmail] sort by Scan_Date desc
+            {
+              if(scanCount < 5)
+              {
+                scanCount = scanCount + 1;
+                scanMember = ifnull(scan.Member.Full_Name,"Family member");
+                scanDate = if(scan.Scan_Date != null,scan.Scan_Date.toString("dd-MMM-yyyy"),"No date");
+                scanStatus = ifnull(scan.OCR_Status,"Uploaded");
+                badgeClass = "zcs-badge-grey";
+                if(scanStatus == "Extracted")
+                {
+                  badgeClass = "zcs-badge-green";
+                }
+                else if(scanStatus == "OCR Failed")
+                {
+                  badgeClass = "zcs-badge-red";
+                }
+                else if(scanStatus == "Processing")
+                {
+                  badgeClass = "zcs-badge-blue";
+                }
+                else if(scanStatus == "Uploaded")
+                {
+                  badgeClass = "zcs-badge-yellow";
+                }
+          %>
+            <tr>
+              <td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"><%= scanMember %></td>
+              <td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"><%= scanDate %></td>
+              <td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"><span class="zcs-badge zcs-badge-filled <%= badgeClass %> zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border"><span class="zcs-badge-text zcs-font-12 zcs-font-normal zcs-lh-body"><%= scanStatus %></span></span></td>
+            </tr>
+          <%
+              }
+            }
+            if(scanCount == 0)
+            {
+          %>
+            <tr><td class="zcs-px-16 zcs-py-12 zcs-box-border zcs-text-center zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-secondary" colspan="3">No prescription scans yet.</td></tr>
+          <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

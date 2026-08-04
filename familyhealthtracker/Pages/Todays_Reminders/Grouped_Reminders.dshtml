@@ -1,0 +1,125 @@
+<%
+  today = zoho.currentdate;
+  ownerEmail = zoho.loginuser;
+  fixedSlots = {"06:00","08:00","10:00","12:00","14:00","16:00","18:00","20:00","22:00"};
+  renderedGroups = 0;
+%>
+<div class="rem-section-shell">
+  <div class="rem-section-card zcs-card zcs-p-16 zcs-box-border">
+    <div class="rem-section-heading">
+      <div>
+        <h3>Medication plan by family member</h3>
+        <p>Each card is a due medication slot for today. Status is read from Reminder_Log for the same medication, time, and date.</p>
+      </div>
+      <div class="zcs-badge zcs-badge-filled-outline zcs-badge-theme zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border">
+        <i class="zcs-badge-icon zcs-no-shrink zc-li-outline health-pill-container-44"></i>
+        <span class="zcs-badge-text zcs-font-13 zcs-font-normal zcs-lh-body">Active medications only</span>
+      </div>
+    </div>
+    <%
+      for each member in Family_Members[Owner_Email == ownerEmail] sort by Full_Name asc
+      {
+        memberHasAny = false;
+        for each slot in fixedSlots
+        {
+          slotCount = 0;
+          for each med in Medications[Owner_Email == ownerEmail && Member == member.ID && Is_Active == true && Start_Date <= today && (End_Date == null || End_Date >= today)]
+          {
+            if(med.Reminder_Times != null && med.Reminder_Times.contains(slot))
+            {
+              slotCount = slotCount + 1;
+            }
+          }
+          if(slotCount > 0)
+          {
+            if(memberHasAny == false)
+            {
+              memberHasAny = true;
+              renderedGroups = renderedGroups + 1;
+    %>
+    <div class="rem-member-group">
+      <div class="rem-member-header zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12">
+        <span><%= ifnull(member.Full_Name,"Family member") %></span>
+        <span class="zcs-font-12 zcs-font-normal zcs-lh-body"><%= ifnull(member.Relation,"Household") %></span>
+      </div>
+    <%
+            }
+    %>
+      <div class="rem-time-group">
+        <div class="rem-time-title"><i class="zc-li-outline ui-2-time"></i><span><%= slot %></span></div>
+        <div class="rem-med-grid">
+          <%
+            for each med in Medications[Owner_Email == ownerEmail && Member == member.ID && Is_Active == true && Start_Date <= today && (End_Date == null || End_Date >= today)]
+            {
+              if(med.Reminder_Times != null && med.Reminder_Times.contains(slot))
+              {
+                medicineName = ifnull(med.Medicine_Name,"Medication");
+                dosageText = ifnull(med.Dosage,"Dosage not specified");
+                frequencyText = ifnull(med.Frequency,"Frequency not specified");
+                notesText = ifnull(med.Notes,"");
+                if(notesText == "")
+                {
+                  notesText = "No notes";
+                }
+                sentRows = Reminder_Log[Owner_Email == ownerEmail && Medication == med.ID && Reminder_Time == slot && Notify_Date == today && Email_Status == "Sent"];
+                failedRows = Reminder_Log[Owner_Email == ownerEmail && Medication == med.ID && Reminder_Time == slot && Notify_Date == today && Email_Status == "Failed"];
+                badgeClass = "zcs-badge-yellow";
+                badgeText = "Pending";
+                badgeIcon = "zc-li-outline loader-dots-06";
+                if(sentRows.count() > 0)
+                {
+                  badgeClass = "zcs-badge-green";
+                  badgeText = "Sent";
+                  badgeIcon = "zc-li-outline ui-1-check-circle-08";
+                }
+                else if(failedRows.count() > 0)
+                {
+                  badgeClass = "zcs-badge-red";
+                  badgeText = "Failed";
+                  badgeIcon = "zc-li-outline ui-1-circle-remove";
+                }
+          %>
+          <div class="zcs-template-card zcs-card zcs-flex zcs-direction-column zcs-relative rem-med-card">
+            <div class="zcs-card-header zcs-p-16 zcs-box-border zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12">
+              <p class="rem-med-name"><%= medicineName %></p>
+              <span class="zcs-badge zcs-badge-filled-outline <%= badgeClass %> zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border">
+                <i class="zcs-badge-icon zcs-no-shrink <%= badgeIcon %>"></i>
+                <span class="zcs-badge-text zcs-font-12 zcs-font-normal zcs-lh-body"><%= badgeText %></span>
+              </span>
+            </div>
+            <div class="zcs-card-content zcs-p-16 zcs-box-border">
+              <p class="rem-med-meta"><strong>Dosage:</strong> <%= dosageText %></p>
+              <p class="rem-med-meta"><strong>Frequency:</strong> <%= frequencyText %></p>
+              <div class="rem-notes"><%= notesText %></div>
+            </div>
+          </div>
+          <%
+              }
+            }
+          %>
+        </div>
+      </div>
+    <%
+          }
+        }
+        if(memberHasAny == true)
+        {
+    %>
+    </div>
+    <%
+        }
+      }
+      if(renderedGroups == 0)
+      {
+    %>
+    <div class="zcs-nodata-wrapper rem-empty zcs-wh-full zcs-flex zcs-align-items-center zcs-justify-center zcs-text-center">
+      <div class="zcs-nodata-content zcs-p-20 zcs-box-border">
+        <i class="zc-li-outline ui-2-time zcs-font-30 zcs-color-theme"></i>
+        <h5 class="zcs-nodata-header zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-mt-10 zcs-mx-0 zcs-mb-0">No active medication reminders are due today.</h5>
+      </div>
+    </div>
+    <%
+      }
+    %>
+  </div>
+</div>

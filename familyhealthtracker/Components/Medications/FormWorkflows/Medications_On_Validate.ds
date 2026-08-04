@@ -1,0 +1,41 @@
+Medications_On_Validate as "Medications On Validate"
+{
+    type = form
+    form = Medications
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Owner_Email == null || input.Owner_Email == "")
+                {
+                    input.Owner_Email = zoho.loginuser;
+                }
+                if(input.Owner_Email != zoho.loginuser)
+                {
+                    alert "You are not authorized to submit this medication.";
+                    cancel submit;
+                }
+                member_record = Family_Members[ID == input.Member];
+                if(member_record.count() == 0 || member_record.Owner_Email != zoho.loginuser)
+                {
+                    alert "Please select a family member that belongs to your household.";
+                    cancel submit;
+                }
+                if(input.End_Date != null && input.Start_Date != null && input.End_Date < input.Start_Date)
+                {
+                    alert "End Date cannot be earlier than Start Date.";
+                    cancel submit;
+                }
+                if(input.Is_Active == true && (input.Reminder_Times == null || input.Reminder_Times.isEmpty()))
+                {
+                    alert "Select at least one reminder time for an active medication.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}

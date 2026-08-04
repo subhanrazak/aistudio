@@ -1,0 +1,96 @@
+<%
+  today = zoho.currentdate;
+  ownerEmail = zoho.loginuser;
+%>
+<style>
+.reminders-shell { padding: 0 20px 20px 10px; background: var(--zcs-page-bg-color); box-sizing: border-box; }
+.reminders-card { min-height: 460px; box-shadow: 0 10px 26px rgba(18,19,43,0.05); }
+.reminder-list { display: flex; flex-direction: column; gap: 10px; }
+.reminder-item { display: grid; grid-template-columns: minmax(72px, 92px) minmax(0, 1fr) auto; gap: 12px; align-items: center; border: 1px solid var(--zcs_tertiary_border_color); border-radius: 12px; background: var(--zcs-white-color); padding: 12px; box-sizing: border-box; }
+.reminder-time { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 42px; border-radius: 10px; color: var(--zcs_brand_color); background: var(--zcs_brand_light_color); font-size: 14px; font-weight: 700; }
+.reminder-title { margin: 0; color: var(--zcs-primary-text-color); font-size: 14px; font-weight: 600; line-height: 1.3; }
+.reminder-meta { margin: 4px 0 0; color: var(--zcs-secondary-text-color); font-size: 12px; line-height: 1.4; }
+.reminder-empty { border: 1px dashed var(--zcs_tertiary_border_color); border-radius: 12px; padding: 24px; text-align: center; color: var(--zcs-secondary-text-color); background: var(--zcs-white-color); }
+.reminder-empty i { display: block; margin-bottom: 8px; color: var(--zcs_brand_color); font-size: 28px; }
+.reminder-footer { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 14px; }
+.reminder-footer a { color: var(--zcs_brand_color); font-size: 13px; font-weight: 500; }
+.zcs-badge { width: auto; }
+.zcs-badge-filled { border: 1px solid transparent; }
+.zcs-badge-filled.zcs-badge-green { background-color: #179E6C; border-color: #179E6C; color: var(--zcs-white-color); }
+.zcs-badge-filled.zcs-badge-blue { background-color: #2A6FFC; border-color: #2A6FFC; color: var(--zcs-white-color); }
+@media (max-width: 900px) { .reminders-shell { padding: 0 12px 12px; } .reminders-card { min-height: auto; } }
+@media (max-width: 576px) { .reminder-item { grid-template-columns: 1fr; align-items: flex-start; } .reminder-time { justify-content: flex-start; padding: 0 12px; width: fit-content; } .reminder-footer { flex-direction: column; align-items: flex-start; } }
+</style>
+<div class="reminders-shell">
+  <div class="reminders-card zcs-card zcs-flex zcs-direction-column zcs-gap-16 zcs-p-16 zcs-box-border">
+    <div class="zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12">
+      <h5 class="zcs-font-18 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0">Upcoming reminders</h5>
+      <span class="zcs-font-12 zcs-font-normal zcs-lh-body zcs-color-tertiary"><%= today.toString("dd-MMM-yyyy") %></span>
+    </div>
+    <div class="reminder-list">
+      <%
+        reminderRows = List();
+        for each med in Medications[Owner_Email == ownerEmail && Is_Active == true && Start_Date <= today && (End_Date == null || End_Date >= today)] sort by Medicine_Name asc
+        {
+          if(med.Reminder_Times != null)
+          {
+            for each slot in med.Reminder_Times
+            {
+              slotText = slot.toString();
+              reminderRows.add(slotText + "|" + med.ID);
+            }
+          }
+        }
+        reminderRows = reminderRows.sort(true);
+        rowCount = 0;
+        for each reminderKey in reminderRows
+        {
+          if(rowCount < 8)
+          {
+            keyParts = reminderKey.toList("|");
+            reminderTime = keyParts.get(0);
+            medicationId = keyParts.get(1).toLong();
+            medRows = Medications[ID == medicationId];
+            if(medRows.count() > 0)
+            {
+              med = medRows;
+              rowCount = rowCount + 1;
+              memberName = ifnull(med.Member.Full_Name,"Family member");
+              medicineName = ifnull(med.Medicine_Name,"Medication");
+              dosageText = ifnull(med.Dosage,"Dosage not specified");
+              sentLog = Reminder_Log[Owner_Email == ownerEmail && Medication == med.ID && Notify_Date == today && Reminder_Time == reminderTime && Email_Status == "Sent"];
+              if(sentLog.count() > 0)
+              {
+                badgeClass = "zcs-badge-green";
+                badgeText = "Sent";
+              }
+              else
+              {
+                badgeClass = "zcs-badge-blue";
+                badgeText = "Scheduled";
+              }
+      %>
+      <div class="reminder-item">
+        <div class="reminder-time"><i class="zc-li-outline ui-2-time"></i><span><%= reminderTime %></span></div>
+        <div>
+          <p class="reminder-title"><%= medicineName %></p>
+          <p class="reminder-meta"><%= memberName %> | <%= dosageText %></p>
+        </div>
+        <span class="zcs-badge zcs-badge-filled <%= badgeClass %> zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border"><span class="zcs-badge-text zcs-font-12 zcs-font-normal zcs-lh-body"><%= badgeText %></span></span>
+      </div>
+      <%
+            }
+          }
+        }
+        if(rowCount == 0)
+        {
+      %>
+      <div class="reminder-empty"><i class="zc-li-outline ui-2-time"></i>No active medication reminders are configured for today.</div>
+      <% } %>
+    </div>
+    <div class="reminder-footer">
+      <span class="zcs-font-12 zcs-font-normal zcs-lh-body zcs-color-tertiary">Showing the next available fixed reminder slots.</span>
+      <a href="#Page:Todays_Reminders">View Today's Reminders</a>
+    </div>
+  </div>
+</div>

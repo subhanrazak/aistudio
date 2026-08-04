@@ -1,0 +1,102 @@
+<%
+  today = zoho.currentdate;
+  ownerEmail = zoho.loginuser;
+  logCount = Reminder_Log[Owner_Email == ownerEmail && Notify_Date == today].count();
+%>
+<div class="rem-section-shell">
+  <div class="rem-section-card zcs-card zcs-p-16 zcs-box-border">
+    <div class="rem-section-heading">
+      <div>
+        <h3>Today's reminder delivery log</h3>
+        <p>Audit trail for emails recorded today. The page only reads Reminder_Log and does not send notifications.</p>
+      </div>
+      <div class="zcs-badge zcs-badge-filled-outline zcs-badge-blue zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border">
+        <i class="zcs-badge-icon zcs-no-shrink zc-li-outline files-time"></i>
+        <span class="zcs-badge-text zcs-font-13 zcs-font-normal zcs-lh-body"><%= logCount %> log records</span>
+      </div>
+    </div>
+    <%
+      if(logCount > 0)
+      {
+    %>
+    <div class="zcs-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative">
+      <table class="zcs-w-full">
+        <thead class="zcs-sticky">
+          <tr>
+            <th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Member</th>
+            <th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Medication</th>
+            <th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Reminder Time</th>
+            <th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Notified At</th>
+            <th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Email Status</th>
+            <th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Notes</th>
+          </tr>
+          <tr class="zcs-tspace"><th class="zcs-p-8 zcs-box-border" colspan="6"></th></tr>
+        </thead>
+        <tbody>
+          <%
+            for each logRow in Reminder_Log[Owner_Email == ownerEmail && Notify_Date == today] sort by Reminder_Time asc
+            {
+              memberName = ifnull(logRow.Member.Full_Name,"Family member");
+              medicationName = ifnull(logRow.Medication.Medicine_Name,"Medication");
+              reminderTime = ifnull(logRow.Reminder_Time,"-");
+              notifiedAtText = "-";
+              if(logRow.Notified_At != null)
+              {
+                notifiedAtText = logRow.Notified_At.toString("dd-MMM-yyyy HH:mm");
+              }
+              statusText = ifnull(logRow.Email_Status,"Pending");
+              notesText = ifnull(logRow.Notes,"");
+              if(notesText == "")
+              {
+                notesText = "-";
+              }
+              badgeClass = "zcs-badge-yellow";
+              badgeIcon = "zc-li-outline loader-dots-06";
+              if(statusText == "Sent")
+              {
+                badgeClass = "zcs-badge-green";
+                badgeIcon = "zc-li-outline ui-1-check-circle-08";
+              }
+              else if(statusText == "Failed")
+              {
+                badgeClass = "zcs-badge-red";
+                badgeIcon = "zc-li-outline ui-1-circle-remove";
+              }
+          %>
+          <tr>
+            <td class="zcs-px-16 zcs-py-10 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"><%= memberName %></td>
+            <td class="zcs-px-16 zcs-py-10 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"><%= medicationName %></td>
+            <td class="zcs-px-16 zcs-py-10 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"><%= reminderTime %></td>
+            <td class="zcs-px-16 zcs-py-10 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"><%= notifiedAtText %></td>
+            <td class="zcs-px-16 zcs-py-10 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary">
+              <span class="zcs-badge zcs-badge-filled-outline <%= badgeClass %> zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border">
+                <i class="zcs-badge-icon zcs-no-shrink <%= badgeIcon %>"></i>
+                <span class="zcs-badge-text zcs-font-12 zcs-font-normal zcs-lh-body"><%= statusText %></span>
+              </span>
+            </td>
+            <td class="zcs-px-16 zcs-py-10 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"><%= notesText %></td>
+          </tr>
+          <%
+            }
+          %>
+        </tbody>
+      </table>
+    </div>
+    <div class="rem-log-footer"><a href="#Report:Todays_Reminder_Log">Open full reminder log report</a></div>
+    <%
+      }
+      else
+      {
+    %>
+    <div class="zcs-nodata-wrapper rem-empty zcs-wh-full zcs-flex zcs-align-items-center zcs-justify-center zcs-text-center">
+      <div class="zcs-nodata-content zcs-p-20 zcs-box-border">
+        <i class="zc-li-outline files-time zcs-font-30 zcs-color-theme"></i>
+        <h5 class="zcs-nodata-header zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-mt-10 zcs-mx-0 zcs-mb-0">No reminder emails have been logged today.</h5>
+      </div>
+    </div>
+    <div class="rem-log-footer"><a href="#Report:Todays_Reminder_Log">Open full reminder log report</a></div>
+    <%
+      }
+    %>
+  </div>
+</div>

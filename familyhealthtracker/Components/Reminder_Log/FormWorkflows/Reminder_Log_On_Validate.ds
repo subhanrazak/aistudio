@@ -1,0 +1,26 @@
+Reminder_Log_On_Validate as "Reminder Log On Validate"
+{
+    type = form
+    form = Reminder_Log
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Owner_Email == null || input.Owner_Email == "")
+                {
+                    input.Owner_Email = zoho.loginuser;
+                }
+                duplicate_logs = Reminder_Log[Medication == input.Medication && Reminder_Time == input.Reminder_Time && Notify_Date == input.Notify_Date && Owner_Email == input.Owner_Email && ID != input.ID];
+                if(duplicate_logs.count() > 0)
+                {
+                    alert "A reminder notification has already been logged for this medication, time, and date.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}

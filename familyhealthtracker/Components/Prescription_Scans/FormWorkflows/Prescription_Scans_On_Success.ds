@@ -1,0 +1,71 @@
+Prescription_Scans_On_Success as "Prescription Scans On Success"
+{
+    type = form
+    form = Prescription_Scans
+    record event = on add or edit
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                current_scan = Prescription_Scans[ID == input.ID];
+                if(input.Prescription_File != null && (input.OCR_Status == null || input.OCR_Status == "" || input.OCR_Status == "Uploaded"))
+                {
+                    current_scan.OCR_Status = "Processing";
+                    try
+                    {
+                        ai_response = zoho.ai.recognizeText(input.Prescription_File,"DOCUMENTROTATE","eng");
+                        extracted_text = ai_response.getJSON("text");
+                        status_flag = ai_response.getJSON("status");
+                        if(extracted_text != null && extracted_text != "")
+                        {
+                            current_scan.Extracted_Text = extracted_text;
+                            if(current_scan.Reviewed_Text == null || current_scan.Reviewed_Text == "")
+                            {
+                                current_scan.Reviewed_Text = extracted_text;
+                            }
+                            current_scan.OCR_Status = "Extracted";
+                            current_scan.Error_Message = "";
+                        }
+                        else
+                        {
+                            current_scan.OCR_Status = "OCR Failed";
+                            current_scan.Error_Message = ifnull(ai_response.getJSON("statusMessage"),"No text was extracted from the prescription file.");
+                        }
+                    }
+                    catch(e)
+                    {
+                        current_scan.OCR_Status = "OCR Failed";
+                        current_scan.Error_Message = e.message;
+                    }
+                }
+                if(current_scan.Save_As_Health_Record == true && current_scan.Saved_Health_Record == null)
+                {
+                    record_text = current_scan.Reviewed_Text;
+                    if(record_text == null || record_text == "")
+                    {
+                        record_text = current_scan.Extracted_Text;
+                    }
+                    if(record_text != null && record_text != "")
+                    {
+                        health_record_id = insert into Health_Records
+                        [
+                            Member = current_scan.Member
+                            Record_Type = "Prescription"
+                            Record_Date = current_scan.Scan_Date
+                            Timeline_Date_Time = zoho.currenttime
+                            Description = "Prescription saved from scan"
+                            OCR_Text = record_text
+                            Source = "Prescription Scan"
+                            Owner_Email = current_scan.Owner_Email
+                        ];
+                        current_scan.Saved_Health_Record = health_record_id;
+                        current_scan.OCR_Status = "Saved";
+                    }
+                }
+            )
+        }
+    }
+}

@@ -1,0 +1,35 @@
+Health_Records_On_Validate as "Health Records On Validate"
+{
+    type = form
+    form = Health_Records
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Owner_Email == null || input.Owner_Email == "")
+                {
+                    input.Owner_Email = zoho.loginuser;
+                }
+                if(input.Owner_Email != zoho.loginuser)
+                {
+                    alert "You are not authorized to submit this health record.";
+                    cancel submit;
+                }
+                member_record = Family_Members[ID == input.Member];
+                if(member_record.count() == 0 || member_record.Owner_Email != zoho.loginuser)
+                {
+                    alert "Please select a family member that belongs to your household.";
+                    cancel submit;
+                }
+                if(input.Timeline_Date_Time == null && input.Record_Date != null)
+                {
+                    input.Timeline_Date_Time = input.Record_Date.toString("dd-MMM-yyyy") + " 09:00:00";
+                }
+            )
+        }
+    }
+}

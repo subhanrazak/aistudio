@@ -1,0 +1,25 @@
+Family_Members_On_Validate as "Family Members On Validate"
+{
+    type = form
+    form = Family_Members
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Owner_Email == null || input.Owner_Email == "")
+                {
+                    input.Owner_Email = zoho.loginuser;
+                }
+                if(input.Owner_Email != null && input.Owner_Email != "" && input.Owner_Email != zoho.loginuser)
+                {
+                    alert "You are not authorized to submit this family member record.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}

@@ -1,0 +1,256 @@
+<%
+  today = zoho.currentdate;
+  ownerEmail = zoho.loginuser;
+  fixedSlots = {"06:00","08:00","10:00","12:00","14:00","16:00","18:00","20:00","22:00"};
+  totalDueSlots = 0;
+  pendingSlots = 0;
+  for each med in Medications[Owner_Email == ownerEmail && Is_Active == true && Start_Date <= today && (End_Date == null || End_Date >= today)]
+  {
+    for each slot in fixedSlots
+    {
+      if(med.Reminder_Times != null && med.Reminder_Times.contains(slot))
+      {
+        totalDueSlots = totalDueSlots + 1;
+        sentRows = Reminder_Log[Owner_Email == ownerEmail && Medication == med.ID && Reminder_Time == slot && Notify_Date == today && Email_Status == "Sent"];
+        failedRows = Reminder_Log[Owner_Email == ownerEmail && Medication == med.ID && Reminder_Time == slot && Notify_Date == today && Email_Status == "Failed"];
+        if(sentRows.count() == 0 && failedRows.count() == 0)
+        {
+          pendingSlots = pendingSlots + 1;
+        }
+      }
+    }
+  }
+  alreadyNotified = Reminder_Log[Owner_Email == ownerEmail && Notify_Date == today && Email_Status == "Sent"].count();
+  failedReminderEmails = Reminder_Log[Owner_Email == ownerEmail && Notify_Date == today && Email_Status == "Failed"].count();
+  sentPercent = 0;
+  if(totalDueSlots > 0)
+  {
+    sentPercent = (alreadyNotified * 100) / totalDueSlots;
+    if(sentPercent > 100)
+    {
+      sentPercent = 100;
+    }
+  }
+%>
+<style>
+/* ZCS global utility sheet is included once for the Todays_Reminders page. */
+:root { --zcs-theme-brand-color: var(--zcs_brand_color); --zcs-light-bg-color: var(--zcs_brand_light_color); --zcs-app-header-color: #1c1c40; --zcs-page-bg-color: #F3F3F4; --zcs-primary-text-color: var(--zcs_primary_text_color); --zcs-secondary-text-color: var(--zcs_secondary_text_color); --zcs-teritiary-text-color: var(--zcs_tertiary_text_color); --zcs-border-color: var(--zcs_tertiary_border_color); --zcs-placeholder-color: #878895; --zcs-white-color: #FFFFFF; --zcs-black-color: #000000; --zcs-primary-btn-color: var(--zcs_brand_color); --zcs-primary-btn-border-color: var(--zcs_brand_color); --zcs-primary-btn-text-color: var(--zcs_brand_foreground_color); --zcs-tooltip-bg-color: #363636; font-size: 16px; line-height: 1.5; --column-gap: 0px; }
+.zcs-row { display: flex; flex-wrap: wrap; }
+.zcs-col-common { flex: 1 1 0%; }
+.zcs-flex { display: flex; }
+.zcs-inline-flex { display: inline-flex; }
+.zcs-row-wrap { flex-wrap: wrap; }
+.zcs-direction-column { flex-direction: column; }
+.zcs-align-items-center { align-items: center; }
+.zcs-align-items-start { align-items: flex-start; }
+.zcs-justify-space-between { justify-content: space-between; }
+.zcs-justify-center { justify-content: center; }
+.zcs-no-shrink { flex-shrink: 0; }
+.zcs-gap-4 { gap: 0.25rem; --column-gap: 0.25rem; }
+.zcs-gap-8 { gap: 0.5rem; --column-gap: 0.5rem; }
+.zcs-gap-10 { gap: 0.625rem; --column-gap: 0.625rem; }
+.zcs-gap-12 { gap: 0.75rem; --column-gap: 0.75rem; }
+.zcs-gap-14 { gap: 0.875rem; --column-gap: 0.875rem; }
+.zcs-gap-16 { gap: 1rem; --column-gap: 1rem; }
+.zcs-gap-18 { gap: 1.125rem; --column-gap: 1.125rem; }
+.zcs-gap-20 { gap: 1.25rem; --column-gap: 1.25rem; }
+.zcs-p-0 { padding: 0rem; }
+.zcs-p-8 { padding: 0.5rem; }
+.zcs-p-10 { padding: 0.625rem; }
+.zcs-p-12 { padding: 0.75rem; }
+.zcs-p-14 { padding: 0.875rem; }
+.zcs-p-16 { padding: 1rem; }
+.zcs-p-18 { padding: 1.125rem; }
+.zcs-p-20 { padding: 1.25rem; }
+.zcs-px-10 { padding-left: 0.625rem; padding-right: 0.625rem; }
+.zcs-px-12 { padding-left: 0.75rem; padding-right: 0.75rem; }
+.zcs-px-16 { padding-left: 1rem; padding-right: 1rem; }
+.zcs-py-2 { padding-top: 0.125rem; padding-bottom: 0.125rem; }
+.zcs-py-4 { padding-top: 0.25rem; padding-bottom: 0.25rem; }
+.zcs-py-8 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+.zcs-py-10 { padding-top: 0.625rem; padding-bottom: 0.625rem; }
+.zcs-py-12 { padding-top: 0.75rem; padding-bottom: 0.75rem; }
+.zcs-m-0 { margin: 0rem; }
+.zcs-mt-4 { margin-top: 0.25rem; }
+.zcs-mt-6 { margin-top: 0.375rem; }
+.zcs-mt-8 { margin-top: 0.5rem; }
+.zcs-mt-10 { margin-top: 0.625rem; }
+.zcs-mt-12 { margin-top: 0.75rem; }
+.zcs-mx-0 { margin-left: 0rem; margin-right: 0rem; }
+.zcs-mb-0 { margin-bottom: 0rem; }
+.zcs-w-full { width: 100%; }
+.zcs-h-full { height: 100%; }
+.zcs-wh-full { width: 100%; height: 100%; }
+.zcs-font-11 { font-size: 0.6875rem; }
+.zcs-font-12 { font-size: 0.75rem; }
+.zcs-font-13 { font-size: 0.8125rem; }
+.zcs-font-14 { font-size: 0.875rem; }
+.zcs-font-15 { font-size: 0.9375rem; }
+.zcs-font-16 { font-size: 1rem; }
+.zcs-font-18 { font-size: 1.125rem; }
+.zcs-font-20 { font-size: 1.25rem; }
+.zcs-font-22 { font-size: 1.375rem; }
+.zcs-font-24 { font-size: 1.5rem; }
+.zcs-font-28 { font-size: 1.75rem; }
+.zcs-font-30 { font-size: 1.875rem; }
+.zcs-font-40 { font-size: 40px; }
+.zcs-font-normal { font-weight: 400; }
+.zcs-font-medium { font-weight: 500; }
+.zcs-font-semibold { font-weight: 600; }
+.zcs-font-bold { font-weight: 700; }
+.zcs-lh-heading { line-height: 1.25; }
+.zcs-lh-body { line-height: 1.5; }
+.zcs-uppercase { text-transform: uppercase; }
+.zcs-rounded-sm { border-radius: 0.25rem; }
+.zcs-rounded-md { border-radius: 0.375rem; }
+.zcs-rounded-lg { border-radius: 0.5rem; }
+.zcs-rounded-xl { border-radius: 0.75rem; }
+.zcs-text-left { text-align: left; }
+.zcs-text-right { text-align: right; }
+.zcs-text-center { text-align: center; }
+.zcs-box-border { box-sizing: border-box; }
+.zcs-relative { position: relative; }
+.zcs-absolute { position: absolute; }
+.zcs-sticky { position: sticky; }
+.zcs-overflow-auto { overflow: auto; }
+.zcs-color-theme { color: var(--zcs-theme-brand-color); }
+.zcs-color-primary { color: var(--zcs-primary-text-color); }
+.zcs-color-secondary { color: var(--zcs-secondary-text-color); }
+.zcs-color-tertiary { color: var(--zcs-teritiary-text-color); }
+.zcs-color-white { color: var(--zcs-white-color); }
+.zcs-card { background-color: var(--zcs-white-color); border: 1px solid #e7e7ee; border-radius: 12px; }
+a { text-decoration: none; }
+/* Card component: card-template-default, adapted for read-only reminder cards. */
+.zcs-template-card { width: 260px; height: 250px; overflow: hidden; }
+.zcs-card-header { border-bottom: 1px solid var(--zcs_tertiary_border_color); }
+.zcs-template-card-badge { top: 0px; right: 0px; background-color: var(--theme_brand_color); border-bottom-left-radius: 32px; }
+/* Badge component: badge-badge-with-icon. */
+.zcs-badge { width: auto; }
+.zcs-badge-filled { border: 1px solid transparent; }
+.zcs-badge-filled-outline, .zcs-badge-outline { border: 1px solid; }
+.zcs-badge-filled.zcs-badge-theme { background-color: var(--zcs_brand_color); border-color: var(--zcs_brand_color); color: var(--zcs-white-color); }
+.zcs-badge-filled.zcs-badge-green { background-color: #179E6C; border-color: #179E6C; color: var(--zcs-white-color); }
+.zcs-badge-filled.zcs-badge-red { background-color: #FE455D; border-color: #FE455D; color: var(--zcs-white-color); }
+.zcs-badge-filled.zcs-badge-yellow { background-color: #FAAE13; border-color: #FAAE13; color: var(--zcs-white-color); }
+.zcs-badge-filled.zcs-badge-blue { background-color: #2A6FFC; border-color: #2A6FFC; color: var(--zcs-white-color); }
+.zcs-badge-filled-outline.zcs-badge-theme { background-color: var(--zcs_component_hover_color); border-color: var(--zcs_brand_color); color: var(--zcs_brand_color); }
+.zcs-badge-filled-outline.zcs-badge-green { background-color: #E4FCF3; border-color: #179E6C; color: #179E6C; }
+.zcs-badge-filled-outline.zcs-badge-red { background-color: #FDE3E6; border-color: #FE455D; color: #FE455D; }
+.zcs-badge-filled-outline.zcs-badge-yellow { background-color: #FCF4E6; border-color: #FAAE13; color: #b8770d; }
+.zcs-badge-filled-outline.zcs-badge-blue { background-color: #E8EFFF; border-color: #2A6FFC; color: #2A6FFC; }
+/* Table component: table-simple-table. */
+:root { --zcs-thead-color: #F9FAFE; --zcs-tr-h-color: #F9FAFE; --zcs-tgroup-color: #F1F2F8; --zcs-tgroup-h-color: #F1F2F8; }
+.zcs-table-wrapper { border: 1px solid var(--zcs_tertiary_border_color); background-color: var(--zcs-white-color); overflow: auto; }
+.zcs-table-wrapper table { line-height: normal; border-collapse: collapse; }
+.zcs-table-wrapper table thead { top: 0px; }
+.zcs-table-wrapper table thead tr th { background-color: var(--zcs-thead-color); box-shadow: 0px -1px 0px 0px var(--zcs_tertiary_border_color) inset; white-space: nowrap; }
+.zcs-table-wrapper table thead tr.zcs-tspace th { background-color: var(--zcs-white-color); box-shadow: none; }
+.zcs-table-wrapper table tbody tr td { border-top: 1px solid var(--zcs_tertiary_border_color); }
+.zcs-table-wrapper table tbody tr:first-child td { border-color: transparent; }
+.zcs-table-wrapper table tbody tr:hover td { background-color: var(--zcs-tr-h-color); }
+/* Today's Reminders page styles. */
+.reminder-page { background: var(--zcs-page-bg-color); padding: 18px 20px 0; box-sizing: border-box; }
+.reminder-hero { min-height: 108px; border-radius: 18px; padding: 20px; background: linear-gradient(135deg, var(--zcs_brand_color), #1094C5); color: var(--zcs-white-color); box-shadow: 0 14px 30px rgba(18,19,43,0.10); }
+.reminder-hero h2, .reminder-hero p { color: var(--zcs-white-color); }
+.reminder-hero-icon { width: 48px; height: 48px; border-radius: 16px; background: rgba(255,255,255,0.18); font-size: 26px; }
+.reminder-metric-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-top: 14px; }
+.reminder-page .rem-metric-card, .reminder-page .rem-med-card { width: auto; height: auto; min-height: 0; overflow: visible; box-shadow: 0 10px 24px rgba(18,19,43,0.05); }
+.rem-metric-value { font-size: 32px; line-height: 1; font-weight: 700; color: var(--zcs-primary-text-color); }
+.rem-metric-icon { width: 38px; height: 38px; border-radius: 12px; font-size: 20px; }
+.rem-metric-icon.total { color: var(--zcs_brand_color); background: var(--zcs_brand_light_color); }
+.rem-metric-icon.sent { color: #179E6C; background: #E4FCF3; }
+.rem-metric-icon.pending { color: #b8770d; background: #FCF4E6; }
+.rem-metric-icon.failed { color: #FE455D; background: #FDE3E6; }
+.reminder-progress { height: 8px; border-radius: 20px; overflow: hidden; background: #EFF1F7; }
+.reminder-progress span { display: block; height: 100%; border-radius: inherit; background: var(--zcs_brand_color); }
+.reminder-chip-row { margin-top: 14px; }
+.reminder-chip-row .zcs-badge { min-height: 30px; }
+.rem-section-shell { padding: 16px 20px 0; background: var(--zcs-page-bg-color); box-sizing: border-box; }
+.rem-section-card { box-shadow: 0 10px 24px rgba(18,19,43,0.05); }
+.rem-section-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.rem-section-heading h3 { margin: 0; color: var(--zcs-primary-text-color); font-size: 20px; line-height: 1.25; font-weight: 700; }
+.rem-section-heading p { margin: 4px 0 0; color: var(--zcs-secondary-text-color); font-size: 13px; }
+.rem-member-group { margin-top: 16px; border: 1px solid var(--zcs_tertiary_border_color); border-radius: 16px; overflow: hidden; background: var(--zcs-white-color); }
+.rem-member-header { background: var(--zcs_brand_light_color); padding: 14px 16px; color: var(--zcs_brand_color); font-weight: 700; }
+.rem-time-group { padding: 14px 16px 16px; border-top: 1px solid var(--zcs_tertiary_border_color); }
+.rem-time-title { display: inline-flex; align-items: center; gap: 8px; color: var(--zcs-primary-text-color); font-size: 15px; font-weight: 700; margin-bottom: 12px; }
+.rem-med-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.rem-med-name { font-size: 16px; font-weight: 700; color: var(--zcs-primary-text-color); margin: 0; }
+.rem-med-meta { margin: 4px 0 0; color: var(--zcs-secondary-text-color); font-size: 13px; line-height: 1.45; }
+.rem-notes { margin-top: 10px; padding: 10px; border-radius: 10px; background: #F9FAFE; color: var(--zcs-secondary-text-color); font-size: 13px; line-height: 1.45; }
+.rem-empty { border: 1px dashed var(--zcs_tertiary_border_color); border-radius: 14px; background: var(--zcs-white-color); color: var(--zcs-secondary-text-color); min-height: 120px; }
+.rem-log-footer { margin-top: 12px; display: flex; justify-content: flex-end; }
+.rem-log-footer a { color: var(--zcs_brand_color); font-size: 13px; font-weight: 600; }
+@media (max-width: 1100px) { .reminder-metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .rem-med-grid { grid-template-columns: 1fr; } }
+@media (max-width: 700px) { .reminder-page, .rem-section-shell { padding-left: 12px; padding-right: 12px; } .reminder-hero { flex-direction: column; align-items: flex-start; } .reminder-metric-grid { grid-template-columns: 1fr; } .rem-section-heading { flex-direction: column; align-items: flex-start; } }
+</style>
+<div class="reminder-page">
+  <div class="reminder-hero zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-16 zcs-box-border">
+    <div>
+      <div class="zcs-badge zcs-badge-filled-outline zcs-badge-theme zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border">
+        <i class="zcs-badge-icon zcs-no-shrink zc-li-outline ui-2-time"></i>
+        <span class="zcs-badge-text zcs-font-13 zcs-font-normal zcs-lh-body">Today, <%= today.toString("dd-MMM-yyyy") %></span>
+      </div>
+      <h2 class="zcs-font-30 zcs-font-bold zcs-lh-heading zcs-m-0 zcs-mt-10">Today's Reminders</h2>
+      <p class="zcs-font-14 zcs-font-normal zcs-lh-body zcs-m-0 zcs-mt-6">Read-only medication plan for your household, grouped by family member and fixed reminder time.</p>
+    </div>
+    <div class="reminder-hero-icon zcs-flex zcs-align-items-center zcs-justify-center zcs-no-shrink"><i class="zc-li-outline health-pill-container-44"></i></div>
+  </div>
+  <div class="reminder-metric-grid">
+    <div class="zcs-template-card zcs-card zcs-flex zcs-direction-column zcs-relative rem-metric-card">
+      <div class="zcs-card-header zcs-p-16 zcs-box-border zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12">
+        <h6 class="zcs-font-15 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0">Total due slots</h6>
+        <span class="rem-metric-icon total zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline ui-2-time"></i></span>
+      </div>
+      <div class="zcs-card-content zcs-p-16 zcs-box-border">
+        <div class="rem-metric-value"><%= totalDueSlots %></div>
+        <p class="zcs-font-13 zcs-font-normal zcs-lh-body zcs-color-secondary zcs-m-0 zcs-mt-8">Active medication doses scheduled today.</p>
+      </div>
+    </div>
+    <div class="zcs-template-card zcs-card zcs-flex zcs-direction-column zcs-relative rem-metric-card">
+      <div class="zcs-card-header zcs-p-16 zcs-box-border zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12">
+        <h6 class="zcs-font-15 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0">Already notified</h6>
+        <span class="rem-metric-icon sent zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline ui-1-check-circle-08"></i></span>
+      </div>
+      <div class="zcs-card-content zcs-p-16 zcs-box-border">
+        <div class="rem-metric-value"><%= alreadyNotified %></div>
+        <div class="reminder-progress zcs-mt-12"><span style="width:<%= sentPercent %>%"></span></div>
+        <p class="zcs-font-13 zcs-font-normal zcs-lh-body zcs-color-secondary zcs-m-0 zcs-mt-8">Reminder_Log records with Email Status = Sent.</p>
+      </div>
+    </div>
+    <div class="zcs-template-card zcs-card zcs-flex zcs-direction-column zcs-relative rem-metric-card">
+      <div class="zcs-card-header zcs-p-16 zcs-box-border zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12">
+        <h6 class="zcs-font-15 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0">Pending</h6>
+        <span class="rem-metric-icon pending zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline loader-dots-06"></i></span>
+      </div>
+      <div class="zcs-card-content zcs-p-16 zcs-box-border">
+        <div class="rem-metric-value"><%= pendingSlots %></div>
+        <p class="zcs-font-13 zcs-font-normal zcs-lh-body zcs-color-secondary zcs-m-0 zcs-mt-8">Due slots without a Sent or Failed log yet.</p>
+      </div>
+    </div>
+    <div class="zcs-template-card zcs-card zcs-flex zcs-direction-column zcs-relative rem-metric-card">
+      <div class="zcs-card-header zcs-p-16 zcs-box-border zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12">
+        <h6 class="zcs-font-15 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0">Failed emails</h6>
+        <span class="rem-metric-icon failed zcs-flex zcs-align-items-center zcs-justify-center"><i class="zc-li-outline ui-1-circle-remove"></i></span>
+      </div>
+      <div class="zcs-card-content zcs-p-16 zcs-box-border">
+        <div class="rem-metric-value"><%= failedReminderEmails %></div>
+        <p class="zcs-font-13 zcs-font-normal zcs-lh-body zcs-color-secondary zcs-m-0 zcs-mt-8">Reminder_Log records with Email Status = Failed.</p>
+      </div>
+    </div>
+  </div>
+  <div class="reminder-chip-row zcs-flex zcs-row-wrap zcs-gap-10">
+    <div class="zcs-badge zcs-badge-filled-outline zcs-badge-blue zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border">
+      <i class="zcs-badge-icon zcs-no-shrink zc-li-outline ui-2-time"></i>
+      <span class="zcs-badge-text zcs-font-13 zcs-font-normal zcs-lh-body">Fixed slots: 06:00 to 22:00</span>
+    </div>
+    <div class="zcs-badge zcs-badge-filled-outline zcs-badge-green zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border">
+      <i class="zcs-badge-icon zcs-no-shrink zc-li-outline ui-1-check-circle-08"></i>
+      <span class="zcs-badge-text zcs-font-13 zcs-font-normal zcs-lh-body">Email schedules handle sending</span>
+    </div>
+    <div class="zcs-badge zcs-badge-filled-outline zcs-badge-yellow zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border">
+      <i class="zcs-badge-icon zcs-no-shrink zc-li-outline ui-1-lock"></i>
+      <span class="zcs-badge-text zcs-font-13 zcs-font-normal zcs-lh-body">Read-only view</span>
+    </div>
+  </div>
+</div>

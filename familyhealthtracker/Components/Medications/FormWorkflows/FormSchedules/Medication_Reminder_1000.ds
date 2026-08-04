@@ -1,0 +1,70 @@
+Medication_Reminder_1000 as "Medication Reminder 10:00"
+{
+    type = schedule
+    start = "2026-08-05 10:00:00"
+    frequency = daily
+    time zone = "Asia/Kolkata"
+
+    on start
+    {
+        actions
+        {
+            on load
+            (
+                slot = "10:00";
+                meds = Medications[Is_Active == true && Start_Date <= zoho.currentdate];
+                for each med in meds
+                {
+                    if((med.End_Date == null || med.End_Date >= zoho.currentdate) && med.Reminder_Times.contains(slot))
+                    {
+                        existing_log = Reminder_Log[Medication == med.ID && Reminder_Time == slot && Notify_Date == zoho.currentdate];
+                        if(existing_log.count() == 0)
+                        {
+                            member_name = "Family member";
+                            member_record = Family_Members[ID == med.Member];
+                            if(member_record.count() > 0)
+                            {
+                                member_name = member_record.Full_Name;
+                            }
+                            try
+                            {
+                                sendmail
+                                (
+                                    from : zoho.adminuserid
+                                    to : med.Owner_Email
+                                    subject : "Medication reminder: " + med.Medicine_Name
+                                    message : "Reminder for " + member_name + ": " + med.Medicine_Name + " is due at " + slot + ". Dosage: " + ifnull(med.Dosage,"Not specified") + ". Frequency: " + ifnull(med.Frequency,"Not specified") + ". Notes: " + ifnull(med.Notes,"None")
+                                )
+                                log_id = insert into Reminder_Log
+                                [
+                                    Medication = med.ID
+                                    Member = med.Member
+                                    Reminder_Time = slot
+                                    Notify_Date = zoho.currentdate
+                                    Notified_At = zoho.currenttime
+                                    Owner_Email = med.Owner_Email
+                                    Email_Status = "Sent"
+                                    Notes = "Reminder email sent."
+                                ];
+                            }
+                            catch(e)
+                            {
+                                log_id = insert into Reminder_Log
+                                [
+                                    Medication = med.ID
+                                    Member = med.Member
+                                    Reminder_Time = slot
+                                    Notify_Date = zoho.currentdate
+                                    Notified_At = zoho.currenttime
+                                    Owner_Email = med.Owner_Email
+                                    Email_Status = "Failed"
+                                    Notes = e.message
+                                ];
+                            }
+                        }
+                    }
+                }
+            )
+        }
+    }
+}

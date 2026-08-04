@@ -1,0 +1,45 @@
+Prescription_Scans_On_Validate as "Prescription Scans On Validate"
+{
+    type = form
+    form = Prescription_Scans
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Owner_Email == null || input.Owner_Email == "")
+                {
+                    input.Owner_Email = zoho.loginuser;
+                }
+                if(input.Owner_Email != zoho.loginuser)
+                {
+                    alert "You are not authorized to submit this prescription scan.";
+                    cancel submit;
+                }
+                member_record = Family_Members[ID == input.Member];
+                if(member_record.count() == 0 || member_record.Owner_Email != zoho.loginuser)
+                {
+                    alert "Please select a family member that belongs to your household.";
+                    cancel submit;
+                }
+                if(input.Prescription_File != null)
+                {
+                    file_suffix = input.Prescription_File.getSuffix(".").toLowerCase();
+                    if(file_suffix not in {"jpg","jpeg","png","webp","pdf"})
+                    {
+                        alert "Only JPG, PNG, WEBP, or PDF prescription files are allowed.";
+                        cancel submit;
+                    }
+                }
+                if(input.Save_As_Health_Record == true && (input.Reviewed_Text == null || input.Reviewed_Text == "") && (input.Extracted_Text == null || input.Extracted_Text == ""))
+                {
+                    alert "OCR or reviewed text is required before saving as a health record.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}
