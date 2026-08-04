@@ -1,0 +1,44 @@
+Delete_User_Users as "Delete User - Users"
+{
+
+				type =  functions
+				form = User
+				execution type = for each record	
+				on start
+				{
+					actions 
+					{
+					on click
+					(
+						usersRecCount = User[Reporting_To == input.ID && !Is_Deleted].count();
+										disputeRecCount = Dispute_Intake[!Status.equalsIgnoreCase("Closed") && Assigned_To == input.ID || Approver == input.ID].count();
+										if(usersRecCount > 0)
+										{
+											alertMessage = usersRecCount + " user(s) report to this User. Before deleting this User, kindly reassign the associated user(s).";
+											openUrl("#Form:Alert_Message?zc_Header=false&Popup_Message=" + alertMessage,"popup window");
+										}
+										else if(disputeRecCount > 0)
+										{
+											alertMessage = disputeRecCount + " active dispute(s) are assigned to this User. Before deleting this User, kindly reassign the associated dispute(s).";
+											openUrl("#Form:Alert_Message?zc_Header=false&Popup_Message=" + alertMessage,"popup window");
+										}
+										else
+										{
+											disputeRecCount = Dispute_Intake[Created_By_User == input.ID || Closed_By_User == input.ID || (Status.equalsIgnoreCase("Closed") && Assigned_To == input.ID || Approver == input.ID)].count();
+											resolutionRecCount = Investigation_Resolution[Dispute.Status.equalsIgnoreCase("Closed") && Approver_Role == input.ID].count();
+											if(disputeRecCount > 0 || resolutionRecCount > 0)
+											{
+												//mark as deleted
+												input.Is_Deleted = true;
+											}
+											else
+											{
+												//delete
+												delete from Role[ID == input.ID];
+											}
+										}
+					)
+					}
+				}
+			
+}

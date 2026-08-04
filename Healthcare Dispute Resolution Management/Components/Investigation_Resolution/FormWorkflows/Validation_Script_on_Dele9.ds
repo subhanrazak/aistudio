@@ -1,0 +1,30 @@
+Validation_Script_on_Dele9 as "Validation Script on Delete"
+{
+
+				type =  form
+				form = Investigation_Resolution
+
+				record event = on delete
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(!input.Approval_Status.equalsIgnoreCase("Pending") || Dispute.Status.equalsIgnoreCase("Closed"))
+										{
+											alert "Only pending Resolution Decisions for open disputes can be deleted.";
+											cancel delete;
+										}
+										else if(input.Added_User != zoho.loginuser && input.Dispute.Admin_Role != thisapp.getLoginUserRoleId())
+										{
+											alert "You don't have permission to delete this Resolution Decision.";
+											cancel delete;
+										}
+						)
+					}
+				}
+
+			
+}

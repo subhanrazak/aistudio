@@ -1,0 +1,26 @@
+Success_Script_On_Delete as "Success Script On Delete"
+{
+
+				type =  form
+				form = Investigation_Resolution
+
+				record event = on delete
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Approval_Status.equalsIgnoreCase("Pending"))
+										{
+											disputeRec = Dispute_Intake[ID == input.Dispute];
+											disputeRec.Status="Under Investigation";
+											thisapp.blueprint.changeStage("Dispute_Intake","Dispute_Resolution_Workfl","Under Investigation",input.Dispute);
+										}
+						)
+					}
+				}
+
+			
+}

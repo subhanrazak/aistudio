@@ -1,0 +1,38 @@
+Load_Script_On_Add1 as "Load Script On Add"
+{
+
+				type =  form
+				form = Investigation_Resolution
+
+				record event = on add
+
+				on load
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Dispute != null)
+										{
+											disable Dispute;
+										}
+										else
+										{
+											loggedInUserRoleId = thisapp.getLoginUserRoleId();
+											adminCount = Role[ID == loggedInUserRoleId && Permission_Set.equalsIgnoreCase("Administrator")].count();
+											if(adminCount == 0)
+											{
+												disputeRecIds = Dispute_Intake[Investigation_Resolution == null && Assigned_To == thisapp.getLoginUserRecId()].ID.getAll();
+											}
+											else
+											{
+												disputeRecIds = Dispute_Intake[Investigation_Resolution == null].ID.getAll();
+											}
+											input.Dispute:ui.add(disputeRecIds);
+										}
+						)
+					}
+				}
+
+			
+}

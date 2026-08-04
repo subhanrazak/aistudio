@@ -1,0 +1,61 @@
+Validation_Script_on_Alwa3 as "Validation Script on Always"
+{
+
+				type =  form
+				form = Dispute_Intake
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if((!input.Status.equalsIgnoreCase("Unassigned") && input.Added_User == zoho.loginuser) || (input.Added_User != zoho.loginuser && input.Admin_Role != thisapp.getLoginUserRoleId()))
+										{
+											alert "You don't have permission to edit this dispute.";
+											cancel submit;
+										}
+										if(input.Email == null && input.Dispute_Source == "Email")
+										{
+											alert(Email,"Email is mandatory");
+											cancel submit;
+										}
+										if(input.Disputed_Amount < 0)
+										{
+											alert(Disputed_Amount,"Please enter a valid Disputed Amount greater than 0.");
+											cancel submit;
+										}
+										else if(input.Disputed_Amount > Total_Billed_Amount)
+										{
+											alert(Disputed_Amount,"The Disputed Amount cannot exceed the Total Billed Amount.");
+											cancel submit;
+										}
+										else
+										{
+											totalDisputedChargeAmount = 0;
+											for each  eachRow in input.Disputed_Charge_Line
+											{
+												totalDisputedChargeAmount = totalDisputedChargeAmount + eachRow.Disputed_Line_Amount;
+											}
+											if(input.Disputed_Amount < totalDisputedChargeAmount)
+											{
+												alert(Disputed_Amount,"Disputed Amount must be greater than or equal to the total disputed charge line amount.");
+												cancel submit;
+											}
+										}
+										if(input.Status == "Unassigned")
+										{
+											for each  eachRow in input.Disputed_Charge_Line
+											{
+												chargeRec = Charge[ID == eachRow.Charge];
+												chargeRec.Charge_Status="Disputed";
+											}
+										}
+						)
+					}
+				}
+
+			
+}

@@ -1,0 +1,28 @@
+Resolution_Approval_Warni as "Resolution Approval Warning"
+{
+
+				type =  schedule
+				form = Investigation_Resolution[Dispute.Status != "Closed"]
+				start = before 1 days from Resolution_Approval_Due_Date at "00:00:00"
+				time zone = "Asia/Kolkata"
+				on start
+				{
+					actions 
+					{
+					on load
+					(
+						subjectMsg = "Reminder — Approval Due Tomorrow for Dispute " + input.Dispute.Dispute_ID;
+										reportLink = thisapp.getAppUrl() + "record-summary/Pending_Approval/" + input.ID;
+										bodyMsgContent = "<p>Hi <b>" + input.Approver.Name + "</b>,</p> <p>This is a reminder that your approval SLA for the dispute below is due tomorrow. Please review and take action before the deadline.</p> <p> <b>Dispute ID</b> : " + input.Dispute.Dispute_ID + "<br> <b>Patient Name</b> : " + input.Dispute.Patient_Name + "<br> <b>Disputed Amount</b> : " + input.Dispute.Disputed_Amount + "<br> <b>Priority</b> : " + input.Dispute.Priority + "<br> <b>Current Status</b> : " + input.Approval_Status + "<br> <b>Due Date</b> : " + input.Resolution_Approval_Due_Date + " </p> <p>Failure to act before the deadline will result in an SLA breach.</p><p><a href='" + reportLink + "'>Click here to view the Resolution</a></p>";
+										sendmail
+										[
+											from :zoho.adminuserid
+											to :input.Approver.Email
+											subject :subjectMsg
+											message :bodyMsgContent
+										]
+					)
+					}
+				}
+			
+}

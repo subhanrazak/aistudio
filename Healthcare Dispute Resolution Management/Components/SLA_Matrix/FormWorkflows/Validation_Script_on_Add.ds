@@ -1,0 +1,40 @@
+Validation_Script_on_Add as "Validation Script on Add"
+{
+
+				type =  form
+				form = SLA_Matrix
+
+				record event = on add
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											isErrorOccurred = false;
+										if(SLA_Matrix[Priority == input.Priority].count() > 0)
+										{
+											isErrorOccurred = true;
+											alert(Priority,"This priority has already been added");
+										}
+										if(input.Investigation_and_Resolution_SLA_days <= 0)
+										{
+											isErrorOccurred = true;
+											alert(Investigation_and_Resolution_SLA_days,"Day value must be greater than 0.");
+										}
+										if(input.Resolution_Approval_SLA_days <= 0)
+										{
+											isErrorOccurred = true;
+											alert(Resolution_Approval_SLA_days,"Day value must be greater than 0.");
+										}
+										if(isErrorOccurred)
+										{
+											cancel submit;
+										}
+						)
+					}
+				}
+
+			
+}

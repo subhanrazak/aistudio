@@ -1,0 +1,41 @@
+Field_Script_Ask_Zia as "Field Script - Ask Zia"
+{
+
+				type =  form
+				form = Dispute_Intake
+
+				record event = on add
+
+				on user input of Ask_Zia
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											hide Accept_Zia_s_Suggestion;
+										if(input.Reason_for_Dispute != null && Ask_Zia)
+										{
+											ziaResponseMap = thisapp.aiFeature.classifyDisputeCategory(input.Reason_for_Dispute);
+											input.Zia_Classification_Response = ziaResponseMap;
+											ziaResponseStatus = ziaResponseMap.get("status");
+											input.Zia_Classification_Status = ziaResponseStatus;
+											input.Zia_Category = ziaResponseMap.get("suggestedCategory");
+											input.Zia_Sub_Category = ziaResponseMap.get("suggestedSubCategory");
+											if(input.Zia_Classification_Status == "Classified" || input.Zia_Classification_Status == "Partial")
+											{
+												show Zia_Result;
+												ziaResultHtml = thisapp.Styles.zia_clasification() + "<div class=\"zcs-flex zcs-direction-column zcs-gap-16\"> <div class='zcs-w-full zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-16'> <div class='zcs-col-common zcs-flex zcs-align-items-center zcs-gap-16'> <svg class='zcs-zia-img' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'> <path d='M12 2l1.9 5.6L19.5 9l-5.6 1.9L12 16.5l-1.9-5.6L4.5 9l5.6-1.4L12 2z' fill='#4870e8'></path> <path d='M19 14l.9 2.4L22 17.2l-2.1.8L19 20.4l-.9-2.4L16 17.2l2.1-.8L19 14z' fill='#a86be0'></path> </svg> <h6 class='zcs-font-16 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'> Ai Classification </h6></div> <div class='zcs-ai-generated-wrapper zcs-rounded-2xl zcs-px-16 zcs-py-6 zcs-box-border'> <h6 class='zcs-ai-generated-text zcs-font-16 zcs-font-medium zcs-lh-heading zcs-m-0'> Ai Generated </h6> </div> </div> <div class='zcs-zia-content zcs-flex zcs-direction-column zcs-gap-16 zcs-rounded-2xl zcs-p-16 zcs-box-border'> <div class='zcs-labelvalue-wrapper'> <ul class='zcs-row zcs-gap-24 zcs-p-0 zcs-m-0'> <li class='zcs-flex zcs-direction-column zcs-gap-8 zcs-col-12'> <p class='zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary zcs-m-0'> AI has analysed the dispute description and suggested a category and sub-category. Review and accept to apply.</p> </li> <li class='zcs-flex zcs-direction-column zcs-gap-8 zcs-col-3 zcs-col-sm-6 zcs-col-xs-12'> <label class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary'> Category</label> <span class='zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'> " + input.Zia_Category + " </span> </li> <li class='zcs-flex zcs-direction-column zcs-gap-8 zcs-col-3 zcs-col-sm-6 zcs-col-xs-12'> <label class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary'> Sub Category </label> <span class='zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'> " + input.Zia_Sub_Category + " </span> </li> </ul> </div> </div> </div>";
+												input.Zia_Result = ziaResultHtml;
+												show Accept_Zia_s_Suggestion;
+											}
+										}
+										else
+										{
+											hide Zia_Result;
+										}
+						)
+					}
+				}
+
+			
+}

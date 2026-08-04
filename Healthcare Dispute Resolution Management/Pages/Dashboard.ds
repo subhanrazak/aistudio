@@ -1,0 +1,76 @@
+<page linkname = "Dashboard" parameters = "string avgResolutionLabel, float avgResolutionTime, int openDisputes, int pendingApprovals, int slaBreaches, int totalDisputes" displayname = "Dashboard"/>
+<content>
+<zml>
+	<layout>
+		<row>
+			<column width='100%'>
+				<file name:Executive_KPI_Summary.ds/>
+			</column>
+		</row>
+		<row>
+			<column width='50%'>
+				<dsp id='Effectiveness_Score_ZCS' elementName='Effectiveness Score' title='Effectiveness Score' titleSize='18px' boldTitle='true' titleColor='#222326'>
+					<![CDATA[htmlpage Effectiveness_Score_ZCS()
+content
+			<%{%>
+				<file name:Effectiveness_Score_ZCS.dshtml/>
+			<%}%>
+					]]>
+				</dsp>
+			</column>
+			<column width='50%'>
+				<dsp id='Analyst_Workload_ZCS' elementName='Analyst Workload' title='Analyst Workload' titleSize='18px' boldTitle='true' titleColor='#222326'>
+					<![CDATA[htmlpage Analyst_Workload_ZCS()
+content
+			<%{%>
+				<file name:Analyst_Workload_ZCS.dshtml/>
+			<%}%>
+					]]>
+				</dsp>
+			</column>
+		</row>
+		<row>
+			<column width='32%'>
+				<dsp id='Dispute_Categories_ZCS' elementName='Dispute Categories' title='Dispute Categories' titleSize='18px' boldTitle='true' titleColor='#222326'>
+					<![CDATA[htmlpage Dispute_Categories_ZCS()
+content
+			<%{%>
+				<file name:Dispute_Categories_ZCS.dshtml/>
+			<%}%>
+					]]>
+				</dsp>
+			</column>
+			<column width='34%'>
+				<file name:SLA_Priority_Distribution_Chart.ds/>
+			</column>
+			<column width='34%'>
+				<dsp id='SLA_Breached_by_Category_ZCS' elementName='SLA Breached by Category' title='SLA Breached by Category' titleSize='18px' boldTitle='true' titleColor='#222326'>
+					<![CDATA[htmlpage SLA_Breached_by_Category_ZCS()
+content
+			<%{%>
+				<file name:SLA_Breached_by_Category_ZCS.dshtml/>
+			<%}%>
+					]]>
+				</dsp>
+			</column>
+		</row>
+		<row>
+			<column width='100%'>
+				<file name:Pending_Approval_Queue.ds/>
+			</column>
+		</row>
+	</layout>
+</zml>
+</content>
+<script>
+totalDisputes = Dispute_Intake[ID != 0].count();
+openDisputes = Dispute_Intake[Status != "Closed"].count();
+slaBreaches = Dispute_Intake[Investigation_Due_Date != null && Investigation_Due_Date < zoho.currentdate && Status != "Closed"].count();
+pendingApprovals = Dispute_Intake[Status == "Pending Approval"].count();
+avgResolutionTime = Investigation_Resolution[Approval_Status == "Approved"].avg(Resolution_Days);
+if(avgResolutionTime == null)
+{
+	avgResolutionTime = 0;
+}
+avgResolutionLabel = avgResolutionTime + " D";
+</script>

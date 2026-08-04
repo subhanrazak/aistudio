@@ -1,0 +1,115 @@
+map aiFeature.classifyDisputeCategory(string reasonInput)
+{
+
+                 	reasonText = ifnull(reasonInput,"").trim();
+                 	if(reasonText.length() < 10)
+                 	{
+                 		return "{\"matchedCategoryID\":\"0\",\"matchedSubCategoryID\":\"0\",\"status\":\"Skipped - insufficient data\",\"suggestedCategory\":\"\",\"suggestedSub\":\"\"}";
+                 	}
+                 	categoriesRec = Dispute_Category[ID != 0];
+                 	subCategoryList = List();
+                 	subCategoryList = categoriesRec.Sub_Category.getall();
+                 	subCategoryMap = Map();
+                 	subCategoryNameMap = Map();
+                 	for each  eachSubCategory in Dispute_Subcategory[ID in subCategoryList]
+                 	{
+                 		subCategoryMap.put(eachSubCategory.ID,eachSubCategory.Sub_Category);
+                 		subCategoryNameMap.put(eachSubCategory.Sub_Category.trim().toLowerCase(),eachSubCategory.ID);
+                 	}
+                 	allowedPairs = List();
+                 	idMap = Map();
+                 	categoryNameMap = Map();
+                 	for each  eachCategory in categoriesRec
+                 	{
+                 		categoryNameMap.put(eachCategory.Category.trim().toLowerCase(),eachCategory.ID);
+                 		for each  eachSub in eachCategory.Sub_Category
+                 		{
+                 			pair = eachCategory.Category + " > " + subCategoryMap.get(eachSub);
+                 			allowedPairs.add(pair);
+                 			idMap.put(pair.toLowerCase(),eachCategory.ID + "|" + eachSub);
+                 		}
+                 	}
+                 	allowedList = allowedPairs.toString("\n");
+                 	promptText = "Classify the dispute reason into a Category and Sub-Category. ";
+                 	promptText = promptText + "First try to match ONE line from the list exactly (Category and Sub-Category are a fixed pair - never mix across lines). If a line fits, copy it exactly and set \"matched\":true. ";
+                 	promptText = promptText + "If no line fits, propose a concise new Category and Sub-Category suited to the reason and set \"matched\":false. ";
+                 	promptText = promptText + "ALWAYS return a real, non-empty category and sub_category - never return empty strings and never return the word \"Unknown\". ";
+                 	promptText = promptText + "Reply ONLY as JSON: {\"matched\":true,\"category\":\"...\",\"sub_category\":\"...\"}\n\n";
+                 	promptText = promptText + "LIST:\n" + allowedList + "\n\n";
+                 	promptText = promptText + "REASON:\n" + reasonText;
+                 	matchedCategoryID = "0";
+                 	matchedSubCategoryID = "0";
+                 	statusText = "No matching category";
+                 	suggestedCategory = "";
+                 	suggestedSubCategory = "";
+                 	try 
+                 	{
+                 		ziaResponse = zia
+                 		[
+                 			message:promptText
+                 			context:"You are a precise text classifier. Output ONLY valid JSON. Prefer values from the list; only propose new ones when nothing fits."
+                 			parameters:{"temperature":0.1}
+                 		];
+                 		//ziaResponse --> {"matched":true,"category":"Charge Error","sub_category":"Duplicate"}
+                 		if(ziaResponse.status == true)
+                 		{
+                 			ziaResponseData = ziaResponse.data;
+                 			ziaResponseJson = ziaResponseData.replaceAll("```json","").replaceAll("```","").trim();
+                 			try 
+                 			{
+                 				resultMap = ziaResponseJson.toMap();
+                 				classifiedCategory = ifnull(resultMap.get("category"),"").trim();
+                 				classifiedSubCategory = ifnull(resultMap.get("sub_category"),"").trim();
+                 				matchedKey = (classifiedCategory + " > " + classifiedSubCategory).toLowerCase();
+                 				if(idMap.containKey(matchedKey))
+                 				{
+                 					combined = idMap.get(matchedKey);
+                 					matchedCategoryID = combined.getPrefix("|");
+                 					matchedSubCategoryID = combined.getSuffix("|");
+                 					suggestedCategory = classifiedCategory;
+                 					suggestedSubCategory = classifiedSubCategory;
+                 					statusText = "Classified";
+                 				}
+                 				else if(categoryNameMap.containKey(classifiedCategory.toLowerCase()))
+                 				{
+                 					matchedCategoryID = categoryNameMap.get(classifiedCategory.toLowerCase()).toString();
+                 					if(subCategoryNameMap.containKey(classifiedSubCategory.toLowerCase()))
+                 					{
+                 						matchedSubCategoryID = subCategoryNameMap.get(classifiedSubCategory.toLowerCase()).toString();
+                 					}
+                 					suggestedCategory = classifiedCategory;
+                 					suggestedSubCategory = classifiedSubCategory;
+                 					statusText = "Partial";
+                 				}
+                 				else if(classifiedCategory != "" && classifiedSubCategory != "")
+                 				{
+                 					suggestedCategory = classifiedCategory;
+                 					suggestedSubCategory = classifiedSubCategory;
+                 					statusText = "Suggested";
+                 				}
+                 				else
+                 				{
+                 					statusText = "Empty content returned";
+                 				}
+                 			}			catch (jsonError)
+                 			{
+                 				statusText = "Invalid JSON returned";
+                 			}
+                 		}
+                 		else
+                 		{
+                 			statusText = "Zia failed: " + ziaResponse.error;
+                 		}
+                 	}	catch (ziaError)
+                 	{
+                 		statusText = "Zia exception: " + ziaError;
+                 	}
+                 	result = Map();
+                 	result.put("matchedCategoryID",matchedCategoryID);
+                 	result.put("matchedSubCategoryID",matchedSubCategoryID);
+                 	result.put("status",statusText);
+                 	result.put("suggestedCategory",suggestedCategory);
+                 	result.put("suggestedSubCategory",suggestedSubCategory);
+                 	return result;
+                 
+}

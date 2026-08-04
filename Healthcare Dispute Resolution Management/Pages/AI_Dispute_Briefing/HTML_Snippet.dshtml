@@ -1,0 +1,237 @@
+<%
+	disputeRecord = Dispute_Intake[ID == input.recordId];
+	rawJson = disputeRecord.AI_Brief_Response;
+	badgePriorityValue = disputeRecord.Priority.toLowerCase();
+	parseSuccess = true;
+	overviewText = "";
+	riskText = "";
+	patternText = "";
+	resolutionText = "";
+	try 
+	{
+		cleanJson = rawJson.replaceAll("```json","").replaceAll("```","").trim();
+		briefData = cleanJson.toMap();
+		overviewText = briefData.get("overview");
+		riskText = briefData.get("risk_indicator");
+		patternText = briefData.get("pattern_flag");
+		resolutionText = briefData.get("resolution_likelihood");
+		if(overviewText == null || overviewText == "")
+		{
+			parseSuccess = false;
+		}
+	}	catch (parseError)
+	{
+		parseSuccess = false;
+	}
+	%>
+<style>
+<%=thisapp.Styles.Base_Styles()%>
+.zcs-zia-img {
+				width: 28px;
+				height: 28px;
+		}
+		.zcs-ai-generated-wrapper {
+				border: 1px solid transparent;
+				background: linear-gradient(120.46deg, #EBF9FF 2.08%, #FFF8FF 95.48%) padding-box, linear-gradient(240.82deg, rgba(228, 37, 39, 0.5) 1.74%, rgba(249, 178, 29, 0.5) 34.79%, rgba(8, 153, 73, 0.5) 67.84%, rgba(34, 109, 180, 0.5) 98.95%) border-box;
+		}
+		.zcs-ai-generated-text {
+				background: linear-gradient(92.86deg, rgba(228, 37, 39, 0.9) 0.83%, #C44CE6 54.25%, #2A90D5 99.15%);
+				background-clip: text;
+				color: transparent;
+		}
+		.zcs-zia-content {
+				background: linear-gradient(97.09deg, #FFF8FF 0.33%, #EBF9FF 98.51%)  padding-box, linear-gradient(180deg, rgba(228, 37, 39, 0.6) 0%, rgba(249, 178, 29, 0.6) 33%, rgba(8, 153, 73, 0.6) 66%, rgba(34, 109, 180, 0.6) 100%) border-box;
+				border: 1px solid transparent;
+		}
+		.zcs-zia-border {
+				height: 1px;
+				background: linear-gradient(90deg, rgba(228, 37, 39, 0.5) 0%, rgba(249, 178, 29, 0.5) 34.13%, rgba(8, 153, 73, 0.5) 70.19%, rgba(34, 109, 180, 0.5) 100%);
+		}
+	.zcs-dispute-insight-item {
+			border: 1px solid var(--zcs_tertiary_border_color);
+			border-radius: 10px;
+			background-color: var(--zcs-white-color);
+			transition: box-shadow 0.2s ease;
+	 }
+	 .zcs-dispute-insight-item:hover {
+			box-shadow: 0 2px 10px rgba(0, 0, 0, 0.07);
+	 }
+	 .zcs-dispute-insight-title {
+			color: var(--zcs_tertiary_text_color);
+	 }
+	 .zcs-dispute-insight-desc {
+			 color: var(--zcs_primary_text_color);
+	 }
+	 .zcs-panel-icon-wrapper {
+				width: 40px;
+				height: 40px;
+		background-color: #E4FCF3;
+				color: #179E6C;
+		}
+		.zcs-panel-icon {
+				width: 24px;
+				height: 24px;
+		}
+	.zcs-dispute-risk.zcs-panel-icon-wrapper {
+				background-color: #fbe6e1;
+		 	color: #b23d28;
+		}
+	.zcs-dispute-pattern.zcs-panel-icon-wrapper {
+				background-color: #fbf0d8;
+		 	color: #a8740f;
+		}
+	.zcs-dispute-resolution.zcs-panel-icon-wrapper {
+				background-color: #e4f5ee;
+				color: #1a8466;
+		}
+	.zcs-dispute-badge-priority-critical {
+			background-color: #FFF0F5; 
+		color: #F1467B;
+	 }
+	 .zcs-dispute-badge-priority-high {
+		 background-color: #fbe6e1;
+		 color: #b23d28;
+	 }
+	 .zcs-dispute-badge-priority-medium {
+		 background-color: #fbf0d8;
+		 color: #a8740f;
+	 }
+	 .zcs-dispute-badge-priority-low {
+			background-color: #e4f5ee;
+			color: #1a8466;
+	 }
+</style>
+<%
+	if(parseSuccess == false)
+	{
+		%>
+<div class="zcs-dispute-empty">
+	<p class="zcs-dispute-empty-title">Brief not available</p>
+	<p class="zcs-dispute-empty-text">The AI dispute brief has not been generated yet, or could not be read. Generate the brief to view the summary.</p>
+</div>
+<%
+	}
+	else
+	{
+		%>
+<div class="zcs-flex zcs-direction-column zcs-gap-16">
+		<div class='zcs-w-full zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-16'>
+				<div class='zcs-col-common zcs-flex zcs-align-items-center zcs-gap-16'>
+						<svg class='zcs-zia-img' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
+								<path d='M12 2l1.9 5.6L19.5 9l-5.6 1.9L12 16.5l-1.9-5.6L4.5 9l5.6-1.4L12 2z' fill='#4870e8'></path>
+								<path d='M19 14l.9 2.4L22 17.2l-2.1.8L19 20.4l-.9-2.4L16 17.2l2.1-.8L19 14z' fill='#a86be0'></path>
+							</svg>
+			<div class="zcs-flex zcs-direction-column zcs-gap-4">
+				<h6 class="zcs-font-16 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0">Ai Dispute Briefing</h6>
+				<span class="zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary"><%=disputeRecord.Dispute_ID%> &middot; <%=disputeRecord.Status%></span>
+			</div>
+				</div>
+				<div class='zcs-ai-generated-wrapper zcs-rounded-2xl zcs-px-16 zcs-py-6 zcs-box-border'>
+						<h6 class='zcs-ai-generated-text zcs-font-16 zcs-font-medium zcs-lh-heading zcs-m-0'> Ai Generated </h6>
+				</div>
+		</div>
+		<div class='zcs-zia-content zcs-flex zcs-direction-column zcs-gap-16 zcs-rounded-2xl zcs-p-16 zcs-box-border'>
+				<div class='zcs-labelvalue-wrapper'>
+						<div class='zcs-flex zcs-direction-column zcs-col-12 zcs-row zcs-gap-10 zcs-p-0 zcs-m-0'>
+				<label class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary'> OVERVIEW </label>
+				<p class='zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary zcs-m-0'><%=overviewText%></p>
+				<div class='zcs-zia-border'></div>
+			</div>
+			<div class='zcs-flex zcs-direction-column zcs-col-12 zcs-row zcs-gap-10 zcs-p-0 zcs-m-0'>
+				<label class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary'> AI INSIGHTS </label>
+				<div class='zcs-dispute-insight-item zcs-flex zcs-align-items-center zcs-justify-space-between zcs-px-16 zcs-py-14 zcs-box-border zcs-gap-12'>
+					<div class="zcs-dispute-risk zcs-panel-icon-wrapper zcs-flex zcs-align-items-center zcs-justify-center zcs-no-shrink zcs-rounded-lg">
+						<i class="zcs-panel-icon zcs-font-24 zc-li-outline files-exclamation"></i>
+					</div>
+				   <div class='zcs-flex zcs-direction-column zcs-gap-4 zcs-col-common'>
+					  <span class='zcs-dispute-insight-title zcs-font-14 zcs-font-semibold zcs-lh-body'>RISK INDICATOR</span>
+					  <span class='zcs-dispute-insight-desc zcs-font-13 zcs-font-normal zcs-lh-body'><%=riskText%></span>
+				   </div>
+				</div>
+				<div class='zcs-dispute-insight-item zcs-flex zcs-align-items-center zcs-justify-space-between zcs-px-16 zcs-py-14 zcs-box-border zcs-gap-12'>
+					<div class="zcs-dispute-pattern zcs-panel-icon-wrapper zcs-flex zcs-align-items-center zcs-justify-center zcs-no-shrink zcs-rounded-lg">
+						<i class="zcs-panel-icon zcs-font-24 zc-li-outline files-question"></i>
+					</div>
+				   <div class='zcs-flex zcs-direction-column zcs-gap-4 zcs-col-common'>
+					  <span class='zcs-dispute-insight-title zcs-font-14 zcs-font-semibold zcs-lh-body'>DISPUTE PATTERN FLAG</span>
+					  <span class='zcs-dispute-insight-desc zcs-font-13 zcs-font-normal zcs-lh-body'><%=patternText%></span>
+				   </div>
+				</div>
+				<div class='zcs-dispute-insight-item zcs-flex zcs-align-items-center zcs-justify-space-between zcs-px-16 zcs-py-14 zcs-box-border zcs-gap-12'>
+					<div class="zcs-dispute-resolution zcs-panel-icon-wrapper zcs-flex zcs-align-items-center zcs-justify-center zcs-no-shrink zcs-rounded-lg">
+						<i class="zcs-panel-icon zcs-font-24 zc-li-outline files-check"></i>
+					</div>
+				   <div class='zcs-flex zcs-direction-column zcs-gap-4 zcs-col-common'>
+					  <span class='zcs-dispute-insight-title zcs-font-14 zcs-font-semibold zcs-lh-body'>RESOLUTION LIKELIHOOD</span>
+					  <span class='zcs-dispute-insight-desc zcs-font-13 zcs-font-normal zcs-lh-body'><%=resolutionText%></span>
+				   </div>
+				</div>
+				<div class='zcs-zia-border'></div>
+			</div>
+			<div class='zcs-flex zcs-direction-column zcs-col-12 zcs-row zcs-gap-10 zcs-p-0 zcs-m-0'>
+				<label class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary'> KEY INFORMATION </label>
+				<ul class='zcs-row zcs-gap-24 zcs-p-0 zcs-m-0'>
+					<li class='zcs-flex zcs-direction-column zcs-gap-8 zcs-col-3 zcs-col-sm-6 zcs-col-xs-12'>
+						<label class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary'> PATIENT </label>
+						<span class='zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'> <%=disputeRecord.Patient.Patient_ID%> - <%=disputeRecord.Patient_Name%> </span>
+					</li>
+					<li class='zcs-flex zcs-direction-column zcs-gap-8 zcs-col-3 zcs-col-sm-6 zcs-col-xs-12'>
+						<label class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary'> CASE </label>
+						<span class='zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'> <%=disputeRecord.Case.Case_ID%> </span>
+					</li>
+					<li class='zcs-flex zcs-direction-column zcs-gap-8 zcs-col-3 zcs-col-sm-6 zcs-col-xs-12'>
+						<label class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary'> DISPUTED AMOUNT </label>
+						<span class='zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'> <%=disputeRecord.Disputed_Amount%> </span>
+					</li>
+					<li class='zcs-flex zcs-direction-column zcs-gap-8 zcs-col-3 zcs-col-sm-6 zcs-col-xs-12'>
+						<label class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary'> CATEGORY </label>
+						<span class='zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'> <%=disputeRecord.Category.Category%> </span>
+					</li>
+					<li class='zcs-flex zcs-direction-column zcs-gap-8 zcs-col-3 zcs-col-sm-6 zcs-col-xs-12'>
+						<label class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary'> SUB-CATEGORY </label>
+						<span class='zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'> <%=disputeRecord.Sub_Category.Sub_Category%> </span>
+					</li>
+					<li class='zcs-flex zcs-direction-column zcs-gap-8 zcs-col-3 zcs-col-sm-6 zcs-col-xs-12'>
+						<label class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary'> PRIORITY </label>
+						<div class='zcs-flex'>
+							<div class='zcs-badge zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-dispute-badge-priority-<%=badgePriorityValue%>'>
+								<span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'> <%=disputeRecord.Priority%> </span>
+							</div>
+						</div>
+					</li>
+					<li class='zcs-flex zcs-direction-column zcs-gap-8 zcs-col-3 zcs-col-sm-6 zcs-col-xs-12'>
+						<label class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary'> DISPUTE SOURCE </label>
+						<span class='zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'> <%=disputeRecord.Dispute_Source%> </span>
+					</li>
+<%
+		if(disputeRecord.Created_By_Type.equalsIgnoreCase("Patient"))
+		{
+			%>
+<li class='zcs-flex zcs-direction-column zcs-gap-8 zcs-col-3 zcs-col-sm-6 zcs-col-xs-12'>
+						<label class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary'> CREATED BY </label>
+						<span class='zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'> <%=disputeRecord.Created_By_Type%> </span>
+					</li>
+<%
+		}
+		else
+		{
+			%>
+<li class='zcs-flex zcs-direction-column zcs-gap-8 zcs-col-3 zcs-col-sm-6 zcs-col-xs-12'>
+						<label class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary'> CREATED BY </label>
+						<span class='zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'> <%=disputeRecord.Created_By_User.User_ID%> - <%=disputeRecord.Created_By_User.Name%> </span>
+					</li>
+<%
+		}
+		%>
+<li class='zcs-flex zcs-direction-column zcs-gap-8 zcs-col-3 zcs-col-sm-6 zcs-col-xs-12'>
+						<label class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary'> CREATED ON </label>
+						<span class='zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'> <%=disputeRecord.Added_Time%> </span>
+					</li>
+				</ul>
+			</div>
+				</div>
+		</div>
+</div>
+<%
+	}
+%>

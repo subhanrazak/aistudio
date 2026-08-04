@@ -1,0 +1,35 @@
+Validation_Script_on_Add3 as "Validation Script on Add"
+{
+
+				type =  form
+				form = Dispute_Intake
+
+				record event = on add
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											slaRec = SLA_Matrix[ID == input.Category.Priority];
+										input.Priority = slaRec.Priority;
+										input.Investigation_Due_Date = zoho.currentdate.addDay(slaRec.Investigation_and_Resolution_SLA_days);
+										input.Assigned_Role = input.Category.Default_Role;
+										loggedInUserRec = User[Email == zoho.loginuserid];
+										if(loggedInUserRec.count() > 0)
+										{
+											input.Created_By_Type = "User";
+											input.Created_By_User = loggedInUserRec.ID;
+										}
+										input.Status = "Unassigned";
+										if(input.Dispute_Source == "Chat Agent")
+										{
+											input.Email = input.Patient.Email;
+										}
+						)
+					}
+				}
+
+			
+}

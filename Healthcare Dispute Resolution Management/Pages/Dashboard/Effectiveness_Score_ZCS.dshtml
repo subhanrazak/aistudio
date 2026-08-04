@@ -1,0 +1,192 @@
+<%
+	totalDisputeCount = Dispute_Intake[ID != 0].count();
+	age0to10 = 0;
+	age11to20 = 0;
+	age21to30 = 0;
+	age31to60 = 0;
+	age60plus = 0;
+	if(totalDisputeCount > 0)
+	{
+		for each eachDispute in Dispute_Intake[Status != "Closed"]
+		{
+			ageDays = daysBetween(eachDispute.Added_Time,zoho.currenttime);
+			if(ageDays <= 10)
+			{
+				age0to10 = age0to10 + 1;
+			}
+			else if(ageDays <= 20)
+			{
+				age11to20 = age11to20 + 1;
+			}
+			else if(ageDays <= 30)
+			{
+				age21to30 = age21to30 + 1;
+			}
+			else if(ageDays <= 60)
+			{
+				age31to60 = age31to60 + 1;
+			}
+			else
+			{
+				age60plus = age60plus + 1;
+			}
+		}
+	}
+	maxValue = 1;
+	if(age0to10 > maxValue)
+	{
+		maxValue = age0to10;
+	}
+	if(age11to20 > maxValue)
+	{
+		maxValue = age11to20;
+	}
+	if(age21to30 > maxValue)
+	{
+		maxValue = age21to30;
+	}
+	if(age31to60 > maxValue)
+	{
+		maxValue = age31to60;
+	}
+	if(age60plus > maxValue)
+	{
+		maxValue = age60plus;
+	}
+	bar0to10 = (age0to10 * 100) / maxValue;
+	bar11to20 = (age11to20 * 100) / maxValue;
+	bar21to30 = (age21to30 * 100) / maxValue;
+	bar31to60 = (age31to60 * 100) / maxValue;
+	bar60plus = (age60plus * 100) / maxValue;
+%>
+<style>
+<%=thisapp.Styles.Base_Styles()%>
+.zcs-dashboard-card {
+	background-color: var(--zcs-white-color);
+	border: 1px solid #E4EAF7;
+	border-radius: 10px;
+	min-height: 330px;
+}
+.zcs-dashboard-card:hover {
+	box-shadow: 0 2px 10px rgba(27,42,74,0.06);
+}
+.zcs-chart-area {
+	height: 250px;
+	padding: 8px 0 0 0;
+}
+.zcs-chart ul li {
+	list-style-type: none;
+}
+.zcs-chart-y-axis-text {
+	width: 44px;
+	color: #3F4652;
+}
+.zcs-chart-y-axis-line {
+	border-top: 1px solid #E9EDF3;
+}
+.zcs-scrollable-container {
+	top: 5px;
+	left: 44px;
+	width: calc(100% - 44px);
+	height: calc(100% + 8px);
+	overflow: hidden;
+}
+.zcs-chart-x-axis {
+	height: 100%;
+}
+.zcs-chart-x-axis li {
+	min-width: 72px;
+}
+.zcs-bar {
+	height: 199px;
+}
+.zcs-bar-value {
+	width: 24px;
+	min-height: 3px;
+	border-radius: 6px 6px 0 0;
+	background: linear-gradient(180deg,#1D5CFF 0%,#7EA2FF 100%);
+}
+.zcs-bar-value-secondary {
+	background: linear-gradient(180deg,#2A6FFC 0%,#AFC3FF 100%);
+}
+.zcs-bar-label {
+	background-color: #142449;
+	color: var(--zcs-white-color);
+	border-radius: 5px;
+	padding: 7px 11px;
+	margin-bottom: -2px;
+}
+.zcs-chart-x-axis-text {
+	max-width: 78px;
+	white-space: normal;
+	text-align: center;
+}
+.zcs-nodata-wrapper {
+	min-height: 250px;
+}
+/* RTL styles start here */
+.zc-rtl-wrapper .zcs-dashboard-card {
+	direction: rtl;
+}
+.zc-rtl-wrapper .zcs-scrollable-container {
+	left: auto;
+	right: 44px;
+}
+/* RTL styles end here */
+/* Responsive styles start here */
+@media (max-width: 768px) {
+	.zcs-chart-x-axis li {
+		min-width: 62px;
+	}
+	.zcs-bar-value {
+		width: 20px;
+	}
+}
+@media (max-width: 576px) {
+	.zcs-chart-area {
+		overflow-x: auto;
+	}
+	.zcs-scrollable-container {
+		width: 460px;
+	}
+}
+/* Responsive styles end here */
+</style>
+<div class='zcs-dashboard-card zcs-p-24 zcs-box-border'>
+<%
+	if(totalDisputeCount == 0)
+	{
+		%>
+		<div class='zcs-nodata-wrapper zcs-wh-full zcs-flex zcs-align-items-center zcs-justify-center zcs-text-center'>
+			<div class='zcs-nodata-content zcs-p-20 zcs-box-border'>
+				<h5 class='zcs-nodata-header zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-mt-10 zcs-mx-0 zcs-mb-0'>No Data</h5>
+			</div>
+		</div>
+		<%
+	}
+	else
+	{
+		%>
+		<div class='zcs-chart-area zcs-chart zcs-w-full zcs-columnchart-wrapper zcs-relative'>
+			<ul class='zcs-chart-y-axis zcs-flex zcs-direction-column zcs-gap-24 zcs-m-0 zcs-p-0'>
+				<li class='zcs-flex zcs-align-items-center zcs-gap-4'><span class='zcs-chart-y-axis-text zcs-font-14 zcs-font-normal zcs-lh-body'>100</span><span class='zcs-chart-y-axis-line zcs-col-common'></span></li>
+				<li class='zcs-flex zcs-align-items-center zcs-gap-4'><span class='zcs-chart-y-axis-text zcs-font-14 zcs-font-normal zcs-lh-body'>80</span><span class='zcs-chart-y-axis-line zcs-col-common'></span></li>
+				<li class='zcs-flex zcs-align-items-center zcs-gap-4'><span class='zcs-chart-y-axis-text zcs-font-14 zcs-font-normal zcs-lh-body'>60</span><span class='zcs-chart-y-axis-line zcs-col-common'></span></li>
+				<li class='zcs-flex zcs-align-items-center zcs-gap-4'><span class='zcs-chart-y-axis-text zcs-font-14 zcs-font-normal zcs-lh-body'>40</span><span class='zcs-chart-y-axis-line zcs-col-common'></span></li>
+				<li class='zcs-flex zcs-align-items-center zcs-gap-4'><span class='zcs-chart-y-axis-text zcs-font-14 zcs-font-normal zcs-lh-body'>20</span><span class='zcs-chart-y-axis-line zcs-col-common'></span></li>
+				<li class='zcs-flex zcs-align-items-center zcs-gap-4'><span class='zcs-chart-y-axis-text zcs-font-14 zcs-font-normal zcs-lh-body'>0</span><span class='zcs-chart-y-axis-line zcs-col-common'></span></li>
+			</ul>
+			<div class='zcs-scrollable-container zcs-absolute'>
+				<ul class='zcs-chart-x-axis zcs-wh-full zcs-flex zcs-justify-space-around zcs-gap-4 zcs-m-0 zcs-p-0'>
+					<li class='zcs-flex zcs-direction-column zcs-gap-10'><div class='zcs-bar zcs-col-common zcs-flex zcs-direction-column zcs-align-items-center zcs-justify-end'><span class='zcs-bar-label zcs-font-13 zcs-font-medium zcs-lh-body'><%=age0to10%></span><div class='zcs-bar-value' style='height: <%=bar0to10%>%;'></div></div><span class='zcs-chart-x-axis-text zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'>0 - 10 Days</span></li>
+					<li class='zcs-flex zcs-direction-column zcs-gap-10'><div class='zcs-bar zcs-col-common zcs-flex zcs-align-items-end zcs-justify-center'><div class='zcs-bar-value zcs-bar-value-secondary' style='height: <%=bar11to20%>%;'></div></div><span class='zcs-chart-x-axis-text zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'>11- 20 Days</span></li>
+					<li class='zcs-flex zcs-direction-column zcs-gap-10'><div class='zcs-bar zcs-col-common zcs-flex zcs-align-items-end zcs-justify-center'><div class='zcs-bar-value zcs-bar-value-secondary' style='height: <%=bar21to30%>%;'></div></div><span class='zcs-chart-x-axis-text zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'>21- 30 Days</span></li>
+					<li class='zcs-flex zcs-direction-column zcs-gap-10'><div class='zcs-bar zcs-col-common zcs-flex zcs-align-items-end zcs-justify-center'><div class='zcs-bar-value zcs-bar-value-secondary' style='height: <%=bar31to60%>%;'></div></div><span class='zcs-chart-x-axis-text zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'>31 - 60 Days</span></li>
+					<li class='zcs-flex zcs-direction-column zcs-gap-10'><div class='zcs-bar zcs-col-common zcs-flex zcs-align-items-end zcs-justify-center'><div class='zcs-bar-value zcs-bar-value-secondary' style='height: <%=bar60plus%>%;'></div></div><span class='zcs-chart-x-axis-text zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'>60+ Days</span></li>
+				</ul>
+			</div>
+		</div>
+		<%
+	}
+%>
+</div>

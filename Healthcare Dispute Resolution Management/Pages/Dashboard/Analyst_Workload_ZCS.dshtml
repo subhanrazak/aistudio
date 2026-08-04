@@ -1,0 +1,159 @@
+<%
+	totalDisputeCount = Dispute_Intake[ID != 0].count();
+	rowsRendered = 0;
+%>
+<style>
+<%=thisapp.Styles.Base_Styles()%>
+.zcs-dashboard-card {
+	background-color: var(--zcs-white-color);
+	border: 1px solid #E4EAF7;
+	border-radius: 10px;
+	min-height: 330px;
+}
+.zcs-dashboard-card:hover {
+	box-shadow: 0 2px 10px rgba(27,42,74,0.06);
+}
+.zcs-avatar {
+	width: var(--zcs-avatar-size);
+	height: var(--zcs-avatar-size);
+	background-color: var(--zcs_brand_color);
+	border-radius: var(--zcs-avatar-radius);
+}
+.zcs-progress-bar {
+	height: 8px;
+	background-color: #F3F4F6;
+	border-radius: 999px;
+	overflow: hidden;
+}
+.zcs-progress-bar-indicator {
+	height: inherit;
+	border-radius: inherit;
+	background-color: #179E6C;
+}
+.zcs-workload-progress-red .zcs-progress-bar-indicator {
+	background-color: #E21B1B;
+}
+.zcs-workload-progress-orange .zcs-progress-bar-indicator {
+	background-color: #E46A00;
+}
+.zcs-badge {
+	width: auto;
+}
+.zcs-badge-filled-outline {
+	border: 1px solid transparent;
+}
+.zcs-badge-filled-outline.zcs-badge-green {
+	background-color: #E4FCF3;
+	border-color: #E4FCF3;
+	color: #0F7D4A;
+}
+.zcs-badge-filled-outline.zcs-badge-red {
+	background-color: #FDE3E6;
+	border-color: #FDE3E6;
+	color: #8D1B1B;
+}
+.zcs-badge-filled-outline.zcs-badge-orange {
+	background-color: #F8F0EB;
+	border-color: #F8F0EB;
+	color: #7A3900;
+}
+.zcs-workload-row {
+	min-height: 41px;
+}
+.zcs-nodata-wrapper {
+	min-height: 250px;
+}
+/* RTL styles start here */
+.zc-rtl-wrapper .zcs-dashboard-card {
+	direction: rtl;
+}
+/* RTL styles end here */
+/* Responsive styles start here */
+@media (max-width: 768px) {
+	.zcs-workload-row {
+		align-items: flex-start;
+	}
+}
+@media (max-width: 576px) {
+	.zcs-workload-row {
+		flex-direction: column;
+	}
+	.zcs-workload-meter {
+		width: 100%;
+	}
+}
+/* Responsive styles end here */
+</style>
+<div class='zcs-dashboard-card zcs-flex zcs-direction-column zcs-gap-12 zcs-p-24 zcs-box-border'>
+<%
+	if(totalDisputeCount == 0)
+	{
+		%>
+		<div class='zcs-nodata-wrapper zcs-wh-full zcs-flex zcs-align-items-center zcs-justify-center zcs-text-center'>
+			<div class='zcs-nodata-content zcs-p-20 zcs-box-border'>
+				<h5 class='zcs-nodata-header zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-mt-10 zcs-mx-0 zcs-mb-0'>No Data</h5>
+			</div>
+		</div>
+		<%
+	}
+	else
+	{
+		for each eachUser in User[Is_Deleted == false] range from 0 to 4
+		{
+			openCount = Dispute_Intake[Status != "Closed" && Assigned_To == eachUser.ID].count();
+			breachedCount = Dispute_Intake[Status != "Closed" && Assigned_To == eachUser.ID && Investigation_Due_Date != null && Investigation_Due_Date < zoho.currentdate].count();
+			workloadPercent = openCount * 4;
+			if(workloadPercent > 100)
+			{
+				workloadPercent = 100;
+			}
+			statusLabel = "On Track";
+			badgeClass = "zcs-badge-green";
+			progressClass = "zcs-workload-progress-green";
+			if(breachedCount > 0)
+			{
+				statusLabel = breachedCount + " Breached";
+				badgeClass = "zcs-badge-red";
+				progressClass = "zcs-workload-progress-red";
+			}
+			else if(openCount > 15)
+			{
+				statusLabel = "At Risk";
+				badgeClass = "zcs-badge-orange";
+				progressClass = "zcs-workload-progress-orange";
+			}
+			displayName = eachUser.Name.first_name + " " + eachUser.Name.last_name;
+			rowsRendered = rowsRendered + 1;
+			%>
+			<div class='zcs-workload-row zcs-flex zcs-align-items-center zcs-gap-12'>
+				<div class='zcs-flex zcs-align-items-center zcs-gap-10 zcs-col-4 zcs-col-sm-12'>
+					<div class='zcs-avatar zcs-flex zcs-align-items-center zcs-justify-center zcs-no-shrink' style='--zcs-avatar-size: 32px; --zcs-avatar-radius: 50%'>
+						<i class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-white zc-li-outline users-single-03'></i>
+					</div>
+					<span class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary zcs-ellipsis'><%=displayName%></span>
+				</div>
+				<div class='zcs-workload-meter zcs-col-common <%=progressClass%>'>
+					<div class='zcs-progress-bar zcs-rounded-sm'>
+						<div class='zcs-progress-bar-indicator' style='width: <%=workloadPercent%>%;'></div>
+					</div>
+				</div>
+				<div class='zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-rounded-full zcs-px-14 zcs-py-5 zcs-box-border <%=badgeClass%>'>
+					<span class='zcs-badge-text zcs-font-13 zcs-font-normal zcs-lh-body'><%=statusLabel%></span>
+				</div>
+				<span class='zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary zcs-text-right' style='min-width: 24px;'><%=openCount%></span>
+			</div>
+			<%
+		}
+		if(rowsRendered == 0)
+		{
+			%>
+			<div class='zcs-nodata-wrapper zcs-wh-full zcs-flex zcs-align-items-center zcs-justify-center zcs-text-center'>
+				<div class='zcs-nodata-content zcs-p-20 zcs-box-border'>
+					<h5 class='zcs-nodata-header zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-mt-10 zcs-mx-0 zcs-mb-0'>No Data</h5>
+				</div>
+			</div>
+			<%
+		}
+	}
+%>
+</div>

@@ -1,0 +1,70 @@
+Validation_Script_on_Add4 as "Validation Script on Add"
+{
+
+				type =  form
+				form = Investigation_Resolution
+
+				record event = on add
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Adjustment_Amount < 0)
+										{
+											alert(Adjustment_Amount,"Please enter a valid Adjustment Amount.");
+											cancel submit;
+										}
+										disputeRec = Dispute_Intake[ID == input.Dispute];
+										if(disputeRec.Approver == null)
+										{
+											roleRec = Role[(Approval_Limit_From <= input.Adjustment_Amount && Approval_Limit_To >= input.Adjustment_Amount) || (Approval_Limit_From <= input.Adjustment_Amount && Approval_Limit_To == null)];
+											if(roleRec.count() > 0)
+											{
+												userRecs = User[Role == roleRec.ID];
+											}
+											else
+											{
+												roleRecs = Role[Permission_Set == "Administrator"].ID.getAll();
+												userRecs = User[Role in roleRecs];
+											}
+											approverRole = 0;
+											availableApproverID = 0;
+											minPendingCount = -1;
+											for each  eachUserRec in userRecs
+											{
+												pendingCount = Investigation_Resolution[Approver == eachUserRec.ID && Approval_Status == "Pending"].count();
+												if(minPendingCount == -1 || pendingCount < minPendingCount)
+												{
+													minPendingCount = pendingCount;
+													availableApproverID = eachUserRec.ID;
+													approverRole = eachUserRec.Role;
+												}
+											}
+											if(availableApproverID == 0)
+											{
+												availableApproverID = userRecs.ID;
+												approverRole = userRecs.Role;
+											}
+										}
+										else
+										{
+											availableApproverID = disputeRec.Approver;
+											approverRole = disputeRec.Approver.Role;
+										}
+										input.Approver_Role = approverRole;
+										input.Approver = availableApproverID;
+										disputeRec.Approver=availableApproverID;
+										slaRec = SLA_Matrix[ID == input.Dispute.Category.Priority];
+										input.Resolution_Approval_Due_Date = zoho.currentdate.addDay(slaRec.Resolution_Approval_SLA_days);
+										input.Approval_Status = "Pending";
+										disputeRec.Status="Pending Approval";
+										input.Created_By = thisapp.getLoginUserRecId();
+						)
+					}
+				}
+
+			
+}

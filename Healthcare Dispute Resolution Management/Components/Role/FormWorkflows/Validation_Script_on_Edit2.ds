@@ -1,0 +1,115 @@
+Validation_Script_on_Edit2 as "Validation Script on Edit"
+{
+
+				type =  form
+				form = Role
+
+				record event = on edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Role != old.Role && Role[Role == input.Role && ID != input.ID].count() > 0)
+										{
+											alert(Role,"This Role has already been added");
+											cancel submit;
+										}
+										else if(Permission_Set == "Approver")
+										{
+											hasLimitFromVal = input.Approval_Limit_From != null;
+											hasLimitToVal = input.Approval_Limit_To != null;
+											if(!hasLimitFromVal)
+											{
+												alert(Approval_Limit_From,"Approval Limit is required for this Permission Set.");
+												cancel submit;
+											}
+											else if(hasLimitToVal && !hasLimitFromVal)
+											{
+												alert(Approval_Limit_From,"Approval Limit From is required when Approval Limit To is set.");
+												cancel submit;
+											}
+											else if(input.Approval_Limit_From < 0)
+											{
+												alert(Approval_Limit_From,"Approval Limit From cannot be negative.");
+												cancel submit;
+											}
+											else if(hasLimitToVal && input.Approval_Limit_From >= input.Approval_Limit_To)
+											{
+												alert(Approval_Limit_From,"Approval Limit From must be less than Approval Limit To.");
+												cancel submit;
+											}
+											else
+											{
+												otherRolesRecs = Role[Permission_Set == "Approver" && Approval_Limit_From != null && ID != input.ID];
+												for each  otherRolesRec in otherRolesRecs
+												{
+													otherLimitFromVal = otherRolesRec.Approval_Limit_From;
+													otherIsOpenEnded = otherRolesRec.Approval_Limit_To == null;
+													currentIsOpenEnded = !hasLimitToVal;
+													startsBeforeOtherEnds = otherIsOpenEnded || input.Approval_Limit_From <= otherRolesRec.Approval_Limit_To;
+													otherStartsBeforeMyEnd = currentIsOpenEnded || otherLimitFromVal <= input.Approval_Limit_To;
+													if(startsBeforeOtherEnds && otherStartsBeforeMyEnd)
+													{
+														otherToLabel = if(otherIsOpenEnded,"open",otherRolesRec.Approval_Limit_To.toString());
+														alert(Approval_Limit_From,"This band overlaps '" + otherRolesRec.Role + "' (" + otherLimitFromVal + " – " + otherToLabel + "). Bands must not overlap.");
+														cancel submit;
+													}
+													if(currentIsOpenEnded && otherIsOpenEnded)
+													{
+														alert(Approval_Limit_To,"Only one open-ended top band is allowed. '" + otherRolesRec.Role + "' already has no upper limit.");
+														cancel submit;
+													}
+												}
+											}
+										}
+										if(input.Permission_Set != old.Permission_Set)
+										{
+											for each  eachUser in User[Role == input.ID && !Is_Deleted]
+											{
+												try 
+												{
+													thisapp.permissions.deleteUser(eachUser.Email);
+													thisapp.permissions.assignUserInProfile(eachUser.Email,input.Permission_Set,true);
+												}		catch (err)
+												{
+													if(err.message == "User Limit Reached")
+													{
+														alert "User limit reached. Please contact the application owner to purchase additional user licenses.";
+													}
+													else
+													{
+														alert err.message;
+													}
+													cancel submit;
+												}
+											}
+											if(input.Permission_Set.equalsIgnoreCase("Administrator"))
+											{
+												for each  eachDispute in Dispute_Intake[ID != null]
+												{
+													adminRoleList = List();
+													adminRoleList = eachDispute.Admin_Role;
+													adminRoleList.add(input.ID);
+													eachDispute.Admin_Role=adminRoleList;
+												}
+											}
+											else if(old.Permission_Set.equalsIgnoreCase("Administrator"))
+											{
+												for each  eachDispute in Dispute_Intake[ID != null]
+												{
+													adminRoleList = List();
+													adminRoleList = eachDispute.Admin_Role;
+													adminRoleList.removeElement(input.ID);
+													eachDispute.Admin_Role=adminRoleList;
+												}
+											}
+										}
+						)
+					}
+				}
+
+			
+}

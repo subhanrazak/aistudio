@@ -1,0 +1,599 @@
+Dispute_Resolution_Workfl as "Dispute Resolution Workflow"
+{
+
+        			type = Blueprint
+        			form = Dispute_Intake
+        			start
+        			{
+            			start stage = "Unassigned Dispute"
+            			chart data
+            			{
+                			from port : B
+                			to port   : T3
+                			position  : "8 -34"
+                			path      : [35.849999999999994,2.8400000000000034,35.849999999999994,12.840000000000003,35.849999999999994,34.92,35.98446807861329,34.92,35.98446807861329,57,35.98446807861329,67]
+            			}
+        			}
+        			stages
+        			{
+           			"Unassigned Dispute"
+           			{
+               			chart data
+               			{
+                   			position : "-47.22305247085299 67"
+               			}
+           			}
+           			"Under Investigation"
+           			{
+               			chart data
+               			{
+                   			position : "-47.55782312925169 306.4626984126984"
+               			}
+           			}
+           			"Pending Approval"
+           			{
+               			chart data
+               			{
+                   			position : "-36.69461815247166 533.9727891156463"
+               			}
+           			}
+           			"Assigned Dispute"
+           			{
+               			chart data
+               			{
+                   			position : "190.29939201417994 180.21417892139192"
+               			}
+           			}
+           			"Approved Resolution"
+           			{
+               			chart data
+               			{
+                   			position : "-179.46350880481066 735.6739456280566"
+               			}
+           			}
+           			"Rejected Resolution"
+           			{
+               			chart data
+               			{
+                   			position : "79.53073685280299 732.4161563745017"
+               			}
+           			}
+           			"Returned for Rework"
+           			{
+               			chart data
+               			{
+                   			position : "319.9837303160822 446.3804960062503"
+               			}
+           			}
+           			"Resolution Communicated"
+           			{
+               			chart data
+               			{
+                   			position : "-195.29790304163322 914.3287621209821"
+               			}
+           			}
+           			"Closed"
+           			{
+               			chart data
+               			{
+                   			position : "173.71719776915472 913.8400590771123"
+               			}
+           			}
+           			"Reassigned"
+           			{
+               			chart data
+               			{
+                   			position : "-344.4605674002232 538"
+               			}
+           			}
+        			}
+        			transitions
+        			{
+    				Approve as "Approve"
+    				{
+         				type = normal
+         				from stage = "Pending Approval"
+         				to stage = "Approved Resolution"
+         				before
+         				{
+            				transition criteria = (Status == "Pending Approval" && Approver.ID == thisapp.getLoginUserRecId() || Admin_Role.ID == thisapp.getLoginUserRoleId())
+         				}
+         				during
+         				{
+            				action = open_form
+            				form = Confirmation
+            				set values
+            				(
+                   				Investigation_Resolution = input.Investigation_Resolution
+                   				Action_field = Blueprint.Transition
+            				)
+         				}
+         				after
+         				{
+							actions 
+							{
+							update Investigation_Resolution[ID == input.Investigation_Resolution]
+							[
+								Approval_Time = "zoho.currenttime"
+								Approval_Status = "Approved"
+							]
+							update Dispute_Intake[ID == input.ID]
+							[
+								Status = "Approved"
+							]
+								custom deluge script
+								(
+															thisapp.aiFeature.openAIResolutionEmail(input.ID);
+														subjectMsg = "Dispute " + input.Dispute_ID + " — Resolution Approved";
+														reportLink = thisapp.getAppUrl() + "record-summary/Approved_Resolutions/" + input.ID;
+														bodyMsgContent = "<p>Hi <b>" + input.Assigned_To.Name + "</b>,</p> <p>The resolution for dispute <b>" + input.Dispute_ID + "</b> has been reviewed and approved by <b>" + input.Approver.Name + "</b>.</p> <p> <b>Dispute ID</b> : " + input.Dispute_ID + "<br> <b>Patient Name</b> : " + input.Patient_Name + "<br> <b>Disputed Amount</b> : " + input.Disputed_Amount + " </p> <p> <b>Resolution Type</b> : " + input.Investigation_Resolution.Resolution_Type + "<br> <b>Adjustment Amount</b> : " + input.Investigation_Resolution.Adjustment_Amount + " </p> <p>Please ensure the resolution is communicated to the patient before closing this dispute.</p> <p><a href='" + reportLink + "'>Click here to view the Resolution</a></p>";
+														sendmail
+														[
+															from :zoho.adminuserid
+															to :input.Assigned_To.Email
+															subject :subjectMsg
+															message :bodyMsgContent
+														]
+								)
+							}
+         				}
+         				chart data
+         				{
+             				from port : B3
+             				to port   : T3
+             				path      : [39.49540819533446,585.5806189108679,39.49540819533446,595.5806189108679,39.49540819533446,660.6272822694623,-92.97998727878188,660.6272822694623,-92.97998727878188,725.6739456280566,-92.97998727878188,735.6739456280566]
+        				}
+  				}
+    				Assign_Dispute as "Assign Dispute"
+    				{
+         				type = normal
+         				from stage = "Unassigned Dispute"
+         				to stage = "Assigned Dispute"
+         				before
+         				{
+            				transition criteria = (Status == "Unassigned" && Admin_Role.ID == thisapp.getLoginUserRoleId())
+         				}
+         				during
+         				{
+            				action = open_form
+            				form = Assign_Dispute
+            				set values
+            				(
+                   				Dispute = input.ID
+                   				Action_field = Blueprint.Transition
+            				)
+         				}
+         				after
+         				{
+							actions 
+							{
+							update Dispute_Intake[ID == input.ID]
+							[
+								Status = "Assigned"
+							]
+								custom deluge script
+								(
+															subjectMsg = "New Dispute Assigned to You — " + input.Dispute_ID;
+														reportLink = thisapp.getAppUrl() + "record-summary/My_Assigned_Disputes/" + input.ID;
+														bodyMsgContent = "<p>Hi <b>" + input.Assigned_To.Name + "</b>,</p> <p>A dispute has been assigned to you. Please review the details below and begin your investigation.</p> <p> <b>Dispute ID</b> : " + input.Dispute_ID + "<br> <b>Patient Name</b> : " + input.Patient_Name + "<br> <b>Disputed Amount</b> : " + input.Disputed_Amount + "<br> <b>Category</b> : " + input.Category.Category + " / " + input.Sub_Category.Sub_Category + "<br> <b>Priority</b> : " + input.Priority + "<br> <b>Due Date</b> : " + input.Investigation_Due_Date + " </p><p><a href='" + reportLink + "'>Click here to view the Dispute</a></p>";
+														sendmail
+														[
+															from :zoho.adminuserid
+															to :input.Assigned_To.Email
+															subject :subjectMsg
+															message :bodyMsgContent
+														]
+								)
+							}
+         				}
+         				chart data
+         				{
+             				from port : R1
+             				to port   : T3
+             				path      : [119.19198862807957,92.80391489761081,129.19198862807957,92.80391489761081,265.81742129167355,92.80391489761081,265.81742129167355,131.50904690950136,265.81742129167355,170.21417892139192,265.81742129167355,180.21417892139192]
+        				}
+  				}
+    				Close_Dispute as "Close Dispute"
+    				{
+         				type = normal
+         				from stage = "Resolution Communicated"
+         				to stage = "Closed"
+         				before
+         				{
+            				transition criteria = (Created_By_Type == "User" && Status == "Resolution Communicated" && Admin_Role.ID == thisapp.getLoginUserRoleId() || Created_By_User.ID == thisapp.getLoginUserRecId())
+            				confirmation before execution
+            				(
+                				message = "Are you sure you want to close this dispute?"
+                				confirm button text = "Yes"
+                				cancel button text = "No"
+            				)
+         				}
+         				after
+         				{
+							actions 
+							{
+								custom deluge script
+								(
+															loginUserRecId = thisapp.getLoginUserRecId();
+														update Dispute_Intake[ID == input.ID]
+														[
+															Status="Closed"
+															Closed_By_User=loginUserRecId
+														];
+														if(Investigation_Resolution.Resolution_Type.equalsIgnoreCase("Full Adjustment") || Investigation_Resolution.Resolution_Type.equalsIgnoreCase("Partial Adjustment"))
+														{
+															for each  disputedChargeLineRec in input.Disputed_Charge_Line
+															{
+																chargeRec = Charge[ID == disputedChargeLineRec.Charge];
+																chargeRec.Charge_Status="Adjusted";
+															}
+														}
+								)
+							}
+         				}
+         				chart data
+         				{
+             				from port : R1
+             				to port   : L1
+             				path      : [10.702098994799343,940.1326770185929,20.702098994799343,940.1326770185929,92.20964838197703,940.1326770185929,92.20964838197703,939.643973974723,163.71719776915472,939.643973974723,173.71719776915472,939.643973974723]
+        				}
+  				}
+    				Communicate_Resolution as "Communicate Resolution"
+    				{
+         				type = common
+         				from stage = "Approved Resolution"
+         				to stage = "Resolution Communicated"
+         				common stages = {"Rejected Resolution"}
+         				before
+         				{
+            				transition criteria = (Status == "Approved" || Status == "Rejected" && (Created_By_Type == "User" && Created_By_User.ID == thisapp.getLoginUserRecId()) || (Created_By_Type == "Patient" && Assigned_To.ID == thisapp.getLoginUserRecId()) || Admin_Role.ID == thisapp.getLoginUserRoleId())
+         				}
+         				during
+         				{
+            				action = open_form
+            				form = Communication_Log
+            				set values
+            				(
+                   				Dispute = input.ID
+            				)
+         				}
+         				after
+         				{
+							actions 
+							{
+							update Dispute_Intake[ID == input.ID]
+							[
+								Status = "Resolution Communicated"
+							]
+							}
+         				}
+         				chart data
+         				{
+             				from port : B3
+             				to port   : T3
+             				path      : [-92.97998727878188,787.2817754232782,-92.97998727878188,797.2817754232782,-92.97998727878188,850.8052687721301,-92.29790202341694,850.8052687721301,-92.29790202341694,904.3287621209821,-92.29790202341694,914.3287621209821]
+        				}
+  				}
+    				Moved_To_Approval as "Moved To Approval"
+    				{
+         				type = normal
+         				from stage = "Reassigned"
+         				to stage = "Pending Approval"
+         				before
+         				{
+         				}
+         				after
+         				{
+         				}
+         				chart data
+         				{
+             				from port : T3
+             				to port   : T1
+             				path      : [-288.1190212770265,538,-288.1190212770265,528,-288.1190212770265,523.9727891156463,-146.54181532344805,523.9727891156463,-4.964609369869624,523.9727891156463,-4.964609369869624,533.9727891156463]
+        				}
+  				}
+    				Pick_and_Start_Investigat as "Pick and Start Investigation"
+    				{
+         				type = normal
+         				from stage = "Unassigned Dispute"
+         				to stage = "Under Investigation"
+         				before
+         				{
+            				transition criteria = (Status == "Unassigned" && Admin_Role.ID == thisapp.getLoginUserRoleId() || Assigned_Role.ID == thisapp.getLoginUserRoleId())
+         				}
+         				after
+         				{
+							actions 
+							{
+								custom deluge script
+								(
+															update Dispute_Intake[ID == input.ID]
+														[
+															Assigned_To=thisapp.getLoginUserRecId()
+															Status="Under Investigation"
+															Investigation_Start_Time=zoho.currenttime
+														];
+								)
+							}
+         				}
+         				chart data
+         				{
+             				from port : B3
+             				to port   : T3
+             				path      : [35.98446807861329,118.60782979522162,35.98446807861329,128.60782979522162,35.98446807861329,212.53526410396,35.05120956621069,212.53526410396,35.05120956621069,296.4626984126984,35.05120956621069,306.4626984126984]
+        				}
+  				}
+    				Reassign as "Reassign"
+    				{
+         				type = normal
+         				from stage = "Pending Approval"
+         				to stage = "Reassigned"
+         				before
+         				{
+            				transition criteria = (Status == "Pending Approval" && Admin_Role.ID == thisapp.getLoginUserRoleId() && Approver.ID == thisapp.getLoginUserRecId())
+         				}
+         				during
+         				{
+            				action = open_form
+            				form = Assign_Dispute
+            				set values
+            				(
+                   				Investigation_Resolution = input.Investigation_Resolution
+                   				Action_field = Blueprint.Transition
+            				)
+         				}
+         				after
+         				{
+							actions 
+							{
+								custom deluge script
+								(
+															thisapp.blueprint.executeTransition("Dispute_Intake","Dispute_Resolution_Workfl","Moved_To_Approval",input.ID);
+								)
+							}
+         				}
+         				chart data
+         				{
+             				from port : L1
+             				to port   : B5
+             				path      : [-36.69461815247166,559.776704013257,-46.69461815247166,559.776704013257,-135.2360466531507,559.776704013257,-135.2360466531507,599.6078297952216,-256.891323861562,599.6078297952216,-256.891323861562,589.6078297952216]
+        				}
+  				}
+    				Reject as "Reject"
+    				{
+         				type = normal
+         				from stage = "Pending Approval"
+         				to stage = "Rejected Resolution"
+         				before
+         				{
+            				transition criteria = (Status == "Pending Approval" && Admin_Role.ID == thisapp.getLoginUserRoleId() || Approver.ID == thisapp.getLoginUserRecId())
+         				}
+         				during
+         				{
+            				action = open_form
+            				form = Confirmation
+            				set values
+            				(
+                   				Investigation_Resolution = input.Investigation_Resolution
+                   				Action_field = Blueprint.Transition
+            				)
+         				}
+         				after
+         				{
+							actions 
+							{
+							update Investigation_Resolution[ID == input.Investigation_Resolution]
+							[
+								Approval_Time = "zoho.currenttime"
+								Approval_Status = "Rejected"
+							]
+							update Dispute_Intake[ID == input.ID]
+							[
+								Status = "Rejected"
+							]
+								custom deluge script
+								(
+															thisapp.aiFeature.openAIResolutionEmail(input.ID);
+														subjectMsg = "Dispute " + input.Dispute_ID + " — Resolution Rejected";
+														reportLink = thisapp.getAppUrl() + "record-summary/Rejected_Resolutions/" + input.ID;
+														bodyMsgContent = "<p>Hi <b>" + input.Assigned_To.Name + "</b>,</p> <p>The resolution for dispute <b>" + input.Dispute_ID + "</b> has been reviewed and rejected by <b>" + input.Approver.Name + "</b>.</p> <p> <b>Dispute ID</b> : " + input.Dispute_ID + "<br> <b>Patient Name</b> : " + input.Patient_Name + "<br> <b>Disputed Amount</b> : " + input.Disputed_Amount + "<br> <b>Priority</b> : " + input.Priority + " </p> <p> <b>Rejected By</b> : " + input.Approver.Name + "<br> <b>Reason</b> : " + input.Investigation_Resolution.Approver_Comments + " </p> <p>Please review the rejection reason and determine the appropriate next steps. Contact <b>" + input.Approver.Name + "</b> at <b>" + input.Approver.Email + "</b> if you need further clarification.</p> <p><a href='" + reportLink + "'>Click here to view the Resolution</a></p>";
+														sendmail
+														[
+															from :zoho.adminuserid
+															to :input.Assigned_To.Email
+															subject :subjectMsg
+															message :bodyMsgContent
+														]
+								)
+							}
+         				}
+         				chart data
+         				{
+             				from port : B5
+             				to port   : T3
+             				path      : [83.95542576053855,585.5806189108679,83.95542576053855,595.5806189108679,83.95542576053855,658.9983876426847,162.70325374015988,658.9983876426847,162.70325374015988,722.4161563745017,162.70325374015988,732.4161563745017]
+        				}
+  				}
+    				Resubmit_for_Approval as "Resubmit for Approval"
+    				{
+         				type = normal
+         				from stage = "Returned for Rework"
+         				to stage = "Pending Approval"
+         				before
+         				{
+            				transition criteria = (Status == "Returned for Rework" && Assigned_To.ID == thisapp.getLoginUserRecId())
+         				}
+         				during
+         				{
+            				action = open_form
+            				form = Investigation_Resolution_Resubmit
+            				set values
+            				(
+                   				Investigation_Resolution = input.Investigation_Resolution
+            				)
+         				}
+         				after
+         				{
+							actions 
+							{
+							update Investigation_Resolution[ID == input.Investigation_Resolution]
+							[
+								Approval_Status = "Pending"
+							]
+							update Dispute_Intake[ID == input.ID]
+							[
+								Status = "Pending Approval"
+							]
+								custom deluge script
+								(
+															subjectMsg = "Dispute " + input.Dispute_ID + " — Reworked Resolution Resubmitted for Approval";
+														reportLink = thisapp.getAppUrl() + "record-summary/Pending_Approval/" + input.ID;
+														bodyMsgContent = "<p>Hi <b>" + input.Approver.Name + "</b>,</p> <p>Investigator <b>" + input.Assigned_To.Name + "</b> has addressed your earlier feedback and resubmitted the resolution for dispute <b>" + input.Dispute_ID + "</b> for your approval.</p> <p> <b>Dispute ID</b> : " + input.Dispute_ID + "<br> <b>Patient Name</b> : " + input.Patient_Name + "<br> <b>Disputed Amount</b> : " + input.Disputed_Amount + "<br> <b>Priority</b> : " + input.Priority + " </p> <p> <b>Resolution Type</b> : " + input.Investigation_Resolution.Resolution_Type + "<br> <b>Adjustment Amount</b> : " + input.Investigation_Resolution.Adjustment_Amount + "<br> <b>Root Cause</b> : " + input.Investigation_Resolution.Root_Cause + "<br> <b>Rationale</b> : " + input.Investigation_Resolution.Resolution_Rationale + " </p> <p><b>Approval Due Date</b> : " + input.Investigation_Resolution.Resolution_Approval_Due_Date + "</p> <p>Please log into the system to review and take action.</p> <p><<a href='" + reportLink + "'>Click here to view the Resolution</a></p>";
+														sendmail
+														[
+															from :zoho.adminuserid
+															to :input.Approver.Email
+															subject :subjectMsg
+															message :bodyMsgContent
+														]
+								)
+							}
+         				}
+         				chart data
+         				{
+             				from port : T3
+             				to port   : T3
+             				path      : [406.1802492786344,446.3804960062503,406.1802492786344,436.3804960062503,39.49540819533446,436.3804960062503,39.49540819533446,480.17664256094827,39.49540819533446,523.9727891156463,39.49540819533446,533.9727891156463]
+        				}
+  				}
+    				Return_for_Rework as "Return for Rework"
+    				{
+         				type = normal
+         				from stage = "Pending Approval"
+         				to stage = "Returned for Rework"
+         				before
+         				{
+            				transition criteria = (Status == "Pending Approval" && Admin_Role.ID == thisapp.getLoginUserRoleId() || Approver.ID == thisapp.getLoginUserRecId())
+         				}
+         				during
+         				{
+            				action = open_form
+            				form = Confirmation
+            				set values
+            				(
+                   				Investigation_Resolution = input.Investigation_Resolution
+                   				Action_field = Blueprint.Transition
+            				)
+         				}
+         				after
+         				{
+							actions 
+							{
+							update Investigation_Resolution[ID == input.Investigation_Resolution]
+							[
+								Approval_Status = "Returned"
+							]
+							update Dispute_Intake[ID == input.ID]
+							[
+								Status = "Returned for Rework"
+							]
+								custom deluge script
+								(
+															zoho.pushNotification(input.Assigned_To.Email,"Resolution Decision Returned","Resolution Decision for Dispute " + input.Dispute_ID + " has been returned for rework.","All_Disputes",input.ID);
+														subjectMsg = "Action Required — Dispute " + input.Dispute_ID + " Returned for Rework";
+														reportLink = thisapp.getAppUrl() + "record-summary/Returned_For_Rework/" + input.ID;
+														bodyMsgContent = "<p>Hi <b>" + input.Assigned_To.Name + "</b>,</p> <p>Your resolution submission for dispute <b>" + input.Dispute_ID + "</b> has been reviewed and returned for rework by <b>" + input.Approver.Name + "</b>.</p> <p> <b>Dispute ID</b> : " + input.Dispute_ID + "<br> <b>Patient Name</b> : " + input.Patient_Name + "<br> <b>Disputed Amount</b> : " + input.Disputed_Amount + "<br> <b>Priority</b> : " + input.Priority + " </p> <p><b>Approver Comments</b> :<br>" + input.Investigation_Resolution.Approver_Comments + "</p> <p>Please review the feedback above, update your resolution accordingly, and resubmit for approval at the earliest.</p> <p>If you need clarification on the required changes, contact <b>" + input.Approver.Name + "</b> at <b>" + input.Approver.Email + "</b>.</p> <p><a href='" + reportLink + "'>Click here to view the Resolution</a></p>";
+														sendmail
+														[
+															from :zoho.adminuserid
+															to :input.Assigned_To.Email
+															subject :subjectMsg
+															message :bodyMsgContent
+														]
+								)
+							}
+         				}
+         				chart data
+         				{
+             				from port : T5
+             				to port   : B4
+             				path      : [83.95542576053855,533.9727891156463,83.95542576053855,523.9727891156463,83.95542576053855,515.9805574585591,431.74575559948516,515.9805574585591,431.74575559948516,507.98832580147194,431.74575559948516,497.98832580147194]
+        				}
+  				}
+    				Start_Investigation as "Start Investigation"
+    				{
+         				type = normal
+         				from stage = "Assigned Dispute"
+         				to stage = "Under Investigation"
+         				before
+         				{
+            				transition criteria = (Status == "Assigned" && Assigned_To.ID == thisapp.getLoginUserRecId())
+         				}
+         				after
+         				{
+							actions 
+							{
+								custom deluge script
+								(
+															update Dispute_Intake[ID == input.ID]
+														[
+															Status="Under Investigation"
+															Investigation_Start_Time=zoho.currenttime
+														];
+								)
+							}
+         				}
+         				chart data
+         				{
+             				from port : B3
+             				to port   : R1
+             				path      : [265.81742129167355,231.82200871661354,265.81742129167355,241.82200871661354,265.81742129167355,332.2666133103092,196.7388317766733,332.2666133103092,127.66024226167306,332.2666133103092,117.66024226167306,332.2666133103092]
+        				}
+  				}
+    				Submit_for_Approval as "Submit for Approval"
+    				{
+         				type = normal
+         				from stage = "Under Investigation"
+         				to stage = "Pending Approval"
+         				before
+         				{
+            				transition criteria = (Status == "Under Investigation" && Assigned_To.ID == thisapp.getLoginUserRecId())
+         				}
+         				during
+         				{
+            				action = open_form
+            				form = Investigation_Resolution
+            				set values
+            				(
+                   				Dispute = input.ID
+            				)
+         				}
+         				after
+         				{
+							actions 
+							{
+								custom deluge script
+								(
+															subjectMsg = "Dispute Resolution Awaiting Your Approval — " + input.Dispute_ID;
+														reportLink = thisapp.getAppUrl() + "record-summary/Pending_Approval/" + input.ID;
+														bodyMsgContent = "<p>Hi <b>" + input.Approver.Name + "</b>,</p> <p>Investigator <b>" + input.Assigned_To.Name + "</b> has completed the investigation for dispute <b>" + input.Dispute_ID + "</b> and has submitted the resolution for your approval.</p> <p> <b>Dispute ID</b> : " + input.Dispute_ID + "<br> <b>Patient Name</b> : " + input.Patient_Name + "<br> <b>Disputed Amount</b> : " + input.Disputed_Amount + "<br> <b>Category</b> : " + input.Category.Category + " / " + input.Sub_Category.Sub_Category + "<br> <b>Priority</b> : " + input.Priority + " </p> <p> <b>Resolution Type</b> : " + input.Investigation_Resolution.Resolution_Type + "<br> <b>Adjustment Amount</b> : " + input.Investigation_Resolution.Adjustment_Amount + "<br> <b>Root Cause</b> : " + input.Investigation_Resolution.Root_Cause + "<br> <b>Rationale</b> : " + input.Investigation_Resolution.Resolution_Rationale + " </p> <p><b>Approval Due Date</b> : " + input.Investigation_Resolution.Resolution_Approval_Due_Date + "</p> <p>Please log into the system to <b>Approve</b>, <b>Reject</b>, or <b>Return for Rework</b>.</p> <p><a href='" + reportLink + "'>Click here to view the Resolution</a></p>";
+														sendmail
+														[
+															from :zoho.adminuserid
+															to :input.Approver.Email
+															subject :subjectMsg
+															message :bodyMsgContent
+														]
+								)
+							}
+         				}
+         				chart data
+         				{
+             				from port : L1
+             				to port   : T2
+             				path      : [-47.55782312925169,332.2666133103092,-57.55782312925169,332.2666133103092,-57.55782312925169,445.02165866178314,17.265399412732414,445.02165866178314,17.265399412732414,523.9727891156463,17.265399412732414,533.9727891156463]
+        				}
+  				}
+        			}
+    			
+}

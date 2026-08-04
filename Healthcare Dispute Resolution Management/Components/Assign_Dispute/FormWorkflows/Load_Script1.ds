@@ -1,0 +1,30 @@
+Load_Script1 as "Load Script"
+{
+
+				type =  form
+				form = Assign_Dispute
+
+				record event = on add
+
+				on load
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Dispute != null && Action_field.equalsIgnoreCase("Assign_Dispute"))
+										{
+											userIds = User[Role in input.Dispute.Admin_Role || Role == input.Dispute.Assigned_Role].ID.getAll();
+											input.Assigned_To:ui.add(userIds);
+										}
+										else if(input.Investigation_Resolution != null && Action_field.equalsIgnoreCase("Reassign"))
+										{
+											userIds = User[Role in input.Investigation_Resolution.Admin_Role || Role == input.Investigation_Resolution.Approver_Role].ID.getAll();
+											input.Assigned_To:ui.add(userIds);
+										}
+						)
+					}
+				}
+
+			
+}

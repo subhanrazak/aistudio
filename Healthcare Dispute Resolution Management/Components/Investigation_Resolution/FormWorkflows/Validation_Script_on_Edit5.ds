@@ -1,0 +1,75 @@
+Validation_Script_on_Edit5 as "Validation Script on Edit"
+{
+
+				type =  form
+				form = Investigation_Resolution
+
+				record event = on edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(Dispute.Status.equalsIgnoreCase("Closed") || input.Approval_Status.equalsIgnoreCase("Approved") || input.Approval_Status.equalsIgnoreCase("Rejected"))
+										{
+											alert "Only pending Resolution Decisions for open disputes can be deleted.";
+											cancel submit;
+										}
+										else if(input.Added_User != zoho.loginuser && input.Dispute.Admin_Role != thisapp.getLoginUserRoleId())
+										{
+											alert "You don't have permission to edit this Resolution Decision.";
+											cancel submit;
+										}
+										if(input.Adjustment_Amount < 0)
+										{
+											alert(Adjustment_Amount,"Please enter a valid Adjustment Amount.");
+											cancel submit;
+										}
+										if(input.Adjustment_Amount != old.Adjustment_Amount && input.Approval_Status == "Pending" && !Resubmitted_After_Rework)
+										{
+											approverRoleRec = Role[ID == input.Approver.Role];
+											isApproverStillValid = approverRoleRec.Permission_Set == "Administrator" || (approverRoleRec.Approval_Limit_From <= input.Adjustment_Amount && approverRoleRec.Approval_Limit_To >= input.Adjustment_Amount || approverRoleRec.Approval_Limit_To == null);
+											if(!isApproverStillValid)
+											{
+												roleRec = Role[(Approval_Limit_From <= input.Adjustment_Amount && Approval_Limit_To >= input.Adjustment_Amount) || (Approval_Limit_From <= input.Adjustment_Amount && Approval_Limit_To == null)];
+												if(roleRec.count() > 0)
+												{
+													userRecs = User[Role == roleRec.ID];
+												}
+												else
+												{
+													roleRecs = Role[Permission_Set == "Administrator"].ID.getAll();
+													userRecs = User[Role in roleRecs];
+												}
+												approverRole = 0;
+												availableApproverID = 0;
+												minPendingCount = -1;
+												for each  eachUserRec in userRecs
+												{
+													pendingCount = Investigation_Resolution[ID != input.ID && Approver == eachUserRec.ID && Approval_Status == "Pending"].count();
+													if(minPendingCount == -1 || pendingCount < minPendingCount)
+													{
+														minPendingCount = pendingCount;
+														availableApproverID = eachUserRec.ID;
+														approverRole = eachUserRec.Role;
+													}
+												}
+												if(availableApproverID == 0)
+												{
+													availableApproverID = userRecs.ID;
+													approverRole = userRecs.Role;
+												}
+												input.Approver_Role = approverRole;
+												input.Approver = availableApproverID;
+												disputeRec = Dispute_Intake[ID == input.Dispute];
+												disputeRec.Approver=availableApproverID;
+											}
+										}
+						)
+					}
+				}
+
+			
+}

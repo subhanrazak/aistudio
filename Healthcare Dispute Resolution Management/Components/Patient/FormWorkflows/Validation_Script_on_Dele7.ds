@@ -1,0 +1,42 @@
+Validation_Script_on_Dele7 as "Validation Script on Delete"
+{
+
+				type =  form
+				form = Patient
+
+				record event = on delete
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											disputeRecCount = Dispute_Intake[Patient == input.ID].count();
+										if(disputeRecCount > 0)
+										{
+											alert disputeRecCount + " dispute record(s) are linked to this Patient.";
+											cancel delete;
+										}
+										if(input.Dispute_agent_access_granted)
+										{
+											try 
+											{
+												thisapp.permissions.deleteUser(input.Email);
+												for each  eachPatient in Patient[Email.equalsIgnoreCase(input.Email)]
+												{
+													eachPatient.Dispute_agent_access_granted=false;
+												}
+											}	catch (err)
+											{
+												alert err.message;
+											}
+										}
+										delete from Charge[Case.Patient == input.ID];
+										delete from Case[Patient == input.ID];
+						)
+					}
+				}
+
+			
+}

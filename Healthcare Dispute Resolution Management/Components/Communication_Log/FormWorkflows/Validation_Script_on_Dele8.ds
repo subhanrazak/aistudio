@@ -1,0 +1,30 @@
+Validation_Script_on_Dele8 as "Validation Script on Delete"
+{
+
+				type =  form
+				form = Communication_Log
+
+				record event = on delete
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(Dispute.Status.equalsIgnoreCase("Closed"))
+										{
+											alert "Communication logs cannot be deleted after the dispute is closed.";
+											cancel delete;
+										}
+										else if(input.Added_User != zoho.loginuser || input.Dispute.Admin_Role != thisapp.getLoginUserRoleId())
+										{
+											alert "You don't have permission to delete this communication log.";
+											cancel delete;
+										}
+						)
+					}
+				}
+
+			
+}

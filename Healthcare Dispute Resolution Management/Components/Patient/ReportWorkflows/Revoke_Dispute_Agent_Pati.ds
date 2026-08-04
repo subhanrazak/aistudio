@@ -1,0 +1,28 @@
+Revoke_Dispute_Agent_Pati as "Revoke Dispute Agent - Patients"
+{
+
+				type =  functions
+				form = Patient
+				execution type = for each record	
+				on start
+				{
+					actions 
+					{
+					on click
+					(
+						try 
+										{
+											thisapp.permissions.deleteUser(input.Email);
+											for each  eachPatient in Patient[Email.equalsIgnoreCase(input.Email)]
+											{
+												eachPatient.Dispute_agent_access_granted=false;
+											}
+										}catch (err)
+										{
+											openUrl("#Form:Alert_Message?zc_Header=false&Popup_Message=" + err.message,"popup window");
+										}
+					)
+					}
+				}
+			
+}

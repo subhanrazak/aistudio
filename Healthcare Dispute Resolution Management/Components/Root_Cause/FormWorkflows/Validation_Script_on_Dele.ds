@@ -1,0 +1,26 @@
+Validation_Script_on_Dele as "Validation Script on Delete"
+{
+
+				type =  form
+				form = Root_Cause
+
+				record event = on delete
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											investigationResolutionRecCount = Investigation_Resolution[Root_Cause == input.ID].count();
+										if(investigationResolutionRecCount > 0)
+										{
+											alert investigationResolutionRecCount + " record(s) are linked to this Root Cause. Before deleting this Root Cause, kindly ensure that the associated Investigation Resolution record(s) are updated.";
+											cancel delete;
+										}
+						)
+					}
+				}
+
+			
+}

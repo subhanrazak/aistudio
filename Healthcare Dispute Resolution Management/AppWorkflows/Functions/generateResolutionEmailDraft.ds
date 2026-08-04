@@ -1,0 +1,54 @@
+void aiFeature.generateResolutionEmailDraft(int disputeId)
+{
+
+                 	disputeRec = Dispute_Intake[ID == disputeId];
+                 	resolutionRec = Investigation_Resolution[Dispute == disputeId];
+                 	emailSubject = "";
+                 	emailContent = "";
+                 	statusText = "No content generated";
+                 	promptText = "Generate a formal and empathetic patient billing dispute resolution email using the dispute details provided. Patient Name: " + disputeRec.Patient_Name + ". Dispute ID: " + disputeRec.Dispute_ID + ". Dispute Category: " + disputeRec.Category.Category + ". Disputed Amount: $" + disputeRec.Disputed_Amount + ". Resolution Type: " + resolutionRec.Resolution_Type + ". Adjustment Amount: $" + resolutionRec.Adjustment_Amount + ". Resolution Rationale: " + resolutionRec.Resolution_Rationale + ". Root Cause: " + resolutionRec.Root_Cause.Root_Cause + ". Instructions: 1. Subject line must reference Dispute ID " + disputeRec.Dispute_ID + " and summarise the resolution in plain language. 2. Format the email body as clean HTML using only <p>, <br>, <b> tags — no divs, no styles, no classes. 3. Follow this structure exactly: Greeting → Dispute acknowledgement → Resolution decision → Adjustment details → Apology if root cause is a hospital error → Next steps → Closing. 4. Each section must be a separate <p> tag. 5. Keep the email under 300 words — concise and clear. 6. Use plain language — no medical or billing jargon. 7. Use only generic references — our billing team, our hospital, our support team, contact us via email — never use bracketed placeholders like [Hospital Name] or [Contact Number]. 8. Tone must be professional, empathetic and clear throughout. 9. Do not mention any timeframes, day counts, or statement cycles — do not use next statement, business days, as soon as possible, shortly, or in due course — state only that the adjustment will be processed and the patient will be notified once complete. 10. Never make promises about outcomes, timelines, or future billing cycles. Reply ONLY as JSON: {\"subject\":\"...\",\"content\":\"...\"}";
+                 	try 
+                 	{
+                 		ziaResponse = zia
+                 		[
+                 			message:promptText
+                 			context:"You are a professional healthcare billing communication specialist. Output ONLY valid JSON with subject and content keys. Never return empty values."
+                 			parameters:{"temperature":0.2}
+                 		];
+                 		if(ziaResponse.status == true)
+                 		{
+                 			ziaResponseData = ziaResponse.data;
+                 			ziaResponseJson = ziaResponseData.replaceAll("```json","").replaceAll("```","").trim();
+                 			try 
+                 			{
+                 				resultMap = ziaResponseJson.toMap();
+                 				emailSubject = ifnull(resultMap.get("subject"),"").trim();
+                 				emailContent = ifnull(resultMap.get("content"),"").trim();
+                 				if(emailSubject != "" && emailContent != "")
+                 				{
+                 					statusText = "Generated";
+                 				}
+                 				else
+                 				{
+                 					statusText = "Empty content returned";
+                 				}
+                 			}			catch (jsonError)
+                 			{
+                 				statusText = "Invalid JSON returned";
+                 			}
+                 		}
+                 		else
+                 		{
+                 			statusText = "Zia failed: " + ziaResponse.error;
+                 		}
+                 	}	catch (ziaError)
+                 	{
+                 		statusText = "Zia exception: " + ziaError;
+                 	}
+                 	result = Map();
+                 	result.put("emailSubject",emailSubject);
+                 	result.put("emailContent",emailContent);
+                 	disputeRec.AI_Email_Draft_Response=result.toString();
+                 	disputeRec.AI_Email_Draft_Status=statusText;
+                 
+}

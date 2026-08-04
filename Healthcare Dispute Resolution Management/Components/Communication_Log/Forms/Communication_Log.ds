@@ -1,0 +1,153 @@
+form Communication_Log
+{
+
+			displayname = "Communication Log"
+			success message = "Data Added Successfully!"
+			Section
+			(
+				type = section
+	 			row = 1
+	 			column = 0   
+				width = medium
+			)
+			must have Dispute
+			(
+				type = picklist	
+				values  = Dispute_Intake[Status != "Closed"].ID
+    			bidirectional = Communication_Log
+    			displayformat = [Dispute_ID]
+				sortorder = ascending
+	 			row = 1
+	 			column = 1   
+				width = medium
+			)
+			must have Time
+			(
+    			type = datetime
+				timedisplayoptions = "hh:mm:ss"
+				alloweddays = 0,1,2,3,4,5,6
+	 			row = 1
+	 			column = 1   
+				width = medium
+			)
+			must have Channel
+			(
+				type = picklist
+				maxchar = 100
+				values = {"Inbound Call","Outbound Call","Email","Letter","Patient Portal","In-Person"}
+	 			row = 1
+	 			column = 1   
+				width = medium
+			)
+			must have Contact_Person
+			(
+    			type = name
+				displayname = "Contact Person"
+     			prefix
+     			(
+	     			 type = prefix
+	     			 displayname ="Prefix"
+	     			 visibility = false
+	     			 value = {"Mr.","Mrs.","Ms."}
+     			) 
+     			first_name
+     			(
+	     			 type = first_name
+	     			 displayname ="First Name"
+     			) 
+     			last_name
+     			(
+	     			 type = last_name
+	     			 displayname ="Last Name"
+     			) 
+     			suffix
+     			(
+	     			 type = suffix
+	     			 displayname ="Suffix"
+	     			 visibility = false
+     			) 
+	 			row = 1
+	 			column = 1   
+				width = medium
+				personal data = true
+			)
+			must have Summary
+			(
+    			type = textarea
+				height = 100px
+	 			row = 1
+	 			column = 1   
+				width = medium
+			)
+			Follow_Up_Required
+			(
+    			type = checkbox
+				displayname = "Follow-Up Required"
+				initial value = false
+	 			row = 1
+	 			column = 1   
+				width = medium
+			)
+			Follow_Up_Date
+			(
+    			type = date
+				displayname = "Follow-Up Date"
+				alloweddays = 0,1,2,3,4,5,6
+	 			row = 1
+	 			column = 1   
+				width = medium
+			)
+			Mark_Dispute_as_Closed
+			(
+    			type = checkbox
+				displayname = "Mark Dispute as Closed?"
+				initial value = false
+	 			row = 1
+	 			column = 1   
+				width = medium
+			)
+			Hidden
+			(
+				type = section
+	 			row = 2
+	 			column = 0   
+				width = medium
+			)
+			Logged_By
+			(
+				type = picklist	
+				displayname = "Logged By"
+				values  = User[Is_Deleted == false].ID
+    			displayformat = [User_ID + " - " + Name.first_name + Name.last_name]
+				sortorder = ascending
+	 			row = 2
+	 			column = 1   
+				width = medium
+			)
+	
+			actions
+			{
+				on add
+				{
+					submit
+					(
+   						type = submit
+   						displayname = "Submit"
+					)
+				}
+				on edit
+				{
+					update
+					(
+   						type = submit
+   						displayname = "Update"
+					)
+					cancel
+					(
+   						type = cancel
+   						displayname = "Cancel"
+					)
+				}
+			}
+		
+}
