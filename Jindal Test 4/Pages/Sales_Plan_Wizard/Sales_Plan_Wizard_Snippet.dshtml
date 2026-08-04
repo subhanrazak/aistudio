@@ -1,0 +1,278 @@
+<%
+	containerName = ifnull(input.loadIn,"");
+	if(containerName == null || containerName.trim() == "")
+	{
+		containerName = "salesWizardSlot";
+	}
+	planFound = false;
+	planRows = Sales_Plans[ID == 0];
+	planId = 0;
+	planNumber = "New sales plan";
+	planStatus = "Draft";
+	planOwner = zoho.loginuserid;
+	planRevision = 0;
+	planCycle = "Not selected";
+	recordStageRaw = "0";
+	recordShowValue = "";
+	if(input.Sales_Plan_ID != null)
+	{
+		planId = ifnull(input.Sales_Plan_ID,0);
+		planRows = Sales_Plans[ID == input.Sales_Plan_ID];
+		if(planRows.count() > 0)
+		{
+			planFound = true;
+			planNumber = "SP-" + ifnull(planRows.Sales_Plan_No,"Draft");
+			planStatus = ifnull(planRows.Status,"Draft");
+			planOwner = ifnull(planRows.Owner_Email,zoho.loginuserid);
+			planRevision = ifnull(planRows.Revision_No,0);
+			planCycle = ifnull(planRows.Budget_Cycle.Cycle_Name,"Not selected");
+			recordStageRaw = ifnull(planRows.Current_Stage,"0");
+			recordShowValue = ifnull(planRows.Show_Value,"");
+		}
+	}
+	stepLabels = {"Context","Demand","Product Split","Review","Submit"};
+	stepLimit = stepLabels.size() - 1;
+	reviewStep = stepLimit - 1;
+	selectedStep = 0;
+	if(input.checkNum != null)
+	{
+		selectedStep = input.checkNum.toLong();
+	}
+	else
+	{
+		selectedStep = recordStageRaw.toLong();
+	}
+	if(selectedStep < 0 || selectedStep > stepLimit)
+	{
+		selectedStep = 0;
+	}
+	statusClean = ifnull(planStatus,"Draft").trim();
+	statusLower = statusClean.toLowerCase();
+	isFinalPlan = false;
+	if(statusClean == "Submitted to Sales Management" || statusClean == "Sales Approved" || statusClean == "Superseded" || statusClean == "Locked" || ifnull(planRows.Locked,false) == true)
+	{
+		isFinalPlan = true;
+		selectedStep = stepLimit;
+		recordStageRaw = stepLimit.toString();
+	}
+	if(planFound == true && selectedStep == reviewStep)
+	{
+		currentStageValue = ifnull(planRows.Current_Stage,"0").toLong();
+		if(currentStageValue < reviewStep)
+		{
+			planRows.Current_Stage=reviewStep.toString();
+			recordStageRaw = reviewStep.toString();
+		}
+	}
+	selectedStepLabel = stepLabels.get(selectedStep);
+	progressPct = ((selectedStep + 1) * 100) / stepLabels.size();
+	if(progressPct > 100)
+	{
+		progressPct = 100;
+	}
+	statusBadgeClass = "zcs-badge-yellow";
+	statusIcon = "ui-1-edit-72";
+	if(statusClean == "Submitted to Sales Management")
+	{
+		statusBadgeClass = "zcs-badge-blue";
+		statusIcon = "loader-dots-06";
+	}
+	else if(statusClean == "Sales Approved" || statusClean == "Locked")
+	{
+		statusBadgeClass = "zcs-badge-green";
+		statusIcon = "ui-1-check-circle-08";
+	}
+	else if(statusClean == "Returned by Sales Management" || statusClean == "Revision Requested by SCM")
+	{
+		statusBadgeClass = "zcs-badge-orange";
+		statusIcon = "ui-3-alert";
+	}
+	else if(statusClean == "Superseded")
+	{
+		statusBadgeClass = "zcs-badge-grey";
+		statusIcon = "files-archive-3d-check";
+	}
+	if(planFound == true)
+	{
+		formParams = "recLinkID=" + planId + "&viewLinkName=All_Sales_Plans&zc_Header=false&From_Page=true&Show_Value=" + selectedStep;
+	}
+	else
+	{
+		formParams = "zc_SubmitVal=Save%20and%20continue&zc_Header=false&From_Page=true&Show_Value=0";
+	}
+%>
+<style>
+:root{--zcs-white-color:#fff;--zcs-page-bg-color:#f4f7fb;--zcs-light-bg-color:var(--zcs_brand_light_color,#eef5ff)}
+.zc-content-loader{display:none!important}div#zppagesLive,div#elementsContainer,.Layout.elemContainment,div#row_1,.zc-pb-formreport-placeholder{height:100%!important;border:0!important;padding:0!important}.Layout.elemContainment{padding:0!important}.zpcontent-wrapper div.zpelement-wrapper{height:100%!important}.zc-pb-tile-card::-webkit-scrollbar{display:none!important}
+.spw,.spw *{box-sizing:border-box}.spw{--spw-bg:#f4f7fb;--spw-card:#fff;--spw-border:#e3e8f2;--spw-primary:var(--zcs_primary_text_color,#111827);--spw-secondary:var(--zcs_secondary_text_color,#64748b);--spw-tertiary:var(--zcs_tertiary_text_color,#94a3b8);--spw-brand:var(--zcs_brand_color,#2563eb);--spw-brand-dark:var(--zcs_brand_dark_color,#1d4ed8);--spw-brand-light:var(--zcs_component_hover_color,#eff6ff);height:100%;min-height:720px;background:radial-gradient(circle at 10% 8%,rgba(20,184,166,.14),transparent 28%),radial-gradient(circle at 92% 6%,rgba(37,99,235,.14),transparent 30%),linear-gradient(180deg,#f8fbff 0%,var(--spw-bg) 60%,#fff 100%);color:var(--spw-primary);font-family:Inter,Arial,sans-serif;padding:20px}.spw a{text-decoration:none}.zcs-flex{display:flex}.zcs-inline-flex{display:inline-flex}.zcs-direction-column{flex-direction:column}.zcs-align-items-center{align-items:center}.zcs-align-items-start{align-items:flex-start}.zcs-justify-center{justify-content:center}.zcs-justify-space-between{justify-content:space-between}.zcs-gap-6{gap:.375rem}.zcs-gap-8{gap:.5rem}.zcs-gap-10{gap:.625rem}.zcs-gap-12{gap:.75rem}.zcs-gap-16{gap:1rem}.zcs-px-10{padding-left:.625rem;padding-right:.625rem}.zcs-px-16{padding-left:1rem;padding-right:1rem}.zcs-py-2{padding-top:.125rem;padding-bottom:.125rem}.zcs-py-8{padding-top:.5rem;padding-bottom:.5rem}.zcs-m-0{margin:0}.zcs-mt-4{margin-top:.25rem}.zcs-mt-8{margin-top:.5rem}.zcs-mt-12{margin-top:.75rem}.zcs-rounded-sm{border-radius:.25rem}.zcs-rounded-md{border-radius:.375rem}.zcs-box-border{box-sizing:border-box}.zcs-font-12{font-size:.75rem}.zcs-font-13{font-size:.8125rem}.zcs-font-14{font-size:.875rem}.zcs-font-15{font-size:.9375rem}.zcs-font-16{font-size:1rem}.zcs-font-18{font-size:1.125rem}.zcs-font-20{font-size:1.25rem}.zcs-font-28{font-size:1.75rem}.zcs-font-normal{font-weight:400}.zcs-font-medium{font-weight:500}.zcs-font-semibold{font-weight:600}.zcs-font-bold{font-weight:700}.zcs-lh-body{line-height:1.5}.zcs-lh-heading{line-height:1.25}.zcs-color-primary{color:var(--spw-primary)}.zcs-color-secondary{color:var(--spw-secondary)}.zcs-w-full{width:100%}.zcs-col-common{flex:1 1 0;min-width:0}.zcs-no-shrink{flex-shrink:0}.zcs-ellipsis{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.zcs-button{width:auto;min-width:5rem;min-height:36px;border:0}.zcs-primary-button{background:var(--spw-brand);color:var(--zcs_brand_foreground_color,#fff)}.zcs-primary-button:hover{background:var(--spw-brand-dark)}.zcs-primary-outline-button{border:1px solid var(--spw-brand);background:#fff;color:var(--spw-brand)}.zcs-primary-outline-button:hover{background:var(--spw-brand-light)}.zcs-button-icon{width:16px;max-height:16px}.zcs-badge{width:auto}.zcs-badge-filled-outline{border:1px solid}.zcs-badge-theme{background:var(--spw-brand-light);border-color:var(--spw-brand);color:var(--spw-brand)}.zcs-badge-green{background:#e4fcf3;border-color:#179e6c;color:#179e6c}.zcs-badge-red{background:#fde3e6;border-color:#fe455d;color:#fe455d}.zcs-badge-yellow{background:#fcf4e6;border-color:#faae13;color:#a06a00}.zcs-badge-blue{background:#e8efff;border-color:#2a6ffc;color:#2a6ffc}.zcs-badge-orange{background:#f8f0eb;border-color:#f4660c;color:#c94f07}.zcs-badge-grey{background:#edf2f7;border-color:#475569;color:#475569}
+.spw-shell{max-width:1520px;height:100%;margin:0 auto;display:flex;flex-direction:column;gap:16px}.spw-hero{position:relative;overflow:hidden;border-radius:28px;padding:22px 24px;background:linear-gradient(135deg,#0f2f66 0%,var(--spw-brand) 58%,#14b8a6 125%);box-shadow:0 22px 54px rgba(37,99,235,.18);color:#fff}.spw-hero:after{content:"";position:absolute;right:-120px;top:-160px;width:360px;height:360px;border-radius:50%;border:1px solid rgba(255,255,255,.22);box-shadow:0 0 0 34px rgba(255,255,255,.06),0 0 0 78px rgba(255,255,255,.04)}.spw-hero-inner{position:relative;z-index:1;display:flex;justify-content:space-between;align-items:center;gap:18px}.spw-back{width:40px;height:40px;border-radius:14px;background:rgba(255,255,255,.14);color:#fff;display:flex;align-items:center;justify-content:center}.spw-title{margin:0;font-size:26px;line-height:1.16;color:#fff}.spw-subtitle{margin:6px 0 0;color:rgba(255,255,255,.88);font-size:13px;line-height:1.5}.spw-hero-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.spw-hero-actions .zcs-primary-outline-button{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.5);color:#fff}.spw-summary{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;align-items:center;padding:16px 18px;background:#fff;border:1px solid var(--spw-border);border-radius:20px;box-shadow:0 1px 2px rgba(15,23,42,.04)}.spw-summary-title{display:flex;align-items:center;gap:12px}.spw-summary-icon{width:46px;height:46px;border-radius:16px;background:var(--spw-brand-light);color:var(--spw-brand);display:flex;align-items:center;justify-content:center;font-size:22px}.spw-summary h2{font-size:18px;margin:0;color:var(--spw-primary)}.spw-summary p{font-size:12px;color:var(--spw-secondary);line-height:1.5;margin:4px 0 0}.spw-summary-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}.spw-progress{height:8px;border-radius:999px;background:#eef2f7;overflow:hidden;margin-top:10px}.spw-progress span{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--spw-brand),#14b8a6)}.spw-workspace{display:grid;grid-template-columns:330px minmax(0,1fr);gap:16px;min-height:0;flex:1}.spw-rail{background:#fff;border:1px solid var(--spw-border);border-radius:24px;padding:18px;overflow:auto;box-shadow:0 1px 2px rgba(15,23,42,.04)}.spw-rail-title{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--spw-tertiary);margin:0 0 14px}.spw-step-list{display:flex;flex-direction:column;gap:10px;padding:0;margin:0;list-style:none}.spw-step{list-style:none}.spw-step-link{display:flex;align-items:flex-start;gap:12px;padding:14px;border:1px solid #edf1f7;border-radius:18px;background:#fbfcff;color:var(--spw-primary);transition:.16s ease}.spw-step-link:hover{border-color:var(--spw-brand);background:var(--spw-brand-light)}.spw-step-active .spw-step-link{background:linear-gradient(135deg,var(--spw-brand),var(--spw-brand-dark));border-color:var(--spw-brand);color:#fff;box-shadow:0 14px 26px rgba(37,99,235,.18)}.spw-step-complete .spw-step-link{border-color:#bbf7d0;background:#f0fdf4}.spw-step-complete.spw-step-active .spw-step-link{background:linear-gradient(135deg,var(--spw-brand),var(--spw-brand-dark));border-color:var(--spw-brand)}.spw-step-locked .spw-step-link,.spw-step-disabled .spw-step-link{opacity:.52;cursor:not-allowed;pointer-events:none;background:#f8fafc;color:var(--spw-tertiary)}.spw-step-num{width:34px;height:34px;border-radius:13px;display:flex;align-items:center;justify-content:center;background:#eef2f7;color:#64748b;font-size:13px;font-weight:900;flex:0 0 auto}.spw-step-active .spw-step-num{background:rgba(255,255,255,.18);color:#fff}.spw-step-complete .spw-step-num{background:#bbf7d0;color:#0f8f61}.spw-step-title{font-size:14px;font-weight:800;line-height:1.25}.spw-step-sub{display:block;font-size:11px;line-height:1.45;opacity:.78;margin-top:3px}.spw-insight{margin-top:14px;border:1px dashed #cbd5e1;border-radius:18px;padding:14px;background:#f8fafc;color:var(--spw-secondary);font-size:12px;line-height:1.55}.spw-body{min-width:0;background:#fff;border:1px solid var(--spw-border);border-radius:24px;overflow:hidden;box-shadow:0 1px 2px rgba(15,23,42,.04);display:flex;flex-direction:column}.spw-body-head{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:16px 20px;border-bottom:1px solid #edf1f7;background:#fbfcff}.spw-body-title{margin:0;font-size:17px;color:var(--spw-primary)}.spw-body-sub{margin:4px 0 0;font-size:12px;color:var(--spw-secondary)}.spw-body-slot{min-height:640px;flex:1;overflow:auto}.spw-form-wrap{height:100%;padding:18px}.spw-form-card{height:100%;min-height:640px;border:1px solid #edf1f7;border-radius:18px;overflow:hidden;background:#fff}.spw-form-embed{height:100%;background:#fff}.spw .spw-form-embed .zc-form-fullheight,.spw .spw-form-embed .row,.spw .spw-form-embed .form-outer-wrapper form.form-table{width:100%;height:100%}.spw .spw-form-embed .zc-form-fullheight .form-outer-wrapper{height:100%!important;border-width:0}.spw .spw-form-embed form .zc-form-scroll-wrapper{padding:0}.spw .spw-form-embed .formContainer{padding:20px 24px!important;height:calc(100% - 69px);overflow:auto}.spw .spw-form-embed form .zc-footer-wrapper .zc-form-footer .formbutton{padding:16px 24px!important;display:flex!important;align-items:center!important;justify-content:center!important}.spw-empty,.spw-callout{display:flex;align-items:flex-start;gap:14px;border-radius:18px;padding:18px;border:1px solid #bfdbfe;background:#eff6ff;color:#1d4ed8}.spw-callout.warn{border-color:#fde68a;background:#fffbeb;color:#b45309}.spw-empty{border-style:dashed;background:#fbfcff;color:var(--spw-secondary)}.spw-callout-icon,.spw-empty-icon{width:42px;height:42px;border-radius:15px;background:rgba(255,255,255,.72);display:flex;align-items:center;justify-content:center;font-size:20px;flex:0 0 auto}.spw-callout h4,.spw-empty h3{margin:0;font-size:15px;color:inherit}.spw-callout p,.spw-empty p{margin:4px 0 0;font-size:13px;line-height:1.55;color:inherit}.spw-review{padding:22px}.spw-review-card{border:1px solid var(--spw-border);border-radius:22px;overflow:hidden;background:#fff}.spw-review-head{padding:22px 24px;background:linear-gradient(135deg,#f8fbff 0%,#eef6ff 100%);border-bottom:1px solid var(--spw-border);display:flex;align-items:flex-start;justify-content:space-between;gap:16px}.spw-review-title{display:flex;gap:14px;align-items:flex-start}.spw-review-icon{width:52px;height:52px;border-radius:18px;background:var(--spw-brand);color:#fff;display:flex;align-items:center;justify-content:center;font-size:24px;flex:0 0 auto}.spw-review h4{margin:0;font-size:20px;line-height:1.25}.spw-review p{margin:5px 0 0;color:var(--spw-secondary);font-size:13px;line-height:1.6}.spw-review-section{padding:20px 24px;border-bottom:1px solid #edf1f7}.spw-review-section:last-child{border-bottom:0}.spw-review-section-title{display:flex;align-items:center;gap:9px;margin:0 0 12px;font-size:14px;font-weight:900}.spw-review-section-title i{color:var(--spw-brand);font-size:18px}.spw-review-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.spw-kv{border:1px solid #edf1f7;border-radius:14px;padding:12px 14px;background:#fbfcff}.spw-kv label{display:block;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--spw-tertiary);margin-bottom:5px}.spw-kv span{display:block;font-size:14px;font-weight:700;color:var(--spw-primary);word-break:break-word}.spw-review-actions{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:18px 24px;background:#fbfcff;border-top:1px solid #edf1f7}.spw-note{display:flex;align-items:center;gap:8px;color:#1d4ed8;font-size:12px;line-height:1.45}.spw-success{position:relative;overflow:hidden;min-height:640px;margin:18px;border:1px solid rgba(22,165,111,.22);border-radius:28px;background:radial-gradient(circle at 18% 18%,rgba(20,184,166,.20),transparent 28%),radial-gradient(circle at 82% 12%,rgba(37,99,235,.16),transparent 26%),linear-gradient(180deg,#f0fdf4 0%,#ffffff 58%,#f8fafc 100%);box-shadow:0 28px 70px rgba(15,143,97,.13)}.spw-success-hero{position:relative;padding:50px 34px 28px;text-align:center}.spw-complete{width:132px;height:132px;margin:0 auto 18px;position:relative}.spw-complete:before{content:"";position:absolute;inset:10px;border-radius:50%;background:#dcfce7;animation:spwPulse 1.9s ease-in-out infinite}.spw-complete-svg{position:relative;width:132px;height:132px;display:block}.spw-complete-svg .ring{fill:none;stroke:#bbf7d0;stroke-width:8;stroke-dasharray:320;stroke-dashoffset:320;animation:spwRing 1s ease .15s forwards}.spw-complete-svg .circle{fill:#16a56f;transform-origin:50% 50%;animation:spwPop .55s cubic-bezier(.2,.9,.25,1.25) both}.spw-complete-svg .check{fill:none;stroke:#fff;stroke-width:10;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:90;stroke-dashoffset:90;animation:spwCheck .7s ease .55s forwards}.spw-success h3{margin:0;font-size:30px;line-height:1.15;color:#0f172a}.spw-success p{max-width:720px;margin:10px auto 0;font-size:14px;line-height:1.7;color:#475569}.spw-success-grid{position:relative;padding:20px 34px 30px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.spw-success-item{border:1px solid #d8f7e6;background:rgba(255,255,255,.9);border-radius:18px;padding:18px}.spw-success-label{display:block;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.05em;color:#0f8f61;margin-bottom:8px}.spw-success-value{display:block;font-size:16px;font-weight:900;color:#0f172a;word-break:break-word}.spw-success-actions{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;padding:0 34px 38px}@keyframes spwPop{0%{transform:scale(.55);opacity:0}70%{transform:scale(1.08);opacity:1}100%{transform:scale(1);opacity:1}}@keyframes spwRing{to{stroke-dashoffset:0}}@keyframes spwCheck{to{stroke-dashoffset:0}}@keyframes spwPulse{0%,100%{transform:scale(.92);opacity:.78}50%{transform:scale(1.08);opacity:.35}}
+@media(max-width:1080px){.spw{padding:14px}.spw-workspace{grid-template-columns:1fr}.spw-rail{overflow:visible}.spw-step-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.spw-summary{grid-template-columns:1fr}.spw-summary-meta{justify-content:flex-start}.spw-success-grid{grid-template-columns:1fr}}
+@media(max-width:680px){.spw-hero-inner,.spw-body-head,.spw-review-head,.spw-review-actions{flex-direction:column;align-items:flex-start}.spw-step-list,.spw-review-grid{grid-template-columns:1fr}.spw-title{font-size:22px}.spw-success h3{font-size:24px}.spw-success{margin:12px}.spw-success-hero{padding:34px 20px 22px}.spw-success-grid{padding:18px 20px}.spw-success-actions{padding:0 20px 30px}.spw-success-actions .zcs-button,.spw-review-actions .zcs-button{width:100%}}
+</style>
+<div class="spw">
+	<div class="spw-shell">
+		<section class="spw-hero">
+			<div class="spw-hero-inner">
+				<div class="zcs-flex zcs-align-items-center zcs-gap-12">
+					<a href="#Page:Sales_Landing" class="spw-back" title="Back to sales landing"><i class="zc-li-outline arrows-1-minimal-left zcs-font-20"></i></a>
+					<div>
+						<h1 class="spw-title">Sales Plan Wizard</h1>
+						<p class="spw-subtitle">A guided planning flow for context, demand, product split, review and final submission.</p>
+					</div>
+				</div>
+				<div class="spw-hero-actions">
+					<a class="zcs-button zcs-primary-outline-button zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-medium zcs-lh-body" href="#Report:My_Sales_Plan_Workqueue"><i class="zcs-button-icon zc-li-outline business-agenda"></i><span>My workqueue</span></a>
+					<a class="zcs-button zcs-primary-outline-button zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-medium zcs-lh-body" href="#Page:Sales_Landing"><i class="zcs-button-icon zc-li-outline business-chart-growth"></i><span>Sales landing</span></a>
+				</div>
+			</div>
+		</section>
+
+		<section class="spw-summary">
+			<div>
+				<div class="spw-summary-title">
+					<div class="spw-summary-icon"><i class="zc-li-outline business-chart-growth"></i></div>
+					<div>
+						<h2><%=planNumber%></h2>
+						<p><%=if(planFound == true,"Cycle: " + planCycle + " | Revision: " + planRevision + " | Current section: " + selectedStepLabel,"Start with plan context. Save once to create the sales-plan draft, then continue through demand and product split.")%></p>
+					</div>
+				</div>
+				<div class="spw-progress"><span style="width:<%=progressPct%>%;"></span></div>
+			</div>
+			<div class="spw-summary-meta">
+				<span class="zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border <%=statusBadgeClass%>"><i class="zcs-badge-icon zcs-no-shrink zc-li-outline <%=statusIcon%>"></i><span class="zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body"><%=planStatus%></span></span>
+				<span class="zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-theme"><i class="zcs-badge-icon zcs-no-shrink zc-li-outline users-single-01"></i><span class="zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body"><%=planOwner%></span></span>
+			</div>
+		</section>
+
+		<section class="spw-workspace">
+			<aside class="spw-rail">
+				<h3 class="spw-rail-title">Wizard steps</h3>
+				<ul class="spw-step-list">
+<%
+	stepIndex = 0;
+	for each stepLabel in stepLabels
+	{
+		stepSub = "Financial year, cycle and ownership";
+		stepIcon = "business-agenda";
+		if(stepIndex == 1)
+		{
+			stepSub = "Grade demand and target MT";
+			stepIcon = "business-chart-bar-32";
+		}
+		else if(stepIndex == 2)
+		{
+			stepSub = "Product mix and required tons";
+			stepIcon = "business-chart-pie-36";
+		}
+		else if(stepIndex == 3)
+		{
+			stepSub = "Totals, variance and status";
+			stepIcon = "files-search";
+		}
+		else if(stepIndex == 4)
+		{
+			stepSub = "Submitted plans become locked";
+			stepIcon = "ui-1-check-circle-08";
+		}
+		stepClass = "spw-step";
+		st = selectedStep;
+		if(planFound == true)
+		{
+			st = ifnull(planRows.Current_Stage,"0").toLong();
+		}
+		if(planFound == true && st >= stepIndex)
+		{
+			stepClass = stepClass + " spw-step-complete";
+		}
+		if(stepIndex == selectedStep)
+		{
+			stepClass = stepClass + " spw-step-active";
+		}
+		if(planFound == false && stepIndex > 0)
+		{
+			stepClass = stepClass + " spw-step-disabled";
+		}
+		if(planFound == true && isFinalPlan == false && stepIndex > st + 1)
+		{
+			stepClass = stepClass + " spw-step-disabled";
+		}
+		if(isFinalPlan == true && stepIndex < stepLimit)
+		{
+			stepClass = stepClass + " spw-step-locked";
+		}
+		targetStep = stepIndex;
+		if(planFound == false)
+		{
+			targetStep = 0;
+		}
+		if(isFinalPlan == true)
+		{
+			targetStep = stepLimit;
+		}
+		stepHref = "#Page:Sales_Plan_Wizard?Sales_Plan_ID=" + planId + "&checkNum=" + targetStep;
+%>
+					<li class="<%=stepClass%>"><a class="spw-step-link" href="<%=stepHref%>"><span class="spw-step-num"><%=stepIndex + 1%></span><span class="zcs-col-common"><span class="spw-step-title"><i class="zc-li-outline <%=stepIcon%>"></i> <%=stepLabel%></span><span class="spw-step-sub"><%=stepSub%></span></span><i class="zc-li-outline arrows-1-minimal-right"></i></a></li>
+<%
+		stepIndex = stepIndex + 1;
+	}
+%>
+				</ul>
+				<div class="spw-insight"><strong>Flow note:</strong> The wizard uses the same Sales Plans form. Saving each step stores progress and opens the next step automatically.</div>
+			</aside>
+
+			<div class="spw-body">
+				<div class="spw-body-head">
+					<div><h3 class="spw-body-title"><%=selectedStepLabel%></h3><p class="spw-body-sub">Complete this section, save, and continue to the next stage.</p></div>
+					<span class="zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-theme"><i class="zc-li-outline files-single-content-03"></i><span class="zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body">Sales Plans</span></span>
+				</div>
+				<div class="spw-body-slot" name="<%=containerName%>">
+<%
+	if(input.Sales_Plan_ID != null && planFound == false)
+	{
+%>
+					<div class="spw-form-wrap"><div class="spw-empty"><div class="spw-empty-icon"><i class="zc-li-outline ui-1-circle-remove"></i></div><div><h3>Sales plan not available</h3><p>The selected sales plan could not be found. Return to Sales Landing and open an existing draft, or start a new sales plan.</p><div class="zcs-flex zcs-align-items-center zcs-gap-8 zcs-mt-12"><a class="zcs-button zcs-primary-button zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body" href="#Page:Sales_Landing"><i class="zcs-button-icon zc-li-outline arrows-1-minimal-left"></i><span>Back</span></a><a class="zcs-button zcs-primary-outline-button zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body" href="#Page:Sales_Plan_Wizard"><i class="zcs-button-icon zc-li-outline ui-1-simple-add"></i><span>Start new</span></a></div></div></div></div>
+<%
+	}
+	else if(planFound == false)
+	{
+%>
+					<div class="spw-form-wrap"><div class="spw-callout warn"><div class="spw-callout-icon"><i class="zc-li-outline ui-2-time"></i></div><div><h4>Create the draft first</h4><p>Save the Context section first. The wizard will reopen the draft and unlock Demand, Product Split, Review and Submit.</p></div></div><div class="spw-form-card"><div class="spw-form-embed" elName="zc-component" zc-component="form" appLinkName="thisapp" zc-applinkname="thisapp" zc-linkname="Sales_Plans" linkName="Sales_Plans" formLinkName="Sales_Plans" params="<%=formParams%>" zc_MobileView="inline" zc-height="700px"></div></div></div>
+<%
+	}
+	else if(isFinalPlan == true || selectedStep == stepLimit)
+	{
+%>
+					<div class="spw-success"><div class="spw-success-hero"><div class="spw-complete"><svg class="spw-complete-svg" viewBox="0 0 120 120" aria-hidden="true"><circle class="ring" cx="60" cy="60" r="50"></circle><circle class="circle" cx="60" cy="60" r="42"></circle><path class="check" d="M39 61.5 L53.5 76 L82 45"></path></svg></div><div class="zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-green"><i class="zc-li-outline ui-1-check-circle-08"></i><span>Wizard complete</span></div><h3>Sales plan is ready for the next workflow step</h3><p>If the plan is submitted, approved, locked or superseded, earlier wizard sections are locked from this guided flow. Use the workqueue or status board to monitor progress.</p></div><div class="spw-success-grid"><div class="spw-success-item"><span class="spw-success-label">Plan</span><span class="spw-success-value"><%=planNumber%></span></div><div class="spw-success-item"><span class="spw-success-label">Status</span><span class="spw-success-value"><%=planStatus%></span></div><div class="spw-success-item"><span class="spw-success-label">Revision</span><span class="spw-success-value"><%=planRevision%></span></div></div><div class="spw-success-actions"><a class="zcs-button zcs-primary-button zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body" href="#Report:My_Sales_Plan_Workqueue"><i class="zcs-button-icon zc-li-outline business-agenda"></i><span>Open workqueue</span></a><a class="zcs-button zcs-primary-outline-button zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body" href="#Page:Sales_Landing"><i class="zcs-button-icon zc-li-outline business-chart-growth"></i><span>Sales landing</span></a></div></div>
+<%
+	}
+	else if(selectedStep == reviewStep)
+	{
+		gradeTotal = ifnull(planRows.Total_Grade_Target_Tons,0);
+		productTotal = ifnull(planRows.Total_Product_Required_Tons,0);
+		varianceValue = ifnull(planRows.Variance_Tons,0);
+		gradeCount = 0;
+		for each gradeLine in planRows.Grade_Demand_Lines_Existing
+		{
+			gradeCount = gradeCount + 1;
+		}
+		productCount = 0;
+		for each productLine in planRows.Product_Split_Lines_Existing
+		{
+			productCount = productCount + 1;
+		}
+%>
+					<div class="spw-review"><div class="spw-review-card"><div class="spw-review-head"><div class="spw-review-title"><div class="spw-review-icon"><i class="zc-li-outline files-search"></i></div><div><h4>Review Sales Plan</h4><p>Check totals and status before moving to the final confirmation. Use Back if demand or product split needs correction.</p></div></div><span class="zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border <%=statusBadgeClass%>"><i class="zc-li-outline <%=statusIcon%>"></i><span><%=planStatus%></span></span></div><div class="spw-review-section"><h5 class="spw-review-section-title"><i class="zc-li-outline business-agenda"></i>Plan Context</h5><div class="spw-review-grid"><div class="spw-kv"><label>Sales Plan</label><span><%=planNumber%></span></div><div class="spw-kv"><label>Budget Cycle</label><span><%=planCycle%></span></div><div class="spw-kv"><label>Owner</label><span><%=planOwner%></span></div><div class="spw-kv"><label>Revision</label><span><%=planRevision%></span></div></div></div><div class="spw-review-section"><h5 class="spw-review-section-title"><i class="zc-li-outline business-chart-bar-32"></i>Demand and Split</h5><div class="spw-review-grid"><div class="spw-kv"><label>Grade Lines</label><span><%=gradeCount%></span></div><div class="spw-kv"><label>Product Lines</label><span><%=productCount%></span></div><div class="spw-kv"><label>Grade Target MT</label><span><%=gradeTotal%></span></div><div class="spw-kv"><label>Product Required MT</label><span><%=productTotal%></span></div><div class="spw-kv"><label>Variance MT</label><span><%=varianceValue%></span></div><div class="spw-kv"><label>Current Stage</label><span><%=selectedStep + 1%> of <%=stepLabels.size()%></span></div></div></div><div class="spw-review-actions"><div class="spw-note"><i class="zc-li-outline ui-2-time"></i><span>Final submission is handled through existing Sales Plan workflow actions and approval queues.</span></div><div class="zcs-flex zcs-align-items-center zcs-gap-8"><a class="zcs-button zcs-primary-outline-button zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body" href="#Page:Sales_Plan_Wizard?Sales_Plan_ID=<%=planId%>&checkNum=2"><i class="zcs-button-icon zc-li-outline arrows-1-minimal-left"></i><span>Back</span></a><a class="zcs-button zcs-primary-button zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body" href="#Page:Sales_Plan_Wizard?Sales_Plan_ID=<%=planId%>&checkNum=4"><i class="zcs-button-icon zc-li-outline ui-1-check-circle-08"></i><span>Continue</span></a></div></div></div></div>
+<%
+	}
+	else
+	{
+%>
+					<div class="spw-form-wrap"><div class="spw-form-card"><div class="spw-form-embed" elName="zc-component" zc-component="form" appLinkName="thisapp" zc-applinkname="thisapp" zc-linkname="Sales_Plans" linkName="Sales_Plans" formLinkName="Sales_Plans" params="<%=formParams%>" zc_MobileView="inline" zc-height="700px"></div></div></div>
+<%
+	}
+%>
+				</div>
+			</div>
+		</section>
+	</div>
+</div>

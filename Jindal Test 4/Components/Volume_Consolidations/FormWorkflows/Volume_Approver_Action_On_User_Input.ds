@@ -1,29 +1,49 @@
 Volume_Approver_Action_On_User_Input as "Volume Approver Action On User Input"
 {
 
-				type =  form
+				type = form
 				form = Volume_Consolidations
-
 				record event = on add or edit
 
 				on user input of Approver_Action
 				{
-					actions 
+					actions
 					{
 						custom deluge script
 						(
-											if(input.Approver_Action == "Request Revision")
-										{
-											show SCM_Decision;
-											show SCM_Comments;
-											show Approval_Remarks;
-											enable Approval_Remarks;
-										}
-										else
-										{
 											hide Approval_Remarks;
 											disable Approval_Remarks;
-										}
+											if(input.Approver_Action == "Send Product Mix to Sales")
+											{
+												show Product_Mix_Review;
+												show Product_Mix_Lines_Existing;
+												show SCM_Comments;
+												input.SCM_Decision = "Send Product Mix to Sales";
+											}
+											else if(input.Approver_Action == "Approve Product Mix" || input.Approver_Action == "Request Product Mix Revision")
+											{
+												show Sales_Product_Mix_Decision;
+												show Sales_Product_Mix_Comments;
+											}
+											else if(input.Approver_Action == "Submit Operations Revision" || input.Approver_Action == "Submit Both Revisions")
+											{
+												show Operations_Revision_Decision;
+												show Operations_Revision_Comments;
+												show Approval_Remarks;
+												enable Approval_Remarks;
+											}
+											else if(input.Approver_Action == "Submit Sales Revision" || input.Approver_Action == "Request Revision")
+											{
+												show SCM_Decision;
+												show SCM_Comments;
+												show Approval_Remarks;
+												enable Approval_Remarks;
+											}
+											else if(input.Approver_Action == "Approve")
+											{
+												show SCM_Decision;
+												show SCM_Comments;
+											}
 						)
 					}
 				}

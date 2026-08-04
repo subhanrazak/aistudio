@@ -10,33 +10,7 @@ WF_OP_Return_Production as "Return Production"
 					{
 					on click
 					(
-						oldStatus = input.Status;
-										if(oldStatus == "Submitted to Operations Approval")
-										{
-											input.Status = "Returned by Operations Approval";
-											input.Iteration_Count = ifnull(input.Iteration_Count,0) + 1;
-											remarksText = input.Approval_Remarks;
-											if(remarksText == null || remarksText == "")
-											{
-												remarksText = "Returned from report action. Add detailed remarks on the form if required.";
-											}
-											input.Approver_Action = null;
-											auditId = insert into Approval_Audit_Log
-											[
-												Budget_Cycle=input.Budget_Cycle
-												Module_Name="Operations Production"
-												Related_Record_ID=input.ID
-												Related_Record_Display="Production Plan " + input.Operations_Production_No
-												Action="Returned"
-												From_Status=oldStatus
-												To_Status="Returned by Operations Approval"
-												Iteration_Number=input.Iteration_Count
-												Actor_Email=zoho.loginuserid
-												Action_On=zoho.currenttime
-												Remarks=remarksText
-												Added_User=zoho.loginuser
-											];
-										}
+						openUrl("#Form:Operations_Production_Plans?recLinkID=" + input.ID + "&viewLinkName=All_Operations_Production_Plans&Approver_Action=Return&zc_LoadIn=dialog","same window");
 					)
 					}
 				}

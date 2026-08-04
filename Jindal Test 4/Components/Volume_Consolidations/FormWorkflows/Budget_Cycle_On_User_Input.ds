@@ -1,0 +1,29 @@
+Budget_Cycle_On_User_Input as "Budget Cycle On User Input"
+{
+
+				type = form
+				form = Volume_Consolidations
+				record event = on add or edit
+
+				on user input of Budget_Cycle
+				{
+					actions
+					{
+						custom deluge script
+						(
+											if(input.Budget_Cycle != null && input.Sales_Plan == null)
+											{
+												approvedSalesPlan = Sales_Plans[Budget_Cycle == input.Budget_Cycle && Status == "Sales Approved"] sort by Sales_Approved_On desc range from 0 to 0;
+												if(approvedSalesPlan.count() > 0)
+												{
+													input.Sales_Plan = approvedSalesPlan.ID;
+												}
+											}
+											input.Product_Mix_Lines_Existing.clear();
+											input.SCM_Review_Lines_Existing.clear();
+						)
+					}
+				}
+
+			
+}

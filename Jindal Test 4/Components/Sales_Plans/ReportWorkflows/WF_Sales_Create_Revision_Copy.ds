@@ -10,28 +10,7 @@ WF_Sales_Create_Revision_Copy as "Create Sales Revision Copy"
 					{
 					on click
 					(
-						oldStatus = input.Status;
-										if(oldStatus == "Revision Requested by SCM" || oldStatus == "Returned by Sales Management")
-										{
-											input.Status = "Revised Draft";
-											input.Iteration_Count = ifnull(input.Iteration_Count,0) + 1;
-											input.Approver_Action = null;
-											auditId = insert into Approval_Audit_Log
-											[
-												Budget_Cycle=input.Budget_Cycle
-												Module_Name="Sales Plans"
-												Related_Record_ID=input.ID
-												Related_Record_Display="Sales Plan " + input.Sales_Plan_No
-												Action="Revision Copy Created"
-												From_Status=oldStatus
-												To_Status="Revised Draft"
-												Iteration_Number=input.Iteration_Count
-												Actor_Email=zoho.loginuserid
-												Action_On=zoho.currenttime
-												Remarks="Revision draft created from report action."
-												Added_User=zoho.loginuser
-											];
-										}
+						openUrl("#Form:Sales_Plans?recLinkID=" + input.ID + "&viewLinkName=All_Sales_Plans&Approver_Action=Create%20Revision%20Copy&zc_LoadIn=dialog","same window");
 					)
 					}
 				}

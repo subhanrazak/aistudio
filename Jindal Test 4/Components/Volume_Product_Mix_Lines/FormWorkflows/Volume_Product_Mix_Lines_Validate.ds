@@ -1,0 +1,34 @@
+Volume_Product_Mix_Lines_Validate as "Volume Product Mix Lines Validate"
+{
+
+				type = form
+				form = Volume_Product_Mix_Lines
+				record event = on add or edit
+
+				on validate
+				{
+					actions
+					{
+						custom deluge script
+						(
+											if(input.Grade != null && input.Product == null)
+											{
+												alert "Product is required when Grade is selected.";
+												cancel submit;
+											}
+											if(input.Product != null && input.Grade == null)
+											{
+												alert "Grade is required when Product is selected.";
+												cancel submit;
+											}
+											if(ifnull(input.Sales_Planned_Tons,0) < 0 || ifnull(input.Proposed_Product_Tons,0) < 0 || ifnull(input.Sales_Approved_Tons,0) < 0 || ifnull(input.Final_Product_Tons,0) < 0)
+											{
+												alert "Product mix tonnage cannot be negative.";
+												cancel submit;
+											}
+						)
+					}
+				}
+
+			
+}

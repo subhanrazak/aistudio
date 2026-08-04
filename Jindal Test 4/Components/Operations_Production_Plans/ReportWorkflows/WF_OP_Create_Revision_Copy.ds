@@ -10,62 +10,7 @@ WF_OP_Create_Revision_Copy as "Create Production Revision Copy"
 					{
 					on click
 					(
-						oldStatus = input.Status;
-										if(oldStatus == "Revision Requested by SCM" || oldStatus == "Returned by Operations Approval")
-										{
-											revisionRows = Collection();
-											for each  productionRow in input.Product_Production_Lines_Existing
-											{
-												newProductionRow = Operations_Production_Plans.Product_Production_Lines_Existing();
-												newProductionRow.Product=productionRow.Product;
-												newProductionRow.Series=productionRow.Series;
-												newProductionRow.Width=productionRow.Width;
-												newProductionRow.Thickness=productionRow.Thickness;
-												newProductionRow.Productivity_MTPH=productionRow.Productivity_MTPH;
-												newProductionRow.Month=productionRow.Month;
-												newProductionRow.Month_Order=productionRow.Month_Order;
-												newProductionRow.Production_Tons=productionRow.Production_Tons;
-												newProductionRow.Remarks=productionRow.Remarks;
-												revisionRows.insert(newProductionRow);
-											}
-											newRevisionId = insert into Operations_Production_Plans
-											[
-												Requested_Financial_Year=input.Requested_Financial_Year
-												Budget_Cycle=input.Budget_Cycle
-												Plant=input.Plant
-												Production_Line=input.Production_Line
-												Linked_Availability_Plan=input.Linked_Availability_Plan
-												Revision_No=ifnull(input.Revision_No,0) + 1
-												Parent_Production_Plan=input.ID
-												Product_Production_Lines_Existing=revisionRows
-												Total_FY_Production_Tons=input.Total_FY_Production_Tons
-												Average_Productivity_MTPH=input.Average_Productivity_MTPH
-												Status="Revised Draft"
-												Iteration_Count=ifnull(input.Iteration_Count,0) + 1
-												Locked=false
-												Owner_Email=zoho.loginuserid
-												Approval_Remarks=input.Approval_Remarks
-												Added_User=zoho.loginuser
-											];
-											input.Status = "Superseded";
-											input.Iteration_Count = ifnull(input.Iteration_Count,0) + 1;
-											input.Approver_Action = null;
-											auditId = insert into Approval_Audit_Log
-											[
-												Budget_Cycle=input.Budget_Cycle
-												Module_Name="Operations Production"
-												Related_Record_ID=input.ID
-												Related_Record_Display="Production Plan " + input.Operations_Production_No
-												Action="Revision Copy Created"
-												From_Status=oldStatus
-												To_Status="Superseded"
-												Iteration_Number=input.Iteration_Count
-												Actor_Email=zoho.loginuserid
-												Action_On=zoho.currenttime
-												Remarks="New revision record ID: " + newRevisionId
-												Added_User=zoho.loginuser
-											];
-										}
+						openUrl("#Form:Operations_Production_Plans?recLinkID=" + input.ID + "&viewLinkName=All_Operations_Production_Plans&Approver_Action=Create%20Revision%20Copy&zc_LoadIn=dialog","same window");
 					)
 					}
 				}

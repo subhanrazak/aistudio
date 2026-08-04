@@ -1,100 +1,115 @@
 Volume_Consolidations_Validate as "Volume Consolidations Validate"
 {
 
-				type =  form
+				type = form
 				form = Volume_Consolidations
-
 				record event = on add or edit
 
 				on validate
 				{
-					actions 
+					actions
 					{
 						custom deluge script
 						(
-											if(input.Locked == true || input.Status == "Locked")
-										{
-											alert "This SCM review is locked and cannot be edited.";
-											cancel submit;
-										}
-										if(input.Budget_Cycle == null && input.Requested_Financial_Year != null)
-										{
-											activeCycle = Budget_Cycles[Financial_Year == input.Requested_Financial_Year && Status != "Completed" && Status != "Closed"] sort by Opened_Date desc range from 0 to 0;
-											if(activeCycle.count() > 0)
+											if(input.Locked == true || input.Status == "Locked" || input.Status == "Final Approved")
 											{
-												input.Budget_Cycle = activeCycle.ID;
-											}
-										}
-										if(input.Sales_Plan != null)
-										{
-											salesPlanRec = Sales_Plans[ID == input.Sales_Plan];
-											if(salesPlanRec.count() == 0 || salesPlanRec.Status != "Sales Approved")
-											{
-												alert "SCM review can start only with a Sales Approved Sales Plan.";
+												alert "This SCM review is locked/final and cannot be edited.";
 												cancel submit;
 											}
-										}
-										if(input.Availability_Plan != null)
-										{
-											availabilityRec = Capacity_TEP_Plans[ID == input.Availability_Plan];
-											if(availabilityRec.count() == 0 || availabilityRec.Status != "Operations Approved")
+											if(input.Budget_Cycle == null && input.Requested_Financial_Year != null)
 											{
-												alert "SCM review can start only with an Operations Approved availability plan.";
+												activeCycle = Budget_Cycles[Financial_Year == input.Requested_Financial_Year && Status != "Completed" && Status != "Closed"] sort by Opened_Date desc range from 0 to 0;
+												if(activeCycle.count() > 0)
+												{
+													input.Budget_Cycle = activeCycle.ID;
+												}
+											}
+											if(input.Consolidation_Scope == null)
+											{
+												input.Consolidation_Scope = "All Plants";
+											}
+											if(input.Sales_Plan != null)
+											{
+												salesPlanRec = Sales_Plans[ID == input.Sales_Plan];
+												if(salesPlanRec.count() == 0 || salesPlanRec.Status != "Sales Approved")
+												{
+													alert "SCM review can start only with a Sales Approved Sales Plan.";
+													cancel submit;
+												}
+											}
+											if(input.Approver_Action in {"Start Review","Send Product Mix to Sales","Approve Product Mix","Approve","Request Revision","Submit to Finance"} && input.Sales_Plan == null)
+											{
+												alert "Sales Plan is required before this consolidation action.";
 												cancel submit;
 											}
-										}
-										if(input.Operations_Production_Plan != null)
-										{
-											productionRec = Operations_Production_Plans[ID == input.Operations_Production_Plan];
-											if(productionRec.count() == 0 || productionRec.Status != "Operations Approved")
+											mixRowCount = 0;
+											unapprovedMixChange = false;
+											for each  mixRow in input.Product_Mix_Lines_Existing
 											{
-												alert "SCM review can start only with an Operations Approved production plan.";
+												mixRowCount = mixRowCount + 1;
+												if(ifnull(mixRow.Sales_Planned_Tons,0) < 0 || ifnull(mixRow.Proposed_Product_Tons,0) < 0 || ifnull(mixRow.Sales_Approved_Tons,0) < 0 || ifnull(mixRow.Final_Product_Tons,0) < 0)
+												{
+													alert "Product mix tonnage cannot be negative.";
+													cancel submit;
+												}
+												if(mixRow.Mix_Status in {"SCM Proposed Change","Sales Revision Requested","Operations Revision Requested"})
+												{
+													unapprovedMixChange = true;
+												}
+												if(ifnull(mixRow.Proposed_Product_Tons,0) != ifnull(mixRow.Sales_Planned_Tons,0) && mixRow.Mix_Status != "Sales Approved" && mixRow.Mix_Status != "Final Approved")
+												{
+													unapprovedMixChange = true;
+												}
+											}
+											if(input.Approver_Action in {"Start Review","Send Product Mix to Sales","Approve Product Mix","Approve"} && mixRowCount == 0)
+											{
+												alert "At least one product mix row is required before review or approval.";
 												cancel submit;
 											}
-										}
-										if(input.Approver_Action == "Start Review" || input.Approver_Action == "Approve" || input.Approver_Action == "Request Revision" || input.Approver_Action == "Submit to Finance" && input.Sales_Plan == null || input.Availability_Plan == null || input.Operations_Production_Plan == null)
-										{
-											alert "Sales, Operations availability, and Operations production plans are all required before SCM action.";
-											cancel submit;
-										}
-										totalShortfall = 0.0;
-										totalCost = 0.0;
-										for each  reviewRow in input.SCM_Review_Lines_Existing
-										{
-											if(ifNull(reviewRow.Sales_Target_Tons,0) < 0 || ifNull(reviewRow.Operations_Production_Tons,0) < 0 || ifNull(reviewRow.BTV_Measured_MT,0) < 0 || ifNull(reviewRow.Required_Raw_Material_MT,0) < 0 || ifNull(reviewRow.Available_Raw_Material_MT,0) < 0 || ifNull(reviewRow.To_Be_Raised_MT,0) < 0 || ifNull(reviewRow.Cost_Forecast,0) < 0)
+											for each  reviewRow in input.SCM_Review_Lines_Existing
 											{
-												alert "SCM review line tonnage and cost values cannot be negative.";
+												if(ifnull(reviewRow.Sales_Target_Tons,0) < 0 || ifnull(reviewRow.Operations_Production_Tons,0) < 0 || ifnull(reviewRow.BTV_Measured_MT,0) < 0 || ifnull(reviewRow.Annual_Available_Hours,0) < 0 || ifnull(reviewRow.Annual_Net_Running_Hours,0) < 0 || ifnull(reviewRow.Equipment_Availability_Percent,0) < 0 || ifnull(reviewRow.Equipment_Utilization_Percent,0) < 0 || ifnull(reviewRow.Required_Raw_Material_MT,0) < 0 || ifnull(reviewRow.Available_Raw_Material_MT,0) < 0 || ifnull(reviewRow.To_Be_Raised_MT,0) < 0 || ifnull(reviewRow.Cost_Forecast,0) < 0)
+												{
+													alert "SCM review line tonnage, availability, and cost values cannot be negative.";
+													cancel submit;
+												}
+												shortfall = ifnull(reviewRow.Required_Raw_Material_MT,0) - ifnull(reviewRow.Available_Raw_Material_MT,0);
+												if(shortfall < 0)
+												{
+													shortfall = 0;
+												}
+												reviewRow.To_Be_Raised_MT=shortfall;
+												if(reviewRow.SCM_Override == true && ifnull(reviewRow.Override_Comments,"").trim() == "")
+												{
+													alert "Override comments are required for every SCM override line.";
+													cancel submit;
+												}
+											}
+											if(input.Sales_Product_Mix_Decision == "Request Product Mix Revision" && ifnull(input.Sales_Product_Mix_Comments,"").trim() == "")
+											{
+												alert "Sales product mix comments are required when requesting a product mix revision.";
 												cancel submit;
 											}
-											shortfall = ifNull(reviewRow.Required_Raw_Material_MT,0) - ifNull(reviewRow.Available_Raw_Material_MT,0);
-											if(shortfall < 0)
+											if(input.Approver_Action == "Submit Operations Revision" && ifnull(input.Operations_Revision_Comments,"").trim() == "")
 											{
-												shortfall = 0;
-											}
-											reviewRow.To_Be_Raised_MT=shortfall;
-											if(reviewRow.SCM_Override == true && reviewRow.Override_Comments == null || reviewRow.Override_Comments == "")
-											{
-												alert "Override comments are required for every SCM override line.";
+												alert "Operations revision comments are required before submitting the operations revision.";
 												cancel submit;
 											}
-											totalShortfall = totalShortfall + shortfall;
-											totalCost = totalCost + ifNull(reviewRow.Cost_Forecast,0);
-										}
-										if(input.SCM_Decision == "Request Sales Revision" || input.SCM_Decision == "Request Operations Revision" || input.SCM_Decision == "Request Sales and Operations Revision" && input.SCM_Comments == null || input.SCM_Comments == "")
-										{
-											alert "SCM comments are required when requesting a revision.";
-											cancel submit;
-										}
-										if(input.Approver_Action == "Approve" && input.SCM_Decision != "Approve")
-										{
-											alert "Set SCM Decision to Approve before approving this SCM review.";
-											cancel submit;
-										}
-										if(input.Approver_Action == "Request Revision" && input.SCM_Decision == null || input.SCM_Decision == "Approve")
-										{
-											alert "Choose which team must revise before selecting Request Revision.";
-											cancel submit;
-										}
+											if(input.Approver_Action == "Request Revision" && input.SCM_Decision in {"Request Sales Revision","Request Operations Revision","Request Sales and Operations Revision"} && ifnull(input.SCM_Comments,"").trim() == "" && ifnull(input.Approval_Remarks,"").trim() == "")
+											{
+												alert "SCM comments or approval remarks are required when requesting a revision.";
+												cancel submit;
+											}
+											if(input.Approver_Action == "Approve" && input.SCM_Decision != "Approve" && input.SCM_Decision != "Final Approve")
+											{
+												alert "Set SCM Decision to Approve or Final Approve before approving this SCM review.";
+												cancel submit;
+											}
+											if(input.Approver_Action == "Approve" && unapprovedMixChange == true)
+											{
+												alert "Product mix changes must be approved by Sales before SCM final approval.";
+												cancel submit;
+											}
 						)
 					}
 				}

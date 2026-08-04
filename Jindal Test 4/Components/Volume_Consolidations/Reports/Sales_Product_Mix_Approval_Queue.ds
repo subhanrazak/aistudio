@@ -1,0 +1,46 @@
+list Sales_Product_Mix_Approval_Queue
+{
+
+			displayName = "Sales Product Mix Approval Queue"
+			show all rows from Volume_Consolidations  [Status == "Product Mix Pending Sales Approval" || Status == "Product Mix Sales Revision Pending"]  
+			(
+				Consolidation_No
+				Requested_Financial_Year
+				Budget_Cycle
+				Consolidation_Scope
+				Sales_Plan
+				Product_Mix_Lines_Existing
+				Sales_Product_Mix_Decision
+				Sales_Product_Mix_Comments
+				SCM_Comments
+				Latest_Revision_No
+				Status
+				Owner_Email
+				custom action "Approve Product Mix"
+				(
+	  			workflow = WF_Volume_Approve_Product_Mix
+				show action for each record = true
+				column header = "Approve Product Mix"
+				success message = "Opening product mix approval form."
+				condition = (Status == "Product Mix Pending Sales Approval" || Status == "Product Mix Sales Revision Pending")
+				)
+				custom action "Request Product Mix Revision"
+				(
+	  			workflow = WF_Volume_Request_Product_Mix_Revision
+				show action for each record = true
+				column header = "Request Product Mix Revision"
+				success message = "Opening product mix revision form."
+				condition = (Status == "Product Mix Pending Sales Approval" || Status == "Product Mix Sales Revision Pending")
+				)
+			)
+			filters
+			(
+				Consolidation_Scope
+				Status
+				Owner_Email
+			)
+			sort by
+			(
+				Consolidation_No descending
+			)
+}

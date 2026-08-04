@@ -1,0 +1,26 @@
+Revision_History_Lines_Validate as "Revision History Lines Validate"
+{
+
+				type = form
+				form = Revision_History_Lines
+				record event = on add or edit
+
+				on validate
+				{
+					actions
+					{
+						custom deluge script
+						(
+											requiresComment = input.Revision_Status in {"Requested","Sales Submitted","Operations Submitted","Both Submitted","Rejected"};
+											commentText = ifnull(input.Comments,"").trim() + ifnull(input.Sales_Request_Comments,"").trim() + ifnull(input.Operations_Request_Comments,"").trim() + ifnull(input.Sales_Response_Comments,"").trim() + ifnull(input.Operations_Response_Comments,"").trim() + ifnull(input.SCM_Review_Comments,"").trim();
+											if(requiresComment && commentText == "")
+											{
+												alert "Comments are required for requested, submitted, or rejected revision history entries.";
+												cancel submit;
+											}
+						)
+					}
+				}
+
+			
+}

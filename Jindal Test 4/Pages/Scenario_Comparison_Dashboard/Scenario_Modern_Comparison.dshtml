@@ -1,0 +1,297 @@
+<%
+	selectedCycle = Budget_Cycles[Status != "Completed" && Status != "Closed" && Status != "Locked" && Status != "Approved Final" && Baseline_Locked != true && Approved_Scenario != true] sort by Opened_Date desc;
+	cycleSource = "Latest active/open cycle";
+	if(input.Budget_Cycle_ID != null && input.Budget_Cycle_ID > 0)
+	{
+		requestedCycle = Budget_Cycles[ID == input.Budget_Cycle_ID];
+		if(requestedCycle.count() > 0)
+		{
+			selectedCycle = requestedCycle;
+			cycleSource = "Selected cycle";
+		}
+	}
+	hasCycle = selectedCycle.count() > 0;
+	cycleCode = "No cycle";
+	cycleName = "No active/open Budget Cycle available";
+	cycleStatus = "No Data";
+	cycleScenario = "-";
+	fyName = "-";
+	comparisonUrl = "#Page:Scenario_Comparison_Dashboard";
+	if(hasCycle)
+	{
+		cycleCode = ifNull(selectedCycle.Cycle_Code,"-");
+		cycleName = ifNull(selectedCycle.Cycle_Name,"-");
+		cycleStatus = ifNull(selectedCycle.Status,"-");
+		cycleScenario = ifNull(selectedCycle.Scenario,"-");
+		comparisonUrl = "#Page:Scenario_Comparison_Dashboard?Budget_Cycle_ID=" + selectedCycle.ID;
+		fyRecords = Financial_Years[ID == selectedCycle.Financial_Year];
+		if(fyRecords.count() > 0)
+		{
+			fyName = ifNull(fyRecords.Year_Name,"-");
+		}
+	}
+	volumeCycle = Budget_Cycles[ID == 0];
+	ebitdaCycle = Budget_Cycles[ID == 0];
+	volumeFinancial = Financial_Consolidations[ID == 0];
+	ebitdaFinancial = Financial_Consolidations[ID == 0];
+	if(hasCycle)
+	{
+		scenarioSetCode = ifNull(selectedCycle.Scenario_Set_Code,"");
+		if(scenarioSetCode != "")
+		{
+			volumeCycle = Budget_Cycles[Scenario_Set_Code == scenarioSetCode && Scenario == "Volume Maximising"];
+			ebitdaCycle = Budget_Cycles[Scenario_Set_Code == scenarioSetCode && Scenario == "EBITDA Maximising"];
+		}
+		if(volumeCycle.count() == 0 && selectedCycle.Scenario == "Volume Maximising")
+		{
+			volumeCycle = selectedCycle;
+		}
+		if(ebitdaCycle.count() == 0 && selectedCycle.Scenario == "EBITDA Maximising")
+		{
+			ebitdaCycle = selectedCycle;
+		}
+		if(volumeCycle.count() > 0)
+		{
+			volumeFinancial = Financial_Consolidations[Budget_Cycle == volumeCycle.ID && Scenario == "Volume Maximising"] sort by Financial_Consolidation_No desc;
+		}
+		if(ebitdaCycle.count() > 0)
+		{
+			ebitdaFinancial = Financial_Consolidations[Budget_Cycle == ebitdaCycle.ID && Scenario == "EBITDA Maximising"] sort by Financial_Consolidation_No desc;
+		}
+	}
+	vVolume = ifNull(volumeFinancial.Volume_MT,0);
+	vRevenue = ifNull(volumeFinancial.Revenue,0);
+	vRaw = ifNull(volumeFinancial.Raw_Material_Cost,0);
+	vCons = ifNull(volumeFinancial.Consumables_Cost,0);
+	vTotal = ifNull(volumeFinancial.Total_Cost,0);
+	vEbitda = ifNull(volumeFinancial.EBITDA,0);
+	vMargin = ifNull(volumeFinancial.EBITDA_Margin_Percent,0);
+	eVolume = ifNull(ebitdaFinancial.Volume_MT,0);
+	eRevenue = ifNull(ebitdaFinancial.Revenue,0);
+	eRaw = ifNull(ebitdaFinancial.Raw_Material_Cost,0);
+	eCons = ifNull(ebitdaFinancial.Consumables_Cost,0);
+	eTotal = ifNull(ebitdaFinancial.Total_Cost,0);
+	eEbitda = ifNull(ebitdaFinancial.EBITDA,0);
+	eMargin = ifNull(ebitdaFinancial.EBITDA_Margin_Percent,0);
+	volVar = eVolume - vVolume;
+	revVar = eRevenue - vRevenue;
+	rawVar = eRaw - vRaw;
+	consVar = eCons - vCons;
+	totalVar = eTotal - vTotal;
+	ebitdaVar = eEbitda - vEbitda;
+	marginVar = eMargin - vMargin;
+	volWidth = 0;
+	if(vVolume != 0)
+	{
+		volWidth = volVar / vVolume * 100;
+	}
+	else if(eVolume != 0)
+	{
+		volWidth = 100;
+	}
+	if(volWidth < 0)
+	{
+		volWidth = volWidth * -1;
+	}
+	if(volWidth > 100)
+	{
+		volWidth = 100;
+	}
+	if(volWidth > 0 && volWidth < 4)
+	{
+		volWidth = 4;
+	}
+	revWidth = 0;
+	if(vRevenue != 0)
+	{
+		revWidth = revVar / vRevenue * 100;
+	}
+	else if(eRevenue != 0)
+	{
+		revWidth = 100;
+	}
+	if(revWidth < 0)
+	{
+		revWidth = revWidth * -1;
+	}
+	if(revWidth > 100)
+	{
+		revWidth = 100;
+	}
+	if(revWidth > 0 && revWidth < 4)
+	{
+		revWidth = 4;
+	}
+	ebitdaWidth = 0;
+	if(vEbitda != 0)
+	{
+		ebitdaWidth = ebitdaVar / vEbitda * 100;
+	}
+	else if(eEbitda != 0)
+	{
+		ebitdaWidth = 100;
+	}
+	if(ebitdaWidth < 0)
+	{
+		ebitdaWidth = ebitdaWidth * -1;
+	}
+	if(ebitdaWidth > 100)
+	{
+		ebitdaWidth = 100;
+	}
+	if(ebitdaWidth > 0 && ebitdaWidth < 4)
+	{
+		ebitdaWidth = 4;
+	}
+	currentDecision = "Pending";
+	if(ifNull(volumeFinancial.Management_Decision,"Pending") != "Pending")
+	{
+		currentDecision = ifNull(volumeFinancial.Management_Decision,"Pending");
+	}
+	if(ifNull(ebitdaFinancial.Management_Decision,"Pending") != "Pending")
+	{
+		currentDecision = ifNull(ebitdaFinancial.Management_Decision,"Pending");
+	}
+	decisionTone = "warn";
+	if(currentDecision.contains("Selected"))
+	{
+		decisionTone = "good";
+	}
+	if(currentDecision == "Rejected")
+	{
+		decisionTone = "bad";
+	}
+	consolidations = Volume_Consolidations[ID == 0];
+	if(hasCycle)
+	{
+		consolidations = Volume_Consolidations[Budget_Cycle == selectedCycle.ID] sort by Consolidation_No desc range from 0 to 5;
+	}
+	volumeStatus = ifNull(volumeFinancial.Status,"Not Created");
+	ebitdaStatus = ifNull(ebitdaFinancial.Status,"Not Created");
+%>
+<style>
+.scx-wrap{--scx-bg:#f5f7fb;--scx-card:#ffffff;--scx-line:#e6eaf2;--scx-text:#162033;--scx-muted:#697386;--scx-brand:var(--zcs_brand_color,#2563eb);--scx-good:#16a34a;--scx-warn:#d97706;--scx-bad:#dc2626;--scx-info:#0891b2;font-family:var(--zc-page-font-family,Inter,Arial,sans-serif);background:radial-gradient(circle at top left,rgba(37,99,235,.14),transparent 28%),linear-gradient(180deg,#f7f9fd 0%,#eef2f7 100%);min-height:calc(100vh - 18px);padding:14px;box-sizing:border-box;color:var(--scx-text)}
+.scx-shell{max-width:1500px;margin:0 auto;display:grid;gap:12px}.scx-hero{background:linear-gradient(135deg,#0f172a 0%,#1d4ed8 58%,#0891b2 100%);border-radius:22px;color:#fff;padding:18px 20px;display:grid;grid-template-columns:1fr auto;gap:16px;align-items:center;box-shadow:0 18px 45px rgba(15,23,42,.18);overflow:hidden;position:relative}.scx-hero:after{content:"";position:absolute;right:-70px;top:-80px;width:240px;height:240px;border-radius:999px;background:rgba(255,255,255,.14)}.scx-title{position:relative;z-index:1}.scx-eyebrow{display:inline-flex;align-items:center;gap:7px;padding:5px 10px;border:1px solid rgba(255,255,255,.28);border-radius:999px;background:rgba(255,255,255,.12);font-size:12px;letter-spacing:.02em}.scx-title h1{font-size:24px;line-height:1.12;margin:10px 0 6px}.scx-title p{margin:0;color:rgba(255,255,255,.82);font-size:13px}.scx-actions{position:relative;z-index:1;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}.scx-btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;text-decoration:none;border-radius:12px;padding:9px 12px;font-size:13px;font-weight:700;border:1px solid rgba(255,255,255,.36);color:#fff;background:rgba(255,255,255,.12);backdrop-filter:blur(8px);white-space:nowrap}.scx-btn.primary{background:#fff;color:#1d4ed8;border-color:#fff}.scx-board{display:grid;grid-template-columns:1.15fr .85fr;gap:12px;align-items:stretch}.scx-card{background:rgba(255,255,255,.94);border:1px solid var(--scx-line);border-radius:18px;box-shadow:0 12px 30px rgba(15,23,42,.06);overflow:hidden}.scx-pad{padding:15px}.scx-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.scx-kpi{padding:13px;border-radius:16px;background:#fff;border:1px solid var(--scx-line);display:grid;gap:6px;min-height:88px}.scx-kpi .top{display:flex;align-items:center;justify-content:space-between;gap:8px}.scx-ico{width:34px;height:34px;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;background:rgba(37,99,235,.1);color:var(--scx-brand);font-size:17px}.scx-label{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--scx-muted);font-weight:800}.scx-value{font-size:21px;line-height:1;font-weight:850;color:var(--scx-text);word-break:break-word}.scx-sub{font-size:12px;color:var(--scx-muted);line-height:1.35}.scx-scenarios{display:grid;grid-template-columns:1fr 1fr;gap:12px}.scx-scenario{border-radius:18px;border:1px solid var(--scx-line);background:#fff;overflow:hidden}.scx-scenario-head{padding:13px 14px;border-bottom:1px solid var(--scx-line);display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.scx-scenario h2{margin:0;font-size:16px}.scx-pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 9px;font-size:11px;font-weight:800;border:1px solid var(--scx-line);background:#f8fafc;color:var(--scx-muted);white-space:nowrap}.scx-pill.good{color:var(--scx-good);background:#ecfdf5;border-color:#bbf7d0}.scx-pill.warn{color:var(--scx-warn);background:#fff7ed;border-color:#fed7aa}.scx-pill.bad{color:var(--scx-bad);background:#fef2f2;border-color:#fecaca}.scx-metrics{padding:12px 14px;display:grid;gap:9px}.scx-line{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;font-size:13px}.scx-line span{color:var(--scx-muted)}.scx-line strong{font-size:13px}.scx-accent{height:4px;background:linear-gradient(90deg,var(--scx-brand),#06b6d4)}.scx-compare{display:grid;gap:10px}.scx-variance{display:grid;grid-template-columns:130px 1fr 110px;gap:10px;align-items:center;padding:9px 0;border-top:1px solid var(--scx-line)}.scx-variance:first-child{border-top:0}.scx-track{height:9px;background:#eef2f7;border-radius:999px;overflow:hidden}.scx-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--scx-brand),#06b6d4);min-width:0}.scx-fill.good{background:linear-gradient(90deg,#16a34a,#22c55e)}.scx-fill.bad{background:linear-gradient(90deg,#dc2626,#f97316)}.scx-diff{text-align:right;font-weight:850}.scx-bottom{display:grid;grid-template-columns:1.1fr .9fr;gap:12px}.scx-section-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px}.scx-section-head h3{margin:0;font-size:16px}.scx-section-head p{margin:4px 0 0;color:var(--scx-muted);font-size:12px}.scx-table-wrap{max-height:245px;overflow:auto;border:1px solid var(--scx-line);border-radius:14px}.scx-table{width:100%;border-collapse:separate;border-spacing:0;background:#fff}.scx-table th{position:sticky;top:0;background:#f8fafc;color:#334155;font-size:11px;text-transform:uppercase;letter-spacing:.06em;text-align:left;padding:10px;border-bottom:1px solid var(--scx-line);z-index:1}.scx-table td{padding:10px;border-bottom:1px solid #eef2f7;font-size:12px;vertical-align:top}.scx-table tr:last-child td{border-bottom:0}.scx-status{display:inline-flex;border-radius:999px;padding:4px 8px;font-size:11px;font-weight:800;background:#f1f5f9;color:#475569}.scx-status.good{background:#ecfdf5;color:#15803d}.scx-status.warn{background:#fff7ed;color:#c2410c}.scx-status.info{background:#ecfeff;color:#0e7490}.scx-decision-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.scx-decision{padding:13px;border:1px solid var(--scx-line);border-radius:16px;background:linear-gradient(180deg,#fff,#f8fafc)}.scx-decision strong{display:block;font-size:16px;margin-top:5px}.scx-flow{display:flex;gap:5px;flex-wrap:wrap;margin-top:10px}.scx-step{font-size:10px;border-radius:999px;padding:4px 7px;background:#eef2f7;color:#64748b}.scx-step.active{background:#dbeafe;color:#1d4ed8;font-weight:800}.scx-note{display:flex;gap:10px;align-items:flex-start;padding:12px;border-radius:16px;background:#f8fafc;border:1px solid var(--scx-line);font-size:12px;color:var(--scx-muted);line-height:1.45}.scx-note i{color:var(--scx-brand);font-size:18px;margin-top:1px}.scx-empty{padding:24px;text-align:center;color:var(--scx-muted)}@media(max-width:1180px){.scx-board,.scx-bottom{grid-template-columns:1fr}.scx-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:760px){.scx-hero{grid-template-columns:1fr}.scx-actions{justify-content:flex-start}.scx-scenarios,.scx-decision-grid,.scx-kpis{grid-template-columns:1fr}.scx-variance{grid-template-columns:1fr}.scx-diff{text-align:left}}
+</style>
+<div class="scx-wrap">
+	<div class="scx-shell">
+		<div class="scx-hero">
+			<div class="scx-title">
+				<span class="scx-eyebrow"><i class="zc-li-outline business-chart-pie-36"></i> <%=cycleSource%></span>
+				<h1>Scenario comparison command center</h1>
+				<p><%=cycleName%> | <%=cycleCode%> | FY <%=fyName%> | <%=cycleScenario%> | <%=cycleStatus%></p>
+			</div>
+			<div class="scx-actions">
+				<a class="scx-btn primary" href="<%=comparisonUrl%>"><i class="zc-li-outline arrows-1-refresh-69"></i> Refresh view</a>
+				<a class="scx-btn" href="#Report:Scenario_Financial_Summary?zc_LoadIn=dialog"><i class="zc-li-outline business-signature"></i> Financial summary</a>
+				<a class="scx-btn" href="#Report:All_Financial_Consolidations?zc_LoadIn=dialog"><i class="zc-li-outline files-2-folder-15"></i> All consolidations</a>
+			</div>
+		</div>
+<%
+	if(!hasCycle)
+	{
+		%>
+		<div class="scx-card scx-pad scx-empty"><i class="zc-li-outline travel-info" style="font-size:28px;color:var(--scx-brand);"></i><br>No selected cycle was supplied and no active/open Budget Cycle is available.</div>
+<%
+	}
+	else
+	{
+		%>
+		<div class="scx-kpis">
+			<div class="scx-kpi"><div class="top"><span class="scx-label">Decision</span><span class="scx-ico"><i class="zc-li-outline ui-1-check-circle-08"></i></span></div><div class="scx-value"><%=currentDecision%></div><div class="scx-sub">Current management outcome</div></div>
+			<div class="scx-kpi"><div class="top"><span class="scx-label">Volume diff</span><span class="scx-ico"><i class="zc-li-outline arrows-4-stre-up"></i></span></div><div class="scx-value"><%=volVar%></div><div class="scx-sub">EBITDA scenario minus volume scenario</div></div>
+			<div class="scx-kpi"><div class="top"><span class="scx-label">EBITDA diff</span><span class="scx-ico"><i class="zc-li-outline business-money-time"></i></span></div><div class="scx-value">INR <%=ebitdaVar%></div><div class="scx-sub">Financial upside or downside</div></div>
+			<div class="scx-kpi"><div class="top"><span class="scx-label">Margin diff</span><span class="scx-ico"><i class="zc-li-outline business-chart-bar-32"></i></span></div><div class="scx-value"><%=marginVar%> pts</div><div class="scx-sub">EBITDA margin percentage points</div></div>
+		</div>
+		<div class="scx-board">
+			<div class="scx-card scx-pad">
+				<div class="scx-scenarios">
+					<div class="scx-scenario">
+						<div class="scx-accent"></div>
+						<div class="scx-scenario-head"><div><h2>Volume Maximising</h2><div class="scx-sub"><%=ifNull(volumeCycle.Cycle_Code,"No cycle")%></div></div><span class="scx-pill"><%=volumeStatus%></span></div>
+						<div class="scx-metrics">
+							<div class="scx-line"><span>Volume MT</span><strong><%=vVolume%></strong></div>
+							<div class="scx-line"><span>Revenue</span><strong>INR <%=vRevenue%></strong></div>
+							<div class="scx-line"><span>Raw material</span><strong>INR <%=vRaw%></strong></div>
+							<div class="scx-line"><span>Consumables</span><strong>INR <%=vCons%></strong></div>
+							<div class="scx-line"><span>Total cost</span><strong>INR <%=vTotal%></strong></div>
+							<div class="scx-line"><span>EBITDA</span><strong>INR <%=vEbitda%></strong></div>
+							<div class="scx-line"><span>EBITDA margin</span><strong><%=vMargin%>%</strong></div>
+						</div>
+					</div>
+					<div class="scx-scenario">
+						<div class="scx-accent" style="background:linear-gradient(90deg,#16a34a,#06b6d4);"></div>
+						<div class="scx-scenario-head"><div><h2>EBITDA Maximising</h2><div class="scx-sub"><%=ifNull(ebitdaCycle.Cycle_Code,"No cycle")%></div></div><span class="scx-pill good"><%=ebitdaStatus%></span></div>
+						<div class="scx-metrics">
+							<div class="scx-line"><span>Volume MT</span><strong><%=eVolume%></strong></div>
+							<div class="scx-line"><span>Revenue</span><strong>INR <%=eRevenue%></strong></div>
+							<div class="scx-line"><span>Raw material</span><strong>INR <%=eRaw%></strong></div>
+							<div class="scx-line"><span>Consumables</span><strong>INR <%=eCons%></strong></div>
+							<div class="scx-line"><span>Total cost</span><strong>INR <%=eTotal%></strong></div>
+							<div class="scx-line"><span>EBITDA</span><strong>INR <%=eEbitda%></strong></div>
+							<div class="scx-line"><span>EBITDA margin</span><strong><%=eMargin%>%</strong></div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="scx-card scx-pad">
+				<div class="scx-section-head"><div><h3>Variance focus</h3><p>Compare scenario difference at a glance.</p></div><span class="scx-pill <%=decisionTone%>"><%=currentDecision%></span></div>
+				<div class="scx-compare">
+					<div class="scx-variance"><div><strong>Volume</strong><div class="scx-sub"><%=vVolume%> to <%=eVolume%></div></div><div class="scx-track"><div class="scx-fill" style="width:<%=volWidth%>%;"></div></div><div class="scx-diff"><%=volVar%></div></div>
+					<div class="scx-variance"><div><strong>Revenue</strong><div class="scx-sub">INR <%=vRevenue%> to <%=eRevenue%></div></div><div class="scx-track"><div class="scx-fill good" style="width:<%=revWidth%>%;"></div></div><div class="scx-diff">INR <%=revVar%></div></div>
+					<div class="scx-variance"><div><strong>EBITDA</strong><div class="scx-sub">INR <%=vEbitda%> to <%=eEbitda%></div></div><div class="scx-track"><div class="scx-fill good" style="width:<%=ebitdaWidth%>%;"></div></div><div class="scx-diff">INR <%=ebitdaVar%></div></div>
+					<div class="scx-variance"><div><strong>Cost movement</strong><div class="scx-sub">Raw, consumables, total</div></div><div class="scx-sub">Raw <%=rawVar%> | Cons <%=consVar%> | Total <%=totalVar%></div><div class="scx-diff"><%=marginVar%> pts</div></div>
+				</div>
+			</div>
+		</div>
+		<div class="scx-bottom">
+			<div class="scx-card scx-pad">
+				<div class="scx-section-head"><div><h3>SCM consolidation summary</h3><p>Latest all-plant consolidation records linked to this cycle.</p></div><a class="scx-btn" style="color:var(--scx-brand);border-color:var(--scx-line);background:#fff;" href="#Report:All_Volume_Consolidations?zc_LoadIn=dialog"><i class="zc-li-outline arrows-1-tail-right"></i> Open report</a></div>
+				<div class="scx-table-wrap"><table class="scx-table"><thead><tr><th>Consolidation</th><th>FY</th><th>Plant</th><th>Status</th><th>Decision</th><th>Revision</th></tr></thead><tbody>
+<%
+		if(consolidations.count() == 0)
+		{
+			%>
+				<tr><td colspan="6" class="scx-empty">No SCM consolidations found for this cycle.</td></tr>
+<%
+		}
+		else
+		{
+			for each rec in consolidations
+			{
+				rowTone = "";
+				if(rec.Status == "SCM Approved" || rec.Status == "Final Approved" || rec.Status == "Submitted to Finance" || rec.Status == "Locked")
+				{
+					rowTone = "good";
+				}
+				else if(rec.Status == "Under SCM Review" || rec.Status == "Returned to SCM Review")
+				{
+					rowTone = "info";
+				}
+				else if(rec.Status.contains("Pending") || rec.Status.contains("Revision"))
+				{
+					rowTone = "warn";
+				}
+				%>
+				<tr><td><strong><%=rec.Consolidation_No%></strong></td><td><%=rec.Requested_Financial_Year.Year_Name%></td><td><%=rec.Plant.Plant_Name%></td><td><span class="scx-status <%=rowTone%>"><%=rec.Status%></span></td><td><%=ifNull(rec.SCM_Decision,"-")%></td><td><%=ifNull(rec.Latest_Revision_No,0)%></td></tr>
+<%
+			}
+		}
+		%>
+				</tbody></table></div>
+			</div>
+			<div class="scx-card scx-pad">
+				<div class="scx-section-head"><div><h3>Management decision</h3><p>Decision state and drill-down actions.</p></div><span class="scx-pill <%=decisionTone%>"><%=currentDecision%></span></div>
+				<div class="scx-decision-grid">
+					<div class="scx-decision"><span class="scx-label">Volume decision</span><strong><%=ifNull(volumeFinancial.Management_Decision,"Pending")%></strong><div class="scx-sub"><%=volumeStatus%></div><div class="scx-flow"><span class="scx-step active">Draft</span><span class="scx-step active">Submitted</span><span class="scx-step">Approved</span><span class="scx-step">Locked</span></div></div>
+					<div class="scx-decision"><span class="scx-label">EBITDA decision</span><strong><%=ifNull(ebitdaFinancial.Management_Decision,"Pending")%></strong><div class="scx-sub"><%=ebitdaStatus%></div><div class="scx-flow"><span class="scx-step active">Draft</span><span class="scx-step active">Submitted</span><span class="scx-step">Approved</span><span class="scx-step">Locked</span></div></div>
+				</div>
+				<div class="scx-note" style="margin-top:10px;"><i class="zc-li-outline travel-info"></i><div>Use the financial summary to verify EBITDA, margin, cost movement and consolidation readiness before marking a final management decision.</div></div>
+				<div class="scx-actions" style="justify-content:flex-start;margin-top:10px;"><a class="scx-btn" style="color:var(--scx-brand);border-color:var(--scx-line);background:#fff;" href="#Report:Approved_Final_Budgets?zc_LoadIn=dialog"><i class="zc-li-outline ui-1-check-circle-08"></i> Final budgets</a><a class="scx-btn" style="color:var(--scx-brand);border-color:var(--scx-line);background:#fff;" href="#Report:Scenario_Financial_Summary?zc_LoadIn=dialog"><i class="zc-li-outline business-signature"></i> Review summary</a></div>
+			</div>
+		</div>
+<%
+	}
+%>
+	</div>
+</div>

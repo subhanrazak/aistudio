@@ -10,33 +10,7 @@ WF_Finance_Return_Consolidation as "Return Consolidation"
 					{
 					on click
 					(
-						oldStatus = input.Status;
-										if(oldStatus == "Submitted to Management")
-										{
-											input.Status = "Returned by Management";
-											input.Iteration_Count = ifnull(input.Iteration_Count,0) + 1;
-											remarksText = input.Approval_Remarks;
-											if(remarksText == null || remarksText == "")
-											{
-												remarksText = "Returned from report action. Add detailed remarks on the form if required.";
-											}
-											input.Approver_Action = null;
-											auditId = insert into Approval_Audit_Log
-											[
-												Budget_Cycle=input.Budget_Cycle
-												Module_Name="Financial Consolidation"
-												Related_Record_ID=input.ID
-												Related_Record_Display="Financial Consolidation " + input.Financial_Consolidation_No
-												Action="Returned"
-												From_Status=oldStatus
-												To_Status="Returned by Management"
-												Iteration_Number=input.Iteration_Count
-												Actor_Email=zoho.loginuserid
-												Action_On=zoho.currenttime
-												Remarks=remarksText
-												Added_User=zoho.loginuser
-											];
-										}
+						openUrl("#Form:Financial_Consolidations?recLinkID=" + input.ID + "&viewLinkName=All_Financial_Consolidations&Approver_Action=Return&zc_LoadIn=dialog","same window");
 					)
 					}
 				}

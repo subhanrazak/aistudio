@@ -1,130 +1,220 @@
 Volume_Consolidations_On_Load as "Volume Consolidations On Load"
 {
 
-				type =  form
+				type = form
 				form = Volume_Consolidations
-
 				record event = on add or edit
 
 				on load
 				{
-					actions 
+					actions
 					{
 						custom deluge script
 						(
 											if(input.Owner_Email == null)
-										{
-											input.Owner_Email = zoho.loginuserid;
-										}
-										if(input.Status == null)
-										{
-											input.Status = "Waiting for Sales and Operations Approval";
-										}
-										if(input.Locked == null)
-										{
-											input.Locked = false;
-										}
-										if(input.Iteration_Count == null)
-										{
-											input.Iteration_Count = 0;
-										}
-										if(input.Latest_Revision_No == null)
-										{
-											input.Latest_Revision_No = 0;
-										}
-										if(input.Requested_Financial_Year != null && input.Budget_Cycle == null)
-										{
-											activeCycle = Budget_Cycles[Financial_Year == input.Requested_Financial_Year && Status != "Completed" && Status != "Closed"] sort by Opened_Date desc range from 0 to 0;
-											if(activeCycle.count() > 0)
 											{
-												input.Budget_Cycle = activeCycle.ID;
+												input.Owner_Email = zoho.loginuserid;
 											}
-										}
-										if(input.Budget_Cycle != null && input.Sales_Plan == null)
-										{
-											approvedSalesPlan = Sales_Plans[Budget_Cycle == input.Budget_Cycle && Status == "Sales Approved"] sort by Sales_Approved_On desc range from 0 to 0;
-											if(approvedSalesPlan.count() > 0)
+											if(input.Status == null)
 											{
-												input.Sales_Plan = approvedSalesPlan.ID;
+												input.Status = "Waiting for Sales and Operations Approval";
 											}
-										}
-										if(input.Budget_Cycle != null && input.Availability_Plan == null)
-										{
-											approvedAvailabilityPlan = Capacity_TEP_Plans[Budget_Cycle == input.Budget_Cycle && Status == "Operations Approved"] sort by Operations_Approved_On desc range from 0 to 0;
-											if(approvedAvailabilityPlan.count() > 0)
+											if(input.Locked == null)
 											{
-												input.Availability_Plan = approvedAvailabilityPlan.ID;
-												input.Plant = approvedAvailabilityPlan.Plant;
+												input.Locked = false;
 											}
-										}
-										if(input.Budget_Cycle != null && input.Operations_Production_Plan == null)
-										{
-											approvedProductionPlan = Operations_Production_Plans[Budget_Cycle == input.Budget_Cycle && Status == "Operations Approved"] sort by Operations_Approved_On desc range from 0 to 0;
-											if(approvedProductionPlan.count() > 0)
+											if(input.Action_Open == null)
 											{
-												input.Operations_Production_Plan = approvedProductionPlan.ID;
-												input.Plant = approvedProductionPlan.Plant;
+												input.Action_Open = false;
 											}
-										}
-										hide Approver_Action;
-										hide Approval_Remarks;
-										hide SCM_Decision;
-										hide SCM_Comments;
-										hide Revision_History;
-										hide Revision_History_Lines_Existing;
-										hide Iteration_Count;
-										hide Locked;
-										hide Owner_Email;
-										hide SCM_Approved_By;
-										hide SCM_Approved_On;
-										disable Status;
-										disable Iteration_Count;
-										disable Locked;
-										disable Owner_Email;
-										disable SCM_Approved_By;
-										disable SCM_Approved_On;
-										disable Approval_Remarks;
-										if(input.ID != null && input.Status in {"Waiting for Sales and Operations Approval","Under SCM Review","Revision Requested","Sales Revision Pending","Operations Revision Pending","Both Revisions Pending","SCM Approved","Submitted to Finance"})
-										{
-											show Status;
-											show Iteration_Count;
-											show Locked;
-											show Owner_Email;
-										}
-										if(input.Status == "Under SCM Review")
-										{
-											show SCM_Decision;
-											show SCM_Comments;
-										}
-										if(input.Status == "Revision Requested" || input.Status == "Sales Revision Pending" || input.Status == "Operations Revision Pending" || input.Status == "Both Revisions Pending")
-										{
-											show Revision_History;
-											show Revision_History_Lines_Existing;
-										}
-										if(input.Status == "SCM Approved" || input.Status == "Submitted to Finance")
-										{
-											show SCM_Approved_By;
-											show SCM_Approved_On;
-										}
-										if(input.Approver_Action == "Request Revision" || input.SCM_Decision == "Request Sales Revision" || input.SCM_Decision == "Request Operations Revision" || input.SCM_Decision == "Request Sales and Operations Revision")
-										{
-											show Approval_Remarks;
-											show SCM_Comments;
-											enable Approval_Remarks;
-										}
-										if(input.Locked == true || input.Status == "Locked")
-										{
+											if(input.Iteration_Count == null)
+											{
+												input.Iteration_Count = 0;
+											}
+											if(input.Latest_Revision_No == null)
+											{
+												input.Latest_Revision_No = 0;
+											}
+											if(input.Consolidation_Scope == null)
+											{
+												input.Consolidation_Scope = "All Plants";
+											}
+											if(input.Requested_Financial_Year != null && input.Budget_Cycle == null)
+											{
+												activeCycle = Budget_Cycles[Financial_Year == input.Requested_Financial_Year && Status != "Completed" && Status != "Closed"] sort by Opened_Date desc range from 0 to 0;
+												if(activeCycle.count() > 0)
+												{
+													input.Budget_Cycle = activeCycle.ID;
+												}
+											}
+											if(input.Budget_Cycle != null && input.Sales_Plan == null)
+											{
+												approvedSalesPlan = Sales_Plans[Budget_Cycle == input.Budget_Cycle && Status == "Sales Approved"] sort by Sales_Approved_On desc range from 0 to 0;
+												if(approvedSalesPlan.count() > 0)
+												{
+													input.Sales_Plan = approvedSalesPlan.ID;
+												}
+											}
+											hide Product_Mix_Review;
+											hide Product_Mix_Lines_Existing;
 											hide Approver_Action;
-											disable Budget_Cycle;
-											disable Sales_Plan;
-											disable Availability_Plan;
-											disable Operations_Production_Plan;
-											disable Plant;
-											disable SCM_Decision;
-											disable SCM_Comments;
-											disable Approver_Action;
-											disable Approval_Remarks;
-										}
+											hide Action_Open;
+											hide Approval_Remarks;
+											hide SCM_Decision;
+											hide SCM_Comments;
+											hide Sales_Product_Mix_Decision;
+											hide Sales_Product_Mix_Comments;
+											hide Operations_Revision_Decision;
+											hide Operations_Revision_Comments;
+											hide Revision_History;
+											hide Revision_History_Lines_Existing;
+											hide Iteration_Count;
+											hide Locked;
+											hide Owner_Email;
+											hide Sales_Approved_By;
+											hide Sales_Approved_On;
+											hide Operations_Submitted_By;
+											hide Operations_Submitted_On;
+											hide SCM_Approved_By;
+											hide SCM_Approved_On;
+											disable Status;
+											disable Action_Open;
+											disable Iteration_Count;
+											disable Locked;
+											disable Owner_Email;
+											disable Sales_Approved_By;
+											disable Sales_Approved_On;
+											disable Operations_Submitted_By;
+											disable Operations_Submitted_On;
+											disable SCM_Approved_By;
+											disable SCM_Approved_On;
+											isSalesManager = thisapp.permissions.isUserInProfile("Sales_Management");
+											isOperations = thisapp.permissions.isUserInProfile("Operations_PPC") || thisapp.permissions.isUserInProfile("Plant_Operations");
+											isSCM = thisapp.permissions.isUserInProfile("SCM_Central_PPC") || thisapp.permissions.isUserInProfile("Sourcing_Team");
+											isAdmin = thisapp.permissions.isUserInProfile("System_Administrator") || thisapp.permissions.isUserInProfile("Administrator");
+											if(input.ID != null)
+											{
+												show Status;
+												show Iteration_Count;
+												show Locked;
+												show Owner_Email;
+											}
+											if(input.Status in {"Product Mix Pending Sales Approval","Product Mix Sales Revision Pending","Sales Product Mix Approved","Under SCM Review","Returned to SCM Review","SCM Approved","Final Approved","Submitted to Finance","Locked"})
+											{
+												show Product_Mix_Review;
+												show Product_Mix_Lines_Existing;
+											}
+											if(input.Status in {"Revision Requested","Sales Revision Pending","Operations Revision Pending","Both Revisions Pending","Product Mix Sales Revision Pending","Sales Revision Submitted","Operations Revision Submitted","Both Revisions Submitted","Returned to SCM Review"})
+											{
+												show Revision_History;
+												show Revision_History_Lines_Existing;
+											}
+											if(input.Status in {"SCM Approved","Final Approved","Submitted to Finance","Locked"})
+											{
+												show SCM_Approved_By;
+												show SCM_Approved_On;
+											}
+											if(input.Sales_Approved_By != null)
+											{
+												show Sales_Approved_By;
+												show Sales_Approved_On;
+											}
+											if(input.Operations_Submitted_By != null)
+											{
+												show Operations_Submitted_By;
+												show Operations_Submitted_On;
+											}
+											if(input.Locked == true || input.Status == "Locked" || input.Status == "Final Approved")
+											{
+												disable Requested_Financial_Year;
+												disable Budget_Cycle;
+												disable Consolidation_Scope;
+												disable Sales_Plan;
+												disable Availability_Plan;
+												disable Operations_Production_Plan;
+												disable Plant;
+												disable Scope_Notes;
+												disable SCM_Decision;
+												disable SCM_Comments;
+												disable Sales_Product_Mix_Decision;
+												disable Sales_Product_Mix_Comments;
+												disable Operations_Revision_Decision;
+												disable Operations_Revision_Comments;
+												disable Approver_Action;
+												disable Approval_Remarks;
+											}
+											if(input.Action_Open == true)
+											{
+												hide Requested_Financial_Year;
+												hide Budget_Cycle;
+												hide Consolidation_Scope;
+												hide Sales_Plan;
+												hide Availability_Plan;
+												hide Operations_Production_Plan;
+												hide Plant;
+												hide Scope_Notes;
+												hide Product_Mix_Review;
+												hide Product_Mix_Lines_Existing;
+												hide Revision_History;
+												hide Revision_History_Lines_Existing;
+												hide Status;
+												hide Iteration_Count;
+												hide Locked;
+												hide Owner_Email;
+												show Approver_Action;
+												disable Approver_Action;
+												if(input.Approver_Action == "Approve Product Mix" || input.Approver_Action == "Request Product Mix Revision")
+												{
+													input.Sales_Product_Mix_Decision = input.Approver_Action;
+													show Sales_Product_Mix_Decision;
+													show Sales_Product_Mix_Comments;
+													disable Sales_Product_Mix_Decision;
+												}
+												else if(input.Approver_Action == "Submit Operations Revision" || input.Approver_Action == "Submit Both Revisions")
+												{
+													input.Operations_Revision_Decision = "Submit Operations Revision";
+													show Operations_Revision_Decision;
+													show Operations_Revision_Comments;
+													show Approval_Remarks;
+													disable Operations_Revision_Decision;
+													enable Approval_Remarks;
+												}
+												else if(input.Approver_Action == "Request Revision")
+												{
+													show SCM_Decision;
+													show SCM_Comments;
+													show Approval_Remarks;
+													enable Approval_Remarks;
+												}
+												else if(input.Approver_Action == "Approve")
+												{
+													input.SCM_Decision = "Approve";
+													show SCM_Decision;
+													show SCM_Comments;
+													disable SCM_Decision;
+												}
+												else if(input.Approver_Action == "Start Review" || input.Approver_Action == "Send Product Mix to Sales")
+												{
+													input.SCM_Decision = "Send Product Mix to Sales";
+													show SCM_Comments;
+												}
+												else if(input.Approver_Action == "Submit to Finance" || input.Approver_Action == "Lock")
+												{
+													show Approval_Remarks;
+													enable Approval_Remarks;
+												}
+											}
+											else
+											{
+												hide Approver_Action;
+												hide Approval_Remarks;
+												hide SCM_Decision;
+												hide SCM_Comments;
+												hide Sales_Product_Mix_Decision;
+												hide Sales_Product_Mix_Comments;
+												hide Operations_Revision_Decision;
+												hide Operations_Revision_Comments;
+											}
 						)
 					}
 				}

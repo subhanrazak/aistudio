@@ -1,0 +1,38 @@
+Volume_Product_Mix_Lines_On_Load as "Volume Product Mix Lines On Load"
+{
+
+				type = form
+				form = Volume_Product_Mix_Lines
+				record event = on add or edit
+
+				on load
+				{
+					actions
+					{
+						custom deluge script
+						(
+											if(input.Mix_Status == null)
+											{
+												input.Mix_Status = "Copied from Sales";
+											}
+											if(input.Proposed_Product_Tons == null)
+											{
+												input.Proposed_Product_Tons = ifnull(input.Sales_Planned_Tons,0);
+											}
+											if(input.Final_Product_Tons == null)
+											{
+												if(input.Sales_Approved_Tons != null && input.Sales_Approved_Tons > 0)
+												{
+													input.Final_Product_Tons = input.Sales_Approved_Tons;
+												}
+												else
+												{
+													input.Final_Product_Tons = ifnull(input.Proposed_Product_Tons,0);
+												}
+											}
+						)
+					}
+				}
+
+			
+}

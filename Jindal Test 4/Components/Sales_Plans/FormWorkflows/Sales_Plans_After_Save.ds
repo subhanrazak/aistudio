@@ -12,7 +12,22 @@ Sales_Plans_After_Save as "Sales Plans After Save"
 					{
 						custom deluge script
 						(
-											if(input.Owner_Email == null)
+										wizardSave = false;
+										wizardStep = 0;
+										if(input.From_Page == true)
+										{
+											wizardSave = true;
+											if(input.Show_Value != null && input.Show_Value.trim() != "")
+											{
+												wizardStep = input.Show_Value.toLong();
+											}
+											if(input.Current_Stage == null || input.Current_Stage.toLong() < wizardStep)
+											{
+												input.Current_Stage = wizardStep.toString();
+											}
+											input.From_Page = false;
+										}
+										if(input.Owner_Email == null)
 										{
 											input.Owner_Email = zoho.loginuserid;
 										}
@@ -21,40 +36,43 @@ Sales_Plans_After_Save as "Sales Plans After Save"
 										newStatus = currentStatus;
 										auditAction = "Updated";
 										shouldAudit = false;
-										if(actionValue == "Submit" && currentStatus == "Draft" || currentStatus == "Returned by Sales Management" || currentStatus == "Revision Requested by SCM" || currentStatus == "Revised Draft")
+										if(wizardSave == false)
 										{
-											newStatus = "Submitted to Sales Management";
-											auditAction = "Submitted";
-											shouldAudit = true;
-										}
-										else if(actionValue == "Approve" && currentStatus == "Submitted to Sales Management")
-										{
-											newStatus = "Sales Approved";
-											input.Sales_Approved_By = zoho.loginuserid;
-											input.Sales_Approved_On = zoho.currenttime;
-											auditAction = "Approved";
-											shouldAudit = true;
-										}
-										else if(actionValue == "Return" && currentStatus == "Submitted to Sales Management")
-										{
-											newStatus = "Returned by Sales Management";
-											input.Iteration_Count = ifNull(input.Iteration_Count,0) + 1;
-											auditAction = "Returned";
-											shouldAudit = true;
-										}
-										else if(actionValue == "Create Revision Copy")
-										{
-											newStatus = "Revised Draft";
-											input.Iteration_Count = ifNull(input.Iteration_Count,0) + 1;
-											auditAction = "Revision Copy Created";
-											shouldAudit = true;
-										}
-										else if(actionValue == "Lock")
-										{
-											newStatus = "Locked";
-											input.Locked = true;
-											auditAction = "Locked";
-											shouldAudit = true;
+											if(actionValue == "Submit" && (currentStatus == "Draft" || currentStatus == "Returned by Sales Management" || currentStatus == "Revision Requested by SCM" || currentStatus == "Revised Draft"))
+											{
+												newStatus = "Submitted to Sales Management";
+												auditAction = "Submitted";
+												shouldAudit = true;
+											}
+											else if(actionValue == "Approve" && currentStatus == "Submitted to Sales Management")
+											{
+												newStatus = "Sales Approved";
+												input.Sales_Approved_By = zoho.loginuserid;
+												input.Sales_Approved_On = zoho.currenttime;
+												auditAction = "Approved";
+												shouldAudit = true;
+											}
+											else if(actionValue == "Return" && currentStatus == "Submitted to Sales Management")
+											{
+												newStatus = "Returned by Sales Management";
+												input.Iteration_Count = ifNull(input.Iteration_Count,0) + 1;
+												auditAction = "Returned";
+												shouldAudit = true;
+											}
+											else if(actionValue == "Create Revision Copy")
+											{
+												newStatus = "Revised Draft";
+												input.Iteration_Count = ifNull(input.Iteration_Count,0) + 1;
+												auditAction = "Revision Copy Created";
+												shouldAudit = true;
+											}
+											else if(actionValue == "Lock")
+											{
+												newStatus = "Locked";
+												input.Locked = true;
+												auditAction = "Locked";
+												shouldAudit = true;
+											}
 										}
 										latestAudit = Approval_Audit_Log[Module_Name == "Sales Plans" && Related_Record_ID == input.ID] sort by Action_On desc range from 0 to 0;
 										if(latestAudit.count() == 0)
@@ -110,6 +128,15 @@ Sales_Plans_After_Save as "Sales Plans After Save"
 												}
 											}
 											input.Approver_Action = null;
+										}
+										if(wizardSave == true)
+										{
+											n = wizardStep + 1;
+											if(n > 4)
+											{
+												n = 4;
+											}
+											openUrl("#Page:Sales_Plan_Wizard?Sales_Plan_ID=" + input.ID + "&checkNum=" + n,"same window");
 										}
 						)
 					}

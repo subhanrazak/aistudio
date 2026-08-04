@@ -1,0 +1,41 @@
+Sales_Plan_On_User_Input as "Sales Plan On User Input"
+{
+
+				type = form
+				form = Volume_Consolidations
+				record event = on add or edit
+
+				on user input of Sales_Plan
+				{
+					actions
+					{
+						custom deluge script
+						(
+											input.Product_Mix_Lines_Existing.clear();
+											input.SCM_Review_Lines_Existing.clear();
+											if(input.Sales_Plan != null)
+											{
+												salesPlanRec = Sales_Plans[ID == input.Sales_Plan];
+												if(salesPlanRec.count() > 0)
+												{
+													for each  productRow in salesPlanRec.Product_Split_Lines_Existing
+													{
+														mixRow = Volume_Consolidations.Product_Mix_Lines_Existing();
+														mixRow.Grade=productRow.Grade;
+														mixRow.Product=productRow.Product;
+														mixRow.Series=productRow.Series;
+														mixRow.Sales_Planned_Tons=ifnull(productRow.Required_Tons,0);
+														mixRow.Proposed_Product_Tons=ifnull(productRow.Required_Tons,0);
+														mixRow.Sales_Approved_Tons=0;
+														mixRow.Final_Product_Tons=ifnull(productRow.Required_Tons,0);
+														mixRow.Mix_Status="Copied from Sales";
+														input.Product_Mix_Lines_Existing.insert(mixRow);
+													}
+												}
+											}
+						)
+					}
+				}
+
+			
+}

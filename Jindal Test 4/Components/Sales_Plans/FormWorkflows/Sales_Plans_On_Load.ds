@@ -12,13 +12,17 @@ Sales_Plans_On_Load as "Sales Plans On Load"
 					{
 						custom deluge script
 						(
-											if(input.Owner_Email == null)
+										if(input.Owner_Email == null)
 										{
 											input.Owner_Email = zoho.loginuserid;
 										}
 										if(input.Status == null)
 										{
 											input.Status = "Draft";
+										}
+										if(input.Current_Stage == null)
+										{
+											input.Current_Stage = "0";
 										}
 										if(input.Requested_Financial_Year != null && input.Budget_Cycle == null)
 										{
@@ -28,6 +32,11 @@ Sales_Plans_On_Load as "Sales Plans On Load"
 												input.Budget_Cycle = activeCycle.ID;
 											}
 										}
+										hide Sales_Demand;
+										hide Grade_Demand_Lines_Existing;
+										hide Product_Split;
+										hide Product_Split_Lines_Existing;
+										hide Totals;
 										hide Approval_Status;
 										hide Approver_Action;
 										hide Approval_Remarks;
@@ -36,6 +45,11 @@ Sales_Plans_On_Load as "Sales Plans On Load"
 										hide Owner_Email;
 										hide Sales_Approved_By;
 										hide Sales_Approved_On;
+										hide Wizard_Page_Helper;
+										hide loadIn;
+										hide Current_Stage;
+										hide Show_Value;
+										hide From_Page;
 										disable Budget_Cycle;
 										disable Total_Grade_Target_Tons;
 										disable Total_Product_Required_Tons;
@@ -47,8 +61,44 @@ Sales_Plans_On_Load as "Sales Plans On Load"
 										disable Sales_Approved_By;
 										disable Sales_Approved_On;
 										disable Parent_Sales_Plan;
-										if(input.ID != null && input.Status in {"Draft","Returned by Sales Management","Revision Requested by SCM","Revised Draft","Submitted to Sales Management","Sales Approved"})
+										wizardStep = 4;
+										if(input.From_Page == true && input.Show_Value != null && input.Show_Value.trim() != "")
 										{
+											wizardStep = input.Show_Value.toLong();
+										}
+										if(input.From_Page == true)
+										{
+											if(wizardStep == 0)
+											{
+												show Plan_Context;
+											}
+											else if(wizardStep == 1)
+											{
+												show Sales_Demand;
+												show Grade_Demand_Lines_Existing;
+											}
+											else if(wizardStep == 2)
+											{
+												show Product_Split;
+												show Product_Split_Lines_Existing;
+											}
+											else
+											{
+												show Totals;
+												show Approval_Status;
+												show Status;
+												show Iteration_Count;
+												show Locked;
+												show Owner_Email;
+											}
+										}
+										else if(input.ID != null && input.Status in {"Draft","Returned by Sales Management","Revision Requested by SCM","Revised Draft","Submitted to Sales Management","Sales Approved"})
+										{
+											show Sales_Demand;
+											show Grade_Demand_Lines_Existing;
+											show Product_Split;
+											show Product_Split_Lines_Existing;
+											show Totals;
 											show Approval_Status;
 											show Approver_Action;
 											show Status;

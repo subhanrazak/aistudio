@@ -1,0 +1,34 @@
+SCM_Review_Lines_Validate as "SCM Review Lines Validate"
+{
+
+				type = form
+				form = SCM_Review_Lines
+				record event = on add or edit
+
+				on validate
+				{
+					actions
+					{
+						custom deluge script
+						(
+											if(input.Plant == null)
+											{
+												alert "Plant is required for SCM review lines used in all-plant consolidation.";
+												cancel submit;
+											}
+											if(input.Product_Mix_Source != null && input.Product == null)
+											{
+												alert "Product is required when Product Mix Source is selected.";
+												cancel submit;
+											}
+											if(ifnull(input.Sales_Target_Tons,0) < 0 || ifnull(input.Operations_Production_Tons,0) < 0 || ifnull(input.BTV_Measured_MT,0) < 0 || ifnull(input.Annual_Available_Hours,0) < 0 || ifnull(input.Annual_Net_Running_Hours,0) < 0 || ifnull(input.Equipment_Availability_Percent,0) < 0 || ifnull(input.Equipment_Utilization_Percent,0) < 0 || ifnull(input.Required_Raw_Material_MT,0) < 0 || ifnull(input.Available_Raw_Material_MT,0) < 0 || ifnull(input.To_Be_Raised_MT,0) < 0 || ifnull(input.Cost_Forecast,0) < 0)
+											{
+												alert "SCM review line numeric values cannot be negative.";
+												cancel submit;
+											}
+						)
+					}
+				}
+
+			
+}

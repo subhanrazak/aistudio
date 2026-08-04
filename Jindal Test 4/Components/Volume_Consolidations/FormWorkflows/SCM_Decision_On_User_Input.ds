@@ -1,28 +1,37 @@
 SCM_Decision_On_User_Input as "SCM Decision On User Input"
 {
 
-				type =  form
+				type = form
 				form = Volume_Consolidations
-
 				record event = on add or edit
 
 				on user input of SCM_Decision
 				{
-					actions 
+					actions
 					{
 						custom deluge script
 						(
-											if(input.SCM_Decision == "Request Sales Revision" || input.SCM_Decision == "Request Operations Revision" || input.SCM_Decision == "Request Sales and Operations Revision")
-										{
-											show SCM_Comments;
-											show Approval_Remarks;
-											enable Approval_Remarks;
-										}
-										else
-										{
 											hide Approval_Remarks;
 											disable Approval_Remarks;
-										}
+											if(input.SCM_Decision == "Send Product Mix to Sales")
+											{
+												input.Approver_Action = "Send Product Mix to Sales";
+												show Product_Mix_Review;
+												show Product_Mix_Lines_Existing;
+												show SCM_Comments;
+											}
+											else if(input.SCM_Decision in {"Request Sales Revision","Request Operations Revision","Request Sales and Operations Revision"})
+											{
+												input.Approver_Action = "Request Revision";
+												show SCM_Comments;
+												show Approval_Remarks;
+												enable Approval_Remarks;
+											}
+											else if(input.SCM_Decision == "Approve" || input.SCM_Decision == "Final Approve")
+											{
+												input.Approver_Action = "Approve";
+												show SCM_Comments;
+											}
 						)
 					}
 				}
