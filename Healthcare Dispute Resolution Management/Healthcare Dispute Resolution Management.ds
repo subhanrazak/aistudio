@@ -3,7 +3,7 @@
  * Generated on : 04-Aug-2026 09:52:14
  * Version      : 1.0
  */
-application "Healthcare-Dispute-Resolution-Management"
+application "Healthcare Dispute Resolution Management"
 {
 	date format = "dd-MMM-yyyy"
 	time zone = "Asia/Kolkata"
@@ -2909,30 +2909,23 @@ application "Healthcare-Dispute-Resolution-Management"
 
 	reports
 	{
-		default summary Organization
+		default list Organization
 		{
 		
 					displayName = "Organization"
-					show all rows from Add_Organization    
+					show all rows from Add_Organization
 					(
 						Organization_Name as "Organization Name"
 						Logo
 						Registration_License_No as "Registration / License No"
 						Phone_Number as "Phone"
 						(
-							displayformat = plainnumber 
+							displayformat = plainnumber
+							linktodial = disable
 						)
 						Email
-						Address 
-			 			(
-			      			enable = Link_to_Map,Show_As_Text
-			 			)
+						Address
 						Website_Address as "Website Address"
-					)
-					options
-					(
-						display rows = 10
-						display records per row = 1
 					)
 				
 		}
@@ -3026,53 +3019,42 @@ application "Healthcare-Dispute-Resolution-Management"
 				
 		}
 
-		default summary Dispute_Categories
+		default list Dispute_Categories
 		{
 		
 					displayName = "Dispute Categories"
-					show all rows from Dispute_Category    
+					show all rows from Dispute_Category
 					(
 						Category
 						Sub_Category as "Sub-Category"
 						Priority
-						(
-							view = SLA_Matrices
-						)
 						Default_Role as "Default Role"
-						(
-							view = Roles
-						)
-					)
-					options
-					(
-						display rows = 10
-						display records per row = 2
 					)
 					conditional formatting
 					(
 						"Critical"
 						{
-						condition = (Priority.Priority == "Critical")
-						fields = [Priority]
-						format = "color:#e64d3b;"
+							condition = (Priority.Priority == "Critical")
+							fields = [Priority]
+							format = "color:#e64d3b;"
 						}
 						"High"
 						{
-						condition = (Priority.Priority == "High")
-						fields = [Priority]
-						format = "color:#e77f06;"
+							condition = (Priority.Priority == "High")
+							fields = [Priority]
+							format = "color:#e77f06;"
 						}
 						"Medium"
 						{
-						condition = (Priority.Priority == "Medium")
-						fields = [Priority]
-						format = "color:#f1c50e;"
+							condition = (Priority.Priority == "Medium")
+							fields = [Priority]
+							format = "color:#f1c50e;"
 						}
 						"Low"
 						{
-						condition = (Priority.Priority == "Low")
-						fields = [Priority]
-						format = "color:#398ef3;"
+							condition = (Priority.Priority == "Low")
+							fields = [Priority]
+							format = "color:#398ef3;"
 						}
 					)
 				
@@ -3302,7 +3284,7 @@ application "Healthcare-Dispute-Resolution-Management"
 						Investigation_Resolution.Approver_Comments as "Approver Comments"
 						custom action "AI Email"
 						(
-			  			workflow = AI_Email_Rejected_Resolut
+			  			workflow = AI_Email_Approved_Resolut
 						show action in view header = true
 						show action in edit record menu = true
 						column header = "AI Email"
@@ -4354,11 +4336,11 @@ application "Healthcare-Dispute-Resolution-Management"
 				
 		}
 
-		default summary ID_Configurations
+		default list ID_Configurations
 		{
 		
 					displayName = "ID Configurations"
-					show all rows from ID_Configuration    
+					show all rows from ID_Configuration
 					(
 						User_ID as "User ID"
 						Patient_ID as "Patient ID"
@@ -4367,11 +4349,6 @@ application "Healthcare-Dispute-Resolution-Management"
 						Charge_ID as "Charge ID"
 						Dispute_ID as "Dispute ID"
 						Resolution_ID as "Resolution ID"
-					)
-					options
-					(
-						display rows = 10
-						display records per row = 1
 					)
 				
 		}
@@ -4541,46 +4518,41 @@ application "Healthcare-Dispute-Resolution-Management"
 				
 		}
 
-		default summary SLA_Matrices
+		default list SLA_Matrices
 		{
 		
 					displayName = "SLA Matrices"
-					show all rows from SLA_Matrix    
+					show all rows from SLA_Matrix
 					(
 						Priority
 						Investigation_and_Resolution_SLA_days as "Investigation and Resolution SLA (days)"
 						Resolution_Approval_SLA_days as "Resolution Approval SLA (days)"
 					)
-					options
-					(
-						display rows = 10
-						display records per row = 2
-					)
 					conditional formatting
 					(
 						"Critical"
 						{
-						condition = (Priority == "Critical")
-						fields = [Priority]
-						format = "color:#e64d3b;"
+							condition = (Priority == "Critical")
+							fields = [Priority]
+							format = "color:#e64d3b;"
 						}
 						"High"
 						{
-						condition = (Priority == "High")
-						fields = [Priority]
-						format = "color:#e77f06;"
+							condition = (Priority == "High")
+							fields = [Priority]
+							format = "color:#e77f06;"
 						}
 						"Medium"
 						{
-						condition = (Priority == "Medium")
-						fields = [Priority]
-						format = "color:#f1c50e;"
+							condition = (Priority == "Medium")
+							fields = [Priority]
+							format = "color:#f1c50e;"
 						}
 						"Low"
 						{
-						condition = (Priority == "Low")
-						fields = [Priority]
-						format = "color:#398ef3;"
+							condition = (Priority == "Low")
+							fields = [Priority]
+							format = "color:#398ef3;"
 						}
 					)
 				
@@ -5125,7 +5097,7 @@ application "Healthcare-Dispute-Resolution-Management"
 														input.Logged_By = thisapp.getLoginUserRecId();
 													if(Mark_Dispute_as_Closed)
 													{
-														thisapp.blueprint.changeStage("Dispute_Intake","Dispute_Resolution_Workfl","Closed",input.Dispute);
+														// Blueprint stage change is handled by updating the Status field.
 														update Dispute_Intake[ID == input.Dispute]
 														[
 															Status="Closed"
@@ -5330,13 +5302,8 @@ application "Healthcare-Dispute-Resolution-Management"
 								{
 									custom deluge script
 									(
-														chargeRecIds = Charge[Case == input.Case && Charge_Status == "Paid" || Charge_Status == "Adjusted"].ID.getAll();
-													disputedChargeIds = input.Disputed_Charge_Line.Charge.getall();
-													if(disputedChargeIds != null)
-													{
-														chargeRecIds.removeall(disputedChargeIds);
-													}
-													row.Charge:ui.add(chargeRecIds);
+													// Dynamic lookup option population is only valid in on-load workflows.
+													// Keep this subform row hook intentionally empty to avoid invalid row picklist UI updates.
 									)
 								}
 							}
@@ -5350,7 +5317,7 @@ application "Healthcare-Dispute-Resolution-Management"
 							type =  form
 							form = Dispute_Intake
 			
-							record event = on edit
+							record event = on add or edit
 			
 							on delete row of Disputed_Charge_Line
 							{
@@ -5358,14 +5325,7 @@ application "Healthcare-Dispute-Resolution-Management"
 								{
 									custom deluge script
 									(
-														if(row.Charge != null)
-													{
-														chargeRec = Charge[ID == row.Charge];
-														if(chargeRec.Charge_Status == "Disputed")
-														{
-															chargeRec.Charge_Status="Paid";
-														}
-													}
+													// Row context is not available for this referenced subform delete workflow in this DS import path.
 									)
 								}
 							}
@@ -5721,8 +5681,7 @@ application "Healthcare-Dispute-Resolution-Management"
 								{
 									custom deluge script
 									(
-														disable Disputed_Charge_Line.CPT_Code;
-													disable Disputed_Charge_Line.Billed_Line_Amount;
+													// Subform child fields cannot be disabled directly from the parent form on-load workflow.
 													disputeSourceList = {"Patient Call","Patient Letter","Email","Patient Portal","Internal Audit"};
 													input.Dispute_Source:ui.add(disputeSourceList);
 									)
@@ -5774,7 +5733,10 @@ application "Healthcare-Dispute-Resolution-Management"
 														idConfig = ID_Configuration[ID != 0];
 													input.Dispute_ID = idConfig.Dispute_ID + " " + input.Auto_Number;
 													userEmailList = User[Role == input.Assigned_Role].Email.getAll();
-													responseMessage = zoho.pushNotification(userEmailList,"New Dispute Awaiting Investigation — " + input.Dispute_ID,"A new dispute " + input.Dispute_ID + " has been submitted and is pending investigation. Please pick it up and start your investigation.","Unassigned_Disputes",input.ID);
+													for each userEmail in userEmailList
+													{
+														responseMessage = zoho.pushNotification(userEmail,"New Dispute Awaiting Investigation — " + input.Dispute_ID,"A new dispute " + input.Dispute_ID + " has been submitted and is pending investigation. Please pick it up and start your investigation.","Unassigned_Disputes",input.ID);
+													}
 									)
 								}
 							}
@@ -6365,7 +6327,7 @@ application "Healthcare-Dispute-Resolution-Management"
 													{
 														disputeRec = Dispute_Intake[ID == input.Dispute];
 														disputeRec.Status="Under Investigation";
-														thisapp.blueprint.changeStage("Dispute_Intake","Dispute_Resolution_Workfl","Under Investigation",input.Dispute);
+														// Blueprint stage change is handled by updating the Status field.
 													}
 									)
 								}
@@ -7968,7 +7930,6 @@ application "Healthcare-Dispute-Resolution-Management"
 			            				set values
 			            				(
 			                   				Investigation_Resolution = input.Investigation_Resolution
-			                   				Action_field = Blueprint.Transition
 			            				)
 			         				}
 			         				after
@@ -8016,16 +7977,15 @@ application "Healthcare-Dispute-Resolution-Management"
 			         				{
 			            				transition criteria = (Status == "Unassigned" && Admin_Role.ID == thisapp.getLoginUserRoleId())
 			         				}
-			         				during
-			         				{
+			        				during
+			        				{
 			            				action = open_form
 			            				form = Assign_Dispute
 			            				set values
 			            				(
 			                   				Dispute = input.ID
-			                   				Action_field = Blueprint.Transition
 			            				)
-			         				}
+			        				}
 			         				after
 			         				{
 										actions 
@@ -8195,16 +8155,15 @@ application "Healthcare-Dispute-Resolution-Management"
 			         				{
 			            				transition criteria = (Status == "Pending Approval" && Admin_Role.ID == thisapp.getLoginUserRoleId() && Approver.ID == thisapp.getLoginUserRecId())
 			         				}
-			         				during
-			         				{
+			        				during
+			        				{
 			            				action = open_form
 			            				form = Assign_Dispute
 			            				set values
 			            				(
 			                   				Investigation_Resolution = input.Investigation_Resolution
-			                   				Action_field = Blueprint.Transition
 			            				)
-			         				}
+			        				}
 			         				after
 			         				{
 										actions 
@@ -8231,18 +8190,17 @@ application "Healthcare-Dispute-Resolution-Management"
 			         				{
 			            				transition criteria = (Status == "Pending Approval" && Admin_Role.ID == thisapp.getLoginUserRoleId() || Approver.ID == thisapp.getLoginUserRecId())
 			         				}
-			         				during
-			         				{
+			        				during
+			        				{
 			            				action = open_form
 			            				form = Confirmation
 			            				set values
 			            				(
 			                   				Investigation_Resolution = input.Investigation_Resolution
-			                   				Action_field = Blueprint.Transition
 			            				)
-			         				}
-			         				after
-			         				{
+			        				}
+			        				after
+			        				{
 										actions 
 										{
 										update Investigation_Resolution[ID == input.Investigation_Resolution]
@@ -8269,9 +8227,9 @@ application "Healthcare-Dispute-Resolution-Management"
 																	]
 											)
 										}
-			         				}
-			         				chart data
-			         				{
+			        				}
+			        				chart data
+			        				{
 			             				from port : B5
 			             				to port   : T3
 			             				path      : [83.95542576053855,585.5806189108679,83.95542576053855,595.5806189108679,83.95542576053855,658.9983876426847,162.70325374015988,658.9983876426847,162.70325374015988,722.4161563745017,162.70325374015988,732.4161563745017]
@@ -8338,18 +8296,17 @@ application "Healthcare-Dispute-Resolution-Management"
 			         				{
 			            				transition criteria = (Status == "Pending Approval" && Admin_Role.ID == thisapp.getLoginUserRoleId() || Approver.ID == thisapp.getLoginUserRecId())
 			         				}
-			         				during
-			         				{
+			        				during
+			        				{
 			            				action = open_form
 			            				form = Confirmation
 			            				set values
 			            				(
 			                   				Investigation_Resolution = input.Investigation_Resolution
-			                   				Action_field = Blueprint.Transition
 			            				)
-			         				}
-			         				after
-			         				{
+			        				}
+			        				after
+			        				{
 										actions 
 										{
 										update Investigation_Resolution[ID == input.Investigation_Resolution]
@@ -8375,9 +8332,9 @@ application "Healthcare-Dispute-Resolution-Management"
 																	]
 											)
 										}
-			         				}
-			         				chart data
-			         				{
+			        				}
+			        				chart data
+			        				{
 			             				from port : T5
 			             				to port   : B4
 			             				path      : [83.95542576053855,533.9727891156463,83.95542576053855,523.9727891156463,83.95542576053855,515.9805574585591,431.74575559948516,515.9805574585591,431.74575559948516,507.98832580147194,431.74575559948516,497.98832580147194]
@@ -8719,7 +8676,13 @@ application "Healthcare-Dispute-Resolution-Management"
 			                 	reasonText = ifnull(reasonInput,"").trim();
 			                 	if(reasonText.length() < 10)
 			                 	{
-			                 		return "{\"matchedCategoryID\":\"0\",\"matchedSubCategoryID\":\"0\",\"status\":\"Skipped - insufficient data\",\"suggestedCategory\":\"\",\"suggestedSub\":\"\"}";
+									result = Map();
+									result.put("matchedCategoryID","0");
+									result.put("matchedSubCategoryID","0");
+									result.put("status","Skipped - insufficient data");
+									result.put("suggestedCategory","");
+									result.put("suggestedSubCategory","");
+									return result;
 			                 	}
 			                 	categoriesRec = Dispute_Category[ID != 0];
 			                 	subCategoryList = List();
@@ -8993,8 +8956,12 @@ application "Healthcare-Dispute-Resolution-Management"
 			int getLoginUserRoleId()
 			{
 			
-			                 	loggedInUserRoleID = User[Email == zoho.loginuserid].Role;
-			                 	return loggedInUserRoleID;
+								userRec = User[Email == zoho.loginuserid];
+								if(userRec.count() > 0 && userRec.Role != null)
+								{
+									return userRec.Role.ID;
+								}
+								return 0;
 			                 
 			}
 
@@ -9076,11 +9043,6 @@ application "Healthcare-Dispute-Resolution-Management"
 					{
 						Add_Organization
 						{
-							allFieldsVisible= true 
-						}
-						Dispute_Intake_BlueprintJob
-						{
-							enabled= Create,Tab 
 							allFieldsVisible= true 
 						}
 						User
@@ -9194,6 +9156,10 @@ application "Healthcare-Dispute-Resolution-Management"
 					"CEO"
 					{
 						description = "User belonging to this role can access data of all other users."
+						"Agent_User"
+						{
+							description = "Agent user role for operational dispute users."
+						}
 					}
 				
 	}
@@ -9539,185 +9505,120 @@ application "Healthcare-Dispute-Resolution-Management"
 	
 		report All_Communication_Logs
 		{
-		
-						quickview
+			quickview
+			(
+				layout
+				(
+					type = -1
+					datablock1
+					(
+						layout type = -1
+						fields
 						(
-							layout
-							(
-								datablock1
-								(
-									fields
-									(
-										Dispute
-										Contact_Person as "Contact Person"
-										Time
-										Channel
-										Logged_By as "Logged By"
-									)
-								)
-							)
-								menu
-								(
-									header
-									(
-									)
-								record
-								(
-									Edit   	   
-									Delete   	   
-		    					)
-								)
-		    				action
-		    				(
-								on click
-								(
-									View Record   	   
-		    					)
-								on right click
-								(
-									Edit   	   
-									Delete   	   
-									View Record   	   
-		    					)
-		     				)
+							Dispute
+							Contact_Person as "Contact Person"
+							Time
+							Channel
+							Logged_By as "Logged By"
 						)
-		
-						detailview
+					)
+				)
+				menu
+				(
+					header ( Edit Delete )
+					record ( Edit Delete )
+				)
+				action
+				(
+					on click ( View Record )
+					on right click ( Edit Delete View Record )
+				)
+			)
+			detailview
+			(
+				layout
+				(
+					type = 1
+					datablock1
+					(
+						layout type = -2
+						fields
 						(
-							layout
-							(
-				 				type = 2
-								datablock4
-								(
-				     				title = "Dispute"
-				     				related field = Dispute
-									fields
-									(
-										Dispute_ID as "Dispute ID"
-										Patient
-										AI_Dispute_Summary as "Dispute Summary"
-										Disputed_Amount as "Disputed Amount"
-										Category
-										Priority
-										Status
-									)
-								)
-								datablock5
-								(
-				     				title = "Communication"
-									fields
-									(
-										Time
-										Channel
-										Contact_Person as "Contact Person"
-										Summary
-										Follow_Up_Required as "Follow-Up Required"
-										Follow_Up_Date as "Follow-Up Date"
-										Logged_By as "Logged By"
-									)
-								)
-							)
-								menu
-								(
-									header
-									(
-										Edit 
-										Delete 
-									)
-								)
+							Dispute
+							Time
+							Channel
+							Contact_Person as "Contact Person"
+							Summary
+							Follow_Up_Required as "Follow-Up Required"
+							Follow_Up_Date as "Follow-Up Date"
+							Logged_By as "Logged By"
 						)
-					
+					)
+				)
+				menu
+				(
+					header ( Edit Delete )
+				)
+			)
 		}
 	
 		report My_Communication_Logs
 		{
-		
-						quickview
+			quickview
+			(
+				layout
+				(
+					type = -1
+					datablock1
+					(
+						layout type = -1
+						fields
 						(
-							layout
-							(
-								datablock1
-								(
-									fields
-									(
-										Dispute
-										Contact_Person as "Contact Person"
-										Time
-										Channel
-									)
-								)
-							)
-								menu
-								(
-									header
-									(
-									)
-								record
-								(
-									Edit   	   
-									Delete   	   
-		    					)
-								)
-		    				action
-		    				(
-								on click
-								(
-									View Record   	   
-		    					)
-								on right click
-								(
-									Edit   	   
-									Delete   	   
-									View Record   	   
-		    					)
-		     				)
+							Dispute
+							Contact_Person as "Contact Person"
+							Time
+							Channel
+							Logged_By as "Logged By"
 						)
-		
-						detailview
+					)
+				)
+				menu
+				(
+					header ( Edit Delete )
+					record ( Edit Delete )
+				)
+				action
+				(
+					on click ( View Record )
+					on right click ( Edit Delete View Record )
+				)
+			)
+			detailview
+			(
+				layout
+				(
+					type = 1
+					datablock1
+					(
+						layout type = -2
+						fields
 						(
-							layout
-							(
-				 				type = 2
-								datablock4
-								(
-				     				title = "Dispute"
-				     				related field = Dispute
-									fields
-									(
-										Dispute_ID as "Dispute ID"
-										Patient
-										AI_Dispute_Summary as "Dispute Summary"
-										Disputed_Amount as "Disputed Amount"
-										Category
-										Priority
-										Status
-									)
-								)
-								datablock5
-								(
-				     				title = "Communication"
-									fields
-									(
-										Time
-										Channel
-										Contact_Person as "Contact Person"
-										Summary
-										Follow_Up_Required as "Follow-Up Required"
-										Follow_Up_Date as "Follow-Up Date"
-										Logged_By as "Logged By"
-									)
-								)
-							)
-								menu
-								(
-									header
-									(
-										Edit 
-										Delete 
-									)
-								)
+							Dispute
+							Time
+							Channel
+							Contact_Person as "Contact Person"
+							Summary
+							Follow_Up_Required as "Follow-Up Required"
+							Follow_Up_Date as "Follow-Up Date"
+							Logged_By as "Logged By"
 						)
-					
+					)
+				)
+				menu
+				(
+					header ( Edit Delete )
+				)
+			)
 		}
 	
 		report Dispute_Categories
@@ -9784,2090 +9685,1023 @@ application "Healthcare-Dispute-Resolution-Management"
 	
 		report All_Disputes
 		{
-		
-						quickview
+			quickview
+			(
+				layout
+				(
+					type = -1
+					datablock1
+					(
+						layout type = -1
+						fields
 						(
-							layout
-							(
-								datablock1
-								(
-									fields
-									(
-										Dispute_ID as "Dispute ID"
-										AI_Dispute_Summary as "Dispute Summary"
-										Patient
-										Disputed_Amount as "Disputed Amount"
-										Category
-										Priority
-										Status
-									)
-								)
-							)
-								menu
-								(
-									header
-									(
-									)
-								record
-								(
-									Edit   	   
-									Delete   	   
-									"AI Dispute Briefing"
-		    					)
-								)
-		    				action
-		    				(
-								on click
-								(
-									View Record   	   
-		    					)
-								on right click
-								(
-									Edit   	   
-									Delete   	   
-									View Record   	   
-		    					)
-		     				)
+							Dispute_ID as "Dispute ID"
+							Patient
+							Category
+							Disputed_Amount as "Disputed Amount"
+							Priority
+							Status
 						)
-		
-						detailview
+					)
+				)
+				menu
+				(
+					header ( Edit Delete )
+					record ( Edit Delete "AI Dispute Briefing" )
+				)
+				action
+				(
+					on click ( View Record )
+					on right click ( Edit Delete View Record )
+				)
+			)
+			detailview
+			(
+				layout
+				(
+					type = 1
+					datablock1
+					(
+						layout type = -2
+						fields
 						(
-							layout
-							(
-								datablock1
-								(
-									fields
-									(
-										Dispute_ID as "Dispute ID"
-										AI_Dispute_Summary as "Dispute Summary"
-										Patient.Added_Time as "Added Time"
-									)
-								)
-							)
-								menu
-								(
-									header
-									(
-										"AI Dispute Briefing"
-										Edit 
-										Delete 
-									)
-								)
+							Dispute_ID as "Dispute ID"
+							Patient
+							Case
+							Insurance_Payer as "Insurance Payer"
+							Total_Billed_Amount as "Total Billed Amount"
+							Patient_Share as "Patient Share"
+							Disputed_Amount as "Disputed Amount"
+							Dispute_Source as "Dispute Source"
+							Reason_for_Dispute as "Reason for Dispute"
+							Category
+							Sub_Category as "Sub-Category"
+							Priority
+							Status
+							Investigation_Due_Date as "Investigation Due Date"
+							Created_By_User as "Created By User"
+							AI_Dispute_Summary as "Dispute Summary"
+							Patient.Added_Time as "Added Time"
 						)
-					
+					)
+				)
+				menu
+				(
+					header ( Edit Delete "AI Dispute Briefing" )
+				)
+			)
 		}
 	
 		report All_Resolution_Decisions
 		{
-		
-						quickview
+			quickview
+			(
+				layout
+				(
+					type = -1
+					datablock1
+					(
+						layout type = -1
+						fields
 						(
-							layout
-							(
-								datablock1
-								(
-									fields
-									(
-										Investigation_Resolution.Resolution_ID as "Resolution ID"
-										Investigation_Resolution.Dispute as "Dispute"
-										Investigation_Resolution.Resolution_Type as "Resolution Type"
-										Investigation_Resolution.Adjustment_Amount as "Adjustment Amount"
-										Investigation_Resolution.Root_Cause as "Root Cause"
-										Investigation_Resolution.Created_By as "Created By"
-										Investigation_Resolution.Approver as "Approver"
-										Investigation_Resolution.Approval_Status as "Approval Status"
-										Investigation_Resolution.Resolution_Approval_Due_Date as "Approval Due Date"
-									)
-								)
-							)
-								menu
-								(
-									header
-									(
-									)
-								record
-								(
-									Edit   	   
-									Delete   	   
-		    					)
-								)
-		    				action
-		    				(
-								on click
-								(
-									View Record   	   
-		    					)
-								on right click
-								(
-									Edit   	   
-									Delete   	   
-									View Record   	   
-		    					)
-		     				)
+							Investigation_Resolution.Resolution_ID as "Resolution ID"
+							Dispute_ID as "Dispute ID"
+							AI_Dispute_Summary as "Dispute Summary"
+							Investigation_Resolution.Resolution_Type as "Resolution Type"
+							Investigation_Resolution.Approval_Status as "Approval Status"
+							Investigation_Resolution.Resolution_Approval_Due_Date as "Approval Due Date"
 						)
-		
-						detailview
+					)
+				)
+				menu
+				(
+					header ( Edit Delete )
+					record ( Edit Delete )
+				)
+				action
+				(
+					on click ( View Record )
+					on right click ( Edit Delete View Record )
+				)
+			)
+			detailview
+			(
+				layout
+				(
+					type = 1
+					datablock1
+					(
+						layout type = -2
+						fields
 						(
-							layout
-							(
-				 				type = 2
-								datablock1
-								(
-				     				title = "Overview"
-									fields
-									(
-										Investigation_Resolution.Resolution_ID as "Resolution ID"
-										Investigation_Resolution.Resolution_Type as "Resolution Type"
-										Investigation_Resolution.Adjustment_Amount as "Adjustment Amount"
-									)
-								)
-								datablock4
-								(
-				     				title = "Dispute"
-									fields
-									(
-										Dispute_ID as "Dispute ID"
-										AI_Dispute_Summary as "Dispute Summary"
-										Disputed_Amount as "Disputed Amount"
-										Patient.Added_Time as "Added Time"
-									)
-								)
-								datablock2
-								(
-				     				title = "Investigation Notes"
-				     				related field = Investigation_Resolution
-									fields
-									(
-										Findings
-										Charge_Verified as "Charge Verified"
-										Internal_Notes as "Internal Notes"
-										Patient_Contacted as "Patient Contacted"
-										Patient_Contact_Date as "Patient Contact Date"
-										Patient_Contact_Summary as "Patient Contact Summary"
-										Supporting_Evidence as "Supporting Evidence"
-									)
-								)
-								datablock3
-								(
-				     				title = "Resolution Decision"
-									fields
-									(
-										Investigation_Resolution.Resolution_Type as "Resolution Type"
-										Investigation_Resolution.Adjustment_Amount as "Adjustment Amount"
-										Investigation_Resolution.Resolution_Rationale as "Resolution Rationale"
-										Investigation_Resolution.Root_Cause as "Root Cause"
-										Investigation_Resolution.Root_Cause_Detail as "Root Cause Detail"
-									)
-								)
-								datablock5
-								(
-				     				title = "Status & Assignment"
-									fields
-									(
-										Investigation_Resolution.Created_By as "Created By"
-										Investigation_Resolution.Approval_Status as "Approval Status"
-										Investigation_Resolution.Resolution_Approval_Due_Date as "Approval Due Date"
-										Investigation_Resolution.Approver as "Approver"
-										Investigation_Resolution.Approver_Comments as "Approver Comments"
-									)
-								)
-							)
-								menu
-								(
-									header
-									(
-										Edit 
-										Delete 
-									)
-								)
+							Investigation_Resolution.Dispute
+							Investigation_Resolution.Resolution_ID as "Resolution ID"
+							Investigation_Resolution.Resolution_Type as "Resolution Type"
+							Investigation_Resolution.Adjustment_Amount as "Adjustment Amount"
+							Investigation_Resolution.Root_Cause as "Root Cause"
+							Investigation_Resolution.Root_Cause_Detail as "Root Cause Detail"
+							Investigation_Resolution.Resolution_Rationale as "Resolution Rationale"
+							Investigation_Resolution.Approval_Status as "Approval Status"
+							Investigation_Resolution.Approver_Comments as "Approver Comments"
+							Investigation_Resolution.Approver
+							Investigation_Resolution.Resolution_Approval_Due_Date as "Approval Due Date"
+							Disputed_Amount as "Disputed Amount"
+							Dispute_ID as "Dispute ID"
+							AI_Dispute_Summary as "Dispute Summary"
+							Patient.Added_Time as "Added Time"
 						)
-					
+					)
+				)
+				menu
+				(
+					header ( Edit Delete )
+				)
+			)
 		}
 	
 		report Approved_Resolutions
 		{
-		
-						quickview
+			quickview
+			(
+				layout
+				(
+					type = -1
+					datablock1
+					(
+						layout type = -1
+						fields
 						(
-							layout
-							(
-								datablock1
-								(
-									fields
-									(
-										Investigation_Resolution.Resolution_ID as "Resolution ID"
-										Investigation_Resolution.Dispute as "Dispute"
-										Investigation_Resolution.Resolution_Type as "Resolution Type"
-										Investigation_Resolution.Adjustment_Amount as "Adjustment Amount"
-										Investigation_Resolution.Root_Cause as "Root Cause"
-										Investigation_Resolution.Created_By as "Created By"
-										Investigation_Resolution.Approver as "Approver"
-										Investigation_Resolution.Resolution_Approval_Due_Date as "Approval Due Date"
-										"AI Email"
-									)
-								)
-							)
-								menu
-								(
-									header
-									(
-									)
-								record
-								(
-									"AI Email"
-		    					)
-								)
-		    				action
-		    				(
-								on click
-								(
-									View Record   	   
-		    					)
-								on right click
-								(
-									View Record   	   
-		    					)
-		     				)
+							Investigation_Resolution.Resolution_ID as "Resolution ID"
+							Dispute_ID as "Dispute ID"
+							AI_Dispute_Summary as "Dispute Summary"
+							Investigation_Resolution.Resolution_Type as "Resolution Type"
+							Investigation_Resolution.Approval_Status as "Approval Status"
+							Investigation_Resolution.Resolution_Approval_Due_Date as "Approval Due Date"
 						)
-		
-						detailview
+					)
+				)
+				menu
+				(
+					header ( Edit Delete "AI Email" )
+					record ( Edit Delete "AI Email" )
+				)
+				action
+				(
+					on click ( View Record )
+					on right click ( Edit Delete "AI Email" View Record )
+				)
+			)
+			detailview
+			(
+				layout
+				(
+					type = 1
+					datablock1
+					(
+						layout type = -2
+						fields
 						(
-							layout
-							(
-				 				type = 2
-								datablock1
-								(
-				     				title = "Overview"
-									fields
-									(
-										Investigation_Resolution.Resolution_ID as "Resolution ID"
-										Investigation_Resolution.Resolution_Type as "Resolution Type"
-										Investigation_Resolution.Adjustment_Amount as "Adjustment Amount"
-									)
-								)
-								datablock4
-								(
-				     				title = "Dispute"
-									fields
-									(
-										Dispute_ID as "Dispute ID"
-										AI_Dispute_Summary as "Dispute Summary"
-										Disputed_Amount as "Disputed Amount"
-										Patient.Added_Time as "Added Time"
-									)
-								)
-								datablock2
-								(
-				     				title = "Investigation Notes"
-				     				related field = Investigation_Resolution
-									fields
-									(
-										Findings
-										Charge_Verified as "Charge Verified"
-										Internal_Notes as "Internal Notes"
-										Patient_Contacted as "Patient Contacted"
-										Patient_Contact_Date as "Patient Contact Date"
-										Patient_Contact_Summary as "Patient Contact Summary"
-										Supporting_Evidence as "Supporting Evidence"
-									)
-								)
-								datablock3
-								(
-				     				title = "Resolution Decision"
-									fields
-									(
-										Investigation_Resolution.Resolution_Type as "Resolution Type"
-										Investigation_Resolution.Adjustment_Amount as "Adjustment Amount"
-										Investigation_Resolution.Resolution_Rationale as "Resolution Rationale"
-										Investigation_Resolution.Root_Cause as "Root Cause"
-										Investigation_Resolution.Root_Cause_Detail as "Root Cause Detail"
-									)
-								)
-								datablock5
-								(
-				     				title = "Status & Assignment"
-									fields
-									(
-										Investigation_Resolution.Created_By as "Created By"
-										Investigation_Resolution.Approval_Status as "Approval Status"
-										Investigation_Resolution.Resolution_Approval_Due_Date as "Approval Due Date"
-										Investigation_Resolution.Approver as "Approver"
-										Investigation_Resolution.Approver_Comments as "Approver Comments"
-									)
-								)
-							)
-								menu
-								(
-									header
-									(
-										"AI Email"
-									)
-								)
+							Investigation_Resolution.Dispute
+							Investigation_Resolution.Resolution_ID as "Resolution ID"
+							Investigation_Resolution.Resolution_Type as "Resolution Type"
+							Investigation_Resolution.Adjustment_Amount as "Adjustment Amount"
+							Investigation_Resolution.Root_Cause as "Root Cause"
+							Investigation_Resolution.Root_Cause_Detail as "Root Cause Detail"
+							Investigation_Resolution.Resolution_Rationale as "Resolution Rationale"
+							Investigation_Resolution.Approval_Status as "Approval Status"
+							Investigation_Resolution.Approver_Comments as "Approver Comments"
+							Investigation_Resolution.Approver
+							Investigation_Resolution.Resolution_Approval_Due_Date as "Approval Due Date"
+							Disputed_Amount as "Disputed Amount"
+							Dispute_ID as "Dispute ID"
+							AI_Dispute_Summary as "Dispute Summary"
+							Patient.Added_Time as "Added Time"
 						)
-					
+					)
+				)
+				menu
+				(
+					header ( Edit Delete "AI Email" )
+				)
+			)
 		}
 	
 		report Closed_Disputes
 		{
-		
-						quickview
+			quickview
+			(
+				layout
+				(
+					type = -1
+					datablock1
+					(
+						layout type = -1
+						fields
 						(
-							layout
-							(
-								datablock1
-								(
-									fields
-									(
-										Dispute_ID as "Dispute ID"
-										Patient
-										AI_Dispute_Summary as "Dispute Summary"
-										Disputed_Amount as "Disputed Amount"
-										Category
-										Priority
-										Closed_By_User as "Closed By"
-									)
-								)
-							)
-								menu
-								(
-									header
-									(
-									)
-								)
-		    				action
-		    				(
-								on click
-								(
-									View Record   	   
-		    					)
-								on right click
-								(
-									View Record   	   
-		    					)
-		     				)
+							Dispute_ID as "Dispute ID"
+							Patient
+							Category
+							Disputed_Amount as "Disputed Amount"
+							Priority
+							Status
 						)
-		
-						detailview
+					)
+				)
+				menu
+				(
+					header ( Edit Delete )
+					record ( Edit Delete )
+				)
+				action
+				(
+					on click ( View Record )
+					on right click ( Edit Delete View Record )
+				)
+			)
+			detailview
+			(
+				layout
+				(
+					type = 1
+					datablock1
+					(
+						layout type = -2
+						fields
 						(
-							layout
-							(
-				 				type = 2
-								datablock1
-								(
-				     				title = "Overview"
-									fields
-									(
-										Dispute_ID as "Dispute ID"
-										AI_Dispute_Summary as "Dispute Summary"
-										Patient.Added_Time as "Added Time"
-									)
-								)
-								datablock4
-								(
-				     				title = "Case Information"
-									fields
-									(
-										Patient
-										Case
-										Insurance_Payer as "Insurance Payer"
-										Total_Billed_Amount as "Total Billed Amount"
-										Patient_Share as "Patient Share"
-									)
-								)
-								datablock5
-								(
-				     				title = "Dispute Details"
-									fields
-									(
-										Disputed_Amount as "Disputed Amount"
-										Reason_for_Dispute as "Reason for Dispute"
-										Dispute_Source as "Dispute Source"
-										Email
-										Supporting_Documents as "Supporting Documents"
-									)
-								)
-								datablock7
-								(
-				     				title = "Classification"
-									fields
-									(
-										Category
-										Sub_Category as "Sub-Category"
-									)
-								)
-								datablock8
-								(
-				     				title = "Disputed Charge Line"
-				     				related field = Disputed_Charge_Line
-									fields
-									(
-										Charge
-										CPT_Code as "CPT Code"
-										Billed_Line_Amount as "Billed Line Amount"
-										Disputed_Line_Amount as "Disputed Line Amount"
-										Line_Reason as "Line Reason"
-									)
-								)
-								datablock6
-								(
-				     				title = "SLA & Status"
-									fields
-									(
-										Status
-										Priority
-										Investigation_Due_Date as "Investigation Due Date"
-										Investigation_Start_Time as "Investigation Start Time"
-									)
-								)
-								datablock9
-								(
-				     				title = "Assignment & Audit Trail"
-									fields
-									(
-										Assigned_Role as "Assigned Role"
-										Assigned_To as "Assigned To"
-										Approver
-										Created_By_Type as "Created By Type"
-										Created_By_User as "Created By User"
-										Closed_By_User as "Closed By"
-									)
-								)
-								datablock10
-								(
-				     				title = "Investigation Resolution"
-				     				related field = Investigation_Resolution[Dispute.Investigation_Resolution is not null]
-									fields
-									(
-										Resolution_ID as "Resolution ID"
-										Resolution_Type as "Resolution Type"
-										Approval_Status as "Approval Status"
-										Root_Cause as "Root Cause"
-										Adjustment_Amount as "Adjustment Amount"
-										Resolution_Approval_Due_Date as "Resolution Approval Due Date"
-										Findings
-										Resolution_Rationale as "Resolution Rationale"
-										Approver_Comments as "Approver Comments"
-										Internal_Notes as "Internal Notes"
-									)
-								)
-								datablock11
-								(
-				     				title = "Communication Log"
-				     				related field = Communication_Log[Dispute.Communication_Log is not null]
-									fields
-									(
-										Time
-										Channel
-										Contact_Person as "Contact Person"
-										Summary
-										Follow_Up_Required as "Follow-Up Required"
-										Follow_Up_Date as "Follow-Up Date"
-										Logged_By as "Logged By"
-									)
-								)
-							)
-								menu
-								(
-									header
-									(
-									)
-								)
+							Dispute_ID as "Dispute ID"
+							Patient
+							Case
+							Insurance_Payer as "Insurance Payer"
+							Total_Billed_Amount as "Total Billed Amount"
+							Patient_Share as "Patient Share"
+							Disputed_Amount as "Disputed Amount"
+							Dispute_Source as "Dispute Source"
+							Reason_for_Dispute as "Reason for Dispute"
+							Category
+							Sub_Category as "Sub-Category"
+							Priority
+							Status
+							Investigation_Due_Date as "Investigation Due Date"
+							Created_By_User as "Created By User"
+							AI_Dispute_Summary as "Dispute Summary"
+							Patient.Added_Time as "Added Time"
 						)
-					
+					)
+				)
+				menu
+				(
+					header ( Edit Delete )
+				)
+			)
 		}
 	
 		report Investigation_Overdues
 		{
-		
-						quickview
+			quickview
+			(
+				layout
+				(
+					type = -1
+					datablock1
+					(
+						layout type = -1
+						fields
 						(
-							layout
-							(
-								datablock1
-								(
-									fields
-									(
-										Dispute_ID as "Dispute ID"
-										Patient
-										AI_Dispute_Summary as "Dispute Summary"
-										Disputed_Amount as "Disputed Amount"
-										Category
-										Priority
-										Assigned_To as "Assigned To"
-										Investigation_Due_Date as "Investigation Due Date"
-									)
-								)
-							)
-								menu
-								(
-									header
-									(
-									)
-								)
-		    				action
-		    				(
-								on click
-								(
-									View Record   	   
-		    					)
-								on right click
-								(
-									View Record   	   
-		    					)
-		     				)
+							Dispute_ID as "Dispute ID"
+							Patient
+							Category
+							Disputed_Amount as "Disputed Amount"
+							Priority
+							Status
 						)
-		
-						detailview
+					)
+				)
+				menu
+				(
+					header ( Edit Delete )
+					record ( Edit Delete )
+				)
+				action
+				(
+					on click ( View Record )
+					on right click ( Edit Delete View Record )
+				)
+			)
+			detailview
+			(
+				layout
+				(
+					type = 1
+					datablock1
+					(
+						layout type = -2
+						fields
 						(
-							layout
-							(
-				 				type = 2
-								datablock1
-								(
-				     				title = "Overview"
-									fields
-									(
-										Dispute_ID as "Dispute ID"
-										AI_Dispute_Summary as "Dispute Summary"
-										Patient.Added_Time as "Added Time"
-									)
-								)
-								datablock4
-								(
-				     				title = "Case Information"
-									fields
-									(
-										Patient
-										Case
-										Insurance_Payer as "Insurance Payer"
-										Total_Billed_Amount as "Total Billed Amount"
-										Patient_Share as "Patient Share"
-									)
-								)
-								datablock5
-								(
-				     				title = "Dispute Details"
-									fields
-									(
-										Disputed_Amount as "Disputed Amount"
-										Reason_for_Dispute as "Reason for Dispute"
-										Dispute_Source as "Dispute Source"
-										Email
-										Supporting_Documents as "Supporting Documents"
-									)
-								)
-								datablock7
-								(
-				     				title = "Classification"
-									fields
-									(
-										Category
-										Sub_Category as "Sub-Category"
-									)
-								)
-								datablock8
-								(
-				     				title = "Disputed Charge Line"
-				     				related field = Disputed_Charge_Line
-									fields
-									(
-										Charge
-										CPT_Code as "CPT Code"
-										Billed_Line_Amount as "Billed Line Amount"
-										Disputed_Line_Amount as "Disputed Line Amount"
-										Line_Reason as "Line Reason"
-									)
-								)
-								datablock6
-								(
-				     				title = "SLA & Status"
-									fields
-									(
-										Status
-										Priority
-										Investigation_Due_Date as "Investigation Due Date"
-										Investigation_Start_Time as "Investigation Start Time"
-									)
-								)
-								datablock9
-								(
-				     				title = "Assignment & Audit Trail"
-									fields
-									(
-										Assigned_Role as "Assigned Role"
-										Assigned_To as "Assigned To"
-										Approver
-										Created_By_Type as "Created By Type"
-										Created_By_User as "Created By User"
-										Closed_By_User as "Closed By User"
-									)
-								)
-								datablock10
-								(
-				     				title = "Investigation Resolution"
-				     				related field = Investigation_Resolution[Dispute.Investigation_Resolution is not null]
-									fields
-									(
-										Resolution_ID as "Resolution ID"
-										Resolution_Type as "Resolution Type"
-										Approval_Status as "Approval Status"
-										Root_Cause as "Root Cause"
-										Adjustment_Amount as "Adjustment Amount"
-										Resolution_Approval_Due_Date as "Resolution Approval Due Date"
-										Findings
-										Resolution_Rationale as "Resolution Rationale"
-										Approver_Comments as "Approver Comments"
-										Internal_Notes as "Internal Notes"
-									)
-								)
-								datablock11
-								(
-				     				title = "Communication Log"
-				     				related field = Communication_Log[Dispute.Communication_Log is not null]
-									fields
-									(
-										Time
-										Channel
-										Contact_Person as "Contact Person"
-										Summary
-										Follow_Up_Required as "Follow-Up Required"
-										Follow_Up_Date as "Follow-Up Date"
-										Logged_By as "Logged By"
-									)
-								)
-							)
-								menu
-								(
-									header
-									(
-									)
-								)
+							Dispute_ID as "Dispute ID"
+							Patient
+							Case
+							Insurance_Payer as "Insurance Payer"
+							Total_Billed_Amount as "Total Billed Amount"
+							Patient_Share as "Patient Share"
+							Disputed_Amount as "Disputed Amount"
+							Dispute_Source as "Dispute Source"
+							Reason_for_Dispute as "Reason for Dispute"
+							Category
+							Sub_Category as "Sub-Category"
+							Priority
+							Status
+							Investigation_Due_Date as "Investigation Due Date"
+							Created_By_User as "Created By User"
+							AI_Dispute_Summary as "Dispute Summary"
+							Patient.Added_Time as "Added Time"
 						)
-					
+					)
+				)
+				menu
+				(
+					header ( Edit Delete )
+				)
+			)
 		}
 	
 		report My_Assigned_Disputes
 		{
-		
-						quickview
+			quickview
+			(
+				layout
+				(
+					type = -1
+					datablock1
+					(
+						layout type = -1
+						fields
 						(
-							layout
-							(
-								datablock1
-								(
-									fields
-									(
-										Dispute_ID as "Dispute ID"
-										Patient
-										AI_Dispute_Summary as "Dispute Summary"
-										Total_Billed_Amount as "Total Billed Amount"
-										Disputed_Amount as "Disputed Amount"
-										Category
-										Priority
-									)
-								)
-							)
-								menu
-								(
-									header
-									(
-									)
-								)
-		    				action
-		    				(
-								on click
-								(
-									View Record   	   
-		    					)
-								on right click
-								(
-									View Record   	   
-		    					)
-		     				)
+							Dispute_ID as "Dispute ID"
+							Patient
+							Category
+							Disputed_Amount as "Disputed Amount"
+							Priority
+							Status
 						)
-		
-						detailview
+					)
+				)
+				menu
+				(
+					header ( Edit Delete )
+					record ( Edit Delete )
+				)
+				action
+				(
+					on click ( View Record )
+					on right click ( Edit Delete View Record )
+				)
+			)
+			detailview
+			(
+				layout
+				(
+					type = 1
+					datablock1
+					(
+						layout type = -2
+						fields
 						(
-							layout
-							(
-				 				type = 2
-								datablock1
-								(
-				     				title = "Overview"
-									fields
-									(
-										Dispute_ID as "Dispute ID"
-										AI_Dispute_Summary as "Dispute Summary"
-										Patient.Added_Time as "Added Time"
-									)
-								)
-								datablock4
-								(
-				     				title = "Case Information"
-									fields
-									(
-										Patient
-										Case
-										Insurance_Payer as "Insurance Payer"
-										Total_Billed_Amount as "Total Billed Amount"
-										Patient_Share as "Patient Share"
-									)
-								)
-								datablock5
-								(
-				     				title = "Dispute Details"
-									fields
-									(
-										Disputed_Amount as "Disputed Amount"
-										Reason_for_Dispute as "Reason for Dispute"
-										Dispute_Source as "Dispute Source"
-										Email
-										Supporting_Documents as "Supporting Documents"
-									)
-								)
-								datablock7
-								(
-				     				title = "Classification"
-									fields
-									(
-										Category
-										Sub_Category as "Sub-Category"
-									)
-								)
-								datablock8
-								(
-				     				title = "Disputed Charge Line"
-				     				related field = Disputed_Charge_Line
-									fields
-									(
-										Charge
-										CPT_Code as "CPT Code"
-										Billed_Line_Amount as "Billed Line Amount"
-										Disputed_Line_Amount as "Disputed Line Amount"
-										Line_Reason as "Line Reason"
-									)
-								)
-								datablock6
-								(
-				     				title = "SLA & Status"
-									fields
-									(
-										Status
-										Priority
-										Investigation_Due_Date as "Investigation Due Date"
-										Investigation_Start_Time as "Investigation Start Time"
-									)
-								)
-								datablock9
-								(
-				     				title = "Assignment & Audit Trail"
-									fields
-									(
-										Assigned_Role as "Assigned Role"
-										Assigned_To as "Assigned To"
-										Approver
-										Created_By_Type as "Created By Type"
-										Created_By_User as "Created By User"
-										Closed_By_User as "Closed By User"
-									)
-								)
-								datablock10
-								(
-				     				title = "Investigation Resolution"
-				     				related field = Investigation_Resolution[Dispute.Investigation_Resolution is not null]
-									fields
-									(
-										Resolution_ID as "Resolution ID"
-										Resolution_Type as "Resolution Type"
-										Approval_Status as "Approval Status"
-										Root_Cause as "Root Cause"
-										Adjustment_Amount as "Adjustment Amount"
-										Resolution_Approval_Due_Date as "Resolution Approval Due Date"
-										Findings
-										Resolution_Rationale as "Resolution Rationale"
-										Approver_Comments as "Approver Comments"
-										Internal_Notes as "Internal Notes"
-									)
-								)
-								datablock11
-								(
-				     				title = "Communication Log"
-				     				related field = Communication_Log[Dispute.Communication_Log is not null]
-									fields
-									(
-										Time
-										Channel
-										Contact_Person as "Contact Person"
-										Summary
-										Follow_Up_Required as "Follow-Up Required"
-										Follow_Up_Date as "Follow-Up Date"
-										Logged_By as "Logged By"
-									)
-								)
-							)
-								menu
-								(
-									header
-									(
-									)
-								)
+							Dispute_ID as "Dispute ID"
+							Patient
+							Case
+							Insurance_Payer as "Insurance Payer"
+							Total_Billed_Amount as "Total Billed Amount"
+							Patient_Share as "Patient Share"
+							Disputed_Amount as "Disputed Amount"
+							Dispute_Source as "Dispute Source"
+							Reason_for_Dispute as "Reason for Dispute"
+							Category
+							Sub_Category as "Sub-Category"
+							Priority
+							Status
+							Investigation_Due_Date as "Investigation Due Date"
+							Created_By_User as "Created By User"
+							AI_Dispute_Summary as "Dispute Summary"
+							Patient.Added_Time as "Added Time"
 						)
-					
+					)
+				)
+				menu
+				(
+					header ( Edit Delete )
+				)
+			)
 		}
 	
 		report My_Pending_Approval
 		{
-		
-						quickview
+			quickview
+			(
+				layout
+				(
+					type = -1
+					datablock1
+					(
+						layout type = -1
+						fields
 						(
-							layout
-							(
-								datablock1
-								(
-									fields
-									(
-										Investigation_Resolution.Resolution_ID as "Resolution ID"
-										Investigation_Resolution.Dispute as "Dispute"
-										Investigation_Resolution.Resolution_Type as "Resolution Type"
-										Investigation_Resolution.Adjustment_Amount as "Adjustment Amount"
-										Investigation_Resolution.Root_Cause as "Root Cause"
-										Investigation_Resolution.Created_By as "Created By"
-										Investigation_Resolution.Resolution_Approval_Due_Date as "Approval Due Date"
-									)
-								)
-							)
-								menu
-								(
-									header
-									(
-									)
-								)
-		    				action
-		    				(
-								on click
-								(
-									View Record   	   
-		    					)
-								on right click
-								(
-									View Record   	   
-		    					)
-		     				)
+							Investigation_Resolution.Resolution_ID as "Resolution ID"
+							Dispute_ID as "Dispute ID"
+							AI_Dispute_Summary as "Dispute Summary"
+							Investigation_Resolution.Resolution_Type as "Resolution Type"
+							Investigation_Resolution.Approval_Status as "Approval Status"
+							Investigation_Resolution.Resolution_Approval_Due_Date as "Approval Due Date"
 						)
-		
-						detailview
+					)
+				)
+				menu
+				(
+					header ( Edit Delete )
+					record ( Edit Delete )
+				)
+				action
+				(
+					on click ( View Record )
+					on right click ( Edit Delete View Record )
+				)
+			)
+			detailview
+			(
+				layout
+				(
+					type = 1
+					datablock1
+					(
+						layout type = -2
+						fields
 						(
-							layout
-							(
-				 				type = 2
-								datablock1
-								(
-				     				title = "Overview"
-									fields
-									(
-										Investigation_Resolution.Resolution_ID as "Resolution ID"
-										Investigation_Resolution.Resolution_Type as "Resolution Type"
-										Investigation_Resolution.Adjustment_Amount as "Adjustment Amount"
-									)
-								)
-								datablock4
-								(
-				     				title = "Dispute"
-									fields
-									(
-										Dispute_ID as "Dispute ID"
-										AI_Dispute_Summary as "Dispute Summary"
-										Disputed_Amount as "Disputed Amount"
-										Patient.Added_Time as "Added Time"
-									)
-								)
-								datablock2
-								(
-				     				title = "Investigation Notes"
-				     				related field = Investigation_Resolution
-									fields
-									(
-										Findings
-										Charge_Verified as "Charge Verified"
-										Internal_Notes as "Internal Notes"
-										Patient_Contacted as "Patient Contacted"
-										Patient_Contact_Date as "Patient Contact Date"
-										Patient_Contact_Summary as "Patient Contact Summary"
-										Supporting_Evidence as "Supporting Evidence"
-									)
-								)
-								datablock3
-								(
-				     				title = "Resolution Decision"
-									fields
-									(
-										Investigation_Resolution.Resolution_Type as "Resolution Type"
-										Investigation_Resolution.Adjustment_Amount as "Adjustment Amount"
-										Investigation_Resolution.Resolution_Rationale as "Resolution Rationale"
-										Investigation_Resolution.Root_Cause as "Root Cause"
-										Investigation_Resolution.Root_Cause_Detail as "Root Cause Detail"
-									)
-								)
-								datablock5
-								(
-				     				title = "Status & Assignment"
-									fields
-									(
-										Investigation_Resolution.Created_By as "Created By"
-										Investigation_Resolution.Approval_Status as "Approval Status"
-										Investigation_Resolution.Resolution_Approval_Due_Date as "Approval Due Date"
-										Investigation_Resolution.Approver as "Approver"
-										Investigation_Resolution.Approver_Comments as "Approver Comments"
-									)
-								)
-							)
-								menu
-								(
-									header
-									(
-									)
-								)
+							Investigation_Resolution.Dispute
+							Investigation_Resolution.Resolution_ID as "Resolution ID"
+							Investigation_Resolution.Resolution_Type as "Resolution Type"
+							Investigation_Resolution.Adjustment_Amount as "Adjustment Amount"
+							Investigation_Resolution.Root_Cause as "Root Cause"
+							Investigation_Resolution.Root_Cause_Detail as "Root Cause Detail"
+							Investigation_Resolution.Resolution_Rationale as "Resolution Rationale"
+							Investigation_Resolution.Approval_Status as "Approval Status"
+							Investigation_Resolution.Approver_Comments as "Approver Comments"
+							Investigation_Resolution.Approver
+							Investigation_Resolution.Resolution_Approval_Due_Date as "Approval Due Date"
+							Disputed_Amount as "Disputed Amount"
+							Dispute_ID as "Dispute ID"
+							AI_Dispute_Summary as "Dispute Summary"
+							Patient.Added_Time as "Added Time"
 						)
-					
+					)
+				)
+				menu
+				(
+					header ( Edit Delete )
+				)
+			)
 		}
 	
 		report My_Under_Investigation
 		{
-		
-						quickview
+			quickview
+			(
+				layout
+				(
+					type = -1
+					datablock1
+					(
+						layout type = -1
+						fields
 						(
-							layout
-							(
-								datablock1
-								(
-									fields
-									(
-										Dispute_ID as "Dispute ID"
-										Patient
-										AI_Dispute_Summary as "Dispute Summary"
-										Disputed_Amount as "Disputed Amount"
-										Category
-										Category.Priority as "Priority"
-										Status
-									)
-								)
-							)
-								menu
-								(
-									header
-									(
-									)
-								)
-		    				action
-		    				(
-								on click
-								(
-									View Record   	   
-		    					)
-								on right click
-								(
-									View Record   	   
-		    					)
-		     				)
+							Dispute_ID as "Dispute ID"
+							Patient
+							Category
+							Disputed_Amount as "Disputed Amount"
+							Priority
+							Status
 						)
-		
-						detailview
+					)
+				)
+				menu
+				(
+					header ( Edit Delete )
+					record ( Edit Delete )
+				)
+				action
+				(
+					on click ( View Record )
+					on right click ( Edit Delete View Record )
+				)
+			)
+			detailview
+			(
+				layout
+				(
+					type = 1
+					datablock1
+					(
+						layout type = -2
+						fields
 						(
-							layout
-							(
-				 				type = 2
-								datablock1
-								(
-				     				title = "Overview"
-									fields
-									(
-										Dispute_ID as "Dispute ID"
-										AI_Dispute_Summary as "Dispute Summary"
-										Patient.Added_Time as "Added Time"
-									)
-								)
-								datablock4
-								(
-				     				title = "Case Information"
-									fields
-									(
-										Patient
-										Case
-										Insurance_Payer as "Insurance Payer"
-										Total_Billed_Amount as "Total Billed Amount"
-										Patient_Share as "Patient Share"
-									)
-								)
-								datablock5
-								(
-				     				title = "Dispute Details"
-									fields
-									(
-										Disputed_Amount as "Disputed Amount"
-										Reason_for_Dispute as "Reason for Dispute"
-										Dispute_Source as "Dispute Source"
-										Email
-										Supporting_Documents as "Supporting Documents"
-									)
-								)
-								datablock7
-								(
-				     				title = "Classification"
-									fields
-									(
-										Category
-										Sub_Category as "Sub-Category"
-									)
-								)
-								datablock8
-								(
-				     				title = "Disputed Charge Line"
-				     				related field = Disputed_Charge_Line
-									fields
-									(
-										Charge
-										CPT_Code as "CPT Code"
-										Billed_Line_Amount as "Billed Line Amount"
-										Disputed_Line_Amount as "Disputed Line Amount"
-										Line_Reason as "Line Reason"
-									)
-								)
-								datablock6
-								(
-				     				title = "SLA & Status"
-									fields
-									(
-										Status
-										Priority
-										Investigation_Due_Date as "Investigation Due Date"
-										Investigation_Start_Time as "Investigation Start Time"
-									)
-								)
-								datablock9
-								(
-				     				title = "Assignment & Audit Trail"
-									fields
-									(
-										Assigned_Role as "Assigned Role"
-										Assigned_To as "Assigned To"
-										Approver
-										Created_By_Type as "Created By Type"
-										Created_By_User as "Created By User"
-										Closed_By_User as "Closed By User"
-									)
-								)
-								datablock10
-								(
-				     				title = "Investigation Resolution"
-				     				related field = Investigation_Resolution[Dispute.Investigation_Resolution is not null]
-									fields
-									(
-										Resolution_ID as "Resolution ID"
-										Resolution_Type as "Resolution Type"
-										Adjustment_Amount as "Adjustment Amount"
-										Root_Cause as "Root Cause"
-										Resolution_Rationale as "Resolution Rationale"
-										Findings
-										Internal_Notes as "Internal Notes"
-										Approval_Status as "Approval Status"
-										Resolution_Approval_Due_Date as "Resolution Approval Due Date"
-										Approver_Comments as "Approver Comments"
-									)
-								)
-								datablock11
-								(
-				     				title = "Communication Log"
-				     				related field = Communication_Log[Dispute.Communication_Log is not null]
-									fields
-									(
-										Time
-										Channel
-										Contact_Person as "Contact Person"
-										Summary
-										Follow_Up_Required as "Follow-Up Required"
-										Follow_Up_Date as "Follow-Up Date"
-										Logged_By as "Logged By"
-									)
-								)
-							)
-								menu
-								(
-									header
-									(
-										Delete 
-									)
-								)
+							Dispute_ID as "Dispute ID"
+							Patient
+							Case
+							Insurance_Payer as "Insurance Payer"
+							Total_Billed_Amount as "Total Billed Amount"
+							Patient_Share as "Patient Share"
+							Disputed_Amount as "Disputed Amount"
+							Dispute_Source as "Dispute Source"
+							Reason_for_Dispute as "Reason for Dispute"
+							Category
+							Sub_Category as "Sub-Category"
+							Priority
+							Status
+							Investigation_Due_Date as "Investigation Due Date"
+							Created_By_User as "Created By User"
+							AI_Dispute_Summary as "Dispute Summary"
+							Patient.Added_Time as "Added Time"
 						)
-					
+					)
+				)
+				menu
+				(
+					header ( Edit Delete )
+				)
+			)
 		}
 	
 		report Pending_Approval
 		{
-		
-						quickview
+			quickview
+			(
+				layout
+				(
+					type = -1
+					datablock1
+					(
+						layout type = -1
+						fields
 						(
-							layout
-							(
-								datablock1
-								(
-									fields
-									(
-										Investigation_Resolution.Resolution_ID as "Resolution ID"
-										Investigation_Resolution.Dispute as "Dispute"
-										Investigation_Resolution.Resolution_Type as "Resolution Type"
-										Investigation_Resolution.Adjustment_Amount as "Adjustment Amount"
-										Investigation_Resolution.Root_Cause as "Root Cause"
-										Investigation_Resolution.Created_By as "Created By"
-										Investigation_Resolution.Approver as "Approver"
-										Investigation_Resolution.Resolution_Approval_Due_Date as "Approval Due Date"
-									)
-								)
-							)
-								menu
-								(
-									header
-									(
-									)
-								)
-		    				action
-		    				(
-								on click
-								(
-									View Record   	   
-		    					)
-								on right click
-								(
-									View Record   	   
-		    					)
-		     				)
+							Investigation_Resolution.Resolution_ID as "Resolution ID"
+							Dispute_ID as "Dispute ID"
+							AI_Dispute_Summary as "Dispute Summary"
+							Investigation_Resolution.Resolution_Type as "Resolution Type"
+							Investigation_Resolution.Approval_Status as "Approval Status"
+							Investigation_Resolution.Resolution_Approval_Due_Date as "Approval Due Date"
 						)
-		
-						detailview
+					)
+				)
+				menu
+				(
+					header ( Edit Delete )
+					record ( Edit Delete )
+				)
+				action
+				(
+					on click ( View Record )
+					on right click ( Edit Delete View Record )
+				)
+			)
+			detailview
+			(
+				layout
+				(
+					type = 1
+					datablock1
+					(
+						layout type = -2
+						fields
 						(
-							layout
-							(
-				 				type = 2
-								datablock1
-								(
-				     				title = "Overview"
-									fields
-									(
-										Investigation_Resolution.Resolution_ID as "Resolution ID"
-										Investigation_Resolution.Resolution_Type as "Resolution Type"
-										Investigation_Resolution.Adjustment_Amount as "Adjustment Amount"
-									)
-								)
-								datablock4
-								(
-				     				title = "Dispute"
-									fields
-									(
-										Dispute_ID as "Dispute ID"
-										AI_Dispute_Summary as "Dispute Summary"
-										Disputed_Amount as "Disputed Amount"
-										Patient.Added_Time as "Added Time"
-									)
-								)
-								datablock2
-								(
-				     				title = "Investigation Notes"
-				     				related field = Investigation_Resolution
-									fields
-									(
-										Findings
-										Charge_Verified as "Charge Verified"
-										Internal_Notes as "Internal Notes"
-										Patient_Contacted as "Patient Contacted"
-										Patient_Contact_Date as "Patient Contact Date"
-										Patient_Contact_Summary as "Patient Contact Summary"
-										Supporting_Evidence as "Supporting Evidence"
-									)
-								)
-								datablock3
-								(
-				     				title = "Resolution Decision"
-									fields
-									(
-										Investigation_Resolution.Resolution_Type as "Resolution Type"
-										Investigation_Resolution.Adjustment_Amount as "Adjustment Amount"
-										Investigation_Resolution.Resolution_Rationale as "Resolution Rationale"
-										Investigation_Resolution.Root_Cause as "Root Cause"
-										Investigation_Resolution.Root_Cause_Detail as "Root Cause Detail"
-									)
-								)
-								datablock5
-								(
-				     				title = "Status & Assignment"
-									fields
-									(
-										Investigation_Resolution.Created_By as "Created By"
-										Investigation_Resolution.Approval_Status as "Approval Status"
-										Investigation_Resolution.Resolution_Approval_Due_Date as "Approval Due Date"
-										Investigation_Resolution.Approver as "Approver"
-										Investigation_Resolution.Approver_Comments as "Approver Comments"
-									)
-								)
-							)
-								menu
-								(
-									header
-									(
-									)
-								)
+							Investigation_Resolution.Dispute
+							Investigation_Resolution.Resolution_ID as "Resolution ID"
+							Investigation_Resolution.Resolution_Type as "Resolution Type"
+							Investigation_Resolution.Adjustment_Amount as "Adjustment Amount"
+							Investigation_Resolution.Root_Cause as "Root Cause"
+							Investigation_Resolution.Root_Cause_Detail as "Root Cause Detail"
+							Investigation_Resolution.Resolution_Rationale as "Resolution Rationale"
+							Investigation_Resolution.Approval_Status as "Approval Status"
+							Investigation_Resolution.Approver_Comments as "Approver Comments"
+							Investigation_Resolution.Approver
+							Investigation_Resolution.Resolution_Approval_Due_Date as "Approval Due Date"
+							Disputed_Amount as "Disputed Amount"
+							Dispute_ID as "Dispute ID"
+							AI_Dispute_Summary as "Dispute Summary"
+							Patient.Added_Time as "Added Time"
 						)
-					
+					)
+				)
+				menu
+				(
+					header ( Edit Delete )
+				)
+			)
 		}
 	
 		report Rejected_Resolutions
 		{
-		
-						quickview
+			quickview
+			(
+				layout
+				(
+					type = -1
+					datablock1
+					(
+						layout type = -1
+						fields
 						(
-							layout
-							(
-								datablock1
-								(
-									fields
-									(
-										Investigation_Resolution.Resolution_ID as "Resolution ID"
-										Investigation_Resolution.Dispute as "Dispute"
-										Investigation_Resolution.Resolution_Type as "Resolution Type"
-										Investigation_Resolution.Adjustment_Amount as "Adjustment Amount"
-										Investigation_Resolution.Root_Cause as "Root Cause"
-										Investigation_Resolution.Created_By as "Created By"
-										Investigation_Resolution.Approver as "Approver"
-										Investigation_Resolution.Resolution_Approval_Due_Date as "Approval Due Date"
-										"AI Email"
-									)
-								)
-							)
-								menu
-								(
-									header
-									(
-									)
-								record
-								(
-									"AI Email"
-		    					)
-								)
-		    				action
-		    				(
-								on click
-								(
-									View Record   	   
-		    					)
-								on right click
-								(
-									View Record   	   
-		    					)
-		     				)
+							Investigation_Resolution.Resolution_ID as "Resolution ID"
+							Dispute_ID as "Dispute ID"
+							AI_Dispute_Summary as "Dispute Summary"
+							Investigation_Resolution.Resolution_Type as "Resolution Type"
+							Investigation_Resolution.Approval_Status as "Approval Status"
+							Investigation_Resolution.Resolution_Approval_Due_Date as "Approval Due Date"
 						)
-		
-						detailview
+					)
+				)
+				menu
+				(
+					header ( Edit Delete "AI Email" )
+					record ( Edit Delete "AI Email" )
+				)
+				action
+				(
+					on click ( View Record )
+					on right click ( Edit Delete "AI Email" View Record )
+				)
+			)
+			detailview
+			(
+				layout
+				(
+					type = 1
+					datablock1
+					(
+						layout type = -2
+						fields
 						(
-							layout
-							(
-				 				type = 2
-								datablock1
-								(
-				     				title = "Overview"
-									fields
-									(
-										Investigation_Resolution.Resolution_ID as "Resolution ID"
-										Investigation_Resolution.Resolution_Type as "Resolution Type"
-										Investigation_Resolution.Adjustment_Amount as "Adjustment Amount"
-									)
-								)
-								datablock4
-								(
-				     				title = "Dispute"
-									fields
-									(
-										Dispute_ID as "Dispute ID"
-										AI_Dispute_Summary as "Dispute Summary"
-										Disputed_Amount as "Disputed Amount"
-										Patient.Added_Time as "Added Time"
-									)
-								)
-								datablock2
-								(
-				     				title = "Investigation Notes"
-				     				related field = Investigation_Resolution
-									fields
-									(
-										Findings
-										Charge_Verified as "Charge Verified"
-										Internal_Notes as "Internal Notes"
-										Patient_Contacted as "Patient Contacted"
-										Patient_Contact_Date as "Patient Contact Date"
-										Patient_Contact_Summary as "Patient Contact Summary"
-										Supporting_Evidence as "Supporting Evidence"
-									)
-								)
-								datablock3
-								(
-				     				title = "Resolution Decision"
-									fields
-									(
-										Investigation_Resolution.Resolution_Type as "Resolution Type"
-										Investigation_Resolution.Adjustment_Amount as "Adjustment Amount"
-										Investigation_Resolution.Resolution_Rationale as "Resolution Rationale"
-										Investigation_Resolution.Root_Cause as "Root Cause"
-										Investigation_Resolution.Root_Cause_Detail as "Root Cause Detail"
-									)
-								)
-								datablock5
-								(
-				     				title = "Status & Assignment"
-									fields
-									(
-										Investigation_Resolution.Created_By as "Created By"
-										Investigation_Resolution.Approval_Status as "Approval Status"
-										Investigation_Resolution.Resolution_Approval_Due_Date as "Approval Due Date"
-										Investigation_Resolution.Approver as "Approver"
-										Investigation_Resolution.Approver_Comments as "Approver Comments"
-									)
-								)
-							)
-								menu
-								(
-									header
-									(
-										"AI Email"
-									)
-								)
+							Investigation_Resolution.Dispute
+							Investigation_Resolution.Resolution_ID as "Resolution ID"
+							Investigation_Resolution.Resolution_Type as "Resolution Type"
+							Investigation_Resolution.Adjustment_Amount as "Adjustment Amount"
+							Investigation_Resolution.Root_Cause as "Root Cause"
+							Investigation_Resolution.Root_Cause_Detail as "Root Cause Detail"
+							Investigation_Resolution.Resolution_Rationale as "Resolution Rationale"
+							Investigation_Resolution.Approval_Status as "Approval Status"
+							Investigation_Resolution.Approver_Comments as "Approver Comments"
+							Investigation_Resolution.Approver
+							Investigation_Resolution.Resolution_Approval_Due_Date as "Approval Due Date"
+							Disputed_Amount as "Disputed Amount"
+							Dispute_ID as "Dispute ID"
+							AI_Dispute_Summary as "Dispute Summary"
+							Patient.Added_Time as "Added Time"
 						)
-					
+					)
+				)
+				menu
+				(
+					header ( Edit Delete "AI Email" )
+				)
+			)
 		}
 	
 		report Resolution_Approval_Overdues
 		{
-		
-						quickview
+			quickview
+			(
+				layout
+				(
+					type = -1
+					datablock1
+					(
+						layout type = -1
+						fields
 						(
-							layout
-							(
-								datablock1
-								(
-									fields
-									(
-										Investigation_Resolution.Resolution_ID as "Resolution ID"
-										Investigation_Resolution.Dispute as "Dispute"
-										Investigation_Resolution.Resolution_Type as "Resolution Type"
-										Investigation_Resolution.Adjustment_Amount as "Adjustment Amount"
-										Investigation_Resolution.Root_Cause as "Root Cause"
-										Investigation_Resolution.Created_By as "Created By"
-										Investigation_Resolution.Approver as "Approver"
-										Investigation_Resolution.Approval_Status as "Approval Status"
-										Investigation_Resolution.Resolution_Approval_Due_Date as "Approval Due Date"
-									)
-								)
-							)
-								menu
-								(
-									header
-									(
-									)
-								)
-		    				action
-		    				(
-								on click
-								(
-									View Record   	   
-		    					)
-								on right click
-								(
-									View Record   	   
-		    					)
-		     				)
+							Investigation_Resolution.Resolution_ID as "Resolution ID"
+							Dispute_ID as "Dispute ID"
+							AI_Dispute_Summary as "Dispute Summary"
+							Investigation_Resolution.Resolution_Type as "Resolution Type"
+							Investigation_Resolution.Approval_Status as "Approval Status"
+							Investigation_Resolution.Resolution_Approval_Due_Date as "Approval Due Date"
 						)
-		
-						detailview
+					)
+				)
+				menu
+				(
+					header ( Edit Delete )
+					record ( Edit Delete )
+				)
+				action
+				(
+					on click ( View Record )
+					on right click ( Edit Delete View Record )
+				)
+			)
+			detailview
+			(
+				layout
+				(
+					type = 1
+					datablock1
+					(
+						layout type = -2
+						fields
 						(
-							layout
-							(
-				 				type = 2
-								datablock1
-								(
-				     				title = "Overview"
-									fields
-									(
-										Investigation_Resolution.Resolution_ID as "Resolution ID"
-										Investigation_Resolution.Resolution_Type as "Resolution Type"
-										Investigation_Resolution.Adjustment_Amount as "Adjustment Amount"
-									)
-								)
-								datablock4
-								(
-				     				title = "Dispute"
-									fields
-									(
-										Dispute_ID as "Dispute ID"
-										AI_Dispute_Summary as "Dispute Summary"
-										Disputed_Amount as "Disputed Amount"
-										Patient.Added_Time as "Added Time"
-									)
-								)
-								datablock2
-								(
-				     				title = "Investigation Notes"
-				     				related field = Investigation_Resolution
-									fields
-									(
-										Findings
-										Charge_Verified as "Charge Verified"
-										Internal_Notes as "Internal Notes"
-										Patient_Contacted as "Patient Contacted"
-										Patient_Contact_Date as "Patient Contact Date"
-										Patient_Contact_Summary as "Patient Contact Summary"
-										Supporting_Evidence as "Supporting Evidence"
-									)
-								)
-								datablock3
-								(
-				     				title = "Resolution Decision"
-									fields
-									(
-										Investigation_Resolution.Resolution_Type as "Resolution Type"
-										Investigation_Resolution.Adjustment_Amount as "Adjustment Amount"
-										Investigation_Resolution.Resolution_Rationale as "Resolution Rationale"
-										Investigation_Resolution.Root_Cause as "Root Cause"
-										Investigation_Resolution.Root_Cause_Detail as "Root Cause Detail"
-									)
-								)
-								datablock5
-								(
-				     				title = "Status & Assignment"
-									fields
-									(
-										Investigation_Resolution.Created_By as "Created By"
-										Investigation_Resolution.Approval_Status as "Approval Status"
-										Investigation_Resolution.Resolution_Approval_Due_Date as "Approval Due Date"
-										Investigation_Resolution.Approver as "Approver"
-										Investigation_Resolution.Approver_Comments as "Approver Comments"
-									)
-								)
-							)
-								menu
-								(
-									header
-									(
-									)
-								)
+							Investigation_Resolution.Dispute
+							Investigation_Resolution.Resolution_ID as "Resolution ID"
+							Investigation_Resolution.Resolution_Type as "Resolution Type"
+							Investigation_Resolution.Adjustment_Amount as "Adjustment Amount"
+							Investigation_Resolution.Root_Cause as "Root Cause"
+							Investigation_Resolution.Root_Cause_Detail as "Root Cause Detail"
+							Investigation_Resolution.Resolution_Rationale as "Resolution Rationale"
+							Investigation_Resolution.Approval_Status as "Approval Status"
+							Investigation_Resolution.Approver_Comments as "Approver Comments"
+							Investigation_Resolution.Approver
+							Investigation_Resolution.Resolution_Approval_Due_Date as "Approval Due Date"
+							Disputed_Amount as "Disputed Amount"
+							Dispute_ID as "Dispute ID"
+							AI_Dispute_Summary as "Dispute Summary"
+							Patient.Added_Time as "Added Time"
 						)
-					
+					)
+				)
+				menu
+				(
+					header ( Edit Delete )
+				)
+			)
 		}
 	
 		report Resolution_Communicated
 		{
-		
-						quickview
+			quickview
+			(
+				layout
+				(
+					type = -1
+					datablock1
+					(
+						layout type = -1
+						fields
 						(
-							layout
-							(
-								datablock1
-								(
-									fields
-									(
-										Dispute_ID as "Dispute ID"
-										Patient
-										AI_Dispute_Summary as "Dispute Summary"
-										Disputed_Amount as "Disputed Amount"
-										Category
-										Category.Priority as "Priority"
-										Assigned_To as "Assigned To"
-									)
-								)
-							)
-								menu
-								(
-									header
-									(
-									)
-								)
-		    				action
-		    				(
-								on click
-								(
-									View Record   	   
-		    					)
-								on right click
-								(
-									View Record   	   
-		    					)
-		     				)
+							Dispute_ID as "Dispute ID"
+							Patient
+							Category
+							Disputed_Amount as "Disputed Amount"
+							Priority
+							Status
 						)
-		
-						detailview
+					)
+				)
+				menu
+				(
+					header ( Edit Delete )
+					record ( Edit Delete )
+				)
+				action
+				(
+					on click ( View Record )
+					on right click ( Edit Delete View Record )
+				)
+			)
+			detailview
+			(
+				layout
+				(
+					type = 1
+					datablock1
+					(
+						layout type = -2
+						fields
 						(
-							layout
-							(
-				 				type = 2
-								datablock1
-								(
-				     				title = "Overview"
-									fields
-									(
-										Dispute_ID as "Dispute ID"
-										AI_Dispute_Summary as "Dispute Summary"
-										Patient.Added_Time as "Added Time"
-									)
-								)
-								datablock4
-								(
-				     				title = "Case Information"
-									fields
-									(
-										Patient
-										Case
-										Insurance_Payer as "Insurance Payer"
-										Total_Billed_Amount as "Total Billed Amount"
-										Patient_Share as "Patient Share"
-									)
-								)
-								datablock5
-								(
-				     				title = "Dispute Details"
-									fields
-									(
-										Disputed_Amount as "Disputed Amount"
-										Reason_for_Dispute as "Reason for Dispute"
-										Dispute_Source as "Dispute Source"
-										Email
-										Supporting_Documents as "Supporting Documents"
-									)
-								)
-								datablock7
-								(
-				     				title = "Classification"
-									fields
-									(
-										Category
-										Sub_Category as "Sub-Category"
-									)
-								)
-								datablock8
-								(
-				     				title = "Disputed Charge Line"
-				     				related field = Disputed_Charge_Line
-									fields
-									(
-										Charge
-										CPT_Code as "CPT Code"
-										Billed_Line_Amount as "Billed Line Amount"
-										Disputed_Line_Amount as "Disputed Line Amount"
-										Line_Reason as "Line Reason"
-									)
-								)
-								datablock6
-								(
-				     				title = "SLA & Status"
-									fields
-									(
-										Status
-										Priority
-										Investigation_Due_Date as "Investigation Due Date"
-										Investigation_Start_Time as "Investigation Start Time"
-									)
-								)
-								datablock9
-								(
-				     				title = "Assignment & Audit Trail"
-									fields
-									(
-										Assigned_Role as "Assigned Role"
-										Assigned_To as "Assigned To"
-										Approver
-										Created_By_Type as "Created By Type"
-										Created_By_User as "Created By User"
-										Closed_By_User as "Closed By User"
-									)
-								)
-								datablock10
-								(
-				     				title = "Investigation Resolution"
-				     				related field = Investigation_Resolution[Dispute.Investigation_Resolution is not null]
-									fields
-									(
-										Resolution_ID as "Resolution ID"
-										Resolution_Type as "Resolution Type"
-										Approval_Status as "Approval Status"
-										Root_Cause as "Root Cause"
-										Adjustment_Amount as "Adjustment Amount"
-										Resolution_Approval_Due_Date as "Resolution Approval Due Date"
-										Findings
-										Resolution_Rationale as "Resolution Rationale"
-										Approver_Comments as "Approver Comments"
-										Internal_Notes as "Internal Notes"
-									)
-								)
-								datablock11
-								(
-				     				title = "Communication Log"
-				     				related field = Communication_Log[Dispute.Communication_Log is not null]
-									fields
-									(
-										Time
-										Channel
-										Contact_Person as "Contact Person"
-										Summary
-										Follow_Up_Required as "Follow-Up Required"
-										Follow_Up_Date as "Follow-Up Date"
-										Logged_By as "Logged By"
-									)
-								)
-							)
-								menu
-								(
-									header
-									(
-									)
-								)
+							Dispute_ID as "Dispute ID"
+							Patient
+							Case
+							Insurance_Payer as "Insurance Payer"
+							Total_Billed_Amount as "Total Billed Amount"
+							Patient_Share as "Patient Share"
+							Disputed_Amount as "Disputed Amount"
+							Dispute_Source as "Dispute Source"
+							Reason_for_Dispute as "Reason for Dispute"
+							Category
+							Sub_Category as "Sub-Category"
+							Priority
+							Status
+							Investigation_Due_Date as "Investigation Due Date"
+							Created_By_User as "Created By User"
+							AI_Dispute_Summary as "Dispute Summary"
+							Patient.Added_Time as "Added Time"
 						)
-					
+					)
+				)
+				menu
+				(
+					header ( Edit Delete )
+				)
+			)
 		}
 	
 		report Returned_For_Rework
 		{
-		
-						quickview
+			quickview
+			(
+				layout
+				(
+					type = -1
+					datablock1
+					(
+						layout type = -1
+						fields
 						(
-							layout
-							(
-								datablock1
-								(
-									fields
-									(
-										Investigation_Resolution.Resolution_ID as "Resolution ID"
-										Investigation_Resolution.Dispute as "Dispute"
-										Investigation_Resolution.Resolution_Type as "Resolution Type"
-										Investigation_Resolution.Adjustment_Amount as "Adjustment Amount"
-										Investigation_Resolution.Root_Cause as "Root Cause"
-										Investigation_Resolution.Created_By as "Created By"
-										Investigation_Resolution.Approver as "Approver"
-										Investigation_Resolution.Resolution_Approval_Due_Date as "Approval Due Date"
-									)
-								)
-							)
-								menu
-								(
-									header
-									(
-									)
-								)
-		    				action
-		    				(
-								on click
-								(
-									View Record   	   
-		    					)
-								on right click
-								(
-									View Record   	   
-		    					)
-		     				)
+							Investigation_Resolution.Resolution_ID as "Resolution ID"
+							Dispute_ID as "Dispute ID"
+							AI_Dispute_Summary as "Dispute Summary"
+							Investigation_Resolution.Resolution_Type as "Resolution Type"
+							Investigation_Resolution.Approval_Status as "Approval Status"
+							Investigation_Resolution.Resolution_Approval_Due_Date as "Approval Due Date"
 						)
-		
-						detailview
+					)
+				)
+				menu
+				(
+					header ( Edit Delete )
+					record ( Edit Delete )
+				)
+				action
+				(
+					on click ( View Record )
+					on right click ( Edit Delete View Record )
+				)
+			)
+			detailview
+			(
+				layout
+				(
+					type = 1
+					datablock1
+					(
+						layout type = -2
+						fields
 						(
-							layout
-							(
-				 				type = 2
-								datablock1
-								(
-				     				title = "Overview"
-									fields
-									(
-										Investigation_Resolution.Resolution_ID as "Resolution ID"
-										Investigation_Resolution.Resolution_Type as "Resolution Type"
-										Investigation_Resolution.Adjustment_Amount as "Adjustment Amount"
-									)
-								)
-								datablock4
-								(
-				     				title = "Dispute"
-									fields
-									(
-										Dispute_ID as "Dispute ID"
-										AI_Dispute_Summary as "Dispute Summary"
-										Disputed_Amount as "Disputed Amount"
-										Patient.Added_Time as "Added Time"
-									)
-								)
-								datablock2
-								(
-				     				title = "Investigation Notes"
-				     				related field = Investigation_Resolution
-									fields
-									(
-										Findings
-										Charge_Verified as "Charge Verified"
-										Internal_Notes as "Internal Notes"
-										Patient_Contacted as "Patient Contacted"
-										Patient_Contact_Date as "Patient Contact Date"
-										Patient_Contact_Summary as "Patient Contact Summary"
-										Supporting_Evidence as "Supporting Evidence"
-									)
-								)
-								datablock3
-								(
-				     				title = "Resolution Decision"
-									fields
-									(
-										Investigation_Resolution.Resolution_Type as "Resolution Type"
-										Investigation_Resolution.Adjustment_Amount as "Adjustment Amount"
-										Investigation_Resolution.Resolution_Rationale as "Resolution Rationale"
-										Investigation_Resolution.Root_Cause as "Root Cause"
-										Investigation_Resolution.Root_Cause_Detail as "Root Cause Detail"
-									)
-								)
-								datablock5
-								(
-				     				title = "Status & Assignment"
-									fields
-									(
-										Investigation_Resolution.Created_By as "Created By"
-										Investigation_Resolution.Approval_Status as "Approval Status"
-										Investigation_Resolution.Resolution_Approval_Due_Date as "Approval Due Date"
-										Investigation_Resolution.Approver as "Approver"
-										Investigation_Resolution.Approver_Comments as "Approver Comments"
-									)
-								)
-							)
-								menu
-								(
-									header
-									(
-									)
-								)
+							Investigation_Resolution.Dispute
+							Investigation_Resolution.Resolution_ID as "Resolution ID"
+							Investigation_Resolution.Resolution_Type as "Resolution Type"
+							Investigation_Resolution.Adjustment_Amount as "Adjustment Amount"
+							Investigation_Resolution.Root_Cause as "Root Cause"
+							Investigation_Resolution.Root_Cause_Detail as "Root Cause Detail"
+							Investigation_Resolution.Resolution_Rationale as "Resolution Rationale"
+							Investigation_Resolution.Approval_Status as "Approval Status"
+							Investigation_Resolution.Approver_Comments as "Approver Comments"
+							Investigation_Resolution.Approver
+							Investigation_Resolution.Resolution_Approval_Due_Date as "Approval Due Date"
+							Disputed_Amount as "Disputed Amount"
+							Dispute_ID as "Dispute ID"
+							AI_Dispute_Summary as "Dispute Summary"
+							Patient.Added_Time as "Added Time"
 						)
-					
+					)
+				)
+				menu
+				(
+					header ( Edit Delete )
+				)
+			)
 		}
 	
 		report Unassigned_Disputes
 		{
-		
-						quickview
+			quickview
+			(
+				layout
+				(
+					type = -1
+					datablock1
+					(
+						layout type = -1
+						fields
 						(
-							layout
-							(
-								datablock1
-								(
-									fields
-									(
-										Dispute_ID as "Dispute ID"
-										Patient
-										AI_Dispute_Summary as "Dispute Summary"
-										Disputed_Amount as "Disputed Amount"
-										Category
-										Priority
-										Assigned_Role as "Assigned Role"
-									)
-								)
-							)
-								menu
-								(
-									header
-									(
-									)
-								record
-								(
-									Edit   	   
-									Delete   	   
-		    					)
-								)
-		    				action
-		    				(
-								on click
-								(
-									View Record   	   
-		    					)
-								on right click
-								(
-									View Record   	   
-		    					)
-		     				)
+							Dispute_ID as "Dispute ID"
+							Patient
+							Category
+							Disputed_Amount as "Disputed Amount"
+							Priority
+							Status
 						)
-		
-						detailview
+					)
+				)
+				menu
+				(
+					header ( Edit Delete )
+					record ( Edit Delete )
+				)
+				action
+				(
+					on click ( View Record )
+					on right click ( Edit Delete View Record )
+				)
+			)
+			detailview
+			(
+				layout
+				(
+					type = 1
+					datablock1
+					(
+						layout type = -2
+						fields
 						(
-							layout
-							(
-				 				type = 2
-								datablock1
-								(
-				     				title = "Overview"
-									fields
-									(
-										Dispute_ID as "Dispute ID"
-										AI_Dispute_Summary as "Dispute Summary"
-										Patient.Added_Time as "Added Time"
-									)
-								)
-								datablock4
-								(
-				     				title = "Case Information"
-									fields
-									(
-										Patient
-										Case
-										Insurance_Payer as "Insurance Payer"
-										Total_Billed_Amount as "Total Billed Amount"
-										Patient_Share as "Patient Share"
-									)
-								)
-								datablock5
-								(
-				     				title = "Dispute Details"
-									fields
-									(
-										Disputed_Amount as "Disputed Amount"
-										Reason_for_Dispute as "Reason for Dispute"
-										Dispute_Source as "Dispute Source"
-										Email
-										Supporting_Documents as "Supporting Documents"
-									)
-								)
-								datablock7
-								(
-				     				title = "Classification"
-									fields
-									(
-										Category
-										Sub_Category as "Sub-Category"
-									)
-								)
-								datablock8
-								(
-									layout type = -1
-				     				title = "Disputed Charge Line"
-				     				related field = Disputed_Charge_Line
-									fields
-									(
-										Charge
-										CPT_Code as "CPT Code"
-										Billed_Line_Amount as "Billed Line Amount"
-										Disputed_Line_Amount as "Disputed Line Amount"
-										Line_Reason as "Line Reason"
-									)
-								)
-								datablock6
-								(
-				     				title = "SLA & Status"
-									fields
-									(
-										Status
-										Priority
-										Investigation_Due_Date as "Investigation Due Date"
-									)
-								)
-								datablock9
-								(
-				     				title = "Assignment & Audit Trail"
-									fields
-									(
-										Assigned_Role as "Assigned Role"
-										Created_By_Type as "Created By Type"
-										Created_By_User as "Created By User"
-									)
-								)
-								datablock11
-								(
-									layout type = -1
-				     				title = "Communication Log"
-				     				related field = Communication_Log[Dispute.Communication_Log is not null]
-									fields
-									(
-										Time
-										Channel
-										Contact_Person as "Contact Person"
-										Summary
-										Follow_Up_Required as "Follow-Up Required"
-										Follow_Up_Date as "Follow-Up Date"
-										Logged_By as "Logged By"
-									)
-								)
-							)
-								menu
-								(
-									header
-									(
-										Edit 
-										Delete 
-									)
-								)
+							Dispute_ID as "Dispute ID"
+							Patient
+							Case
+							Insurance_Payer as "Insurance Payer"
+							Total_Billed_Amount as "Total Billed Amount"
+							Patient_Share as "Patient Share"
+							Disputed_Amount as "Disputed Amount"
+							Dispute_Source as "Dispute Source"
+							Reason_for_Dispute as "Reason for Dispute"
+							Category
+							Sub_Category as "Sub-Category"
+							Priority
+							Status
+							Investigation_Due_Date as "Investigation Due Date"
+							Created_By_User as "Created By User"
+							AI_Dispute_Summary as "Dispute Summary"
+							Patient.Added_Time as "Added Time"
 						)
-					
+					)
+				)
+				menu
+				(
+					header ( Edit Delete )
+				)
+			)
 		}
 	
 		report Under_Investigation
 		{
-		
-						quickview
+			quickview
+			(
+				layout
+				(
+					type = -1
+					datablock1
+					(
+						layout type = -1
+						fields
 						(
-							layout
-							(
-								datablock1
-								(
-									fields
-									(
-										Dispute_ID as "Dispute ID"
-										Patient
-										AI_Dispute_Summary as "Dispute Summary"
-										Disputed_Amount as "Disputed Amount"
-										Category
-										Category.Priority as "Priority"
-										Assigned_To as "Assigned To"
-									)
-								)
-							)
-								menu
-								(
-									header
-									(
-									)
-								)
-		    				action
-		    				(
-								on click
-								(
-									View Record   	   
-		    					)
-								on right click
-								(
-									View Record   	   
-		    					)
-		     				)
+							Dispute_ID as "Dispute ID"
+							Patient
+							Category
+							Disputed_Amount as "Disputed Amount"
+							Priority
+							Status
 						)
-		
-						detailview
+					)
+				)
+				menu
+				(
+					header ( Edit Delete )
+					record ( Edit Delete )
+				)
+				action
+				(
+					on click ( View Record )
+					on right click ( Edit Delete View Record )
+				)
+			)
+			detailview
+			(
+				layout
+				(
+					type = 1
+					datablock1
+					(
+						layout type = -2
+						fields
 						(
-							layout
-							(
-				 				type = 2
-								datablock1
-								(
-				     				title = "Overview"
-									fields
-									(
-										Dispute_ID as "Dispute ID"
-										AI_Dispute_Summary as "Dispute Summary"
-										Patient.Added_Time as "Added Time"
-									)
-								)
-								datablock4
-								(
-				     				title = "Case Information"
-									fields
-									(
-										Patient
-										Case
-										Insurance_Payer as "Insurance Payer"
-										Total_Billed_Amount as "Total Billed Amount"
-										Patient_Share as "Patient Share"
-									)
-								)
-								datablock5
-								(
-				     				title = "Dispute Details"
-									fields
-									(
-										Disputed_Amount as "Disputed Amount"
-										Reason_for_Dispute as "Reason for Dispute"
-										Dispute_Source as "Dispute Source"
-										Email
-										Supporting_Documents as "Supporting Documents"
-									)
-								)
-								datablock7
-								(
-				     				title = "Classification"
-									fields
-									(
-										Category
-										Sub_Category as "Sub-Category"
-									)
-								)
-								datablock8
-								(
-				     				title = "Disputed Charge Line"
-				     				related field = Disputed_Charge_Line
-									fields
-									(
-										Charge
-										CPT_Code as "CPT Code"
-										Billed_Line_Amount as "Billed Line Amount"
-										Disputed_Line_Amount as "Disputed Line Amount"
-										Line_Reason as "Line Reason"
-									)
-								)
-								datablock6
-								(
-				     				title = "SLA & Status"
-									fields
-									(
-										Status
-										Priority
-										Investigation_Due_Date as "Investigation Due Date"
-										Investigation_Start_Time as "Investigation Start Time"
-									)
-								)
-								datablock9
-								(
-				     				title = "Assignment & Audit Trail"
-									fields
-									(
-										Assigned_Role as "Assigned Role"
-										Assigned_To as "Assigned To"
-										Approver
-										Created_By_Type as "Created By Type"
-										Created_By_User as "Created By User"
-										Closed_By_User as "Closed By User"
-									)
-								)
-								datablock10
-								(
-				     				title = "Investigation Resolution"
-				     				related field = Investigation_Resolution[Dispute.Investigation_Resolution is not null]
-									fields
-									(
-										Resolution_ID as "Resolution ID"
-										Resolution_Type as "Resolution Type"
-										Approval_Status as "Approval Status"
-										Root_Cause as "Root Cause"
-										Adjustment_Amount as "Adjustment Amount"
-										Resolution_Approval_Due_Date as "Resolution Approval Due Date"
-										Findings
-										Resolution_Rationale as "Resolution Rationale"
-										Approver_Comments as "Approver Comments"
-										Internal_Notes as "Internal Notes"
-									)
-								)
-								datablock11
-								(
-				     				title = "Communication Log"
-				     				related field = Communication_Log[Dispute.Communication_Log is not null]
-									fields
-									(
-										Time
-										Channel
-										Contact_Person as "Contact Person"
-										Summary
-										Follow_Up_Required as "Follow-Up Required"
-										Follow_Up_Date as "Follow-Up Date"
-										Logged_By as "Logged By"
-									)
-								)
-							)
-								menu
-								(
-									header
-									(
-									)
-								)
+							Dispute_ID as "Dispute ID"
+							Patient
+							Case
+							Insurance_Payer as "Insurance Payer"
+							Total_Billed_Amount as "Total Billed Amount"
+							Patient_Share as "Patient Share"
+							Disputed_Amount as "Disputed Amount"
+							Dispute_Source as "Dispute Source"
+							Reason_for_Dispute as "Reason for Dispute"
+							Category
+							Sub_Category as "Sub-Category"
+							Priority
+							Status
+							Investigation_Due_Date as "Investigation Due Date"
+							Created_By_User as "Created By User"
+							AI_Dispute_Summary as "Dispute Summary"
+							Patient.Added_Time as "Added Time"
 						)
-					
+					)
+				)
+				menu
+				(
+					header ( Edit Delete )
+				)
+			)
 		}
 	
 		report Dispute_Subcategories
@@ -12142,113 +10976,76 @@ application "Healthcare-Dispute-Resolution-Management"
 	
 		report All_Resolution_Decisions_Master
 		{
-		
-						quickview
+			quickview
+			(
+				layout
+				(
+					type = -1
+					datablock1
+					(
+						layout type = -1
+						fields
 						(
-							layout
-							(
-								datablock1
-								(
-									fields
-									(
-										Dispute
-										Resolution_ID as "Resolution ID"
-										Resolution_Type as "Resolution Type"
-										Adjustment_Amount as "Adjustment Amount"
-										Root_Cause as "Root Cause"
-										Created_By as "Created By"
-										Approval_Status as "Approval Status"
-										Approver
-										Resolution_Approval_Due_Date as "Resolution Approval Due Date"
-									)
-								)
-							)
-								menu
-								(
-									header
-									(
-									)
-								record
-								(
-									Edit   	   
-									Delete   	   
-		    					)
-								)
-		    				action
-		    				(
-								on click
-								(
-									View Record   	   
-		    					)
-								on right click
-								(
-									Edit   	   
-									Delete   	   
-									View Record   	   
-		    					)
-		     				)
+							Dispute
+							Resolution_ID as "Resolution ID"
+							Resolution_Type as "Resolution Type"
+							Adjustment_Amount as "Adjustment Amount"
+							Root_Cause as "Root Cause"
+							Approval_Status as "Approval Status"
+							Approver
 						)
-		
-						detailview
+					)
+				)
+				menu
+				(
+					header ( Edit Delete )
+					record ( Edit Delete )
+				)
+				action
+				(
+					on click ( View Record )
+					on right click ( Edit Delete View Record )
+				)
+			)
+			detailview
+			(
+				layout
+				(
+					type = 1
+					datablock1
+					(
+						layout type = -2
+						fields
 						(
-							layout
-							(
-				 				type = 2
-								datablock1
-								(
-				     				title = "Overview"
-									fields
-									(
-										Resolution_ID as "Resolution ID"
-										Dispute
-										Findings
-										Charge_Verified as "Charge Verified"
-										Internal_Notes as "Internal Notes"
-										Patient_Contacted as "Patient Contacted"
-										Patient_Contact_Date as "Patient Contact Date"
-										Patient_Contact_Summary as "Patient Contact Summary"
-										Supporting_Evidence as "Supporting Evidence"
-										Resolution_Type as "Resolution Type"
-										Adjustment_Amount as "Adjustment Amount"
-										Resolution_Rationale as "Resolution Rationale"
-										Root_Cause as "Root Cause"
-										Root_Cause_Detail as "Root Cause Detail"
-										Created_By as "Created By"
-										Approval_Status as "Approval Status"
-										Approver
-										Resolution_Approval_Due_Date as "Resolution Approval Due Date"
-										Approver_Comments as "Approver Comments"
-										Approval_Time as "Approval Time"
-										Resolution_Days
-									)
-								)
-								datablock2
-								(
-									layout type = -1
-				     				title = "Dispute Intake"
-				     				related field = Dispute_Intake.Investigation_Resolution
-									fields
-									(
-										Patient
-										Patient_Name as "Patient Name"
-										Insurance_Payer as "Insurance Payer"
-										Case
-										Total_Billed_Amount as "Total Billed Amount"
-										Patient_Share as "Patient Share"
-										Disputed_Amount as "Disputed Amount"
-									)
-								)
-							)
-								menu
-								(
-									header
-									(
-										Edit 
-										Delete 
-									)
-								)
+							Resolution_ID as "Resolution ID"
+							Dispute
+							Findings
+							Charge_Verified as "Charge Verified"
+							Internal_Notes as "Internal Notes"
+							Patient_Contacted as "Patient Contacted"
+							Patient_Contact_Date as "Patient Contact Date"
+							Patient_Contact_Summary as "Patient Contact Summary"
+							Supporting_Evidence as "Supporting Evidence"
+							Resolution_Type as "Resolution Type"
+							Adjustment_Amount as "Adjustment Amount"
+							Resolution_Rationale as "Resolution Rationale"
+							Root_Cause as "Root Cause"
+							Root_Cause_Detail as "Root Cause Detail"
+							Created_By as "Created By"
+							Approval_Status as "Approval Status"
+							Approver
+							Resolution_Approval_Due_Date as "Resolution Approval Due Date"
+							Approver_Comments as "Approver Comments"
+							Approval_Time as "Approval Time"
+							Resolution_Days
 						)
-					
+					)
+				)
+				menu
+				(
+					header ( Edit Delete )
+				)
+			)
 		}
 	
 		report Patients
@@ -12662,11 +11459,11 @@ application "Healthcare-Dispute-Resolution-Management"
 				{
 					form  Add_Organization
 					{
-						icon = "design-2-filter-organization"
+						icon = "business-building"
 					}
 					form  ID_Configuration
 					{
-						icon = "users-2-contacts-45"
+						icon = "files-paper"
 					}
 					form  Insurance_Payer
 					{
@@ -12702,7 +11499,7 @@ application "Healthcare-Dispute-Resolution-Management"
 					}
 					form  User
 					{
-						icon = "users-2-woman-up"
+						icon = "users-single-body"
 					}
 					systemcomponent
 					{
@@ -12736,11 +11533,11 @@ application "Healthcare-Dispute-Resolution-Management"
 					}
 					form  Communication_Log
 					{
-						icon = "tech-2-l-location"
+						icon = "location-pin"
 					}
 					form  Investigation_Resolution
 					{
-						icon = "media-1-action-74"
+						icon = "files-paper"
 					}
 					form  Disputed_Charge_Line
 					{
@@ -12768,7 +11565,7 @@ application "Healthcare-Dispute-Resolution-Management"
 					}
 					form  Resolution_Email
 					{
-						icon = "ui-1-email-84"
+						icon = "files-paper"
 					}
 					report Resolution_Email_Report
 					{
@@ -13122,2087 +11919,990 @@ application "Healthcare-Dispute-Resolution-Management"
 	{
 		report All_Communication_Logs
 		{
-		
-						quickview
+			quickview
+			(
+				layout
+				(
+					type = -1
+					datablock1
+					(
+						layout type = -1
+						fields
 						(
-							layout
-							(
-				 				type = 12
-								datablock1
-								(
-					 				display type = auto
-									layout type = 35
-									fields
-									(
-										Contact_Person as "Contact Person"
-										Summary
-										Time
-										Logged_By as "Logged By"
-									)
-								)
-							)
-								menu
-								(
-									header
-									(
-									)
-								record
-								(
-									Edit   	   
-									Delete   	   
-		    					)
-								)
-		    				action
-		    				(
-								on tap
-								(
-									View Record   	   
-		    					)
-								on long press
-								(
-									Edit   	   
-									Delete   	   
-									View Record   	   
-		    					)
-		     				)
+							Dispute
+							Contact_Person as "Contact Person"
+							Time
+							Channel
+							Logged_By as "Logged By"
 						)
-		
-						detailview
+					)
+				)
+				menu
+				(
+					header ( Edit Delete )
+					record ( Edit Delete )
+				)
+				action
+				(
+					on tap ( View Record )
+					on long press ( Edit Delete View Record )
+					on left swipe ( Delete )
+					on right swipe ( Edit )
+				)
+			)
+			detailview
+			(
+				layout
+				(
+					type = 1
+					datablock1
+					(
+						layout type = -2
+						fields
 						(
-							layout
-							(
-				 				type = 2
-								datablock4
-								(
-				     				title = "Dispute"
-				     				related field = Dispute
-									fields
-									(
-										Dispute_ID as "Dispute ID"
-										Patient
-										AI_Dispute_Summary as "Dispute Summary"
-										Disputed_Amount as "Disputed Amount"
-										Category
-										Priority
-										Status
-									)
-								)
-								datablock5
-								(
-				     				title = "Communication"
-									fields
-									(
-										Time
-										Channel
-										Contact_Person as "Contact Person"
-										Summary
-										Follow_Up_Required as "Follow-Up Required"
-										Follow_Up_Date as "Follow-Up Date"
-										Logged_By as "Logged By"
-									)
-								)
-							)
-								menu
-								(
-									header
-									(
-										Edit 
-										Delete 
-									)
-								)
+							Dispute
+							Time
+							Channel
+							Contact_Person as "Contact Person"
+							Summary
+							Follow_Up_Required as "Follow-Up Required"
+							Follow_Up_Date as "Follow-Up Date"
+							Logged_By as "Logged By"
 						)
-					
+					)
+				)
+				menu
+				(
+					header ( Edit Delete )
+				)
+			)
 		}
 	
 		report My_Communication_Logs
 		{
-		
-						quickview
+			quickview
+			(
+				layout
+				(
+					type = -1
+					datablock1
+					(
+						layout type = -1
+						fields
 						(
-							layout
-							(
-				 				type = 12
-								datablock1
-								(
-					 				display type = auto
-									layout type = 35
-									fields
-									(
-										Contact_Person as "Contact Person"
-										Summary
-										Time
-										Channel
-									)
-								)
-							)
-								menu
-								(
-									header
-									(
-									)
-								record
-								(
-									Edit   	   
-									Delete   	   
-		    					)
-								)
-		    				action
-		    				(
-								on tap
-								(
-									View Record   	   
-		    					)
-								on long press
-								(
-									Edit   	   
-									Delete   	   
-									View Record   	   
-		    					)
-		     				)
+							Dispute
+							Contact_Person as "Contact Person"
+							Time
+							Channel
+							Logged_By as "Logged By"
 						)
-		
-						detailview
+					)
+				)
+				menu
+				(
+					header ( Edit Delete )
+					record ( Edit Delete )
+				)
+				action
+				(
+					on tap ( View Record )
+					on long press ( Edit Delete View Record )
+					on left swipe ( Delete )
+					on right swipe ( Edit )
+				)
+			)
+			detailview
+			(
+				layout
+				(
+					type = 1
+					datablock1
+					(
+						layout type = -2
+						fields
 						(
-							layout
-							(
-				 				type = 2
-								datablock4
-								(
-				     				title = "Dispute"
-				     				related field = Dispute
-									fields
-									(
-										Dispute_ID as "Dispute ID"
-										Patient
-										AI_Dispute_Summary as "Dispute Summary"
-										Disputed_Amount as "Disputed Amount"
-										Category
-										Priority
-										Status
-									)
-								)
-								datablock5
-								(
-				     				title = "Communication"
-									fields
-									(
-										Time
-										Channel
-										Contact_Person as "Contact Person"
-										Summary
-										Follow_Up_Required as "Follow-Up Required"
-										Follow_Up_Date as "Follow-Up Date"
-										Logged_By as "Logged By"
-									)
-								)
-							)
-								menu
-								(
-									header
-									(
-										Edit 
-										Delete 
-									)
-								)
+							Dispute
+							Time
+							Channel
+							Contact_Person as "Contact Person"
+							Summary
+							Follow_Up_Required as "Follow-Up Required"
+							Follow_Up_Date as "Follow-Up Date"
+							Logged_By as "Logged By"
 						)
-					
+					)
+				)
+				menu
+				(
+					header ( Edit Delete )
+				)
+			)
 		}
 	
 		report All_Disputes
 		{
-		
-						quickview
+			quickview
+			(
+				layout
+				(
+					type = -1
+					datablock1
+					(
+						layout type = -1
+						fields
 						(
-							layout
-							(
-				 				type = Custom
-				 				selectedlayout = "Custom Layout 2"
-							)
-								menu
-								(
-									header
-									(
-									)
-								record
-								(
-									Edit   	   
-									Delete   	   
-									"AI Dispute Briefing"
-		    					)
-								)
-		    				action
-		    				(
-								on tap
-								(
-									View Record   	   
-		    					)
-								on long press
-								(
-									"AI Dispute Briefing"
-		    					)
-		     				)
+							Dispute_ID as "Dispute ID"
+							Patient
+							Category
+							Disputed_Amount as "Disputed Amount"
+							Priority
+							Status
 						)
-		
-						detailview
+					)
+				)
+				menu
+				(
+					header ( Edit Delete )
+					record ( Edit Delete "AI Dispute Briefing" )
+				)
+				action
+				(
+					on tap ( View Record )
+					on long press ( Edit Delete View Record )
+					on left swipe ( Delete )
+					on right swipe ( Edit )
+				)
+			)
+			detailview
+			(
+				layout
+				(
+					type = 1
+					datablock1
+					(
+						layout type = -2
+						fields
 						(
-							layout
-							(
-				 				type = 2
-								datablock1
-								(
-				     				title = "Overview"
-									fields
-									(
-										Dispute_ID as "Dispute ID"
-										AI_Dispute_Summary as "Dispute Summary"
-										Patient.Added_Time as "Added Time"
-									)
-								)
-								datablock4
-								(
-				     				title = "Case Information"
-									fields
-									(
-										Patient
-										Case
-										Insurance_Payer as "Insurance Payer"
-										Total_Billed_Amount as "Total Billed Amount"
-										Patient_Share as "Patient Share"
-									)
-								)
-								datablock5
-								(
-				     				title = "Dispute Details"
-									fields
-									(
-										Disputed_Amount as "Disputed Amount"
-										Reason_for_Dispute as "Reason for Dispute"
-										Dispute_Source as "Dispute Source"
-										Email
-										Supporting_Documents as "Supporting Documents"
-									)
-								)
-								datablock7
-								(
-				     				title = "Classification"
-									fields
-									(
-										Category
-										Sub_Category as "Sub-Category"
-									)
-								)
-								datablock8
-								(
-				     				title = "Disputed Charge Line"
-				     				related field = Disputed_Charge_Line
-									fields
-									(
-										Charge
-										CPT_Code as "CPT Code"
-										Billed_Line_Amount as "Billed Line Amount"
-										Disputed_Line_Amount as "Disputed Line Amount"
-										Line_Reason as "Line Reason"
-									)
-								)
-								datablock6
-								(
-				     				title = "SLA & Status"
-									fields
-									(
-										Status
-										Priority
-										Investigation_Due_Date as "Investigation Due Date"
-										Investigation_Start_Time as "Investigation Start Time"
-									)
-								)
-								datablock9
-								(
-				     				title = "Assignment & Audit Trail"
-									fields
-									(
-										Assigned_Role as "Assigned Role"
-										Assigned_To as "Assigned To"
-										Approver
-										Created_By_Type as "Created By Type"
-										Created_By_User as "Created By User"
-										Closed_By_User as "Closed By User"
-									)
-								)
-								datablock10
-								(
-				     				title = "Investigation Resolution"
-				     				related field = Investigation_Resolution[Dispute.Investigation_Resolution is not null]
-									fields
-									(
-										Resolution_ID as "Resolution ID"
-										Resolution_Type as "Resolution Type"
-										Approval_Status as "Approval Status"
-										Root_Cause as "Root Cause"
-										Adjustment_Amount as "Adjustment Amount"
-										Resolution_Approval_Due_Date as "Resolution Approval Due Date"
-										Findings
-										Resolution_Rationale as "Resolution Rationale"
-										Approver_Comments as "Approver Comments"
-										Internal_Notes as "Internal Notes"
-									)
-								)
-								datablock11
-								(
-				     				title = "Communication Log"
-				     				related field = Communication_Log[Dispute.Communication_Log is not null]
-									fields
-									(
-										Time
-										Channel
-										Contact_Person as "Contact Person"
-										Summary
-										Follow_Up_Required as "Follow-Up Required"
-										Follow_Up_Date as "Follow-Up Date"
-										Logged_By as "Logged By"
-									)
-								)
-							)
-								menu
-								(
-									header
-									(
-										"AI Dispute Briefing"
-										Edit 
-										Delete 
-									)
-								)
+							Dispute_ID as "Dispute ID"
+							Patient
+							Case
+							Disputed_Amount as "Disputed Amount"
+							Category
+							Sub_Category as "Sub-Category"
+							Priority
+							Status
+							Investigation_Due_Date as "Investigation Due Date"
+							AI_Dispute_Summary as "Dispute Summary"
 						)
-					
+					)
+				)
+				menu
+				(
+					header ( Edit Delete "AI Dispute Briefing" )
+				)
+			)
 		}
 	
 		report Approved_Resolutions
 		{
-		
-						quickview
+			quickview
+			(
+				layout
+				(
+					type = -1
+					datablock1
+					(
+						layout type = -1
+						fields
 						(
-							layout
-							(
-				 				type = Custom
-				 				selectedlayout = "Custom Layout 1"
-							)
-								menu
-								(
-									header
-									(
-									)
-								record
-								(
-									"AI Email"
-		    					)
-								)
-		    				action
-		    				(
-								on tap
-								(
-									View Record   	   
-		    					)
-								on long press
-								(
-									View Record   	   
-		    					)
-		     				)
+							Investigation_Resolution.Resolution_ID as "Resolution ID"
+							Dispute_ID as "Dispute ID"
+							Investigation_Resolution.Resolution_Type as "Resolution Type"
+							Investigation_Resolution.Approval_Status as "Approval Status"
 						)
-		
-						detailview
+					)
+				)
+				menu
+				(
+					header ( Edit Delete "AI Email" )
+					record ( Edit Delete "AI Email" )
+				)
+				action
+				(
+					on tap ( View Record )
+					on long press ( Edit Delete "AI Email" View Record )
+					on left swipe ( Delete )
+					on right swipe ( Edit )
+				)
+			)
+			detailview
+			(
+				layout
+				(
+					type = 1
+					datablock1
+					(
+						layout type = -2
+						fields
 						(
-							layout
-							(
-				 				type = 2
-								datablock1
-								(
-				     				title = "Overview"
-									fields
-									(
-										Investigation_Resolution.Resolution_ID as "Resolution ID"
-										Investigation_Resolution.Resolution_Type as "Resolution Type"
-										Investigation_Resolution.Adjustment_Amount as "Adjustment Amount"
-									)
-								)
-								datablock4
-								(
-				     				title = "Dispute"
-									fields
-									(
-										Dispute_ID as "Dispute ID"
-										AI_Dispute_Summary as "Dispute Summary"
-										Disputed_Amount as "Disputed Amount"
-										Patient.Added_Time as "Added Time"
-									)
-								)
-								datablock2
-								(
-				     				title = "Investigation Notes"
-				     				related field = Investigation_Resolution
-									fields
-									(
-										Findings
-										Charge_Verified as "Charge Verified"
-										Internal_Notes as "Internal Notes"
-										Patient_Contacted as "Patient Contacted"
-										Patient_Contact_Date as "Patient Contact Date"
-										Patient_Contact_Summary as "Patient Contact Summary"
-										Supporting_Evidence as "Supporting Evidence"
-									)
-								)
-								datablock3
-								(
-				     				title = "Resolution Decision"
-									fields
-									(
-										Investigation_Resolution.Resolution_Type as "Resolution Type"
-										Investigation_Resolution.Adjustment_Amount as "Adjustment Amount"
-										Investigation_Resolution.Resolution_Rationale as "Resolution Rationale"
-										Investigation_Resolution.Root_Cause as "Root Cause"
-										Investigation_Resolution.Root_Cause_Detail as "Root Cause Detail"
-									)
-								)
-								datablock5
-								(
-				     				title = "Status & Assignment"
-									fields
-									(
-										Investigation_Resolution.Created_By as "Created By"
-										Investigation_Resolution.Approval_Status as "Approval Status"
-										Investigation_Resolution.Resolution_Approval_Due_Date as "Approval Due Date"
-										Investigation_Resolution.Approver as "Approver"
-										Investigation_Resolution.Approver_Comments as "Approver Comments"
-									)
-								)
-							)
-								menu
-								(
-									header
-									(
-										"AI Email"
-									)
-								)
+							Investigation_Resolution.Resolution_ID as "Resolution ID"
+							Investigation_Resolution.Resolution_Type as "Resolution Type"
+							Investigation_Resolution.Adjustment_Amount as "Adjustment Amount"
+							Investigation_Resolution.Approval_Status as "Approval Status"
+							Disputed_Amount as "Disputed Amount"
+							Dispute_ID as "Dispute ID"
+							AI_Dispute_Summary as "Dispute Summary"
 						)
-					
+					)
+				)
+				menu
+				(
+					header ( Edit Delete "AI Email" )
+				)
+			)
 		}
 	
 		report Closed_Disputes
 		{
-		
-						quickview
+			quickview
+			(
+				layout
+				(
+					type = -1
+					datablock1
+					(
+						layout type = -1
+						fields
 						(
-							layout
-							(
-				 				type = Custom
-				 				selectedlayout = "Custom Layout 1"
-							)
-								menu
-								(
-									header
-									(
-									)
-								)
-		    				action
-		    				(
-								on tap
-								(
-									View Record   	   
-		    					)
-								on long press
-								(
-									View Record   	   
-		    					)
-		     				)
+							Dispute_ID as "Dispute ID"
+							Patient
+							Category
+							Disputed_Amount as "Disputed Amount"
+							Priority
+							Status
 						)
-		
-						detailview
+					)
+				)
+				menu
+				(
+					header ( Edit Delete )
+					record ( Edit Delete )
+				)
+				action
+				(
+					on tap ( View Record )
+					on long press ( Edit Delete View Record )
+					on left swipe ( Delete )
+					on right swipe ( Edit )
+				)
+			)
+			detailview
+			(
+				layout
+				(
+					type = 1
+					datablock1
+					(
+						layout type = -2
+						fields
 						(
-							layout
-							(
-				 				type = 2
-								datablock1
-								(
-				     				title = "Overview"
-									fields
-									(
-										Dispute_ID as "Dispute ID"
-										AI_Dispute_Summary as "Dispute Summary"
-										Patient.Added_Time as "Added Time"
-									)
-								)
-								datablock4
-								(
-				     				title = "Case Information"
-									fields
-									(
-										Patient
-										Case
-										Insurance_Payer as "Insurance Payer"
-										Total_Billed_Amount as "Total Billed Amount"
-										Patient_Share as "Patient Share"
-									)
-								)
-								datablock5
-								(
-				     				title = "Dispute Details"
-									fields
-									(
-										Disputed_Amount as "Disputed Amount"
-										Reason_for_Dispute as "Reason for Dispute"
-										Dispute_Source as "Dispute Source"
-										Email
-										Supporting_Documents as "Supporting Documents"
-									)
-								)
-								datablock7
-								(
-				     				title = "Classification"
-									fields
-									(
-										Category
-										Sub_Category as "Sub-Category"
-									)
-								)
-								datablock8
-								(
-				     				title = "Disputed Charge Line"
-				     				related field = Disputed_Charge_Line
-									fields
-									(
-										Charge
-										CPT_Code as "CPT Code"
-										Billed_Line_Amount as "Billed Line Amount"
-										Disputed_Line_Amount as "Disputed Line Amount"
-										Line_Reason as "Line Reason"
-									)
-								)
-								datablock6
-								(
-				     				title = "SLA & Status"
-									fields
-									(
-										Status
-										Priority
-										Investigation_Due_Date as "Investigation Due Date"
-										Investigation_Start_Time as "Investigation Start Time"
-									)
-								)
-								datablock9
-								(
-				     				title = "Assignment & Audit Trail"
-									fields
-									(
-										Assigned_Role as "Assigned Role"
-										Assigned_To as "Assigned To"
-										Approver
-										Created_By_Type as "Created By Type"
-										Created_By_User as "Created By User"
-										Closed_By_User as "Closed By"
-									)
-								)
-								datablock10
-								(
-				     				title = "Investigation Resolution"
-				     				related field = Investigation_Resolution[Dispute.Investigation_Resolution is not null]
-									fields
-									(
-										Resolution_ID as "Resolution ID"
-										Resolution_Type as "Resolution Type"
-										Approval_Status as "Approval Status"
-										Root_Cause as "Root Cause"
-										Adjustment_Amount as "Adjustment Amount"
-										Resolution_Approval_Due_Date as "Resolution Approval Due Date"
-										Findings
-										Resolution_Rationale as "Resolution Rationale"
-										Approver_Comments as "Approver Comments"
-										Internal_Notes as "Internal Notes"
-									)
-								)
-								datablock11
-								(
-				     				title = "Communication Log"
-				     				related field = Communication_Log[Dispute.Communication_Log is not null]
-									fields
-									(
-										Time
-										Channel
-										Contact_Person as "Contact Person"
-										Summary
-										Follow_Up_Required as "Follow-Up Required"
-										Follow_Up_Date as "Follow-Up Date"
-										Logged_By as "Logged By"
-									)
-								)
-							)
-								menu
-								(
-									header
-									(
-									)
-								)
+							Dispute_ID as "Dispute ID"
+							Patient
+							Case
+							Disputed_Amount as "Disputed Amount"
+							Category
+							Sub_Category as "Sub-Category"
+							Priority
+							Status
+							Investigation_Due_Date as "Investigation Due Date"
+							AI_Dispute_Summary as "Dispute Summary"
 						)
-					
+					)
+				)
+				menu
+				(
+					header ( Edit Delete )
+				)
+			)
 		}
 	
 		report Investigation_Overdues
 		{
-		
-						quickview
+			quickview
+			(
+				layout
+				(
+					type = -1
+					datablock1
+					(
+						layout type = -1
+						fields
 						(
-							layout
-							(
-				 				type = Custom
-				 				selectedlayout = "Custom Layout 2"
-							)
-								menu
-								(
-									header
-									(
-									)
-								)
-		    				action
-		    				(
-								on tap
-								(
-									View Record   	   
-		    					)
-								on long press
-								(
-									View Record   	   
-		    					)
-		     				)
+							Dispute_ID as "Dispute ID"
+							Patient
+							Category
+							Disputed_Amount as "Disputed Amount"
+							Priority
+							Status
 						)
-		
-						detailview
+					)
+				)
+				menu
+				(
+					header ( Edit Delete )
+					record ( Edit Delete )
+				)
+				action
+				(
+					on tap ( View Record )
+					on long press ( Edit Delete View Record )
+					on left swipe ( Delete )
+					on right swipe ( Edit )
+				)
+			)
+			detailview
+			(
+				layout
+				(
+					type = 1
+					datablock1
+					(
+						layout type = -2
+						fields
 						(
-							layout
-							(
-				 				type = 2
-								datablock1
-								(
-				     				title = "Overview"
-									fields
-									(
-										Dispute_ID as "Dispute ID"
-										AI_Dispute_Summary as "Dispute Summary"
-										Patient.Added_Time as "Added Time"
-									)
-								)
-								datablock4
-								(
-				     				title = "Case Information"
-									fields
-									(
-										Patient
-										Case
-										Insurance_Payer as "Insurance Payer"
-										Total_Billed_Amount as "Total Billed Amount"
-										Patient_Share as "Patient Share"
-									)
-								)
-								datablock5
-								(
-				     				title = "Dispute Details"
-									fields
-									(
-										Disputed_Amount as "Disputed Amount"
-										Reason_for_Dispute as "Reason for Dispute"
-										Dispute_Source as "Dispute Source"
-										Email
-										Supporting_Documents as "Supporting Documents"
-									)
-								)
-								datablock7
-								(
-				     				title = "Classification"
-									fields
-									(
-										Category
-										Sub_Category as "Sub-Category"
-									)
-								)
-								datablock8
-								(
-				     				title = "Disputed Charge Line"
-				     				related field = Disputed_Charge_Line
-									fields
-									(
-										Charge
-										CPT_Code as "CPT Code"
-										Billed_Line_Amount as "Billed Line Amount"
-										Disputed_Line_Amount as "Disputed Line Amount"
-										Line_Reason as "Line Reason"
-									)
-								)
-								datablock6
-								(
-				     				title = "SLA & Status"
-									fields
-									(
-										Status
-										Priority
-										Investigation_Due_Date as "Investigation Due Date"
-										Investigation_Start_Time as "Investigation Start Time"
-									)
-								)
-								datablock9
-								(
-				     				title = "Assignment & Audit Trail"
-									fields
-									(
-										Assigned_Role as "Assigned Role"
-										Assigned_To as "Assigned To"
-										Approver
-										Created_By_Type as "Created By Type"
-										Created_By_User as "Created By User"
-										Closed_By_User as "Closed By User"
-									)
-								)
-								datablock10
-								(
-				     				title = "Investigation Resolution"
-				     				related field = Investigation_Resolution[Dispute.Investigation_Resolution is not null]
-									fields
-									(
-										Resolution_ID as "Resolution ID"
-										Resolution_Type as "Resolution Type"
-										Approval_Status as "Approval Status"
-										Root_Cause as "Root Cause"
-										Adjustment_Amount as "Adjustment Amount"
-										Resolution_Approval_Due_Date as "Resolution Approval Due Date"
-										Findings
-										Resolution_Rationale as "Resolution Rationale"
-										Approver_Comments as "Approver Comments"
-										Internal_Notes as "Internal Notes"
-									)
-								)
-								datablock11
-								(
-				     				title = "Communication Log"
-				     				related field = Communication_Log[Dispute.Communication_Log is not null]
-									fields
-									(
-										Time
-										Channel
-										Contact_Person as "Contact Person"
-										Summary
-										Follow_Up_Required as "Follow-Up Required"
-										Follow_Up_Date as "Follow-Up Date"
-										Logged_By as "Logged By"
-									)
-								)
-							)
-								menu
-								(
-									header
-									(
-									)
-								)
+							Dispute_ID as "Dispute ID"
+							Patient
+							Case
+							Disputed_Amount as "Disputed Amount"
+							Category
+							Sub_Category as "Sub-Category"
+							Priority
+							Status
+							Investigation_Due_Date as "Investigation Due Date"
+							AI_Dispute_Summary as "Dispute Summary"
 						)
-					
+					)
+				)
+				menu
+				(
+					header ( Edit Delete )
+				)
+			)
 		}
 	
 		report My_Assigned_Disputes
 		{
-		
-						quickview
+			quickview
+			(
+				layout
+				(
+					type = -1
+					datablock1
+					(
+						layout type = -1
+						fields
 						(
-							layout
-							(
-				 				type = Custom
-				 				selectedlayout = "Custom Layout 1"
-							)
-								menu
-								(
-									header
-									(
-									)
-								)
-		    				action
-		    				(
-								on tap
-								(
-									View Record   	   
-		    					)
-								on long press
-								(
-									View Record   	   
-		    					)
-		     				)
+							Dispute_ID as "Dispute ID"
+							Patient
+							Category
+							Disputed_Amount as "Disputed Amount"
+							Priority
+							Status
 						)
-		
-						detailview
+					)
+				)
+				menu
+				(
+					header ( Edit Delete )
+					record ( Edit Delete )
+				)
+				action
+				(
+					on tap ( View Record )
+					on long press ( Edit Delete View Record )
+					on left swipe ( Delete )
+					on right swipe ( Edit )
+				)
+			)
+			detailview
+			(
+				layout
+				(
+					type = 1
+					datablock1
+					(
+						layout type = -2
+						fields
 						(
-							layout
-							(
-				 				type = 2
-								datablock1
-								(
-				     				title = "Overview"
-									fields
-									(
-										Dispute_ID as "Dispute ID"
-										AI_Dispute_Summary as "Dispute Summary"
-										Patient.Added_Time as "Added Time"
-									)
-								)
-								datablock4
-								(
-				     				title = "Case Information"
-									fields
-									(
-										Patient
-										Case
-										Insurance_Payer as "Insurance Payer"
-										Total_Billed_Amount as "Total Billed Amount"
-										Patient_Share as "Patient Share"
-									)
-								)
-								datablock5
-								(
-				     				title = "Dispute Details"
-									fields
-									(
-										Disputed_Amount as "Disputed Amount"
-										Reason_for_Dispute as "Reason for Dispute"
-										Dispute_Source as "Dispute Source"
-										Email
-										Supporting_Documents as "Supporting Documents"
-									)
-								)
-								datablock7
-								(
-				     				title = "Classification"
-									fields
-									(
-										Category
-										Sub_Category as "Sub-Category"
-									)
-								)
-								datablock8
-								(
-				     				title = "Disputed Charge Line"
-				     				related field = Disputed_Charge_Line
-									fields
-									(
-										Charge
-										CPT_Code as "CPT Code"
-										Billed_Line_Amount as "Billed Line Amount"
-										Disputed_Line_Amount as "Disputed Line Amount"
-										Line_Reason as "Line Reason"
-									)
-								)
-								datablock6
-								(
-				     				title = "SLA & Status"
-									fields
-									(
-										Status
-										Priority
-										Investigation_Due_Date as "Investigation Due Date"
-										Investigation_Start_Time as "Investigation Start Time"
-									)
-								)
-								datablock9
-								(
-				     				title = "Assignment & Audit Trail"
-									fields
-									(
-										Assigned_Role as "Assigned Role"
-										Assigned_To as "Assigned To"
-										Approver
-										Created_By_Type as "Created By Type"
-										Created_By_User as "Created By User"
-										Closed_By_User as "Closed By User"
-									)
-								)
-								datablock10
-								(
-				     				title = "Investigation Resolution"
-				     				related field = Investigation_Resolution[Dispute.Investigation_Resolution is not null]
-									fields
-									(
-										Resolution_ID as "Resolution ID"
-										Resolution_Type as "Resolution Type"
-										Approval_Status as "Approval Status"
-										Root_Cause as "Root Cause"
-										Adjustment_Amount as "Adjustment Amount"
-										Resolution_Approval_Due_Date as "Resolution Approval Due Date"
-										Findings
-										Resolution_Rationale as "Resolution Rationale"
-										Approver_Comments as "Approver Comments"
-										Internal_Notes as "Internal Notes"
-									)
-								)
-								datablock11
-								(
-				     				title = "Communication Log"
-				     				related field = Communication_Log[Dispute.Communication_Log is not null]
-									fields
-									(
-										Time
-										Channel
-										Contact_Person as "Contact Person"
-										Summary
-										Follow_Up_Required as "Follow-Up Required"
-										Follow_Up_Date as "Follow-Up Date"
-										Logged_By as "Logged By"
-									)
-								)
-							)
-								menu
-								(
-									header
-									(
-									)
-								)
+							Dispute_ID as "Dispute ID"
+							Patient
+							Case
+							Disputed_Amount as "Disputed Amount"
+							Category
+							Sub_Category as "Sub-Category"
+							Priority
+							Status
+							Investigation_Due_Date as "Investigation Due Date"
+							AI_Dispute_Summary as "Dispute Summary"
 						)
-					
+					)
+				)
+				menu
+				(
+					header ( Edit Delete )
+				)
+			)
 		}
 	
 		report My_Pending_Approval
 		{
-		
-						quickview
+			quickview
+			(
+				layout
+				(
+					type = -1
+					datablock1
+					(
+						layout type = -1
+						fields
 						(
-							layout
-							(
-				 				type = Custom
-				 				selectedlayout = "Custom Layout 1"
-							)
-								menu
-								(
-									header
-									(
-									)
-								)
-		    				action
-		    				(
-								on tap
-								(
-									View Record   	   
-		    					)
-								on long press
-								(
-									View Record   	   
-		    					)
-		     				)
+							Investigation_Resolution.Resolution_ID as "Resolution ID"
+							Dispute_ID as "Dispute ID"
+							Investigation_Resolution.Resolution_Type as "Resolution Type"
+							Investigation_Resolution.Approval_Status as "Approval Status"
 						)
-		
-						detailview
+					)
+				)
+				menu
+				(
+					header ( Edit Delete )
+					record ( Edit Delete )
+				)
+				action
+				(
+					on tap ( View Record )
+					on long press ( Edit Delete View Record )
+					on left swipe ( Delete )
+					on right swipe ( Edit )
+				)
+			)
+			detailview
+			(
+				layout
+				(
+					type = 1
+					datablock1
+					(
+						layout type = -2
+						fields
 						(
-							layout
-							(
-				 				type = 2
-								datablock1
-								(
-				     				title = "Overview"
-									fields
-									(
-										Investigation_Resolution.Resolution_ID as "Resolution ID"
-										Investigation_Resolution.Resolution_Type as "Resolution Type"
-										Investigation_Resolution.Adjustment_Amount as "Adjustment Amount"
-									)
-								)
-								datablock4
-								(
-				     				title = "Dispute"
-									fields
-									(
-										Dispute_ID as "Dispute ID"
-										AI_Dispute_Summary as "Dispute Summary"
-										Disputed_Amount as "Disputed Amount"
-										Patient.Added_Time as "Added Time"
-									)
-								)
-								datablock2
-								(
-				     				title = "Investigation Notes"
-				     				related field = Investigation_Resolution
-									fields
-									(
-										Findings
-										Charge_Verified as "Charge Verified"
-										Internal_Notes as "Internal Notes"
-										Patient_Contacted as "Patient Contacted"
-										Patient_Contact_Date as "Patient Contact Date"
-										Patient_Contact_Summary as "Patient Contact Summary"
-										Supporting_Evidence as "Supporting Evidence"
-									)
-								)
-								datablock3
-								(
-				     				title = "Resolution Decision"
-									fields
-									(
-										Investigation_Resolution.Resolution_Type as "Resolution Type"
-										Investigation_Resolution.Adjustment_Amount as "Adjustment Amount"
-										Investigation_Resolution.Resolution_Rationale as "Resolution Rationale"
-										Investigation_Resolution.Root_Cause as "Root Cause"
-										Investigation_Resolution.Root_Cause_Detail as "Root Cause Detail"
-									)
-								)
-								datablock5
-								(
-				     				title = "Status & Assignment"
-									fields
-									(
-										Investigation_Resolution.Created_By as "Created By"
-										Investigation_Resolution.Approval_Status as "Approval Status"
-										Investigation_Resolution.Resolution_Approval_Due_Date as "Approval Due Date"
-										Investigation_Resolution.Approver as "Approver"
-										Investigation_Resolution.Approver_Comments as "Approver Comments"
-									)
-								)
-							)
-								menu
-								(
-									header
-									(
-									)
-								)
+							Investigation_Resolution.Resolution_ID as "Resolution ID"
+							Investigation_Resolution.Resolution_Type as "Resolution Type"
+							Investigation_Resolution.Adjustment_Amount as "Adjustment Amount"
+							Investigation_Resolution.Approval_Status as "Approval Status"
+							Disputed_Amount as "Disputed Amount"
+							Dispute_ID as "Dispute ID"
+							AI_Dispute_Summary as "Dispute Summary"
 						)
-					
+					)
+				)
+				menu
+				(
+					header ( Edit Delete )
+				)
+			)
 		}
 	
 		report My_Under_Investigation
 		{
-		
-						quickview
+			quickview
+			(
+				layout
+				(
+					type = -1
+					datablock1
+					(
+						layout type = -1
+						fields
 						(
-							layout
-							(
-				 				type = Custom
-				 				selectedlayout = "Custom Layout 1"
-							)
-								menu
-								(
-									header
-									(
-									)
-								)
-		    				action
-		    				(
-								on tap
-								(
-									View Record   	   
-		    					)
-								on long press
-								(
-									View Record   	   
-		    					)
-		     				)
+							Dispute_ID as "Dispute ID"
+							Patient
+							Category
+							Disputed_Amount as "Disputed Amount"
+							Priority
+							Status
 						)
-		
-						detailview
+					)
+				)
+				menu
+				(
+					header ( Edit Delete )
+					record ( Edit Delete )
+				)
+				action
+				(
+					on tap ( View Record )
+					on long press ( Edit Delete View Record )
+					on left swipe ( Delete )
+					on right swipe ( Edit )
+				)
+			)
+			detailview
+			(
+				layout
+				(
+					type = 1
+					datablock1
+					(
+						layout type = -2
+						fields
 						(
-							layout
-							(
-				 				type = 2
-								datablock1
-								(
-				     				title = "Overview"
-									fields
-									(
-										Dispute_ID as "Dispute ID"
-										AI_Dispute_Summary as "Dispute Summary"
-										Patient.Added_Time as "Added Time"
-									)
-								)
-								datablock4
-								(
-				     				title = "Case Information"
-									fields
-									(
-										Patient
-										Case
-										Insurance_Payer as "Insurance Payer"
-										Total_Billed_Amount as "Total Billed Amount"
-										Patient_Share as "Patient Share"
-									)
-								)
-								datablock5
-								(
-				     				title = "Dispute Details"
-									fields
-									(
-										Disputed_Amount as "Disputed Amount"
-										Reason_for_Dispute as "Reason for Dispute"
-										Dispute_Source as "Dispute Source"
-										Email
-										Supporting_Documents as "Supporting Documents"
-									)
-								)
-								datablock7
-								(
-				     				title = "Classification"
-									fields
-									(
-										Category
-										Sub_Category as "Sub-Category"
-									)
-								)
-								datablock8
-								(
-				     				title = "Disputed Charge Line"
-				     				related field = Disputed_Charge_Line
-									fields
-									(
-										Charge
-										CPT_Code as "CPT Code"
-										Billed_Line_Amount as "Billed Line Amount"
-										Disputed_Line_Amount as "Disputed Line Amount"
-										Line_Reason as "Line Reason"
-									)
-								)
-								datablock6
-								(
-				     				title = "SLA & Status"
-									fields
-									(
-										Status
-										Priority
-										Investigation_Due_Date as "Investigation Due Date"
-										Investigation_Start_Time as "Investigation Start Time"
-									)
-								)
-								datablock9
-								(
-				     				title = "Assignment & Audit Trail"
-									fields
-									(
-										Assigned_Role as "Assigned Role"
-										Assigned_To as "Assigned To"
-										Approver
-										Created_By_Type as "Created By Type"
-										Created_By_User as "Created By User"
-										Closed_By_User as "Closed By User"
-									)
-								)
-								datablock10
-								(
-				     				title = "Investigation Resolution"
-				     				related field = Investigation_Resolution[Dispute.Investigation_Resolution is not null]
-									fields
-									(
-										Resolution_ID as "Resolution ID"
-										Resolution_Type as "Resolution Type"
-										Approval_Status as "Approval Status"
-										Root_Cause as "Root Cause"
-										Adjustment_Amount as "Adjustment Amount"
-										Resolution_Approval_Due_Date as "Resolution Approval Due Date"
-										Findings
-										Resolution_Rationale as "Resolution Rationale"
-										Approver_Comments as "Approver Comments"
-										Internal_Notes as "Internal Notes"
-									)
-								)
-								datablock11
-								(
-				     				title = "Communication Log"
-				     				related field = Communication_Log[Dispute.Communication_Log is not null]
-									fields
-									(
-										Time
-										Channel
-										Contact_Person as "Contact Person"
-										Summary
-										Follow_Up_Required as "Follow-Up Required"
-										Follow_Up_Date as "Follow-Up Date"
-										Logged_By as "Logged By"
-									)
-								)
-							)
-								menu
-								(
-									header
-									(
-									)
-								)
+							Dispute_ID as "Dispute ID"
+							Patient
+							Case
+							Disputed_Amount as "Disputed Amount"
+							Category
+							Sub_Category as "Sub-Category"
+							Priority
+							Status
+							Investigation_Due_Date as "Investigation Due Date"
+							AI_Dispute_Summary as "Dispute Summary"
 						)
-					
+					)
+				)
+				menu
+				(
+					header ( Edit Delete )
+				)
+			)
 		}
 	
 		report Pending_Approval
 		{
-		
-						quickview
+			quickview
+			(
+				layout
+				(
+					type = -1
+					datablock1
+					(
+						layout type = -1
+						fields
 						(
-							layout
-							(
-				 				type = Custom
-				 				selectedlayout = "Custom Layout 1"
-							)
-								menu
-								(
-									header
-									(
-									)
-								)
-		    				action
-		    				(
-								on tap
-								(
-									View Record   	   
-		    					)
-								on long press
-								(
-									View Record   	   
-		    					)
-		     				)
+							Investigation_Resolution.Resolution_ID as "Resolution ID"
+							Dispute_ID as "Dispute ID"
+							Investigation_Resolution.Resolution_Type as "Resolution Type"
+							Investigation_Resolution.Approval_Status as "Approval Status"
 						)
-		
-						detailview
+					)
+				)
+				menu
+				(
+					header ( Edit Delete )
+					record ( Edit Delete )
+				)
+				action
+				(
+					on tap ( View Record )
+					on long press ( Edit Delete View Record )
+					on left swipe ( Delete )
+					on right swipe ( Edit )
+				)
+			)
+			detailview
+			(
+				layout
+				(
+					type = 1
+					datablock1
+					(
+						layout type = -2
+						fields
 						(
-							layout
-							(
-				 				type = 2
-								datablock1
-								(
-				     				title = "Overview"
-									fields
-									(
-										Investigation_Resolution.Resolution_ID as "Resolution ID"
-										Investigation_Resolution.Resolution_Type as "Resolution Type"
-										Investigation_Resolution.Adjustment_Amount as "Adjustment Amount"
-									)
-								)
-								datablock4
-								(
-				     				title = "Dispute"
-									fields
-									(
-										Dispute_ID as "Dispute ID"
-										AI_Dispute_Summary as "Dispute Summary"
-										Disputed_Amount as "Disputed Amount"
-										Patient.Added_Time as "Added Time"
-									)
-								)
-								datablock2
-								(
-				     				title = "Investigation Notes"
-				     				related field = Investigation_Resolution
-									fields
-									(
-										Findings
-										Charge_Verified as "Charge Verified"
-										Internal_Notes as "Internal Notes"
-										Patient_Contacted as "Patient Contacted"
-										Patient_Contact_Date as "Patient Contact Date"
-										Patient_Contact_Summary as "Patient Contact Summary"
-										Supporting_Evidence as "Supporting Evidence"
-									)
-								)
-								datablock3
-								(
-				     				title = "Resolution Decision"
-									fields
-									(
-										Investigation_Resolution.Resolution_Type as "Resolution Type"
-										Investigation_Resolution.Adjustment_Amount as "Adjustment Amount"
-										Investigation_Resolution.Resolution_Rationale as "Resolution Rationale"
-										Investigation_Resolution.Root_Cause as "Root Cause"
-										Investigation_Resolution.Root_Cause_Detail as "Root Cause Detail"
-									)
-								)
-								datablock5
-								(
-				     				title = "Status & Assignment"
-									fields
-									(
-										Investigation_Resolution.Created_By as "Created By"
-										Investigation_Resolution.Approval_Status as "Approval Status"
-										Investigation_Resolution.Resolution_Approval_Due_Date as "Approval Due Date"
-										Investigation_Resolution.Approver as "Approver"
-										Investigation_Resolution.Approver_Comments as "Approver Comments"
-									)
-								)
-							)
-								menu
-								(
-									header
-									(
-									)
-								)
+							Investigation_Resolution.Resolution_ID as "Resolution ID"
+							Investigation_Resolution.Resolution_Type as "Resolution Type"
+							Investigation_Resolution.Adjustment_Amount as "Adjustment Amount"
+							Investigation_Resolution.Approval_Status as "Approval Status"
+							Disputed_Amount as "Disputed Amount"
+							Dispute_ID as "Dispute ID"
+							AI_Dispute_Summary as "Dispute Summary"
 						)
-					
+					)
+				)
+				menu
+				(
+					header ( Edit Delete )
+				)
+			)
 		}
 	
 		report Rejected_Resolutions
 		{
-		
-						quickview
+			quickview
+			(
+				layout
+				(
+					type = -1
+					datablock1
+					(
+						layout type = -1
+						fields
 						(
-							layout
-							(
-				 				type = Custom
-				 				selectedlayout = "Custom Layout 1"
-							)
-								menu
-								(
-									header
-									(
-									)
-								record
-								(
-									"AI Email"
-		    					)
-								)
-		    				action
-		    				(
-								on tap
-								(
-									View Record   	   
-		    					)
-								on long press
-								(
-									View Record   	   
-		    					)
-		     				)
+							Investigation_Resolution.Resolution_ID as "Resolution ID"
+							Dispute_ID as "Dispute ID"
+							Investigation_Resolution.Resolution_Type as "Resolution Type"
+							Investigation_Resolution.Approval_Status as "Approval Status"
 						)
-		
-						detailview
+					)
+				)
+				menu
+				(
+					header ( Edit Delete "AI Email" )
+					record ( Edit Delete "AI Email" )
+				)
+				action
+				(
+					on tap ( View Record )
+					on long press ( Edit Delete "AI Email" View Record )
+					on left swipe ( Delete )
+					on right swipe ( Edit )
+				)
+			)
+			detailview
+			(
+				layout
+				(
+					type = 1
+					datablock1
+					(
+						layout type = -2
+						fields
 						(
-							layout
-							(
-				 				type = 2
-								datablock1
-								(
-				     				title = "Overview"
-									fields
-									(
-										Investigation_Resolution.Resolution_ID as "Resolution ID"
-										Investigation_Resolution.Resolution_Type as "Resolution Type"
-										Investigation_Resolution.Adjustment_Amount as "Adjustment Amount"
-									)
-								)
-								datablock4
-								(
-				     				title = "Dispute"
-									fields
-									(
-										Dispute_ID as "Dispute ID"
-										AI_Dispute_Summary as "Dispute Summary"
-										Disputed_Amount as "Disputed Amount"
-										Patient.Added_Time as "Added Time"
-									)
-								)
-								datablock2
-								(
-				     				title = "Investigation Notes"
-				     				related field = Investigation_Resolution
-									fields
-									(
-										Findings
-										Charge_Verified as "Charge Verified"
-										Internal_Notes as "Internal Notes"
-										Patient_Contacted as "Patient Contacted"
-										Patient_Contact_Date as "Patient Contact Date"
-										Patient_Contact_Summary as "Patient Contact Summary"
-										Supporting_Evidence as "Supporting Evidence"
-									)
-								)
-								datablock3
-								(
-				     				title = "Resolution Decision"
-									fields
-									(
-										Investigation_Resolution.Resolution_Type as "Resolution Type"
-										Investigation_Resolution.Adjustment_Amount as "Adjustment Amount"
-										Investigation_Resolution.Resolution_Rationale as "Resolution Rationale"
-										Investigation_Resolution.Root_Cause as "Root Cause"
-										Investigation_Resolution.Root_Cause_Detail as "Root Cause Detail"
-									)
-								)
-								datablock5
-								(
-				     				title = "Status & Assignment"
-									fields
-									(
-										Investigation_Resolution.Created_By as "Created By"
-										Investigation_Resolution.Approval_Status as "Approval Status"
-										Investigation_Resolution.Resolution_Approval_Due_Date as "Approval Due Date"
-										Investigation_Resolution.Approver as "Approver"
-										Investigation_Resolution.Approver_Comments as "Approver Comments"
-									)
-								)
-							)
-								menu
-								(
-									header
-									(
-										"AI Email"
-									)
-								)
+							Investigation_Resolution.Resolution_ID as "Resolution ID"
+							Investigation_Resolution.Resolution_Type as "Resolution Type"
+							Investigation_Resolution.Adjustment_Amount as "Adjustment Amount"
+							Investigation_Resolution.Approval_Status as "Approval Status"
+							Disputed_Amount as "Disputed Amount"
+							Dispute_ID as "Dispute ID"
+							AI_Dispute_Summary as "Dispute Summary"
 						)
-					
+					)
+				)
+				menu
+				(
+					header ( Edit Delete "AI Email" )
+				)
+			)
 		}
 	
 		report Resolution_Approval_Overdues
 		{
-		
-						quickview
+			quickview
+			(
+				layout
+				(
+					type = -1
+					datablock1
+					(
+						layout type = -1
+						fields
 						(
-							layout
-							(
-				 				type = Custom
-				 				selectedlayout = "Custom Layout 1"
-							)
-								menu
-								(
-									header
-									(
-									)
-								)
-		    				action
-		    				(
-								on tap
-								(
-									View Record   	   
-		    					)
-								on long press
-								(
-									View Record   	   
-		    					)
-		     				)
+							Investigation_Resolution.Resolution_ID as "Resolution ID"
+							Dispute_ID as "Dispute ID"
+							Investigation_Resolution.Resolution_Type as "Resolution Type"
+							Investigation_Resolution.Approval_Status as "Approval Status"
 						)
-		
-						detailview
+					)
+				)
+				menu
+				(
+					header ( Edit Delete )
+					record ( Edit Delete )
+				)
+				action
+				(
+					on tap ( View Record )
+					on long press ( Edit Delete View Record )
+					on left swipe ( Delete )
+					on right swipe ( Edit )
+				)
+			)
+			detailview
+			(
+				layout
+				(
+					type = 1
+					datablock1
+					(
+						layout type = -2
+						fields
 						(
-							layout
-							(
-				 				type = 2
-								datablock1
-								(
-				     				title = "Overview"
-									fields
-									(
-										Investigation_Resolution.Resolution_ID as "Resolution ID"
-										Investigation_Resolution.Resolution_Type as "Resolution Type"
-										Investigation_Resolution.Adjustment_Amount as "Adjustment Amount"
-									)
-								)
-								datablock4
-								(
-				     				title = "Dispute"
-									fields
-									(
-										Dispute_ID as "Dispute ID"
-										AI_Dispute_Summary as "Dispute Summary"
-										Disputed_Amount as "Disputed Amount"
-										Patient.Added_Time as "Added Time"
-									)
-								)
-								datablock2
-								(
-				     				title = "Investigation Notes"
-				     				related field = Investigation_Resolution
-									fields
-									(
-										Findings
-										Charge_Verified as "Charge Verified"
-										Internal_Notes as "Internal Notes"
-										Patient_Contacted as "Patient Contacted"
-										Patient_Contact_Date as "Patient Contact Date"
-										Patient_Contact_Summary as "Patient Contact Summary"
-										Supporting_Evidence as "Supporting Evidence"
-									)
-								)
-								datablock3
-								(
-				     				title = "Resolution Decision"
-									fields
-									(
-										Investigation_Resolution.Resolution_Type as "Resolution Type"
-										Investigation_Resolution.Adjustment_Amount as "Adjustment Amount"
-										Investigation_Resolution.Resolution_Rationale as "Resolution Rationale"
-										Investigation_Resolution.Root_Cause as "Root Cause"
-										Investigation_Resolution.Root_Cause_Detail as "Root Cause Detail"
-									)
-								)
-								datablock5
-								(
-				     				title = "Status & Assignment"
-									fields
-									(
-										Investigation_Resolution.Created_By as "Created By"
-										Investigation_Resolution.Approval_Status as "Approval Status"
-										Investigation_Resolution.Resolution_Approval_Due_Date as "Approval Due Date"
-										Investigation_Resolution.Approver as "Approver"
-										Investigation_Resolution.Approver_Comments as "Approver Comments"
-									)
-								)
-							)
-								menu
-								(
-									header
-									(
-									)
-								)
+							Investigation_Resolution.Resolution_ID as "Resolution ID"
+							Investigation_Resolution.Resolution_Type as "Resolution Type"
+							Investigation_Resolution.Adjustment_Amount as "Adjustment Amount"
+							Investigation_Resolution.Approval_Status as "Approval Status"
+							Disputed_Amount as "Disputed Amount"
+							Dispute_ID as "Dispute ID"
+							AI_Dispute_Summary as "Dispute Summary"
 						)
-					
+					)
+				)
+				menu
+				(
+					header ( Edit Delete )
+				)
+			)
 		}
 	
 		report Resolution_Communicated
 		{
-		
-						quickview
+			quickview
+			(
+				layout
+				(
+					type = -1
+					datablock1
+					(
+						layout type = -1
+						fields
 						(
-							layout
-							(
-				 				type = Custom
-				 				selectedlayout = "Custom Layout 1"
-							)
-								menu
-								(
-									header
-									(
-									)
-								)
-		    				action
-		    				(
-								on tap
-								(
-									View Record   	   
-		    					)
-								on long press
-								(
-									View Record   	   
-		    					)
-		     				)
+							Dispute_ID as "Dispute ID"
+							Patient
+							Category
+							Disputed_Amount as "Disputed Amount"
+							Priority
+							Status
 						)
-		
-						detailview
+					)
+				)
+				menu
+				(
+					header ( Edit Delete )
+					record ( Edit Delete )
+				)
+				action
+				(
+					on tap ( View Record )
+					on long press ( Edit Delete View Record )
+					on left swipe ( Delete )
+					on right swipe ( Edit )
+				)
+			)
+			detailview
+			(
+				layout
+				(
+					type = 1
+					datablock1
+					(
+						layout type = -2
+						fields
 						(
-							layout
-							(
-				 				type = 2
-								datablock1
-								(
-				     				title = "Overview"
-									fields
-									(
-										Dispute_ID as "Dispute ID"
-										AI_Dispute_Summary as "Dispute Summary"
-										Patient.Added_Time as "Added Time"
-									)
-								)
-								datablock4
-								(
-				     				title = "Case Information"
-									fields
-									(
-										Patient
-										Case
-										Insurance_Payer as "Insurance Payer"
-										Total_Billed_Amount as "Total Billed Amount"
-										Patient_Share as "Patient Share"
-									)
-								)
-								datablock5
-								(
-				     				title = "Dispute Details"
-									fields
-									(
-										Disputed_Amount as "Disputed Amount"
-										Reason_for_Dispute as "Reason for Dispute"
-										Dispute_Source as "Dispute Source"
-										Email
-										Supporting_Documents as "Supporting Documents"
-									)
-								)
-								datablock7
-								(
-				     				title = "Classification"
-									fields
-									(
-										Category
-										Sub_Category as "Sub-Category"
-									)
-								)
-								datablock8
-								(
-				     				title = "Disputed Charge Line"
-				     				related field = Disputed_Charge_Line
-									fields
-									(
-										Charge
-										CPT_Code as "CPT Code"
-										Billed_Line_Amount as "Billed Line Amount"
-										Disputed_Line_Amount as "Disputed Line Amount"
-										Line_Reason as "Line Reason"
-									)
-								)
-								datablock6
-								(
-				     				title = "SLA & Status"
-									fields
-									(
-										Status
-										Priority
-										Investigation_Due_Date as "Investigation Due Date"
-										Investigation_Start_Time as "Investigation Start Time"
-									)
-								)
-								datablock9
-								(
-				     				title = "Assignment & Audit Trail"
-									fields
-									(
-										Assigned_Role as "Assigned Role"
-										Assigned_To as "Assigned To"
-										Approver
-										Created_By_Type as "Created By Type"
-										Created_By_User as "Created By User"
-										Closed_By_User as "Closed By User"
-									)
-								)
-								datablock10
-								(
-				     				title = "Investigation Resolution"
-				     				related field = Investigation_Resolution[Dispute.Investigation_Resolution is not null]
-									fields
-									(
-										Resolution_ID as "Resolution ID"
-										Resolution_Type as "Resolution Type"
-										Approval_Status as "Approval Status"
-										Root_Cause as "Root Cause"
-										Adjustment_Amount as "Adjustment Amount"
-										Resolution_Approval_Due_Date as "Resolution Approval Due Date"
-										Findings
-										Resolution_Rationale as "Resolution Rationale"
-										Approver_Comments as "Approver Comments"
-										Internal_Notes as "Internal Notes"
-									)
-								)
-								datablock11
-								(
-				     				title = "Communication Log"
-				     				related field = Communication_Log[Dispute.Communication_Log is not null]
-									fields
-									(
-										Time
-										Channel
-										Contact_Person as "Contact Person"
-										Summary
-										Follow_Up_Required as "Follow-Up Required"
-										Follow_Up_Date as "Follow-Up Date"
-										Logged_By as "Logged By"
-									)
-								)
-							)
-								menu
-								(
-									header
-									(
-									)
-								)
+							Dispute_ID as "Dispute ID"
+							Patient
+							Case
+							Disputed_Amount as "Disputed Amount"
+							Category
+							Sub_Category as "Sub-Category"
+							Priority
+							Status
+							Investigation_Due_Date as "Investigation Due Date"
+							AI_Dispute_Summary as "Dispute Summary"
 						)
-					
+					)
+				)
+				menu
+				(
+					header ( Edit Delete )
+				)
+			)
 		}
 	
 		report Returned_For_Rework
 		{
-		
-						quickview
+			quickview
+			(
+				layout
+				(
+					type = -1
+					datablock1
+					(
+						layout type = -1
+						fields
 						(
-							layout
-							(
-				 				type = Custom
-				 				selectedlayout = "Custom Layout 1"
-							)
-								menu
-								(
-									header
-									(
-									)
-								)
-		    				action
-		    				(
-								on tap
-								(
-									View Record   	   
-		    					)
-								on long press
-								(
-									View Record   	   
-		    					)
-		     				)
+							Investigation_Resolution.Resolution_ID as "Resolution ID"
+							Dispute_ID as "Dispute ID"
+							Investigation_Resolution.Resolution_Type as "Resolution Type"
+							Investigation_Resolution.Approval_Status as "Approval Status"
 						)
-		
-						detailview
+					)
+				)
+				menu
+				(
+					header ( Edit Delete )
+					record ( Edit Delete )
+				)
+				action
+				(
+					on tap ( View Record )
+					on long press ( Edit Delete View Record )
+					on left swipe ( Delete )
+					on right swipe ( Edit )
+				)
+			)
+			detailview
+			(
+				layout
+				(
+					type = 1
+					datablock1
+					(
+						layout type = -2
+						fields
 						(
-							layout
-							(
-				 				type = 2
-								datablock1
-								(
-				     				title = "Overview"
-									fields
-									(
-										Investigation_Resolution.Resolution_ID as "Resolution ID"
-										Investigation_Resolution.Resolution_Type as "Resolution Type"
-										Investigation_Resolution.Adjustment_Amount as "Adjustment Amount"
-									)
-								)
-								datablock4
-								(
-				     				title = "Dispute"
-									fields
-									(
-										Dispute_ID as "Dispute ID"
-										AI_Dispute_Summary as "Dispute Summary"
-										Disputed_Amount as "Disputed Amount"
-										Patient.Added_Time as "Added Time"
-									)
-								)
-								datablock2
-								(
-				     				title = "Investigation Notes"
-				     				related field = Investigation_Resolution
-									fields
-									(
-										Findings
-										Charge_Verified as "Charge Verified"
-										Internal_Notes as "Internal Notes"
-										Patient_Contacted as "Patient Contacted"
-										Patient_Contact_Date as "Patient Contact Date"
-										Patient_Contact_Summary as "Patient Contact Summary"
-										Supporting_Evidence as "Supporting Evidence"
-									)
-								)
-								datablock3
-								(
-				     				title = "Resolution Decision"
-									fields
-									(
-										Investigation_Resolution.Resolution_Type as "Resolution Type"
-										Investigation_Resolution.Adjustment_Amount as "Adjustment Amount"
-										Investigation_Resolution.Resolution_Rationale as "Resolution Rationale"
-										Investigation_Resolution.Root_Cause as "Root Cause"
-										Investigation_Resolution.Root_Cause_Detail as "Root Cause Detail"
-									)
-								)
-								datablock5
-								(
-				     				title = "Status & Assignment"
-									fields
-									(
-										Investigation_Resolution.Created_By as "Created By"
-										Investigation_Resolution.Approval_Status as "Approval Status"
-										Investigation_Resolution.Resolution_Approval_Due_Date as "Approval Due Date"
-										Investigation_Resolution.Approver as "Approver"
-										Investigation_Resolution.Approver_Comments as "Approver Comments"
-									)
-								)
-							)
-								menu
-								(
-									header
-									(
-									)
-								)
+							Investigation_Resolution.Resolution_ID as "Resolution ID"
+							Investigation_Resolution.Resolution_Type as "Resolution Type"
+							Investigation_Resolution.Adjustment_Amount as "Adjustment Amount"
+							Investigation_Resolution.Approval_Status as "Approval Status"
+							Disputed_Amount as "Disputed Amount"
+							Dispute_ID as "Dispute ID"
+							AI_Dispute_Summary as "Dispute Summary"
 						)
-					
+					)
+				)
+				menu
+				(
+					header ( Edit Delete )
+				)
+			)
 		}
 	
 		report Unassigned_Disputes
 		{
-		
-						quickview
+			quickview
+			(
+				layout
+				(
+					type = -1
+					datablock1
+					(
+						layout type = -1
+						fields
 						(
-							layout
-							(
-				 				type = Custom
-				 				selectedlayout = "Custom Layout 1"
-							)
-								menu
-								(
-									header
-									(
-									)
-								record
-								(
-									Edit   	   
-									Delete   	   
-		    					)
-								)
-		    				action
-		    				(
-								on tap
-								(
-									View Record   	   
-		    					)
-								on long press
-								(
-									View Record   	   
-		    					)
-		     				)
+							Dispute_ID as "Dispute ID"
+							Patient
+							Category
+							Disputed_Amount as "Disputed Amount"
+							Priority
+							Status
 						)
-		
-						detailview
+					)
+				)
+				menu
+				(
+					header ( Edit Delete )
+					record ( Edit Delete )
+				)
+				action
+				(
+					on tap ( View Record )
+					on long press ( Edit Delete View Record )
+					on left swipe ( Delete )
+					on right swipe ( Edit )
+				)
+			)
+			detailview
+			(
+				layout
+				(
+					type = 1
+					datablock1
+					(
+						layout type = -2
+						fields
 						(
-							layout
-							(
-				 				type = 2
-								datablock1
-								(
-									layout type = 35
-				     				title = "Overview"
-									fields
-									(
-										Dispute_ID as "Dispute ID"
-										AI_Dispute_Summary as "Dispute Summary"
-										Patient.Added_Time as "Added Time"
-									)
-								)
-								datablock4
-								(
-				     				title = "Case Information"
-									fields
-									(
-										Patient
-										Case
-										Insurance_Payer as "Insurance Payer"
-										Total_Billed_Amount as "Total Billed Amount"
-										Patient_Share as "Patient Share"
-									)
-								)
-								datablock5
-								(
-				     				title = "Dispute Details"
-									fields
-									(
-										Disputed_Amount as "Disputed Amount"
-										Reason_for_Dispute as "Reason for Dispute"
-										Dispute_Source as "Dispute Source"
-										Email
-										Supporting_Documents as "Supporting Documents"
-									)
-								)
-								datablock7
-								(
-				     				title = "Classification"
-									fields
-									(
-										Category
-										Sub_Category as "Sub-Category"
-									)
-								)
-								datablock8
-								(
-									layout type = 31
-				     				title = "Disputed Charge Line"
-				     				related field = Disputed_Charge_Line
-									fields
-									(
-										CPT_Code as "CPT Code"
-										Charge
-										Billed_Line_Amount as "Billed Line Amount"
-										Disputed_Line_Amount as "Disputed Line Amount"
-									)
-								)
-								datablock6
-								(
-				     				title = "SLA & Status"
-									fields
-									(
-										Status
-										Priority
-										Investigation_Due_Date as "Investigation Due Date"
-									)
-								)
-								datablock9
-								(
-				     				title = "Assignment & Audit Trail"
-									fields
-									(
-										Assigned_Role as "Assigned Role"
-										Created_By_Type as "Created By Type"
-										Created_By_User as "Created By User"
-									)
-								)
-								datablock11
-								(
-									layout type = 35
-				     				title = "Communication Log"
-				     				related field = Communication_Log[Dispute.Communication_Log is not null]
-									fields
-									(
-										Contact_Person as "Contact Person"
-										Summary
-										Channel
-										Follow_Up_Required as "Follow-Up Required"
-									)
-								)
-							)
-								menu
-								(
-									header
-									(
-										Edit 
-										Delete 
-									)
-								)
+							Dispute_ID as "Dispute ID"
+							Patient
+							Case
+							Disputed_Amount as "Disputed Amount"
+							Category
+							Sub_Category as "Sub-Category"
+							Priority
+							Status
+							Investigation_Due_Date as "Investigation Due Date"
+							AI_Dispute_Summary as "Dispute Summary"
 						)
-					
+					)
+				)
+				menu
+				(
+					header ( Edit Delete )
+				)
+			)
 		}
 	
 		report Under_Investigation
 		{
-		
-						quickview
+			quickview
+			(
+				layout
+				(
+					type = -1
+					datablock1
+					(
+						layout type = -1
+						fields
 						(
-							layout
-							(
-				 				type = Custom
-				 				selectedlayout = "Custom Layout 1"
-							)
-								menu
-								(
-									header
-									(
-									)
-								)
-		    				action
-		    				(
-								on tap
-								(
-									View Record   	   
-		    					)
-								on long press
-								(
-									View Record   	   
-		    					)
-		     				)
+							Dispute_ID as "Dispute ID"
+							Patient
+							Category
+							Disputed_Amount as "Disputed Amount"
+							Priority
+							Status
 						)
-		
-						detailview
+					)
+				)
+				menu
+				(
+					header ( Edit Delete )
+					record ( Edit Delete )
+				)
+				action
+				(
+					on tap ( View Record )
+					on long press ( Edit Delete View Record )
+					on left swipe ( Delete )
+					on right swipe ( Edit )
+				)
+			)
+			detailview
+			(
+				layout
+				(
+					type = 1
+					datablock1
+					(
+						layout type = -2
+						fields
 						(
-							layout
-							(
-				 				type = 2
-								datablock1
-								(
-				     				title = "Overview"
-									fields
-									(
-										Dispute_ID as "Dispute ID"
-										AI_Dispute_Summary as "Dispute Summary"
-										Patient.Added_Time as "Added Time"
-									)
-								)
-								datablock4
-								(
-				     				title = "Case Information"
-									fields
-									(
-										Patient
-										Case
-										Insurance_Payer as "Insurance Payer"
-										Total_Billed_Amount as "Total Billed Amount"
-										Patient_Share as "Patient Share"
-									)
-								)
-								datablock5
-								(
-				     				title = "Dispute Details"
-									fields
-									(
-										Disputed_Amount as "Disputed Amount"
-										Reason_for_Dispute as "Reason for Dispute"
-										Dispute_Source as "Dispute Source"
-										Email
-										Supporting_Documents as "Supporting Documents"
-									)
-								)
-								datablock7
-								(
-				     				title = "Classification"
-									fields
-									(
-										Category
-										Sub_Category as "Sub-Category"
-									)
-								)
-								datablock8
-								(
-				     				title = "Disputed Charge Line"
-				     				related field = Disputed_Charge_Line
-									fields
-									(
-										Charge
-										CPT_Code as "CPT Code"
-										Billed_Line_Amount as "Billed Line Amount"
-										Disputed_Line_Amount as "Disputed Line Amount"
-										Line_Reason as "Line Reason"
-									)
-								)
-								datablock6
-								(
-				     				title = "SLA & Status"
-									fields
-									(
-										Status
-										Priority
-										Investigation_Due_Date as "Investigation Due Date"
-										Investigation_Start_Time as "Investigation Start Time"
-									)
-								)
-								datablock9
-								(
-				     				title = "Assignment & Audit Trail"
-									fields
-									(
-										Assigned_Role as "Assigned Role"
-										Assigned_To as "Assigned To"
-										Approver
-										Created_By_Type as "Created By Type"
-										Created_By_User as "Created By User"
-										Closed_By_User as "Closed By User"
-									)
-								)
-								datablock10
-								(
-				     				title = "Investigation Resolution"
-				     				related field = Investigation_Resolution[Dispute.Investigation_Resolution is not null]
-									fields
-									(
-										Resolution_ID as "Resolution ID"
-										Resolution_Type as "Resolution Type"
-										Approval_Status as "Approval Status"
-										Root_Cause as "Root Cause"
-										Adjustment_Amount as "Adjustment Amount"
-										Resolution_Approval_Due_Date as "Resolution Approval Due Date"
-										Findings
-										Resolution_Rationale as "Resolution Rationale"
-										Approver_Comments as "Approver Comments"
-										Internal_Notes as "Internal Notes"
-									)
-								)
-								datablock11
-								(
-				     				title = "Communication Log"
-				     				related field = Communication_Log[Dispute.Communication_Log is not null]
-									fields
-									(
-										Time
-										Channel
-										Contact_Person as "Contact Person"
-										Summary
-										Follow_Up_Required as "Follow-Up Required"
-										Follow_Up_Date as "Follow-Up Date"
-										Logged_By as "Logged By"
-									)
-								)
-							)
-								menu
-								(
-									header
-									(
-									)
-								)
+							Dispute_ID as "Dispute ID"
+							Patient
+							Case
+							Disputed_Amount as "Disputed Amount"
+							Category
+							Sub_Category as "Sub-Category"
+							Priority
+							Status
+							Investigation_Due_Date as "Investigation Due Date"
+							AI_Dispute_Summary as "Dispute Summary"
 						)
-					
+					)
+				)
+				menu
+				(
+					header ( Edit Delete )
+				)
+			)
 		}
 	}
 	menu
@@ -15212,11 +12912,11 @@ application "Healthcare-Dispute-Resolution-Management"
 				{
 					form  Add_Organization
 					{
-						icon = "design-2-filter-organization"
+						icon = "business-building"
 					}
 					form  ID_Configuration
 					{
-						icon = "users-2-contacts-45"
+						icon = "files-paper"
 					}
 					form  Insurance_Payer
 					{
@@ -15252,7 +12952,7 @@ application "Healthcare-Dispute-Resolution-Management"
 					}
 					form  User
 					{
-						icon = "users-2-woman-up"
+						icon = "users-single-body"
 					}
 					systemcomponent
 					{
@@ -15286,11 +12986,11 @@ application "Healthcare-Dispute-Resolution-Management"
 					}
 					form  Communication_Log
 					{
-						icon = "tech-2-l-location"
+						icon = "location-pin"
 					}
 					form  Investigation_Resolution
 					{
-						icon = "media-1-action-74"
+						icon = "files-paper"
 					}
 					form  Disputed_Charge_Line
 					{
@@ -15318,7 +13018,7 @@ application "Healthcare-Dispute-Resolution-Management"
 					}
 					form  Resolution_Email
 					{
-						icon = "ui-1-email-84"
+						icon = "files-paper"
 					}
 					report Resolution_Email_Report
 					{
@@ -15334,17 +13034,11 @@ application "Healthcare-Dispute-Resolution-Management"
 					}
 					page Dashboard
 					{
-						icon = "ui-1-dashboard-half"
+						icon = "business-chart-bar-33"
 					}
 					report All_Resolution_Decisions_Master
 					{
 						icon = "tech-desktop"
-					}
-					section SharedAnalytics_Section
-					{
-						type = shared_user_report_section
-						displayname = "Reports"
-						icon = "business-chart-bar-33"
 					}
 				}
 				space Operations
@@ -15393,7 +13087,7 @@ application "Healthcare-Dispute-Resolution-Management"
 					section Investigation1
 					{
 						displayname = "Investigation"
-						icon = "users-2-child"
+						icon = "business-briefcase-24"
 						report Under_Investigation
 						{
 							icon = "clothes-wash"
@@ -15406,7 +13100,7 @@ application "Healthcare-Dispute-Resolution-Management"
 					section Approval
 					{
 						displayname = "Approval"
-						icon = "users-2-child"
+						icon = "files-check"
 						report Pending_Approval
 						{
 							icon = "clothes-wash"
@@ -15427,7 +13121,7 @@ application "Healthcare-Dispute-Resolution-Management"
 					section Closure
 					{
 						displayname = "Closure"
-						icon = "users-2-child"
+						icon = "business-chart-pie-36"
 						report Resolution_Communicated
 						{
 							icon = "clothes-wash"
@@ -15440,7 +13134,7 @@ application "Healthcare-Dispute-Resolution-Management"
 					section Dispute_Registry
 					{
 						displayname = "Dispute Registry"
-						icon = "users-2-child"
+						icon = "files-archive"
 						report All_Disputes
 						{
 							icon = "clothes-wash"
@@ -15451,10 +13145,17 @@ application "Healthcare-Dispute-Resolution-Management"
 						}
 						report All_Communication_Logs
 						{
-							icon = "tech-2-l-location"
+							icon = "location-pin"
 						}
 					}
+					section SharedAnalytics_Section
+					{
+						type = shared_user_report_section
+						displayname = "Reports"
+						icon = "business-chart-bar-33"
+					}
 				}
+	
 				space Masters
 				{
 					displayname = "Masters"
@@ -15479,7 +13180,7 @@ application "Healthcare-Dispute-Resolution-Management"
 					section Settings
 					{
 						displayname = "Settings"
-						icon = "design-2-filter-organization"
+						icon = "business-building"
 						report Organization
 						{
 							icon = "tech-desktop"
