@@ -1,0 +1,27 @@
+Patients_On_Success as "Patients On Success"
+{
+    type = form
+    form = Patients
+    record event = on add or edit
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                auditSummary = "Patient record saved for " + ifnull(input.Patient_Name, "Unnamed patient") + ". Insurance: " + if(input.Has_Insurance == true, "Yes", "No") + ".";
+                auditId = insert into Audit_Logs
+                [
+                    Event_Time = zoho.currenttime
+                    Entity_Type = "Patient"
+                    Entity_Record_ID = input.ID
+                    Action_Type = "Updated"
+                    Summary = auditSummary
+                    Performed_By = zoho.loginuser
+                    Sensitivity = "High"
+                ];
+            )
+        }
+    }
+}

@@ -1,0 +1,35 @@
+Payments_On_Validate as "Payments On Validate"
+{
+    type = form
+    form = Payments
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if (ifnull(input.Amount,0) <= 0)
+                {
+                    alert "Payment amount must be greater than zero.";
+                    cancel submit;
+                }
+                if (input.Payment_Method in {"Card","Bank Transfer","UPI","Insurance Payout"} && input.Reference_Number in {""," ","null"})
+                {
+                    alert "Reference number is required for the selected payment method.";
+                    cancel submit;
+                }
+                if (input.Invoice != null && input.Payment_Status == "Received")
+                {
+                    inv = Invoices[ID == input.Invoice];
+                    if (inv.count() > 0 && input.Payment_Method != "Insurance Payout" && ifnull(input.Amount,0) > ifnull(inv.Balance_Due,0))
+                    {
+                        alert "Received payment cannot exceed the invoice balance due.";
+                        cancel submit;
+                    }
+                }
+            )
+        }
+    }
+}

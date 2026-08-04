@@ -1,0 +1,57 @@
+Claim_Status_On_User_Input as "Claim Status On User Input"
+{
+    type = form
+    form = Insurance_Claims
+    record event = on add or edit
+
+    on user input of Claim_Status
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if (input.Claim_Status == "Denied")
+                {
+                    show Denial_Reason;
+                    enable Denial_Reason;
+                }
+                else
+                {
+                    input.Denial_Reason = "";
+                    hide Denial_Reason;
+                    disable Denial_Reason;
+                }
+                if (input.Claim_Status in {"Approved","Partially Approved"})
+                {
+                    show Approved_Amount;
+                    show Copay_Amount;
+                    show Approval_Date;
+                    enable Approved_Amount;
+                    enable Copay_Amount;
+                    enable Approval_Date;
+                }
+                else
+                {
+                    input.Approval_Date = null;
+                    hide Approved_Amount;
+                    hide Copay_Amount;
+                    hide Approval_Date;
+                    disable Approved_Amount;
+                    disable Copay_Amount;
+                    disable Approval_Date;
+                }
+                if (input.Claim_Status in {"Submitted","Under Review","Approved","Partially Approved","Denied","Closed"})
+                {
+                    show Submission_Date;
+                    enable Submission_Date;
+                }
+                else
+                {
+                    input.Submission_Date = null;
+                    hide Submission_Date;
+                    disable Submission_Date;
+                }
+            )
+        }
+    }
+}

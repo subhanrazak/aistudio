@@ -1,0 +1,31 @@
+Prescriptions_On_Validate as "Prescriptions On Validate"
+{
+    type = form
+    form = Prescriptions
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if (input.Duration_Days != null && input.Duration_Days <= 0)
+                {
+                    alert "Duration days must be positive.";
+                    cancel submit;
+                }
+                if (input.Refill_Allowed == true && (input.Refill_Until == null || input.Refill_Until <= zoho.currentdate))
+                {
+                    alert "A future refill-until date is required when refill is allowed.";
+                    cancel submit;
+                }
+                if (input.Status == "Issued" && input.Medication_Details in {""," ","null"})
+                {
+                    alert "Medication details are required before issuing a prescription.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}

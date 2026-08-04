@@ -1,0 +1,134 @@
+<%
+upcomingFollowups = Consultations[Requires_Follow_Up == true && Follow_Up_Date >= zoho.currentdate];
+recentConsultations = Consultations[ID != 0];
+recentPrescriptions = Prescriptions[ID != 0];
+%>
+<div class="clinic-dashboard-shell clinic-card zcs-card">
+    <div class="clinic-section-title">
+        <h3><i class="zc-li-outline ui-2-notification-69"></i> Follow-up and activity feed</h3>
+        <span>Upcoming follow-ups, latest clinical activity, and prescription work</span>
+    </div>
+    <div class="clinic-activity-layout">
+        <div class="clinic-activity-column">
+            <h4 class="clinic-mini-title"><i class="zc-li-outline ui-1-calendar-grid-58"></i> Upcoming follow-ups</h4>
+            <div class="clinic-feed-list">
+                <%
+                followupShown = 0;
+                for each followRecord in upcomingFollowups
+                {
+                    if(followupShown < 5)
+                    {
+                        followNumber = ifnull(followRecord.Consultation_Number,"Consultation");
+                        followDate = ifnull(followRecord.Follow_Up_Date,"No date");
+                        followOutcome = ifnull(followRecord.Visit_Outcome,"Follow-up");
+                        %>
+                        <div class="clinic-feed-item">
+                            <p class="clinic-feed-primary"><%=followNumber%></p>
+                            <p class="clinic-feed-secondary">Follow-up date: <%=followDate%></p>
+                            <div class="zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-blue"><i class="zcs-badge-icon zcs-no-shrink zc-li-outline ui-2-time"></i><span class="zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body"><%=followOutcome%></span></div>
+                        </div>
+                        <%
+                        followupShown = followupShown + 1;
+                    }
+                }
+                if(followupShown == 0)
+                {
+                    %><div class="clinic-empty">No upcoming follow-ups</div><%
+                }
+                %>
+            </div>
+        </div>
+        <div class="clinic-activity-column">
+            <h4 class="clinic-mini-title"><i class="zc-li-outline health-stethoscope"></i> Recent consultations</h4>
+            <div class="clinic-feed-list">
+                <%
+                consultShown = 0;
+                for each consultRecord in recentConsultations
+                {
+                    if(consultShown < 5)
+                    {
+                        consultNumber = ifnull(consultRecord.Consultation_Number,"Consultation");
+                        consultDate = ifnull(consultRecord.Consultation_DateTime,"No date");
+                        consultStatus = ifnull(consultRecord.Visit_Outcome,"Recorded");
+                        consultBadgeClass = "zcs-badge-blue";
+                        consultIcon = "loader-dots-06";
+                        if(consultStatus == "Treated")
+                        {
+                            consultBadgeClass = "zcs-badge-green";
+                            consultIcon = "ui-1-check-circle-08";
+                        }
+                        if(consultStatus == "Referred" || consultStatus == "Admitted")
+                        {
+                            consultBadgeClass = "zcs-badge-orange";
+                            consultIcon = "arrows-1-share-66";
+                        }
+                        if(consultStatus == "Follow-up Required" || consultStatus == "Observation")
+                        {
+                            consultBadgeClass = "zcs-badge-yellow";
+                            consultIcon = "ui-2-time";
+                        }
+                        %>
+                        <div class="clinic-feed-item">
+                            <p class="clinic-feed-primary"><%=consultNumber%></p>
+                            <p class="clinic-feed-secondary">Consulted: <%=consultDate%></p>
+                            <div class="zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border <%=consultBadgeClass%>"><i class="zcs-badge-icon zcs-no-shrink zc-li-outline <%=consultIcon%>"></i><span class="zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body"><%=consultStatus%></span></div>
+                        </div>
+                        <%
+                        consultShown = consultShown + 1;
+                    }
+                }
+                if(consultShown == 0)
+                {
+                    %><div class="clinic-empty">No recent consultations</div><%
+                }
+                %>
+            </div>
+        </div>
+        <div class="clinic-activity-column">
+            <h4 class="clinic-mini-title"><i class="zc-li-outline health-pills"></i> Recent prescriptions</h4>
+            <div class="clinic-feed-list">
+                <%
+                prescriptionShown = 0;
+                for each prescriptionRecord in recentPrescriptions
+                {
+                    if(prescriptionShown < 5)
+                    {
+                        prescriptionNumber = ifnull(prescriptionRecord.Prescription_Number,"Prescription");
+                        prescriptionDate = ifnull(prescriptionRecord.Prescription_Date,"No date");
+                        prescriptionStatus = ifnull(prescriptionRecord.Status,"Draft");
+                        prescriptionBadgeClass = "zcs-badge-blue";
+                        prescriptionIcon = "loader-dots-06";
+                        if(prescriptionStatus == "Issued" || prescriptionStatus == "Completed")
+                        {
+                            prescriptionBadgeClass = "zcs-badge-green";
+                            prescriptionIcon = "ui-1-check-circle-08";
+                        }
+                        if(prescriptionStatus == "Cancelled")
+                        {
+                            prescriptionBadgeClass = "zcs-badge-red";
+                            prescriptionIcon = "ui-1-circle-remove";
+                        }
+                        if(prescriptionStatus == "Draft")
+                        {
+                            prescriptionBadgeClass = "zcs-badge-yellow";
+                            prescriptionIcon = "files-single-folded-content";
+                        }
+                        %>
+                        <div class="clinic-feed-item">
+                            <p class="clinic-feed-primary"><%=prescriptionNumber%></p>
+                            <p class="clinic-feed-secondary">Prescription date: <%=prescriptionDate%></p>
+                            <div class="zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border <%=prescriptionBadgeClass%>"><i class="zcs-badge-icon zcs-no-shrink zc-li-outline <%=prescriptionIcon%>"></i><span class="zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body"><%=prescriptionStatus%></span></div>
+                        </div>
+                        <%
+                        prescriptionShown = prescriptionShown + 1;
+                    }
+                }
+                if(prescriptionShown == 0)
+                {
+                    %><div class="clinic-empty">No recent prescriptions</div><%
+                }
+                %>
+            </div>
+        </div>
+    </div>
+</div>

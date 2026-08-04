@@ -1,0 +1,271 @@
+form Invoices
+{
+    displayname = "Invoices"
+    Invoice_Details
+    (
+        type = section
+        displayname = "Invoice Details"
+        row = 1
+        column = 0
+    )
+    Invoice_Number
+    (
+        type = autonumber
+        displayname = "Invoice Number"
+        start index = 60001
+        row = 1
+        column = 1
+        width = medium
+    )
+    must have Patient
+    (
+        type = picklist
+        displayname = "Patient"
+        values = Patients.ID
+        displayformat = [Patient_Name]
+        searchable = true
+        row = 1
+        column = 1
+        width = medium
+    )
+    Appointment
+    (
+        type = picklist
+        displayname = "Appointment"
+        values = Appointments.ID
+        displayformat = [Appointment_Number]
+        searchable = true
+        row = 1
+        column = 2
+        width = medium
+    )
+    Consultation
+    (
+        type = picklist
+        displayname = "Consultation"
+        values = Consultations.ID
+        displayformat = [Consultation_Number]
+        searchable = true
+        row = 1
+        column = 1
+        width = medium
+    )
+    must have Invoice_Date
+    (
+        type = date
+        displayname = "Invoice Date"
+        initial value = "${zoho.currentdate}"
+        row = 1
+        column = 2
+        width = medium
+    )
+    must have Billing_Mode
+    (
+        type = picklist
+        displayname = "Billing Mode"
+        values = {"Self Pay","Insurance","Mixed"}
+        initial value = "Self Pay"
+        row = 1
+        column = 1
+        width = medium
+    )
+    Service_Description
+    (
+        type = textarea
+        displayname = "Service Description"
+        height = 100px
+        row = 1
+        column = 2
+        width = medium
+    )
+    Charges
+    (
+        type = section
+        displayname = "Charges"
+        visibility = true
+        row = 2
+        column = 1
+    )
+    Consultation_Fee
+    (
+        type = decimal
+        displayname = "Consultation Fee"
+        decimalplace = 2
+        initial value = 0
+        row = 2
+        column = 1
+        width = medium
+    )
+    Procedure_Fee
+    (
+        type = decimal
+        displayname = "Procedure Fee"
+        decimalplace = 2
+        initial value = 0
+        row = 2
+        column = 2
+        width = medium
+    )
+    Lab_Fee
+    (
+        type = decimal
+        displayname = "Lab Fee"
+        decimalplace = 2
+        initial value = 0
+        row = 2
+        column = 1
+        width = medium
+    )
+    Pharmacy_Fee
+    (
+        type = decimal
+        displayname = "Pharmacy Fee"
+        decimalplace = 2
+        initial value = 0
+        row = 2
+        column = 2
+        width = medium
+    )
+    Other_Charges
+    (
+        type = decimal
+        displayname = "Other Charges"
+        decimalplace = 2
+        initial value = 0
+        row = 2
+        column = 1
+        width = medium
+    )
+    Discount
+    (
+        type = decimal
+        displayname = "Discount"
+        decimalplace = 2
+        initial value = 0
+        row = 2
+        column = 2
+        width = medium
+    )
+    Tax_Amount
+    (
+        type = decimal
+        displayname = "Tax Amount"
+        decimalplace = 2
+        initial value = 0
+        row = 2
+        column = 1
+        width = medium
+    )
+    Total_Amount
+    (
+        type = formula
+        displayname = "Total Amount"
+        value = Consultation_Fee + Procedure_Fee + Lab_Fee + Pharmacy_Fee + Other_Charges - Discount + Tax_Amount
+        visibility = true
+        row = 2
+        column = 2
+        width = medium
+    )
+    Amount_Paid
+    (
+        type = decimal
+        displayname = "Amount Paid"
+        decimalplace = 2
+        initial value = 0
+        row = 2
+        column = 1
+        width = medium
+    )
+    Balance_Due
+    (
+        type = formula
+        displayname = "Balance Due"
+        value = Consultation_Fee + Procedure_Fee + Lab_Fee + Pharmacy_Fee + Other_Charges - Discount + Tax_Amount - Amount_Paid
+        visibility = true
+        row = 2
+        column = 2
+        width = medium
+    )
+    must have Invoice_Status
+    (
+        type = picklist
+        displayname = "Invoice Status"
+        values = {"Draft","Submitted","Partially Paid","Paid","Cancelled"}
+        initial value = "Draft"
+        row = 2
+        column = 1
+        width = medium
+    )
+    Insurance_Billing
+    (
+        type = section
+        displayname = "Insurance Billing"
+        visibility = true
+        row = 3
+        column = 1
+    )
+    Insurance_Related
+    (
+        type = checkbox
+        displayname = "Insurance Related"
+        initial value = false
+        row = 3
+        column = 1
+        width = medium
+    )
+    Claim_Reference
+    (
+        type = text
+        displayname = "Claim Reference"
+        row = 3
+        column = 2
+        width = medium
+    )
+    Claim_Status_Note
+    (
+        type = textarea
+        displayname = "Claim Status Note"
+        height = 100px
+        row = 3
+        column = 1
+        width = medium
+    )
+    Notes
+    (
+        type = textarea
+        displayname = "Notes"
+        height = 100px
+        row = 3
+        column = 2
+        width = medium
+    )
+    actions
+    {
+        on add
+        {
+            Submit
+            (
+                type = submit
+                displayname = "Submit"
+            )
+            Reset
+            (
+                type = reset
+                displayname = "Reset"
+            )
+        }
+        on edit
+        {
+            Update
+            (
+                type = submit
+                displayname = "Update"
+            )
+            Cancel
+            (
+                type = cancel
+                displayname = "Cancel"
+            )
+        }
+    }
+}

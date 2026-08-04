@@ -1,0 +1,60 @@
+Payments_On_Success as "Payments On Success"
+{
+    type = form
+    form = Payments
+    record event = on add or edit
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if (input.Invoice != null)
+                {
+                    inv = Invoices[ID == input.Invoice];
+                    if (inv.count() > 0)
+                    {
+                        if (input.Payment_Status == "Received")
+                        {
+                            inv.Amount_Paid = ifnull(inv.Amount_Paid,0) + ifnull(input.Amount,0);
+                            if (ifnull(inv.Amount_Paid,0) >= ifnull(inv.Total_Amount,0) && ifnull(inv.Total_Amount,0) > 0)
+                            {
+                                inv.Invoice_Status = "Paid";
+                            }
+                            else if (ifnull(inv.Amount_Paid,0) > 0)
+                            {
+                                inv.Invoice_Status = "Partially Paid";
+                            }
+                        }
+                        else if (input.Payment_Status == "Refunded")
+                        {
+                            refundAmount = ifnull(input.Amount,0);
+                            currentPaid = ifnull(inv.Amount_Paid,0);
+                            inv.Amount_Paid = if(currentPaid - refundAmount < 0, 0, currentPaid - refundAmount);
+                            if (ifnull(inv.Amount_Paid,0) == 0 && inv.Invoice_Status != "Cancelled")
+                            {
+                                inv.Invoice_Status = "Submitted";
+                            }
+                            else if (ifnull(inv.Amount_Paid,0) < ifnull(inv.Total_Amount,0) && inv.Invoice_Status != "Cancelled")
+                            {
+                                inv.Invoice_Status = "Partially Paid";
+                            }
+                        }
+                    }
+                }
+                auditSummary = "Payment " + input.Payment_Number + " saved with status " + ifnull(input.Payment_Status, "Unknown") + ".";
+                auditId = insert into Audit_Logs
+                [
+                    Event_Time = zoho.currenttime
+                    Entity_Type = "Payment"
+                    Entity_Record_ID = input.ID
+                    Action_Type = if(input.Payment_Status == "Refunded", "Payment Posted", "Payment Posted")
+                    Summary = auditSummary
+                    Performed_By = zoho.loginuser
+                    Sensitivity = "Medium"
+                ];
+            )
+        }
+    }
+}

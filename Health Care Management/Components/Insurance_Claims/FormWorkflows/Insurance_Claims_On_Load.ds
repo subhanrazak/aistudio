@@ -1,0 +1,54 @@
+Insurance_Claims_On_Load as "Insurance Claims On Load"
+{
+    type = form
+    form = Insurance_Claims
+    record event = on add or edit
+
+    on load
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if (input.Claim_Status == "Denied")
+                {
+                    show Denial_Reason;
+                    enable Denial_Reason;
+                }
+                else
+                {
+                    hide Denial_Reason;
+                    disable Denial_Reason;
+                }
+                if (input.Claim_Status in {"Approved","Partially Approved"})
+                {
+                    show Approved_Amount;
+                    show Copay_Amount;
+                    show Approval_Date;
+                    enable Approved_Amount;
+                    enable Copay_Amount;
+                    enable Approval_Date;
+                }
+                else
+                {
+                    hide Approved_Amount;
+                    hide Copay_Amount;
+                    hide Approval_Date;
+                    disable Approved_Amount;
+                    disable Copay_Amount;
+                    disable Approval_Date;
+                }
+                if (input.Claim_Status in {"Submitted","Under Review","Approved","Partially Approved","Denied","Closed"})
+                {
+                    show Submission_Date;
+                    enable Submission_Date;
+                }
+                else
+                {
+                    hide Submission_Date;
+                    disable Submission_Date;
+                }
+            )
+        }
+    }
+}

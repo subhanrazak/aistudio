@@ -1,0 +1,35 @@
+Consultations_On_Success as "Consultations On Success"
+{
+    type = form
+    form = Consultations
+    record event = on add or edit
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if (input.Appointment != null)
+                {
+                    appt = Appointments[ID == input.Appointment];
+                    if (appt.count() > 0 && appt.Appointment_Status not in {"Cancelled","No Show"})
+                    {
+                        appt.Appointment_Status = "Completed";
+                    }
+                }
+                auditSummary = "Consultation " + input.Consultation_Number + " saved with outcome " + ifnull(input.Visit_Outcome, "Unknown") + ".";
+                auditId = insert into Audit_Logs
+                [
+                    Event_Time = zoho.currenttime
+                    Entity_Type = "Consultation"
+                    Entity_Record_ID = input.ID
+                    Action_Type = "Updated"
+                    Summary = auditSummary
+                    Performed_By = zoho.loginuser
+                    Sensitivity = "High"
+                ];
+            )
+        }
+    }
+}

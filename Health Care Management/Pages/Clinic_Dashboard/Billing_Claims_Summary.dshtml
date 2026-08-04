@@ -1,0 +1,49 @@
+<%
+outstandingInvoiceRecords = Invoices[Balance_Due > 0 && Invoice_Status != "Cancelled"];
+outstandingInvoiceCount = outstandingInvoiceRecords.count();
+outstandingBalance = 0;
+if(outstandingInvoiceCount > 0)
+{
+    outstandingBalance = ifnull(outstandingInvoiceRecords.sum(Balance_Due),0);
+}
+openClaimRecords = Insurance_Claims[Claim_Status != "Approved" && Claim_Status != "Denied" && Claim_Status != "Closed"];
+openClaimCount = openClaimRecords.count();
+openClaimAmount = 0;
+if(openClaimCount > 0)
+{
+    openClaimAmount = ifnull(openClaimRecords.sum(Claim_Amount),0);
+}
+approvedClaimCount = Insurance_Claims[Claim_Status == "Approved" || Claim_Status == "Partially Approved"].count();
+deniedClaimCount = Insurance_Claims[Claim_Status == "Denied"].count();
+insuranceInvoiceCount = Invoices[Insurance_Related == true].count();
+submittedClaimCount = Insurance_Claims[Claim_Status == "Submitted"].count();
+reviewClaimCount = Insurance_Claims[Claim_Status == "Under Review"].count();
+%>
+<div class="clinic-dashboard-shell clinic-card zcs-card">
+    <div class="clinic-section-title">
+        <h3><i class="zc-li-outline business-money-time"></i> Billing and claims</h3>
+        <a class="clinic-link" href="#Report:Outstanding_Invoices">View invoices</a>
+    </div>
+    <div class="clinic-summary-grid">
+        <a class="clinic-summary-tile" href="#Report:Outstanding_Invoices">
+            <p class="clinic-summary-label">Outstanding invoices</p>
+            <p class="clinic-summary-value"><%=outstandingInvoiceCount%></p>
+            <div class="clinic-summary-foot clinic-money">Balance due: $<%=outstandingBalance%></div>
+        </a>
+        <a class="clinic-summary-tile" href="#Report:Open_Insurance_Claims">
+            <p class="clinic-summary-label">Open claims</p>
+            <p class="clinic-summary-value"><%=openClaimCount%></p>
+            <div class="clinic-summary-foot clinic-money">Claim amount: $<%=openClaimAmount%></div>
+        </a>
+        <a class="clinic-summary-tile" href="#Report:All_Insurance_Claims?Claim_Status=Approved">
+            <p class="clinic-summary-label">Approved or partial claims</p>
+            <p class="clinic-summary-value"><%=approvedClaimCount%></p>
+            <div class="clinic-summary-foot">Submitted: <%=submittedClaimCount%> / Under review: <%=reviewClaimCount%></div>
+        </a>
+        <a class="clinic-summary-tile" href="#Report:All_Insurance_Claims?Claim_Status=Denied">
+            <p class="clinic-summary-label">Denied claims</p>
+            <p class="clinic-summary-value"><%=deniedClaimCount%></p>
+            <div class="clinic-summary-foot">Insurance-related invoices: <%=insuranceInvoiceCount%></div>
+        </a>
+    </div>
+</div>

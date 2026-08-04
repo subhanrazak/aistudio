@@ -1,0 +1,40 @@
+Appointments_On_Validate as "Appointments On Validate"
+{
+    type = form
+    form = Appointments
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if (input.Appointment_Date != null && input.Appointment_Date < zoho.currentdate && input.Appointment_Status in {"Requested","Confirmed","Checked In"})
+                {
+                    alert "Active appointments cannot be scheduled in the past.";
+                    cancel submit;
+                }
+                if (input.Visit_Type == "Follow-up" && input.Followup_Reason in {""," ","null"})
+                {
+                    alert "Follow-up reason is required for follow-up visits.";
+                    cancel submit;
+                }
+                if (input.Appointment_Status == "Cancelled" && input.Cancellation_Reason in {""," ","null"})
+                {
+                    alert "Cancellation reason is required for cancelled appointments.";
+                    cancel submit;
+                }
+                if (input.Provider != null && input.Appointment_Date != null && input.Appointment_Time != null)
+                {
+                    duplicates = Appointments[Provider == input.Provider && Appointment_Date == input.Appointment_Date && Appointment_Time == input.Appointment_Time && Appointment_Status not in {"Cancelled","No Show","Completed"} && ID != input.ID];
+                    if (duplicates.count() > 0)
+                    {
+                        alert "This provider already has an active appointment at the selected date and time.";
+                        cancel submit;
+                    }
+                }
+            )
+        }
+    }
+}

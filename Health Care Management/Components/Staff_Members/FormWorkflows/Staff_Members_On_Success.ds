@@ -1,0 +1,28 @@
+Staff_Members_On_Success as "Staff Members On Success"
+{
+    type = form
+    form = Staff_Members
+    record event = on add or edit
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                actionType = "Updated";
+                auditSummary = "Staff master data saved for " + ifnull(input.Full_Name, "Unnamed staff") + " (" + ifnull(input.Role, "No role") + ").";
+                auditId = insert into Audit_Logs
+                [
+                    Event_Time = zoho.currenttime
+                    Entity_Type = "Staff"
+                    Entity_Record_ID = input.ID
+                    Action_Type = actionType
+                    Summary = auditSummary
+                    Performed_By = zoho.loginuser
+                    Sensitivity = "Medium"
+                ];
+            )
+        }
+    }
+}

@@ -1,0 +1,39 @@
+Invoices_On_Success as "Invoices On Success"
+{
+    type = form
+    form = Invoices
+    record event = on add or edit
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                inv = Invoices[ID == input.ID];
+                if (inv.count() > 0 && inv.Invoice_Status != "Cancelled")
+                {
+                    if (ifnull(inv.Amount_Paid,0) >= ifnull(inv.Total_Amount,0) && ifnull(inv.Total_Amount,0) > 0)
+                    {
+                        inv.Invoice_Status = "Paid";
+                    }
+                    else if (ifnull(inv.Amount_Paid,0) > 0)
+                    {
+                        inv.Invoice_Status = "Partially Paid";
+                    }
+                }
+                auditSummary = "Invoice " + input.Invoice_Number + " saved. Billing mode: " + ifnull(input.Billing_Mode, "Unknown") + ".";
+                auditId = insert into Audit_Logs
+                [
+                    Event_Time = zoho.currenttime
+                    Entity_Type = "Invoice"
+                    Entity_Record_ID = input.ID
+                    Action_Type = "Updated"
+                    Summary = auditSummary
+                    Performed_By = zoho.loginuser
+                    Sensitivity = "Medium"
+                ];
+            )
+        }
+    }
+}

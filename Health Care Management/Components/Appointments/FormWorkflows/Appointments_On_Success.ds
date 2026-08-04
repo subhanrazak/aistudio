@@ -1,0 +1,27 @@
+Appointments_On_Success as "Appointments On Success"
+{
+    type = form
+    form = Appointments
+    record event = on add or edit
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                auditSummary = "Appointment " + input.Appointment_Number + " saved with status " + ifnull(input.Appointment_Status, "Unknown") + ".";
+                auditId = insert into Audit_Logs
+                [
+                    Event_Time = zoho.currenttime
+                    Entity_Type = "Appointment"
+                    Entity_Record_ID = input.ID
+                    Action_Type = "Status Changed"
+                    Summary = auditSummary
+                    Performed_By = zoho.loginuser
+                    Sensitivity = "Medium"
+                ];
+            )
+        }
+    }
+}

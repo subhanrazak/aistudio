@@ -1,0 +1,36 @@
+Consultations_On_Validate as "Consultations On Validate"
+{
+    type = form
+    form = Consultations
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if (input.Symptoms in {""," ","null"})
+                {
+                    alert "Symptoms are required for a consultation.";
+                    cancel submit;
+                }
+                if (input.Diagnosis in {""," ","null"})
+                {
+                    alert "Diagnosis is required for a consultation.";
+                    cancel submit;
+                }
+                if ((input.Requires_Follow_Up == true || input.Visit_Outcome == "Follow-up Required") && (input.Follow_Up_Date == null || input.Follow_Up_Date <= zoho.currentdate))
+                {
+                    alert "A future follow-up date is required.";
+                    cancel submit;
+                }
+                if (input.Visit_Outcome == "Referred" && input.Referral_Notes in {""," ","null"})
+                {
+                    alert "Referral notes are required when the patient is referred.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}

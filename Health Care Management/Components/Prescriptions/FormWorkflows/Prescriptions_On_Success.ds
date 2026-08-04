@@ -1,0 +1,27 @@
+Prescriptions_On_Success as "Prescriptions On Success"
+{
+    type = form
+    form = Prescriptions
+    record event = on add or edit
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                auditSummary = "Prescription " + input.Prescription_Number + " saved with status " + ifnull(input.Status, "Unknown") + ".";
+                auditId = insert into Audit_Logs
+                [
+                    Event_Time = zoho.currenttime
+                    Entity_Type = "Prescription"
+                    Entity_Record_ID = input.ID
+                    Action_Type = "Status Changed"
+                    Summary = auditSummary
+                    Performed_By = zoho.loginuser
+                    Sensitivity = "High"
+                ];
+            )
+        }
+    }
+}

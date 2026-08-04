@@ -1,0 +1,37 @@
+Insurance_Claims_On_Success as "Insurance Claims On Success"
+{
+    type = form
+    form = Insurance_Claims
+    record event = on add or edit
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if (input.Invoice != null)
+                {
+                    inv = Invoices[ID == input.Invoice];
+                    if (inv.count() > 0)
+                    {
+                        inv.Insurance_Related = true;
+                        inv.Claim_Reference = ifnull(input.Claim_Reference_Number, input.Claim_Number.toString());
+                        inv.Claim_Status_Note = "Claim status: " + ifnull(input.Claim_Status, "Unknown");
+                    }
+                }
+                auditSummary = "Insurance claim " + input.Claim_Number + " saved with status " + ifnull(input.Claim_Status, "Unknown") + ".";
+                auditId = insert into Audit_Logs
+                [
+                    Event_Time = zoho.currenttime
+                    Entity_Type = "Insurance Claim"
+                    Entity_Record_ID = input.ID
+                    Action_Type = "Claim Updated"
+                    Summary = auditSummary
+                    Performed_By = zoho.loginuser
+                    Sensitivity = "Medium"
+                ];
+            )
+        }
+    }
+}

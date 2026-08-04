@@ -1,0 +1,33 @@
+Visit_Outcome_On_User_Input as "Visit Outcome On User Input"
+{
+    type = form
+    form = Consultations
+    record event = on add or edit
+
+    on user input of Visit_Outcome
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if (input.Visit_Outcome == "Follow-up Required")
+                {
+                    input.Requires_Follow_Up = true;
+                    show Follow_Up_Date;
+                    enable Follow_Up_Date;
+                }
+                if (input.Visit_Outcome == "Referred")
+                {
+                    show Referral_Notes;
+                    enable Referral_Notes;
+                }
+                else
+                {
+                    input.Referral_Notes = "";
+                    hide Referral_Notes;
+                    disable Referral_Notes;
+                }
+            )
+        }
+    }
+}

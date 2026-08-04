@@ -1,0 +1,41 @@
+Insurance_Claims_On_Validate as "Insurance Claims On Validate"
+{
+    type = form
+    form = Insurance_Claims
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if (ifnull(input.Claim_Amount,0) < 0 || ifnull(input.Approved_Amount,0) < 0 || ifnull(input.Copay_Amount,0) < 0)
+                {
+                    alert "Claim, approved, and copay amounts cannot be negative.";
+                    cancel submit;
+                }
+                if (ifnull(input.Approved_Amount,0) > ifnull(input.Claim_Amount,0))
+                {
+                    alert "Approved amount cannot be greater than claim amount.";
+                    cancel submit;
+                }
+                if (input.Claim_Status in {"Submitted","Under Review","Approved","Partially Approved","Denied","Closed"} && input.Submission_Date == null)
+                {
+                    alert "Submission date is required once a claim has been submitted.";
+                    cancel submit;
+                }
+                if (input.Claim_Status in {"Approved","Partially Approved"} && (input.Approval_Date == null || ifnull(input.Approved_Amount,0) <= 0))
+                {
+                    alert "Approval date and approved amount are required for approved claims.";
+                    cancel submit;
+                }
+                if (input.Claim_Status == "Denied" && input.Denial_Reason in {""," ","null"})
+                {
+                    alert "Denial reason is required for denied claims.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}

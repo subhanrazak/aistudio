@@ -1,0 +1,128 @@
+<%
+todayAppointmentRecords = Appointments[Appointment_Date == zoho.currentdate];
+openClaimRecords = Insurance_Claims[Claim_Status != "Approved" && Claim_Status != "Denied" && Claim_Status != "Closed"];
+outstandingInvoiceRecords = Invoices[Balance_Due > 0 && Invoice_Status != "Cancelled"];
+%>
+<div class="clinic-dashboard-shell clinic-card zcs-card">
+    <div class="clinic-section-title">
+        <h3><i class="zc-li-outline design-todo"></i> Open work tables</h3>
+        <span>Compact queues for the operations desk</span>
+    </div>
+    <div class="clinic-open-work-grid">
+        <div class="clinic-compact-table">
+            <div class="clinic-table-title"><h4>Today appointments</h4><a class="clinic-link" href="#Report:Today_Appointments">Open report</a></div>
+            <div class="zcs-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative">
+                <table class="zcs-w-full">
+                    <thead class="zcs-sticky"><tr><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Appointment</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Time</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Status</th></tr></thead>
+                    <tbody>
+                        <%
+                        appointmentRows = 0;
+                        for each appointmentRecord in todayAppointmentRecords
+                        {
+                            if(appointmentRows < 8)
+                            {
+                                appointmentNo = ifnull(appointmentRecord.Appointment_Number,"-");
+                                appointmentTime = ifnull(appointmentRecord.Appointment_Time,"-");
+                                appointmentStatus = ifnull(appointmentRecord.Appointment_Status,"-");
+                                statusClass = "zcs-l_blue";
+                                if(appointmentStatus == "Completed" || appointmentStatus == "Checked In")
+                                {
+                                    statusClass = "zcs-green";
+                                }
+                                if(appointmentStatus == "Cancelled" || appointmentStatus == "No Show")
+                                {
+                                    statusClass = "zcs-red";
+                                }
+                                if(appointmentStatus == "Requested")
+                                {
+                                    statusClass = "zcs-yellow";
+                                }
+                                %><tr><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"><%=appointmentNo%></td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"><%=appointmentTime%></td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body <%=statusClass%>"><%=appointmentStatus%></td></tr><%
+                                appointmentRows = appointmentRows + 1;
+                            }
+                        }
+                        if(appointmentRows == 0)
+                        {
+                            %><tr><td colspan="3" class="zcs-px-16 zcs-py-16 zcs-box-border zcs-text-center zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-secondary">No appointments today</td></tr><%
+                        }
+                        %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="clinic-compact-table">
+            <div class="clinic-table-title"><h4>Open insurance claims</h4><a class="clinic-link" href="#Report:Open_Insurance_Claims">Open report</a></div>
+            <div class="zcs-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative">
+                <table class="zcs-w-full">
+                    <thead class="zcs-sticky"><tr><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Claim</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Amount</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Status</th></tr></thead>
+                    <tbody>
+                        <%
+                        claimRows = 0;
+                        for each claimRecord in openClaimRecords
+                        {
+                            if(claimRows < 8)
+                            {
+                                claimNo = ifnull(claimRecord.Claim_Number,"-");
+                                claimAmount = ifnull(claimRecord.Claim_Amount,0);
+                                claimStatus = ifnull(claimRecord.Claim_Status,"-");
+                                claimClass = "zcs-l_blue";
+                                if(claimStatus == "Draft")
+                                {
+                                    claimClass = "zcs-yellow";
+                                }
+                                if(claimStatus == "Under Review" || claimStatus == "Submitted")
+                                {
+                                    claimClass = "zcs-l_blue";
+                                }
+                                %><tr><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"><%=claimNo%></td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary clinic-money">$<%=claimAmount%></td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body <%=claimClass%>"><%=claimStatus%></td></tr><%
+                                claimRows = claimRows + 1;
+                            }
+                        }
+                        if(claimRows == 0)
+                        {
+                            %><tr><td colspan="3" class="zcs-px-16 zcs-py-16 zcs-box-border zcs-text-center zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-secondary">No open claims</td></tr><%
+                        }
+                        %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="clinic-compact-table">
+            <div class="clinic-table-title"><h4>Outstanding invoices</h4><a class="clinic-link" href="#Report:Outstanding_Invoices">Open report</a></div>
+            <div class="zcs-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative">
+                <table class="zcs-w-full">
+                    <thead class="zcs-sticky"><tr><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Invoice</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Balance</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Status</th></tr></thead>
+                    <tbody>
+                        <%
+                        invoiceRows = 0;
+                        for each invoiceRecord in outstandingInvoiceRecords
+                        {
+                            if(invoiceRows < 8)
+                            {
+                                invoiceNo = ifnull(invoiceRecord.Invoice_Number,"-");
+                                invoiceBalance = ifnull(invoiceRecord.Balance_Due,0);
+                                invoiceStatus = ifnull(invoiceRecord.Invoice_Status,"-");
+                                invoiceClass = "zcs-yellow";
+                                if(invoiceStatus == "Partially Paid")
+                                {
+                                    invoiceClass = "zcs-l_blue";
+                                }
+                                if(invoiceStatus == "Submitted")
+                                {
+                                    invoiceClass = "zcs-yellow";
+                                }
+                                %><tr><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"><%=invoiceNo%></td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary clinic-money">$<%=invoiceBalance%></td><td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body <%=invoiceClass%>"><%=invoiceStatus%></td></tr><%
+                                invoiceRows = invoiceRows + 1;
+                            }
+                        }
+                        if(invoiceRows == 0)
+                        {
+                            %><tr><td colspan="3" class="zcs-px-16 zcs-py-16 zcs-box-border zcs-text-center zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-secondary">No outstanding invoices</td></tr><%
+                        }
+                        %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

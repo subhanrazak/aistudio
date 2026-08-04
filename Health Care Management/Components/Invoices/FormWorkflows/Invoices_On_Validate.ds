@@ -1,0 +1,38 @@
+Invoices_On_Validate as "Invoices On Validate"
+{
+    type = form
+    form = Invoices
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                subtotal = ifnull(input.Consultation_Fee,0) + ifnull(input.Procedure_Fee,0) + ifnull(input.Lab_Fee,0) + ifnull(input.Pharmacy_Fee,0) + ifnull(input.Other_Charges,0);
+                if (ifnull(input.Consultation_Fee,0) < 0 || ifnull(input.Procedure_Fee,0) < 0 || ifnull(input.Lab_Fee,0) < 0 || ifnull(input.Pharmacy_Fee,0) < 0 || ifnull(input.Other_Charges,0) < 0 || ifnull(input.Discount,0) < 0 || ifnull(input.Tax_Amount,0) < 0 || ifnull(input.Amount_Paid,0) < 0)
+                {
+                    alert "Fees, discount, tax, and amount paid cannot be negative.";
+                    cancel submit;
+                }
+                if (ifnull(input.Discount,0) > subtotal)
+                {
+                    alert "Discount cannot be greater than subtotal.";
+                    cancel submit;
+                }
+                totalCalc = subtotal - ifnull(input.Discount,0) + ifnull(input.Tax_Amount,0);
+                if (ifnull(input.Amount_Paid,0) > totalCalc)
+                {
+                    alert "Amount paid cannot be greater than total amount.";
+                    cancel submit;
+                }
+                if (input.Billing_Mode == "Insurance" && input.Invoice_Status == "Submitted" && input.Claim_Reference in {""," ","null"} && input.Claim_Status_Note in {""," ","null"})
+                {
+                    alert "Claim reference or claim status note is required before submitting an insurance invoice.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}

@@ -1,0 +1,180 @@
+Claim_Review_Process as "Claim Review Process"
+{
+    type = blueprint
+    form = Insurance_Claims
+
+    start
+    {
+        start stage = "Draft"
+    }
+
+    stages
+    {
+        "Draft" { }
+        "Submitted" { }
+        "Under Review" { }
+        "Approved" { }
+        "Partially Approved" { }
+        "Denied" { }
+        "Closed" { }
+    }
+
+    transitions
+    {
+        Submit_Claim as "Submit Claim"
+        {
+            type = normal
+            from stage = "Draft"
+            to stage = "Submitted"
+            before
+            {
+                transition owner
+                (
+                    permissions = {"Staff","Administrator"}
+                )
+            }
+            after
+            {
+                actions
+                {
+                    custom deluge script
+                    (
+                    Claim_Status = "Submitted";
+                    if (Submission_Date == null)
+                    {
+                        Submission_Date = zoho.currentdate;
+                    }
+                    )
+                }
+            }
+        }
+        Start_Review as "Start Review"
+        {
+            type = normal
+            from stage = "Submitted"
+            to stage = "Under Review"
+            before
+            {
+                transition owner
+                (
+                    permissions = {"Staff","Administrator"}
+                )
+            }
+            after
+            {
+                actions
+                {
+                    custom deluge script
+                    (
+                    Claim_Status = "Under Review";
+                    if (Submission_Date == null)
+                    {
+                        Submission_Date = zoho.currentdate;
+                    }
+                    )
+                }
+            }
+        }
+        Approve_Claim as "Approve"
+        {
+            type = normal
+            from stage = "Under Review"
+            to stage = "Approved"
+            before
+            {
+                transition owner
+                (
+                    permissions = {"Administrator"}
+                )
+            }
+            after
+            {
+                actions
+                {
+                    custom deluge script
+                    (
+                    Claim_Status = "Approved";
+                    if (Approval_Date == null)
+                    {
+                        Approval_Date = zoho.currentdate;
+                    }
+                    )
+                }
+            }
+        }
+        Partially_Approve_Claim as "Partially Approve"
+        {
+            type = normal
+            from stage = "Under Review"
+            to stage = "Partially Approved"
+            before
+            {
+                transition owner
+                (
+                    permissions = {"Administrator"}
+                )
+            }
+            after
+            {
+                actions
+                {
+                    custom deluge script
+                    (
+                    Claim_Status = "Partially Approved";
+                    if (Approval_Date == null)
+                    {
+                        Approval_Date = zoho.currentdate;
+                    }
+                    )
+                }
+            }
+        }
+        Deny_Claim as "Deny"
+        {
+            type = normal
+            from stage = "Under Review"
+            to stage = "Denied"
+            before
+            {
+                transition owner
+                (
+                    permissions = {"Administrator"}
+                )
+            }
+            after
+            {
+                actions
+                {
+                    custom deluge script
+                    (
+                    Claim_Status = "Denied";
+                    )
+                }
+            }
+        }
+        Close_Claim as "Close"
+        {
+            type = common
+            from stage = "Approved"
+            to stage = "Closed"
+            common stages = {"Partially Approved","Denied"}
+            before
+            {
+                transition owner
+                (
+                    permissions = {"Staff","Administrator"}
+                )
+            }
+            after
+            {
+                actions
+                {
+                    custom deluge script
+                    (
+                    Claim_Status = "Closed";
+                    )
+                }
+            }
+        }
+    }
+}

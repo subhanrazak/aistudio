@@ -1,0 +1,34 @@
+Patients_On_Validate as "Patients On Validate"
+{
+    type = form
+    form = Patients
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if (input.Date_of_Birth != null && input.Date_of_Birth > zoho.currentdate)
+                {
+                    alert "Date of birth cannot be in the future.";
+                    cancel submit;
+                }
+                if (input.Has_Insurance == true)
+                {
+                    if (input.Insurance_Provider == null || input.Policy_Number in {""," ","null"} || input.Policy_Holder_Name in {""," ","null"} || input.Insurance_Validity_Date == null)
+                    {
+                        alert "Insurance provider, policy number, policy holder name, and validity date are required when insurance is enabled.";
+                        cancel submit;
+                    }
+                    if (input.Insurance_Validity_Date != null && input.Insurance_Validity_Date < zoho.currentdate)
+                    {
+                        alert "Insurance validity date cannot be expired.";
+                        cancel submit;
+                    }
+                }
+            )
+        }
+    }
+}
