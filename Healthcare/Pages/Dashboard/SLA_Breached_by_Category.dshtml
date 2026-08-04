@@ -1,0 +1,162 @@
+<%
+	totalDisputeCount = Dispute_Intake[ID != 0].count();
+	categoryRecs = Dispute_Category[ID != 0] range from 0 to 3;
+	maxValue = 10;
+	if(totalDisputeCount > 0)
+	{
+		for each  eachCategoryForMax in categoryRecs
+		{
+			breachedForMax = Dispute_Intake[Category == eachCategoryForMax.ID && Status != "Closed" && Investigation_Due_Date != null && Investigation_Due_Date < zoho.currentdate].count();
+			atRiskForMax = Dispute_Intake[Category == eachCategoryForMax.ID && Status != "Closed" && Investigation_Due_Date != null && Investigation_Due_Date >= zoho.currentdate && Investigation_Due_Date <= zoho.currentdate.addDay(1)].count();
+			if(breachedForMax > maxValue)
+			{
+				maxValue = breachedForMax;
+			}
+			if(atRiskForMax > maxValue)
+			{
+				maxValue = atRiskForMax;
+			}
+		}
+	}
+	axisTop = maxValue;
+	axisStep = maxValue / 5;
+	if(axisStep < 1)
+	{
+		axisStep = 1;
+	}
+	%>
+<style>
+<%=thisapp.Styles.Base_Styles()%>
+.zcs-dashboard-card {
+	background-color: var(--zcs-white-color);
+	border: 1px solid #E4EAF7;
+	border-radius: 10px;
+	min-height: 320px;
+}
+.zcs-dashboard-card:hover {
+	box-shadow: 0 2px 10px rgba(27,42,74,0.06);
+}
+.zcs-chart-area {
+	height: 237px;
+	padding: 8px 0 0 0;
+}
+.zcs-chart ul li {
+	list-style-type: none;
+}
+.zcs-chart-y-axis-text {
+	width: 34px;
+	color: #3F4652;
+}
+.zcs-chart-y-axis-line {
+	border-top: 1px solid #E9EDF3;
+}
+.zcs-scrollable-container {
+	top: 5px;
+	left: 34px;
+	width: calc(100% - 34px);
+	height: calc(100% + 8px);
+	overflow: hidden;
+}
+.zcs-chart-x-axis {
+	height: 100%;
+}
+.zcs-chart-x-axis li {
+	min-width: 54px;
+}
+.zcs-bar {
+	height: 184px;
+}
+.zcs-bar-value {
+	width: 9px;
+	min-height: 2px;
+	border-radius: 5px 5px 0 0;
+	background-color: #1D5CFF;
+}
+.zcs-bar-value-risk {
+	background-color: #AFC6FF;
+}
+.zcs-mini-legend-dot {
+	width: 12px;
+	height: 12px;
+	border-radius: 50%;
+	background-color: #1D5CFF;
+}
+.zcs-mini-legend-dot-risk {
+	background-color: #AFC6FF;
+}
+.zcs-chart-x-axis-text {
+	max-width: 54px;
+	text-align: center;
+}
+.zcs-nodata-wrapper {
+	min-height: 240px;
+}
+/* RTL styles start here */
+.zc-rtl-wrapper .zcs-dashboard-card {
+	direction: rtl;
+}
+.zc-rtl-wrapper .zcs-scrollable-container {
+	left: auto;
+	right: 34px;
+}
+/* RTL styles end here */
+/* Responsive styles start here */
+@media (max-width: 576px) {
+	.zcs-chart-area {
+		overflow-x: auto;
+	}
+	.zcs-scrollable-container {
+		width: 320px;
+	}
+}
+/* Responsive styles end here */
+</style>
+<div class='zcs-dashboard-card zcs-flex zcs-direction-column zcs-gap-10 zcs-p-24 zcs-box-border'>
+<%
+	if(totalDisputeCount == 0)
+	{
+		%>
+<div class='zcs-nodata-wrapper zcs-wh-full zcs-flex zcs-align-items-center zcs-justify-center zcs-text-center'>
+			<div class='zcs-nodata-content zcs-p-20 zcs-box-border'>
+				<h5 class='zcs-nodata-header zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-mt-10 zcs-mx-0 zcs-mb-0'>No Data</h5>
+			</div>
+		</div>
+<%
+	}
+	else
+	{
+		%>
+<div class='zcs-chart-area zcs-chart zcs-w-full zcs-columnchart-wrapper zcs-relative'>
+			<ul class='zcs-chart-y-axis zcs-flex zcs-direction-column zcs-gap-23 zcs-m-0 zcs-p-0'>
+				<li class='zcs-flex zcs-align-items-center zcs-gap-4'><span class='zcs-chart-y-axis-text zcs-font-14 zcs-font-normal zcs-lh-body'><%=axisTop%></span><span class='zcs-chart-y-axis-line zcs-col-common'></span></li>
+				<li class='zcs-flex zcs-align-items-center zcs-gap-4'><span class='zcs-chart-y-axis-text zcs-font-14 zcs-font-normal zcs-lh-body'><%=axisStep * 4%></span><span class='zcs-chart-y-axis-line zcs-col-common'></span></li>
+				<li class='zcs-flex zcs-align-items-center zcs-gap-4'><span class='zcs-chart-y-axis-text zcs-font-14 zcs-font-normal zcs-lh-body'><%=axisStep * 3%></span><span class='zcs-chart-y-axis-line zcs-col-common'></span></li>
+				<li class='zcs-flex zcs-align-items-center zcs-gap-4'><span class='zcs-chart-y-axis-text zcs-font-14 zcs-font-normal zcs-lh-body'><%=axisStep * 2%></span><span class='zcs-chart-y-axis-line zcs-col-common'></span></li>
+				<li class='zcs-flex zcs-align-items-center zcs-gap-4'><span class='zcs-chart-y-axis-text zcs-font-14 zcs-font-normal zcs-lh-body'><%=axisStep%></span><span class='zcs-chart-y-axis-line zcs-col-common'></span></li>
+				<li class='zcs-flex zcs-align-items-center zcs-gap-4'><span class='zcs-chart-y-axis-text zcs-font-14 zcs-font-normal zcs-lh-body'>0</span><span class='zcs-chart-y-axis-line zcs-col-common'></span></li>
+			</ul>
+			<div class='zcs-scrollable-container zcs-absolute'>
+				<ul class='zcs-chart-x-axis zcs-wh-full zcs-flex zcs-justify-space-around zcs-gap-4 zcs-m-0 zcs-p-0'>
+<%
+		for each  eachCategory in categoryRecs
+		{
+			breachedCount = Dispute_Intake[Category == eachCategory.ID && Status != "Closed" && Investigation_Due_Date != null && Investigation_Due_Date < zoho.currentdate].count();
+			atRiskCount = Dispute_Intake[Category == eachCategory.ID && Status != "Closed" && Investigation_Due_Date != null && Investigation_Due_Date >= zoho.currentdate && Investigation_Due_Date <= zoho.currentdate.addDay(1)].count();
+			breachedHeight = (breachedCount * 100) / maxValue;
+			atRiskHeight = (atRiskCount * 100) / maxValue;
+			%>
+<li class='zcs-flex zcs-direction-column zcs-gap-10'><div class='zcs-bar zcs-col-common zcs-flex zcs-align-items-end zcs-justify-center zcs-gap-5'><div class='zcs-bar-value zcs-bar-value-risk' style='height: <%=atRiskHeight%>%;'></div><div class='zcs-bar-value' style='height: <%=breachedHeight%>%;'></div></div><span class='zcs-chart-x-axis-text zcs-font-12 zcs-font-normal zcs-lh-body zcs-color-primary zcs-ellipsis'><%=eachCategory.Category%></span></li>
+<%
+		}
+		%>
+</ul>
+			</div>
+		</div>
+		<div class='zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-18'>
+			<div class='zcs-flex zcs-align-items-center zcs-gap-6'><span class='zcs-mini-legend-dot'></span><span class='zcs-font-13 zcs-font-normal zcs-lh-body zcs-color-primary'>Breached</span></div>
+			<div class='zcs-flex zcs-align-items-center zcs-gap-6'><span class='zcs-mini-legend-dot zcs-mini-legend-dot-risk'></span><span class='zcs-font-13 zcs-font-normal zcs-lh-body zcs-color-primary'>At Risk</span></div>
+		</div>
+<%
+	}
+	%>
+</div>

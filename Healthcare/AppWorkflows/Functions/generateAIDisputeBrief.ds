@@ -1,0 +1,87 @@
+void aiFeature.generateAIDisputeBrief(int recID)
+{
+
+                 	disputeRecord = Dispute_Intake[ID == recID];
+                 	contentText = "Dispute ID: " + disputeRecord.Dispute_ID + "\n";
+                 	contentText = contentText + "Patient: " + disputeRecord.Patient_Name + "\n";
+                 	contentText = contentText + "Insurance Payer: " + disputeRecord.Insurance_Payer.Payer_ID + "-" + disputeRecord.Insurance_Payer.Payer_Name + "\n";
+                 	contentText = contentText + "Total Billed Amount: " + disputeRecord.Total_Billed_Amount + "\n";
+                 	contentText = contentText + "Disputed Amount: " + disputeRecord.Disputed_Amount + "\n";
+                 	contentText = contentText + "Category: " + disputeRecord.Category.Category + "\n";
+                 	contentText = contentText + "Sub-Category: " + disputeRecord.Sub_Category.Sub_Category + "\n";
+                 	contentText = contentText + "Reason for Dispute: " + disputeRecord.Reason_for_Dispute + "\n";
+                 	contentText = contentText + "\nDisputed Charge Lines:\n";
+                 	for each  eachCharge in disputeRecord.Disputed_Charge_Line
+                 	{
+                 		contentText = contentText + "- Charge: " + eachCharge.Charge.Charge_ID + ", CPT Code: " + eachCharge.CPT_Code + ", Service Date: " + eachCharge.Charge.Service_Date + ", Billed Amount: " + eachCharge.Billed_Line_Amount + ", Disputed Amount: " + eachCharge.Disputed_Line_Amount + ", Reason: " + ifnull(eachCharge.Line_Reason,"") + "\n";
+                 	}
+                 	if(contentText.length() < 80)
+                 	{
+                 		disputeRecord.AI_Brief_Response="";
+                 		disputeRecord.AI_Brief_Status="Skipped - insufficient data";
+                 		return;
+                 	}
+                 	promptText = "Read the billing dispute details below and return ONLY valid JSON with no markdown, no code fences, no preamble. Use exactly this structure: {\"summary\":\"one sentence under 15 words — patient name, dispute category, sub-category and payer only\",\"overview\":\"two to three lines summarising the dispute for a billing analyst — include patient, payer, disputed amount, category and reason\",\"risk_indicator\":\"one sentence on the financial exposure and severity — must start with High, Medium or Low exposure\",\"pattern_flag\":\"one sentence identifying if this matches a known billing dispute pattern — reference the category and sub-category\",\"resolution_likelihood\":\"one sentence assessing the likelihood of resolving in the patient favour based on the evidence provided\"}. Rules: every key must always be present and never empty — if a field cannot be determined from the available data, return a short neutral statement for that field instead of leaving it blank. summary must be under 15 words and must not repeat information already in overview. Keep all other values concise and factual. Only use facts present in the record. Do not assume or invent information.\n\nDISPUTE DETAILS:\n" + contentText;
+                 	briefSaved = false;
+                 	try 
+                 	{
+                 		briefResponse = zia
+                 		[
+                 			message:promptText
+                 			context:"You are a healthcare billing dispute analyst assistant. Output ONLY valid JSON with no extra text. Only use facts present in the dispute record."
+                 			parameters:{"temperature":0.1}
+                 		];
+                 		if(briefResponse.status == true)
+                 		{
+                 			aiJson = briefResponse.data;
+                 			aiJson = aiJson.replaceAll("```json","").replaceAll("```","").trim();
+                 			try 
+                 			{
+                 				testMap = aiJson.toMap();
+                 				summaryVal = testMap.get("summary");
+                 				overviewVal = testMap.get("overview");
+                 				riskVal = testMap.get("risk_indicator");
+                 				patternVal = testMap.get("pattern_flag");
+                 				resolutionVal = testMap.get("resolution_likelihood");
+                 				if(overviewVal != null && overviewVal != "")
+                 				{
+                 					rebuilt = Map();
+                 					rebuilt.put("summary",summaryVal);
+                 					rebuilt.put("overview",overviewVal);
+                 					rebuilt.put("risk_indicator",riskVal);
+                 					rebuilt.put("pattern_flag",patternVal);
+                 					rebuilt.put("resolution_likelihood",resolutionVal);
+                 					disputeRecord.AI_Brief_Response=rebuilt.toString();
+                 					disputeRecord.AI_Brief_Status="Generated";
+                 					disputeRecord.AI_Dispute_Summary=summaryVal;
+                 					briefSaved = true;
+                 				}
+                 				else
+                 				{
+                 					disputeRecord.AI_Brief_Status="Empty content returned";
+                 				}
+                 			}			catch (jsonError)
+                 			{
+                 				disputeRecord.AI_Brief_Status="Invalid JSON returned";
+                 			}
+                 		}
+                 		else
+                 		{
+                 			disputeRecord.AI_Brief_Status="Zia failed: " + briefResponse.error;
+                 		}
+                 	}	catch (ziaError)
+                 	{
+                 		disputeRecord.AI_Brief_Status="Zia exception: " + ziaError;
+                 	}
+                 	if(briefSaved == false)
+                 	{
+                 		disputeRecord.AI_Brief_Response="";
+                 		payerPart = "";
+                 		if(disputeRecord.Insurance_Payer != null)
+                 		{
+                 			payerPart = " against " + disputeRecord.Insurance_Payer.Payer_Name;
+                 		}
+                 		disputeRecord.AI_Dispute_Summary=disputeRecord.Patient_Name + " disputes" + disputeRecord.Category.Category + " (" + disputeRecord.Sub_Category.Sub_Category + ")" + payerPart + ".";
+                 	}
+                 
+}

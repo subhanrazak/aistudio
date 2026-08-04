@@ -1,0 +1,32 @@
+Validation_Script_on_Dele6 as "Validation Script on Delete"
+{
+
+				type =  form
+				form = Insurance_Payer
+
+				record event = on delete
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											patientRecCount = Patient[Insurance_Payer == input.ID].count();
+										if(patientRecCount > 0)
+										{
+											alert patientRecCount + " patient record(s) are linked to this Insurance Payer. Before deleting this Insurance Payer, kindly ensure that the associated record(s) are updated.";
+											cancel delete;
+										}
+										disputeRecCount = Dispute_Intake[Insurance_Payer == input.ID].count();
+										if(disputeRecCount > 0)
+										{
+											alert disputeRecCount + " dispute record(s) are linked to this Insurance Payer.";
+											cancel delete;
+										}
+						)
+					}
+				}
+
+			
+}

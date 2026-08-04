@@ -1,0 +1,31 @@
+Field_Script_Case as "Field Script - Case"
+{
+
+				type =  form
+				form = Dispute_Intake
+
+				record event = on add or edit
+
+				on user input of Case
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											input.Disputed_Charge_Line.clear();
+										if(input.Case != null)
+										{
+											input.Total_Billed_Amount = Charge[Case == input.Case].sum(Amount);
+											input.Patient_Share = Charge[Case == input.Case].sum(Patient_Paid);
+										}
+										else
+										{
+											input.Total_Billed_Amount = null;
+											input.Patient_Share = null;
+										}
+						)
+					}
+				}
+
+			
+}

@@ -1,0 +1,38 @@
+Success_Script4 as "Success Script"
+{
+
+				type =  form
+				form = Update_Patient_Email
+				button = Submit
+				on click
+				{
+					actions 
+					{
+					on click
+					(
+						try 
+										{
+											thisapp.permissions.assignUserInProfile(input.Email,"Agent_User",true);
+											patientRec = Patient[ID == input.Patient];
+											patientRec.Email=input.Email;
+											for each  eachPatient in Patient[Email.equalsIgnoreCase(input.Email)]
+											{
+												eachPatient.Dispute_agent_access_granted=true;
+											}
+											openUrl("#Script:dialog.close","same window");
+										}catch (err)
+										{
+											if(err.message == "User Limit Reached")
+											{
+												alert "User limit reached. Please contact the application owner to purchase additional user licenses.";
+											}
+											else
+											{
+												alert err.message;
+											}
+										}
+					)
+					}
+				}
+			
+}

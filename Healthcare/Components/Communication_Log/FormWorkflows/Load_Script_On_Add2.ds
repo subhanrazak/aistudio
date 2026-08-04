@@ -1,0 +1,29 @@
+Load_Script_On_Add2 as "Load Script On Add"
+{
+
+				type =  form
+				form = Communication_Log
+
+				record event = on add
+
+				on load
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Dispute != null)
+										{
+											disable Dispute;
+											loginUserRecId = thisapp.getLoginUserRecId();
+											if(Dispute.Status.equalsIgnoreCase("Approved") || Dispute.Status.equalsIgnoreCase("Rejected") && (Dispute.Created_By_Type.equalsIgnoreCase("User") && input.Dispute.Created_By_User == loginUserRecId) || (Dispute.Created_By_Type.equalsIgnoreCase("Patient") && input.Dispute.Assigned_To == loginUserRecId) || input.Dispute.Admin_Role == thisapp.getLoginUserRoleId())
+											{
+												show Mark_Dispute_as_Closed;
+											}
+										}
+						)
+					}
+				}
+
+			
+}

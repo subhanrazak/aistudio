@@ -1,0 +1,41 @@
+Success_Script_On_Add7 as "Success Script On Add"
+{
+
+				type =  form
+				form = Communication_Log
+
+				record event = on add
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											input.Logged_By = thisapp.getLoginUserRecId();
+										if(Mark_Dispute_as_Closed)
+										{
+											thisapp.blueprint.changeStage("Dispute_Intake","Dispute_Resolution_Workfl","Closed",input.Dispute);
+											update Dispute_Intake[ID == input.Dispute]
+											[
+												Status="Closed"
+												Closed_By_User=input.Logged_By
+											];
+											resolutionRec = Investigation_Resolution[Dispute == input.Dispute];
+											statusVal = "Paid";
+											if(resolutionRec.Resolution_Type.equalsIgnoreCase("Full Adjustment") || resolutionRec.Resolution_Type.equalsIgnoreCase("Partial Adjustment"))
+											{
+												statusVal = "Adjusted";
+											}
+											for each  disputedChargeLineRec in Disputed_Charge_Line[Dispute == input.Dispute]
+											{
+												chargeRec = Charge[ID == disputedChargeLineRec.Charge];
+												chargeRec.Charge_Status=statusVal;
+											}
+										}
+						)
+					}
+				}
+
+			
+}

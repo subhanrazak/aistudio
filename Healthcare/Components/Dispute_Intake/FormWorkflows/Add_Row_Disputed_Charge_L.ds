@@ -1,0 +1,27 @@
+Add_Row_Disputed_Charge_L as "Add Row - Disputed Charge Line"
+{
+
+				type =  form
+				form = Dispute_Intake
+
+				record event = on add or edit
+
+				on add row of Disputed_Charge_Line
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											chargeRecIds = Charge[Case == input.Case && Charge_Status == "Paid" || Charge_Status == "Adjusted"].ID.getAll();
+										disputedChargeIds = input.Disputed_Charge_Line.Charge.getall();
+										if(disputedChargeIds != null)
+										{
+											chargeRecIds.removeall(disputedChargeIds);
+										}
+										row.Charge:ui.add(chargeRecIds);
+						)
+					}
+				}
+
+			
+}

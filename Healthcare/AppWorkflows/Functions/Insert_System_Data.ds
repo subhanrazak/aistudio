@@ -1,0 +1,48 @@
+void Insert_System_Data()
+{
+
+                 	configCount = ID_Configuration[ID != null].count();
+                 	if(configCount == 0)
+                 	{
+                 		insert into ID_Configuration
+                 		[
+                 			Added_User=zoho.loginuser
+                 			Case_ID="Case ID -"
+                 			Charge_ID="Charge ID -"
+                 			Dispute_ID="Dispute ID -"
+                 			Insurance_Payer_ID="Payer ID -"
+                 			Patient_ID="Patient ID -"
+                 			Resolution_ID="Resolution ID -"
+                 			User_ID="User ID -"
+                 		]
+                 	}
+                 	roleRec = Role[Role.equalsIgnoreCase("System Administrator")];
+                 	if(roleRec.count() == 0)
+                 	{
+                 		roleRecID = insert into Role
+                 		[
+                 			Added_User=zoho.loginuser
+                 			Permission_Set="Administrator"
+                 			Role="System Administrator"
+                 		];
+                 	}
+                 	else
+                 	{
+                 		roleRecID = roleRec.ID;
+                 	}
+                 	adminRecCount = User[Email == zoho.adminuserid].count();
+                 	if(adminRecCount == 0)
+                 	{
+                 		userRecID = insert into User
+                 		[
+                 			Name.first_name="Admin"
+                 			Name.last_name=zoho.adminuser
+                 			Email=zoho.adminuserid
+                 			Role=roleRecID
+                 			Added_User=zoho.adminuser
+                 		];
+                 		userRec = User[ID == userRecID];
+                 		userRec.User_ID="User ID -" + userRec.Auto_Number;
+                 	}
+                 
+}

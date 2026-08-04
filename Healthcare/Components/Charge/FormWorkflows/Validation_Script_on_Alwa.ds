@@ -1,0 +1,56 @@
+Validation_Script_on_Alwa as "Validation Script on Always"
+{
+
+				type =  form
+				form = Charge
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											isErrorOccurred = false;
+										if(Service_Date > zoho.currentdate)
+										{
+											isErrorOccurred = true;
+											alert(Service_Date,"Service Date cannot be in the future.");
+										}
+										else if(input.Service_Date < input.Case.Admission_Date || input.Service_Date > input.Case.Discharge_Date)
+										{
+											isErrorOccurred = true;
+											alert(Service_Date,"Service Date is outside the selected case period.");
+										}
+										if(input.Insurance_Paid != null && input.Insurance_Paid < 0)
+										{
+											isErrorOccurred = true;
+											alert(Insurance_Paid,"Insurance Paid cannot be negative.");
+										}
+										if(input.Patient_Paid != null && input.Patient_Paid < 0)
+										{
+											isErrorOccurred = true;
+											alert(Patient_Paid,"Patient Paid cannot be negative.");
+										}
+										totalAmount = ifnull(input.Insurance_Paid,0) + ifnull(input.Patient_Paid,0);
+										if(input.Amount < 0)
+										{
+											isErrorOccurred = true;
+											alert(Amount,"Total Billed cannot be negative.");
+										}
+										else if(input.Amount < totalAmount)
+										{
+											isErrorOccurred = true;
+											alert(Amount,"Total Billed cannot be less than total payments.");
+										}
+										if(isErrorOccurred)
+										{
+											cancel submit;
+										}
+						)
+					}
+				}
+
+			
+}

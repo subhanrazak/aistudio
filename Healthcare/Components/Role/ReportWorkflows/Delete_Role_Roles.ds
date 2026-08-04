@@ -1,0 +1,45 @@
+Delete_Role_Roles as "Delete Role - Roles"
+{
+
+				type =  functions
+				form = Role
+				execution type = for each record	
+				on start
+				{
+					actions 
+					{
+					on click
+					(
+						usersRecCount = User[Role == input.ID && !Is_Deleted].count();
+										disputeCategoryRecCount = Dispute_Category[Default_Role == input.ID].count();
+										if(usersRecCount > 0)
+										{
+											alertMessage = usersRecCount + " user(s) are linked to this Role. Before deleting this Role, kindly ensure that the associated user(s) are updated.";
+											openUrl("#Form:Alert_Message?zc_Header=false&Popup_Message=" + alertMessage,"popup window");
+										}
+										else if(disputeCategoryRecCount > 0)
+										{
+											alertMessage = disputeCategoryRecCount + " category(s) are linked to this Role. Before deleting this Role, kindly ensure that the associated category(s) are updated.";
+											openUrl("#Form:Alert_Message?zc_Header=false&Popup_Message=" + alertMessage,"popup window");
+										}
+										else
+										{
+											deletedUsersRecCount = User[Role == input.ID && Is_Deleted].count();
+											disputeRecCount = Dispute_Intake[Status.equalsIgnoreCase("Closed") && Assigned_Role == input.ID].count();
+											resolutionRecCount = Investigation_Resolution[Dispute.Status.equalsIgnoreCase("Closed") && Approver_Role == input.ID].count();
+											if(deletedUsersRecCount > 0 || disputeRecCount > 0 || resolutionRecCount > 0)
+											{
+												//mark as deleted
+												input.Is_Deleted = true;
+											}
+											else
+											{
+												//delete
+												delete from Role[ID == input.ID];
+											}
+										}
+					)
+					}
+				}
+			
+}

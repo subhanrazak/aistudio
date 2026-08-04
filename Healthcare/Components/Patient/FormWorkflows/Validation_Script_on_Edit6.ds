@@ -1,0 +1,34 @@
+Validation_Script_on_Edit6 as "Validation Script on Edit"
+{
+
+				type =  form
+				form = Patient
+
+				record event = on edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Dispute_agent_access_granted && input.Email != old.Email)
+										{
+											try 
+											{
+												thisapp.permissions.deleteUser(old.Email);
+												for each  eachPatient in Patient[Email.equalsIgnoreCase(old.Email)]
+												{
+													eachPatient.Dispute_agent_access_granted=false;
+												}
+											}	catch (err)
+											{
+												alert err.message;
+											}
+										}
+						)
+					}
+				}
+
+			
+}

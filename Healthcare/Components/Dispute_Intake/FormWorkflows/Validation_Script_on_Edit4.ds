@@ -1,0 +1,27 @@
+Validation_Script_on_Edit4 as "Validation Script on Edit"
+{
+
+				type =  form
+				form = Dispute_Intake
+
+				record event = on edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Category != old.Category && input.Status == "Unassigned")
+										{
+											slaRec = SLA_Matrix[ID == input.Category.Priority];
+											input.Priority = slaRec.Priority;
+											input.Investigation_Due_Date = input.Added_Time.addDay(slaRec.Investigation_and_Resolution_SLA_days);
+											input.Assigned_Role = input.Category.Default_Role;
+										}
+						)
+					}
+				}
+
+			
+}

@@ -1,0 +1,134 @@
+<%
+	totalDisputeCount = Dispute_Intake[ID != 0].count();
+	rowsRendered = 0;
+	%>
+<style>
+<%=thisapp.Styles.Base_Styles()%>
+.zcs-dashboard-card {
+	background-color: var(--zcs-white-color);
+	border: 1px solid #E4EAF7;
+	border-radius: 10px;
+	min-height: 320px;
+}
+.zcs-dashboard-card:hover {
+	box-shadow: 0 2px 10px rgba(27,42,74,0.06);
+}
+.zcs-progress-bar {
+	height: 14px;
+	background-color: #F3F4F6;
+	border-radius: 999px;
+	overflow: hidden;
+}
+.zcs-progress-bar-indicator {
+	height: inherit;
+	border-radius: inherit;
+	background-color: #C72E52;
+}
+.zcs-category-color-2 .zcs-progress-bar-indicator {
+	background-color: #4B9D00;
+}
+.zcs-category-color-3 .zcs-progress-bar-indicator {
+	background-color: #951B91;
+}
+.zcs-category-color-4 .zcs-progress-bar-indicator {
+	background-color: #C98A00;
+}
+.zcs-category-color-5 .zcs-progress-bar-indicator {
+	background-color: #0079B8;
+}
+.zcs-category-color-6 .zcs-progress-bar-indicator {
+	background-color: #8A8F98;
+}
+.zcs-nodata-wrapper {
+	min-height: 240px;
+}
+/* RTL styles start here */
+.zc-rtl-wrapper .zcs-dashboard-card {
+	direction: rtl;
+}
+/* RTL styles end here */
+/* Responsive styles start here */
+@media (max-width: 576px) {
+	.zcs-category-row {
+		flex-direction: column;
+		align-items: flex-start;
+	}
+	.zcs-category-meter {
+		width: 100%;
+	}
+}
+/* Responsive styles end here */
+</style>
+<div class='zcs-dashboard-card zcs-flex zcs-direction-column zcs-gap-17 zcs-p-24 zcs-box-border'>
+<%
+	if(totalDisputeCount == 0)
+	{
+		%>
+<div class='zcs-nodata-wrapper zcs-wh-full zcs-flex zcs-align-items-center zcs-justify-center zcs-text-center'>
+			<div class='zcs-nodata-content zcs-p-20 zcs-box-border'>
+				<h5 class='zcs-nodata-header zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-mt-10 zcs-mx-0 zcs-mb-0'>No Data</h5>
+			</div>
+		</div>
+<%
+	}
+	else
+	{
+		for each  eachCategory in Dispute_Category[ID != 0] range from 0 to 5
+		{
+			catCount = Dispute_Intake[Category == eachCategory.ID].count();
+			categoryPercent = 0;
+			if(totalDisputeCount > 0)
+			{
+				categoryPercent = (catCount * 100) / totalDisputeCount;
+			}
+			if(categoryPercent > 100)
+			{
+				categoryPercent = 100;
+			}
+			rowsRendered = rowsRendered + 1;
+			colorClass = "zcs-category-color-1";
+			if(rowsRendered == 2)
+			{
+				colorClass = "zcs-category-color-2";
+			}
+			else if(rowsRendered == 3)
+			{
+				colorClass = "zcs-category-color-3";
+			}
+			else if(rowsRendered == 4)
+			{
+				colorClass = "zcs-category-color-4";
+			}
+			else if(rowsRendered == 5)
+			{
+				colorClass = "zcs-category-color-5";
+			}
+			else if(rowsRendered == 6)
+			{
+				colorClass = "zcs-category-color-6";
+			}
+			%>
+<div class='zcs-category-row zcs-flex zcs-align-items-center zcs-gap-14 <%=colorClass%>'>
+				<span class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary zcs-col-4 zcs-col-sm-12 zcs-ellipsis'><%=eachCategory.Category%></span>
+				<div class='zcs-category-meter zcs-col-common'>
+					<div class='zcs-progress-bar zcs-rounded-full'>
+						<div class='zcs-progress-bar-indicator' style='width: <%=categoryPercent%>%;'></div>
+					</div>
+				</div>
+				<span class='zcs-font-14 zcs-font-semibold zcs-lh-body zcs-color-primary zcs-text-right' style='min-width: 42px;'><%=categoryPercent%>%</span>
+			</div>
+<%
+		}
+		if(rowsRendered == 0)
+		{
+			%>
+<div class='zcs-nodata-wrapper zcs-wh-full zcs-flex zcs-align-items-center zcs-justify-center zcs-text-center'>
+				<div class='zcs-nodata-content zcs-p-20 zcs-box-border'>
+					<h5 class='zcs-nodata-header zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-mt-10 zcs-mx-0 zcs-mb-0'>No Data</h5>
+				</div>
+			</div>
+<%
+		}
+	}
+	%>
+</div>

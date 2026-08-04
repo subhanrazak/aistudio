@@ -1,0 +1,33 @@
+Validation_Script_on_Dele10 as "Validation Script on Delete"
+{
+
+				type =  form
+				form = Dispute_Intake
+
+				record event = on delete
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if((!input.Status.equalsIgnoreCase("Unassigned") && input.Added_User == zoho.loginuser) || (input.Added_User != zoho.loginuser && input.Admin_Role != thisapp.getLoginUserRoleId()))
+										{
+											alert "You don't have permission to delete this dispute.";
+											cancel delete;
+										}
+										for each  eachDisputedChargeLine in Disputed_Charge_Line[Dispute == input.ID]
+										{
+											chargeRec = Charge[ID == eachDisputedChargeLine.Charge];
+											chargeRec.Charge_Status="Paid";
+										}
+										delete from Investigation_Resolution[Dispute == input.ID];
+										delete from Disputed_Charge_Line[Dispute == input.ID];
+										delete from Communication_Log[Dispute == input.ID];
+						)
+					}
+				}
+
+			
+}

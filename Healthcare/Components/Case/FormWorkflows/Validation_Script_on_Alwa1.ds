@@ -1,0 +1,44 @@
+Validation_Script_on_Alwa1 as "Validation Script on Always"
+{
+
+				type =  form
+				form = Case
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											isErrorOccurred = false;
+										if(input.Discharge_Date != null && input.Admission_Date > input.Discharge_Date)
+										{
+											isErrorOccurred = true;
+											alert(Admission_Date,"Invalid date range");
+											alert(Discharge_Date,"Invalid date range");
+										}
+										else
+										{
+											if(Admission_Date > zoho.currentdate)
+											{
+												isErrorOccurred = true;
+												alert(Admission_Date,"Admission Date cannot be in the future.");
+											}
+											if(input.Case_Status == "Closed" && input.Discharge_Date == null)
+											{
+												isErrorOccurred = true;
+												alert(Discharge_Date,"Discharge Date is required for a closed case.");
+											}
+										}
+										if(isErrorOccurred)
+										{
+											cancel submit;
+										}
+						)
+					}
+				}
+
+			
+}

@@ -1,0 +1,57 @@
+Field_Script_Category as "Field Script - Category"
+{
+
+				type =  form
+				form = Dispute_Intake
+
+				record event = on add
+
+				on user input of Category
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Category != null)
+										{
+											input.Sub_Category:ui.add(input.Category.Sub_Category);
+											if(input.Accept_Zia_s_Suggestion)
+											{
+												ziaResponse = input.Zia_Classification_Response.toMap();
+												ziaRespStatus = input.Zia_Classification_Status;
+												if(ziaRespStatus == "Classified")
+												{
+													input.Sub_Category = ziaResponse.get("matchedSubCategoryID").toLong();
+												}
+												else if(ziaRespStatus == "Partial")
+												{
+													if(ziaResponse.get("matchedSubCategoryID") != "0")
+													{
+														subCategoryID = ziaResponse.get("matchedSubCategoryID").toLong();
+													}
+													else
+													{
+														subCategoryID = insert into Dispute_Subcategory
+														[
+															Added_User=zoho.loginuser
+															Sub_Category=input.Zia_Sub_Category
+															Is_Zia_Added=true
+														];
+													}
+													categoryID = ziaResponse.get("matchedCategoryID").toLong();
+													categoryRec = Dispute_Category[ID == categoryID];
+													subCategoryList = List();
+													subCategoryList = categoryRec.Sub_Category;
+													subCategoryList.add(subCategoryID);
+													categoryRec.Sub_Category=subCategoryList;
+													input.Sub_Category:ui.add(subCategoryList);
+													input.Sub_Category = subCategoryID;
+												}
+											}
+										}
+						)
+					}
+				}
+
+			
+}

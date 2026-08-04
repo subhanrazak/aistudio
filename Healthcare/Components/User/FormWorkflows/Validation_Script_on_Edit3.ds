@@ -1,0 +1,39 @@
+Validation_Script_on_Edit3 as "Validation Script on Edit"
+{
+
+				type =  form
+				form = User
+
+				record event = on edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Role != old.Role)
+										{
+											try 
+											{
+												thisapp.permissions.deleteUser(input.Email);
+												thisapp.permissions.assignUserInProfile(input.Email,input.Role.Permission_Set,true);
+											}	catch (err)
+											{
+												if(err.message == "User Limit Reached")
+												{
+													alert "User limit reached. Please contact the application owner to purchase additional user licenses.";
+												}
+												else
+												{
+													alert err.message;
+												}
+												cancel submit;
+											}
+										}
+						)
+					}
+				}
+
+			
+}

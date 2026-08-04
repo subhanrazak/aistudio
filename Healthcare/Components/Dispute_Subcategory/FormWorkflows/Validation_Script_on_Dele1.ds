@@ -1,0 +1,39 @@
+Validation_Script_on_Dele1 as "Validation Script on Delete"
+{
+
+				type =  form
+				form = Dispute_Subcategory
+
+				record event = on delete
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											categoryRecCount = Dispute_Category[Sub_Category == input.ID].count();
+										disputeRecCount = Dispute_Intake[Sub_Category == input.ID].count();
+										linkedModule = "";
+										linkedCount = 0;
+										if(categoryRecCount > 0)
+										{
+											linkedModule = "Dispute Category(s)";
+											linkedCount = categoryRecCount;
+										}
+										else if(disputeRecCount > 0)
+										{
+											linkedModule = "Dispute(s)";
+											linkedCount = disputeRecCount;
+										}
+										if(linkedCount > 0)
+										{
+											alert linkedCount + " record(s) are linked to this Sub-Category. Before deleting this Sub-Category, kindly ensure that the associated " + linkedModule + " are updated.";
+											cancel delete;
+										}
+						)
+					}
+				}
+
+			
+}

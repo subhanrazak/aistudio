@@ -1,0 +1,50 @@
+list Approved_Resolutions
+{
+
+			displayName = "Approved Resolutions"
+			show all rows from Dispute_Intake  [Created_By_User.ID == thisapp.getLoginUserRecId() || Investigation_Resolution.Created_By == thisapp.getLoginUserRecId() || Investigation_Resolution.Approver == thisapp.getLoginUserRecId() || Admin_Role.ID == thisapp.getLoginUserRoleId() && Status == "Approved"]  
+			(
+				Investigation_Resolution.Dispute
+				Investigation_Resolution.Resolution_ID as "Resolution ID"
+				Investigation_Resolution.Resolution_Type as "Resolution Type"
+				Investigation_Resolution.Adjustment_Amount as "Adjustment Amount"
+				Investigation_Resolution.Root_Cause as "Root Cause"
+				Investigation_Resolution.Created_By as "Created By"
+				Investigation_Resolution.Approver
+				Investigation_Resolution.Resolution_Approval_Due_Date as "Approval Due Date"
+				Disputed_Amount as "Disputed Amount"
+				Dispute_ID as "Dispute ID"
+				AI_Dispute_Summary as "Dispute Summary"
+				Patient.Added_Time as "Added Time"
+				Investigation_Resolution.Root_Cause_Detail as "Root Cause Detail"
+				Investigation_Resolution.Resolution_Rationale as "Resolution Rationale"
+				Investigation_Resolution.Approval_Status as "Approval Status"
+				Investigation_Resolution.Approver_Comments as "Approver Comments"
+				custom action "AI Email"
+				(
+	  			workflow = AI_Email_Rejected_Resolut
+				show action in view header = true
+				show action in edit record menu = true
+				column header = "AI Email"
+				condition = (AI_Email_Draft_Status == "Generated")
+				)
+			)
+			conditional formatting
+			(
+				"Rejected"
+				{
+				condition = (Investigation_Resolution.Approval_Status == "Rejected")
+				fields = [Investigation_Resolution.Approval_Status]
+				format = "color:#f44336;"
+				}
+			)
+			customlayouts
+			(
+				template
+	 			(
+	 	  			displayname="Custom Layout 1"
+	 	  			content="<panel  \n >\n	<pr \n			width='fill'\n		height='fill'\n>\n	<pc \n		padding = '20px'\n	bgColor = '#FFFFFF'\n\n		width = '100%'\n		hAlign = 'left'\n		vAlign = 'top'\n>\n	<pr \n			width='fill'\n		height='fill'\n>\n	<pc \n		padding = '0px'\n\n		width = '100%'\n		hAlign = 'left'\n>\n	<pr \n			width='auto'\n		height='auto'\n>\n	<pc \n		padding = '0px'\n\n		hAlign = 'left'\n>\n	<pr \n	>\n	<pc \n	\n>\n	<text \n\n	margin = '0px'\n	padding = '0px'\n	color = 'theme'\n	size = '20px'\n	bold = 'true' \n	type = 'field'\n\n	bgColor = 'transparent'\n        bgColorType = 'noFill'\n	cornerRadius = '0px'\n\n    lineHeight = '29'\n    numOfLines = '1'\n\n\n\n\n    borderColor = '#295BF9'\n    borderWidth = '0px'\n\n	  value = 'Investigation_Resolution.Resolution_ID'\n>\n</text>\n\n</pc>\n</pr><pr \n	>\n	<pc \n	\n>\n	<text \n\n	marginLeft = '0px'\n	marginRight = '0px' \n	marginBottom = '15px'\n	marginTop = '8px'\n	padding = '0px'\n	color = '#522363'\n	size = '15px'\n	type = 'field'\n\n	bgColor = 'transparent'\n        bgColorType = 'noFill'\n	cornerRadius = '0px'\n\n    lineHeight = '21'\n    numOfLines = '1'\n\n\n\n\n    borderColor = '#295BF9'\n    borderWidth = '0px'\n\n	  value = 'AI_Dispute_Summary'\n>\n</text>\n\n</pc>\n</pr>\n</pc>\n</pr>\n</pc>\n</pr><pr \n			width='fill'\n		height='fill'\n>\n	<pc \n		paddingTop = '0px'\n	paddingLeft = '0px'\n	paddingRight = '10px'\n	paddingBottom = '0px'\n	bgColor = 'transparent'\n        bgColorType = 'noFill'\n\n		width = '33%'\n		hAlign = 'left'\n		vAlign = 'top'\n>\n	<pr \n			width='auto'\n		height='auto'\n>\n	<pc \n	\n>\n	<text \n\n	margin = '0px'\n	padding = '0px'\n	color = '#4C4C4C'\n	size = '15px'\n	type = 'field'\n\n	bgColor = 'transparent'\n        bgColorType = 'noFill'\n	cornerRadius = '0px'\n\n    lineHeight = '21'\n    numOfLines = '1'\n\n\n\n\n    borderColor = '#295BF9'\n    borderWidth = '0px'\n\n	  value = 'Dispute_ID'\n>\n</text>\n\n</pc>\n</pr>\n</pc><pc \n		paddingTop = '0px'\n	paddingLeft = '10px'\n	paddingRight = '10px'\n	paddingBottom = '0px'\n	bgColor = 'transparent'\n        bgColorType = 'noFill'\n\n		width = '34%'\n		hAlign = 'center'\n		vAlign = 'top'\n>\n	<pr \n			width='auto'\n		height='auto'\n>\n	<pc \n	\n>\n	<text \n\n	margin = '0px'\n	padding = '0px'\n	color = '#4C4C4C'\n	size = '15px'\n	type = 'field'\n\n	bgColor = 'transparent'\n        bgColorType = 'noFill'\n	cornerRadius = '0px'\n\n    lineHeight = '20'\n    numOfLines = '1'\n\n\n\n\n    borderColor = '#295BF9'\n    borderWidth = '0px'\n\n	  value = 'Investigation_Resolution.Resolution_Type'\n>\n</text>\n\n</pc>\n</pr>\n</pc><pc \n		paddingTop = '0px'\n	paddingLeft = '10px'\n	paddingRight = '0px'\n	paddingBottom = '0px'\n	bgColor = 'transparent'\n        bgColorType = 'noFill'\n\n		width = '33%'\n		hAlign = 'right'\n		vAlign = 'top'\n>\n	<pr \n			width='auto'\n		height='auto'\n>\n	<pc \n	\n>\n	<text \n\n	margin = '0px'\n	padding = '0px'\n	color = '#4C4C4C'\n	size = '15px'\n	type = 'field'\n\n	bgColor = 'transparent'\n        bgColorType = 'noFill'\n	cornerRadius = '0px'\n\n    lineHeight = '20'\n    numOfLines = '1'\n\n\n\n\n    borderColor = '#295BF9'\n    borderWidth = '0px'\n\n	  value = 'Investigation_Resolution.Adjustment_Amount'\n>\n</text>\n\n</pc>\n</pr>\n</pc>\n</pr>\n</pc>\n</pr>\n</panel>"
+	    		)
+			)
+		
+}

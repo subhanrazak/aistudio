@@ -1,0 +1,29 @@
+Investigation_Warning as "Investigation Warning"
+{
+
+				type =  schedule
+				form = Dispute_Intake[Status == "Assigned" || Status == "Under Investigation" || Status == "Returned for Rework"]
+					status = inactive
+				start = before 1 days from Investigation_Due_Date at "00:00:00"
+				time zone = "Asia/Kolkata"
+				on start
+				{
+					actions 
+					{
+					on load
+					(
+						subjectMsg = "Reminder — Investigation Due Tomorrow for Dispute " + input.Dispute_ID;
+										reportLink = thisapp.getAppUrl() + "record-summary/My_Assigned_Disputes/" + input.ID;
+										bodyMsgContent = "<p>Hi <b>" + input.Assigned_To.Name + "</b>,</p><p>This is a reminder that your investigation SLA for the dispute below is due tomorrow. Please ensure your investigation is completed and submitted for approval before the deadline.</p><p><b>Dispute ID</b> : " + input.Dispute_ID + "<br><b>Patient Name</b> : " + input.Patient_Name + "<br><b>Disputed Amount</b> : " + input.Disputed_Amount + "<br><b>Priority</b> : " + input.Priority + "<br><b>Current Status</b> : " + input.Status + "<br><b>Due Date</b> : " + input.Investigation_Due_Date + "</p><p>Failure to meet this deadline will result in an SLA breach.</p><p><a href='" + reportLink + "'>Click here to view the Dispute</a></p>";
+										sendmail
+										[
+											from :zoho.adminuserid
+											to :input.Assigned_To.Email
+											subject :subjectMsg
+											message :bodyMsgContent
+										]
+					)
+					}
+				}
+			
+}
