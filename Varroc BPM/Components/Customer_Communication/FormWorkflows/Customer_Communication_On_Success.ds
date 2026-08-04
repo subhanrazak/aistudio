@@ -1,0 +1,24 @@
+Customer_Communication_On_Add as "Customer Communication - On Add Success"
+{
+    type = form
+    form = Customer_Communication
+    record event = on add
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                // Set communicated by to current user
+                input.Communicated_By = zoho.loginuser;
+
+                // Update Revision Request status to Customer Communication
+                update Revision_Request[ID == input.Revision_Reference]
+                [
+                    Overall_Status = "Customer Communication"
+                ]
+            )
+        }
+    }
+}

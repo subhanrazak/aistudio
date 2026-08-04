@@ -1,0 +1,84 @@
+<page linkname = "Management_Dashboard" parameters = "int total_open_revisions, float total_financial_impact, float total_accepted_value, int avg_cycle_time, int urgent_count" displayname = "Management Dashboard"/>
+<content>
+<zml>
+  <layout>
+    <row>
+      <column width='100%'>
+        <dsp id='Mgmt_KPI_Cards' elementName='Mgmt_KPI_Cards'>
+          <![CDATA[htmlpage Mgmt_KPI_Cards()
+content
+<%{%>
+    <file name:Mgmt_KPI_Cards.dshtml/>
+<%}%>
+          ]]>
+        </dsp>
+      </column>
+    </row>
+    <row>
+      <column width='50%'>
+        <dsp id='Revision_By_Type_Chart' elementName='Revision_By_Type_Chart'>
+          <![CDATA[htmlpage Revision_By_Type_Chart()
+content
+<%{%>
+    <file name:Revision_By_Type_Chart.dshtml/>
+<%}%>
+          ]]>
+        </dsp>
+      </column>
+      <column width='50%'>
+        <dsp id='Revision_Status_Breakdown' elementName='Revision_Status_Breakdown'>
+          <![CDATA[htmlpage Revision_Status_Breakdown()
+content
+<%{%>
+    <file name:Revision_Status_Breakdown.dshtml/>
+<%}%>
+          ]]>
+        </dsp>
+      </column>
+    </row>
+    <row>
+      <column width='100%'>
+        <dsp id='SO_Revision_Summary_Table' elementName='SO_Revision_Summary_Table'>
+          <![CDATA[htmlpage SO_Revision_Summary_Table()
+content
+<%{%>
+    <file name:SO_Revision_Summary_Table.dshtml/>
+<%}%>
+          ]]>
+        </dsp>
+      </column>
+    </row>
+  </layout>
+</zml>
+</content>
+<script>
+total_open_revisions = Revision_Request[Overall_Status != "Completed" && Overall_Status != "Rejected" && Overall_Status != "Customer Rejected"].count();
+total_financial_impact = Revision_Request[Overall_Status != "Completed" && Overall_Status != "Rejected" && Overall_Status != "Customer Rejected"].sum(Total_Financial_Impact);
+total_accepted_value = Revision_Request[Overall_Status == "Completed"].sum(Total_Financial_Impact);
+urgent_count = Revision_Request[Urgency == "Urgent" && Overall_Status != "Completed" && Overall_Status != "Rejected" && Overall_Status != "Customer Rejected"].count();
+
+/* Avg cycle time: average days from Submitted_Date to Level3_Date for completed revisions */
+completed_revs = Revision_Request[Overall_Status == "Completed"] range from 0 to 199;
+total_days = 0;
+completed_count = 0;
+for each rev in completed_revs
+{
+  sub_date = rev.get("Submitted_Date");
+  end_date = rev.get("Level3_Date");
+  if (sub_date != null && end_date != null)
+  {
+    diff_days = end_date.toDate().daysBetween(sub_date.toDate());
+    if (diff_days < 0) { diff_days = diff_days * -1; }
+    total_days = total_days + diff_days;
+    completed_count = completed_count + 1;
+  }
+}
+if (completed_count > 0)
+{
+  avg_cycle_time = (total_days / completed_count).toLong();
+}
+else
+{
+  avg_cycle_time = 0;
+}
+</script>

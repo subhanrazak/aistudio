@@ -1,0 +1,67 @@
+Customer_Communication_On_Edit as "Customer Communication - On Edit Success"
+{
+    type = form
+    form = Customer_Communication
+    record event = on edit
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                revRef = input.Revision_Reference;
+                revID = input.Revision_Reference.Revision_ID;
+                customer = input.Customer_Display;
+                soNum = input.SO_Number_Display;
+
+                if (input.Customer_Response == "Accepted")
+                {
+                    // Unlock supplier amendment module
+                    update Revision_Request[ID == revRef]
+                    [
+                        Overall_Status = "Customer Accepted"
+                    ]
+
+                    sendmail
+                    (
+                        from : zoho.adminuserid
+                        to : "procurement.manager@varroc.com"
+                        subject : "Customer ACCEPTED Revision " + revID + " - Raise Supplier Amendment"
+                        message : "Customer " + customer + " has accepted Revision " + revID + " (SO: " + soNum + ").<br><br><b>Amended SO Number:</b> " + input.Amended_SO_Number + "<br><br>The Supplier PO Amendment module is now unlocked. Please raise the corresponding supplier amendment."
+                    )
+                }
+                else if (input.Customer_Response == "Rejected")
+                {
+                    update Revision_Request[ID == revRef]
+                    [
+                        Overall_Status = "Customer Rejected"
+                    ]
+
+                    sendmail
+                    (
+                        from : zoho.adminuserid
+                        to : "commercial.head@varroc.com"
+                        subject : "Customer REJECTED Revision " + revID
+                        message : "Customer " + customer + " has rejected the amendment request for Revision " + revID + " (SO: " + soNum + ").<br><br><b>Reason:</b> " + input.Rejection_Reason + "<br><br>Please decide on the next steps."
+                    )
+                }
+                else if (input.Customer_Response == "Under Negotiation")
+                {
+                    update Revision_Request[ID == revRef]
+                    [
+                        Overall_Status = "Under Negotiation"
+                    ]
+
+                    sendmail
+                    (
+                        from : zoho.adminuserid
+                        to : "commercial.head@varroc.com"
+                        subject : "Customer Counter-Proposal Received - Revision " + revID
+                        message : "Customer " + customer + " has provided a counter-proposal for Revision " + revID + " (SO: " + soNum + ").<br><br>Please log the negotiation details in the Negotiation Log and respond to the customer."
+                    )
+                }
+            )
+        }
+    }
+}

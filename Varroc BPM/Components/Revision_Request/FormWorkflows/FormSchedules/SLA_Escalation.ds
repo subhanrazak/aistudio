@@ -1,0 +1,60 @@
+SLA_Escalation as "SLA Escalation - Daily Check"
+{
+    type = schedule
+    start = "2025-01-01 08:00:00"
+    frequency = daily
+    time zone = "Asia/Kolkata"
+
+    on start
+    {
+        actions
+        {
+            on load
+            (
+                today = zoho.currentdate;
+
+                // Level 1 escalation - revisions waiting > 3 days
+                l1Overdue = Revision_Request[(Overall_Status == "Submitted" || Overall_Status == "Level 1 Review") && Level1_Start_Date <= today.subDay(3)];
+                for each rev in l1Overdue
+                {
+                    daysWaiting = today - rev.Level1_Start_Date.toDate();
+                    sendmail
+                    (
+                        from : zoho.adminuserid
+                        to : "procurement.head@varroc.com"
+                        subject : "ESCALATION: Revision " + rev.Revision_ID + " overdue at Level 1 (" + daysWaiting + " days)"
+                        message : "Revision Request " + rev.Revision_ID + " (SO: " + rev.SO_Reference.SO_Number + ") has been waiting for Level 1 Procurement Manager approval for " + daysWaiting + " days.<br><br>SLA deadline was: " + rev.SLA_Deadline + "<br><b>Please take immediate action.</b>"
+                    )
+                }
+
+                // Level 2 escalation - revisions waiting > 2 days
+                l2Overdue = Revision_Request[Overall_Status == "Level 2 Review" && Level2_Start_Date <= today.subDay(2)];
+                for each rev in l2Overdue
+                {
+                    daysWaiting = today - rev.Level2_Start_Date.toDate();
+                    sendmail
+                    (
+                        from : zoho.adminuserid
+                        to : "finance.head@varroc.com"
+                        subject : "ESCALATION: Revision " + rev.Revision_ID + " overdue at Level 2 Finance (" + daysWaiting + " days)"
+                        message : "Revision Request " + rev.Revision_ID + " (SO: " + rev.SO_Reference.SO_Number + ") has been waiting for Finance approval for " + daysWaiting + " days.<br><br>SLA deadline was: " + rev.SLA_Deadline + "<br><b>Please take immediate action.</b>"
+                    )
+                }
+
+                // Level 3 escalation - revisions waiting > 2 days
+                l3Overdue = Revision_Request[Overall_Status == "Level 3 Review" && Level3_Start_Date <= today.subDay(2)];
+                for each rev in l3Overdue
+                {
+                    daysWaiting = today - rev.Level3_Start_Date.toDate();
+                    sendmail
+                    (
+                        from : zoho.adminuserid
+                        to : "ceo@varroc.com"
+                        subject : "ESCALATION: Revision " + rev.Revision_ID + " overdue at Level 3 Commercial Head (" + daysWaiting + " days)"
+                        message : "Revision Request " + rev.Revision_ID + " (SO: " + rev.SO_Reference.SO_Number + ") has been waiting for Commercial Head final approval for " + daysWaiting + " days.<br><br>SLA deadline was: " + rev.SLA_Deadline + "<br><b>This requires CEO/MD attention.</b>"
+                    )
+                }
+            )
+        }
+    }
+}

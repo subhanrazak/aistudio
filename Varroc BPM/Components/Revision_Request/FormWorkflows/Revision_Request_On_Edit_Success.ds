@@ -1,0 +1,273 @@
+Revision_Request_On_Edit_Success as "Revision Request - On Edit Success"
+{
+    type = form
+    form = Revision_Request
+    record event = on edit
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                revID = input.Revision_ID;
+                soNum = input.SO_Reference.SO_Number;
+                customer = input.Customer_Name_Display;
+
+                // --- LEVEL 1 APPROVAL ---
+                if (input.Level1_Action == "Approved" && (input.Overall_Status == "Submitted" || input.Overall_Status == "Level 1 Review" || input.Overall_Status == "Info Requested"))
+                {
+                    if (input.Level1_Date == null)
+                    {
+                        input.Level1_Date = zoho.currenttime;
+                    }
+                    input.Overall_Status = "Level 2 Review";
+                    input.Level2_Action = "Pending";
+                    input.Level2_Start_Date = zoho.currenttime;
+                    input.SLA_Deadline = zoho.currentdate.addDay(2);
+
+                    // Insert approval log
+                    insert into Approval_Log
+                    [
+                        Revision_Reference = input.ID
+                        Approval_Level = "Level 1 - Procurement Manager"
+                        Action = "Approved"
+                        Comments = input.Level1_Comments
+                        Action_By = input.Level1_Approved_By
+                        Action_Date = input.Level1_Date
+                        SO_Number_Ref = soNum
+                    ]
+
+                    sendmail
+                    (
+                        from : zoho.adminuserid
+                        to : "finance@varroc.com"
+                        subject : "Revision " + revID + " - Level 2 Finance Approval Required"
+                        message : "Revision Request " + revID + " (SO: " + soNum + ", Customer: " + customer + ") has been approved at Level 1 and now requires Finance approval.<br><br><b>Financial Impact:</b> INR " + input.Total_Financial_Impact + "<br><b>SLA Deadline:</b> " + input.SLA_Deadline
+                    )
+                }
+                else if (input.Level1_Action == "Rejected" && (input.Overall_Status == "Submitted" || input.Overall_Status == "Level 1 Review" || input.Overall_Status == "Info Requested"))
+                {
+                    if (input.Level1_Date == null)
+                    {
+                        input.Level1_Date = zoho.currenttime;
+                    }
+                    input.Overall_Status = "Rejected";
+
+                    insert into Approval_Log
+                    [
+                        Revision_Reference = input.ID
+                        Approval_Level = "Level 1 - Procurement Manager"
+                        Action = "Rejected"
+                        Comments = input.Level1_Comments
+                        Action_By = input.Level1_Approved_By
+                        Action_Date = input.Level1_Date
+                        SO_Number_Ref = soNum
+                    ]
+
+                    sendmail
+                    (
+                        from : zoho.adminuserid
+                        to : input.Added_User
+                        subject : "Revision " + revID + " Rejected at Level 1"
+                        message : "Your Revision Request " + revID + " has been rejected by the Procurement Manager.<br><b>Comments:</b> " + input.Level1_Comments
+                    )
+                }
+                else if (input.Level1_Action == "Request Info" && (input.Overall_Status == "Submitted" || input.Overall_Status == "Level 1 Review"))
+                {
+                    input.Overall_Status = "Info Requested";
+
+                    insert into Approval_Log
+                    [
+                        Revision_Reference = input.ID
+                        Approval_Level = "Level 1 - Procurement Manager"
+                        Action = "Request Info"
+                        Comments = input.Level1_Comments
+                        Action_By = input.Level1_Approved_By
+                        Action_Date = zoho.currenttime
+                        SO_Number_Ref = soNum
+                    ]
+
+                    sendmail
+                    (
+                        from : zoho.adminuserid
+                        to : input.Added_User
+                        subject : "More Information Required - Revision " + revID
+                        message : "Additional information is required for Revision Request " + revID + ".<br><b>Comments:</b> " + input.Level1_Comments
+                    )
+                }
+
+                if (input.Level2_Action == "Approved" && input.Overall_Status == "Level 2 Review")
+                {
+                    if (input.Level2_Date == null)
+                    {
+                        input.Level2_Date = zoho.currenttime;
+                    }
+                    input.Overall_Status = "Level 3 Review";
+                    input.Level3_Action = "Pending";
+                    input.Level3_Start_Date = zoho.currenttime;
+                    input.SLA_Deadline = zoho.currentdate.addDay(2);
+
+                    insert into Approval_Log
+                    [
+                        Revision_Reference = input.ID
+                        Approval_Level = "Level 2 - Finance"
+                        Action = "Approved"
+                        Comments = input.Level2_Comments
+                        Action_By = input.Level2_Approved_By
+                        Action_Date = input.Level2_Date
+                        SO_Number_Ref = soNum
+                    ]
+
+                    sendmail
+                    (
+                        from : zoho.adminuserid
+                        to : "commercial.head@varroc.com"
+                        subject : "Revision " + revID + " - Level 3 Final Approval Required"
+                        message : "Revision Request " + revID + " (SO: " + soNum + ", Customer: " + customer + ") has been approved by Finance and now requires final Commercial Head approval.<br><br><b>Financial Impact:</b> INR " + input.Total_Financial_Impact + "<br><b>SLA Deadline:</b> " + input.SLA_Deadline
+                    )
+                }
+
+                if (input.Level2_Action == "Rejected" && input.Overall_Status == "Level 2 Review")
+                {
+                    if (input.Level2_Date == null)
+                    {
+                        input.Level2_Date = zoho.currenttime;
+                    }
+                    input.Overall_Status = "Rejected";
+
+                    insert into Approval_Log
+                    [
+                        Revision_Reference = input.ID
+                        Approval_Level = "Level 2 - Finance"
+                        Action = "Rejected"
+                        Comments = input.Level2_Comments
+                        Action_By = input.Level2_Approved_By
+                        Action_Date = input.Level2_Date
+                        SO_Number_Ref = soNum
+                    ]
+
+                    sendmail
+                    (
+                        from : zoho.adminuserid
+                        to : input.Added_User
+                        subject : "Revision " + revID + " Rejected at Level 2 - Finance"
+                        message : "Revision Request " + revID + " has been rejected by Finance.<br><b>Comments:</b> " + input.Level2_Comments
+                    )
+                }
+
+                if (input.Level2_Action == "Request Info" && input.Overall_Status == "Level 2 Review")
+                {
+                    input.Overall_Status = "Info Requested";
+
+                    insert into Approval_Log
+                    [
+                        Revision_Reference = input.ID
+                        Approval_Level = "Level 2 - Finance"
+                        Action = "Request Info"
+                        Comments = input.Level2_Comments
+                        Action_By = input.Level2_Approved_By
+                        Action_Date = zoho.currenttime
+                        SO_Number_Ref = soNum
+                    ]
+
+                    sendmail
+                    (
+                        from : zoho.adminuserid
+                        to : input.Added_User
+                        subject : "More Information Required - Revision " + revID + " (Finance Review)"
+                        message : "Finance has requested additional information for Revision Request " + revID + ".<br><b>Comments:</b> " + input.Level2_Comments
+                    )
+                }
+
+                if (input.Level3_Action == "Approved" && input.Overall_Status == "Level 3 Review")
+                {
+                    if (input.Level3_Date == null)
+                    {
+                        input.Level3_Date = zoho.currenttime;
+                    }
+                    input.Overall_Status = "Internally Approved";
+
+                    insert into Approval_Log
+                    [
+                        Revision_Reference = input.ID
+                        Approval_Level = "Level 3 - Commercial Head"
+                        Action = "Approved"
+                        Comments = input.Level3_Comments
+                        Action_By = input.Level3_Approved_By
+                        Action_Date = input.Level3_Date
+                        SO_Number_Ref = soNum
+                    ]
+
+                    sendmail
+                    (
+                        from : zoho.adminuserid
+                        to : "commercial.head@varroc.com"
+                        subject : "Revision " + revID + " Internally Approved - Initiate Customer Communication"
+                        message : "Revision Request " + revID + " (SO: " + soNum + ", Customer: " + customer + ") has been fully approved internally.<br><br>Please initiate formal customer communication.<br><b>Financial Impact:</b> INR " + input.Total_Financial_Impact
+                    )
+
+                    sendmail
+                    (
+                        from : zoho.adminuserid
+                        to : input.Added_User
+                        subject : "Revision " + revID + " - Internal Approval Complete"
+                        message : "Your Revision Request " + revID + " has been approved by all three internal levels. The Commercial Head will now initiate customer communication."
+                    )
+                }
+
+                if (input.Level3_Action == "Rejected" && input.Overall_Status == "Level 3 Review")
+                {
+                    if (input.Level3_Date == null)
+                    {
+                        input.Level3_Date = zoho.currenttime;
+                    }
+                    input.Overall_Status = "Rejected";
+
+                    insert into Approval_Log
+                    [
+                        Revision_Reference = input.ID
+                        Approval_Level = "Level 3 - Commercial Head"
+                        Action = "Rejected"
+                        Comments = input.Level3_Comments
+                        Action_By = input.Level3_Approved_By
+                        Action_Date = input.Level3_Date
+                        SO_Number_Ref = soNum
+                    ]
+
+                    sendmail
+                    (
+                        from : zoho.adminuserid
+                        to : input.Added_User
+                        subject : "Revision " + revID + " Rejected at Level 3 - Commercial Head"
+                        message : "Revision Request " + revID + " has been rejected at the final approval stage.<br><b>Comments:</b> " + input.Level3_Comments
+                    )
+                }
+
+                if (input.Level3_Action == "Request Info" && input.Overall_Status == "Level 3 Review")
+                {
+                    input.Overall_Status = "Info Requested";
+
+                    insert into Approval_Log
+                    [
+                        Revision_Reference = input.ID
+                        Approval_Level = "Level 3 - Commercial Head"
+                        Action = "Request Info"
+                        Comments = input.Level3_Comments
+                        Action_By = input.Level3_Approved_By
+                        Action_Date = zoho.currenttime
+                        SO_Number_Ref = soNum
+                    ]
+
+                    sendmail
+                    (
+                        from : zoho.adminuserid
+                        to : input.Added_User
+                        subject : "More Information Required - Revision " + revID + " (Commercial Head Review)"
+                        message : "The Commercial Head has requested additional information for Revision Request " + revID + ".<br><b>Comments:</b> " + input.Level3_Comments
+                    )
+                }
+            )
+        }
+    }
+}

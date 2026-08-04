@@ -1,0 +1,45 @@
+WF_Mark_L3_Approved as "Mark L3 Approved"
+{
+    type = functions
+    form = Revision_Request
+    execution type = for each record
+
+    on start
+    {
+        actions
+        {
+            on click
+            (
+                update Revision_Request[ID == input.ID]
+                [
+                    Level3_Action = "Approved"
+                    Level3_Date = zoho.currenttime
+                    Level3_Approved_By = zoho.loginuser
+                    Overall_Status = "Internally Approved"
+                ]
+
+                soNum = input.SO_Reference.SO_Number;
+                customer = input.Customer_Name_Display;
+
+                insert into Approval_Log
+                [
+                    Revision_Reference = input.ID
+                    Approval_Level = "Level 3 - Commercial Head"
+                    Action = "Approved"
+                    Comments = input.Level3_Comments
+                    Action_By = zoho.loginuser
+                    Action_Date = zoho.currenttime
+                    SO_Number_Ref = soNum
+                ]
+
+                sendmail
+                (
+                    from : zoho.adminuserid
+                    to : "commercial.head@varroc.com"
+                    subject : "Revision " + input.Revision_ID + " Internally Approved - Initiate Customer Communication"
+                    message : "Revision " + input.Revision_ID + " (SO: " + soNum + ", Customer: " + customer + ") has been fully approved internally. Please initiate formal customer communication.<br><b>Financial Impact:</b> INR " + input.Total_Financial_Impact
+                )
+            )
+        }
+    }
+}

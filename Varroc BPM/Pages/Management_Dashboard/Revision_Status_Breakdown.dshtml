@@ -1,0 +1,244 @@
+<style>
+/* ===== Revision Status Breakdown ===== */
+* { box-sizing: border-box; }
+body, div, span, p, h1, h2, h3, h4, h5, h6 { font-family: sans-serif; }
+
+.mgmt-status-section {
+  padding: 16px 24px 16px 0;
+  height: 100%;
+}
+.mgmt-status-card {
+  background: #FFFFFF;
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+  border: 1px solid #e7e7ee;
+  padding: 20px 24px;
+  height: 100%;
+}
+.mgmt-status-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #1A3C6E;
+  margin: 0 0 20px 0;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f0f0f5;
+}
+.mgmt-status-title i { font-size: 16px; color: #1A73E8; }
+
+.mgmt-status-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+.mgmt-status-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1 1 calc(50% - 7px);
+  min-width: 160px;
+  background: #F8F9FB;
+  border-radius: 8px;
+  padding: 12px 14px;
+  border: 1px solid #eef0f5;
+}
+.mgmt-status-circle {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #FFFFFF;
+  line-height: 1;
+}
+.mgmt-status-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.mgmt-status-count {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1A3C6E;
+  line-height: 1.1;
+}
+.mgmt-status-name {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--zcs_secondary_text_color, #6B7280);
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mgmt-status-divider {
+  border: none;
+  border-top: 1px solid #f0f0f5;
+  margin: 16px 0 12px 0;
+}
+.mgmt-status-total-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.8125rem;
+  color: var(--zcs_secondary_text_color, #6B7280);
+}
+.mgmt-status-total-val {
+  font-weight: 700;
+  color: #1A3C6E;
+  font-size: 0.9375rem;
+}
+</style>
+
+<%
+  /* Fetch counts by Overall_Status */
+  cnt_submitted = Revision_Request[Overall_Status == "Submitted"].count();
+  cnt_l1 = Revision_Request[Overall_Status == "Level 1 Review"].count();
+  cnt_l2 = Revision_Request[Overall_Status == "Level 2 Review"].count();
+  cnt_l3 = Revision_Request[Overall_Status == "Level 3 Review"].count();
+  cnt_info_req = Revision_Request[Overall_Status == "Info Requested"].count();
+  cnt_cust_review = Revision_Request[Overall_Status == "Customer Review"].count();
+  cnt_cust_accepted = Revision_Request[Overall_Status == "Customer Accepted"].count();
+  cnt_cust_rejected = Revision_Request[Overall_Status == "Customer Rejected"].count();
+  cnt_supplier_amend = Revision_Request[Overall_Status == "Supplier Amendment Raised"].count();
+  cnt_completed = Revision_Request[Overall_Status == "Completed"].count();
+  cnt_rejected = Revision_Request[Overall_Status == "Rejected"].count();
+
+  grand_total = cnt_submitted + cnt_l1 + cnt_l2 + cnt_l3 + cnt_info_req + cnt_cust_review + cnt_cust_accepted + cnt_cust_rejected + cnt_supplier_amend + cnt_completed + cnt_rejected;
+%>
+
+<div class="mgmt-status-section">
+  <div class="mgmt-status-card">
+    <h3 class="mgmt-status-title">
+      <i class="zc-li-outline ui-1-pie-chart-2"></i>
+      Revision Status Breakdown
+    </h3>
+
+    <div class="mgmt-status-grid">
+
+      <!-- Submitted — Blue -->
+      <div class="mgmt-status-item">
+        <div class="mgmt-status-circle" style="background:#1A73E8;">
+          <span><%= cnt_submitted %></span>
+        </div>
+        <div class="mgmt-status-info">
+          <span class="mgmt-status-count"><%= cnt_submitted %></span>
+          <span class="mgmt-status-name">Submitted</span>
+        </div>
+      </div>
+
+      <!-- Level 1 Review — Orange -->
+      <div class="mgmt-status-item">
+        <div class="mgmt-status-circle" style="background:#F9AB00;">
+          <span><%= cnt_l1 %></span>
+        </div>
+        <div class="mgmt-status-info">
+          <span class="mgmt-status-count"><%= cnt_l1 %></span>
+          <span class="mgmt-status-name">Level 1 Review</span>
+        </div>
+      </div>
+
+      <!-- Level 2 Review — Orange-Red -->
+      <div class="mgmt-status-item">
+        <div class="mgmt-status-circle" style="background:#E65100;">
+          <span><%= cnt_l2 %></span>
+        </div>
+        <div class="mgmt-status-info">
+          <span class="mgmt-status-count"><%= cnt_l2 %></span>
+          <span class="mgmt-status-name">Level 2 Review</span>
+        </div>
+      </div>
+
+      <!-- Level 3 Review — Deep Orange -->
+      <div class="mgmt-status-item">
+        <div class="mgmt-status-circle" style="background:#BF360C;">
+          <span><%= cnt_l3 %></span>
+        </div>
+        <div class="mgmt-status-info">
+          <span class="mgmt-status-count"><%= cnt_l3 %></span>
+          <span class="mgmt-status-name">Level 3 Review</span>
+        </div>
+      </div>
+
+      <!-- Info Requested — Amber -->
+      <div class="mgmt-status-item">
+        <div class="mgmt-status-circle" style="background:#F59E0B;">
+          <span><%= cnt_info_req %></span>
+        </div>
+        <div class="mgmt-status-info">
+          <span class="mgmt-status-count"><%= cnt_info_req %></span>
+          <span class="mgmt-status-name">Info Requested</span>
+        </div>
+      </div>
+
+      <!-- Customer Review — Blue-Teal -->
+      <div class="mgmt-status-item">
+        <div class="mgmt-status-circle" style="background:#0097A7;">
+          <span><%= cnt_cust_review %></span>
+        </div>
+        <div class="mgmt-status-info">
+          <span class="mgmt-status-count"><%= cnt_cust_review %></span>
+          <span class="mgmt-status-name">Customer Review</span>
+        </div>
+      </div>
+
+      <!-- Customer Accepted — Green -->
+      <div class="mgmt-status-item">
+        <div class="mgmt-status-circle" style="background:#34A853;">
+          <span><%= cnt_cust_accepted %></span>
+        </div>
+        <div class="mgmt-status-info">
+          <span class="mgmt-status-count"><%= cnt_cust_accepted %></span>
+          <span class="mgmt-status-name">Customer Accepted</span>
+        </div>
+      </div>
+
+      <!-- Supplier Amendment Raised — Purple -->
+      <div class="mgmt-status-item">
+        <div class="mgmt-status-circle" style="background:#8430CE;">
+          <span><%= cnt_supplier_amend %></span>
+        </div>
+        <div class="mgmt-status-info">
+          <span class="mgmt-status-count"><%= cnt_supplier_amend %></span>
+          <span class="mgmt-status-name">Supplier Amendment</span>
+        </div>
+      </div>
+
+      <!-- Completed — Dark Green -->
+      <div class="mgmt-status-item">
+        <div class="mgmt-status-circle" style="background:#137333;">
+          <span><%= cnt_completed %></span>
+        </div>
+        <div class="mgmt-status-info">
+          <span class="mgmt-status-count"><%= cnt_completed %></span>
+          <span class="mgmt-status-name">Completed</span>
+        </div>
+      </div>
+
+      <!-- Rejected — Red -->
+      <div class="mgmt-status-item">
+        <div class="mgmt-status-circle" style="background:#EA4335;">
+          <span><%= cnt_rejected + cnt_cust_rejected %></span>
+        </div>
+        <div class="mgmt-status-info">
+          <span class="mgmt-status-count"><%= cnt_rejected + cnt_cust_rejected %></span>
+          <span class="mgmt-status-name">Rejected (all)</span>
+        </div>
+      </div>
+
+    </div>
+
+    <hr class="mgmt-status-divider"/>
+    <div class="mgmt-status-total-row">
+      <span>Total Revisions (all time)</span>
+      <span class="mgmt-status-total-val"><%= grand_total %></span>
+    </div>
+  </div>
+</div>

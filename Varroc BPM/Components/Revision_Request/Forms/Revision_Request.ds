@@ -1,0 +1,394 @@
+form Revision_Request
+{
+    title
+    {
+        displayname = "Revision Request"
+        on add = "Raise Revision Request"
+        on edit = "Edit Revision Request"
+    }
+
+    Revision_Details
+    (
+        type = section
+        displayname = "Revision Details"
+        row = 1
+        column = 0
+    )
+    Revision_ID
+    (
+        type = autonumber
+        displayname = "Revision ID"
+        start index = 1001
+        row = 1
+        column = 1
+        width = medium
+    )
+    must have SO_Reference
+    (
+        type = picklist
+        displayname = "SO Reference"
+        values = SO_Baseline.ID
+        displayformat = [SO_Number]
+        searchable = true
+        row = 1
+        column = 1
+        width = medium
+    )
+    Customer_Name_Display
+    (
+        type = formula
+        displayname = "Customer Name"
+        value = SO_Reference.Customer_Name
+        visibility = true
+        row = 1
+        column = 1
+        width = medium
+    )
+    must have Revision_Type
+    (
+        type = picklist
+        displayname = "Revision Type"
+        values = {"Raw Material Cost Change","Forex Movement","Freight Cost Change","Shipping Mode Change","Scope Change - Specification","Scope Change - Quantity Revision","Market Demand Change","Engineering Change (ECN)","Timeline / Delivery Change","Supplier-Driven Cost Change"}
+        row = 1
+        column = 1
+        width = medium
+    )
+    must have Urgency
+    (
+        type = radiobuttons
+        displayname = "Urgency"
+        values = {"Standard","Urgent"}
+        initial value = "Standard"
+        row = 1
+        column = 1
+        width = medium
+    )
+    Revision_Date
+    (
+        type = date
+        displayname = "Revision Date"
+        initial value = "${zoho.currentdate}"
+        row = 1
+        column = 1
+        width = medium
+    )
+
+    Change_Description
+    (
+        type = section
+        displayname = "Change Description"
+        visibility = true
+        row = 2
+        column = 1
+    )
+    must have Description
+    (
+        type = textarea
+        displayname = "Description of Change"
+        description
+        [
+            type = tooltip
+            message = "What changed, why it changed, and what the impact is"
+        ]
+        height = 80px
+        row = 2
+        column = 1
+        width = medium
+    )
+    Old_Value
+    (
+        type = text
+        displayname = "Old Value (Price / Qty / Spec / Timeline)"
+        row = 2
+        column = 2
+        width = medium
+    )
+    New_Value
+    (
+        type = text
+        displayname = "New Value (Price / Qty / Spec / Timeline)"
+        row = 2
+        column = 1
+        width = medium
+    )
+    Impact_Direction
+    (
+        type = radiobuttons
+        displayname = "Financial Impact Direction"
+        values = {"Increase","Decrease"}
+        row = 2
+        column = 2
+        width = medium
+    )
+    Financial_Impact_Per_Unit
+    (
+        type = INR
+        displayname = "Financial Impact Per Unit (INR)"
+        decimalplace = 2
+        row = 2
+        column = 1
+        width = medium
+    )
+    Total_Financial_Impact
+    (
+        type = INR
+        displayname = "Total Financial Impact (INR)"
+        decimalplace = 2
+        row = 2
+        column = 2
+        width = medium
+    )
+
+    Supporting_Documents_Section
+    (
+        type = section
+        displayname = "Supporting Documents"
+        visibility = true
+        row = 3
+        column = 1
+    )
+    Supporting_Documents
+    (
+        type = upload file
+        displayname = "Supporting Documents"
+        file count = 10
+        browse = local_drive
+        row = 3
+        column = 1
+        width = medium
+    )
+    Document_Notes
+    (
+        type = textarea
+        displayname = "Document Notes"
+        row = 3
+        column = 1
+        width = medium
+    )
+
+    Overall_Status_Section
+    (
+        type = section
+        displayname = "Overall Status"
+        visibility = true
+        row = 4
+        column = 1
+    )
+    Overall_Status
+    (
+        type = picklist
+        displayname = "Overall Status"
+        values = {"Draft","Submitted","Level 1 Review","Level 2 Review","Level 3 Review","Internally Approved","Rejected","Info Requested","Customer Communication","Under Negotiation","Customer Accepted","Customer Rejected","Supplier Amendment Raised","Completed"}
+        initial value = "Draft"
+        row = 4
+        column = 1
+        width = medium
+    )
+    Submitted_Date
+    (
+        type = datetime
+        displayname = "Submitted Date"
+        row = 4
+        column = 2
+        width = medium
+    )
+    SLA_Deadline
+    (
+        type = date
+        displayname = "SLA Deadline"
+        row = 4
+        column = 1
+        width = medium
+    )
+    Submitted_By
+    (
+        type = text
+        displayname = "Submitted By"
+        row = 4
+        column = 2
+        width = medium
+    )
+
+    Level1_Approval_Section
+    (
+        type = section
+        displayname = "Level 1 Approval - Procurement Manager"
+        visibility = true
+        row = 5
+        column = 1
+    )
+    Level1_Action
+    (
+        type = picklist
+        displayname = "L1 Decision"
+        values = {"Pending","Approved","Rejected","Request Info"}
+        initial value = "Pending"
+        row = 5
+        column = 1
+        width = medium
+    )
+    Level1_Comments
+    (
+        type = textarea
+        displayname = "L1 Comments"
+        row = 5
+        column = 2
+        width = medium
+    )
+    Level1_Approved_By
+    (
+        type = text
+        displayname = "L1 Actioned By"
+        row = 5
+        column = 1
+        width = medium
+    )
+    Level1_Date
+    (
+        type = datetime
+        displayname = "L1 Action Date"
+        row = 5
+        column = 2
+        width = medium
+    )
+    Level1_Start_Date
+    (
+        type = datetime
+        displayname = "L1 Start Date"
+        row = 5
+        column = 1
+        width = medium
+    )
+
+    Level2_Approval_Section
+    (
+        type = section
+        displayname = "Level 2 Approval - Finance"
+        visibility = true
+        row = 6
+        column = 1
+    )
+    Level2_Action
+    (
+        type = picklist
+        displayname = "L2 Decision"
+        values = {"Pending","Approved","Rejected","Request Info"}
+        initial value = "Pending"
+        row = 6
+        column = 1
+        width = medium
+    )
+    Level2_Comments
+    (
+        type = textarea
+        displayname = "L2 Comments"
+        row = 6
+        column = 2
+        width = medium
+    )
+    Level2_Approved_By
+    (
+        type = text
+        displayname = "L2 Actioned By"
+        row = 6
+        column = 1
+        width = medium
+    )
+    Level2_Date
+    (
+        type = datetime
+        displayname = "L2 Action Date"
+        row = 6
+        column = 2
+        width = medium
+    )
+    Level2_Start_Date
+    (
+        type = datetime
+        displayname = "L2 Start Date"
+        row = 6
+        column = 1
+        width = medium
+    )
+
+    Level3_Approval_Section
+    (
+        type = section
+        displayname = "Level 3 Approval - Commercial Head"
+        visibility = true
+        row = 7
+        column = 1
+    )
+    Level3_Action
+    (
+        type = picklist
+        displayname = "L3 Decision"
+        values = {"Pending","Approved","Rejected","Request Info"}
+        initial value = "Pending"
+        row = 7
+        column = 1
+        width = medium
+    )
+    Level3_Comments
+    (
+        type = textarea
+        displayname = "L3 Comments"
+        row = 7
+        column = 2
+        width = medium
+    )
+    Level3_Approved_By
+    (
+        type = text
+        displayname = "L3 Actioned By"
+        row = 7
+        column = 1
+        width = medium
+    )
+    Level3_Date
+    (
+        type = datetime
+        displayname = "L3 Action Date"
+        row = 7
+        column = 2
+        width = medium
+    )
+    Level3_Start_Date
+    (
+        type = datetime
+        displayname = "L3 Start Date"
+        row = 7
+        column = 1
+        width = medium
+    )
+
+    actions
+    {
+        on add
+        {
+            Submit
+            (
+                type = submit
+                displayname = "Submit Revision"
+            )
+            Reset
+            (
+                type = reset
+                displayname = "Reset"
+            )
+        }
+        on edit
+        {
+            Update
+            (
+                type = submit
+                displayname = "Update"
+            )
+            Cancel
+            (
+                type = cancel
+                displayname = "Cancel"
+            )
+        }
+    }
+}

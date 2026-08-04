@@ -1,0 +1,35 @@
+list Open_Negotiations
+{
+    displayName = "Open Negotiations"
+    show all rows from Negotiation_Log [Round_Status == "Open" || Round_Status == "Stalled"]
+    (
+        Revision_Reference
+        Customer_Display
+        Round_Number
+        Negotiation_Date
+        Varroc_Proposal
+        Customer_Counter_Proposal
+        Next_Action
+        Next_Action_Date
+        Round_Status
+    )
+    sort by
+    (
+        Next_Action_Date ascending
+    )
+    conditional formatting
+    (
+        "Overdue Next Action"
+        {
+            condition = (Next_Action_Date < zoho.currentdate)
+            fields = [Revision_Reference, Customer_Display, Next_Action, Next_Action_Date]
+            format = "background-color:#FFD6D6;color:#CC0000;font-weight:bold"
+        }
+        "Stalled"
+        {
+            condition = (Round_Status == "Stalled")
+            fields = [Round_Status]
+            format = "background-color:#FFF3CD;color:#856404"
+        }
+    )
+}

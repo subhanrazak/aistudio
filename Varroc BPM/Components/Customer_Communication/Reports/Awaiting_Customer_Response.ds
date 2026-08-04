@@ -1,0 +1,34 @@
+list Awaiting_Customer_Response
+{
+    displayName = "Awaiting Customer Response"
+    show all rows from Customer_Communication [Customer_Response == "Pending" || Customer_Response == "No Response" || Customer_Response == "Under Negotiation"]
+    (
+        Revision_Reference
+        Customer_Display
+        SO_Number_Display
+        Communication_Date
+        Customer_Response
+        Follow_Up_Count
+        Last_Follow_Up_Date
+        Proposed_Effective_Date
+    )
+    sort by
+    (
+        Communication_Date ascending
+    )
+    conditional formatting
+    (
+        "Many Follow Ups"
+        {
+            condition = (Follow_Up_Count >= 4)
+            fields = [Revision_Reference, Customer_Display, Customer_Response, Follow_Up_Count]
+            format = "background-color:#FFD6D6;color:#CC0000;font-weight:bold"
+        }
+        "Some Follow Ups"
+        {
+            condition = (Follow_Up_Count >= 2 && Follow_Up_Count < 4)
+            fields = [Follow_Up_Count]
+            format = "background-color:#FFF3CD;color:#856404"
+        }
+    )
+}

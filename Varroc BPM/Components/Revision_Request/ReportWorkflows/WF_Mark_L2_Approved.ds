@@ -1,0 +1,48 @@
+WF_Mark_L2_Approved as "Mark L2 Approved"
+{
+    type = functions
+    form = Revision_Request
+    execution type = for each record
+
+    on start
+    {
+        actions
+        {
+            on click
+            (
+                update Revision_Request[ID == input.ID]
+                [
+                    Level2_Action = "Approved"
+                    Level2_Date = zoho.currenttime
+                    Level2_Approved_By = zoho.loginuser
+                    Overall_Status = "Level 3 Review"
+                    Level3_Action = "Pending"
+                    Level3_Start_Date = zoho.currenttime
+                    SLA_Deadline = zoho.currentdate.addDay(2)
+                ]
+
+                soNum = input.SO_Reference.SO_Number;
+                customer = input.Customer_Name_Display;
+
+                insert into Approval_Log
+                [
+                    Revision_Reference = input.ID
+                    Approval_Level = "Level 2 - Finance"
+                    Action = "Approved"
+                    Comments = input.Level2_Comments
+                    Action_By = zoho.loginuser
+                    Action_Date = zoho.currenttime
+                    SO_Number_Ref = soNum
+                ]
+
+                sendmail
+                (
+                    from : zoho.adminuserid
+                    to : "commercial.head@varroc.com"
+                    subject : "Revision " + input.Revision_ID + " - Level 3 Final Approval Required"
+                    message : "Revision Request " + input.Revision_ID + " (SO: " + soNum + ", Customer: " + customer + ") has been approved by Finance and now requires final Commercial Head approval.<br><b>Financial Impact:</b> INR " + input.Total_Financial_Impact
+                )
+            )
+        }
+    }
+}

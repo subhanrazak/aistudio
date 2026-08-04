@@ -1,0 +1,53 @@
+Supplier_Amendment_On_Edit as "Supplier Amendment - On Edit Success"
+{
+    type = form
+    form = Supplier_Amendment
+    record event = on edit
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                revRef = input.Revision_Reference;
+                revID = input.Revision_Reference.Revision_ID;
+
+                if (input.Supplier_Response == "Accepted")
+                {
+                    // Close the revision as fully completed
+                    update Revision_Request[ID == revRef]
+                    [
+                        Overall_Status = "Completed"
+                    ]
+
+                    sendmail
+                    (
+                        from : zoho.adminuserid
+                        to : "commercial.head@varroc.com"
+                        subject : "Revision " + revID + " COMPLETED - End-to-End Amendment Chain Closed"
+                        message : "Revision " + revID + " is now fully closed.<br><br><b>Supplier:</b> " + input.Supplier_Name + "<br><b>Amended Supplier PO:</b> " + input.Amended_Supplier_PO_Reference + "<br><br>The full amendment cycle (SO revision → internal approval → customer acceptance → supplier PO amendment) is complete."
+                    )
+
+                    sendmail
+                    (
+                        from : zoho.adminuserid
+                        to : "procurement.manager@varroc.com"
+                        subject : "Revision " + revID + " COMPLETED"
+                        message : "Supplier " + input.Supplier_Name + " has accepted the amendment for Revision " + revID + ". Amended Supplier PO: " + input.Amended_Supplier_PO_Reference + ". The revision is now marked as Completed."
+                    )
+                }
+                else if (input.Supplier_Response == "Rejected")
+                {
+                    sendmail
+                    (
+                        from : zoho.adminuserid
+                        to : "procurement.manager@varroc.com"
+                        subject : "ALERT: Supplier Rejected Amendment - Revision " + revID
+                        message : "Supplier " + input.Supplier_Name + " has rejected the amendment for Revision " + revID + ".<br><br><b>Supplier Notes:</b> " + input.Supplier_Counter_Proposal + "<br><br>Escalation and renegotiation required."
+                    )
+                }
+            )
+        }
+    }
+}

@@ -1,0 +1,52 @@
+Revision_Request_On_Load as "Revision Request - On Load"
+{
+    type = form
+    form = Revision_Request
+    record event = on add or edit
+
+    on load
+    {
+        actions
+        {
+            custom deluge script
+            (
+                currentStatus = input.Overall_Status;
+
+                // Disable L1 fields unless status is at L1 stage
+                if (currentStatus != "Submitted" && currentStatus != "Level 1 Review" && currentStatus != "Info Requested" && currentStatus != "Draft")
+                {
+                    disable Level1_Action;
+                    disable Level1_Comments;
+                }
+
+                // Disable L2 fields unless status is at L2 stage
+                if (currentStatus != "Level 2 Review")
+                {
+                    disable Level2_Action;
+                    disable Level2_Comments;
+                }
+
+                // Disable L3 fields unless status is at L3 stage
+                if (currentStatus != "Level 3 Review")
+                {
+                    disable Level3_Action;
+                    disable Level3_Comments;
+                }
+
+                // Disable metadata fields that are auto-set
+                disable Level1_Approved_By;
+                disable Level1_Date;
+                disable Level1_Start_Date;
+                disable Level2_Approved_By;
+                disable Level2_Date;
+                disable Level2_Start_Date;
+                disable Level3_Approved_By;
+                disable Level3_Date;
+                disable Level3_Start_Date;
+                disable Submitted_By;
+                disable Submitted_Date;
+                disable Revision_Date;
+            )
+        }
+    }
+}

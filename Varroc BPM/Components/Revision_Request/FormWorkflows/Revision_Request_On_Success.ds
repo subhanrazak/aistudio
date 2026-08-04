@@ -1,0 +1,52 @@
+Revision_Request_On_Add_Success as "Revision Request - On Add Success"
+{
+    type = form
+    form = Revision_Request
+    record event = on add
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                // Set submission metadata
+                input.Submitted_Date = zoho.currenttime;
+                input.Submitted_By = zoho.loginuser;
+                input.Overall_Status = "Submitted";
+                input.Level1_Action = "Pending";
+                input.Level1_Start_Date = zoho.currenttime;
+
+                // Set SLA deadline based on urgency
+                if (input.Urgency == "Urgent")
+                {
+                    input.SLA_Deadline = zoho.currentdate.addDay(1);
+                }
+                else
+                {
+                    input.SLA_Deadline = zoho.currentdate.addDay(3);
+                }
+
+                // Send notification email to Procurement Manager profile users
+                // Notify Procurement Manager
+                emailBody = "A new Revision Request has been submitted and requires your review.<br><br>"
+                    + "<b>Revision ID:</b> " + input.Revision_ID + "<br>"
+                    + "<b>SO Reference:</b> " + input.SO_Reference.SO_Number + "<br>"
+                    + "<b>Customer:</b> " + input.Customer_Name_Display + "<br>"
+                    + "<b>Revision Type:</b> " + input.Revision_Type + "<br>"
+                    + "<b>Description:</b> " + input.Description + "<br>"
+                    + "<b>Total Financial Impact:</b> INR " + input.Total_Financial_Impact + "<br>"
+                    + "<b>Urgency:</b> " + input.Urgency + "<br>"
+                    + "<b>SLA Deadline:</b> " + input.SLA_Deadline + "<br>";
+
+                sendmail
+                (
+                    from : zoho.adminuserid
+                    to : "procurement.manager@varroc.com"
+                    subject : "New Revision Request: " + input.Revision_ID + " - " + input.Revision_Type
+                    message : emailBody
+                )
+            )
+        }
+    }
+}

@@ -1,0 +1,78 @@
+list Pending_Approvals
+{
+    displayName = "Pending Approvals"
+    show all rows from Revision_Request [Overall_Status == "Level 1 Review" || Overall_Status == "Level 2 Review" || Overall_Status == "Level 3 Review" || Overall_Status == "Submitted"]
+    (
+        Revision_ID
+        SO_Reference
+        Customer_Name_Display
+        Revision_Type
+        Overall_Status
+        Urgency
+        Total_Financial_Impact
+        Submitted_Date
+        SLA_Deadline
+
+        custom action "Mark L1 Approved"
+        (
+            workflow = WF_Mark_L1_Approved
+            show action for each record = true
+            column header = "Approval Actions"
+            success message = "Level 1 approved. Moving to Finance review."
+            condition = (Overall_Status == "Submitted" || Overall_Status == "Level 1 Review" || Overall_Status == "Info Requested")
+        )
+        custom action "Mark L2 Approved"
+        (
+            workflow = WF_Mark_L2_Approved
+            show action for each record = true
+            column header = "Approval Actions"
+            success message = "Level 2 approved. Moving to Commercial Head review."
+            condition = (Overall_Status == "Level 2 Review")
+        )
+        custom action "Mark L3 Approved"
+        (
+            workflow = WF_Mark_L3_Approved
+            show action for each record = true
+            column header = "Approval Actions"
+            success message = "Level 3 approved. Revision is internally approved."
+            condition = (Overall_Status == "Level 3 Review")
+        )
+        custom action "Reject"
+        (
+            workflow = WF_Reject_Revision
+            show action for each record = true
+            column header = "Approval Actions"
+            success message = "Revision rejected."
+            confirmation before execution
+            (
+                message for individual record = "Are you sure you want to reject this revision?"
+                confirm button text = "Reject"
+                cancel button text = "Cancel"
+            )
+        )
+    )
+    filters
+    (
+        Overall_Status
+        Urgency
+    )
+    sort by
+    (
+        SLA_Deadline ascending
+    )
+    conditional formatting
+    (
+        "Overdue SLA"
+        {
+            condition = (SLA_Deadline < zoho.currentdate)
+            fields = [Revision_ID, Overall_Status, SLA_Deadline]
+            format = "background-color:#FFD6D6;color:#CC0000;font-weight:bold"
+        }
+        "Urgent"
+        {
+            condition = (Urgency == "Urgent")
+            fields = [Revision_ID, Urgency]
+            format = "background-color:#FFF0F0;color:#CC0000;font-weight:bold"
+        }
+    )
+}

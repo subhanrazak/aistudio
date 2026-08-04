@@ -1,0 +1,51 @@
+Customer_Followup_Schedule as "Customer Follow-up Reminder - Daily"
+{
+    type = schedule
+    start = "2025-01-01 09:00:00"
+    frequency = daily
+    time zone = "Asia/Kolkata"
+
+    on start
+    {
+        actions
+        {
+            on load
+            (
+                today = zoho.currentdate;
+                followupThreshold = today.subDay(7);
+
+                // Fetch all pending / no-response communications older than 7 days
+                pendingComms = Customer_Communication[(Customer_Response == "Pending" || Customer_Response == "No Response") && Communication_Date <= followupThreshold];
+
+                for each comm in pendingComms
+                {
+                    daysSince = today - comm.Communication_Date;
+
+                    // Increment follow-up count and update last follow-up date
+                    newCount = comm.Follow_Up_Count + 1;
+                    update Customer_Communication[ID == comm.ID]
+                    [
+                        Follow_Up_Count = newCount
+                        Last_Follow_Up_Date = today
+                    ]
+
+                    sendmail
+                    (
+                        from : zoho.adminuserid
+                        to : comm.Communicated_By
+                        subject : "Follow-up Required: Customer response pending for Revision " + comm.Revision_Reference.Revision_ID
+                        message : "Customer " + comm.Customer_Display + " has not responded to the amendment request for Revision " + comm.Revision_Reference.Revision_ID + " (SO: " + comm.SO_Number_Display + ").<br><br><b>Communication Date:</b> " + comm.Communication_Date + "<br><b>Days Since Communication:</b> " + daysSince + "<br><b>Follow-up Count:</b> " + newCount + "<br><br>Please follow up immediately."
+                    )
+
+                    sendmail
+                    (
+                        from : zoho.adminuserid
+                        to : "commercial.head@varroc.com"
+                        subject : "Customer Follow-up Alert: Revision " + comm.Revision_Reference.Revision_ID + " (" + daysSince + " days)"
+                        message : "No customer response received for Revision " + comm.Revision_Reference.Revision_ID + " after " + daysSince + " days. Follow-up count: " + newCount + "."
+                    )
+                }
+            )
+        }
+    }
+}

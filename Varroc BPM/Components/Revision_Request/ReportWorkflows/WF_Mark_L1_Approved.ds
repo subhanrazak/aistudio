@@ -1,0 +1,48 @@
+WF_Mark_L1_Approved as "Mark L1 Approved"
+{
+    type = functions
+    form = Revision_Request
+    execution type = for each record
+
+    on start
+    {
+        actions
+        {
+            on click
+            (
+                update Revision_Request[ID == input.ID]
+                [
+                    Level1_Action = "Approved"
+                    Level1_Date = zoho.currenttime
+                    Level1_Approved_By = zoho.loginuser
+                    Overall_Status = "Level 2 Review"
+                    Level2_Action = "Pending"
+                    Level2_Start_Date = zoho.currenttime
+                    SLA_Deadline = zoho.currentdate.addDay(2)
+                ]
+
+                soNum = input.SO_Reference.SO_Number;
+                customer = input.Customer_Name_Display;
+
+                insert into Approval_Log
+                [
+                    Revision_Reference = input.ID
+                    Approval_Level = "Level 1 - Procurement Manager"
+                    Action = "Approved"
+                    Comments = input.Level1_Comments
+                    Action_By = zoho.loginuser
+                    Action_Date = zoho.currenttime
+                    SO_Number_Ref = soNum
+                ]
+
+                sendmail
+                (
+                    from : zoho.adminuserid
+                    to : "finance@varroc.com"
+                    subject : "Revision " + input.Revision_ID + " - Level 2 Finance Approval Required"
+                    message : "Revision Request " + input.Revision_ID + " (SO: " + soNum + ", Customer: " + customer + ") has been approved at Level 1 and now requires Finance approval.<br><b>Financial Impact:</b> INR " + input.Total_Financial_Impact
+                )
+            )
+        }
+    }
+}

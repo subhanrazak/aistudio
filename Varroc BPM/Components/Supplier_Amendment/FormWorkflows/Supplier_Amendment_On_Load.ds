@@ -1,0 +1,36 @@
+Supplier_Amendment_On_Load as "Supplier Amendment - On Load"
+{
+    type = form
+    form = Supplier_Amendment
+    record event = on add or edit
+
+    on load
+    {
+        actions
+        {
+            custom deluge script
+            (
+                // Check if linked revision is in Customer Accepted status
+                if (input.Revision_Reference != null)
+                {
+                    revRecord = Revision_Request[ID == input.Revision_Reference];
+                    if (revRecord.Overall_Status != "Customer Accepted" && revRecord.Overall_Status != "Supplier Amendment Raised" && revRecord.Overall_Status != "Completed")
+                    {
+                        // Disable all editable fields as a soft lock
+                        disable Supplier_Name;
+                        disable Supplier_PO_Reference;
+                        disable Amendment_Type;
+                        disable Old_Value;
+                        disable New_Value;
+                        disable Amendment_Description;
+                        disable Customer_Amended_SO_Reference;
+                        disable Supplier_Response;
+                        disable Supplier_Response_Date;
+                        disable Amended_Supplier_PO_Reference;
+                        disable Supplier_Counter_Proposal;
+                    }
+                }
+            )
+        }
+    }
+}

@@ -1,0 +1,46 @@
+Supplier_Amendment_On_Add as "Supplier Amendment - On Add Success"
+{
+    type = form
+    form = Supplier_Amendment
+    record event = on add
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                revRef = input.Revision_Reference;
+                revRecord = Revision_Request[ID == revRef];
+
+                // Warn if revision is not in Customer Accepted status
+                if (revRecord.Overall_Status != "Customer Accepted")
+                {
+                    sendmail
+                    (
+                        from : zoho.adminuserid
+                        to : zoho.loginuser
+                        subject : "Warning: Supplier Amendment raised for non-accepted Revision"
+                        message : "You have raised a supplier amendment for Revision " + input.Revision_Reference.Revision_ID + " which currently has status: " + revRecord.Overall_Status + ".<br><br>Supplier amendments should only be raised after the customer has formally accepted the revision and an amended SO number is on record."
+                    )
+                }
+                else
+                {
+                    // Update Revision Request status
+                    update Revision_Request[ID == revRef]
+                    [
+                        Overall_Status = "Supplier Amendment Raised"
+                    ]
+
+                    sendmail
+                    (
+                        from : zoho.adminuserid
+                        to : "procurement.manager@varroc.com"
+                        subject : "Supplier Amendment Raised - Revision " + input.Revision_Reference.Revision_ID
+                        message : "A supplier amendment has been raised for Revision " + input.Revision_Reference.Revision_ID + ".<br><br><b>Supplier:</b> " + input.Supplier_Name + "<br><b>Amendment Type:</b> " + input.Amendment_Type + "<br><b>Customer Amended SO:</b> " + input.Customer_Amended_SO_Reference
+                    )
+                }
+            )
+        }
+    }
+}

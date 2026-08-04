@@ -1,0 +1,27 @@
+list Urgent_Revisions
+{
+    displayName = "Urgent Revisions"
+    show all rows from Revision_Request [Urgency == "Urgent" && Overall_Status != "Completed" && Overall_Status != "Customer Rejected" && Overall_Status != "Rejected"]
+    (
+        Revision_ID
+        SO_Reference
+        Customer_Name_Display
+        Revision_Type
+        Overall_Status
+        Total_Financial_Impact
+        SLA_Deadline
+    )
+    sort by
+    (
+        SLA_Deadline ascending
+    )
+    conditional formatting
+    (
+        "Overdue SLA"
+        {
+            condition = (SLA_Deadline < zoho.currentdate)
+            fields = [Revision_ID, Overall_Status, SLA_Deadline]
+            format = "background-color:#FFD6D6;color:#CC0000;font-weight:bold"
+        }
+    )
+}

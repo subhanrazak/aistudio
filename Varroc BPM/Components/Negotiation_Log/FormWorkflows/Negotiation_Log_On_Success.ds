@@ -1,0 +1,47 @@
+Negotiation_Log_On_Add as "Negotiation Log - On Add Success"
+{
+    type = form
+    form = Negotiation_Log
+    record event = on add
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                // Set negotiated by to current user
+                input.Negotiated_By = zoho.loginuser;
+
+                // Auto-compute round number: find highest existing round for this revision and add 1
+                maxRound = 0;
+                for each existingRound in Negotiation_Log[Revision_Reference == input.Revision_Reference]
+                {
+                    if (existingRound.Round_Number > maxRound)
+                    {
+                        maxRound = existingRound.Round_Number;
+                    }
+                }
+                nextRound = maxRound + 1;
+
+                update Negotiation_Log[ID == input.ID]
+                [
+                    Round_Number = nextRound
+                    Negotiated_By = zoho.loginuser
+                ]
+
+                // Notify Commercial Head
+                revID = input.Revision_Reference.Revision_ID;
+                customer = input.Customer_Display;
+
+                sendmail
+                (
+                    from : zoho.adminuserid
+                    to : "commercial.head@varroc.com"
+                    subject : "Negotiation Round " + nextRound + " Logged - Revision " + revID
+                    message : "A new negotiation round has been logged for Revision " + revID + " with customer " + customer + ".<br><br><b>Round Number:</b> " + nextRound + "<br><b>Varroc Position:</b> " + input.Varroc_Proposal + "<br><b>Customer Counter-Proposal:</b> " + input.Customer_Counter_Proposal + "<br><b>Next Action Date:</b> " + input.Next_Action_Date
+                )
+            )
+        }
+    }
+}

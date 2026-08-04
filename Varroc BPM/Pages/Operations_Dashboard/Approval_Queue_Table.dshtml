@@ -1,0 +1,229 @@
+<style>
+/* ===== Table component styles ===== */
+:root {
+  --zcs-thead-color: #F9FAFE;
+  --zcs-tr-h-color: #F9FAFE;
+  --zcs-white-color: #FFFFFF;
+}
+* { box-sizing: border-box; }
+body, div, span, p, h1, h2, h3, h4, h5, h6, th, td { font-family: sans-serif; }
+
+.ops-table-section {
+  padding: 8px 24px 20px 24px;
+}
+.ops-table-card {
+  background: #FFFFFF;
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+  border: 1px solid #e7e7ee;
+  overflow: hidden;
+}
+.ops-table-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px 12px 20px;
+  border-bottom: 1px solid #e7e7ee;
+  gap: 8px;
+}
+.ops-table-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #1A3C6E;
+  margin: 0;
+}
+.ops-table-title i {
+  font-size: 16px;
+  color: #F9AB00;
+}
+.ops-table-count {
+  font-size: 0.75rem;
+  font-weight: 500;
+  background: #F3F3F4;
+  color: #6B7280;
+  border-radius: 12px;
+  padding: 2px 10px;
+}
+.ops-table-wrapper {
+  overflow-x: auto;
+}
+.ops-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+}
+.ops-table thead tr th {
+  background: #F9FAFE;
+  padding: 10px 14px;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6B7280;
+  white-space: nowrap;
+  border-bottom: 1px solid #e7e7ee;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.ops-table tbody tr td {
+  padding: 10px 14px;
+  font-size: 0.8125rem;
+  color: var(--zcs_primary_text_color, #1A1A2E);
+  border-bottom: 1px solid #f0f0f5;
+  white-space: nowrap;
+}
+.ops-table tbody tr:last-child td {
+  border-bottom: none;
+}
+.ops-table tbody tr:hover td {
+  background: #F9FAFE;
+}
+.ops-table tbody tr.row-overdue td {
+  background: #FFF5F5;
+}
+.ops-table tbody tr.row-overdue:hover td {
+  background: #FFE8E8;
+}
+.ops-table tbody tr.row-overdue td:first-child {
+  border-left: 3px solid #EA4335;
+}
+.ops-table tbody tr.row-warning td {
+  background: #FFFBF0;
+}
+.ops-table tbody tr.row-warning:hover td {
+  background: #FFF3D0;
+}
+.ops-table tbody tr.row-warning td:first-child {
+  border-left: 3px solid #F9AB00;
+}
+.ops-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 0.6875rem;
+  font-weight: 500;
+}
+.ops-badge-red { background: #FDECEA; color: #EA4335; }
+.ops-badge-orange { background: #FFF3E0; color: #E65100; }
+.ops-badge-blue { background: #E8F0FE; color: #1A73E8; }
+.ops-badge-grey { background: #F3F3F4; color: #6B7280; }
+.ops-overdue-days {
+  font-weight: 700;
+  color: #EA4335;
+}
+.ops-empty-state {
+  text-align: center;
+  padding: 32px 20px;
+  color: #9CA3AF;
+  font-size: 0.875rem;
+}
+.ops-empty-state i {
+  font-size: 32px;
+  display: block;
+  margin-bottom: 8px;
+  color: #D1D5DB;
+}
+</style>
+
+<%
+  today = zoho.currentdate;
+  queue_records = Revision_Request[Overall_Status == "Level 1 Review" || Overall_Status == "Level 2 Review" || Overall_Status == "Level 3 Review" || Overall_Status == "Submitted"] sort by SLA_Deadline range from 0 to 19;
+  queue_count = queue_records.count();
+%>
+
+<div class="ops-table-section">
+  <div class="ops-table-card">
+    <div class="ops-table-header">
+      <h3 class="ops-table-title">
+        <i class="zc-li-outline ui-1-check-circle-08"></i>
+        Approval Queue
+      </h3>
+      <span class="ops-table-count"><%= queue_count %> items</span>
+    </div>
+    <div class="ops-table-wrapper">
+      <table class="ops-table">
+        <thead>
+          <tr>
+            <th>Revision ID</th>
+            <th>SO Number</th>
+            <th>Customer</th>
+            <th>Revision Type</th>
+            <th>Current Stage</th>
+            <th>SLA Deadline</th>
+            <th>Days Overdue</th>
+          </tr>
+        </thead>
+        <tbody>
+          <%
+            if(queue_count == 0)
+            {
+          %>
+          <tr>
+            <td colspan="7">
+              <div class="ops-empty-state">
+                <i class="zc-li-outline ui-1-check-circle-08"></i>
+                No items in the approval queue
+              </div>
+            </td>
+          </tr>
+          <%
+            }
+            for each rec in queue_records
+            {
+              sla_date = rec.SLA_Deadline;
+              days_overdue = 0;
+              row_class = "";
+              if(sla_date < today)
+              {
+                days_overdue = today.daysBetween(sla_date).abs();
+                row_class = "row-overdue";
+              }
+              else if(sla_date == today || sla_date == today.addDay(1))
+              {
+                row_class = "row-warning";
+              }
+              stage = rec.Overall_Status;
+              badge_class = "ops-badge-grey";
+              if(stage == "Level 1 Review") { badge_class = "ops-badge-blue"; }
+              if(stage == "Level 2 Review") { badge_class = "ops-badge-orange"; }
+              if(stage == "Level 3 Review") { badge_class = "ops-badge-red"; }
+              if(stage == "Submitted") { badge_class = "ops-badge-grey"; }
+              sla_str = sla_date.toString("dd MMM yyyy");
+          %>
+          <tr class="<%= row_class %>">
+            <td><strong><%= rec.Revision_ID %></strong></td>
+            <td><%= rec.get("SO_Reference").get("SO_Number") %></td>
+            <td><%= rec.get("Customer_Name_Display") %></td>
+            <td><%= rec.Revision_Type %></td>
+            <td><span class="ops-badge <%= badge_class %>"><%= stage %></span></td>
+            <td><%= sla_str %></td>
+            <td>
+              <%
+                if(days_overdue > 0)
+                {
+              %>
+              <span class="ops-overdue-days">
+                <i class="zc-li-solid ui-2-alert-circle" style="font-size:12px;"></i>
+                <%= days_overdue %> day<% if(days_overdue != 1) { %>s<% } %>
+              </span>
+              <%
+                }
+                else
+                {
+              %>
+              <span style="color:#9CA3AF;">—</span>
+              <%
+                }
+              %>
+            </td>
+          </tr>
+          <%
+            }
+          %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

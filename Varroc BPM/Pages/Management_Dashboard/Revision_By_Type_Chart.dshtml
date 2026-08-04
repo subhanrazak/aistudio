@@ -1,0 +1,207 @@
+<style>
+/* ===== Revision By Type Chart ===== */
+* { box-sizing: border-box; }
+body, div, span, p, h1, h2, h3, h4, h5, h6 { font-family: sans-serif; }
+
+.mgmt-chart-section {
+  padding: 16px 24px 16px 24px;
+  height: 100%;
+}
+.mgmt-chart-card {
+  background: #FFFFFF;
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+  border: 1px solid #e7e7ee;
+  padding: 20px 24px;
+  height: 100%;
+}
+.mgmt-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #1A3C6E;
+  margin: 0 0 20px 0;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f0f0f5;
+}
+.mgmt-card-title i { font-size: 16px; color: #1A73E8; }
+
+.mgmt-bar-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.mgmt-bar-table th {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--zcs_secondary_text_color, #6B7280);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0 0 10px 0;
+  text-align: left;
+  border-bottom: 1px solid #f0f0f5;
+}
+.mgmt-bar-table th.col-count { text-align: right; width: 48px; }
+.mgmt-bar-table th.col-bar { width: 55%; padding-left: 12px; }
+.mgmt-bar-table td {
+  padding: 10px 0;
+  font-size: 0.8125rem;
+  color: var(--zcs_primary_text_color, #374151);
+  border-bottom: 1px solid #f8f8fb;
+  vertical-align: middle;
+}
+.mgmt-bar-table td.col-type {
+  font-weight: 500;
+  white-space: nowrap;
+  padding-right: 12px;
+  min-width: 140px;
+}
+.mgmt-bar-table td.col-count {
+  text-align: right;
+  font-weight: 700;
+  color: #1A3C6E;
+  padding-right: 12px;
+  width: 48px;
+}
+.mgmt-bar-table td.col-bar { padding-left: 12px; }
+.mgmt-bar-track {
+  background: #F3F3F4;
+  border-radius: 4px;
+  height: 14px;
+  width: 100%;
+  overflow: hidden;
+}
+.mgmt-bar-fill {
+  height: 14px;
+  border-radius: 4px;
+  min-width: 4px;
+}
+.mgmt-no-data {
+  font-size: 0.8125rem;
+  color: var(--zcs_secondary_text_color, #6B7280);
+  text-align: center;
+  padding: 32px 0;
+}
+</style>
+
+<%
+  /* Fetch open revisions grouped by Revision_Type */
+  open_statuses = {"Completed", "Rejected", "Customer Rejected"};
+
+  type_price_increase = Revision_Request[Overall_Status != "Completed" && Overall_Status != "Rejected" && Overall_Status != "Customer Rejected" && Revision_Type == "Price Increase"].count();
+  type_price_decrease = Revision_Request[Overall_Status != "Completed" && Overall_Status != "Rejected" && Overall_Status != "Customer Rejected" && Revision_Type == "Price Decrease"].count();
+  type_scope_change = Revision_Request[Overall_Status != "Completed" && Overall_Status != "Rejected" && Overall_Status != "Customer Rejected" && Revision_Type == "Scope Change"].count();
+  type_tooling = Revision_Request[Overall_Status != "Completed" && Overall_Status != "Rejected" && Overall_Status != "Customer Rejected" && Revision_Type == "Tooling"].count();
+  type_logistics = Revision_Request[Overall_Status != "Completed" && Overall_Status != "Rejected" && Overall_Status != "Customer Rejected" && Revision_Type == "Logistics"].count();
+  type_other = Revision_Request[Overall_Status != "Completed" && Overall_Status != "Rejected" && Overall_Status != "Customer Rejected" && Revision_Type == "Other"].count();
+
+  /* Build list of type-count pairs for rendering */
+  bar_max = type_price_increase;
+  if (type_price_decrease > bar_max) { bar_max = type_price_decrease; }
+  if (type_scope_change > bar_max) { bar_max = type_scope_change; }
+  if (type_tooling > bar_max) { bar_max = type_tooling; }
+  if (type_logistics > bar_max) { bar_max = type_logistics; }
+  if (type_other > bar_max) { bar_max = type_other; }
+  if (bar_max == 0) { bar_max = 1; }
+
+  pct_price_increase = ((type_price_increase * 100) / bar_max).toLong();
+  pct_price_decrease = ((type_price_decrease * 100) / bar_max).toLong();
+  pct_scope_change = ((type_scope_change * 100) / bar_max).toLong();
+  pct_tooling = ((type_tooling * 100) / bar_max).toLong();
+  pct_logistics = ((type_logistics * 100) / bar_max).toLong();
+  pct_other = ((type_other * 100) / bar_max).toLong();
+
+  total_open_check = type_price_increase + type_price_decrease + type_scope_change + type_tooling + type_logistics + type_other;
+%>
+
+<div class="mgmt-chart-section">
+  <div class="mgmt-chart-card">
+    <h3 class="mgmt-card-title">
+      <i class="zc-li-outline graph-1-bar-chart-horizontal"></i>
+      Open Revisions by Type
+    </h3>
+
+    <% if (total_open_check == 0) { %>
+    <div class="mgmt-no-data">No open revisions found.</div>
+    <% } else { %>
+    <table class="mgmt-bar-table">
+      <thead>
+        <tr>
+          <th>Revision Type</th>
+          <th class="col-count">Count</th>
+          <th class="col-bar">Distribution</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (type_price_increase > 0) { %>
+        <tr>
+          <td class="col-type">Price Increase</td>
+          <td class="col-count"><%= type_price_increase %></td>
+          <td class="col-bar">
+            <div class="mgmt-bar-track">
+              <div class="mgmt-bar-fill" style="width:<%= pct_price_increase %>%;background:#EA4335;"></div>
+            </div>
+          </td>
+        </tr>
+        <% } %>
+        <% if (type_price_decrease > 0) { %>
+        <tr>
+          <td class="col-type">Price Decrease</td>
+          <td class="col-count"><%= type_price_decrease %></td>
+          <td class="col-bar">
+            <div class="mgmt-bar-track">
+              <div class="mgmt-bar-fill" style="width:<%= pct_price_decrease %>%;background:#34A853;"></div>
+            </div>
+          </td>
+        </tr>
+        <% } %>
+        <% if (type_scope_change > 0) { %>
+        <tr>
+          <td class="col-type">Scope Change</td>
+          <td class="col-count"><%= type_scope_change %></td>
+          <td class="col-bar">
+            <div class="mgmt-bar-track">
+              <div class="mgmt-bar-fill" style="width:<%= pct_scope_change %>%;background:#1A73E8;"></div>
+            </div>
+          </td>
+        </tr>
+        <% } %>
+        <% if (type_tooling > 0) { %>
+        <tr>
+          <td class="col-type">Tooling</td>
+          <td class="col-count"><%= type_tooling %></td>
+          <td class="col-bar">
+            <div class="mgmt-bar-track">
+              <div class="mgmt-bar-fill" style="width:<%= pct_tooling %>%;background:#F9AB00;"></div>
+            </div>
+          </td>
+        </tr>
+        <% } %>
+        <% if (type_logistics > 0) { %>
+        <tr>
+          <td class="col-type">Logistics</td>
+          <td class="col-count"><%= type_logistics %></td>
+          <td class="col-bar">
+            <div class="mgmt-bar-track">
+              <div class="mgmt-bar-fill" style="width:<%= pct_logistics %>%;background:#8430CE;"></div>
+            </div>
+          </td>
+        </tr>
+        <% } %>
+        <% if (type_other > 0) { %>
+        <tr>
+          <td class="col-type">Other</td>
+          <td class="col-count"><%= type_other %></td>
+          <td class="col-bar">
+            <div class="mgmt-bar-track">
+              <div class="mgmt-bar-fill" style="width:<%= pct_other %>%;background:#9CA3AF;"></div>
+            </div>
+          </td>
+        </tr>
+        <% } %>
+      </tbody>
+    </table>
+    <% } %>
+  </div>
+</div>

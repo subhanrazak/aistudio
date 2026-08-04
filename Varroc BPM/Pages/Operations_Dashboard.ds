@@ -1,0 +1,152 @@
+<page linkname = "Operations_Dashboard" parameters = "int total_open_revisions, int pending_l1, int pending_l2, int pending_l3, int pending_customer, int pending_supplier, int overdue_approvals, float total_pending_financial_impact" displayname = "Operations Dashboard"/>
+<content>
+<zml>
+  <layout>
+    <row>
+      <column width='100%'>
+        <dsp id='KPI_Cards' elementName='KPI_Cards'>
+          <![CDATA[htmlpage KPI_Cards()
+content
+<%{%>
+    <file name:KPI_Cards.dshtml/>
+<%}%>
+          ]]>
+        </dsp>
+      </column>
+    </row>
+    <row>
+      <column width='60%'>
+        <dsp id='Approval_Queue_Table' elementName='Approval_Queue_Table'>
+          <![CDATA[htmlpage Approval_Queue_Table()
+content
+<%{%>
+    <file name:Approval_Queue_Table.dshtml/>
+<%}%>
+          ]]>
+        </dsp>
+      </column>
+      <column width='40%'>
+        <dsp id='Customer_Response_Table' elementName='Customer_Response_Table'>
+          <![CDATA[htmlpage Customer_Response_Table()
+content
+<%{%>
+    <file name:Customer_Response_Table.dshtml/>
+<%}%>
+          ]]>
+        </dsp>
+      </column>
+    </row>
+    <row>
+      <column width='60%'>
+        <dsp id='Supplier_Pending_Table' elementName='Supplier_Pending_Table'>
+          <![CDATA[htmlpage Supplier_Pending_Table()
+content
+<%{%>
+    <file name:Supplier_Pending_Table.dshtml/>
+<%}%>
+          ]]>
+        </dsp>
+      </column>
+      <column width='40%'>
+        <dsp id='Pipeline_Note' elementName='Pipeline_Note'>
+          <![CDATA[htmlpage Pipeline_Note()
+content
+<%{%>
+<style>
+* { box-sizing: border-box; }
+body, div, span, p, h1, h2, h3, h4, h5, h6 { font-family: sans-serif; }
+.ops-note-section { padding: 0 24px 24px 0; }
+.ops-note-card {
+  background: #FFFFFF;
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+  border: 1px solid #e7e7ee;
+  padding: 20px;
+  height: 100%;
+}
+.ops-note-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #1A3C6E;
+  margin: 0 0 16px 0;
+}
+.ops-note-title i { font-size: 16px; color: #1A73E8; }
+.ops-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  font-size: 0.8125rem;
+  color: var(--zcs_primary_text_color, #374151);
+}
+.ops-legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+.ops-divider { border: none; border-top: 1px solid #f0f0f5; margin: 14px 0; }
+.ops-note-info {
+  font-size: 0.75rem;
+  color: #9CA3AF;
+  line-height: 1.5;
+}
+</style>
+<div class="ops-note-section">
+  <div class="ops-note-card">
+    <h3 class="ops-note-title">
+      <i class="zc-li-outline files-1-copy-07"></i>
+      Pipeline Legend
+    </h3>
+    <div class="ops-legend-item">
+      <div class="ops-legend-dot" style="background:#EA4335;"></div>
+      <span>Red row — SLA deadline passed (overdue)</span>
+    </div>
+    <div class="ops-legend-item">
+      <div class="ops-legend-dot" style="background:#F9AB00;"></div>
+      <span>Orange row — SLA deadline today or tomorrow</span>
+    </div>
+    <div class="ops-legend-item">
+      <div class="ops-legend-dot" style="background:#34A853;"></div>
+      <span>Normal row — within SLA window</span>
+    </div>
+    <hr class="ops-divider"/>
+    <div class="ops-legend-item">
+      <div class="ops-legend-dot" style="background:#1A73E8;"></div>
+      <span>Level 1 Review</span>
+    </div>
+    <div class="ops-legend-item">
+      <div class="ops-legend-dot" style="background:#E65100;"></div>
+      <span>Level 2 Review</span>
+    </div>
+    <div class="ops-legend-item">
+      <div class="ops-legend-dot" style="background:#EA4335;"></div>
+      <span>Level 3 Review</span>
+    </div>
+    <hr class="ops-divider"/>
+    <p class="ops-note-info">
+      Tables show up to 20 records sorted by earliest deadline first. Supplier amendments limited to 10 records. Data refreshes on each page load.
+    </p>
+  </div>
+</div>
+<%}%>
+          ]]>
+        </dsp>
+      </column>
+    </row>
+  </layout>
+</zml>
+</content>
+<script>
+total_open_revisions = Revision_Request[Overall_Status != "Completed" && Overall_Status != "Rejected" && Overall_Status != "Customer Rejected"].count();
+pending_l1 = Revision_Request[Overall_Status == "Level 1 Review"].count();
+pending_l2 = Revision_Request[Overall_Status == "Level 2 Review"].count();
+pending_l3 = Revision_Request[Overall_Status == "Level 3 Review"].count();
+pending_customer = Customer_Communication[Customer_Response == "Pending" || Customer_Response == "No Response" || Customer_Response == "Under Negotiation"].count();
+pending_supplier = Supplier_Amendment[Supplier_Response == "Pending" || Supplier_Response == "Under Negotiation"].count();
+overdue_approvals = Revision_Request[SLA_Deadline < zoho.currentdate && (Overall_Status == "Level 1 Review" || Overall_Status == "Level 2 Review" || Overall_Status == "Level 3 Review" || Overall_Status == "Submitted")].count();
+total_pending_financial_impact = Revision_Request[Overall_Status != "Completed" && Overall_Status != "Rejected" && Overall_Status != "Customer Rejected"].sum(Total_Financial_Impact);
+</script>

@@ -1,0 +1,182 @@
+form Customer_Communication
+{
+    title
+    {
+        displayname = "Customer Communication"
+        on add = "Log Customer Communication"
+        on edit = "Update Customer Response"
+    }
+
+    Communication_Details
+    (
+        type = section
+        displayname = "Communication Details"
+        row = 1
+        column = 0
+    )
+    must have Revision_Reference
+    (
+        type = picklist
+        displayname = "Revision Reference"
+        values = Revision_Request.ID
+        displayformat = [Revision_ID]
+        searchable = true
+        row = 1
+        column = 1
+        width = medium
+    )
+    SO_Number_Display
+    (
+        type = formula
+        displayname = "SO Number"
+        value = Revision_Reference.SO_Reference.SO_Number
+        visibility = true
+        row = 1
+        column = 2
+        width = medium
+    )
+    Customer_Display
+    (
+        type = formula
+        displayname = "Customer Name"
+        value = Revision_Reference.Customer_Name_Display
+        visibility = true
+        row = 1
+        column = 1
+        width = medium
+    )
+    must have Communication_Date
+    (
+        type = date
+        displayname = "Communication Date"
+        initial value = "${zoho.currentdate}"
+        row = 1
+        column = 2
+        width = medium
+    )
+    must have Proposed_Effective_Date
+    (
+        type = date
+        displayname = "Proposed Effective Date"
+        row = 1
+        column = 1
+        width = medium
+    )
+    Communication_Notes
+    (
+        type = textarea
+        displayname = "Revision Notice / Communication Summary"
+        height = 100px
+        row = 1
+        column = 2
+        width = medium
+    )
+    Attached_Documents
+    (
+        type = upload file
+        displayname = "Attached Documents"
+        file count = 5
+        browse = local_drive
+        row = 1
+        column = 1
+        width = medium
+    )
+    Communicated_By
+    (
+        type = text
+        displayname = "Communicated By"
+        row = 1
+        column = 2
+        width = medium
+    )
+
+    Customer_Response_Section
+    (
+        type = section
+        displayname = "Customer Response"
+        visibility = true
+        row = 2
+        column = 1
+    )
+    Customer_Response
+    (
+        type = picklist
+        displayname = "Customer Response"
+        values = {"Pending","Accepted","Rejected","Under Negotiation","No Response"}
+        initial value = "Pending"
+        row = 2
+        column = 1
+        width = medium
+    )
+    Response_Date
+    (
+        type = date
+        displayname = "Response Date"
+        row = 2
+        column = 2
+        width = medium
+    )
+    Amended_SO_Number
+    (
+        type = text
+        displayname = "Amended SO Number (from Customer)"
+        row = 2
+        column = 1
+        width = medium
+    )
+    Rejection_Reason
+    (
+        type = textarea
+        displayname = "Rejection / Counter Reason"
+        row = 2
+        column = 2
+        width = medium
+    )
+    Follow_Up_Count
+    (
+        type = number
+        displayname = "Follow-up Count"
+        initial value = 0
+        row = 2
+        column = 1
+        width = medium
+    )
+    Last_Follow_Up_Date
+    (
+        type = date
+        displayname = "Last Follow-up Date"
+        row = 2
+        column = 2
+        width = medium
+    )
+
+    actions
+    {
+        on add
+        {
+            Submit
+            (
+                type = submit
+                displayname = "Log Communication"
+            )
+            Reset
+            (
+                type = reset
+                displayname = "Reset"
+            )
+        }
+        on edit
+        {
+            Update
+            (
+                type = submit
+                displayname = "Update Response"
+            )
+            Cancel
+            (
+                type = cancel
+                displayname = "Cancel"
+            )
+        }
+    }
+}

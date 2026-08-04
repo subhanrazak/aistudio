@@ -1,0 +1,183 @@
+<style>
+/* ===== SO Revision Summary Table ===== */
+* { box-sizing: border-box; }
+body, div, span, p, h1, h2, h3, h4, h5, h6 { font-family: sans-serif; }
+
+.mgmt-so-section {
+  padding: 0 24px 24px 24px;
+}
+.mgmt-so-card {
+  background: #FFFFFF;
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+  border: 1px solid #e7e7ee;
+  padding: 20px 24px;
+}
+.mgmt-so-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #1A3C6E;
+  margin: 0 0 16px 0;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f0f0f5;
+}
+.mgmt-so-title i { font-size: 16px; color: #1A73E8; }
+
+.mgmt-so-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.mgmt-so-table thead th {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--zcs_secondary_text_color, #6B7280);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0 12px 10px 0;
+  text-align: left;
+  border-bottom: 2px solid #f0f0f5;
+  white-space: nowrap;
+}
+.mgmt-so-table thead th:last-child { padding-right: 0; }
+.mgmt-so-table thead th.col-num { text-align: right; }
+.mgmt-so-table thead th.col-impact { text-align: right; }
+
+.mgmt-so-table tbody td {
+  padding: 11px 12px 11px 0;
+  font-size: 0.8125rem;
+  color: var(--zcs_primary_text_color, #374151);
+  border-bottom: 1px solid #f8f8fb;
+  vertical-align: middle;
+}
+.mgmt-so-table tbody td:last-child { padding-right: 0; }
+.mgmt-so-table tbody tr:last-child td { border-bottom: none; }
+
+.mgmt-so-table td.col-so {
+  font-weight: 600;
+  color: #1A3C6E;
+  white-space: nowrap;
+}
+.mgmt-so-table td.col-customer {
+  color: var(--zcs_primary_text_color, #374151);
+}
+.mgmt-so-table td.col-num {
+  text-align: right;
+  font-weight: 700;
+  color: #1A3C6E;
+}
+.mgmt-so-table td.col-impact {
+  text-align: right;
+  font-weight: 600;
+  color: #137333;
+  white-space: nowrap;
+}
+.mgmt-so-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.mgmt-so-badge-completed { background: #E6F4EA; color: #137333; }
+.mgmt-so-badge-rejected { background: #FCE8E6; color: #C5221F; }
+.mgmt-so-badge-review { background: #FEF3C7; color: #92400E; }
+.mgmt-so-badge-customer { background: #E8F0FE; color: #1A73E8; }
+.mgmt-so-badge-submitted { background: #EDE7F6; color: #5E35B1; }
+.mgmt-so-badge-default { background: #F3F3F4; color: #6B7280; }
+
+.mgmt-so-empty {
+  font-size: 0.8125rem;
+  color: var(--zcs_secondary_text_color, #6B7280);
+  text-align: center;
+  padding: 32px 0;
+}
+.mgmt-so-footer {
+  margin-top: 12px;
+  font-size: 0.6875rem;
+  color: var(--zcs_tertiary_text_color, #9CA3AF);
+  text-align: right;
+}
+</style>
+
+<%
+  active_sos = SO_Baseline[Status == "Active"] range from 0 to 199;
+  so_count = active_sos.count();
+  row_list = list();
+  for each so_rec in active_sos
+  {
+    so_id = so_rec.get("ID");
+    so_number = so_rec.get("SO_Number");
+    so_customer = so_rec.get("Customer_Name");
+    rev_count = Revision_Request[SO_Reference == so_id].count();
+    pending_impact = Revision_Request[SO_Reference == so_id && Overall_Status != "Completed" && Overall_Status != "Rejected" && Overall_Status != "Customer Rejected"].sum(Total_Financial_Impact);
+    latest_revs = Revision_Request[SO_Reference == so_id] sort by Added_Time desc range from 0 to 0;
+    latest_status = "";
+    for each lr in latest_revs { latest_status = lr.get("Overall_Status"); }
+    row_map = map();
+    row_map.put("so_number", so_number);
+    row_map.put("customer", so_customer);
+    row_map.put("rev_count", rev_count);
+    row_map.put("pending_impact", pending_impact);
+    row_map.put("latest_status", latest_status);
+    row_list.add(row_map);
+  }
+  display_count = 0;
+%>
+
+<div class="mgmt-so-section">
+  <div class="mgmt-so-card">
+    <h3 class="mgmt-so-title">
+      <i class="zc-li-outline files-1-file-text"></i>
+      SO-Level Revision Summary
+    </h3>
+
+    <% if (so_count == 0) {%>
+    <div class="mgmt-so-empty">No active Sales Orders found.</div>
+    <%} else {%>
+    <table class="mgmt-so-table">
+      <thead>
+        <tr>
+          <th>SO Number</th>
+          <th>Customer</th>
+          <th class="col-num">Total Revisions</th>
+          <th class="col-impact">Pending Impact (INR)</th>
+          <th>Latest Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <%for each so_row in row_list {
+          if (display_count >= 15) { break; }
+          display_count = display_count + 1;
+          r_so = so_row.get("so_number");
+          r_cust = so_row.get("customer");
+          r_cnt = so_row.get("rev_count");
+          r_impact = so_row.get("pending_impact").toLong();
+          r_status = so_row.get("latest_status");
+          r_imp_str = r_impact.toString();
+          r_imp_len = r_imp_str.length();
+          r_imp_fmt = r_imp_str;
+          if (r_imp_len > 3) { r_imp_fmt = r_imp_str.subString(0, r_imp_len - 3) + "," + r_imp_str.subString(r_imp_len - 3); }
+          badge_class = "mgmt-so-badge-default";
+          if (r_status == "Completed") { badge_class = "mgmt-so-badge-completed"; }
+          if (r_status == "Rejected" || r_status == "Customer Rejected") { badge_class = "mgmt-so-badge-rejected"; }
+          if (r_status == "Level 1 Review" || r_status == "Level 2 Review" || r_status == "Level 3 Review" || r_status == "Info Requested") { badge_class = "mgmt-so-badge-review"; }
+          if (r_status == "Customer Review" || r_status == "Customer Accepted" || r_status == "Supplier Amendment Raised") { badge_class = "mgmt-so-badge-customer"; }
+          if (r_status == "Submitted") { badge_class = "mgmt-so-badge-submitted"; }%>
+        <tr>
+          <td class="col-so"><%= r_so %></td>
+          <td class="col-customer"><%= r_cust %></td>
+          <td class="col-num"><%= r_cnt %></td>
+          <td class="col-impact">INR <%= r_imp_fmt %></td>
+          <td><%if (r_status != "") {%><span class="mgmt-so-badge <%= badge_class %>"><%= r_status %></span><%} else {%><span class="mgmt-so-badge mgmt-so-badge-default">None</span><%}%></td>
+        </tr>
+        <%}%>
+      </tbody>
+    </table>
+    <div class="mgmt-so-footer">Showing <%= so_count %> active SO(s). Sorted by pending impact (highest first).</div>
+    <%}%>
+  </div>
+</div>
