@@ -1,0 +1,34 @@
+Click_of_Approve as "Click of Approve"
+{
+
+				type =  form
+				form = Approve_POD
+				button = Submit
+				on click
+				{
+					actions 
+					{
+					on click
+					(
+						if(input.POD_ID.isEmpty() == false)
+										{
+											pod_rec = POD_Form[ID == input.POD_ID];
+											pod_rec.Status="Approved";
+											pod_rec.Approve_Comments=input.Comments;
+											delivery_rec = Outbound_Deliveries_Form[ID == input.POD_ID.Delivery_Number];
+											delivery_rec.Delivery_Status="POD Approved";
+											insert into Timeline
+											[
+												Delivery_Number=input.POD_ID.Delivery_Number
+												POD_ID=input.POD_ID
+												Action_field="POD Approved"
+												Description=input.POD_ID.POD_ID + " Approved · Comments" + input.Comments
+												Date_Time=zoho.currenttime
+												Added_User=zoho.loginuser
+											]
+										}
+					)
+					}
+				}
+			
+}

@@ -1,0 +1,33 @@
+Submit_action_on_add5 as "Submit action on add"
+{
+
+				type =  form
+				form = Arrived
+
+				record event = on add
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											delivery_rec = Outbound_Deliveries_Form[ID == input.Delivery_Number];
+										delivery_rec.Delivery_Status="Arrived";
+										delivery_rec.Driver_Arrived_Time=zoho.currenttime;
+										insert into Timeline
+										[
+											Action_field="Arrived at Customer"
+											Driver_ID=input.Delivery_Number.Driver
+											Description="Arrived at " + input.Delivery_Number.Delivery_Address
+											Delivery_Number=input.Delivery_Number
+											Date_Time=zoho.currenttime
+											Added_User=zoho.loginuser
+										]
+										openUrl("#Script:page.parent.refresh ","parent window");
+						)
+					}
+				}
+
+			
+}

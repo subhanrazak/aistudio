@@ -1,0 +1,109 @@
+list Pending
+{
+
+			displayName = "Pending"
+			show all rows from Outbound_Deliveries_Form  [Driver.Email == zoho.loginuserid && Delivery_Status == "Assigned"]  
+			(
+				Delivery_Number as "Delivery Number"
+				Planned_Delivery_Date as "Planned Delivery Date"
+				(
+					displayformat = fulldate
+				)
+				Route_Number as "Route Number"
+				Stop_Sequence as "Stop Sequence"
+				Total_Items as "Total Items"
+				Total_Weight_kg as "Total Weight kg"
+				Special_Instructions as "Special Instructions"
+				Delivery_Status as "Delivery Status"
+				Added_Time as "Added Time"
+				Delivery_Address as "Delivery Address"
+				Products
+				(
+					field = Products.Product + " | Qty - " + Products.Ordered_Qty
+				)
+				Customer
+				Delivery_Outcome as "Delivery Outcome"
+				Driver
+				Customer.Customer_Phone as "Customer Phone"
+				(
+					displayformat = plainnumber 
+				)
+				Customer.Customer_Name as "Customer Name"
+				Vehicle
+				Customer_Address as "Customer Address"
+				Customer.Customer_Email as "Customer Email"
+				Customer.Customer_Logo as "Customer Logo"
+				SAP_ID as "SAP ID"
+				Delivery_Window_Start as "Delivery Window Start"
+			)
+			sort by
+			(
+				Added_Time descending
+			)
+			custom actions
+			(
+				"View"
+				(
+	  			workflow = Open_Details1
+				show action in edit record menu = true
+				)
+			)
+			conditional formatting
+			(
+				"Pending"
+				{
+				condition = (Delivery_Outcome == "Pending")
+				fields = [Delivery_Outcome]
+				format = "color:#efb116;background-color:#ffffff;"
+				}
+				"In progress"
+				{
+				condition = (Delivery_Outcome == "In Progress")
+				fields = [Delivery_Status, Delivery_Outcome]
+				format = "color:#2f78d0;"
+				}
+				"Delivered"
+				{
+				condition = (Delivery_Outcome == "Delivered")
+				fields = [Delivery_Status, Delivery_Outcome]
+				format = "color:#4ea64c;"
+				}
+				"Partial"
+				{
+				condition = (Delivery_Status == "Partial")
+				fields = [Delivery_Status]
+				format = "color:#2eb79f;"
+				}
+				"Not delivered"
+				{
+				condition = (Delivery_Outcome == "Not Delivered")
+				fields = [Delivery_Status, Delivery_Outcome]
+				format = "color:#ef166f;"
+				}
+				"Pending"
+				{
+				condition = (Delivery_Outcome == "Pending")
+				fields = [Delivery_Status]
+				format = "color:#f1c50e;"
+				}
+			)
+			customlayouts
+			(
+				template
+	 			(
+	 	  			displayname="Custom Layout 1"
+	 	  			content="<panel  \n >\n	<pr \n			width='fill'\n		height='fill'\n>\n	<pc \n		padding = '0px'\n	bgColor = 'transparent'\n        bgColorType = 'noFill'\n\n		width = '100%'\n		hAlign = 'center'\n		vAlign = 'middle'\n>\n	<pr \n			width='fill'\n		height='fill'\n>\n	<pc \n		padding = '20px'\n	bgColor = '#4E96F4'\n\n		width = '40%'\n		hAlign = 'center'\n		vAlign = 'middle'\n>\n	<pr \n			width='auto'\n		height='auto'\n>\n	<pc \n		padding = '5px'\n\n		hAlign = 'center'\n		vAlign = 'middle'\n>\n	<pr \n	>\n	<pc \n	\n>\n	<image  \n	\n	color = '#FFFFFF'\n	type = 'icon'\n	value = 'ui-1-calendar-grid-58'\n	size = '22px'\n	iconType = 'solid'\n/>\n</pc>\n</pr><pr \n	>\n	<pc \n	\n>\n	<text \n\n	margin = '0px'\n	color = '#FFFFFF'\n	size = '16px'\n	bold = 'true' \n	type = 'field'\n\n\n    lineHeight = '23'\n    numOfLines = '1'\n\n\n\n\n\n	  value = 'Customer'\n>\n</text>\n\n</pc>\n</pr>\n</pc>\n</pr>\n</pc><pc \n		padding = '20px'\n	bgColor = 'transparent'\n        bgColorType = 'noFill'\n\n		width = '60%'\n		hAlign = 'left'\n>\n	<pr \n			width='auto'\n		height='auto'\n>\n	<pc \n		padding = '0px'\n\n		hAlign = 'left'\n		vAlign = 'middle'\n>\n	<pr \n	>\n	<pc \n	\n>\n	<text \n\n	color = '#4E96F4'\n	size = '15px'\n	type = 'field'\n\n\n    lineHeight = '21'\n    numOfLines = '1'\n\n\n\n\n\n	  value = 'Customer_Address'\n>\n</text>\n\n</pc>\n</pr><pr \n	>\n	<pc \n	\n>\n	<text \n\n	marginLeft = '0px'\n	marginRight = '0px' \n	marginBottom = '8px'\n	marginTop = '15px'\n	color = '#132437'\n	size = '20px'\n	bold = 'true' \n	type = 'field'\n\n\n    lineHeight = '29'\n    numOfLines = '1'\n\n\n\n\n\n	  value = 'Driver'\n>\n</text>\n\n</pc>\n</pr><pr \n	>\n	<pc \n	\n>\n	<text \n\n	margin = '0px'\n	color = '#2D3C4D'\n	size = '15px'\n	type = 'field'\n\n\n    lineHeight = '21'\n    numOfLines = '3'\n\n\n\n\n\n	  value = 'Special_Instructions'\n>\n</text>\n\n</pc>\n</pr>\n</pc>\n</pr>\n</pc>\n</pr>\n</pc>\n</pr>\n</panel>"
+	    		)
+				template
+	 			(
+	 	  			displayname="Custom Layout 2"
+	 	  			content="<panel  \n >\n	<pr \n			width='fill'\n		height='fill'\n>\n	<pc \n		padding = '20px'\n	bgColor = '#FFFFFF'\n\n		width = '100%'\n		hAlign = 'left'\n		vAlign = 'top'\n>\n	<pr \n			width='fill'\n		height='fill'\n>\n	<pc \n		padding = '0px'\n\n		width = '100%'\n		hAlign = 'left'\n		vAlign = 'top'\n>\n	<pr \n			width='auto'\n		height='auto'\n>\n	<pc \n		padding = '0px'\n\n		hAlign = 'left'\n		vAlign = 'top'\n>\n	<pr \n	>\n	<pc \n	\n>\n	<image  \n	\n	color = '#10BE4B'\n	type = 'icon'\n	value = 'ui-1-calendar-grid-58'\n	size = '16px'\n	cornerRadius = '0px'\n	iconType = 'solid'\n/>\n</pc><pc \n	\n>\n	<text \n\n	marginLeft = '10px'\n	marginBottom = '0px'\n	marginTop = '2px'\n	color = '#10BE4B'\n	size = '16px'\n	bold = 'true' \n	type = 'field'\n\n\n    lineHeight = '23'\n    numOfLines = '1'\n\n\n\n\n\n	  value = 'Customer'\n>\n</text>\n\n</pc>\n</pr><pr \n	>\n	<pc \n	\n>\n	<text \n\n	marginLeft = '0px'\n	marginRight = '0px' \n	marginBottom = '0px'\n	marginTop = '15px'\n	color = '#132437'\n	size = '15px'\n	type = 'field'\n\n\n    lineHeight = '21'\n    numOfLines = '1'\n\n\n\n\n\n	  value = 'Customer_Address'\n>\n</text>\n\n</pc>\n</pr><pr \n	>\n	<pc \n	\n>\n	<text \n\n	marginLeft = '0px'\n	marginRight = '0px' \n	marginBottom = '0px'\n	marginTop = '6px'\n	color = '#132437'\n	size = '20px'\n	bold = 'true' \n	type = 'field'\n\n\n    lineHeight = '29'\n    numOfLines = '1'\n\n\n\n\n\n	  value = 'Driver'\n>\n</text>\n\n</pc>\n</pr>\n</pc>\n</pr>\n</pc>\n</pr><pr \n			width='fill'\n		height='fill'\n>\n	<pc \n		paddingTop = '15px'\n	paddingLeft = '0px'\n	paddingRight = '10px'\n	paddingBottom = '0px'\n	bgColor = 'transparent'\n        bgColorType = 'noFill'\n\n		width = '50%'\n		hAlign = 'left'\n		vAlign = 'top'\n>\n	<pr \n			width='auto'\n		height='auto'\n>\n	<pc \n	\n		width = '100%'\n		hAlign = 'left'\n		vAlign = 'top'\n>\n	<text \n\n	marginTop = '0px'\n	color = '#168868'\n	size = '15px'\n	type = 'field'\n\n\n    lineHeight = '20'\n    numOfLines = '1'\n\n\n\n\n\n	  value = 'Route_Number'\n>\n</text>\n\n</pc>\n</pr>\n</pc><pc \n		paddingTop = '15px'\n	paddingLeft = '10px'\n	paddingRight = '0px'\n	paddingBottom = '0px'\n	bgColor = 'transparent'\n        bgColorType = 'noFill'\n\n		width = '50%'\n		hAlign = 'right'\n		vAlign = 'top'\n>\n	<pr \n			width='auto'\n		height='auto'\n>\n	<pc \n	\n		width = '100%'\n		hAlign = 'right'\n		vAlign = 'top'\n>\n	<text \n\n	marginTop = '0px'\n	color = '#168868'\n	size = '15px'\n	type = 'field'\n\n\n    lineHeight = '20'\n    numOfLines = '1'\n\n\n\n\n\n	  value = 'Planned_Delivery_Date'\n>\n</text>\n\n</pc>\n</pr>\n</pc>\n</pr>\n</pc>\n</pr>\n</panel>"
+	    		)
+				template
+	 			(
+	 	  			displayname="Delivery Custom Layout"
+	 	  			content="<panel  \n >\n	<pr \n			width='fill'\n		height='fill'\n>\n	<pc \n		padding = '0px'\n	bgColor = '#FFFFFF'\n\n		width = '100%'\n		hAlign = 'left'\n		vAlign = 'top'\n>\n	<pr \n			width='fill'\n		height='58px'\n>\n	<pc \n		paddingTop = '8px'\n	paddingLeft = '16px'\n	paddingRight = '16px'\n	paddingBottom = '8px'\n	bgColor = 'transparent'\n        bgColorType = 'noFill'\n\n    borderColor = '#F9F9F9'\n    borderWidth = '0px'\n		width = '50%'\n		hAlign = 'left'\n		vAlign = 'middle'\n    	cornerRadius = '0px'\n>\n	<pr \n			width='auto'\n		height='auto'\n>\n	<pc \n	\n>\n	<text \n\n	marginLeft = '0px'\n	marginRight = '2px' \n	marginBottom = '0px'\n	marginTop = '0px'\n	padding = '0px'\n	color = '#000000'\n	size = '16px'\n	type = 'Text'\n\n	bgColor = 'transparent'\n        bgColorType = 'noFill'\n	cornerRadius = '0px'\n\n\n\n\n\n    borderColor = '#295BF9'\n    borderWidth = '0px'\n\n	  value = '#'\n>\n</text>\n\n</pc><pc \n	\n>\n	<text \n\n	marginLeft = '0px'\n	marginRight = '8px' \n	marginBottom = '0px'\n	marginTop = '0px'\n	padding = '0px'\n	color = '#3F3F3F'\n	size = '13px'\n	bold = 'true' \n	type = 'field'\n\n	bgColor = 'transparent'\n        bgColorType = 'noFill'\n	cornerRadius = '0px'\n\n    lineHeight = '18'\n    numOfLines = '1'\n\n\n\n\n    borderColor = '#295BF9'\n    borderWidth = '0px'\n\n	  value = 'Delivery_Number'\n>\n</text>\n\n</pc><pc \n	\n>\n	<text \n\n	margin = '0px'\n	padding = '0px'\n	color = '#000000'\n	size = '11px'\n	bold = 'true' \n	type = 'field'\n\n	bgColor = '#F9F9F9'\n	cornerRadius = '8px'\n\n    lineHeight = '16'\n    numOfLines = '1'\n\n\n\n\n    borderColor = '#F9F9F9'\n    borderWidth = '10px'\n\n	  value = 'Delivery_Status'\n>\n</text>\n\n</pc>\n</pr>\n</pc><pc \n		padding = '16px'\n	bgColor = 'transparent'\n        bgColorType = 'noFill'\n\n    borderColor = '#295BF9'\n    borderWidth = '0px'\n		width = '50%'\n		hAlign = 'right'\n		vAlign = 'middle'\n    	cornerRadius = '0px'\n>\n	<pr \n			width='auto'\n		height='auto'\n>\n	<pc \n	\n>\n	<image  \n		margin = '0px'\n\n    borderColor = '#295BF9'\n    borderWidth = '0px'\n	color = '#5800DB'\n	bgColor = 'transparent'\n        bgColorType = 'noFill'\n	width = '24px'\n	height = '24px'\n	type = 'icon'\n	value = 'ui-1-calendar-57'\n	size = '14px'\n	cornerRadius = '0px'\n	iconType = 'outline'\n/>\n</pc><pc \n	\n>\n	<text \n\n	margin = '0px'\n	padding = '0px'\n	color = '#000000'\n	size = '13px'\n	type = 'field'\n\n	bgColor = 'transparent'\n        bgColorType = 'noFill'\n	cornerRadius = '0px'\n\n    lineHeight = '18'\n    numOfLines = '1'\n\n\n\n\n    borderColor = '#295BF9'\n    borderWidth = '0px'\n\n	  value = 'Planned_Delivery_Date'\n>\n</text>\n\n</pc>\n</pr>\n</pc>\n</pr><pr \n			width='fill'\n		height='85px'\n>\n	<pc \n		paddingTop = '0px'\n	paddingLeft = '16px'\n	paddingRight = '16px'\n	paddingBottom = '8px'\n	bgColor = 'transparent'\n        bgColorType = 'noFill'\n\n    borderColor = '#295BF9'\n    borderWidth = '0px'\n		width = '100%'\n		hAlign = 'left'\n		vAlign = 'middle'\n    	cornerRadius = '0px'\n>\n	<pr \n			width='auto'\n		height='auto'\n>\n	<pc \n	\n>\n	<image  \n		marginLeft = '0px'\n	marginRight = '12px' \n	marginBottom = '0px'\n	marginTop = '0px'\n\n    borderColor = '#E7E7EE'\n    borderWidth = '1px'\n	color = '#FFFFFF'\n	bgColor = 'transparent'\n        bgColorType = 'noFill'\n	width = '52px'\n	height = '52px'\n	type = 'field'\n	value = 'Customer.Customer_Logo'\n	cornerRadius = '10px'\n/>\n</pc><pc \n		padding = '0px'\n	bgColor = 'transparent'\n        bgColorType = 'noFill'\n\n    borderColor = '#295BF9'\n    borderWidth = '0px'\n		hAlign = 'left'\n    	cornerRadius = '0px'\n>\n	<pr \n	>\n	<pc \n	\n>\n	<text \n\n	margin = '0px'\n	padding = '0px'\n	color = '#131635'\n	size = '16px'\n	bold = 'true' \n	type = 'field'\n\n	bgColor = 'transparent'\n        bgColorType = 'noFill'\n	cornerRadius = '0px'\n\n    lineHeight = '23'\n    numOfLines = '1'\n\n\n\n\n    borderColor = '#295BF9'\n    borderWidth = '0px'\n\n	  value = 'Customer.Customer_Name'\n>\n</text>\n\n</pc>\n</pr><pr \n	>\n	<pc \n	\n>\n	<text \n\n	marginLeft = '0px'\n	marginRight = '0px' \n	marginBottom = '0px'\n	marginTop = '4px'\n	padding = '0px'\n	color = '#595959'\n	size = '14px'\n	type = 'field'\n\n	bgColor = 'transparent'\n        bgColorType = 'noFill'\n	cornerRadius = '0px'\n\n    lineHeight = '20'\n    numOfLines = '3'\n\n\n\n\n    borderColor = '#295BF9'\n    borderWidth = '0px'\n\n	  value = 'Delivery_Address'\n>\n</text>\n\n</pc>\n</pr>\n</pc>\n</pr>\n</pc>\n</pr><pr \n			width='fill'\n		height='fill'\n>\n	<pc \n		paddingTop = '8px'\n	paddingLeft = '16px'\n	paddingRight = '16px'\n	paddingBottom = '8px'\n	bgColor = 'transparent'\n        bgColorType = 'noFill'\n\n    borderColor = '#F3F3F3'\n    borderWidth = '1px'\n		width = '49%'\n		hAlign = 'left'\n		vAlign = 'middle'\n    	cornerRadius = '0px'\n>\n	<pr \n			width='auto'\n		height='auto'\n>\n	<pc \n	\n>\n	<image  \n		margin = '0px'\n\n    borderColor = '#295BF9'\n    borderWidth = '0px'\n	color = '#5800DB'\n	bgColor = 'transparent'\n        bgColorType = 'noFill'\n	width = '24px'\n	height = '24px'\n	type = 'icon'\n	value = 'shopping-delivery'\n	size = '14px'\n	cornerRadius = '0px'\n	iconType = 'outline'\n/>\n</pc><pc \n	\n>\n	<text \n\n	margin = '0px'\n	padding = '0px'\n	color = '#000000'\n	size = '14px'\n	fontFamily = 'lato, arimo, sans-serif' \n	type = 'field'\n\n	bgColor = 'transparent'\n        bgColorType = 'noFill'\n	cornerRadius = '0px'\n\n    lineHeight = '20'\n    numOfLines = '1'\n\n\n\n\n    borderColor = '#295BF9'\n    borderWidth = '0px'\n\n	  value = 'Vehicle'\n>\n</text>\n\n</pc>\n</pr>\n</pc><pc \n		paddingTop = '8px'\n	paddingLeft = '16px'\n	paddingRight = '16px'\n	paddingBottom = '8px'\n	bgColor = 'transparent'\n        bgColorType = 'noFill'\n\n    borderColor = '#F3F3F3'\n    borderWidth = '1px'\n		width = '51%'\n		hAlign = 'left'\n		vAlign = 'middle'\n    	cornerRadius = '0px'\n>\n	<pr \n			width='auto'\n		height='auto'\n>\n	<pc \n	\n>\n	<image  \n		margin = '0px'\n\n    borderColor = '#295BF9'\n    borderWidth = '0px'\n	color = '#5800DB'\n	bgColor = 'transparent'\n        bgColorType = 'noFill'\n	width = '24px'\n	height = '24px'\n	type = 'icon'\n	value = 'location-flag-diagonal-33'\n	size = '14px'\n	cornerRadius = '0px'\n	iconType = 'outline'\n/>\n</pc><pc \n	\n>\n	<text \n\n	margin = '0px'\n	padding = '0px'\n	color = '#000000'\n	size = '14px'\n	type = 'field'\n\n	bgColor = 'transparent'\n        bgColorType = 'noFill'\n	cornerRadius = '0px'\n\n    lineHeight = '20'\n    numOfLines = '1'\n\n\n\n\n    borderColor = '#295BF9'\n    borderWidth = '0px'\n\n	  value = 'Stop_Sequence'\n>\n</text>\n\n</pc><pc \n	\n>\n	<text \n\n	marginLeft = '6px'\n	marginRight = '6px' \n	marginBottom = '0px'\n	marginTop = '0px'\n	padding = '0px'\n	color = '#000000'\n	size = '14px'\n	type = 'Text'\n\n	bgColor = 'transparent'\n        bgColorType = 'noFill'\n	cornerRadius = '0px'\n\n\n\n\n\n    borderColor = '#295BF9'\n    borderWidth = '0px'\n\n	  value = '-'\n>\n</text>\n\n</pc><pc \n	\n>\n	<image  \n		margin = '0px'\n\n    borderColor = '#295BF9'\n    borderWidth = '0px'\n	color = '#5800DB'\n	bgColor = 'transparent'\n        bgColorType = 'noFill'\n	width = '24px'\n	height = '24px'\n	type = 'icon'\n	value = 'location-map-gps'\n	size = '14px'\n	cornerRadius = '0px'\n	iconType = 'outline'\n/>\n</pc><pc \n	\n>\n	<text \n\n	margin = '0px'\n	padding = '0px'\n	color = '#000000'\n	size = '14px'\n	fontFamily = 'lato, arimo, sans-serif' \n	type = 'field'\n\n	bgColor = 'transparent'\n        bgColorType = 'noFill'\n	cornerRadius = '0px'\n\n    lineHeight = '20'\n    numOfLines = '1'\n\n\n\n\n    borderColor = '#295BF9'\n    borderWidth = '0px'\n\n	  value = 'Route_Number'\n>\n</text>\n\n</pc>\n</pr>\n</pc>\n</pr>\n</pc>\n</pr>\n</panel>"
+	    		)
+			)
+		
+}

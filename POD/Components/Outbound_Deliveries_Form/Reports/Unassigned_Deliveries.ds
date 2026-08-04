@@ -1,0 +1,78 @@
+list Unassigned_Deliveries
+{
+
+			displayName = "Unassigned"
+			show all rows from Outbound_Deliveries_Form  [Delivery_Status == "Pending"]  
+			(
+				Delivery_Number as "Delivery Number"
+				Planned_Delivery_Date as "Planned Delivery Date"
+				Route_Number as "Route Number"
+				Stop_Sequence as "Stop Sequence"
+				Total_Items as "Total Items"
+				Total_Weight_kg as "Total Weight kg"
+				Special_Instructions as "Special Instructions"
+				Delivery_Status as "Delivery Status"
+				Added_User as "Added User"
+				Added_Time as "Added Time"
+				Delivery_Address as "Delivery Address"
+				Products
+				(
+					field = Products.Product + " | Qty - " + Products.Ordered_Qty
+				)
+				Customer
+				Customer_Address as "Customer Address"
+				custom action "Assign Driver"
+				(
+	  			workflow = Assign_Driver1
+				show action in edit record menu = true
+				column header = "Assign Driver"
+				condition = (Delivery_Status == "Pending")
+				)
+			)
+			sort by
+			(
+				Added_Time descending
+			)
+			custom actions
+			(
+				"View"
+				(
+	  			workflow = Open_Details1
+				show action in edit record menu = true
+				)
+			)
+			conditional formatting
+			(
+				"Pending"
+				{
+				condition = (Delivery_Status == "Pending")
+				fields = [Delivery_Status]
+				format = "color:#f2c47d;"
+				}
+				"In Transit"
+				{
+				condition = (Delivery_Status == "In-Transit")
+				fields = [Delivery_Status]
+				format = "color:#2f78d0;"
+				}
+				"Delivered"
+				{
+				condition = (Delivery_Status == "Delivered")
+				fields = [Delivery_Status]
+				format = "color:#4ea64c;"
+				}
+				"Partial"
+				{
+				condition = (Delivery_Status == "Partial")
+				fields = [Delivery_Status]
+				format = "color:#2eb79f;"
+				}
+				"Refused"
+				{
+				condition = (Delivery_Status == "Refused")
+				fields = [Delivery_Status]
+				format = "color:#ef166f;"
+				}
+			)
+		
+}

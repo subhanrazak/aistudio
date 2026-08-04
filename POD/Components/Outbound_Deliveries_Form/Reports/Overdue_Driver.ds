@@ -1,0 +1,87 @@
+list Overdue_Driver
+{
+
+			displayName = "Overdue"
+			show all rows from Outbound_Deliveries_Form  [Is_Overdue == true && Driver.Email == zoho.loginuserid]  
+			(
+				Delivery_Number as "Delivery Number"
+				Planned_Delivery_Date as "Planned Delivery Date"
+				Route_Number as "Route Number"
+				Stop_Sequence as "Stop Sequence"
+				Total_Items as "Total Items"
+				Total_Weight_kg as "Total Weight kg"
+				Special_Instructions as "Special Instructions"
+				Delivery_Status as "Delivery Status"
+				Added_User as "Added User"
+				Added_Time as "Added Time"
+				Delivery_Address as "Delivery Address"
+				Products
+				(
+					field = Products.Product + " | Qty - " + Products.Ordered_Qty
+				)
+				Customer
+				Customer_Address as "Customer Address"
+				Driver
+			)
+			filters
+			(
+				"Pending"  :  Delivery_Status == "Pending"
+				"Assigned"  :  Delivery_Status == "Assigned"
+				"In-Transit"  :  Delivery_Status == "In-Transit"
+				"Arrived"  :  Delivery_Status == "Arrived"
+				"Verified"  :  Delivery_Status == "Verified"
+				"POD Submitted"  :  Delivery_Status == "POD Submitted"
+			)
+			sort by
+			(
+				Added_Time descending
+			)
+			custom actions
+			(
+				"View"
+				(
+	  			workflow = Open_Details1
+				show action in edit record menu = true
+				)
+				"Assign Driver"
+				(
+	  			workflow = Assign_Driver
+				show action in edit record menu = true
+				condition = (Delivery_Status == "Pending")
+				)
+			)
+			conditional formatting
+			(
+				"Pending"
+				{
+				condition = (Delivery_Outcome == "Pending")
+				fields = [Delivery_Status]
+				format = "color:#f2c47d;"
+				}
+				"In progress"
+				{
+				condition = (Delivery_Outcome == "In Progress")
+				fields = [Delivery_Status]
+				format = "color:#2f78d0;"
+				}
+				"Delivered"
+				{
+				condition = (Delivery_Outcome == "Delivered")
+				fields = [Delivery_Status]
+				format = "color:#4ea64c;"
+				}
+				"Partial"
+				{
+				condition = (Delivery_Status == "Partial")
+				fields = [Delivery_Status]
+				format = "color:#2eb79f;"
+				}
+				"Not delivered"
+				{
+				condition = (Delivery_Outcome == "Not Delivered")
+				fields = [Delivery_Status]
+				format = "color:#ef166f;"
+				}
+			)
+		
+}

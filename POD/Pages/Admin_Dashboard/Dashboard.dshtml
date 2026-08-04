@@ -1,0 +1,82 @@
+<%
+total_deliveries = Outbound_Deliveries_Form[ID != 0].count();
+pending_deliveries = Outbound_Deliveries_Form[Delivery_Status == "Pending"].count();
+assigned_deliveries = Outbound_Deliveries_Form[Delivery_Status == "Assigned"].count();
+in_transit_deliveries = Outbound_Deliveries_Form[Delivery_Status == "In Transit" || Delivery_Status == "In-Transit"].count();
+arrived_deliveries = Outbound_Deliveries_Form[Delivery_Status == "Arrived"].count();
+pod_submitted = Outbound_Deliveries_Form[Delivery_Status == "POD Submitted"].count();
+pod_approved = Outbound_Deliveries_Form[Delivery_Status == "POD Approved"].count();
+pod_rejected = Outbound_Deliveries_Form[Delivery_Status == "POD Rejected"].count();
+overdue_count = Outbound_Deliveries_Form[Is_Overdue == true].count();
+open_exception_count = New_Exception[Status == "Open"].count();
+submitted_pods = POD_Form[Status == "Submitted"].count();
+driver_count = Driver[ID != 0].count();
+vehicle_count = Vehicle[ID != 0].count();
+feedback_count = Customer_Feedback[ID != 0].count();
+active_count = assigned_deliveries + in_transit_deliveries + arrived_deliveries;
+closed_count = pod_approved + pod_submitted;
+completion_pct = 0;
+if(total_deliveries > 0)
+{
+	completion_pct = ((closed_count * 100) / total_deliveries).round(0);
+}
+%>
+<style>
+.zpod{font-family:Inter,-apple-system,BlinkMacSystemFont,system-ui,sans-serif;background:#f1f5f9;color:#0f172a;padding:20px;box-sizing:border-box}.zpod *{box-sizing:border-box}.zpod a{text-decoration:none}.topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:16px}.brand{display:flex;align-items:center;gap:12px}.brand-icon{width:44px;height:44px;border-radius:14px;background:#0f172a;color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 10px 24px rgba(15,23,42,.18)}.eyebrow{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;color:#64748b}.title{font-size:24px;font-weight:900;letter-spacing:-.04em;margin-top:2px}.actions{display:flex;gap:8px;flex-wrap:wrap}.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px;font-size:12px;font-weight:800;border:1px solid #cbd5e1;color:#334155;background:#fff}.btn-primary{background:#2563eb;border-color:#2563eb;color:#fff}.btn-red{background:#dc2626;border-color:#dc2626;color:#fff}.layout{display:grid;grid-template-columns:2fr 1fr;gap:16px}.hero{background:#fff;border:1px solid #e2e8f0;border-radius:16px;overflow:hidden}.hero-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:18px;border-bottom:1px solid #e2e8f0;background:linear-gradient(180deg,#fff,#f8fafc)}.hero-title{font-size:18px;font-weight:900;letter-spacing:-.03em}.hero-sub{font-size:13px;color:#64748b;margin-top:4px;line-height:1.45}.live-pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:7px 10px;background:#f0fdf4;color:#16a34a;font-size:11px;font-weight:900}.live-dot{width:7px;height:7px;border-radius:50%;background:#16a34a}.stage-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0;border-bottom:1px solid #e2e8f0}.stage{padding:16px 14px;border-right:1px solid #e2e8f0;min-height:92px}.stage:last-child{border-right:0}.stage-label{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:#64748b}.stage-val{font-size:28px;font-weight:950;letter-spacing:-.05em;margin-top:8px}.stage-note{font-size:11px;color:#94a3b8;margin-top:2px}.stage-blue{background:#eff6ff}.stage-amber{background:#fffbeb}.stage-green{background:#f0fdf4}.stage-red{background:#fef2f2}.ops-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:16px;margin-top:16px}.card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;overflow:hidden}.card-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px;border-bottom:1px solid #e2e8f0;background:#f8fafc}.card-head h3{font-size:14px;margin:0;font-weight:900}.chip{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 9px;background:#eef2ff;color:#2563eb;font-size:11px;font-weight:900}.card-body{padding:16px}.queue{display:grid;gap:10px}.queue-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px;border:1px solid #e2e8f0;border-radius:12px;background:#fff}.queue-left{display:flex;align-items:center;gap:10px}.queue-ico{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px}.q-blue{background:#eff6ff;color:#2563eb}.q-amber{background:#fffbeb;color:#d97706}.q-red{background:#fef2f2;color:#dc2626}.q-green{background:#f0fdf4;color:#16a34a}.queue-title{font-size:13px;font-weight:850}.queue-sub{font-size:11px;color:#64748b;margin-top:2px}.queue-count{font-size:24px;font-weight:950;letter-spacing:-.04em}.progress-wrap{padding:18px}.progress-top{display:flex;align-items:end;justify-content:space-between;gap:10px;margin-bottom:10px}.progress-num{font-size:38px;font-weight:950;letter-spacing:-.06em}.progress-label{font-size:12px;color:#64748b;font-weight:700}.bar{height:12px;background:#e2e8f0;border-radius:999px;overflow:hidden}.bar-fill{height:100%;width:<%=completion_pct%>%;background:linear-gradient(90deg,#16a34a,#2563eb);border-radius:999px}.mini-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}.mini{border-radius:12px;background:#f8fafc;border:1px solid #e2e8f0;padding:12px}.mini b{display:block;font-size:20px}.mini span{font-size:11px;color:#64748b;font-weight:700}.side{display:grid;gap:16px}.fleet-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.fleet{border:1px solid #e2e8f0;border-radius:14px;padding:14px;background:#fff}.fleet i{font-size:20px;color:#2563eb}.fleet b{display:block;font-size:26px;margin-top:8px}.fleet span{font-size:11px;color:#64748b;font-weight:800;text-transform:uppercase;letter-spacing:.05em}.quick{display:grid;grid-template-columns:1fr 1fr;gap:10px}.quick a{display:flex;align-items:center;gap:9px;border:1px solid #e2e8f0;border-radius:12px;background:#fff;color:#0f172a;padding:12px;font-size:12px;font-weight:850}.quick i{color:#2563eb}.report-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}.reportbox{background:#fff;border:1px solid #e2e8f0;border-radius:16px;overflow:hidden;min-height:360px}.reportbody{height:360px;overflow:auto;background:#fff}.reportbody .zc-embed{height:100%}.risk-list{display:grid;gap:9px}.risk{display:flex;align-items:center;justify-content:space-between;gap:10px;border-radius:12px;padding:11px 12px;background:#f8fafc;border:1px solid #e2e8f0}.risk span{font-size:12px;font-weight:800;color:#334155}.risk b{font-size:18px}.risk-red b{color:#dc2626}.risk-amber b{color:#d97706}@media(max-width:1100px){.layout,.ops-grid,.report-grid{grid-template-columns:1fr}.stage-grid{grid-template-columns:repeat(3,1fr)}.stage:nth-child(3){border-right:0}.stage:nth-child(n+4){border-top:1px solid #e2e8f0}}@media(max-width:640px){.zpod{padding:12px}.topbar,.hero-head{flex-direction:column;align-items:stretch}.stage-grid,.fleet-grid,.quick,.mini-grid{grid-template-columns:1fr}.stage{border-right:0;border-top:1px solid #e2e8f0}.stage:first-child{border-top:0}.actions a{justify-content:center}.title{font-size:20px}}
+</style>
+<div class="zpod">
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-icon"><i class="zc-li-outline shopping-delivery-fast"></i></div>
+      <div><div class="eyebrow">POD Operations</div><div class="title">Admin Control Tower</div></div>
+    </div>
+    <div class="actions">
+      <a class="btn btn-primary" href="#Form:Outbound_Deliveries_Form?zc_LoadIn=dialog"><i class="zc-li-outline ui-1-simple-add"></i> Create Delivery</a>
+      <a class="btn" href="#Form:Assign_Driver?zc_LoadIn=dialog"><i class="zc-li-outline users-single-05"></i> Assign Driver</a>
+      <a class="btn btn-red" href="#Report:Overdue_Admin"><i class="zc-li-outline ui-1-notification-69"></i> Overdue</a>
+    </div>
+  </div>
+
+  <div class="layout">
+    <section class="hero">
+      <div class="hero-head">
+        <div><div class="hero-title">Delivery pipeline</div><div class="hero-sub">Track outbound deliveries from unassigned queue to POD approval with exception and SLA visibility.</div></div>
+        <div class="live-pill"><span class="live-dot"></span> Live data</div>
+      </div>
+      <div class="stage-grid">
+        <div class="stage stage-amber"><div class="stage-label">Unassigned</div><div class="stage-val"><%=pending_deliveries%></div><div class="stage-note">Needs driver</div></div>
+        <div class="stage stage-blue"><div class="stage-label">Assigned</div><div class="stage-val"><%=assigned_deliveries%></div><div class="stage-note">Ready to start</div></div>
+        <div class="stage stage-blue"><div class="stage-label">In Transit</div><div class="stage-val"><%=in_transit_deliveries%></div><div class="stage-note">On route</div></div>
+        <div class="stage stage-blue"><div class="stage-label">Arrived</div><div class="stage-val"><%=arrived_deliveries%></div><div class="stage-note">At customer</div></div>
+        <div class="stage stage-green"><div class="stage-label">POD Submitted</div><div class="stage-val"><%=pod_submitted%></div><div class="stage-note">Await review</div></div>
+        <div class="stage stage-green"><div class="stage-label">POD Approved</div><div class="stage-val"><%=pod_approved%></div><div class="stage-note">Closed</div></div>
+      </div>
+      <div class="progress-wrap">
+        <div class="progress-top"><div><div class="progress-num"><%=completion_pct%>%</div><div class="progress-label">POD closure progress across <%=total_deliveries%> deliveries</div></div><span class="chip"><i class="zc-li-outline ui-1-check-circle-08"></i> <%=closed_count%> closed/submitted</span></div>
+        <div class="bar"><div class="bar-fill"></div></div>
+        <div class="mini-grid"><div class="mini"><b><%=active_count%></b><span>Active deliveries</span></div><div class="mini"><b><%=pod_rejected%></b><span>POD rejected</span></div><div class="mini"><b><%=feedback_count%></b><span>Feedback received</span></div></div>
+      </div>
+    </section>
+
+    <aside class="side">
+      <div class="card"><div class="card-head"><h3>Fleet readiness</h3><span class="chip">Masters</span></div><div class="card-body fleet-grid"><div class="fleet"><i class="zc-li-outline users-single-05"></i><b><%=driver_count%></b><span>Drivers</span></div><div class="fleet"><i class="zc-li-outline transportation_truck-front"></i><b><%=vehicle_count%></b><span>Vehicles</span></div></div></div>
+      <div class="card"><div class="card-head"><h3>Risk queue</h3><span class="chip">Action needed</span></div><div class="card-body risk-list"><div class="risk risk-red"><span>Overdue deliveries</span><b><%=overdue_count%></b></div><div class="risk risk-red"><span>Open exceptions</span><b><%=open_exception_count%></b></div><div class="risk risk-amber"><span>PODs to review</span><b><%=submitted_pods%></b></div></div></div>
+      <div class="card"><div class="card-head"><h3>Quick navigation</h3></div><div class="card-body quick"><a href="#Report:All_Drivers_Location"><i class="zc-li-outline location_pin"></i> Driver Map</a><a href="#Report:All_Outbound_Deliveries"><i class="zc-li-outline business-chart-bar-32"></i> All Deliveries</a><a href="#Report:All_Exceptions"><i class="zc-li-outline ui-1-alert-circle-i"></i> Exceptions</a><a href="#Report:POD_Report"><i class="zc-li-outline files-single-copy-04"></i> POD Queue</a></div></div>
+    </aside>
+  </div>
+
+  <section class="ops-grid">
+    <div class="card"><div class="card-head"><h3>Work queues</h3><span class="chip">Today’s focus</span></div><div class="card-body queue">
+      <a class="queue-row" href="#Report:Unassigned_Deliveries"><div class="queue-left"><div class="queue-ico q-amber"><i class="zc-li-outline ui-2-time"></i></div><div><div class="queue-title">Unassigned deliveries</div><div class="queue-sub">Allocate driver and vehicle</div></div></div><div class="queue-count"><%=pending_deliveries%></div></a>
+      <a class="queue-row" href="#Report:Overdue_Admin"><div class="queue-left"><div class="queue-ico q-red"><i class="zc-li-outline ui-1-notification-69"></i></div><div><div class="queue-title">Overdue deliveries</div><div class="queue-sub">SLA breach / delayed movement</div></div></div><div class="queue-count"><%=overdue_count%></div></a>
+      <a class="queue-row" href="#Report:All_Exceptions"><div class="queue-left"><div class="queue-ico q-red"><i class="zc-li-outline ui-1-alert-circle-i"></i></div><div><div class="queue-title">Open exceptions</div><div class="queue-sub">Shortage, damage, rejection</div></div></div><div class="queue-count"><%=open_exception_count%></div></a>
+      <a class="queue-row" href="#Report:POD_Report"><div class="queue-left"><div class="queue-ico q-green"><i class="zc-li-outline ui-1-check-square-09"></i></div><div><div class="queue-title">POD review</div><div class="queue-sub">Approve or reject submitted proof</div></div></div><div class="queue-count"><%=submitted_pods%></div></a>
+    </div></div>
+    <div class="card"><div class="card-head"><h3>Admin actions</h3><span class="chip">Fast tasks</span></div><div class="card-body quick" style="grid-template-columns:1fr 1fr"><a href="#Form:New_Customer?zc_LoadIn=dialog"><i class="zc-li-outline users-single-05"></i> Add Customer</a><a href="#Form:Driver?zc_LoadIn=dialog"><i class="zc-li-outline users-single-02"></i> Add Driver</a><a href="#Form:Vehicle?zc_LoadIn=dialog"><i class="zc-li-outline transportation_car-front"></i> Add Vehicle</a><a href="#Form:New_Product?zc_LoadIn=dialog"><i class="zc-li-outline shopping_box"></i> Add Product</a><a href="#Report:Customer_Feedback_Report"><i class="zc-li-outline ui-2-chat-round-content"></i> Feedback</a><a href="#Report:Products_Report"><i class="zc-li-outline shopping_tag-content"></i> Products</a></div></div>
+  </section>
+
+  <section class="report-grid">
+    <div class="reportbox"><div class="card-head"><h3>Live driver locations</h3><span class="chip">Map</span></div><div class="reportbody"><div class="zc-embed" zc-component="report" zc-linkname="All_Drivers_Location" zc-params="zc_Header=false&zc_Footer=false"></div></div></div>
+    <div class="reportbox"><div class="card-head"><h3>Unassigned delivery list</h3><span class="chip"><%=pending_deliveries%></span></div><div class="reportbody"><div class="zc-embed" zc-component="report" zc-linkname="Unassigned_Deliveries" zc-params="zc_Header=false&zc_Footer=false"></div></div></div>
+  </section>
+</div>

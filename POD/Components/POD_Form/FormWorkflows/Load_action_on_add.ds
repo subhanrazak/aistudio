@@ -1,0 +1,40 @@
+Load_action_on_add as "Load action on add"
+{
+
+				type =  form
+				form = POD_Form
+
+				record event = on add
+
+				on load
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											// input.notes = "<div class='wrapper'><div class='key-label'><p class='key'>Delivery Number</p><p class='value'>" + input.Delivery_Number.Delivery_Number + "</p></div><div class='key-label'><p class='key'>Delivery Address</p><p class='value'>" + input.Delivery_Number.Delivery_Address + "</p></div></div>";
+										pod_line_items = Collection();
+										for each  verified_item in Outbound_Delivery_Line_Items[Outbound_Deliveries_SAP == input.Delivery_Number]
+										{
+											row = POD_Form.Items();
+											row.Product=verified_item.ID;
+											row.Ordered_Qty=verified_item.Ordered_Qty;
+											row.Delivered_Qty=verified_item.Ordered_Qty;
+											row.Pending_Qty=0;
+											// 	row.Reason_Code=verified_item.Reason_Code;
+											// 	row.Image = verified_item.Image;
+											// 	row.Notes=verified_item.Notes;
+											row.Status=verified_item.Status;
+											pod_line_items.insert(row);
+										}
+										input.Items.insert(pod_line_items);
+										disable Items.Product;
+										disable Items.Ordered_Qty;
+										disable Items.Pending_Qty;
+										hide Items.Status;
+						)
+					}
+				}
+
+			
+}

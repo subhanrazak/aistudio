@@ -1,0 +1,35 @@
+string Util.askGemini(General gen_rec, string prompt)
+{
+
+                 	gen_rec = General[ID != 0];
+                 	api_key = gen_rec.Gemini_API_Key;
+                 	model = "gemini-2.5-flash";
+                 	// free tier, fast
+                 	payload = Map();
+                 	contents = List();
+                 	content = Map();
+                 	parts = List();
+                 	part = Map();
+                 	part.put("text",prompt);
+                 	parts.add(part);
+                 	content.put("parts",parts);
+                 	contents.add(content);
+                 	payload.put("contents",contents);
+                 	try 
+                 	{
+                 		response = invokeurl
+                 		[
+                 			url :"https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent?key=" + api_key
+                 			type :POST
+                 			parameters:payload.toString()
+                 			headers:{"Content-Type":"application/json"}
+                 		];
+                 		// Extract text from response
+                 		result = response.get("candidates").get(0).get("content").get("parts").get(0).get("text");
+                 	}	catch (e)
+                 	{
+                 		result = "";
+                 	}
+                 	return result;
+                 
+}

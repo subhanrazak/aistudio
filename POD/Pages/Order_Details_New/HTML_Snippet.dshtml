@@ -1,0 +1,509 @@
+<%
+	delivery_rec = Outbound_Deliveries_Form[ID == input.record_id];
+	logged_in_role = thisapp.Util.getLoggedInProfile();
+	%>
+<style>
+<%=thisapp.Styles.App_CSS()%>
+<%=thisapp.Styles.Avatar()%>
+<%=thisapp.Styles.Button()%>
+<%=thisapp.Styles.Timeline()%>
+<%=thisapp.Styles.Key_Value()%>
+<%=thisapp.Styles.Badge()%>
+<%=thisapp.Styles.Progress_Bar()%>
+<%=thisapp.Styles.Divider()%>
+<%=thisapp.Styles.Table()%>
+<%=thisapp.Styles.Banner()%>
+
+.zcs-page-container {
+	background-color: var(--zcs-page-bg-color);
+}
+.zcs-page-fleet_job_order .zcs-page-header {
+    background-color: #FFF;
+}
+.zcs-icon-wrapper {
+    width: 32px;
+    height: 32px;
+    background-color: #F5F4FA;
+    color: #4B4274;
+}
+.zcs-tl-card {
+    background-color: #FAFBFF;
+}
+.zcs-tl-icon {
+    background-color: #F2F5FF;
+    color: #5B5481;
+}
+.zcs-pl-60 {
+    padding: 0px 20px 0px 70px;
+}
+@media (max-width: 768px) {
+	.zcs-labelvalue-with_divider .zcs-divider {
+		display: none;
+	}
+	.zcs-labelvalue-with_divider ul {
+		gap: 16px;
+	}
+	.zcs-bottom-info {
+		height: auto;
+		overflow: initial;
+	}
+	.zcs-contact-card {
+		height: auto;
+	}
+}
+.zcs-labelvalue-with_divider ul li {
+    min-width: 150px;
+}
+
+.zcs-outline-toast.zcs-custom-toast {
+    border: 1px solid #5051f9;
+	background-color: #ededff;
+}
+</style>
+<div class='zcs-page-container zcs-page-fleet_job_order zcs-wh-full'>
+    <div class='zcs-page-container-inner zcs-wh-full zcs-flex zcs-direction-column'>
+        <div class='zcs-page-header zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-16 zcs-px-20 zcs-py-9 zcs-box-border'>
+			<div class='zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-16 zcs-ellipsis'>
+				<a href='#Report:All_Outbound_Deliveries' class='zcs-back'>
+					<i class='zcs-back-icon zcs-font-22 zcs-color-tertiary fa fa-angle-left'></i>
+				</a>
+				<div class='zcs-flex zcs-gap-12 zcs-ellipsis'>
+					<h5 class='zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-ellipsis zcs-m-0'> <%=delivery_rec.Delivery_Number%> </h5>
+						<div class='zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-lg zcs-px-10 zcs-py-0 zcs-box-border zcs-badge-red'>
+							<span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'> <%=delivery_rec.Delivery_Status%> </span>
+						</div>
+</div>
+			</div>
+<%
+	if(delivery_rec.Delivery_Status == "Assigned" && logged_in_role in {"Administrator","Admin"} || delivery_rec.Driver.Email == zoho.loginuserid)
+	{
+		%>
+<a class='zcs-button zcs-primary-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body'
+				href='#Form:Start?Delivery_Number=<%=input.record_id%>&Action_field=Start&zc_LoadIn=dialog&zc_Header=false'>
+				<span class='zcs-button-text'> <i value="media-1-button-play" html="media-1-button-play" class="media-1-button-play zc-li-outline zcs-font-semibold"></i> Start </span>
+			</a>
+<%
+	}
+	else if(delivery_rec.Delivery_Status == "In Transit" && logged_in_role in {"Administrator","Admin"} || delivery_rec.Driver.Email == zoho.loginuserid)
+	{
+		%>
+<a class='zcs-button zcs-primary-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body'
+				href='#Form:Arrived?Delivery_Number=<%=input.record_id%>&Action_field=Start&zc_LoadIn=dialog&zc_Header=false'>
+				<span class='zcs-button-text'> <i value="files-check" html="files-check" class="files-check zc-li-outline zcs-font-semibold"></i> Arrived </span>
+			</a>
+<%
+	}
+	%>
+</div>
+		<div class='zcs-page-content zcs-col-common zcs-flex zcs-direction-column zcs-gap-16 zcs-p-16 zcs-box-border zcs-overflow-auto'>
+			<div class='zcs-card zcs-flex zcs-direction-column'>
+				
+					
+   
+        <div class="zcs-toast zcs-theme-toast zcs-row zcs-align-items-center zcs-justify-space-between zcs-gap-8 zcs-p-20 zcs-rounded-lg zcs-box-border">
+            <div class="zcs-col-sm-12 zcs-flex zcs-align-items-center zcs-gap-8">
+<%
+	if(delivery_rec.Customer.Customer_Logo.isEmpty() == false)
+	{
+		%>
+<div style="--zcs-avatar-size: 32px; --zcs-avatar-radius: 50%" class="zcs-avatar zcs-flex zcs-align-items-center zcs-justify-center zcs-no-shrink">
+                   
+					<img alt="John Smith" src='<%=thisapp.Util.processImageUrl(delivery_rec.Customer.Customer_Logo,delivery_rec.Customer.ID,"All_Customers","Customer_Logo")%>' class="zcs-avatar-img zcs-wh-full" data-src="https://mockmind-api.uifaces.co/content/human/125.jpg" data-zc-image-queued="true">
+                </div>
+<%
+	}
+	%>
+<div class="zcs-flex zcs-direction-column zcs-col-common zcs-ellipsis">
+                    <span class="zcs-font-13 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-ellipsis">
+                        <%=delivery_rec.Customer.Customer_Name%>
+                    </span>
+                    <span class="zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-theme zcs-ellipsis">
+                       <%=delivery_rec.Customer.Customer_Email%>
+                    </span>
+                </div>
+            </div>
+            <div class="zcs-col-sm-12 zcs-row zcs-align-items-center zcs-justify-end zcs-gap-8">
+                <a href="tel:<%=delivery_rec.Customer.Customer_Phone%>" class="zcs-col-sm-6 zcs-col-xs-12 zcs-button zcs-secondary-button zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body">
+                    <i class="zcs-button-icon zc-li-outline ui-3-phone"></i>
+                    <span class="zcs-button-text"> Call </span>
+                </a>
+               <!-- <a href="" class="zcs-col-sm-6 zcs-col-xs-12 zcs-button zcs-secondary-button zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body">
+                    <i class="zcs-button-icon zc-li-outline ui-2-chat-round-content"></i>
+                    <span class="zcs-button-text"> Send message </span>
+                </a>-->
+            </div>
+        </div>
+    
+
+				
+				<div class='zcs-divider zcs-divider-horizontal'></div>
+				<div class='zcs-labelvalue-with_divider zcs-labelvalue-wrapper zcs-p-16 zcs-box-border'>
+					<ul class='zcs-row zcs-gap-32 zcs-p-0 zcs-m-0'>
+					
+						<li class='zcs-flex zcs-direction-column zcs-gap-8 zcs-col-sm-6 zcs-col-xs-12'>
+							<label class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary'> Driver </label>
+							<div class='zcs-flex zcs-align-items-center zcs-gap-8'>
+<%
+	if(delivery_rec.Driver.Image.isEmpty() == false)
+	{
+		%>
+<div class='zcs-avatar zcs-flex zcs-align-items-center zcs-justify-center zcs-no-shrink'
+									style='--zcs-avatar-size: 24px; --zcs-avatar-radius: 50%'>
+									<img class='zcs-avatar-img zcs-wh-full' src='<%=thisapp.Util.processImageUrl(delivery_rec.Driver.Image,delivery_rec.Driver.ID,"All_Drivers","Image")%>'
+										alt='<%=delivery_rec.Driver.Driver_Name%>'>
+								</div>
+<%
+	}
+	%>
+<span class='zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary zcs-ellipsis'>
+									<%=delivery_rec.Driver.Driver_Name%>
+								</span>
+							</div>
+						</li>
+						<div class='zcs-divider zcs-divider-vertical'></div>
+					<li class='zcs-flex zcs-direction-column zcs-gap-8 zcs-col-sm-6 zcs-col-xs-12'>
+							<label class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary'> Vehicle </label>
+							<span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'> <%=delivery_rec.Vehicle.Vehicle_Number%>  </span>
+						</li>
+						<div class='zcs-divider zcs-divider-vertical'></div>
+						
+						<li class='zcs-flex zcs-direction-column zcs-gap-8 zcs-col-sm-6 zcs-col-xs-12'>
+							<label class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary'> Route / Stop </label>
+							<span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'> <%=delivery_rec.Route_Number%> / <%=delivery_rec.Stop_Sequence%> </span>
+						</li>
+						<div class='zcs-divider zcs-divider-vertical'></div>
+						
+						<li class='zcs-flex zcs-direction-column zcs-gap-8 zcs-col-sm-6 zcs-col-xs-12'>
+							<label class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary'> Total Weight / Total Items </label>
+							<span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'> <%=delivery_rec.Total_Weight_kg%> KG / <%=delivery_rec.Total_Items%> </span>
+						</li>
+						<div class='zcs-divider zcs-divider-vertical'></div>
+						<li class='zcs-flex zcs-direction-column zcs-gap-8 zcs-col-sm-6 zcs-col-xs-12'>
+							<label class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary'> Planned Delivery Date </label>
+							<span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'> <%=delivery_rec.Planned_Delivery_Date%> </span>
+						</li>
+						
+						<div class='zcs-divider zcs-divider-vertical'></div>
+						<li class='zcs-flex zcs-direction-column zcs-gap-8 zcs-col-sm-6 zcs-col-xs-12'>
+							<label class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary'> Delivery Window </label>
+							<span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'> <%=delivery_rec.Delivery_Window_Start%> - <%=delivery_rec.Delivery_Window_End%> </span>
+						</li>
+<%
+	if(delivery_rec.Delivery_Status in {"Verified","POD Submitted","POD Captured","POD Approved","POD Rejected"})
+	{
+		%>
+<div class='zcs-divider zcs-divider-vertical'></div>
+						<li class='zcs-flex zcs-direction-column zcs-gap-8 zcs-col-sm-6 zcs-col-xs-12'>
+							<label class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary'> Delivery Address </label>
+							<span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'> <%=delivery_rec.Delivery_Address%> </span>
+						</li>
+<%
+	}
+	if(delivery_rec.Delivery_Status in {"POD Submitted","POD Captured","POD Approved","POD Rejected"})
+	{
+		%>
+<div class='zcs-divider zcs-divider-vertical'></div>
+						<li class='zcs-flex zcs-direction-column zcs-gap-8 zcs-col-sm-6 zcs-col-xs-12'>
+							<label class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary'> Delivery Outcome </label>
+							<span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'> <%=delivery_rec.Delivery_Outcome%> </span>
+						</li>
+<%
+	}
+	%>
+</ul>
+				</div>
+			</div>
+<%
+	if(delivery_rec.Special_Instructions.isEmpty() == false)
+	{
+		%>
+<div class='zcs-toast zcs-outline-toast zcs-custom-toast zcs-w-full zcs-flex zcs-gap-8 zcs-px-16 zcs-py-12 zcs-rounded-sm zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'>
+    <i class='zcs-toast-icon zcs-no-shrink zcs-lh-body zc-li-outline travel-info'></i>
+    <div class='zcs-toast-text'>
+        <p class='zcs-m-0'>
+            <%=delivery_rec.Special_Instructions%>
+        </p>
+    </div>
+</div>
+<%
+	}
+	%>
+<div class='zcs-bottom-info zcs-row zcs-gap-16 zcs-col-common zcs-overflow-auto'>
+				<div class='zcs-col-6 zcs-col-sm-12'>
+					<div class='zcs-flex zcs-direction-column zcs-gap-16'>
+<%
+	if(delivery_rec.Delivery_Status in {"Assigned","In Transit","Arrived"})
+	{
+		%>
+<div class='zcs-card zcs-flex zcs-direction-column'>
+							<h6 class='zcs-font-16 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0 zcs-px-24 zcs-py-16 zcs-box-border'> Route </h6>
+<%
+		if(delivery_rec.Delivery_Status in {"In Transit"})
+		{
+			start_rec = Start[Delivery_Number == input.record_id];
+			%>
+<iframe 
+  class="zcs-map-frame"
+  src="https://maps.google.com/maps?saddr=<%=encodeUrl(start_rec.Modified_Location)%>&daddr=<%=encodeUrl(delivery_rec.Delivery_Address)%>&output=embed"
+  allowfullscreen loading="lazy" height="400px">
+</iframe>
+<%
+		}
+		else if(delivery_rec.Delivery_Status in {"Arrived"})
+		{
+			arrived_rec = Arrived[Delivery_Number == input.record_id];
+			%>
+<iframe 
+  class="zcs-map-frame"
+  src="https://maps.google.com/maps?saddr=<%=encodeUrl(arrived_rec.Modified_Location)%>&daddr=<%=encodeUrl(delivery_rec.Delivery_Address)%>&output=embed"
+  allowfullscreen loading="lazy" height="400px">
+</iframe>
+<%
+		}
+		else if(delivery_rec.Delivery_Status in {"Pending","Assigned"})
+		{
+			%>
+<div class='zcs-nodata-wrapper zcs-wh-full zcs-flex zcs-align-items-center zcs-justify-center zcs-text-center'>
+    <div class='zcs-nodata-content zcs-p-20 zcs-box-border'>
+        <i value="location-pin" html="location-pin" class="location-pin zc-li-outline zcs-font-40"></i>
+        <h5 class='zcs-nodata-header zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-mt-10 zcs-mx-0 zcs-mb-0'>
+             Route not available
+        </h5>
+        <p class='zcs-nodata-desc zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-teritiary zcs-mt-12 zcs-mx-0 zcs-mb-0'>
+            Tap Start to capture your location and view the route to customer
+        </p>
+    </div>
+</div>
+<%
+		}
+		%>
+<div class='zcs-divider zcs-divider-horizontal'></div>
+<div class="zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-16  zcs-px-24 zcs-py-12 zcs-box-border">
+	<span class="zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"> <b> Delivery Address: </b> <%=delivery_rec.Delivery_Address%> </span>
+<%
+		if(delivery_rec.Delivery_Status in {"In Transit"})
+		{
+			%>
+<a href='https://www.google.com/maps/dir/?api=1&destination=<%=delivery_rec.Delivery_Address%>' class="zcs-col-sm-6 zcs-col-xs-12 zcs-button zcs-primary-button zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body" href="">
+		<i class="zcs-button-icon zc-li-outline ui-3-send zcs-font-semibold"></i>
+		<span class="zcs-button-text"> Navigate </span>
+	</a>
+<%
+		}
+		%>
+</div>
+</div>
+<%
+	}
+	if(delivery_rec.Delivery_Status in {"Verified","POD Captured","POD Submitted","POD Approved","POD Rejected"})
+	{
+		%>
+<div class='zcs-card zcs-flex zcs-direction-column zcs-gap-24 zcs-px-24 zcs-py-16 zcs-box-border'>
+							<h6 class='zcs-font-16 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'> Verified Items </h6>
+							
+							<div class='zcs-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative'>
+    <table class='zcs-w-full'>
+        <thead class='zcs-sticky'>
+            <tr>
+                <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'> Product </th>
+                <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'> Delivered / Ordered </th>
+				<th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'> Pending Quantity </th>
+                <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'> Reason Code </th>
+				<th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'> Notes </th>
+            </tr>
+            <tr class='zcs-tspace'>
+                <th class='zcs-p-2 zcs-box-border' colspan='5'> </th>
+            </tr>
+        </thead>
+        <tbody>
+<%
+		for each  v_item in POD_Line_Items[POD_ID.Delivery_Number == input.record_id]
+		{
+			color_class = "zcs-color-primary";
+			if(v_item.Delivered_Qty == v_item.Ordered_Qty)
+			{
+				color_class = "zcs-color-green";
+			}
+			else
+			{
+				color_class = "zcs-color-red";
+			}
+			%>
+<tr>
+                <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'> <%=v_item.Product.Product.Product_Name%> </td>
+                <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body <%=color_class%>'> <%=v_item.Delivered_Qty%> / <%=v_item.Ordered_Qty%> </td>
+				<td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'> <%=v_item.Pending_Qty%> </td>
+				<td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'> <%=v_item.Reason_Code%> </td>
+				<td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'> <%=v_item.Notes%> </td>
+               
+            </tr>
+<%
+		}
+		%>
+</tbody>
+    </table>
+</div>
+							
+						
+	</div>
+<%
+	}
+	if(delivery_rec.Delivery_Status in {"POD Captured","POD Submitted","POD Approved","POD Rejected"})
+	{
+		recipient_rec = Receipient_Details[Delivery_Number == input.record_id];
+		signatureURL = zoho.appuri + "report/Receipient_Details_Report/" + recipient_rec.ID + "/Receipient_Signature/download-file?filepath=/" + recipient_rec.Receipient_Signature;
+		%>
+<div class="zcs-card zcs-flex zcs-direction-column zcs-gap-24 zcs-px-24 zcs-py-16 zcs-box-border">
+							<h6 class="zcs-font-16 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0"> Recipient Details </h6>
+							<div class="zcs-labelvalue-wrapper">
+								<ul class="zcs-row zcs-p-0 zcs-m-0 zcs-gap-16">
+									<li class="zcs-flex zcs-direction-column zcs-gap-16 zcs-col-6 zcs-col-xs-12">
+										<label class="zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary"> Recipient Name </label>
+										<span class="zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary"> <%=recipient_rec.Receipient_Printed_Name%> </span>
+									</li>
+									<li class="zcs-flex zcs-direction-column zcs-gap-16 zcs-col-6 zcs-col-xs-12">
+										<label class="zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary"> Recipient Role </label>
+										<span class="zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary"> <%=recipient_rec.Receipient_Role%> </span>
+									</li>
+									<li class="zcs-flex zcs-direction-column zcs-gap-16 zcs-col-6 zcs-col-xs-12">
+										<label class="zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary"> Recipient Phone Number </label>
+										<span class="zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary"> <%=recipient_rec.Receipient_Phone%> </span>
+									</li>
+									<li class="zcs-flex zcs-direction-column zcs-gap-16 zcs-col-6 zcs-col-xs-12">
+										<label class="zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary"> Delivery Notes </label>
+										<span class="zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary"> <%=recipient_rec.POD_Form.Delivery_Notes%>   </span>
+									</li>
+									<li class="zcs-flex zcs-direction-column zcs-gap-16 zcs-col-6 zcs-col-xs-12">
+										<label class="zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary"> Recipient Signature </label>
+										<span class="zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">  <img src='<%=signatureURL%>' height='100px'>   </span>
+									</li>
+									
+								</ul>
+							</div>
+						</div>
+<%
+	}
+	if(delivery_rec.Delivery_Status in {"Pending","Assigned","In Transit","Arrived"})
+	{
+		if(delivery_rec.Delivery_Status in {"Pending","Assigned","In Transit"})
+		{
+			%>
+<div class='zcs-card zcs-flex zcs-direction-column zcs-gap-24 zcs-px-24 zcs-py-16 zcs-box-border'>
+							<h6 class='zcs-font-16 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'> Delivery Items </h6>
+<div class='zcs-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative'>
+    <table class='zcs-w-full'>
+        <thead class='zcs-sticky'>
+            <tr>
+                <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'> Product </th>
+                <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'> Quantity </th>
+				<th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'> Weight </th>
+                <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'> Status </th>
+            </tr>
+            <tr class='zcs-tspace'>
+                <th class='zcs-p-2 zcs-box-border' colspan='4'> </th>
+            </tr>
+        </thead>
+        <tbody>
+<%
+			for each  item in Outbound_Delivery_Line_Items[Outbound_Deliveries_SAP == input.record_id]
+			{
+				%>
+<tr>
+                <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'> <%=item.Product.Product_Name%> </td>
+                
+                <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'> <%=item.Ordered_Qty%> </td>
+				<td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'> <%=item.Total_Weight%> </td>
+                <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-yellow'> <%=item.Status%> </td>
+            </tr>
+<%
+			}
+			%>
+</tbody>
+    </table>
+</div>
+</div>
+<%
+		}
+		else if(delivery_rec.Delivery_Status == "Arrived")
+		{
+			%>
+<div class='zcs-card zcs-box-border'>
+<div elName='zc-component' formLinkName='POD_Form' params='Delivery_Number=<%=input.record_id%>&zc_Header=false&amp;zc_SubmitVal=Next&amp;zc_ResetVal=Reset'></div>
+</div>
+<%
+		}
+	}
+	else if(delivery_rec.Delivery_Status in {"Verified"})
+	{
+		if(delivery_rec.Need_OTP_Verification == false || (delivery_rec.Need_OTP_Verification == true && delivery_rec.OTP_Verified == true))
+		{
+			%>
+<div class='zcs-card zcs-box-border'>
+							<div elName='zc-component' formLinkName='Receipient_Details' params='Delivery_Number=<%=input.record_id%>&zc_Header=false&amp;zc_SubmitVal=Next&amp;zc_ResetVal=Reset'></div>
+							</div>
+<%
+		}
+		else if(delivery_rec.Need_OTP_Verification == true && delivery_rec.OTP_Verified == false)
+		{
+			%>
+<div class='zcs-card zcs-box-border'>
+							<div elName='zc-component' formLinkName='Verify_OTP' params='Delivery_Number=<%=input.record_id%>&zc_Header=false&amp;zc_SubmitVal=Next&amp;zc_ResetVal=Reset'></div>
+							</div>
+<%
+		}
+	}
+	else if(delivery_rec.Delivery_Status in {"POD Captured"})
+	{
+		%>
+<div class='zcs-card zcs-box-border'>
+							<div elName='zc-component' formLinkName='Submit_POD' params='Delivery_Number=<%=input.record_id%>&zc_Header=false&amp;zc_SuccMsg=POD Submitted Successfully!&amp;zc_SubmitVal=Submit&amp;zc_ResetVal=Reset'></div>
+							</div>
+<%
+	}
+	%>
+</div>
+				</div>
+				<div class='zcs-col-6 zcs-col-sm-12'>
+					<div class='zcs-contact-card zcs-card zcs-flex zcs-direction-column zcs-gap-24 zcs-px-16 zcs-py-24 zcs-box-border zcs-h-full'>
+						<h6 class='zcs-font-16 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'> Timeline </h6>
+						<div class='zcs-timeline-wrapper zcs-without-time'>
+							<ul class='zcs-flex zcs-direction-column zcs-gap-32 zcs-p-0 zcs-m-0'>
+<%
+	for each  timeline in Timeline[Delivery_Number == input.record_id] sort by Date_Time desc
+	{
+		%>
+<li class='zcs-tl-li zcs-row zcs-gap-0 zcs-relative'>
+									<div class='zcs-tl-indicator zcs-h-full zcs-flex zcs-justify-center zcs-absolute'>
+										<i class='zcs-tl-icon zcs-flex zcs-align-items-center zcs-justify-center zcs-rounded-xl zcs-font-16 zcs-relative zc-li-outline transportation-car'></i>
+									</div>
+									<div class='zcs-flex zcs-direction-column zcs-col-12 zcs-pl-60 zcs-pr-20 zcs-box-border'>
+										<div class='zcs-tl-card zcs-card zcs-flex zcs-direction-column zcs-px-20 zcs-py-16 zcs-box-border'>
+											<div class='zcs-row zcs-align-items-center zcs-gap-16'>
+												<h6 class='zcs-col-common zcs-font-16 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'> <%=timeline.Action_field%> </h6>
+												<!--<div class='zcs-badge zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border'
+													style='background-color: #FFF3E4; color: #E17800;'>
+													<span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'> Pending </span>
+												</div>-->
+											</div>
+											<p class='zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary zcs-mt-8 zcs-mx-0 zcs-mb-6'> <%=timeline.Description%> </p>
+											<div class='zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-16'>
+												<span class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary'> <%=timeline.Date_Time%> </span>
+												<div class='zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-4'>
+													<i class='zcs-lh-body zcs-color-primary zc-li-outline ui-2-time'></i>
+													<label class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary'> <%=thisapp.Util.timeSince(timeline.Date_Time)%> </label>
+												</div>
+											</div>
+										</div>
+									</div>
+								</li>
+<%
+	}
+	%>
+</ul>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+    </div>
+</div>

@@ -1,0 +1,35 @@
+Load_action_on_add3 as "Load action on add"
+{
+
+				type =  form
+				form = Submit_POD
+
+				record event = on add
+
+				on load
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											input.Notes = "<p>Are you sure you want to submit this Proof of Delivery? Once submitted, it cannot be modified.</p>";
+										is_exception = "None";
+										exc_count = New_Exception[Delivery_Number == input.Delivery_Number];
+										if(exc_count.count() > 0)
+										{
+											is_exception = exc_count.Exception_ID;
+										}
+										pod_rec = POD_Form[Delivery_Number == input.Delivery_Number].Added_Time;
+										// delivery_details = "Delivery No: "+input.Delivery_Number.Delivery_Number+", Customer: "+input.Delivery_Number.Customer.Customer_Name+", Driver: "+input.Delivery_Number.Driver.Driver_Name+", Status: "+input.Delivery_Number.Delivery_Status+", Items: "+input.Delivery_Number.Total_Items+", Exception: "+is_exception;
+										delivery_notes_prompt = "Generate a professional Proof of Delivery (POD) note using only the following details: Planned Delivery Date: " + input.Delivery_Number.Planned_Delivery_Date + ", Delivered Date: " + pod_rec + ", Customer: " + input.Delivery_Number.Customer.Customer_Name + ", Driver: " + input.Delivery_Number.Driver.Driver_Name + ", Delivery Status: " + input.Delivery_Number.Delivery_Status + ", Exceptions: " + is_exception + ". Compare the planned and delivered dates and clearly state whether the delivery was completed on time, early, or delayed. Write the note in a professional, natural, multiline paragraph format without headings, bullet points, markdown, asterisks (*), or numbering. Do not invent, assume, or add any information that is not provided. Return only the delivery note.";
+										gen_rec = General[ID != 0];
+										if(gen_rec.Gemini_API_Key.isEmpty() == false)
+										{
+											input.Delivery_Notes = thisapp.Util.askGemini(gen_rec,delivery_notes_prompt);
+										}
+						)
+					}
+				}
+
+			
+}

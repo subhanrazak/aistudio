@@ -1,0 +1,118 @@
+Click_of_submit as "Click of submit"
+{
+
+				type =  form
+				form = Submit_POD
+				button = Submit_POD_for_Approval
+				on click
+				{
+					actions 
+					{
+					on click
+					(
+						delivery_rec = Outbound_Deliveries_Form[ID == input.Delivery_Number];
+										general_settings_rec = General[ID != 0];
+										arrived_rec = Arrived[Delivery_Number == input.Delivery_Number];
+										if(arrived_rec.count() > 0)
+										{
+											driver_location_addr = zoho.map.rGeoCode(arrived_rec.Added_Location.latitude.toDecimal(),arrived_rec.Added_Location.longitude.toDecimal());
+											distance_in_kilometer = zoho.map.distanceBetween(delivery_rec.Delivery_Address,driver_location_addr.get("label"),"KILOMETRE");
+											distance_in_meter = distance_in_kilometer * 1000;
+											if(distance_in_meter > general_settings_rec.Minimum_Arrival_Distance)
+											{
+												alert "Arrival cannot be confirmed because you are outside the allowed delivery radius. Distance from delivery location: " + distance_in_kilometer.round(2) + " KM. Allowed radius: " + general_settings_rec.Minimum_Arrival_Distance + " meters.";
+												supervisors = Employee[Role == "Supervisor"].Email.getAll().toList();
+												res = zoho.pushNotification(supervisors,"Invalid submission by driver","Invalid submission by driver","All_Outbound_Deliveries",input.Delivery_Number.ID);
+											}
+											else
+											{
+												pod_rec = POD_Form[Delivery_Number == input.Delivery_Number];
+												pod_rec.Delivery_Notes=input.Delivery_Notes;
+												pod_rec.Status="Submitted";
+												verify_items = POD_Line_Items[POD_ID.Delivery_Number == input.Delivery_Number];
+												total = verify_items.count();
+												matched = 0;
+												zero_delivered = 0;
+												for each  vi in verify_items
+												{
+													line_item = Outbound_Delivery_Line_Items[ID == vi.Product];
+													line_item.Delivered_Qty=vi.Delivered_Qty;
+													line_item.Pending_Qty=vi.Pending_Qty;
+													if(vi.Delivered_Qty == vi.Ordered_Qty)
+													{
+														line_item.Status="Delivered";
+														vi.Status="Delivered";
+														matched = matched + 1;
+													}
+													else if(vi.Delivered_Qty == 0)
+													{
+														line_item.Status="Not Delivered";
+														vi.Status="Not Delivered";
+														zero_delivered = zero_delivered + 1;
+													}
+													else
+													{
+														line_item.Status="Partial";
+														vi.Status="Partial";
+													}
+												}
+												// ── Set Status + Outcome ──
+												if(total > 0)
+												{
+													delivery_rec.Delivered_Date=zoho.currenttime;
+													delivery_rec.Delivery_Status="POD Submitted";
+													if(matched == total)
+													{
+														delivery_rec.Delivery_Outcome="Delivered";
+													}
+													else if(zero_delivered == total)
+													{
+														delivery_rec.Delivery_Outcome="Not Delivered";
+													}
+													else
+													{
+														delivery_rec.Delivery_Outcome="Delivered";
+													}
+												}
+												// ── Timeline with dynamic description ──
+												disc_count = total - matched - zero_delivered;
+												desc = "Outcome: " + delivery_rec.Delivery_Outcome;
+												if(disc_count > 0)
+												{
+													desc = desc + " · " + disc_count + " discrepancy(s)";
+												}
+												desc = desc + " · Waiting for approval";
+												insert into Timeline
+												[
+													Action_field="POD Submitted"
+													Driver_ID=input.Delivery_Number.Driver
+													Description=desc
+													Delivery_Number=input.Delivery_Number
+													Date_Time=zoho.currenttime
+													Added_User=zoho.loginuser
+												]
+												form_Link = "https://creatorapp.zohopublic.com/creatorsolutions_zylker84/pod/form-perma/Collect_Customer_Feedback/jf2FKyDKUCkKzOQ4tff5a0eOSavRtnOfDFKmbEHaVmMgNFb9X4Gw5X5JhHpstFQf9FV59Tp94OGkx2OZUG777Hzy82p2nd3SEgJy?Customer_ID=" + input.Delivery_Number.Customer.ID + "&Outbound_Delivery_ID=" + input.Delivery_Number.ID;
+												content = "<!DOCTYPE html> <html> <head> <meta charset='UTF-8'> <title>Customer Feedback Request</title> </head> <body style='font-family: Arial, sans-serif; color: #333333; line-height: 1.6;'> <p>Hi <strong>" + input.Delivery_Number.Customer.Customer_Name + "</strong>,</p> <p> We hope your delivery was completed successfully. </p> <p> Please take a minute to share your feedback using the link below: </p> <p> <a href='" + form_Link + "' style='background-color:#0066cc; color:#ffffff; text-decoration:none; padding:12px 20px; border-radius:5px; display:inline-block;'> Submit Feedback </a> </p> <p> If the button above does not work, please use the following link: </p> <p> <a href='" + form_Link + "'>" + form_Link + "</a> </p> <p> Your feedback is valuable and helps us improve our service. </p> <p> Thank you. </p> <p> Best Regards,<br> <strong>Logistics Team</strong> </p> </body> </html>";
+												sendmail
+												[
+													from :zoho.adminuserid
+													to :input.Delivery_Number.Customer.Customer_Email
+													cc:"hariprasath.j.1997@gmail.com"
+													subject :"We Value Your Feedback – Delivery #" + input.Delivery_Number.Delivery_Number
+													message :content
+												]
+												if(zoho.device.type == "web")
+												{
+													openUrl("#Script:page.parent.refresh ","parent window");
+												}
+											}
+										}
+										else
+										{
+											info "Not arrived yet";
+										}
+					)
+					}
+				}
+			
+}

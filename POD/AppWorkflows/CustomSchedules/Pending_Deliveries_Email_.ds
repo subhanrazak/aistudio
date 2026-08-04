@@ -1,0 +1,39 @@
+Pending_Deliveries_Email_ as "Pending Deliveries Email to supervisor"
+{
+
+				type =  schedule
+				start = "2026-07-01 18:00:00"
+				frequency = daily
+				time zone = "Asia/Kolkata"
+				on start
+				{
+					actions 
+					{
+					on load
+					(
+						pending_deliveries_today = Outbound_Deliveries_Form[Planned_Delivery_Date == zoho.currentdate && Delivery_Outcome in {"Pending","Not Delivered"}];
+										if(pending_deliveries_today.count() > 0)
+										{
+											mail_content = "<div style='font-family: Arial, Helvetica, sans-serif; font-size:14px; color:#333333; line-height:1.6;'> <p>Dear Supervisor,</p> <p> Please find the list of outbound deliveries that are still pending <strong>Proof of Delivery (POD)</strong> as of <strong>6:00 PM</strong>. </p> <p> Kindly review the pending deliveries and follow up with the respective drivers or delivery teams to ensure the PODs are submitted at the earliest. </p> <p><strong>Pending Outbound Deliveries Without POD</strong></p> <table border='1' cellspacing='0' cellpadding='8' style='border-collapse: collapse; width:100%;'> <thead style='background:#f2f2f2;'> <tr> <th align='left'>Delivery ID</th> <th align='left'>Customer Name</th> </tr> </thead> <tbody>";
+											order_details_table = "";
+											for each  rec in pending_deliveries_today
+											{
+												rec.Is_Overdue=true;
+												order_details_table = order_details_table + "<tr><td>" + rec.Delivery_Number + "</td><td>" + rec.Customer.Customer_Name + "</td></tr>";
+											}
+											mail_content = mail_content + order_details_table;
+											mail_content = mail_content + "</tbody> </table> <p>Thank you.</p> </div>";
+											supervisor_email_list = Employee[Role == "Supervisor"].Email.getAll().toList();
+											sendmail
+											[
+												from :zoho.adminuserid
+												to :supervisor_email_list
+												subject :"Pending Outbound Deliveries Without POD – 6:00 PM Alert"
+												message :mail_content
+											]
+										}
+					)
+					}
+				}
+			
+}

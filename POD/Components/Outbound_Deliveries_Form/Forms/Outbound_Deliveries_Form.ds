@@ -1,0 +1,373 @@
+form Outbound_Deliveries_Form
+{
+
+			displayname = "Outbound Deliveries"
+			success message = "Data Added Successfully!"
+			feature property = 8
+			Customer_Information
+			(
+				type = section
+				displayname = "1. Customer Information"
+				visibility = true
+	 			row = 1
+	 			column = 0   
+				width = medium
+			)
+			must have Customer
+			(
+				type = picklist	
+				values  = New_Customer.ID
+    			displayformat = [Customer_Name]
+				allow new entries
+				[
+					displayname = "Add New"
+				]
+				sortorder = ascending
+	 			row = 1
+	 			column = 1   
+				width = medium
+			)
+			must have Customer_Address
+			(
+				type = picklist	
+				displayname = "Customer Address"
+				values  = Customer_Address[Customer.ID == input.Customer].ID
+    			displayformat = [" " + Customer_Address.address_line_1 + " " + Customer_Address.address_line_2 + " " + Customer_Address.district_city + " " + Customer_Address.state_province]
+				allow new entries
+				[
+					displayname = "Add New"
+					set values
+					(
+						Customer = input.Customer
+					)
+				]
+				sortorder = ascending
+	 			row = 1
+	 			column = 1   
+				width = medium
+			)
+			Delivery_Planning
+			(
+				type = section
+				displayname = "2. Delivery Planning"
+				visibility = true
+	 			row = 2
+	 			column = 0   
+				width = medium
+			)
+			Driver
+			(
+				type = picklist	
+				values  = Driver.ID
+    			displayformat = [Driver_Name]
+				allow new entries
+				[
+					displayname = "Add New"
+				]
+				sortorder = ascending
+	 			row = 2
+	 			column = 1   
+				width = medium
+			)
+			must have Route_Number
+			(
+    			type = text
+				displayname = "Route Number"
+	 			row = 2
+	 			column = 1   
+				width = medium
+			)
+			must have Planned_Delivery_Date
+			(
+    			type = date
+				displayname = "Planned Delivery Date"
+				alloweddays = 0,1,2,3,4,5,6
+	 			row = 2
+	 			column = 1   
+				width = medium
+			)
+			Vehicle
+			(
+				type = picklist	
+				values  = Vehicle.ID
+    			displayformat = [Vehicle_Number]
+				allow new entries
+				[
+					displayname = "Add New"
+				]
+				sortorder = ascending
+	 			row = 2
+	 			column = 2   
+				width = medium
+			)
+			must have Stop_Sequence
+			(
+				type = number
+				displayname = "Stop Sequence"
+	 			row = 2
+	 			column = 2   
+				width = medium
+			)
+			Delivery_Window_Instructions
+			(
+				type = section
+				displayname = "3. Delivery Window & Instructions"
+				visibility = true
+	 			row = 3
+	 			column = 0   
+				width = medium
+			)
+			Delivery_Window_Start
+			(
+    			type = time
+				displayname = "Delivery Window Start"
+				timedisplayoptions = "hh:mm" 
+	 			row = 3
+	 			column = 1   
+				width = medium
+			)
+			Delivery_Window_End
+			(
+    			type = time
+				displayname = "Delivery Window End"
+				timedisplayoptions = "hh:mm" 
+	 			row = 3
+	 			column = 1   
+				width = medium
+			)
+			Special_Instructions
+			(
+    			type = textarea
+				displayname = "Special Instructions"
+				height = 100px
+	 			row = 3
+	 			column = 2   
+				width = medium
+			)
+			Products
+			(
+				type = grid
+				displayname = "4. Products"
+				values  = Outbound_Delivery_Line_Items.ID
+    			bidirectional = Outbound_Deliveries_SAP
+	 			row = 4
+	 			column = 1   
+				width = medium
+			)
+			Section
+			(
+				type = section
+	 			row = 5
+	 			column = 0   
+				width = medium
+			)
+			Need_OTP_Verification
+			(
+    			type = checkbox
+				displayname = "Need OTP Verification?"
+				initial value = false
+	 			row = 5
+	 			column = 1   
+				width = medium
+			)
+			Hidden_Section
+			(
+				type = section
+				displayname = "Hidden Section"
+				visibility = true
+	 			row = 6
+	 			column = 0   
+				width = medium
+			)
+			unique Delivery_Number
+			(
+    			type = text
+				displayname = "Delivery Number"
+	 			row = 6
+	 			column = 1   
+				width = medium
+			)
+			Delivery_Address
+			(
+    			type = textarea
+				displayname = "Delivery Address"
+				height = 100px
+	 			row = 6
+	 			column = 1   
+				width = medium
+			)
+			Driver_Start_Time
+			(
+    			type = datetime
+				displayname = "Driver Start Time"
+				timedisplayoptions = "hh:mm:ss"
+				alloweddays = 0,1,2,3,4,5,6
+	 			row = 6
+	 			column = 1   
+				width = medium
+			)
+			Driver_Arrived_Time
+			(
+    			type = datetime
+				displayname = "Driver Arrived Time"
+				timedisplayoptions = "hh:mm:ss"
+				alloweddays = 0,1,2,3,4,5,6
+	 			row = 6
+	 			column = 1   
+				width = medium
+			)
+			Total_Weight_kg
+			(
+				type = decimal
+				displayname = "Total Weight kg"
+	 			row = 6
+	 			column = 1   
+				width = medium
+			)
+			Total_Items
+			(
+				type = number
+				displayname = "Total Items"
+	 			row = 6
+	 			column = 1   
+				width = medium
+			)
+			Delivery_Status
+			(
+				type = picklist
+				displayname = "Delivery Status"
+				maxchar = 100
+				values = {"Pending","Assigned","In Transit","Arrived","Verified","POD Captured","POD Submitted","POD Approved","POD Rejected","Completed"}
+	 			row = 6
+	 			column = 1   
+				width = medium
+			)
+			Delivery_Outcome
+			(
+				type = picklist
+				displayname = "Delivery Outcome"
+				maxchar = 100
+				values = {"Pending","Delivered","Not Delivered"}
+				initial value = "Pending"
+	 			row = 6
+	 			column = 1   
+				width = medium
+			)
+			Distance_km
+			(
+				type = decimal
+	 			row = 6
+	 			column = 1   
+				width = medium
+			)
+			Duration_min
+			(
+				type = decimal
+	 			row = 6
+	 			column = 1   
+				width = medium
+			)
+			SAP_ID
+			(
+    			type = text
+				displayname = "SAP ID"
+	 			row = 6
+	 			column = 1   
+				width = medium
+			)
+			Order_Date
+			(
+    			type = datetime
+				displayname = "Order Date"
+				timedisplayoptions = "hh:mm:ss"
+				alloweddays = 0,1,2,3,4,5,6
+	 			row = 6
+	 			column = 1   
+				width = medium
+			)
+			Delivered_Date
+			(
+    			type = datetime
+				displayname = "Delivered Date"
+				timedisplayoptions = "hh:mm:ss"
+				alloweddays = 0,1,2,3,4,5,6
+	 			row = 6
+	 			column = 1   
+				width = medium
+			)
+			S_No
+			(
+    			type = autonumber
+				displayname = "S No"
+				start index = 1
+	 			row = 6
+	 			column = 1   
+				width = medium
+			)
+			Driver_Users_Field
+			(
+    			type = picklist
+				displayname = "Driver Users Field"
+				module = users
+				displayformat = [emailid]
+	 			row = 6
+	 			column = 1   
+				width = medium
+				personal data = true
+			)
+			Is_Overdue
+			(
+    			type = checkbox
+				displayname = "Is Overdue"
+				initial value = false
+	 			row = 6
+	 			column = 1   
+				width = medium
+			)
+			OTP
+			(
+				type = number
+	 			row = 6
+	 			column = 1   
+				width = medium
+			)
+			OTP_Verified
+			(
+    			type = checkbox
+				displayname = "OTP Verified"
+				initial value = false
+	 			row = 6
+	 			column = 1   
+				width = medium
+			)
+	
+			actions
+			{
+				on add
+				{
+					submit
+					(
+   						type = submit
+   						displayname = "Submit"
+					)
+				}
+				on edit
+				{
+					update
+					(
+   						type = submit
+   						displayname = "Update"
+					)
+					cancel
+					(
+   						type = cancel
+   						displayname = "Cancel"
+					)
+				}
+			}
+			blueprint components
+			{
+				stages = {"Stage1","Stage2","Stage3","Pending","Assign Driver","Delivery Started","Arrived at customer location","Items Verified","POD Captured","Submit POD","Assigned","OTP Verified"}
+			}
+		
+}

@@ -1,0 +1,136 @@
+Submit_action_on_always4 as "Submit action on always"
+{
+
+				type =  form
+				form = POD_Form
+
+				record event = on add or edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											delivery_rec = Outbound_Deliveries_Form[ID == input.Delivery_Number];
+										input.Status = "Draft";
+										co = Outbound_Delivery_Line_Items[Outbound_Deliveries_SAP == input.Delivery_Number].count();
+										if(delivery_rec.Need_OTP_Verification == true)
+										{
+											delivery_rec.Delivery_Status="Verified";
+											insert into Timeline
+											[
+												Action_field="Awaiting OTP"
+												Driver_ID=input.Delivery_Number.Driver
+												Description="All " + co + " items verified. Waiting for customer OTP verification to proceed with POD capture."
+												Delivery_Number=input.Delivery_Number
+												Date_Time=zoho.currenttime
+												Added_User=zoho.loginuser
+											]
+										}
+										else
+										{
+											delivery_rec.Delivery_Status="Verified";
+											insert into Timeline
+											[
+												Action_field="Items Verified"
+												Driver_ID=input.Delivery_Number.Driver
+												Description="All " + co + " items verified"
+												Delivery_Number=input.Delivery_Number
+												Date_Time=zoho.currenttime
+												Added_User=zoho.loginuser
+											]
+										}
+										verify_items = POD_Line_Items[POD_ID.Delivery_Number == input.Delivery_Number];
+										total = verify_items.count();
+										matched = 0;
+										zero_delivered = 0;
+										for each  vi in verify_items
+										{
+											line_item = Outbound_Delivery_Line_Items[ID == vi.Product];
+											line_item.Delivered_Qty=vi.Delivered_Qty;
+											line_item.Pending_Qty=vi.Pending_Qty;
+											if(vi.Delivered_Qty == vi.Ordered_Qty)
+											{
+												line_item.Status="Verified";
+												vi.Status="Verified";
+												matched = matched + 1;
+											}
+											else if(vi.Delivered_Qty == 0)
+											{
+												line_item.Status="Verified";
+												vi.Status="Verified";
+												zero_delivered = zero_delivered + 1;
+											}
+											else
+											{
+												line_item.Status="Verified";
+												vi.Status="Verified";
+											}
+										}
+										// ── Set Status + Outcome ──
+										if(total > 0)
+										{
+											delivery_rec.Delivered_Date=zoho.currenttime;
+											if(matched == total)
+											{
+												// 		delivery_rec.Delivery_Outcome="Delivered";
+											}
+											else if(zero_delivered == total)
+											{
+												// 		delivery_rec.Delivery_Outcome="Not Delivered";
+											}
+											else
+											{
+												// 		delivery_rec.Delivery_Outcome="Delivered";
+												gen_rec = General[ID != 0];
+												sla_due_hrs = ifNull(gen_rec.Exception_SLA_Due_Hrs,0);
+												excep_id = insert into New_Exception
+												[
+													Delivery_Number=input.Delivery_Number
+													POD_ID=input.ID
+													Status="Open"
+													Reported_Date=zoho.currenttime
+													Exception_SLA_Due_On=zoho.currenttime.addHour(sla_due_hrs)
+													Added_User=zoho.loginuser
+												];
+												excep_rec = New_Exception[ID == excep_id];
+												excep_rec.Exception_ID=thisapp.Util.getID("Exception",excep_rec.S_No);
+												for each  pod_line_item_defect in input.Items
+												{
+													if(pod_line_item_defect.Pending_Qty > 0)
+													{
+														insert into Exception_Line_Items
+														[
+															Exception_ID=excep_id
+															Product=pod_line_item_defect.Product
+															Ordered_Qty=pod_line_item_defect.Ordered_Qty
+															Delivered_Qty=pod_line_item_defect.Delivered_Qty
+															Pending_Qty=pod_line_item_defect.Pending_Qty
+															Reject_Reason=pod_line_item_defect.Reason_Code
+															Image=pod_line_item_defect.Image
+															Notes=pod_line_item_defect.Notes
+															Status=pod_line_item_defect.Status
+															Added_User=zoho.loginuser
+														]
+													}
+												}
+												insert into Timeline
+												[
+													Delivery_Number=input.Delivery_Number
+													POD_ID=input.ID
+													Exception_ID=excep_id
+													Action_field="Exception Created"
+													Description=excep_rec.Exception_ID + " Created"
+													Date_Time=zoho.currenttime
+													Added_User=zoho.loginuser
+												]
+											}
+										}
+										openUrl("#Script:page.parent.refresh ","parent window");
+						)
+					}
+				}
+
+			
+}

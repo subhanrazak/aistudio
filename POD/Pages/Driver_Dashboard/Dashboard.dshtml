@@ -1,0 +1,52 @@
+<%
+my_total = Outbound_Deliveries_Form[Driver.Email == zoho.loginuserid].count();
+my_today = Outbound_Deliveries_Form[Driver.Email == zoho.loginuserid && Planned_Delivery_Date == zoho.currentdate].count();
+my_pending = Outbound_Deliveries_Form[Driver.Email == zoho.loginuserid && Delivery_Status == "Assigned"].count();
+my_in_transit = Outbound_Deliveries_Form[Driver.Email == zoho.loginuserid && (Delivery_Status == "In Transit" || Delivery_Status == "In-Transit")].count();
+my_arrived = Outbound_Deliveries_Form[Driver.Email == zoho.loginuserid && Delivery_Status == "Arrived"].count();
+my_pod_submitted = Outbound_Deliveries_Form[Driver.Email == zoho.loginuserid && Delivery_Status == "POD Submitted"].count();
+my_delivered = Outbound_Deliveries_Form[Driver.Email == zoho.loginuserid && (Delivery_Outcome == "Delivered" || Delivery_Status == "POD Submitted" || Delivery_Status == "POD Approved")].count();
+my_failed = Outbound_Deliveries_Form[Driver.Email == zoho.loginuserid && Delivery_Outcome == "Not Delivered"].count();
+my_overdue = Outbound_Deliveries_Form[Driver.Email == zoho.loginuserid && Is_Overdue == true].count();
+completion_pct = 0;
+if(my_total > 0)
+{
+	completion_pct = ((my_delivered * 100) / my_total).round(0);
+}
+next_delivery = Outbound_Deliveries_Form[Driver.Email == zoho.loginuserid && (Delivery_Status == "Assigned" || Delivery_Status == "In Transit" || Delivery_Status == "In-Transit" || Delivery_Status == "Arrived")];
+next_delivery_no = "No active delivery";
+next_customer = "All caught up";
+next_address = "No route is waiting right now.";
+next_status = "Ready";
+next_id = 0;
+if(next_delivery.count() > 0)
+{
+	for each d in next_delivery
+	{
+		next_delivery_no = d.Delivery_Number;
+		next_customer = d.Customer.Customer_Name;
+		next_address = d.Delivery_Address;
+		next_status = d.Delivery_Status;
+		next_id = d.ID;
+		break;
+	}
+}
+%>
+<style>
+.zcdash{font-family:Inter,Arial,sans-serif;background:#f7f9fc;padding:24px;color:#0f172a;box-sizing:border-box}.zcdash *{box-sizing:border-box}.hero{border-radius:30px;padding:28px;background:linear-gradient(135deg,#064e3b,#059669 52%,#22d3ee);color:#fff;box-shadow:0 18px 44px rgba(5,150,105,.22);position:relative;overflow:hidden}.hero:after{content:"";position:absolute;right:-60px;top:-80px;width:230px;height:230px;border-radius:50%;background:rgba(255,255,255,.12)}.hero-row{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;position:relative;z-index:1}.eyebrow{font-size:12px;text-transform:uppercase;letter-spacing:.16em;opacity:.82;margin-bottom:10px}.title{font-size:29px;font-weight:850;line-height:1.08;margin:0}.subtitle{max-width:700px;color:#dcfce7;margin:10px 0 0;font-size:14px;line-height:1.6}.hero-actions{display:flex;gap:10px;flex-wrap:wrap}.btn{display:inline-flex;align-items:center;gap:8px;text-decoration:none;border-radius:999px;padding:11px 16px;font-size:13px;font-weight:850}.btn-primary{background:#fff;color:#047857}.btn-ghost{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.25);color:#fff}.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-top:18px}.kpi{background:#fff;border:1px solid #e5e7eb;border-radius:22px;padding:18px;box-shadow:0 10px 28px rgba(15,23,42,.06);position:relative;overflow:hidden}.kpi:before{content:"";position:absolute;top:0;left:0;right:0;height:4px;background:var(--accent)}.kpi-head{display:flex;justify-content:space-between;gap:10px}.ico{width:42px;height:42px;border-radius:14px;display:flex;align-items:center;justify-content:center;background:var(--soft);color:var(--accent);font-size:20px}.label{font-size:13px;color:#64748b;font-weight:780}.value{font-size:31px;font-weight:900;margin-top:12px;letter-spacing:-.04em}.note{font-size:12px;color:#94a3b8;margin-top:4px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px}.card{background:#fff;border:1px solid #e5e7eb;border-radius:24px;padding:20px;box-shadow:0 10px 28px rgba(15,23,42,.06)}.card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:10px}.card-head h3{font-size:17px;margin:0}.pill{display:inline-flex;align-items:center;gap:7px;border-radius:999px;background:#ecfdf5;color:#047857;padding:7px 10px;font-size:12px;font-weight:850}.route{background:linear-gradient(180deg,#ffffff,#f0fdf4);border:1px solid #bbf7d0;border-radius:22px;padding:18px}.route-no{font-size:13px;color:#047857;font-weight:900;text-transform:uppercase;letter-spacing:.08em}.route-main{font-size:24px;font-weight:900;margin:8px 0 6px}.route-address{font-size:13px;color:#64748b;line-height:1.55}.progress-shell{height:12px;background:#e2e8f0;border-radius:999px;overflow:hidden;margin:16px 0 10px}.progress-bar{height:100%;width:<%=completion_pct%>%;background:linear-gradient(90deg,#10b981,#22d3ee)}.status-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.status{padding:15px;border-radius:18px;background:#f8fafc;border:1px solid #edf2f7}.status b{display:block;font-size:25px;margin-bottom:3px}.status span{font-size:12px;color:#64748b;font-weight:780}.quick{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:18px}.quick a{display:flex;align-items:center;gap:10px;text-decoration:none;color:#0f172a;background:#fff;border:1px solid #e5e7eb;border-radius:18px;padding:14px;font-size:13px;font-weight:850;box-shadow:0 8px 20px rgba(15,23,42,.05)}.quick i{color:#059669}.reports{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px}.reportbox{background:#fff;border:1px solid #e5e7eb;border-radius:24px;overflow:hidden;box-shadow:0 10px 28px rgba(15,23,42,.06)}.reporthead{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 18px;border-bottom:1px solid #eef2f7}.reporthead h3{margin:0;font-size:15px}.reportbody{height:430px;overflow:auto}.zc-embed{height:100%}@media(max-width:900px){.kpis,.quick,.reports{grid-template-columns:1fr 1fr}.grid{grid-template-columns:1fr}}@media(max-width:560px){.zcdash{padding:14px}.kpis,.quick,.reports,.status-grid{grid-template-columns:1fr}.hero{padding:22px}.title{font-size:24px}}
+</style>
+<div class="zcdash">
+  <section class="hero"><div class="hero-row"><div><div class="eyebrow">Driver Workspace</div><h1 class="title">Driver Dashboard</h1><p class="subtitle">See today’s assigned stops, start or continue a delivery, verify OTP, submit POD, and track your route location from one mobile-friendly screen.</p></div><div class="hero-actions"><a class="btn btn-primary" href="#Report:Today"><i class="zc-li-outline ui-2-calendar-date"></i> Today</a><a class="btn btn-ghost" href="#Report:Driver_Location"><i class="zc-li-outline location_pin"></i> My Location</a></div></div></section>
+  <section class="kpis">
+    <div class="kpi" style="--accent:#059669;--soft:#dcfce7"><div class="kpi-head"><div><div class="label">Today</div><div class="value"><%=my_today%></div></div><div class="ico"><i class="zc-li-outline ui-2-calendar-date"></i></div></div><div class="note">Stops planned today</div></div>
+    <div class="kpi" style="--accent:#2563eb;--soft:#dbeafe"><div class="kpi-head"><div><div class="label">Pending Start</div><div class="value"><%=my_pending%></div></div><div class="ico"><i class="zc-li-outline media-1-button-play"></i></div></div><div class="note">Assigned but not started</div></div>
+    <div class="kpi" style="--accent:#f59e0b;--soft:#fef3c7"><div class="kpi-head"><div><div class="label">Active</div><div class="value"><%=my_in_transit + my_arrived%></div></div><div class="ico"><i class="zc-li-outline shopping-delivery-fast"></i></div></div><div class="note">In transit or at customer</div></div>
+    <div class="kpi" style="--accent:#ef4444;--soft:#fee2e2"><div class="kpi-head"><div><div class="label">Overdue</div><div class="value"><%=my_overdue%></div></div><div class="ico"><i class="zc-li-outline ui-1-notification-69"></i></div></div><div class="note">Needs immediate update</div></div>
+  </section>
+  <section class="grid">
+    <div class="card"><div class="card-head"><h3>Next Active Stop</h3><span class="pill"><%=next_status%></span></div><div class="route"><div class="route-no"><%=next_delivery_no%></div><div class="route-main"><%=next_customer%></div><div class="route-address"><%=next_address%></div></div><div class="quick" style="grid-template-columns:repeat(2,minmax(0,1fr));margin-top:14px"><a href="#Form:Start?Delivery_Number=<%=next_id%>&zc_LoadIn=dialog"><i class="zc-li-outline media-1-button-play"></i> Start</a><a href="#Page:Delivery_Details?delivery_id=<%=next_id%>"><i class="zc-li-outline arrows-1-tail-right"></i> Details</a></div></div>
+    <div class="card"><div class="card-head"><h3>My Progress</h3><span class="pill"><%=completion_pct%>% closed</span></div><div class="status-grid"><div class="status"><b><%=my_delivered%></b><span>Delivered</span></div><div class="status"><b><%=my_pod_submitted%></b><span>POD Submitted</span></div><div class="status"><b><%=my_failed%></b><span>Failed</span></div><div class="status"><b><%=my_total%></b><span>All Assigned</span></div></div><div class="progress-shell"><div class="progress-bar"></div></div><div class="note">Completion is calculated from your delivered/POD-submitted records.</div></div>
+  </section>
+  <section class="quick"><a href="#Report:Pending"><i class="zc-li-outline ui-2-time"></i> Pending</a><a href="#Report:In_Progress"><i class="zc-li-outline shopping-delivery-fast"></i> In Progress</a><a href="#Report:Delivered_Driver"><i class="zc-li-outline ui-1-check-circle-08"></i> Delivered</a><a href="#Report:Failed_Driver"><i class="zc-li-outline ui-1-simple-remove"></i> Failed</a></section>
+  <section class="reports"><div class="reportbox"><div class="reporthead"><h3>My Route Location</h3><span class="pill">Map</span></div><div class="reportbody"><div class="zc-embed" zc-component="report" zc-linkname="Driver_Location" zc-params="zc_Header=false&zc_Footer=false"></div></div></div><div class="reportbox"><div class="reporthead"><h3>Today’s Delivery List</h3><span class="pill"><%=my_today%></span></div><div class="reportbody"><div class="zc-embed" zc-component="report" zc-linkname="Today" zc-params="zc_Header=false&zc_Footer=false"></div></div></div></section>
+</div>

@@ -1,0 +1,86 @@
+Submit_action_on_add6 as "Submit action on add"
+{
+
+				type =  form
+				form = Outbound_Deliveries_Form
+
+				record event = on add
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											input.Delivery_Number = thisapp.Util.getID("Delivery_Number",input.S_No);
+										input.Delivery_Address = input.Customer_Address.Customer_Address;
+										input.Total_Weight_kg = input.Products.sum(Total_Weight);
+										input.Total_Items = input.Products.count();
+										input.Order_Date = zoho.currenttime;
+										tracking_link = "https://creatorapp.zohopublic.com/creatorsolutions_zylker84/pod/page-perma/Order_Tracking/btKVpHWZfTYpRuTEXvVzY3AH1m4SfEP4yOk2J7eQhRyqWOT9CQj7GX8FYp5QqVhperTeHtRvgY5TFTNnBaMQ7UZERaBqehf1Cp2E?order_id=" + input.ID + "&page_action=detail";
+										if(input.Need_OTP_Verification == true)
+										{
+											input.OTP = randomNumber(10000,99999);
+											content = "<div style='font-family: Arial, sans-serif; color: #333333; line-height: 1.6;'> <p>Dear <strong>" + input.Customer.Customer_Name + "</strong>,</p> <p> Greetings! </p> <p> Your delivery has been scheduled and is being processed. You can track the status of your delivery using the details below. </p> <div style='background:#f3f4f6;border:1px solid #d1d5db;border-radius:8px;padding:20px;margin:20px 0;text-align:center;'> <p style='margin:0;font-size:16px;color:#555;'>Delivery Verification OTP</p> <div style='font-size:36px;font-weight:bold;letter-spacing:8px;color:#2563eb;margin:10px 0;'> " + input.OTP + " </div> <p style='margin:0;font-size:14px;color:#666;'> Please share this OTP with the delivery driver to complete your delivery. </p> </div> <table cellpadding='8' cellspacing='0'' border='1' style='border-collapse: collapse; width: 100%; max-width: 600px;'> <tr> <td><strong>Delivery Number</strong></td> <td>" + input.Delivery_Number + "</td> </tr> <tr> <td><strong>Planned Delivery Date</strong></td> <td>" + input.Planned_Delivery_Date + "</td> </tr> <tr> <td><strong>Delivery Address</strong></td> <td>" + input.Delivery_Address + "</td> </tr> </table> <br> <div style='text-align: center;'> <a href='" + tracking_link + "' style='background-color: #2563eb; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 5px; display: inline-block; font-weight: bold;'> Track Delivery </a> </div> <br> <p> The tracking page will provide real-time updates on your delivery status and proof of delivery once the shipment is completed. </p> <p> If you have any questions regarding your delivery, please contact our support team. </p> <p> Thank you for choosing us. </p> <p> Regards,<br> <strong>Logistics Team</strong><br> </p> </div>";
+										}
+										else
+										{
+											content = "<div style='font-family: Arial, sans-serif; color: #333333; line-height: 1.6;'> <p>Dear <strong>" + input.Customer.Customer_Name + "</strong>,</p> <p> Greetings! </p> <p> Your delivery has been scheduled and is being processed. You can track the status of your delivery using the details below. </p> <table cellpadding='8' cellspacing='0'' border='1' style='border-collapse: collapse; width: 100%; max-width: 600px;'> <tr> <td><strong>Delivery Number</strong></td> <td>" + input.Delivery_Number + "</td> </tr> <tr> <td><strong>Planned Delivery Date</strong></td> <td>" + input.Planned_Delivery_Date + "</td> </tr> <tr> <td><strong>Delivery Address</strong></td> <td>" + input.Delivery_Address + "</td> </tr> </table> <br> <div style='text-align: center;'> <a href='" + tracking_link + "' style='background-color: #2563eb; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 5px; display: inline-block; font-weight: bold;'> Track Delivery </a> </div> <br> <p> The tracking page will provide real-time updates on your delivery status and proof of delivery once the shipment is completed. </p> <p> If you have any questions regarding your delivery, please contact our support team. </p> <p> Thank you for choosing us. </p> <p> Regards,<br> <strong>Logistics Team</strong><br> </p> </div>";
+										}
+										sendmail
+										[
+											from :zoho.adminuserid
+											to :input.Customer.Customer_Email
+											cc:"hariprasath.j.1997@gmail.com"
+											subject :"Your Delivery Has Been Scheduled – #" + input.Delivery_Number
+											message :content
+										]
+										insert into Timeline
+										[
+											Delivery_Number=input.ID
+											Action_field="Outbound Delivery Created"
+											Description=input.Delivery_Number + " Created · " + input.Customer.Customer_Name + " · " + input.Total_Items + " items · " + input.Total_Weight_kg.round(1) + " kg"
+											Date_Time=zoho.currenttime.subSeconds(1)
+											Added_User=zoho.loginuser
+										]
+										// Insert timeline entries
+										if(input.Driver.isEmpty())
+										{
+											input.Delivery_Status = "Pending";
+										}
+										else
+										{
+											try 
+											{
+												// 		input.Driver_Users_Field.email = input.Driver.Email;
+												input.Delivery_Status = "Assigned";
+												insert into Timeline
+												[
+													Delivery_Number=input.ID
+													Action_field="Driver Assigned"
+													Description="Assigned to " + input.Driver.Driver_Name + " · Vehicle " + input.Vehicle.Vehicle_Number + " · Route " + input.Route_Number + " · Stop #" + input.Stop_Sequence
+													Date_Time=zoho.currenttime
+													Added_User=zoho.loginuser
+												]
+											}	catch (e)
+											{
+												input.Delivery_Status = "Pending";
+												insert into Timeline
+												[
+													Delivery_Number=input.ID
+													Action_field="Assignment Failed"
+													Description="Driver user not found for " + ifnull(input.Driver.Driver_Name,"Unknown") + " (" + ifnull(input.Driver.Email,"No email") + ")"
+													Date_Time=zoho.currenttime
+													Added_User=zoho.loginuser
+												]
+												input.Vehicle = null;
+												input.Driver = null;
+											}
+										}
+										success message input.Delivery_Number + " is created successfully";
+						)
+					}
+				}
+
+			
+}
