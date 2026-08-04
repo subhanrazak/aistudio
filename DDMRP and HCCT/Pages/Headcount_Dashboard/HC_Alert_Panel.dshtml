@@ -1,0 +1,164 @@
+<style>
+/* ===== HC Alert Panel ===== */
+.hc-alert-wrapper {
+    padding: 16px;
+    box-sizing: border-box;
+    background-color: var(--zcs-page-bg-color, #F3F3F4);
+}
+.hc-alert-card {
+    background-color: var(--zcs-white-color, #FFFFFF);
+    border: 1px solid #e7e7ee;
+    border-radius: 12px;
+    overflow: hidden;
+}
+.hc-alert-card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 16px;
+    border-bottom: 1px solid #e7e7ee;
+    background-color: var(--zcs-white-color, #FFFFFF);
+}
+.hc-alert-card-header h3 {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--zcs_primary_text_color, #1a1a2e);
+    margin: 0;
+}
+.hc-alert-table-wrapper {
+    overflow: auto;
+}
+.hc-alert-table {
+    width: 100%;
+    border-collapse: collapse;
+    line-height: normal;
+}
+.hc-alert-table thead tr th {
+    background-color: #F9FAFE;
+    box-shadow: 0px -1px 0px 0px #e7e7ee inset;
+    padding: 8px 16px;
+    text-align: left;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--zcs_primary_text_color, #1a1a2e);
+    white-space: nowrap;
+    box-sizing: border-box;
+}
+.hc-alert-table tbody tr td {
+    padding: 8px 16px;
+    font-size: 0.875rem;
+    font-weight: 400;
+    color: var(--zcs_primary_text_color, #1a1a2e);
+    border-top: 1px solid #e7e7ee;
+    box-sizing: border-box;
+}
+.hc-alert-table tbody tr:first-child td {
+    border-top-color: transparent;
+}
+.hc-alert-table tbody tr:hover td {
+    background-color: #F9FAFE;
+}
+.hc-alert-table tbody tr.hc-row-high td {
+    background-color: #FFF0F0;
+}
+.hc-alert-table tbody tr.hc-row-high:hover td {
+    background-color: #FFE0E0;
+}
+.hc-alert-table tbody tr.hc-row-medium td {
+    background-color: #FFF8EC;
+}
+.hc-alert-table tbody tr.hc-row-medium:hover td {
+    background-color: #FFEFD0;
+}
+.hc-badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+.hc-badge-high   { background-color: #FDECEA; color: #C62828; }
+.hc-badge-medium { background-color: #FEF3E6; color: #E07B00; }
+.hc-badge-low    { background-color: #E6F7F0; color: #179E6C; }
+.hc-no-data {
+    padding: 32px 16px;
+    text-align: center;
+    color: var(--zcs_tertiary_text_color, #9CA3AF);
+    font-size: 0.875rem;
+}
+</style>
+
+<%
+  alertRecords = Headcount_Calculator[Alert_Triggered == true] sort by Calc_Date desc range from 0 to 9;
+
+  alertCount = alertRecords.count();
+%>
+
+<div class="hc-alert-wrapper">
+  <div class="hc-alert-card">
+    <div class="hc-alert-card-header">
+      <i class="zc-li-outline ui-2-alert-circle" style="font-size:18px;color:#FE455D;"></i>
+      <h3>Recent HC Gap Alerts</h3>
+      <span style="margin-left:auto;font-size:0.75rem;color:var(--zcs_tertiary_text_color,#9CA3AF);">Last 10 triggered alerts</span>
+    </div>
+    <div class="hc-alert-table-wrapper">
+      <% if(alertCount == 0) { %>
+      <div class="hc-no-data">
+        <i class="zc-li-outline ui-1-check-circle-08" style="font-size:32px;color:#179E6C;display:block;margin-bottom:8px;"></i>
+        No gap alerts triggered recently.
+      </div>
+      <% } else { %>
+      <table class="hc-alert-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Department</th>
+            <th>Shift</th>
+            <th>Required HC</th>
+            <th>Present HC</th>
+            <th>Gap</th>
+            <th>Severity</th>
+          </tr>
+        </thead>
+        <tbody>
+          <%
+            for each alertRow in alertRecords
+            {
+              gapVal = alertRow.get("Gap");
+              if(gapVal == null) { gapVal = 0; }
+              rowClass = "";
+              badgeClass = "hc-badge-low";
+              severityLabel = "Low";
+              if(gapVal > 10)
+              {
+                rowClass = "hc-row-high";
+                badgeClass = "hc-badge-high";
+                severityLabel = "High";
+              }
+              else if(gapVal >= 5)
+              {
+                rowClass = "hc-row-medium";
+                badgeClass = "hc-badge-medium";
+                severityLabel = "Medium";
+              }
+          %>
+          <tr class="<%= rowClass %>">
+            <td><%= alertRow.get("Calc_Date") %></td>
+            <td><%= alertRow.get("Department") %></td>
+            <td><%= alertRow.get("Shift") %></td>
+            <td><%= alertRow.get("Required_HC_Rounded") %></td>
+            <td>—</td>
+            <td><strong><%= gapVal %></strong></td>
+            <td><span class="hc-badge <%= badgeClass %>"><%= severityLabel %></span></td>
+
+
+          </tr>
+          <%
+            }
+          %>
+        </tbody>
+      </table>
+      <% } %>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,109 @@
+<%
+  todayDate = zoho.currentdate;
+
+  redCount = NFP_Status_Log[Status == "RED" && NFP_Date == todayDate].count();
+  yellowCount = NFP_Status_Log[Status == "YELLOW" && NFP_Date == todayDate].count();
+  greenCount = NFP_Status_Log[Status == "GREEN" && NFP_Date == todayDate].count();
+  alertCount = Supply_Alert_Log[Acknowledged == false].count();
+%>
+
+<style>
+  /* ===== Buffer KPI Cards ===== */
+  .buf-kpi-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    padding: 16px;
+    box-sizing: border-box;
+  }
+  .buf-kpi-card {
+    flex: 1 1 200px;
+    min-width: 180px;
+    border-radius: 12px;
+    padding: 20px 24px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    border: 1px solid var(--zcs_tertiary_border_color);
+    background-color: var(--zcs-white-color, #ffffff);
+  }
+  .buf-kpi-card.buf-red   { background-color: #fff2f3; border-color: #ffc5cb; }
+  .buf-kpi-card.buf-yellow{ background-color: #fffbea; border-color: #ffe08a; }
+  .buf-kpi-card.buf-green { background-color: #f0fdf6; border-color: #a7f3d0; }
+  .buf-kpi-card.buf-alert { background-color: #fff7ed; border-color: #fed7aa; }
+
+  .buf-kpi-icon {
+    font-size: 22px;
+    line-height: 1;
+  }
+  .buf-kpi-icon.buf-red    { color: #dc2626; }
+  .buf-kpi-icon.buf-yellow { color: #b45309; }
+  .buf-kpi-icon.buf-green  { color: #16a34a; }
+  .buf-kpi-icon.buf-alert  { color: #ea580c; }
+
+  .buf-kpi-label {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--zcs_secondary_text_color, #6b7280);
+    line-height: 1.4;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .buf-kpi-value {
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--zcs_primary_text_color, #111827);
+  }
+  .buf-kpi-value.buf-red    { color: #dc2626; }
+  .buf-kpi-value.buf-yellow { color: #b45309; }
+  .buf-kpi-value.buf-green  { color: #16a34a; }
+  .buf-kpi-value.buf-alert  { color: #ea580c; }
+
+  .buf-kpi-sub {
+    font-size: 0.75rem;
+    color: var(--zcs_tertiary_text_color, #9ca3af);
+    line-height: 1.4;
+  }
+</style>
+
+<div class="buf-kpi-row">
+
+  <div class="buf-kpi-card buf-red">
+    <span class="buf-kpi-icon buf-red">
+      <i class="zc-li-solid ui-1-simple-remove"></i>
+    </span>
+    <div class="buf-kpi-label">Parts in RED</div>
+    <div class="buf-kpi-value buf-red"><%= redCount %></div>
+    <div class="buf-kpi-sub">Below Red Zone — immediate action required</div>
+  </div>
+
+  <div class="buf-kpi-card buf-yellow">
+    <span class="buf-kpi-icon buf-yellow">
+      <i class="zc-li-outline ui-2-time"></i>
+    </span>
+    <div class="buf-kpi-label">Parts in YELLOW</div>
+    <div class="buf-kpi-value buf-yellow"><%= yellowCount %></div>
+    <div class="buf-kpi-sub">In Yellow Zone — monitor closely</div>
+  </div>
+
+  <div class="buf-kpi-card buf-green">
+    <span class="buf-kpi-icon buf-green">
+      <i class="zc-li-outline ui-1-check-circle-08"></i>
+    </span>
+    <div class="buf-kpi-label">Parts in GREEN</div>
+    <div class="buf-kpi-value buf-green"><%= greenCount %></div>
+    <div class="buf-kpi-sub">In Green Zone — buffer healthy</div>
+  </div>
+
+  <div class="buf-kpi-card buf-alert">
+    <span class="buf-kpi-icon buf-alert">
+      <i class="zc-li-outline ui-1-bell-53"></i>
+    </span>
+    <div class="buf-kpi-label">Unacknowledged Alerts</div>
+    <div class="buf-kpi-value buf-alert"><%= alertCount %></div>
+    <div class="buf-kpi-sub">Supply alerts pending acknowledgement</div>
+  </div>
+
+</div>

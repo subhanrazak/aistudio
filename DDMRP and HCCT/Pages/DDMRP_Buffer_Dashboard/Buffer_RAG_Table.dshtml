@@ -1,0 +1,189 @@
+<%
+  todayDate = zoho.currentdate;
+  ragRecords = NFP_Status_Log[NFP_Date == todayDate] sort by Status asc;
+%>
+
+<style>
+  /* ===== Buffer RAG Table ===== */
+  .buf-rag-wrapper {
+    padding: 0 16px 16px 16px;
+    box-sizing: border-box;
+  }
+  .buf-rag-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 0 10px 0;
+  }
+  .buf-rag-header-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--zcs_primary_text_color, #111827);
+  }
+  .buf-rag-header-icon {
+    font-size: 18px;
+    color: var(--zcs_brand_color, #3b82f6);
+  }
+
+  .buf-rag-table-wrapper {
+    border: 1px solid var(--zcs_tertiary_border_color, #e5e7eb);
+    border-radius: 8px;
+    overflow: auto;
+    background-color: var(--zcs-white-color, #ffffff);
+  }
+  .buf-rag-table {
+    width: 100%;
+    border-collapse: collapse;
+    line-height: normal;
+  }
+  .buf-rag-table thead tr th {
+    background-color: #f9fafe;
+    box-shadow: 0px -1px 0px 0px var(--zcs_tertiary_border_color, #e5e7eb) inset;
+    padding: 10px 16px;
+    text-align: left;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--zcs_secondary_text_color, #6b7280);
+    white-space: nowrap;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .buf-rag-table tbody tr td {
+    padding: 10px 16px;
+    font-size: 0.875rem;
+    color: var(--zcs_primary_text_color, #111827);
+    border-top: 1px solid var(--zcs_tertiary_border_color, #e5e7eb);
+    vertical-align: middle;
+  }
+  .buf-rag-table tbody tr:first-child td {
+    border-top: none;
+  }
+
+  /* RAG row tints */
+  .buf-row-red    { background-color: #fff5f5; }
+  .buf-row-yellow { background-color: #fffdf0; }
+  .buf-row-green  { background-color: #f0fdf4; }
+
+  /* Status badge */
+  .buf-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .buf-badge-red    { background-color: #fee2e2; color: #dc2626; }
+  .buf-badge-yellow { background-color: #fef9c3; color: #b45309; }
+  .buf-badge-green  { background-color: #dcfce7; color: #16a34a; }
+
+  .buf-part-code {
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: var(--zcs_brand_color, #3b82f6);
+  }
+  .buf-nfp-val {
+    font-weight: 600;
+  }
+  .buf-zone-val {
+    font-size: 0.8125rem;
+    color: var(--zcs_secondary_text_color, #6b7280);
+  }
+  .buf-no-data {
+    text-align: center;
+    padding: 32px 16px;
+    color: var(--zcs_tertiary_text_color, #9ca3af);
+    font-size: 0.875rem;
+  }
+</style>
+
+<div class="buf-rag-wrapper">
+  <div class="buf-rag-header">
+    <span class="buf-rag-header-icon">
+      <i class="zc-li-outline ui-2-chart-bar-32"></i>
+    </span>
+    <span class="buf-rag-header-title">Buffer Status by Part — Today</span>
+  </div>
+
+  <div class="buf-rag-table-wrapper">
+    <table class="buf-rag-table">
+      <thead>
+        <tr>
+          <th>Part Code</th>
+          <th>Part Description</th>
+          <th>NFP</th>
+          <th>Red Zone</th>
+          <th>Yellow Zone</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <%
+          if(ragRecords.count() == 0)
+          {
+        %>
+        <tr>
+          <td colspan="6" class="buf-no-data">
+            <i class="zc-li-outline ui-1-zoom-split" style="font-size:20px;display:block;margin-bottom:6px;"></i>
+            No buffer status records found for today.
+          </td>
+        </tr>
+        <%
+          }
+          else
+          {
+            for each rec in ragRecords
+            {
+              rowClass = "buf-row-green";
+              badgeClass = "buf-badge-green";
+              badgeIcon = "ui-1-check-circle-08";
+              iconStyle = "outline";
+              if(rec.Status == "RED")
+              {
+                rowClass = "buf-row-red";
+                badgeClass = "buf-badge-red";
+                badgeIcon = "ui-1-simple-remove";
+                iconStyle = "solid";
+              }
+              else if(rec.Status == "YELLOW")
+              {
+                rowClass = "buf-row-yellow";
+                badgeClass = "buf-badge-yellow";
+                badgeIcon = "ui-2-time";
+                iconStyle = "outline";
+              }
+
+              part_id = rec.get("Part");
+              partCode = "";
+              partDesc = "";
+              skuRecs = Part_SKU_Master[ID == part_id] sort by Added_Time desc range from 0 to 0;
+              for each skuRec in skuRecs
+              {
+                partCode = skuRec.get("Part_Code");
+                partDesc = skuRec.get("Part_Description");
+              }
+        %>
+        <tr class="<%= rowClass %>">
+          <td class="buf-part-code"><%= partCode %></td>
+          <td><%= partDesc %></td>
+          <td class="buf-nfp-val"><%= rec.get("NFP") %></td>
+          <td class="buf-zone-val"><%= rec.get("Red_Zone_Value") %></td>
+          <td class="buf-zone-val"><%= rec.get("Yellow_Zone_Value") %></td>
+
+          <td>
+            <span class="buf-badge <%= badgeClass %>">
+              <i class="zc-li-<%= iconStyle %> <%= badgeIcon %>"></i>
+              <%= encodeURL(rec.Status) %>
+            </span>
+          </td>
+        </tr>
+        <%
+            }
+          }
+        %>
+      </tbody>
+    </table>
+  </div>
+</div>

@@ -1,0 +1,32 @@
+list HC_Gap_Alert_Log
+{
+    displayName = "HC Gap Alert Log"
+    show all rows from Headcount_Calculator [Alert_Triggered == true]
+    (
+        Calc_Date
+        Department
+        Production_Line
+        Shift
+        Required_HC_Rounded
+        Gap
+        Utilisation_Percent
+        Alert_Triggered
+    )
+    filters ( Department  Shift )
+    sort by ( Calc_Date descending )
+    conditional formatting
+    (
+        "Critical Gap"
+        {
+            condition = (Gap > 10)
+            fields = [Gap]
+            format = "background-color:#FF0000;color:#FFFFFF;font-weight:bold"
+        }
+        "Moderate Gap"
+        {
+            condition = (Gap > 5)
+            fields = [Gap]
+            format = "background-color:#FFE0E0;color:#CC0000"
+        }
+    )
+}

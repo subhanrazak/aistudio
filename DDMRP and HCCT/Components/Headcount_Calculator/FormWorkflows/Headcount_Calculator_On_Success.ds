@@ -1,0 +1,61 @@
+HC_Calc_On_Success as "HC Calculation On Success"
+{
+    type = form
+    form = Headcount_Calculator
+    record event = on add or edit
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                // Fetch matching HC Actual Entry for same department and date
+                actual_entries = HC_Actual_Entry[Department == input.Department && Entry_Date == input.Calc_Date] sort by Added_Time desc range from 0 to 0;
+                actual_present = 0;
+                for each ae in actual_entries
+                {
+                    actual_present = ae.get("Present_Count");
+                }
+
+
+                // Calculate Required HC
+                // Required HC = (Planned Output × Cycle Time) / (Available Hours × 3600 × Efficiency% / 100)
+                eff_decimal = input.Efficiency_Percent / 100.0;
+                avail_seconds = input.Available_Hours * 3600.0;
+                required_hc = (input.Planned_Output * input.Cycle_Time_Seconds) / (avail_seconds * eff_decimal);
+                required_hc_rounded = required_hc.ceil();
+
+                // Calculate Gap and Utilisation
+                gap = required_hc - actual_present;
+                utilisation = 0.0;
+                if (required_hc > 0)
+                {
+                    utilisation = (actual_present / required_hc) * 100.0;
+                }
+
+
+                // Check gap threshold and trigger alert
+                gap_threshold = 5;
+                alert_flag = false;
+                if (gap > gap_threshold)
+                {
+                    alert_flag = true;
+                    // TODO: Send Zoho Cliq alert to #production-alerts channel
+                    // Integration deferred - requires Zoho Cliq connection configuration
+                }
+
+
+                update Headcount_Calculator[ID == input.ID]
+                [
+                    Required_HC = required_hc.round(2)
+                    Required_HC_Rounded = required_hc_rounded
+                    Gap = gap.round(2)
+                    Utilisation_Percent = utilisation.round(2)
+                    Alert_Triggered = alert_flag
+                ];
+
+            )
+        }
+    }
+}

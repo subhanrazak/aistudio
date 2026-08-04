@@ -1,0 +1,30 @@
+list Parts_In_RED
+{
+    displayName = "Parts in RED Zone"
+    show all rows from NFP_Status_Log [Status == "RED"]
+    (
+        NFP_Date
+        Part
+        NFP
+        Red_Zone_Value
+        Action_Triggered
+        PO_Draft_Created
+    )
+    filters ( Part  PO_Draft_Created )
+    sort by ( NFP_Date descending )
+    conditional formatting
+    (
+        "Critical RED"
+        {
+            condition = (NFP <= 0)
+            fields = [NFP, Part]
+            format = "background-color:#FF0000;color:#FFFFFF;font-weight:bold"
+        }
+        "Low NFP"
+        {
+            condition = (NFP > 0)
+            fields = [NFP]
+            format = "background-color:#FFE0E0;color:#CC0000"
+        }
+    )
+}

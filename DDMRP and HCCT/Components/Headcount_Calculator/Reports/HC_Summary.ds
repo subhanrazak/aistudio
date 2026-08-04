@@ -1,0 +1,40 @@
+default list HC_Summary
+{
+    displayName = "HC Calculation Summary"
+    show all rows from Headcount_Calculator
+    (
+        Calc_Date
+        Department
+        Production_Line
+        Shift
+        Planned_Output
+        Required_HC
+        Required_HC_Rounded
+        Gap
+        (
+            display = average
+        )
+        Utilisation_Percent
+        (
+            display = average
+        )
+        Alert_Triggered
+    )
+    filters ( Department  Shift  Alert_Triggered )
+    sort by ( Calc_Date descending )
+    conditional formatting
+    (
+        "High Gap"
+        {
+            condition = (Gap > 5)
+            fields = [Gap]
+            format = "background-color:#FFE0E0;color:#CC0000;font-weight:bold"
+        }
+        "Low Utilisation"
+        {
+            condition = (Utilisation_Percent < 80)
+            fields = [Utilisation_Percent]
+            format = "background-color:#FFF3CD;color:#856404"
+        }
+    )
+}

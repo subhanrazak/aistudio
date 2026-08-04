@@ -1,0 +1,165 @@
+Daily_Buffer_Recalc as "Daily Buffer Zone Recalculation"
+{
+    type = schedule
+    start = "2026-01-01 06:00:00"
+    frequency = daily
+    time zone = "Asia/Kolkata"
+
+    on start
+    {
+        actions
+        {
+            on load
+            (
+                // Fetch all active decoupling points
+                active_dps = Decoupling_Point_Master[Active_Status == true];
+                for each dp in active_dps
+                {
+                    part_id = dp.get("Part");
+
+                    // Fetch part master data
+                    part_records = Part_SKU_Master[ID == part_id] sort by Added_Time desc range from 0 to 0;
+                    if (part_records.count() == 0)
+                    {
+                        continue;
+                    }
+                    adu = 0.0;
+                    moq = 0;
+                    for each partRec in part_records
+                    {
+                        adu = partRec.get("ADU");
+                        moq = partRec.get("MOQ");
+                    }
+
+
+                    // Guard against null values
+                    if (adu == null) { adu = 0.0; }
+                    if (moq == null) { moq = 0; }
+
+                    // Get decoupling point parameters
+                    lead_time = dp.get("Lead_Time_Days");
+                    lead_time_factor = dp.get("Lead_Time_Factor");
+                    order_cycle = dp.get("Order_Cycle_Days");
+
+                    if (lead_time == null) { lead_time = 1; }
+                    if (lead_time_factor == null) { lead_time_factor = 0.5; }
+                    if (order_cycle == null) { order_cycle = 1; }
+
+                    // Calculate buffer zones
+                    // Red Zone = MOQ + (ADU × Lead Time × Lead Time Factor)
+                    red_zone = moq + (adu * lead_time * lead_time_factor);
+
+                    // Yellow Zone = ADU × Decoupled Lead Time
+                    yellow_zone = adu * lead_time;
+
+                    // Green Zone = max(MOQ, ADU × Order Cycle, Red Zone)
+                    green_zone = moq;
+                    g2 = adu * order_cycle;
+                    g3 = red_zone;
+                    if (g2 > green_zone) { green_zone = g2; }
+                    if (g3 > green_zone) { green_zone = g3; }
+
+                    // Fetch today's stock snapshot
+                    today = zoho.currentdate;
+                    snapshots = Daily_Stock_Snapshot[Part == part_id && Snapshot_Date == today];
+                    on_hand = 0.0;
+                    on_order = 0.0;
+                    qual_demand = 0.0;
+                    for each snap in snapshots
+                    {
+                        tempOnHand = snap.get("On_Hand_Qty");
+                        tempOnOrder = snap.get("On_Order_Qty");
+                        tempDemand = snap.get("Qualified_Demand");
+                        if (tempOnHand != null) { on_hand = tempOnHand; }
+                        if (tempOnOrder != null) { on_order = tempOnOrder; }
+                        if (tempDemand != null) { qual_demand = tempDemand; }
+                    }
+
+
+                    // Calculate NFP = On-Hand + On-Order - Qualified Demand
+                    nfp = on_hand + on_order - qual_demand;
+
+                    // Determine buffer status
+                    buffer_status = "GREEN";
+                    if (nfp <= red_zone)
+                    {
+                        buffer_status = "RED";
+                    }
+                    else if (nfp <= yellow_zone)
+                    {
+                        buffer_status = "YELLOW";
+                    }
+
+                    // Create NFP Status Log entry
+                    nfp_record = map();
+                    nfp_record.put("Part", part_id);
+                    nfp_record.put("NFP_Date", today);
+                    nfp_record.put("NFP", nfp.round(2));
+                    nfp_record.put("Status", buffer_status);
+                    nfp_record.put("Red_Zone_Value", red_zone.round(2));
+                    nfp_record.put("Yellow_Zone_Value", yellow_zone.round(2));
+
+                    action_flag = false;
+                    if (buffer_status == "RED")
+                    {
+                        action_flag = true;
+                        // TODO: Send Zoho Cliq alert to #supply-alerts channel
+                        // Integration deferred - requires Zoho Cliq connection configuration
+                        // TODO: Auto-create PO draft in Zoho Books
+                        // Integration deferred - requires Zoho Books connection configuration
+
+                        // Create Supply Alert Log entry
+                        insert into Supply_Alert_Log
+                        [
+                            Part = part_id
+                            Alert_Date = today
+                            Alert_Type = "RED Zone Breach"
+                            NFP_At_Alert = nfp.round(2)
+                            Buffer_Status = "RED"
+                            Acknowledged = false
+                            PO_Draft_Created = false
+                        ];
+                    }
+                    nfp_record.put("Action_Triggered", action_flag);
+                    nfp_record.put("PO_Draft_Created", false);
+                    insert into NFP_Status_Log
+                    [
+                        Part = part_id
+                        NFP_Date = today
+                        NFP = nfp.round(2)
+                        Status = buffer_status
+                        Red_Zone_Value = red_zone.round(2)
+                        Yellow_Zone_Value = yellow_zone.round(2)
+                        Action_Triggered = action_flag
+                        PO_Draft_Created = false
+                    ];
+
+                    // Update Buffer Profile & Levels
+                    existing_buffer = Buffer_Profile_Levels[Part == part_id];
+                    if (existing_buffer.count() > 0)
+                    {
+                        update Buffer_Profile_Levels[Part == part_id]
+                        [
+                            Red_Zone = red_zone.round(2)
+                            Yellow_Zone = yellow_zone.round(2)
+                            Green_Zone = green_zone.round(2)
+                            Last_Calculated = today
+                        ];
+                    }
+                    else
+                    {
+                        insert into Buffer_Profile_Levels
+                        [
+                            Part = part_id
+                            Red_Zone = red_zone.round(2)
+                            Yellow_Zone = yellow_zone.round(2)
+                            Green_Zone = green_zone.round(2)
+                            Last_Calculated = today
+                        ];
+                    }
+                }
+
+            )
+        }
+    }
+}

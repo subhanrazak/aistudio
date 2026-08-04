@@ -1,0 +1,5430 @@
+application "DDMRP-and-HCCT"
+{
+	date format = "dd-MMM-yyyy"
+	time zone = "Asia/Kolkata"
+	time format = "24-hr"
+
+
+
+	forms
+	{
+		form Buffer_Profile_Levels
+		{
+		    displayname = "Buffer Profile & Levels"
+		
+		    Part_Profile
+		    (
+		        type = section
+		        displayname = "Part & Profile"
+		        row = 1
+		        column = 0
+		    )
+		    Buffer_ID
+		    (
+		        type = autonumber
+		        displayname = "Buffer ID"
+		        start index = 1
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		    must have Part
+		    (
+		        type = picklist
+		        displayname = "Part / SKU"
+		        values = Part_SKU_Master.ID
+		        displayformat = [Part_Code]
+		        searchable = true
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		    Last_Calculated
+		    (
+		        type = date
+		        displayname = "Last Calculated Date"
+		        initial value = "${zoho.currentdate}"
+		        row = 1
+		        column = 2
+		        width = medium
+		    )
+		    Buffer_Zones
+		    (
+		        type = section
+		        displayname = "Buffer Zones"
+		        visibility = true
+		        row = 2
+		        column = 1
+		    )
+		    Red_Zone
+		    (
+		        type = decimal
+		        displayname = "Red Zone (Top)"
+		        decimalplace = 2
+		        row = 2
+		        column = 1
+		        width = medium
+		    )
+		    Yellow_Zone
+		    (
+		        type = decimal
+		        displayname = "Yellow Zone (Top)"
+		        decimalplace = 2
+		        row = 2
+		        column = 2
+		        width = medium
+		    )
+		    Green_Zone
+		    (
+		        type = decimal
+		        displayname = "Green Zone (Top)"
+		        decimalplace = 2
+		        row = 2
+		        column = 1
+		        width = medium
+		    )
+		    Variability_Factor
+		    (
+		        type = picklist
+		        displayname = "Variability Factor Applied"
+		        values = {"Low (0.1)","Medium (0.5)","High (1.0)"}
+		        row = 2
+		        column = 2
+		        width = medium
+		    )
+		    Override
+		    (
+		        type = section
+		        displayname = "Override"
+		        visibility = true
+		        row = 3
+		        column = 1
+		    )
+		    Manual_Override
+		    (
+		        type = checkbox
+		        displayname = "Manual Override Active"
+		        initial value = false
+		        row = 3
+		        column = 1
+		        width = medium
+		    )
+		    Override_Notes
+		    (
+		        type = textarea
+		        displayname = "Override Notes"
+		        row = 3
+		        column = 2
+		        width = medium
+		    )
+		    actions
+		    {
+		        on add
+		        {
+		            Submit
+		            (
+		                type = submit
+		                displayname = "Submit"
+		            )
+		            Reset
+		            (
+		                type = reset
+		                displayname = "Reset"
+		            )
+		        }
+		        on edit
+		        {
+		            Update
+		            (
+		                type = submit
+		                displayname = "Update"
+		            )
+		            Cancel
+		            (
+		                type = cancel
+		                displayname = "Cancel"
+		            )
+		        }
+		    }
+		}
+
+		form Daily_Stock_Snapshot
+		{
+		    displayname = "Daily Stock Snapshot"
+		
+		    Snapshot_Details
+		    (
+		        type = section
+		        displayname = "Snapshot Details"
+		        row = 1
+		        column = 0
+		    )
+		    Snapshot_ID
+		    (
+		        type = autonumber
+		        displayname = "Snapshot ID"
+		        start index = 1
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		    must have Part
+		    (
+		        type = picklist
+		        displayname = "Part / SKU"
+		        values = Part_SKU_Master.ID
+		        displayformat = [Part_Code]
+		        searchable = true
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		    must have Snapshot_Date
+		    (
+		        type = date
+		        displayname = "Snapshot Date"
+		        initial value = "${zoho.currentdate}"
+		        row = 1
+		        column = 2
+		        width = medium
+		    )
+		    Stock_Quantities
+		    (
+		        type = section
+		        displayname = "Stock Quantities"
+		        visibility = true
+		        row = 2
+		        column = 1
+		    )
+		    must have On_Hand_Qty
+		    (
+		        type = decimal
+		        displayname = "On-Hand Quantity"
+		        decimalplace = 2
+		        row = 2
+		        column = 1
+		        width = medium
+		    )
+		    On_Order_Qty
+		    (
+		        type = decimal
+		        displayname = "On-Order Quantity"
+		        decimalplace = 2
+		        initial value = 0.0
+		        row = 2
+		        column = 2
+		        width = medium
+		    )
+		    Qualified_Demand
+		    (
+		        type = decimal
+		        displayname = "Qualified Demand"
+		        decimalplace = 2
+		        initial value = 0.0
+		        row = 2
+		        column = 1
+		        width = medium
+		    )
+		    Source
+		    (
+		        type = picklist
+		        displayname = "Data Source"
+		        values = {"Manual Entry","Zoho Inventory Sync","Import"}
+		        initial value = "Manual Entry"
+		        row = 2
+		        column = 2
+		        width = medium
+		    )
+		    actions
+		    {
+		        on add
+		        {
+		            Submit
+		            (
+		                type = submit
+		                displayname = "Submit"
+		            )
+		            Reset
+		            (
+		                type = reset
+		                displayname = "Reset"
+		            )
+		        }
+		        on edit
+		        {
+		            Update
+		            (
+		                type = submit
+		                displayname = "Update"
+		            )
+		            Cancel
+		            (
+		                type = cancel
+		                displayname = "Cancel"
+		            )
+		        }
+		    }
+		}
+
+		form Decoupling_Point_Master
+		{
+		    displayname = "Decoupling Point Master"
+		
+		    Decoupling_Point
+		    (
+		        type = section
+		        displayname = "Decoupling Point"
+		        row = 1
+		        column = 0
+		    )
+		    DP_ID
+		    (
+		        type = autonumber
+		        displayname = "DP ID"
+		        start index = 1
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		    must have Part
+		    (
+		        type = picklist
+		        displayname = "Part / SKU"
+		        values = Part_SKU_Master.ID
+		        displayformat = [Part_Code]
+		        searchable = true
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		    Active_Status
+		    (
+		        type = checkbox
+		        displayname = "Active"
+		        initial value = true
+		        row = 1
+		        column = 2
+		        width = medium
+		    )
+		    Lead_Time_Parameters
+		    (
+		        type = section
+		        displayname = "Lead Time Parameters"
+		        visibility = true
+		        row = 2
+		        column = 1
+		    )
+		    must have Lead_Time_Days
+		    (
+		        type = number
+		        displayname = "Decoupled Lead Time (Days)"
+		        row = 2
+		        column = 1
+		        width = medium
+		    )
+		    Lead_Time_Factor
+		    (
+		        type = decimal
+		        displayname = "Lead Time Factor (0-1)"
+		        decimalplace = 2
+		        initial value = 0.5
+		        row = 2
+		        column = 2
+		        width = medium
+		    )
+		    Variability_Factor
+		    (
+		        type = picklist
+		        displayname = "Demand Variability Factor"
+		        values = {"Low (0.1)","Medium (0.5)","High (1.0)"}
+		        row = 2
+		        column = 1
+		        width = medium
+		    )
+		    Order_Parameters
+		    (
+		        type = section
+		        displayname = "Order Parameters"
+		        visibility = true
+		        row = 3
+		        column = 1
+		    )
+		    must have Order_Cycle_Days
+		    (
+		        type = number
+		        displayname = "Order Cycle (Days)"
+		        row = 3
+		        column = 1
+		        width = medium
+		    )
+		    Notes
+		    (
+		        type = textarea
+		        displayname = "Notes"
+		        row = 3
+		        column = 2
+		        width = medium
+		    )
+		    actions
+		    {
+		        on add
+		        {
+		            Submit
+		            (
+		                type = submit
+		                displayname = "Submit"
+		            )
+		            Reset
+		            (
+		                type = reset
+		                displayname = "Reset"
+		            )
+		        }
+		        on edit
+		        {
+		            Update
+		            (
+		                type = submit
+		                displayname = "Update"
+		            )
+		            Cancel
+		            (
+		                type = cancel
+		                displayname = "Cancel"
+		            )
+		        }
+		    }
+		}
+
+		form Employee_Master
+		{
+		    displayname = "Employee Master"
+		
+		    Employee_Info
+		    (
+		        type = section
+		        displayname = "Employee Information"
+		        row = 1
+		        column = 0
+		    )
+		    Employee_ID
+		    (
+		        type = autonumber
+		        displayname = "Employee ID"
+		        start index = 1
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		    must have Employee_Name
+		    (
+		        type = text
+		        displayname = "Employee Name"
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		    must have Department
+		    (
+		        type = picklist
+		        displayname = "Department"
+		        values = {"Assembly","Paint","Battery","Quality","Logistics","Maintenance","HR","Finance","IT"}
+		        row = 1
+		        column = 2
+		        width = medium
+		    )
+		    Role_Shift
+		    (
+		        type = section
+		        displayname = "Role & Shift"
+		        visibility = true
+		        row = 2
+		        column = 1
+		    )
+		    must have Role
+		    (
+		        type = text
+		        displayname = "Role / Designation"
+		        row = 2
+		        column = 1
+		        width = medium
+		    )
+		    must have Shift
+		    (
+		        type = picklist
+		        displayname = "Shift"
+		        values = {"Morning","Afternoon","Night","General"}
+		        row = 2
+		        column = 2
+		        width = medium
+		    )
+		    Location
+		    (
+		        type = text
+		        displayname = "Location / Plant"
+		        row = 2
+		        column = 1
+		        width = medium
+		    )
+		    Employment_Type
+		    (
+		        type = picklist
+		        displayname = "Employment Type"
+		        values = {"Permanent","Contract","Contractor","Apprentice"}
+		        row = 2
+		        column = 2
+		        width = medium
+		    )
+		    Contact_Status
+		    (
+		        type = section
+		        displayname = "Contact & Status"
+		        visibility = true
+		        row = 3
+		        column = 1
+		    )
+		    Email
+		    (
+		        type = email
+		        displayname = "Email Address"
+		        row = 3
+		        column = 1
+		        width = medium
+		    )
+		    Phone
+		    (
+		        type = phonenumber
+		        displayname = "Phone Number"
+		        allowedcountries = {in}
+		        defaultcountry = "in"
+		        row = 3
+		        column = 2
+		        width = medium
+		    )
+		    Status
+		    (
+		        type = picklist
+		        displayname = "Status"
+		        values = {"Active","Inactive","On Leave"}
+		        initial value = "Active"
+		        row = 3
+		        column = 1
+		        width = medium
+		    )
+		    Join_Date
+		    (
+		        type = date
+		        displayname = "Date of Joining"
+		        row = 3
+		        column = 2
+		        width = medium
+		    )
+		    actions
+		    {
+		        on add
+		        {
+		            Submit
+		            (
+		                type = submit
+		                displayname = "Submit"
+		            )
+		            Reset
+		            (
+		                type = reset
+		                displayname = "Reset"
+		            )
+		        }
+		        on edit
+		        {
+		            Update
+		            (
+		                type = submit
+		                displayname = "Update"
+		            )
+		            Cancel
+		            (
+		                type = cancel
+		                displayname = "Cancel"
+		            )
+		        }
+		    }
+		}
+
+		form HC_Actual_Entry
+		{
+		    displayname = "HC Actual Entry"
+		
+		    Attendance_Details
+		    (
+		        type = section
+		        displayname = "Attendance Details"
+		        row = 1
+		        column = 0
+		    )
+		    Entry_ID
+		    (
+		        type = autonumber
+		        displayname = "Entry ID"
+		        start index = 1
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		    must have Entry_Date
+		    (
+		        type = date
+		        displayname = "Entry Date"
+		        initial value = "${zoho.currentdate}"
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		    must have Department
+		    (
+		        type = picklist
+		        displayname = "Department"
+		        values = {"Assembly","Paint","Battery","Quality","Logistics","Maintenance","HR","Finance","IT"}
+		        row = 1
+		        column = 2
+		        width = medium
+		    )
+		    Headcount_Counts
+		    (
+		        type = section
+		        displayname = "Headcount Counts"
+		        visibility = true
+		        row = 2
+		        column = 1
+		    )
+		    must have Present_Count
+		    (
+		        type = number
+		        displayname = "Present Count"
+		        row = 2
+		        column = 1
+		        width = medium
+		    )
+		    Absent_Count
+		    (
+		        type = number
+		        displayname = "Absent Count"
+		        row = 2
+		        column = 2
+		        width = medium
+		    )
+		    Contractor_Count
+		    (
+		        type = number
+		        displayname = "Contractor Count"
+		        row = 2
+		        column = 1
+		        width = medium
+		    )
+		    Total_Workforce
+		    (
+		        type = formula
+		        displayname = "Total Workforce"
+		        value = Present_Count + Absent_Count
+		        visibility = true
+		        row = 2
+		        column = 2
+		        width = medium
+		    )
+		    Notes_Section
+		    (
+		        type = section
+		        displayname = "Notes"
+		        visibility = true
+		        row = 3
+		        column = 1
+		    )
+		    Shift
+		    (
+		        type = picklist
+		        displayname = "Shift"
+		        values = {"Morning","Afternoon","Night","General"}
+		        row = 3
+		        column = 1
+		        width = medium
+		    )
+		    Notes
+		    (
+		        type = textarea
+		        displayname = "Notes"
+		        row = 3
+		        column = 2
+		        width = medium
+		    )
+		    actions
+		    {
+		        on add
+		        {
+		            Submit
+		            (
+		                type = submit
+		                displayname = "Submit"
+		            )
+		            Reset
+		            (
+		                type = reset
+		                displayname = "Reset"
+		            )
+		        }
+		        on edit
+		        {
+		            Update
+		            (
+		                type = submit
+		                displayname = "Update"
+		            )
+		            Cancel
+		            (
+		                type = cancel
+		                displayname = "Cancel"
+		            )
+		        }
+		    }
+		}
+
+		form Headcount_Calculator
+		{
+		    displayname = "Headcount Calculator"
+		
+		    Calculation_Inputs
+		    (
+		        type = section
+		        displayname = "Calculation Inputs"
+		        row = 1
+		        column = 0
+		    )
+		    Calc_ID
+		    (
+		        type = autonumber
+		        displayname = "Calc ID"
+		        start index = 1
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		    must have Department
+		    (
+		        type = picklist
+		        displayname = "Department"
+		        values = {"Assembly","Paint","Battery","Quality","Logistics","Maintenance","HR","Finance","IT"}
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		    must have Shift
+		    (
+		        type = picklist
+		        displayname = "Shift"
+		        values = {"Morning","Afternoon","Night","General"}
+		        row = 1
+		        column = 2
+		        width = medium
+		    )
+		    must have Calc_Date
+		    (
+		        type = date
+		        displayname = "Calculation Date"
+		        initial value = "${zoho.currentdate}"
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		    must have Production_Line
+		    (
+		        type = text
+		        displayname = "Production Line"
+		        row = 1
+		        column = 2
+		        width = medium
+		    )
+		    Plan_Parameters
+		    (
+		        type = section
+		        displayname = "Plan Parameters"
+		        visibility = true
+		        row = 2
+		        column = 1
+		    )
+		    must have Planned_Output
+		    (
+		        type = number
+		        displayname = "Planned Output Units"
+		        row = 2
+		        column = 1
+		        width = medium
+		    )
+		    must have Cycle_Time_Seconds
+		    (
+		        type = decimal
+		        displayname = "Cycle Time (seconds)"
+		        decimalplace = 2
+		        row = 2
+		        column = 2
+		        width = medium
+		    )
+		    must have Available_Hours
+		    (
+		        type = decimal
+		        displayname = "Available Hours"
+		        decimalplace = 2
+		        row = 2
+		        column = 1
+		        width = medium
+		    )
+		    must have Efficiency_Percent
+		    (
+		        type = decimal
+		        displayname = "Efficiency (%)"
+		        decimalplace = 2
+		        initial value = 85.0
+		        row = 2
+		        column = 2
+		        width = medium
+		    )
+		    Calculated_Results
+		    (
+		        type = section
+		        displayname = "Calculated Results"
+		        visibility = true
+		        row = 3
+		        column = 1
+		    )
+		    Required_HC
+		    (
+		        type = decimal
+		        displayname = "Required Headcount"
+		        decimalplace = 2
+		        row = 3
+		        column = 1
+		        width = medium
+		    )
+		    Required_HC_Rounded
+		    (
+		        type = number
+		        displayname = "Required HC (Rounded)"
+		        row = 3
+		        column = 2
+		        width = medium
+		    )
+		    Gap
+		    (
+		        type = decimal
+		        displayname = "HC Gap (Required - Actual)"
+		        decimalplace = 2
+		        row = 3
+		        column = 1
+		        width = medium
+		    )
+		    Utilisation_Percent
+		    (
+		        type = decimal
+		        displayname = "Utilisation (%)"
+		        decimalplace = 2
+		        row = 3
+		        column = 2
+		        width = medium
+		    )
+		    Alert_Triggered
+		    (
+		        type = checkbox
+		        displayname = "Alert Triggered"
+		        initial value = false
+		        row = 3
+		        column = 1
+		        width = medium
+		    )
+		    actions
+		    {
+		        on add
+		        {
+		            Submit
+		            (
+		                type = submit
+		                displayname = "Calculate"
+		            )
+		            Reset
+		            (
+		                type = reset
+		                displayname = "Reset"
+		            )
+		        }
+		        on edit
+		        {
+		            Update
+		            (
+		                type = submit
+		                displayname = "Recalculate"
+		            )
+		            Cancel
+		            (
+		                type = cancel
+		                displayname = "Cancel"
+		            )
+		        }
+		    }
+		}
+
+		form NFP_Status_Log
+		{
+		    displayname = "NFP Status Log"
+		
+		    NFP_Record
+		    (
+		        type = section
+		        displayname = "NFP Record"
+		        row = 1
+		        column = 0
+		    )
+		    NFP_ID
+		    (
+		        type = autonumber
+		        displayname = "NFP ID"
+		        start index = 1
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		    must have Part
+		    (
+		        type = picklist
+		        displayname = "Part / SKU"
+		        values = Part_SKU_Master.ID
+		        displayformat = [Part_Code]
+		        searchable = true
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		    must have NFP_Date
+		    (
+		        type = date
+		        displayname = "NFP Date"
+		        initial value = "${zoho.currentdate}"
+		        row = 1
+		        column = 2
+		        width = medium
+		    )
+		    Calculated_Values
+		    (
+		        type = section
+		        displayname = "Calculated Values"
+		        visibility = true
+		        row = 2
+		        column = 1
+		    )
+		    NFP
+		    (
+		        type = decimal
+		        displayname = "Net Flow Position (NFP)"
+		        decimalplace = 2
+		        row = 2
+		        column = 1
+		        width = medium
+		    )
+		    Status
+		    (
+		        type = picklist
+		        displayname = "Buffer Status"
+		        values = {"RED","YELLOW","GREEN"}
+		        row = 2
+		        column = 2
+		        width = medium
+		    )
+		    Red_Zone_Value
+		    (
+		        type = decimal
+		        displayname = "Red Zone Top"
+		        decimalplace = 2
+		        row = 2
+		        column = 1
+		        width = medium
+		    )
+		    Yellow_Zone_Value
+		    (
+		        type = decimal
+		        displayname = "Yellow Zone Top"
+		        decimalplace = 2
+		        row = 2
+		        column = 2
+		        width = medium
+		    )
+		    Action_Tracking
+		    (
+		        type = section
+		        displayname = "Action Tracking"
+		        visibility = true
+		        row = 3
+		        column = 1
+		    )
+		    Action_Triggered
+		    (
+		        type = checkbox
+		        displayname = "Action Triggered"
+		        initial value = false
+		        row = 3
+		        column = 1
+		        width = medium
+		    )
+		    PO_Draft_Created
+		    (
+		        type = checkbox
+		        displayname = "PO Draft Created (Zoho Books)"
+		        initial value = false
+		        row = 3
+		        column = 2
+		        width = medium
+		    )
+		    Notes
+		    (
+		        type = textarea
+		        displayname = "Notes"
+		        row = 3
+		        column = 1
+		        width = medium
+		    )
+		    actions
+		    {
+		        on add
+		        {
+		            Submit
+		            (
+		                type = submit
+		                displayname = "Submit"
+		            )
+		            Reset
+		            (
+		                type = reset
+		                displayname = "Reset"
+		            )
+		        }
+		        on edit
+		        {
+		            Update
+		            (
+		                type = submit
+		                displayname = "Update"
+		            )
+		            Cancel
+		            (
+		                type = cancel
+		                displayname = "Cancel"
+		            )
+		        }
+		    }
+		}
+
+		form Part_SKU_Master
+		{
+		    displayname = "Part / SKU Master"
+		
+		    Part_Identification
+		    (
+		        type = section
+		        displayname = "Part Identification"
+		        row = 1
+		        column = 0
+		    )
+		    Part_ID
+		    (
+		        type = autonumber
+		        displayname = "Part ID"
+		        start index = 1
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		    must have unique Part_Code
+		    (
+		        type = text
+		        displayname = "Part Code"
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		    must have Part_Description
+		    (
+		        type = text
+		        displayname = "Part Description"
+		        row = 1
+		        column = 2
+		        width = medium
+		    )
+		    Classification
+		    (
+		        type = section
+		        displayname = "Classification"
+		        visibility = true
+		        row = 2
+		        column = 1
+		    )
+		    must have Category
+		    (
+		        type = picklist
+		        displayname = "Category"
+		        values = {"Battery Cell","Motor","Controller","Chassis","Brakes","Wiring Harness","Fasteners","Packaging","Other"}
+		        row = 2
+		        column = 1
+		        width = medium
+		    )
+		    Supplier
+		    (
+		        type = text
+		        displayname = "Supplier Name"
+		        row = 2
+		        column = 2
+		        width = medium
+		    )
+		    Unit
+		    (
+		        type = picklist
+		        displayname = "Unit of Measure"
+		        values = {"Each","Kg","Litre","Metre","Set","Box","Pallet"}
+		        row = 2
+		        column = 1
+		        width = medium
+		    )
+		    MOQ
+		    (
+		        type = number
+		        displayname = "Minimum Order Quantity (MOQ)"
+		        row = 2
+		        column = 2
+		        width = medium
+		    )
+		    DDMRP_Parameters
+		    (
+		        type = section
+		        displayname = "DDMRP Parameters"
+		        visibility = true
+		        row = 3
+		        column = 1
+		    )
+		    ADU
+		    (
+		        type = decimal
+		        displayname = "Average Daily Usage (ADU)"
+		        decimalplace = 2
+		        row = 3
+		        column = 1
+		        width = medium
+		    )
+		    ADU_Last_Updated
+		    (
+		        type = date
+		        displayname = "ADU Last Updated Date"
+		        row = 3
+		        column = 2
+		        width = medium
+		    )
+		    Lead_Time_Days
+		    (
+		        type = number
+		        displayname = "Lead Time (Days)"
+		        row = 3
+		        column = 1
+		        width = medium
+		    )
+		    Status
+		    (
+		        type = picklist
+		        displayname = "Status"
+		        values = {"Active","Inactive","Discontinued"}
+		        initial value = "Active"
+		        row = 3
+		        column = 2
+		        width = medium
+		    )
+		    actions
+		    {
+		        on add
+		        {
+		            Submit
+		            (
+		                type = submit
+		                displayname = "Submit"
+		            )
+		            Reset
+		            (
+		                type = reset
+		                displayname = "Reset"
+		            )
+		        }
+		        on edit
+		        {
+		            Update
+		            (
+		                type = submit
+		                displayname = "Update"
+		            )
+		            Cancel
+		            (
+		                type = cancel
+		                displayname = "Cancel"
+		            )
+		        }
+		    }
+		}
+
+		form Production_Plan
+		{
+		    displayname = "Production Plan"
+		
+		    Plan_Details
+		    (
+		        type = section
+		        displayname = "Plan Details"
+		        row = 1
+		        column = 0
+		    )
+		    Plan_ID
+		    (
+		        type = autonumber
+		        displayname = "Plan ID"
+		        start index = 1
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		    must have Production_Line
+		    (
+		        type = text
+		        displayname = "Production Line"
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		    must have SKU
+		    (
+		        type = text
+		        displayname = "SKU / Product Code"
+		        row = 1
+		        column = 2
+		        width = medium
+		    )
+		    Output_Timing
+		    (
+		        type = section
+		        displayname = "Output & Timing"
+		        visibility = true
+		        row = 2
+		        column = 1
+		    )
+		    must have Planned_Output_Units
+		    (
+		        type = number
+		        displayname = "Planned Output Units"
+		        row = 2
+		        column = 1
+		        width = medium
+		    )
+		    must have Cycle_Time
+		    (
+		        type = decimal
+		        displayname = "Cycle Time (seconds)"
+		        decimalplace = 2
+		        row = 2
+		        column = 2
+		        width = medium
+		    )
+		    must have Week
+		    (
+		        type = date
+		        displayname = "Week Starting Date"
+		        row = 2
+		        column = 1
+		        width = medium
+		    )
+		    Shift
+		    (
+		        type = picklist
+		        displayname = "Shift"
+		        values = {"Morning","Afternoon","Night","General"}
+		        row = 2
+		        column = 2
+		        width = medium
+		    )
+		    Notes_Status
+		    (
+		        type = section
+		        displayname = "Notes & Status"
+		        visibility = true
+		        row = 3
+		        column = 1
+		    )
+		    Status
+		    (
+		        type = picklist
+		        displayname = "Status"
+		        values = {"Draft","Confirmed","In Progress","Completed"}
+		        initial value = "Draft"
+		        row = 3
+		        column = 1
+		        width = medium
+		    )
+		    Notes
+		    (
+		        type = textarea
+		        displayname = "Notes"
+		        row = 3
+		        column = 2
+		        width = medium
+		    )
+		    actions
+		    {
+		        on add
+		        {
+		            Submit
+		            (
+		                type = submit
+		                displayname = "Submit"
+		            )
+		            Reset
+		            (
+		                type = reset
+		                displayname = "Reset"
+		            )
+		        }
+		        on edit
+		        {
+		            Update
+		            (
+		                type = submit
+		                displayname = "Update"
+		            )
+		            Cancel
+		            (
+		                type = cancel
+		                displayname = "Cancel"
+		            )
+		        }
+		    }
+		}
+
+		form Shift_Configuration
+		{
+		    displayname = "Shift Configuration"
+		
+		    Shift_Details
+		    (
+		        type = section
+		        displayname = "Shift Details"
+		        row = 1
+		        column = 0
+		    )
+		    must have Shift_Name
+		    (
+		        type = text
+		        displayname = "Shift Name"
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		    must have Production_Line
+		    (
+		        type = text
+		        displayname = "Production Line"
+		        row = 1
+		        column = 2
+		        width = medium
+		    )
+		    Timing
+		    (
+		        type = section
+		        displayname = "Timing"
+		        visibility = true
+		        row = 2
+		        column = 1
+		    )
+		    must have Start_Time
+		    (
+		        type = time
+		        displayname = "Start Time"
+		        row = 2
+		        column = 1
+		        width = medium
+		    )
+		    must have End_Time
+		    (
+		        type = time
+		        displayname = "End Time"
+		        row = 2
+		        column = 2
+		        width = medium
+		    )
+		    Break_Duration_Minutes
+		    (
+		        type = number
+		        displayname = "Break Duration (mins)"
+		        row = 2
+		        column = 1
+		        width = medium
+		    )
+		    Available_Hours
+		    (
+		        type = decimal
+		        displayname = "Available Hours (hrs)"
+		        decimalplace = 2
+		        row = 2
+		        column = 2
+		        width = medium
+		    )
+		    Schedule
+		    (
+		        type = section
+		        displayname = "Schedule"
+		        visibility = true
+		        row = 3
+		        column = 1
+		    )
+		    Days
+		    (
+		        type = checkboxes
+		        displayname = "Working Days"
+		        values = {"Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"}
+		        row = 3
+		        column = 1
+		        width = medium
+		    )
+		    Status
+		    (
+		        type = picklist
+		        displayname = "Status"
+		        values = {"Active","Inactive"}
+		        initial value = "Active"
+		        row = 3
+		        column = 2
+		        width = medium
+		    )
+		    actions
+		    {
+		        on add
+		        {
+		            Submit
+		            (
+		                type = submit
+		                displayname = "Submit"
+		            )
+		            Reset
+		            (
+		                type = reset
+		                displayname = "Reset"
+		            )
+		        }
+		        on edit
+		        {
+		            Update
+		            (
+		                type = submit
+		                displayname = "Update"
+		            )
+		            Cancel
+		            (
+		                type = cancel
+		                displayname = "Cancel"
+		            )
+		        }
+		    }
+		}
+
+		form Supply_Alert_Log
+		{
+		    displayname = "Supply Alert Log"
+		
+		    Alert_Details
+		    (
+		        type = section
+		        displayname = "Alert Details"
+		        row = 1
+		        column = 0
+		    )
+		    Alert_ID
+		    (
+		        type = autonumber
+		        displayname = "Alert ID"
+		        start index = 1
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		    must have Part
+		    (
+		        type = picklist
+		        displayname = "Part / SKU"
+		        values = Part_SKU_Master.ID
+		        displayformat = [Part_Code]
+		        searchable = true
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		    must have Alert_Date
+		    (
+		        type = date
+		        displayname = "Alert Date"
+		        initial value = "${zoho.currentdate}"
+		        row = 1
+		        column = 2
+		        width = medium
+		    )
+		    Alert_Information
+		    (
+		        type = section
+		        displayname = "Alert Information"
+		        visibility = true
+		        row = 2
+		        column = 1
+		    )
+		    Alert_Type
+		    (
+		        type = picklist
+		        displayname = "Alert Type"
+		        values = {"RED Zone Breach","YELLOW Zone Warning","Stock-Out Risk","Manual Alert"}
+		        initial value = "RED Zone Breach"
+		        row = 2
+		        column = 1
+		        width = medium
+		    )
+		    NFP_At_Alert
+		    (
+		        type = decimal
+		        displayname = "NFP at Time of Alert"
+		        decimalplace = 2
+		        row = 2
+		        column = 2
+		        width = medium
+		    )
+		    Buffer_Status
+		    (
+		        type = picklist
+		        displayname = "Buffer Status at Alert"
+		        values = {"RED","YELLOW","GREEN"}
+		        row = 2
+		        column = 1
+		        width = medium
+		    )
+		    PO_Draft_Created
+		    (
+		        type = checkbox
+		        displayname = "PO Draft Created"
+		        initial value = false
+		        row = 2
+		        column = 2
+		        width = medium
+		    )
+		    Acknowledgment
+		    (
+		        type = section
+		        displayname = "Acknowledgment"
+		        visibility = true
+		        row = 3
+		        column = 1
+		    )
+		    Acknowledged
+		    (
+		        type = checkbox
+		        displayname = "Acknowledged"
+		        initial value = false
+		        row = 3
+		        column = 1
+		        width = medium
+		    )
+		    Acknowledged_By
+		    (
+		        type = text
+		        displayname = "Acknowledged By"
+		        row = 3
+		        column = 2
+		        width = medium
+		    )
+		    Acknowledged_Date
+		    (
+		        type = date
+		        displayname = "Acknowledged Date"
+		        row = 3
+		        column = 1
+		        width = medium
+		    )
+		    Resolution_Notes
+		    (
+		        type = textarea
+		        displayname = "Resolution Notes"
+		        row = 3
+		        column = 2
+		        width = medium
+		    )
+		    actions
+		    {
+		        on add
+		        {
+		            Submit
+		            (
+		                type = submit
+		                displayname = "Submit"
+		            )
+		            Reset
+		            (
+		                type = reset
+		                displayname = "Reset"
+		            )
+		        }
+		        on edit
+		        {
+		            Update
+		            (
+		                type = submit
+		                displayname = "Update"
+		            )
+		            Cancel
+		            (
+		                type = cancel
+		                displayname = "Cancel"
+		            )
+		        }
+		    }
+		}
+	}
+
+	reports
+	{
+		default list All_Buffer_Profiles
+		{
+		    displayName = "All Buffer Profiles"
+		    show all rows from Buffer_Profile_Levels
+		    (
+		        Part
+		        Red_Zone
+		        Yellow_Zone
+		        Green_Zone
+		        Variability_Factor
+		        Last_Calculated
+		        Manual_Override
+		    )
+		    filters ( Variability_Factor  Manual_Override )
+		    sort by ( Part ascending )
+		}
+
+		default list All_Stock_Snapshots
+		{
+		    displayName = "All Stock Snapshots"
+		    show all rows from Daily_Stock_Snapshot
+		    (
+		        Snapshot_Date
+		        Part
+		        On_Hand_Qty
+		        (
+		            display = total
+		        )
+		        On_Order_Qty
+		        (
+		            display = total
+		        )
+		        Qualified_Demand
+		        (
+		            display = total
+		        )
+		        Source
+		    )
+		    filters ( Part  Source )
+		    sort by ( Snapshot_Date descending )
+		}
+
+		list Latest_Stock_Snapshots
+		{
+		    displayName = "Latest Stock Snapshots"
+		    show all rows from Daily_Stock_Snapshot
+		    (
+		        Part
+		        Snapshot_Date
+		        On_Hand_Qty
+		        On_Order_Qty
+		        Qualified_Demand
+		        Source
+		    )
+		    sort by ( Snapshot_Date descending )
+		}
+
+		list Active_Decoupling_Points
+		{
+		    displayName = "Active Decoupling Points"
+		    show all rows from Decoupling_Point_Master [Active_Status == true]
+		    (
+		        Part
+		        Lead_Time_Days
+		        Lead_Time_Factor
+		        Variability_Factor
+		        Order_Cycle_Days
+		    )
+		    sort by ( Part ascending )
+		}
+
+		default list All_Decoupling_Points
+		{
+		    displayName = "All Decoupling Points"
+		    show all rows from Decoupling_Point_Master
+		    (
+		        Part
+		        Lead_Time_Days
+		        Lead_Time_Factor
+		        Variability_Factor
+		        Order_Cycle_Days
+		        Active_Status
+		    )
+		    filters ( Active_Status  Variability_Factor )
+		    sort by ( Part ascending )
+		}
+
+		default list All_Employees
+		{
+		    displayName = "All Employees"
+		    show all rows from Employee_Master
+		    (
+		        Employee_Name
+		        Department
+		        Role
+		        Shift
+		        Location
+		        Employment_Type
+		        Status
+		        Join_Date
+		    )
+		    filters ( Department  Shift  Status  Employment_Type )
+		    sort by ( Employee_Name ascending )
+		}
+
+		list Employees_By_Department
+		{
+		    displayName = "Employees by Department"
+		    show all rows from Employee_Master [Status == "Active"]
+		    (
+		        Employee_Name
+		        Department
+		        Role
+		        Shift
+		        Employment_Type
+		    )
+		    group by ( Department ascending )
+		    sort by ( Employee_Name ascending )
+		}
+
+		default list All_HC_Actual
+		{
+		    displayName = "All HC Actual Entries"
+		    show all rows from HC_Actual_Entry
+		    (
+		        Entry_Date
+		        Department
+		        Shift
+		        Present_Count
+		        (
+		            display = total
+		        )
+		        Absent_Count
+		        (
+		            display = total
+		        )
+		        Contractor_Count
+		        (
+		            display = total
+		        )
+		        Total_Workforce
+		    )
+		    filters ( Department  Shift )
+		    sort by ( Entry_Date descending )
+		}
+
+		list Department_HC_Actual
+		{
+		    displayName = "Department-wise HC Actual"
+		    show all rows from HC_Actual_Entry
+		    (
+		        Department
+		        Entry_Date
+		        Shift
+		        Present_Count
+		        (
+		            display = total
+		        )
+		        Absent_Count
+		        (
+		            display = total
+		        )
+		        Total_Workforce
+		    )
+		    group by ( Department ascending )
+		    sort by ( Entry_Date descending )
+		}
+
+		list HC_Gap_Alert_Log
+		{
+		    displayName = "HC Gap Alert Log"
+		    show all rows from Headcount_Calculator [Alert_Triggered == true]
+		    (
+		        Calc_Date
+		        Department
+		        Production_Line
+		        Shift
+		        Required_HC_Rounded
+		        Gap
+		        Utilisation_Percent
+		        Alert_Triggered
+		    )
+		    filters ( Department  Shift )
+		    sort by ( Calc_Date descending )
+		    conditional formatting
+		    (
+		        "Critical Gap"
+		        {
+		            condition = (Gap > 10)
+		            fields = [Gap]
+		            format = "background-color:#FF0000;color:#FFFFFF;font-weight:bold"
+		        }
+		        "Moderate Gap"
+		        {
+		            condition = (Gap > 5)
+		            fields = [Gap]
+		            format = "background-color:#FFE0E0;color:#CC0000"
+		        }
+		    )
+		}
+
+		default list HC_Summary
+		{
+		    displayName = "HC Calculation Summary"
+		    show all rows from Headcount_Calculator
+		    (
+		        Calc_Date
+		        Department
+		        Production_Line
+		        Shift
+		        Planned_Output
+		        Required_HC
+		        Required_HC_Rounded
+		        Gap
+		        (
+		            display = average
+		        )
+		        Utilisation_Percent
+		        (
+		            display = average
+		        )
+		        Alert_Triggered
+		    )
+		    filters ( Department  Shift  Alert_Triggered )
+		    sort by ( Calc_Date descending )
+		    conditional formatting
+		    (
+		        "High Gap"
+		        {
+		            condition = (Gap > 5)
+		            fields = [Gap]
+		            format = "background-color:#FFE0E0;color:#CC0000;font-weight:bold"
+		        }
+		        "Low Utilisation"
+		        {
+		            condition = (Utilisation_Percent < 80)
+		            fields = [Utilisation_Percent]
+		            format = "background-color:#FFF3CD;color:#856404"
+		        }
+		    )
+		}
+
+		list Shift_Utilisation_Summary
+		{
+		    displayName = "Shift Utilisation Summary"
+		    show all rows from Headcount_Calculator
+		    (
+		        Shift
+		        Department
+		        Required_HC_Rounded
+		        (
+		            display = total
+		        )
+		        Gap
+		        (
+		            display = average
+		        )
+		        Utilisation_Percent
+		        (
+		            display = average
+		        )
+		    )
+		    group by ( Shift ascending )
+		    sort by ( Utilisation_Percent ascending )
+		}
+
+		default list All_NFP_Status
+		{
+		    displayName = "All NFP Status Logs"
+		    show all rows from NFP_Status_Log
+		    (
+		        NFP_Date
+		        Part
+		        NFP
+		        Status
+		        Red_Zone_Value
+		        Yellow_Zone_Value
+		        Action_Triggered
+		        PO_Draft_Created
+		    )
+		    filters ( Part  Status  Action_Triggered )
+		    sort by ( NFP_Date descending )
+		    conditional formatting
+		    (
+		        "RED Status"
+		        {
+		            condition = (Status == "RED")
+		            fields = [Status, NFP]
+		            format = "background-color:#FFE0E0;color:#CC0000;font-weight:bold"
+		        }
+		        "YELLOW Status"
+		        {
+		            condition = (Status == "YELLOW")
+		            fields = [Status, NFP]
+		            format = "background-color:#FFF3CD;color:#856404"
+		        }
+		        "GREEN Status"
+		        {
+		            condition = (Status == "GREEN")
+		            fields = [Status]
+		            format = "background-color:#D4EDDA;color:#155724"
+		        }
+		    )
+		}
+
+		list NFP_Trend
+		{
+		    displayName = "NFP 14-Day Trend"
+		    show all rows from NFP_Status_Log
+		    (
+		        NFP_Date
+		        Part
+		        NFP
+		        (
+		            display = average
+		        )
+		        Status
+		        Red_Zone_Value
+		        Yellow_Zone_Value
+		    )
+		    filters ( Part  Status )
+		    sort by ( NFP_Date descending )
+		}
+
+		list Parts_In_RED
+		{
+		    displayName = "Parts in RED Zone"
+		    show all rows from NFP_Status_Log [Status == "RED"]
+		    (
+		        NFP_Date
+		        Part
+		        NFP
+		        Red_Zone_Value
+		        Action_Triggered
+		        PO_Draft_Created
+		    )
+		    filters ( Part  PO_Draft_Created )
+		    sort by ( NFP_Date descending )
+		    conditional formatting
+		    (
+		        "Critical RED"
+		        {
+		            condition = (NFP <= 0)
+		            fields = [NFP, Part]
+		            format = "background-color:#FF0000;color:#FFFFFF;font-weight:bold"
+		        }
+		        "Low NFP"
+		        {
+		            condition = (NFP > 0)
+		            fields = [NFP]
+		            format = "background-color:#FFE0E0;color:#CC0000"
+		        }
+		    )
+		}
+
+		list Active_Parts
+		{
+		    displayName = "Active Parts"
+		    show all rows from Part_SKU_Master [Status == "Active"]
+		    (
+		        Part_Code
+		        Part_Description
+		        Category
+		        Supplier
+		        MOQ
+		        ADU
+		        Lead_Time_Days
+		    )
+		    filters ( Category  Supplier )
+		    sort by ( Part_Code ascending )
+		}
+
+		default list All_Parts
+		{
+		    displayName = "All Parts / SKUs"
+		    show all rows from Part_SKU_Master
+		    (
+		        Part_Code
+		        Part_Description
+		        Category
+		        Supplier
+		        Unit
+		        MOQ
+		        ADU
+		        ADU_Last_Updated
+		        Lead_Time_Days
+		        Status
+		    )
+		    filters ( Category  Supplier  Status )
+		    sort by ( Part_Code ascending )
+		}
+
+		default list All_Production_Plans
+		{
+		    displayName = "All Production Plans"
+		    show all rows from Production_Plan
+		    (
+		        Production_Line
+		        SKU
+		        Planned_Output_Units
+		        (
+		            display = total
+		        )
+		        Cycle_Time
+		        Week
+		        Shift
+		        Status
+		    )
+		    filters ( Production_Line  Shift  Status )
+		    sort by ( Week descending )
+		}
+
+		list Weekly_Production_Plans
+		{
+		    displayName = "Weekly Production Plans"
+		    show all rows from Production_Plan [Status != "Completed"]
+		    (
+		        Production_Line
+		        SKU
+		        Planned_Output_Units
+		        (
+		            display = total
+		        )
+		        Cycle_Time
+		        Week
+		        Shift
+		        Status
+		    )
+		    group by ( Week ascending )
+		    sort by ( Production_Line ascending )
+		}
+
+		default list All_Shifts
+		{
+		    displayName = "All Shift Configurations"
+		    show all rows from Shift_Configuration
+		    (
+		        Shift_Name
+		        Production_Line
+		        Start_Time
+		        End_Time
+		        Break_Duration_Minutes
+		        Available_Hours
+		        Status
+		    )
+		    filters ( Production_Line  Status )
+		    sort by ( Shift_Name ascending )
+		}
+
+		list ADU_History
+		{
+		    displayName = "ADU History"
+		    show all rows from Supply_Alert_Log
+		    (
+		        Alert_ID
+		        Alert_Date
+		        Part
+		        Alert_Type
+		        Buffer_Status
+		        NFP_At_Alert
+		    )
+		    filters ( Part  Alert_Type  Buffer_Status )
+		    sort by ( Alert_Date descending )
+		}
+
+		default list All_Supply_Alerts
+		{
+		    displayName = "All Supply Alerts"
+		    show all rows from Supply_Alert_Log
+		    (
+		        Alert_Date
+		        Part
+		        Alert_Type
+		        Buffer_Status
+		        NFP_At_Alert
+		        Acknowledged
+		        Acknowledged_By
+		        Acknowledged_Date
+		        PO_Draft_Created
+		        custom action "Acknowledge Alert"
+		        (
+		            workflow = Acknowledge_Alert_Button
+		            show action for each record = true
+		            column header = "Action"
+		            success message = "Alert acknowledged successfully"
+		            condition = (Acknowledged == false)
+		        )
+		    )
+		    filters ( Part  Alert_Type  Buffer_Status  Acknowledged )
+		    sort by ( Alert_Date descending )
+		    conditional formatting
+		    (
+		        "RED Alert"
+		        {
+		            condition = (Buffer_Status == "RED")
+		            fields = [Buffer_Status, Part]
+		            format = "background-color:#FFE0E0;color:#CC0000;font-weight:bold"
+		        }
+		        "YELLOW Alert"
+		        {
+		            condition = (Buffer_Status == "YELLOW")
+		            fields = [Buffer_Status]
+		            format = "background-color:#FFF3CD;color:#856404"
+		        }
+		        "Unacknowledged"
+		        {
+		            condition = (Acknowledged == false)
+		            fields = [Alert_Date, Part]
+		            format = "background-color:#FFF0E0;color:#92400E;font-weight:bold"
+		        }
+		
+		    )
+		}
+
+		list Unacknowledged_Alerts
+		{
+		    displayName = "Unacknowledged Alerts"
+		    show all rows from Supply_Alert_Log [Acknowledged == false]
+		    (
+		        Alert_Date
+		        Part
+		        Alert_Type
+		        Buffer_Status
+		        NFP_At_Alert
+		        PO_Draft_Created
+		        custom action "Acknowledge Alert"
+		        (
+		            workflow = Acknowledge_Alert_Button
+		            show action for each record = true
+		            column header = "Action"
+		            success message = "Alert acknowledged successfully"
+		        )
+		    )
+		    filters ( Part  Alert_Type )
+		    sort by ( Alert_Date descending )
+		    conditional formatting
+		    (
+		        "RED Alert"
+		        {
+		            condition = (Buffer_Status == "RED")
+		            fields = [Buffer_Status, Part]
+		            format = "background-color:#FFE0E0;color:#CC0000;font-weight:bold"
+		        }
+		        "YELLOW Alert"
+		        {
+		            condition = (Buffer_Status == "YELLOW")
+		            fields = [Buffer_Status]
+		            format = "background-color:#FFF3CD;color:#856404"
+		        }
+		    )
+		}
+	}
+
+	pages
+	{
+		page DDMRP_Buffer_Dashboard
+		{
+					displayname = "DDMRP Buffer Dashboard"
+					Content="<zml>\n\t<layout>\n\t\t<row>\n\t\t\t<column width='100%'>\n\t\t\t\t<dsp id='Buffer_KPI_Cards' elementName='Buffer_KPI_Cards'>\n\t\t\t\t\t<![CDATA[htmlpage Buffer_KPI_Cards()\n\t\t\t\t\t\t content\n\t\t\t\t\t\t &lt;%{%&gt;\n\t\t\t\t\t\t\t\t &lt;%\n\ttodayDate = zoho.currentdate;\n\n\tredCount = NFP_Status_Log[Status == &quot;RED&quot; &amp;&amp; NFP_Date == todayDate].count();\n\tyellowCount = NFP_Status_Log[Status == &quot;YELLOW&quot; &amp;&amp; NFP_Date == todayDate].count();\n\tgreenCount = NFP_Status_Log[Status == &quot;GREEN&quot; &amp;&amp; NFP_Date == todayDate].count();\n\talertCount = Supply_Alert_Log[Acknowledged == false].count();\n%&gt;\n\n&lt;style&gt;\n\t/* ===== Buffer KPI Cards ===== */\n\t.buf-kpi-row {\n\t\tdisplay: flex;\n\t\tflex-wrap: wrap;\n\t\tgap: 16px;\n\t\tpadding: 16px;\n\t\tbox-sizing: border-box;\n\t}\n\t.buf-kpi-card {\n\t\tflex: 1 1 200px;\n\t\tmin-width: 180px;\n\t\tborder-radius: 12px;\n\t\tpadding: 20px 24px;\n\t\tbox-sizing: border-box;\n\t\tdisplay: flex;\n\t\tflex-direction: column;\n\t\tgap: 8px;\n\t\tborder: 1px solid var(--zcs_tertiary_border_color);\n\t\tbackground-color: var(--zcs-white-color, #ffffff);\n\t}\n\t.buf-kpi-card.buf-red   { background-color: #fff2f3; border-color: #ffc5cb; }\n\t.buf-kpi-card.buf-yellow{ background-color: #fffbea; border-color: #ffe08a; }\n\t.buf-kpi-card.buf-green { background-color: #f0fdf6; border-color: #a7f3d0; }\n\t.buf-kpi-card.buf-alert { background-color: #fff7ed; border-color: #fed7aa; }\n\n\t.buf-kpi-icon {\n\t\tfont-size: 22px;\n\t\tline-height: 1;\n\t}\n\t.buf-kpi-icon.buf-red    { color: #dc2626; }\n\t.buf-kpi-icon.buf-yellow { color: #b45309; }\n\t.buf-kpi-icon.buf-green  { color: #16a34a; }\n\t.buf-kpi-icon.buf-alert  { color: #ea580c; }\n\n\t.buf-kpi-label {\n\t\tfont-size: 0.8125rem;\n\t\tfont-weight: 500;\n\t\tcolor: var(--zcs_secondary_text_color, #6b7280);\n\t\tline-height: 1.4;\n\t\ttext-transform: uppercase;\n\t\tletter-spacing: 0.04em;\n\t}\n\t.buf-kpi-value {\n\t\tfont-size: 2rem;\n\t\tfont-weight: 700;\n\t\tline-height: 1.2;\n\t\tcolor: var(--zcs_primary_text_color, #111827);\n\t}\n\t.buf-kpi-value.buf-red    { color: #dc2626; }\n\t.buf-kpi-value.buf-yellow { color: #b45309; }\n\t.buf-kpi-value.buf-green  { color: #16a34a; }\n\t.buf-kpi-value.buf-alert  { color: #ea580c; }\n\n\t.buf-kpi-sub {\n\t\tfont-size: 0.75rem;\n\t\tcolor: var(--zcs_tertiary_text_color, #9ca3af);\n\t\tline-height: 1.4;\n\t}\n&lt;/style&gt;\n\n&lt;div class=&quot;buf-kpi-row&quot;&gt;\n\n\t&lt;div class=&quot;buf-kpi-card buf-red&quot;&gt;\n\t\t&lt;span class=&quot;buf-kpi-icon buf-red&quot;&gt;\n\t\t\t&lt;i class=&quot;zc-li-solid ui-1-simple-remove&quot;&gt;&lt;/i&gt;\n\t\t&lt;/span&gt;\n\t\t&lt;div class=&quot;buf-kpi-label&quot;&gt;Parts in RED&lt;/div&gt;\n\t\t&lt;div class=&quot;buf-kpi-value buf-red&quot;&gt;&lt;%= redCount %&gt;&lt;/div&gt;\n\t\t&lt;div class=&quot;buf-kpi-sub&quot;&gt;Below Red Zone — immediate action required&lt;/div&gt;\n\t&lt;/div&gt;\n\n\t&lt;div class=&quot;buf-kpi-card buf-yellow&quot;&gt;\n\t\t&lt;span class=&quot;buf-kpi-icon buf-yellow&quot;&gt;\n\t\t\t&lt;i class=&quot;zc-li-outline ui-2-time&quot;&gt;&lt;/i&gt;\n\t\t&lt;/span&gt;\n\t\t&lt;div class=&quot;buf-kpi-label&quot;&gt;Parts in YELLOW&lt;/div&gt;\n\t\t&lt;div class=&quot;buf-kpi-value buf-yellow&quot;&gt;&lt;%= yellowCount %&gt;&lt;/div&gt;\n\t\t&lt;div class=&quot;buf-kpi-sub&quot;&gt;In Yellow Zone — monitor closely&lt;/div&gt;\n\t&lt;/div&gt;\n\n\t&lt;div class=&quot;buf-kpi-card buf-green&quot;&gt;\n\t\t&lt;span class=&quot;buf-kpi-icon buf-green&quot;&gt;\n\t\t\t&lt;i class=&quot;zc-li-outline ui-1-check-circle-08&quot;&gt;&lt;/i&gt;\n\t\t&lt;/span&gt;\n\t\t&lt;div class=&quot;buf-kpi-label&quot;&gt;Parts in GREEN&lt;/div&gt;\n\t\t&lt;div class=&quot;buf-kpi-value buf-green&quot;&gt;&lt;%= greenCount %&gt;&lt;/div&gt;\n\t\t&lt;div class=&quot;buf-kpi-sub&quot;&gt;In Green Zone — buffer healthy&lt;/div&gt;\n\t&lt;/div&gt;\n\n\t&lt;div class=&quot;buf-kpi-card buf-alert&quot;&gt;\n\t\t&lt;span class=&quot;buf-kpi-icon buf-alert&quot;&gt;\n\t\t\t&lt;i class=&quot;zc-li-outline ui-1-bell-53&quot;&gt;&lt;/i&gt;\n\t\t&lt;/span&gt;\n\t\t&lt;div class=&quot;buf-kpi-label&quot;&gt;Unacknowledged Alerts&lt;/div&gt;\n\t\t&lt;div class=&quot;buf-kpi-value buf-alert&quot;&gt;&lt;%= alertCount %&gt;&lt;/div&gt;\n\t\t&lt;div class=&quot;buf-kpi-sub&quot;&gt;Supply alerts pending acknowledgement&lt;/div&gt;\n\t&lt;/div&gt;\n\n&lt;/div&gt;\n\t\t\t\t\t\t &lt;%}%&gt;\n\t\t\t\t ]]>\n\t\t\t\t</dsp>\n\t\t\t</column>\n\t\t</row>\n\t\t<row>\n\t\t\t<column width='100%'>\n\t\t\t\t<dsp id='Buffer_RAG_Table' elementName='Buffer_RAG_Table'>\n\t\t\t\t\t<![CDATA[htmlpage Buffer_RAG_Table()\n\t\t\t\t\t\t content\n\t\t\t\t\t\t &lt;%{%&gt;\n\t\t\t\t\t\t\t\t &lt;%\n\ttodayDate = zoho.currentdate;\n\tragRecords = NFP_Status_Log[NFP_Date == todayDate] sort by Status asc;\n%&gt;\n\n&lt;style&gt;\n\t/* ===== Buffer RAG Table ===== */\n\t.buf-rag-wrapper {\n\t\tpadding: 0 16px 16px 16px;\n\t\tbox-sizing: border-box;\n\t}\n\t.buf-rag-header {\n\t\tdisplay: flex;\n\t\talign-items: center;\n\t\tgap: 8px;\n\t\tpadding: 12px 0 10px 0;\n\t}\n\t.buf-rag-header-title {\n\t\tfont-size: 1rem;\n\t\tfont-weight: 600;\n\t\tcolor: var(--zcs_primary_text_color, #111827);\n\t}\n\t.buf-rag-header-icon {\n\t\tfont-size: 18px;\n\t\tcolor: var(--zcs_brand_color, #3b82f6);\n\t}\n\n\t.buf-rag-table-wrapper {\n\t\tborder: 1px solid var(--zcs_tertiary_border_color, #e5e7eb);\n\t\tborder-radius: 8px;\n\t\toverflow: auto;\n\t\tbackground-color: var(--zcs-white-color, #ffffff);\n\t}\n\t.buf-rag-table {\n\t\twidth: 100%;\n\t\tborder-collapse: collapse;\n\t\tline-height: normal;\n\t}\n\t.buf-rag-table thead tr th {\n\t\tbackground-color: #f9fafe;\n\t\tbox-shadow: 0px -1px 0px 0px var(--zcs_tertiary_border_color, #e5e7eb) inset;\n\t\tpadding: 10px 16px;\n\t\ttext-align: left;\n\t\tfont-size: 0.8125rem;\n\t\tfont-weight: 600;\n\t\tcolor: var(--zcs_secondary_text_color, #6b7280);\n\t\twhite-space: nowrap;\n\t\ttext-transform: uppercase;\n\t\tletter-spacing: 0.04em;\n\t}\n\t.buf-rag-table tbody tr td {\n\t\tpadding: 10px 16px;\n\t\tfont-size: 0.875rem;\n\t\tcolor: var(--zcs_primary_text_color, #111827);\n\t\tborder-top: 1px solid var(--zcs_tertiary_border_color, #e5e7eb);\n\t\tvertical-align: middle;\n\t}\n\t.buf-rag-table tbody tr:first-child td {\n\t\tborder-top: none;\n\t}\n\n\t/* RAG row tints */\n\t.buf-row-red    { background-color: #fff5f5; }\n\t.buf-row-yellow { background-color: #fffdf0; }\n\t.buf-row-green  { background-color: #f0fdf4; }\n\n\t/* Status badge */\n\t.buf-badge {\n\t\tdisplay: inline-flex;\n\t\talign-items: center;\n\t\tgap: 5px;\n\t\tpadding: 3px 10px;\n\t\tborder-radius: 20px;\n\t\tfont-size: 0.75rem;\n\t\tfont-weight: 600;\n\t\twhite-space: nowrap;\n\t}\n\t.buf-badge-red    { background-color: #fee2e2; color: #dc2626; }\n\t.buf-badge-yellow { background-color: #fef9c3; color: #b45309; }\n\t.buf-badge-green  { background-color: #dcfce7; color: #16a34a; }\n\n\t.buf-part-code {\n\t\tfont-weight: 600;\n\t\tfont-size: 0.875rem;\n\t\tcolor: var(--zcs_brand_color, #3b82f6);\n\t}\n\t.buf-nfp-val {\n\t\tfont-weight: 600;\n\t}\n\t.buf-zone-val {\n\t\tfont-size: 0.8125rem;\n\t\tcolor: var(--zcs_secondary_text_color, #6b7280);\n\t}\n\t.buf-no-data {\n\t\ttext-align: center;\n\t\tpadding: 32px 16px;\n\t\tcolor: var(--zcs_tertiary_text_color, #9ca3af);\n\t\tfont-size: 0.875rem;\n\t}\n&lt;/style&gt;\n\n&lt;div class=&quot;buf-rag-wrapper&quot;&gt;\n\t&lt;div class=&quot;buf-rag-header&quot;&gt;\n\t\t&lt;span class=&quot;buf-rag-header-icon&quot;&gt;\n\t\t\t&lt;i class=&quot;zc-li-outline ui-2-chart-bar-32&quot;&gt;&lt;/i&gt;\n\t\t&lt;/span&gt;\n\t\t&lt;span class=&quot;buf-rag-header-title&quot;&gt;Buffer Status by Part — Today&lt;/span&gt;\n\t&lt;/div&gt;\n\n\t&lt;div class=&quot;buf-rag-table-wrapper&quot;&gt;\n\t\t&lt;table class=&quot;buf-rag-table&quot;&gt;\n\t\t\t&lt;thead&gt;\n\t\t\t\t&lt;tr&gt;\n\t\t\t\t\t&lt;th&gt;Part Code&lt;/th&gt;\n\t\t\t\t\t&lt;th&gt;Part Description&lt;/th&gt;\n\t\t\t\t\t&lt;th&gt;NFP&lt;/th&gt;\n\t\t\t\t\t&lt;th&gt;Red Zone&lt;/th&gt;\n\t\t\t\t\t&lt;th&gt;Yellow Zone&lt;/th&gt;\n\t\t\t\t\t&lt;th&gt;Status&lt;/th&gt;\n\t\t\t\t&lt;/tr&gt;\n\t\t\t&lt;/thead&gt;\n\t\t\t&lt;tbody&gt;\n\t\t\t\t&lt;%\n\t\t\t\t\tif(ragRecords.count() == 0)\n\t\t\t\t\t{\n\t\t\t\t%&gt;\n\t\t\t\t&lt;tr&gt;\n\t\t\t\t\t&lt;td colspan=&quot;6&quot; class=&quot;buf-no-data&quot;&gt;\n\t\t\t\t\t\t&lt;i class=&quot;zc-li-outline ui-1-zoom-split&quot; style=&quot;font-size:20px;display:block;margin-bottom:6px;&quot;&gt;&lt;/i&gt;\n\t\t\t\t\t\tNo buffer status records found for today.\n\t\t\t\t\t&lt;/td&gt;\n\t\t\t\t&lt;/tr&gt;\n\t\t\t\t&lt;%\n\t\t\t\t\t}\n\t\t\t\t\telse\n\t\t\t\t\t{\n\t\t\t\t\t\tfor each rec in ragRecords\n\t\t\t\t\t\t{\n\t\t\t\t\t\t\trowClass = &quot;buf-row-green&quot;;\n\t\t\t\t\t\t\tbadgeClass = &quot;buf-badge-green&quot;;\n\t\t\t\t\t\t\tbadgeIcon = &quot;ui-1-check-circle-08&quot;;\n\t\t\t\t\t\t\ticonStyle = &quot;outline&quot;;\n\t\t\t\t\t\t\tif(rec.Status == &quot;RED&quot;)\n\t\t\t\t\t\t\t{\n\t\t\t\t\t\t\t\trowClass = &quot;buf-row-red&quot;;\n\t\t\t\t\t\t\t\tbadgeClass = &quot;buf-badge-red&quot;;\n\t\t\t\t\t\t\t\tbadgeIcon = &quot;ui-1-simple-remove&quot;;\n\t\t\t\t\t\t\t\ticonStyle = &quot;solid&quot;;\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\telse if(rec.Status == &quot;YELLOW&quot;)\n\t\t\t\t\t\t\t{\n\t\t\t\t\t\t\t\trowClass = &quot;buf-row-yellow&quot;;\n\t\t\t\t\t\t\t\tbadgeClass = &quot;buf-badge-yellow&quot;;\n\t\t\t\t\t\t\t\tbadgeIcon = &quot;ui-2-time&quot;;\n\t\t\t\t\t\t\t\ticonStyle = &quot;outline&quot;;\n\t\t\t\t\t\t\t}\n\n\t\t\t\t\t\t\tpart_id = rec.get(&quot;Part&quot;);\n\t\t\t\t\t\t\tpartCode = &quot;&quot;;\n\t\t\t\t\t\t\tpartDesc = &quot;&quot;;\n\t\t\t\t\t\t\tskuRecs = Part_SKU_Master[ID == part_id] sort by Added_Time desc range from 0 to 0;\n\t\t\t\t\t\t\tfor each skuRec in skuRecs\n\t\t\t\t\t\t\t{\n\t\t\t\t\t\t\t\tpartCode = skuRec.get(&quot;Part_Code&quot;);\n\t\t\t\t\t\t\t\tpartDesc = skuRec.get(&quot;Part_Description&quot;);\n\t\t\t\t\t\t\t}\n\t\t\t\t%&gt;\n\t\t\t\t&lt;tr class=&quot;&lt;%= rowClass %&gt;&quot;&gt;\n\t\t\t\t\t&lt;td class=&quot;buf-part-code&quot;&gt;&lt;%= partCode %&gt;&lt;/td&gt;\n\t\t\t\t\t&lt;td&gt;&lt;%= partDesc %&gt;&lt;/td&gt;\n\t\t\t\t\t&lt;td class=&quot;buf-nfp-val&quot;&gt;&lt;%= rec.get(&quot;NFP&quot;) %&gt;&lt;/td&gt;\n\t\t\t\t\t&lt;td class=&quot;buf-zone-val&quot;&gt;&lt;%= rec.get(&quot;Red_Zone_Value&quot;) %&gt;&lt;/td&gt;\n\t\t\t\t\t&lt;td class=&quot;buf-zone-val&quot;&gt;&lt;%= rec.get(&quot;Yellow_Zone_Value&quot;) %&gt;&lt;/td&gt;\n\n\t\t\t\t\t&lt;td&gt;\n\t\t\t\t\t\t&lt;span class=&quot;buf-badge &lt;%= badgeClass %&gt;&quot;&gt;\n\t\t\t\t\t\t\t&lt;i class=&quot;zc-li-&lt;%= iconStyle %&gt; &lt;%= badgeIcon %&gt;&quot;&gt;&lt;/i&gt;\n\t\t\t\t\t\t\t&lt;%= encodeURL(rec.Status) %&gt;\n\t\t\t\t\t\t&lt;/span&gt;\n\t\t\t\t\t&lt;/td&gt;\n\t\t\t\t&lt;/tr&gt;\n\t\t\t\t&lt;%\n\t\t\t\t\t\t}\n\t\t\t\t\t}\n\t\t\t\t%&gt;\n\t\t\t&lt;/tbody&gt;\n\t\t&lt;/table&gt;\n\t&lt;/div&gt;\n&lt;/div&gt;\n\t\t\t\t\t\t &lt;%}%&gt;\n\t\t\t\t ]]>\n\t\t\t\t</dsp>\n\t\t\t</column>\n\t\t</row>\n\t\t<row>\n\t\t\t<column width='50%'>\n\t\t\t\t<report elementName='RED_Parts_Panel'\n\t\t\t\ttitle='Parts in RED Zone'\n\t\t\t\ttitleColor='#dc2626'\n\t\t\t\tboldTitle='true'\n\t\t\t\tappLinkName='thisapp'\n\t\t\t\tlinkName='Parts_In_RED'\n\t\t\t\tiszreport='false'\n\t\t\t\tzc_Footer='true'\n\t\t\t\tzc_AddRec='false'\n\t\t\t\tzc_EditRec='false'\n\t\t\t\tzc_DelRec='false'\n\t\t\t\tzc_DuplRec='false'\n\t\t\t\tzc_Print='false'\n\t\t\t\tzc_Export='true'\n\t\t\t\tzc_Search='true'\n\t\t\t\tzc_EditBulkRec='false'\n\t\t\t\tzc_BulkDelete='false'\n\t\t\t\tzc_BulkDuplicate='false'\n\t\t\t\theightType='custom'\n\t\t\t\theightValue='400' />\n\t\t\t</column>\n\t\t\t<column width='50%'>\n\t\t\t\t<report elementName='Supply_Alerts_Panel'\n\t\t\t\ttitle='Unacknowledged Supply Alerts'\n\t\t\t\ttitleColor='#ea580c'\n\t\t\t\tboldTitle='true'\n\t\t\t\tappLinkName='thisapp'\n\t\t\t\tlinkName='Unacknowledged_Alerts'\n\t\t\t\tiszreport='false'\n\t\t\t\tzc_Footer='true'\n\t\t\t\tzc_AddRec='false'\n\t\t\t\tzc_EditRec='true'\n\t\t\t\tzc_DelRec='false'\n\t\t\t\tzc_DuplRec='false'\n\t\t\t\tzc_Print='false'\n\t\t\t\tzc_Export='true'\n\t\t\t\tzc_Search='true'\n\t\t\t\tzc_EditBulkRec='false'\n\t\t\t\tzc_BulkDelete='false'\n\t\t\t\tzc_BulkDuplicate='false'\n\t\t\t\theightType='custom'\n\t\t\t\theightValue='400' />\n\t\t\t</column>\n\t\t</row>\n\t\t<row>\n\t\t\t<column width='100%'>\n\t\t\t\t<report elementName='NFP_Trend_Panel'\n\t\t\t\ttitle='NFP Trend'\n\t\t\t\ttitleColor='#1d4ed8'\n\t\t\t\tboldTitle='true'\n\t\t\t\tappLinkName='thisapp'\n\t\t\t\tlinkName='NFP_Trend'\n\t\t\t\tiszreport='false'\n\t\t\t\tzc_Footer='true'\n\t\t\t\tzc_AddRec='false'\n\t\t\t\tzc_EditRec='false'\n\t\t\t\tzc_DelRec='false'\n\t\t\t\tzc_DuplRec='false'\n\t\t\t\tzc_Print='false'\n\t\t\t\tzc_Export='true'\n\t\t\t\tzc_Search='true'\n\t\t\t\tzc_EditBulkRec='false'\n\t\t\t\tzc_BulkDelete='false'\n\t\t\t\tzc_BulkDuplicate='false'\n\t\t\t\theightType='custom'\n\t\t\t\theightValue='400' />\n\t\t\t</column>\n\t\t</row>\n\t</layout>\n</zml>"
+		}
+
+		page Headcount_Dashboard
+		{
+					displayname = "Headcount Dashboard"
+					Content="<zml>\n\t<layout>\n\t\t<row>\n\t\t\t<column width='100%'>\n\t\t\t\t<dsp id='HC_KPI_Cards' elementName='HC_KPI_Cards'>\n\t\t\t\t\t<![CDATA[htmlpage HC_KPI_Cards()\n\t\t\t\t\t\tcontent\n\t\t\t\t\t\t&lt;%{%&gt;\n\t\t\t\t\t\t\t\t&lt;style&gt;\n/* ===== zcs-global (once per page) ===== */\n:root { --zcs-theme-brand-color: var(--zcs_brand_color); --zcs-light-bg-color: var(--zcs_brand_light_color); --zcs-app-header-color: #1c1c40; --zcs-page-bg-color: #F3F3F4; --zcs-primary-text-color: var(--zcs_primary_text_color); --zcs-secondary-text-color: var(--zcs_secondary_text_color); --zcs-teritiary-text-color: var(--zcs_tertiary_text_color); --zcs-border-color: var(--zcs_tertiary_border_color); --zcs-placeholder-color: #878895; --zcs-white-color: #FFFFFF; --zcs-black-color: #000000; --zcs-primary-btn-color: var(--zcs_brand_color); --zcs-primary-btn-border-color: var(--zcs_brand_color); --zcs-primary-btn-text-color: var(--zcs_brand_foreground_color); --zcs-primary-btn-h-color: var(--zcs_brand_dark_color); --zcs-primary-btn-h-border-color: var(--zcs_brand_dark_color); --zcs-primary-btn-h-text-color: var(--zcs_brand_foreground_color); --zcs-secondary-btn-color: var(--zcs_light_grey_color); --zcs-secondary-btn-border-color: var(--zcs_primary_border_color); --zcs-secondary-btn-text-color: var(--zcs_primary_text_color); --zcs-secondary-btn-h-color: var(--zcs_dark_grey_color); --zcs-secondary-btn-h-border-color: var(--zcs_primary_border_color); --zcs-secondary-btn-h-text-color: var(--zcs_primary_text_color); --zcs-tooltip-bg-color: #363636; } :root { font-size: 16px; line-height: 1.5; --column-gap: 0px; } .zcs-row { display: flex; flex-wrap: wrap; } .zcs-col { flex-shrink: 0; width: 100%; max-width: 100%; } .zcs-flex { display: flex; } .zcs-direction-column { flex-direction: column; } .zcs-align-items-center { align-items: center; } .zcs-justify-space-between { justify-content: space-between; } .zcs-gap-8 { gap: 0.5rem; } .zcs-gap-16 { gap: 1rem; } .zcs-p-20 { padding: 1.25rem; } .zcs-p-16 { padding: 1rem; } .zcs-px-16 { padding-left: 1rem; padding-right: 1rem; } .zcs-py-8 { padding-top: 0.5rem; padding-bottom: 0.5rem; } .zcs-m-0 { margin: 0; } .zcs-font-12 { font-size: 0.75rem; } .zcs-font-14 { font-size: 0.875rem; } .zcs-font-24 { font-size: 1.5rem; } .zcs-font-28 { font-size: 1.75rem; } .zcs-font-bold { font-weight: 700; } .zcs-font-semibold { font-weight: 600; } .zcs-font-medium { font-weight: 500; } .zcs-font-normal { font-weight: 400; } .zcs-lh-body { line-height: 1.5; } .zcs-lh-heading { line-height: 1.25; } .zcs-color-primary { color: var(--zcs_primary_text_color); } .zcs-color-secondary { color: var(--zcs_secondary_text_color); } .zcs-color-tertiary { color: var(--zcs_tertiary_text_color); } .zcs-color-white { color: #FFFFFF; } .zcs-rounded-xl { border-radius: 0.75rem; } .zcs-rounded-lg { border-radius: 0.5rem; } .zcs-rounded-half { border-radius: 50%; } .zcs-box-border { box-sizing: border-box; } .zcs-w-full { width: 100%; } .zcs-no-shrink { flex-shrink: 0; } .zcs-card { background-color: var(--zcs-white-color); border: 1px solid #e7e7ee; border-radius: 12px; }\n\n/* ===== KPI Cards ===== */\n.hc-kpi-row {\n\t\tdisplay: flex;\n\t\tflex-wrap: wrap;\n\t\tgap: 16px;\n\t\tpadding: 16px;\n\t\tbox-sizing: border-box;\n\t\tbackground-color: var(--zcs-page-bg-color, #F3F3F4);\n}\n.hc-kpi-card {\n\t\tflex: 1 1 calc(25% - 12px);\n\t\tmin-width: 180px;\n\t\tbackground-color: var(--zcs-white-color, #FFFFFF);\n\t\tborder: 1px solid #e7e7ee;\n\t\tborder-radius: 12px;\n\t\tpadding: 20px;\n\t\tbox-sizing: border-box;\n\t\tdisplay: flex;\n\t\tflex-direction: column;\n\t\tgap: 12px;\n}\n.hc-kpi-icon-wrap {\n\t\twidth: 44px;\n\t\theight: 44px;\n\t\tborder-radius: 50%;\n\t\tdisplay: flex;\n\t\talign-items: center;\n\t\tjustify-content: center;\n\t\tflex-shrink: 0;\n}\n.hc-kpi-icon-wrap.blue  { background-color: #E8F1FB; }\n.hc-kpi-icon-wrap.green { background-color: #E6F7F0; }\n.hc-kpi-icon-wrap.red   { background-color: #FDECEA; }\n.hc-kpi-icon-wrap.orange{ background-color: #FEF3E6; }\n.hc-kpi-icon-wrap i { font-size: 20px; font-style: normal; }\n.hc-kpi-icon-wrap.blue  i { color: #1565C0; }\n.hc-kpi-icon-wrap.green i { color: #179E6C; }\n.hc-kpi-icon-wrap.red   i { color: #FE455D; }\n.hc-kpi-icon-wrap.orange i { color: #E07B00; }\n.hc-kpi-label {\n\t\tfont-size: 0.8125rem;\n\t\tfont-weight: 500;\n\t\tcolor: var(--zcs_secondary_text_color, #6B7280);\n\t\tline-height: 1.4;\n\t\tmargin: 0;\n}\n.hc-kpi-value {\n\t\tfont-size: 1.75rem;\n\t\tfont-weight: 700;\n\t\tcolor: var(--zcs_primary_text_color, #1a1a2e);\n\t\tline-height: 1.2;\n\t\tmargin: 0;\n}\n.hc-kpi-sub {\n\t\tfont-size: 0.75rem;\n\t\tcolor: var(--zcs_tertiary_text_color, #9CA3AF);\n\t\tmargin: 0;\n}\n.hc-kpi-header {\n\t\tpadding: 16px 16px 0 16px;\n\t\tdisplay: flex;\n\t\talign-items: center;\n\t\tgap: 8px;\n}\n.hc-kpi-header h2 {\n\t\tfont-size: 1rem;\n\t\tfont-weight: 600;\n\t\tcolor: var(--zcs_primary_text_color, #1a1a2e);\n\t\tmargin: 0;\n}\n&lt;/style&gt;\n\n&lt;%\n\ttodayDate = zoho.currentdate;\n\tsevenDaysAgo = todayDate.subDay(6);\n\n\tcalcRecords = Headcount_Calculator[Calc_Date &gt;= sevenDaysAgo &amp;&amp; Calc_Date &lt;= todayDate];\n\ttotalRequiredHC = calcRecords.sum(Required_HC_Rounded);\n\tavgUtilisation = calcRecords.avg(Utilisation_Percent);\n\tavgGap = calcRecords.avg(Gap);\n\n\tactualRecords = HC_Actual_Entry[Entry_Date == todayDate];\n\ttotalPresentHC = actualRecords.sum(Present_Count);\n\n\tif(totalRequiredHC == null) { totalRequiredHC = 0; }\n\tif(totalPresentHC == null) { totalPresentHC = 0; }\n\tif(avgGap == null) { avgGap = 0; }\n\tif(avgUtilisation == null) { avgUtilisation = 0; }\n\n\tavgGapDisplay = avgGap.round(1);\n\tavgUtilDisplay = avgUtilisation.round(1);\n%&gt;\n\n&lt;div class=&quot;hc-kpi-header&quot;&gt;\n\t&lt;i class=&quot;zc-li-outline ui-1-bar-chart-stats-up&quot; style=&quot;font-size:18px;color:var(--zcs_brand_color);&quot;&gt;&lt;/i&gt;\n\t&lt;h2&gt;Headcount KPIs — Last 7 Days&lt;/h2&gt;\n&lt;/div&gt;\n\n&lt;div class=&quot;hc-kpi-row&quot;&gt;\n\n\t&lt;div class=&quot;hc-kpi-card&quot;&gt;\n\t\t&lt;div class=&quot;hc-kpi-icon-wrap blue&quot;&gt;\n\t\t\t&lt;i class=&quot;zc-li-outline users-wm-man-woman&quot;&gt;&lt;/i&gt;\n\t\t&lt;/div&gt;\n\t\t&lt;p class=&quot;hc-kpi-label&quot;&gt;Total Required HC&lt;/p&gt;\n\t\t&lt;p class=&quot;hc-kpi-value&quot;&gt;&lt;%= totalRequiredHC %&gt;&lt;/p&gt;\n\t\t&lt;p class=&quot;hc-kpi-sub&quot;&gt;Sum over last 7 days&lt;/p&gt;\n\t&lt;/div&gt;\n\n\t&lt;div class=&quot;hc-kpi-card&quot;&gt;\n\t\t&lt;div class=&quot;hc-kpi-icon-wrap green&quot;&gt;\n\t\t\t&lt;i class=&quot;zc-li-outline ui-1-check-circle-08&quot;&gt;&lt;/i&gt;\n\t\t&lt;/div&gt;\n\t\t&lt;p class=&quot;hc-kpi-label&quot;&gt;Total Present HC&lt;/p&gt;\n\t\t&lt;p class=&quot;hc-kpi-value&quot;&gt;&lt;%= totalPresentHC %&gt;&lt;/p&gt;\n\t\t&lt;p class=&quot;hc-kpi-sub&quot;&gt;Actual entries for today&lt;/p&gt;\n\t&lt;/div&gt;\n\n\t&lt;div class=&quot;hc-kpi-card&quot;&gt;\n\t\t&lt;div class=&quot;hc-kpi-icon-wrap red&quot;&gt;\n\t\t\t&lt;i class=&quot;zc-li-outline ui-2-alert-circle&quot;&gt;&lt;/i&gt;\n\t\t&lt;/div&gt;\n\t\t&lt;p class=&quot;hc-kpi-label&quot;&gt;Average Gap&lt;/p&gt;\n\t\t&lt;p class=&quot;hc-kpi-value&quot;&gt;&lt;%= avgGapDisplay %&gt;&lt;/p&gt;\n\t\t&lt;p class=&quot;hc-kpi-sub&quot;&gt;Avg HC gap over last 7 days&lt;/p&gt;\n\t&lt;/div&gt;\n\n\t&lt;div class=&quot;hc-kpi-card&quot;&gt;\n\t\t&lt;div class=&quot;hc-kpi-icon-wrap orange&quot;&gt;\n\t\t\t&lt;i class=&quot;zc-li-outline ui-2-time&quot;&gt;&lt;/i&gt;\n\t\t&lt;/div&gt;\n\t\t&lt;p class=&quot;hc-kpi-label&quot;&gt;Avg Utilisation %&lt;/p&gt;\n\t\t&lt;p class=&quot;hc-kpi-value&quot;&gt;&lt;%= avgUtilDisplay %&gt;%&lt;/p&gt;\n\t\t&lt;p class=&quot;hc-kpi-sub&quot;&gt;Avg utilisation over last 7 days&lt;/p&gt;\n\t&lt;/div&gt;\n\n&lt;/div&gt;\n\t\t\t\t\t\t&lt;%}%&gt;\n\t\t\t\t\t]]>\n\t\t\t\t</dsp>\n\t\t\t</column>\n\t\t</row>\n\t\t<row>\n\t\t\t<column width='50%'>\n\t\t\t\t<report elementName='HC_Dept_Chart'\n\t\t\t\ttitle='Department-wise HC vs Actual'\n\t\t\t\ttitleColor='#1a1a2e'\n\t\t\t\tboldTitle='true'\n\t\t\t\tappLinkName='thisapp'\n\t\t\t\tlinkName='Department_HC_Actual'\n\t\t\t\tiszreport='false'\n\t\t\t\tzc_Footer='true'\n\t\t\t\tzc_AddRec='false'\n\t\t\t\tzc_EditRec='false'\n\t\t\t\tzc_DelRec='false'\n\t\t\t\tzc_DuplRec='false'\n\t\t\t\tzc_Print='false'\n\t\t\t\tzc_Export='true'\n\t\t\t\tzc_Search='true'\n\t\t\t\tzc_EditBulkRec='false'\n\t\t\t\tzc_BulkDelete='false'\n\t\t\t\tzc_BulkDuplicate='false'\n\t\t\t\theightType='custom'\n\t\t\t\theightValue='400' />\n\t\t\t</column>\n\t\t\t<column width='50%'>\n\t\t\t\t<report elementName='HC_Shift_Summary'\n\t\t\t\ttitle='Shift Utilisation Summary'\n\t\t\t\ttitleColor='#1a1a2e'\n\t\t\t\tboldTitle='true'\n\t\t\t\tappLinkName='thisapp'\n\t\t\t\tlinkName='Shift_Utilisation_Summary'\n\t\t\t\tiszreport='false'\n\t\t\t\tzc_Footer='true'\n\t\t\t\tzc_AddRec='false'\n\t\t\t\tzc_EditRec='false'\n\t\t\t\tzc_DelRec='false'\n\t\t\t\tzc_DuplRec='false'\n\t\t\t\tzc_Print='false'\n\t\t\t\tzc_Export='true'\n\t\t\t\tzc_Search='true'\n\t\t\t\tzc_EditBulkRec='false'\n\t\t\t\tzc_BulkDelete='false'\n\t\t\t\tzc_BulkDuplicate='false'\n\t\t\t\theightType='custom'\n\t\t\t\theightValue='400' />\n\t\t\t</column>\n\t\t</row>\n\t\t<row>\n\t\t\t<column width='100%'>\n\t\t\t\t<dsp id='HC_Alert_Panel' elementName='HC_Alert_Panel'>\n\t\t\t\t\t<![CDATA[htmlpage HC_Alert_Panel()\n\t\t\t\t\t\tcontent\n\t\t\t\t\t\t&lt;%{%&gt;\n\t\t\t\t\t\t\t\t&lt;style&gt;\n/* ===== HC Alert Panel ===== */\n.hc-alert-wrapper {\n\t\tpadding: 16px;\n\t\tbox-sizing: border-box;\n\t\tbackground-color: var(--zcs-page-bg-color, #F3F3F4);\n}\n.hc-alert-card {\n\t\tbackground-color: var(--zcs-white-color, #FFFFFF);\n\t\tborder: 1px solid #e7e7ee;\n\t\tborder-radius: 12px;\n\t\toverflow: hidden;\n}\n.hc-alert-card-header {\n\t\tdisplay: flex;\n\t\talign-items: center;\n\t\tgap: 8px;\n\t\tpadding: 14px 16px;\n\t\tborder-bottom: 1px solid #e7e7ee;\n\t\tbackground-color: var(--zcs-white-color, #FFFFFF);\n}\n.hc-alert-card-header h3 {\n\t\tfont-size: 0.9375rem;\n\t\tfont-weight: 600;\n\t\tcolor: var(--zcs_primary_text_color, #1a1a2e);\n\t\tmargin: 0;\n}\n.hc-alert-table-wrapper {\n\t\toverflow: auto;\n}\n.hc-alert-table {\n\t\twidth: 100%;\n\t\tborder-collapse: collapse;\n\t\tline-height: normal;\n}\n.hc-alert-table thead tr th {\n\t\tbackground-color: #F9FAFE;\n\t\tbox-shadow: 0px -1px 0px 0px #e7e7ee inset;\n\t\tpadding: 8px 16px;\n\t\ttext-align: left;\n\t\tfont-size: 0.875rem;\n\t\tfont-weight: 500;\n\t\tcolor: var(--zcs_primary_text_color, #1a1a2e);\n\t\twhite-space: nowrap;\n\t\tbox-sizing: border-box;\n}\n.hc-alert-table tbody tr td {\n\t\tpadding: 8px 16px;\n\t\tfont-size: 0.875rem;\n\t\tfont-weight: 400;\n\t\tcolor: var(--zcs_primary_text_color, #1a1a2e);\n\t\tborder-top: 1px solid #e7e7ee;\n\t\tbox-sizing: border-box;\n}\n.hc-alert-table tbody tr:first-child td {\n\t\tborder-top-color: transparent;\n}\n.hc-alert-table tbody tr:hover td {\n\t\tbackground-color: #F9FAFE;\n}\n.hc-alert-table tbody tr.hc-row-high td {\n\t\tbackground-color: #FFF0F0;\n}\n.hc-alert-table tbody tr.hc-row-high:hover td {\n\t\tbackground-color: #FFE0E0;\n}\n.hc-alert-table tbody tr.hc-row-medium td {\n\t\tbackground-color: #FFF8EC;\n}\n.hc-alert-table tbody tr.hc-row-medium:hover td {\n\t\tbackground-color: #FFEFD0;\n}\n.hc-badge {\n\t\tdisplay: inline-block;\n\t\tpadding: 2px 10px;\n\t\tborder-radius: 6px;\n\t\tfont-size: 0.75rem;\n\t\tfont-weight: 600;\n}\n.hc-badge-high   { background-color: #FDECEA; color: #C62828; }\n.hc-badge-medium { background-color: #FEF3E6; color: #E07B00; }\n.hc-badge-low    { background-color: #E6F7F0; color: #179E6C; }\n.hc-no-data {\n\t\tpadding: 32px 16px;\n\t\ttext-align: center;\n\t\tcolor: var(--zcs_tertiary_text_color, #9CA3AF);\n\t\tfont-size: 0.875rem;\n}\n&lt;/style&gt;\n\n&lt;%\n\talertRecords = Headcount_Calculator[Alert_Triggered == true] sort by Calc_Date desc range from 0 to 9;\n\n\talertCount = alertRecords.count();\n%&gt;\n\n&lt;div class=&quot;hc-alert-wrapper&quot;&gt;\n\t&lt;div class=&quot;hc-alert-card&quot;&gt;\n\t\t&lt;div class=&quot;hc-alert-card-header&quot;&gt;\n\t\t\t&lt;i class=&quot;zc-li-outline ui-2-alert-circle&quot; style=&quot;font-size:18px;color:#FE455D;&quot;&gt;&lt;/i&gt;\n\t\t\t&lt;h3&gt;Recent HC Gap Alerts&lt;/h3&gt;\n\t\t\t&lt;span style=&quot;margin-left:auto;font-size:0.75rem;color:var(--zcs_tertiary_text_color,#9CA3AF);&quot;&gt;Last 10 triggered alerts&lt;/span&gt;\n\t\t&lt;/div&gt;\n\t\t&lt;div class=&quot;hc-alert-table-wrapper&quot;&gt;\n\t\t\t&lt;% if(alertCount == 0) { %&gt;\n\t\t\t&lt;div class=&quot;hc-no-data&quot;&gt;\n\t\t\t\t&lt;i class=&quot;zc-li-outline ui-1-check-circle-08&quot; style=&quot;font-size:32px;color:#179E6C;display:block;margin-bottom:8px;&quot;&gt;&lt;/i&gt;\n\t\t\t\tNo gap alerts triggered recently.\n\t\t\t&lt;/div&gt;\n\t\t\t&lt;% } else { %&gt;\n\t\t\t&lt;table class=&quot;hc-alert-table&quot;&gt;\n\t\t\t\t&lt;thead&gt;\n\t\t\t\t\t&lt;tr&gt;\n\t\t\t\t\t\t&lt;th&gt;Date&lt;/th&gt;\n\t\t\t\t\t\t&lt;th&gt;Department&lt;/th&gt;\n\t\t\t\t\t\t&lt;th&gt;Shift&lt;/th&gt;\n\t\t\t\t\t\t&lt;th&gt;Required HC&lt;/th&gt;\n\t\t\t\t\t\t&lt;th&gt;Present HC&lt;/th&gt;\n\t\t\t\t\t\t&lt;th&gt;Gap&lt;/th&gt;\n\t\t\t\t\t\t&lt;th&gt;Severity&lt;/th&gt;\n\t\t\t\t\t&lt;/tr&gt;\n\t\t\t\t&lt;/thead&gt;\n\t\t\t\t&lt;tbody&gt;\n\t\t\t\t\t&lt;%\n\t\t\t\t\t\tfor each alertRow in alertRecords\n\t\t\t\t\t\t{\n\t\t\t\t\t\t\tgapVal = alertRow.get(&quot;Gap&quot;);\n\t\t\t\t\t\t\tif(gapVal == null) { gapVal = 0; }\n\t\t\t\t\t\t\trowClass = &quot;&quot;;\n\t\t\t\t\t\t\tbadgeClass = &quot;hc-badge-low&quot;;\n\t\t\t\t\t\t\tseverityLabel = &quot;Low&quot;;\n\t\t\t\t\t\t\tif(gapVal &gt; 10)\n\t\t\t\t\t\t\t{\n\t\t\t\t\t\t\t\trowClass = &quot;hc-row-high&quot;;\n\t\t\t\t\t\t\t\tbadgeClass = &quot;hc-badge-high&quot;;\n\t\t\t\t\t\t\t\tseverityLabel = &quot;High&quot;;\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\telse if(gapVal &gt;= 5)\n\t\t\t\t\t\t\t{\n\t\t\t\t\t\t\t\trowClass = &quot;hc-row-medium&quot;;\n\t\t\t\t\t\t\t\tbadgeClass = &quot;hc-badge-medium&quot;;\n\t\t\t\t\t\t\t\tseverityLabel = &quot;Medium&quot;;\n\t\t\t\t\t\t\t}\n\t\t\t\t\t%&gt;\n\t\t\t\t\t&lt;tr class=&quot;&lt;%= rowClass %&gt;&quot;&gt;\n\t\t\t\t\t\t&lt;td&gt;&lt;%= alertRow.get(&quot;Calc_Date&quot;) %&gt;&lt;/td&gt;\n\t\t\t\t\t\t&lt;td&gt;&lt;%= alertRow.get(&quot;Department&quot;) %&gt;&lt;/td&gt;\n\t\t\t\t\t\t&lt;td&gt;&lt;%= alertRow.get(&quot;Shift&quot;) %&gt;&lt;/td&gt;\n\t\t\t\t\t\t&lt;td&gt;&lt;%= alertRow.get(&quot;Required_HC_Rounded&quot;) %&gt;&lt;/td&gt;\n\t\t\t\t\t\t&lt;td&gt;—&lt;/td&gt;\n\t\t\t\t\t\t&lt;td&gt;&lt;strong&gt;&lt;%= gapVal %&gt;&lt;/strong&gt;&lt;/td&gt;\n\t\t\t\t\t\t&lt;td&gt;&lt;span class=&quot;hc-badge &lt;%= badgeClass %&gt;&quot;&gt;&lt;%= severityLabel %&gt;&lt;/span&gt;&lt;/td&gt;\n\n\n\t\t\t\t\t&lt;/tr&gt;\n\t\t\t\t\t&lt;%\n\t\t\t\t\t\t}\n\t\t\t\t\t%&gt;\n\t\t\t\t&lt;/tbody&gt;\n\t\t\t&lt;/table&gt;\n\t\t\t&lt;% } %&gt;\n\t\t&lt;/div&gt;\n\t&lt;/div&gt;\n&lt;/div&gt;\n\t\t\t\t\t\t&lt;%}%&gt;\n\t\t\t\t\t]]>\n\t\t\t\t</dsp>\n\t\t\t</column>\n\t\t</row>\n\t\t<row>\n\t\t\t<column width='100%'>\n\t\t\t\t<report elementName='HC_Weekly_Trend'\n\t\t\t\ttitle='Weekly HC Variance Trend'\n\t\t\t\ttitleColor='#1a1a2e'\n\t\t\t\tboldTitle='true'\n\t\t\t\tappLinkName='thisapp'\n\t\t\t\tlinkName='HC_Summary'\n\t\t\t\tiszreport='false'\n\t\t\t\tzc_Footer='true'\n\t\t\t\tzc_AddRec='false'\n\t\t\t\tzc_EditRec='false'\n\t\t\t\tzc_DelRec='false'\n\t\t\t\tzc_DuplRec='false'\n\t\t\t\tzc_Print='false'\n\t\t\t\tzc_Export='true'\n\t\t\t\tzc_Search='true'\n\t\t\t\tzc_EditBulkRec='false'\n\t\t\t\tzc_BulkDelete='false'\n\t\t\t\tzc_BulkDuplicate='false'\n\t\t\t\theightType='custom'\n\t\t\t\theightValue='400' />\n\t\t\t</column>\n\t\t</row>\n\t</layout>\n</zml>"
+		}
+	}
+
+	workflow
+	{
+		form
+		{
+			HC_Calc_On_Success as "HC Calculation On Success"
+			{
+			    type = form
+			    form = Headcount_Calculator
+			    record event = on add or edit
+			
+			    on success
+			    {
+			        actions
+			        {
+			            custom deluge script
+			            (
+			                // Fetch matching HC Actual Entry for same department and date
+			                actual_entries = HC_Actual_Entry[Department == input.Department && Entry_Date == input.Calc_Date] sort by Added_Time desc range from 0 to 0;
+			                actual_present = 0;
+			                for each ae in actual_entries
+			                {
+			                    actual_present = ae.get("Present_Count");
+			                }
+			
+			
+			                // Calculate Required HC
+			                // Required HC = (Planned Output × Cycle Time) / (Available Hours × 3600 × Efficiency% / 100)
+			                eff_decimal = input.Efficiency_Percent / 100.0;
+			                avail_seconds = input.Available_Hours * 3600.0;
+			                required_hc = (input.Planned_Output * input.Cycle_Time_Seconds) / (avail_seconds * eff_decimal);
+			                required_hc_rounded = required_hc.ceil();
+			
+			                // Calculate Gap and Utilisation
+			                gap = required_hc - actual_present;
+			                utilisation = 0.0;
+			                if (required_hc > 0)
+			                {
+			                    utilisation = (actual_present / required_hc) * 100.0;
+			                }
+			
+			
+			                // Check gap threshold and trigger alert
+			                gap_threshold = 5;
+			                alert_flag = false;
+			                if (gap > gap_threshold)
+			                {
+			                    alert_flag = true;
+			                    // TODO: Send Zoho Cliq alert to #production-alerts channel
+			                    // Integration deferred - requires Zoho Cliq connection configuration
+			                }
+			
+			
+			                update Headcount_Calculator[ID == input.ID]
+			                [
+			                    Required_HC = required_hc.round(2)
+			                    Required_HC_Rounded = required_hc_rounded
+			                    Gap = gap.round(2)
+			                    Utilisation_Percent = utilisation.round(2)
+			                    Alert_Triggered = alert_flag
+			                ];
+			
+			            )
+			        }
+			    }
+			}
+
+			Acknowledge_Alert_On_Success as "Acknowledge Alert On Edit"
+			{
+			    type = form
+			    form = Supply_Alert_Log
+			    record event = on edit
+			
+			    on success
+			    {
+			        actions
+			        {
+			            custom deluge script
+			            (
+			                if (input.Acknowledged == true && (input.Acknowledged_By == "" || input.Acknowledged_By == null))
+			                {
+			                    update Supply_Alert_Log[ID == input.ID]
+			                    [
+			                        Acknowledged_By = zoho.loginuser
+			                        Acknowledged_Date = zoho.currentdate
+			                    ];
+			                }
+			
+			            )
+			        }
+			    }
+			}
+		}
+
+		schedule
+		{
+			Daily_Buffer_Recalc as "Daily Buffer Zone Recalculation"
+			{
+			    type = schedule
+			    start = "2026-01-01 06:00:00"
+			    frequency = daily
+			    time zone = "Asia/Kolkata"
+			
+			    on start
+			    {
+			        actions
+			        {
+			            on load
+			            (
+			                // Fetch all active decoupling points
+			                active_dps = Decoupling_Point_Master[Active_Status == true];
+			                for each dp in active_dps
+			                {
+			                    part_id = dp.get("Part");
+			
+			                    // Fetch part master data
+			                    part_records = Part_SKU_Master[ID == part_id] sort by Added_Time desc range from 0 to 0;
+			                    if (part_records.count() == 0)
+			                    {
+			                        continue;
+			                    }
+			                    adu = 0.0;
+			                    moq = 0;
+			                    for each partRec in part_records
+			                    {
+			                        adu = partRec.get("ADU");
+			                        moq = partRec.get("MOQ");
+			                    }
+			
+			
+			                    // Guard against null values
+			                    if (adu == null) { adu = 0.0; }
+			                    if (moq == null) { moq = 0; }
+			
+			                    // Get decoupling point parameters
+			                    lead_time = dp.get("Lead_Time_Days");
+			                    lead_time_factor = dp.get("Lead_Time_Factor");
+			                    order_cycle = dp.get("Order_Cycle_Days");
+			
+			                    if (lead_time == null) { lead_time = 1; }
+			                    if (lead_time_factor == null) { lead_time_factor = 0.5; }
+			                    if (order_cycle == null) { order_cycle = 1; }
+			
+			                    // Calculate buffer zones
+			                    // Red Zone = MOQ + (ADU × Lead Time × Lead Time Factor)
+			                    red_zone = moq + (adu * lead_time * lead_time_factor);
+			
+			                    // Yellow Zone = ADU × Decoupled Lead Time
+			                    yellow_zone = adu * lead_time;
+			
+			                    // Green Zone = max(MOQ, ADU × Order Cycle, Red Zone)
+			                    green_zone = moq;
+			                    g2 = adu * order_cycle;
+			                    g3 = red_zone;
+			                    if (g2 > green_zone) { green_zone = g2; }
+			                    if (g3 > green_zone) { green_zone = g3; }
+			
+			                    // Fetch today's stock snapshot
+			                    today = zoho.currentdate;
+			                    snapshots = Daily_Stock_Snapshot[Part == part_id && Snapshot_Date == today];
+			                    on_hand = 0.0;
+			                    on_order = 0.0;
+			                    qual_demand = 0.0;
+			                    for each snap in snapshots
+			                    {
+			                        tempOnHand = snap.get("On_Hand_Qty");
+			                        tempOnOrder = snap.get("On_Order_Qty");
+			                        tempDemand = snap.get("Qualified_Demand");
+			                        if (tempOnHand != null) { on_hand = tempOnHand; }
+			                        if (tempOnOrder != null) { on_order = tempOnOrder; }
+			                        if (tempDemand != null) { qual_demand = tempDemand; }
+			                    }
+			
+			
+			                    // Calculate NFP = On-Hand + On-Order - Qualified Demand
+			                    nfp = on_hand + on_order - qual_demand;
+			
+			                    // Determine buffer status
+			                    buffer_status = "GREEN";
+			                    if (nfp <= red_zone)
+			                    {
+			                        buffer_status = "RED";
+			                    }
+			                    else if (nfp <= yellow_zone)
+			                    {
+			                        buffer_status = "YELLOW";
+			                    }
+			
+			                    // Create NFP Status Log entry
+			                    nfp_record = map();
+			                    nfp_record.put("Part", part_id);
+			                    nfp_record.put("NFP_Date", today);
+			                    nfp_record.put("NFP", nfp.round(2));
+			                    nfp_record.put("Status", buffer_status);
+			                    nfp_record.put("Red_Zone_Value", red_zone.round(2));
+			                    nfp_record.put("Yellow_Zone_Value", yellow_zone.round(2));
+			
+			                    action_flag = false;
+			                    if (buffer_status == "RED")
+			                    {
+			                        action_flag = true;
+			                        // TODO: Send Zoho Cliq alert to #supply-alerts channel
+			                        // Integration deferred - requires Zoho Cliq connection configuration
+			                        // TODO: Auto-create PO draft in Zoho Books
+			                        // Integration deferred - requires Zoho Books connection configuration
+			
+			                        // Create Supply Alert Log entry
+			                        insert into Supply_Alert_Log
+			                        [
+			                            Part = part_id
+			                            Alert_Date = today
+			                            Alert_Type = "RED Zone Breach"
+			                            NFP_At_Alert = nfp.round(2)
+			                            Buffer_Status = "RED"
+			                            Acknowledged = false
+			                            PO_Draft_Created = false
+			                        ];
+			                    }
+			                    nfp_record.put("Action_Triggered", action_flag);
+			                    nfp_record.put("PO_Draft_Created", false);
+			                    insert into NFP_Status_Log
+			                    [
+			                        Part = part_id
+			                        NFP_Date = today
+			                        NFP = nfp.round(2)
+			                        Status = buffer_status
+			                        Red_Zone_Value = red_zone.round(2)
+			                        Yellow_Zone_Value = yellow_zone.round(2)
+			                        Action_Triggered = action_flag
+			                        PO_Draft_Created = false
+			                    ];
+			
+			                    // Update Buffer Profile & Levels
+			                    existing_buffer = Buffer_Profile_Levels[Part == part_id];
+			                    if (existing_buffer.count() > 0)
+			                    {
+			                        update Buffer_Profile_Levels[Part == part_id]
+			                        [
+			                            Red_Zone = red_zone.round(2)
+			                            Yellow_Zone = yellow_zone.round(2)
+			                            Green_Zone = green_zone.round(2)
+			                            Last_Calculated = today
+			                        ];
+			                    }
+			                    else
+			                    {
+			                        insert into Buffer_Profile_Levels
+			                        [
+			                            Part = part_id
+			                            Red_Zone = red_zone.round(2)
+			                            Yellow_Zone = yellow_zone.round(2)
+			                            Green_Zone = green_zone.round(2)
+			                            Last_Calculated = today
+			                        ];
+			                    }
+			                }
+			
+			            )
+			        }
+			    }
+			}
+		}
+
+		functions
+		{
+			Acknowledge_Alert_Button as "Acknowledge Alert"
+			{
+			    type = functions
+			    form = Supply_Alert_Log
+			    execution type = for each record
+			
+			    on start
+			    {
+			        actions
+			        {
+			            on click
+			
+			            (
+			                update Supply_Alert_Log[ID == input.ID]
+			                [
+			                    Acknowledged = true
+			                    Acknowledged_By = zoho.loginuser
+			                    Acknowledged_Date = zoho.currentdate
+			                ];
+			            )
+			
+			        }
+			    }
+			}
+		}
+	}
+
+	share_settings
+	{
+	"HR_Admin"
+	{
+	    name        = "HR_Admin"
+	    type        = Users_Permissions
+	    permissions = { Chat:false, Predefined:false, ApiAccess:false, PIIAccess:false, ePHIAccess:false }
+	    description = "Full access to Headcount module: create, edit, delete, view all reports and dashboards"
+	
+	    ModulePermissions
+	    {
+	        Employee_Master
+	        {
+	            enabled          = Create,Viewall,Modifyall,Import,Export,Tab,View,Edit,Delete,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Employees={"View","Edit","Delete"}
+	                Employees_By_Department={"View","Edit","Delete"}
+	            }
+	        }
+	        Production_Plan
+	        {
+	            enabled          = Create,Viewall,Modifyall,Import,Export,Tab,View,Edit,Delete,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Production_Plans={"View","Edit","Delete"}
+	                Weekly_Production_Plans={"View","Edit","Delete"}
+	            }
+	        }
+	        Shift_Configuration
+	        {
+	            enabled          = Create,Viewall,Modifyall,Import,Export,Tab,View,Edit,Delete,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Shifts={"View","Edit","Delete"}
+	            }
+	        }
+	        Headcount_Calculator
+	        {
+	            enabled          = Create,Viewall,Modifyall,Import,Export,Tab,View,Edit,Delete,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                HC_Summary={"View","Edit","Delete"}
+	                HC_Gap_Alert_Log={"View","Edit","Delete"}
+	                Shift_Utilisation_Summary={"View","Edit","Delete"}
+	            }
+	        }
+	        HC_Actual_Entry
+	        {
+	            enabled          = Create,Viewall,Modifyall,Import,Export,Tab,View,Edit,Delete,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_HC_Actual={"View","Edit","Delete"}
+	                Department_HC_Actual={"View","Edit","Delete"}
+	            }
+	        }
+	        Part_SKU_Master
+	        {
+	            enabled          = Viewall,Tab,View,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Parts={"View"}
+	                Active_Parts={"View"}
+	            }
+	        }
+	        Decoupling_Point_Master
+	        {
+	            enabled          = Viewall,Tab,View,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Decoupling_Points={"View"}
+	                Active_Decoupling_Points={"View"}
+	            }
+	        }
+	        Buffer_Profile_Levels
+	        {
+	            enabled          = Viewall,Tab,View,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Buffer_Profiles={"View"}
+	            }
+	        }
+	        Daily_Stock_Snapshot
+	        {
+	            enabled          = Viewall,Tab,View,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Stock_Snapshots={"View"}
+	                Latest_Stock_Snapshots={"View"}
+	            }
+	        }
+	        NFP_Status_Log
+	        {
+	            enabled          = Viewall,Tab,View,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_NFP_Status={"View"}
+	                Parts_In_RED={"View"}
+	                NFP_Trend={"View"}
+	            }
+	        }
+	        Supply_Alert_Log
+	        {
+	            enabled          = Viewall,Tab,View,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Supply_Alerts={"View"}
+	                Unacknowledged_Alerts={"View"}
+	                ADU_History={"View"}
+	            }
+	        }
+	        Headcount_Dashboard
+	        {
+	            enabled = tab
+	        }
+	        DDMRP_Buffer_Dashboard
+	        {
+	            enabled = tab
+	        }
+	    }
+	}
+	"Line_Manager"
+	{
+	    name        = "Line_Manager"
+	    type        = Users_Permissions
+	    permissions = { Chat:false, Predefined:false, ApiAccess:false, PIIAccess:false, ePHIAccess:false }
+	    description = "Create/Edit HC Actual Entry; View own department reports"
+	
+	    ModulePermissions
+	    {
+	        Employee_Master
+	        {
+	            enabled          = Viewall,Tab,View,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Employees={"View"}
+	                Employees_By_Department={"View"}
+	            }
+	        }
+	        Production_Plan
+	        {
+	            enabled          = Viewall,Tab,View,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Production_Plans={"View"}
+	                Weekly_Production_Plans={"View"}
+	            }
+	        }
+	        Shift_Configuration
+	        {
+	            enabled          = Viewall,Tab,View,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Shifts={"View"}
+	            }
+	        }
+	        Headcount_Calculator
+	        {
+	            enabled          = Viewall,Tab,View,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                HC_Summary={"View"}
+	                HC_Gap_Alert_Log={"View"}
+	                Shift_Utilisation_Summary={"View"}
+	            }
+	        }
+	        HC_Actual_Entry
+	        {
+	            enabled          = Create,Viewall,Tab,View,Edit,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_HC_Actual={"View","Edit"}
+	                Department_HC_Actual={"View","Edit"}
+	            }
+	        }
+	        Part_SKU_Master
+	        {
+	            enabled          = Viewall,Tab,View,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Parts={"View"}
+	                Active_Parts={"View"}
+	            }
+	        }
+	        Decoupling_Point_Master
+	        {
+	            enabled          = Viewall,Tab,View,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Decoupling_Points={"View"}
+	                Active_Decoupling_Points={"View"}
+	            }
+	        }
+	        Buffer_Profile_Levels
+	        {
+	            enabled          = Viewall,Tab,View,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Buffer_Profiles={"View"}
+	            }
+	        }
+	        Daily_Stock_Snapshot
+	        {
+	            enabled          = Viewall,Tab,View,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Stock_Snapshots={"View"}
+	                Latest_Stock_Snapshots={"View"}
+	            }
+	        }
+	        NFP_Status_Log
+	        {
+	            enabled          = Viewall,Tab,View,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_NFP_Status={"View"}
+	                Parts_In_RED={"View"}
+	                NFP_Trend={"View"}
+	            }
+	        }
+	        Supply_Alert_Log
+	        {
+	            enabled          = Viewall,Tab,View,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Supply_Alerts={"View"}
+	                Unacknowledged_Alerts={"View"}
+	                ADU_History={"View"}
+	            }
+	        }
+	        Headcount_Dashboard
+	        {
+	            enabled = tab
+	        }
+	        DDMRP_Buffer_Dashboard
+	        {
+	            enabled = tab
+	        }
+	    }
+	}
+	"Operations_Head"
+	{
+	    name        = "Operations_Head"
+	    type        = Users_Permissions
+	    permissions = { Chat:false, Predefined:false, ApiAccess:false, PIIAccess:false, ePHIAccess:false }
+	    description = "Read-only access to all dashboards and reports across both modules"
+	
+	    ModulePermissions
+	    {
+	        Employee_Master
+	        {
+	            enabled          = Viewall,Tab,View,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Employees={"View"}
+	                Employees_By_Department={"View"}
+	            }
+	        }
+	        Production_Plan
+	        {
+	            enabled          = Viewall,Tab,View,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Production_Plans={"View"}
+	                Weekly_Production_Plans={"View"}
+	            }
+	        }
+	        Shift_Configuration
+	        {
+	            enabled          = Viewall,Tab,View,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Shifts={"View"}
+	            }
+	        }
+	        Headcount_Calculator
+	        {
+	            enabled          = Viewall,Tab,View,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                HC_Summary={"View"}
+	                HC_Gap_Alert_Log={"View"}
+	                Shift_Utilisation_Summary={"View"}
+	            }
+	        }
+	        HC_Actual_Entry
+	        {
+	            enabled          = Viewall,Tab,View,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_HC_Actual={"View"}
+	                Department_HC_Actual={"View"}
+	            }
+	        }
+	        Part_SKU_Master
+	        {
+	            enabled          = Viewall,Tab,View,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Parts={"View"}
+	                Active_Parts={"View"}
+	            }
+	        }
+	        Decoupling_Point_Master
+	        {
+	            enabled          = Viewall,Tab,View,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Decoupling_Points={"View"}
+	                Active_Decoupling_Points={"View"}
+	            }
+	        }
+	        Buffer_Profile_Levels
+	        {
+	            enabled          = Viewall,Tab,View,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Buffer_Profiles={"View"}
+	            }
+	        }
+	        Daily_Stock_Snapshot
+	        {
+	            enabled          = Viewall,Tab,View,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Stock_Snapshots={"View"}
+	                Latest_Stock_Snapshots={"View"}
+	            }
+	        }
+	        NFP_Status_Log
+	        {
+	            enabled          = Viewall,Tab,View,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_NFP_Status={"View"}
+	                Parts_In_RED={"View"}
+	                NFP_Trend={"View"}
+	            }
+	        }
+	        Supply_Alert_Log
+	        {
+	            enabled          = Viewall,Tab,View,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Supply_Alerts={"View"}
+	                Unacknowledged_Alerts={"View"}
+	                ADU_History={"View"}
+	            }
+	        }
+	        Headcount_Dashboard
+	        {
+	            enabled = tab
+	        }
+	        DDMRP_Buffer_Dashboard
+	        {
+	            enabled = tab
+	        }
+	    }
+	}
+	"Procurement"
+	{
+	    name        = "Procurement"
+	    type        = Users_Permissions
+	    permissions = { Chat:false, Predefined:false, ApiAccess:false, PIIAccess:false, ePHIAccess:false }
+	    description = "View Buffer Status, Alert Log; Acknowledge alerts; Access PO drafts"
+	
+	    ModulePermissions
+	    {
+	        Employee_Master
+	        {
+	            enabled          = Viewall,Tab,View,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Employees={"View"}
+	                Employees_By_Department={"View"}
+	            }
+	        }
+	        Production_Plan
+	        {
+	            enabled          = Viewall,Tab,View,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Production_Plans={"View"}
+	                Weekly_Production_Plans={"View"}
+	            }
+	        }
+	        Shift_Configuration
+	        {
+	            enabled          = Viewall,Tab,View,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Shifts={"View"}
+	            }
+	        }
+	        Headcount_Calculator
+	        {
+	            enabled          = Viewall,Tab,View,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                HC_Summary={"View"}
+	                HC_Gap_Alert_Log={"View"}
+	                Shift_Utilisation_Summary={"View"}
+	            }
+	        }
+	        HC_Actual_Entry
+	        {
+	            enabled          = Viewall,Tab,View,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_HC_Actual={"View"}
+	                Department_HC_Actual={"View"}
+	            }
+	        }
+	        Part_SKU_Master
+	        {
+	            enabled          = Viewall,Tab,View,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Parts={"View"}
+	                Active_Parts={"View"}
+	            }
+	        }
+	        Decoupling_Point_Master
+	        {
+	            enabled          = Viewall,Tab,View,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Decoupling_Points={"View"}
+	                Active_Decoupling_Points={"View"}
+	            }
+	        }
+	        Buffer_Profile_Levels
+	        {
+	            enabled          = Viewall,Tab,View,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Buffer_Profiles={"View"}
+	            }
+	        }
+	        Daily_Stock_Snapshot
+	        {
+	            enabled          = Create,Viewall,Tab,View,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Stock_Snapshots={"View"}
+	                Latest_Stock_Snapshots={"View"}
+	            }
+	        }
+	        NFP_Status_Log
+	        {
+	            enabled          = Viewall,Tab,View,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_NFP_Status={"View"}
+	                Parts_In_RED={"View"}
+	                NFP_Trend={"View"}
+	            }
+	        }
+	        Supply_Alert_Log
+	        {
+	            enabled          = Viewall,Modifyall,Tab,View,Edit,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Supply_Alerts={"View","Edit"}
+	                Unacknowledged_Alerts={"View","Edit"}
+	                ADU_History={"View"}
+	            }
+	        }
+	        Headcount_Dashboard
+	        {
+	            enabled = tab
+	        }
+	        DDMRP_Buffer_Dashboard
+	        {
+	            enabled = tab
+	        }
+	    }
+	}
+	"Production_Planner"
+	{
+	    name        = "Production_Planner"
+	    type        = Users_Permissions
+	    permissions = { Chat:false, Predefined:false, ApiAccess:false, PIIAccess:false, ePHIAccess:false }
+	    description = "View all Headcount reports; Edit Production Plan"
+	
+	    ModulePermissions
+	    {
+	        Employee_Master
+	        {
+	            enabled          = Viewall,Tab,View,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Employees={"View"}
+	                Employees_By_Department={"View"}
+	            }
+	        }
+	        Production_Plan
+	        {
+	            enabled          = Create,Viewall,Modifyall,Tab,View,Edit,Delete,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Production_Plans={"View","Edit","Delete"}
+	                Weekly_Production_Plans={"View","Edit","Delete"}
+	            }
+	        }
+	        Shift_Configuration
+	        {
+	            enabled          = Viewall,Tab,View,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Shifts={"View"}
+	            }
+	        }
+	        Headcount_Calculator
+	        {
+	            enabled          = Create,Viewall,Modifyall,Tab,View,Edit,Delete,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                HC_Summary={"View","Edit","Delete"}
+	                HC_Gap_Alert_Log={"View","Edit","Delete"}
+	                Shift_Utilisation_Summary={"View","Edit","Delete"}
+	            }
+	        }
+	        HC_Actual_Entry
+	        {
+	            enabled          = Viewall,Tab,View,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_HC_Actual={"View"}
+	                Department_HC_Actual={"View"}
+	            }
+	        }
+	        Part_SKU_Master
+	        {
+	            enabled          = Viewall,Tab,View,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Parts={"View"}
+	                Active_Parts={"View"}
+	            }
+	        }
+	        Decoupling_Point_Master
+	        {
+	            enabled          = Viewall,Tab,View,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Decoupling_Points={"View"}
+	                Active_Decoupling_Points={"View"}
+	            }
+	        }
+	        Buffer_Profile_Levels
+	        {
+	            enabled          = Viewall,Tab,View,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Buffer_Profiles={"View"}
+	            }
+	        }
+	        Daily_Stock_Snapshot
+	        {
+	            enabled          = Viewall,Tab,View,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Stock_Snapshots={"View"}
+	                Latest_Stock_Snapshots={"View"}
+	            }
+	        }
+	        NFP_Status_Log
+	        {
+	            enabled          = Viewall,Tab,View,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_NFP_Status={"View"}
+	                Parts_In_RED={"View"}
+	                NFP_Trend={"View"}
+	            }
+	        }
+	        Supply_Alert_Log
+	        {
+	            enabled          = Viewall,Tab,View,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Supply_Alerts={"View"}
+	                Unacknowledged_Alerts={"View"}
+	                ADU_History={"View"}
+	            }
+	        }
+	        Headcount_Dashboard
+	        {
+	            enabled = tab
+	        }
+	        DDMRP_Buffer_Dashboard
+	        {
+	            enabled = tab
+	        }
+	    }
+	}
+	"Supply_Planner"
+	{
+	    name        = "Supply_Planner"
+	    type        = Users_Permissions
+	    permissions = { Chat:false, Predefined:false, ApiAccess:false, PIIAccess:false, ePHIAccess:false }
+	    description = "Full access to DDMRP module: create/edit decoupling points, buffer profiles, view all reports"
+	
+	    ModulePermissions
+	    {
+	        Employee_Master
+	        {
+	            enabled          = Viewall,Tab,View,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Employees={"View"}
+	                Employees_By_Department={"View"}
+	            }
+	        }
+	        Production_Plan
+	        {
+	            enabled          = Viewall,Tab,View,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Production_Plans={"View"}
+	                Weekly_Production_Plans={"View"}
+	            }
+	        }
+	        Shift_Configuration
+	        {
+	            enabled          = Viewall,Tab,View,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Shifts={"View"}
+	            }
+	        }
+	        Headcount_Calculator
+	        {
+	            enabled          = Viewall,Tab,View,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                HC_Summary={"View"}
+	                HC_Gap_Alert_Log={"View"}
+	                Shift_Utilisation_Summary={"View"}
+	            }
+	        }
+	        HC_Actual_Entry
+	        {
+	            enabled          = Viewall,Tab,View,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_HC_Actual={"View"}
+	                Department_HC_Actual={"View"}
+	            }
+	        }
+	        Part_SKU_Master
+	        {
+	            enabled          = Create,Viewall,Modifyall,Import,Export,Tab,View,Edit,Delete,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Parts={"View","Edit","Delete"}
+	                Active_Parts={"View","Edit","Delete"}
+	            }
+	        }
+	        Decoupling_Point_Master
+	        {
+	            enabled          = Create,Viewall,Modifyall,Import,Export,Tab,View,Edit,Delete,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Decoupling_Points={"View","Edit","Delete"}
+	                Active_Decoupling_Points={"View","Edit","Delete"}
+	            }
+	        }
+	        Buffer_Profile_Levels
+	        {
+	            enabled          = Create,Viewall,Modifyall,Tab,View,Edit,Delete,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Buffer_Profiles={"View","Edit","Delete"}
+	            }
+	        }
+	        Daily_Stock_Snapshot
+	        {
+	            enabled          = Create,Viewall,Modifyall,Import,Tab,View,Edit,Delete,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Stock_Snapshots={"View","Edit","Delete"}
+	                Latest_Stock_Snapshots={"View","Edit","Delete"}
+	            }
+	        }
+	        NFP_Status_Log
+	        {
+	            enabled          = Create,Viewall,Modifyall,Tab,View,Edit,Delete,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_NFP_Status={"View","Edit","Delete"}
+	                Parts_In_RED={"View","Edit","Delete"}
+	                NFP_Trend={"View","Edit","Delete"}
+	            }
+	        }
+	        Supply_Alert_Log
+	        {
+	            enabled          = Create,Viewall,Modifyall,Tab,View,Edit,Delete,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Supply_Alerts={"View","Edit","Delete"}
+	                Unacknowledged_Alerts={"View","Edit","Delete"}
+	                ADU_History={"View","Edit","Delete"}
+	            }
+	        }
+	        Headcount_Dashboard
+	        {
+	            enabled = tab
+	        }
+	        DDMRP_Buffer_Dashboard
+	        {
+	            enabled = tab
+	        }
+	    }
+	}
+	}
+
+	web
+	{
+	forms
+	{
+	    form Employee_Master
+	    {
+	        label placement = top
+	    }
+	    form Production_Plan
+	    {
+	        label placement = top
+	    }
+	    form Shift_Configuration
+	    {
+	        label placement = top
+	    }
+	    form Headcount_Calculator
+	    {
+	        label placement = top
+	    }
+	    form HC_Actual_Entry
+	    {
+	        label placement = top
+	    }
+	    form Part_SKU_Master
+	    {
+	        label placement = top
+	    }
+	    form Decoupling_Point_Master
+	    {
+	        label placement = top
+	    }
+	    form Buffer_Profile_Levels
+	    {
+	        label placement = top
+	    }
+	    form Daily_Stock_Snapshot
+	    {
+	        label placement = top
+	    }
+	    form NFP_Status_Log
+	    {
+	        label placement = top
+	    }
+	    form Supply_Alert_Log
+	    {
+	        label placement = top
+	    }
+	}
+	reports
+	{
+		report All_Buffer_Profiles
+		{
+		    quickview
+		    (
+		        layout
+		        (
+		            type = -1
+		            datablock1
+		            (
+		                layout type = -1
+		                fields
+		                (
+		                    Part
+		                    Red_Zone
+		                    Yellow_Zone
+		                    Green_Zone
+		                    Last_Calculated
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		            record
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		        action
+		        (
+		            on click
+		            (
+		                View Record
+		            )
+		            on right click
+		            (
+		                Edit
+		                Delete
+		                Duplicate
+		                View Record
+		            )
+		        )
+		    )
+		    detailview
+		    (
+		        layout
+		        (
+		            type = 1
+		            datablock1
+		            (
+		                layout type = -2
+		                fields
+		                (
+		                    Part
+		                    Red_Zone
+		                    Yellow_Zone
+		                    Green_Zone
+		                    Variability_Factor
+		                    Last_Calculated
+		                    Manual_Override
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		    )
+		}
+	
+		report All_Stock_Snapshots
+		{
+		    quickview
+		    (
+		        layout
+		        (
+		            type = -1
+		            datablock1
+		            (
+		                layout type = -1
+		                fields
+		                (
+		                    Snapshot_Date
+		                    Part
+		                    On_Hand_Qty
+		                    On_Order_Qty
+		                    Qualified_Demand
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		            record
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		        action
+		        (
+		            on click
+		            (
+		                View Record
+		            )
+		            on right click
+		            (
+		                Edit
+		                Delete
+		                Duplicate
+		                View Record
+		            )
+		        )
+		    )
+		    detailview
+		    (
+		        layout
+		        (
+		            type = 1
+		            datablock1
+		            (
+		                layout type = -2
+		                fields
+		                (
+		                    Snapshot_Date
+		                    Part
+		                    On_Hand_Qty
+		                    On_Order_Qty
+		                    Qualified_Demand
+		                    Source
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		    )
+		}
+	
+		report Latest_Stock_Snapshots
+		{
+		    quickview
+		    (
+		        layout
+		        (
+		            type = -1
+		            datablock1
+		            (
+		                layout type = -1
+		                fields
+		                (
+		                    Part
+		                    Snapshot_Date
+		                    On_Hand_Qty
+		                    On_Order_Qty
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		            record
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		        action
+		        (
+		            on click
+		            (
+		                View Record
+		            )
+		            on right click
+		            (
+		                Edit
+		                Delete
+		                Duplicate
+		                View Record
+		            )
+		        )
+		    )
+		    detailview
+		    (
+		        layout
+		        (
+		            type = 1
+		            datablock1
+		            (
+		                layout type = -2
+		                fields
+		                (
+		                    Part
+		                    Snapshot_Date
+		                    On_Hand_Qty
+		                    On_Order_Qty
+		                    Qualified_Demand
+		                    Source
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		    )
+		}
+	
+		report Active_Decoupling_Points
+		{
+		    quickview
+		    (
+		        layout
+		        (
+		            type = -1
+		            datablock1
+		            (
+		                layout type = -1
+		                fields
+		                (
+		                    Part
+		                    Lead_Time_Days
+		                    Order_Cycle_Days
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		            record
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		        action
+		        (
+		            on click
+		            (
+		                View Record
+		            )
+		            on right click
+		            (
+		                Edit
+		                Delete
+		                Duplicate
+		                View Record
+		            )
+		        )
+		    )
+		    detailview
+		    (
+		        layout
+		        (
+		            type = 1
+		            datablock1
+		            (
+		                layout type = -2
+		                fields
+		                (
+		                    Part
+		                    Lead_Time_Days
+		                    Lead_Time_Factor
+		                    Variability_Factor
+		                    Order_Cycle_Days
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		    )
+		}
+	
+		report All_Decoupling_Points
+		{
+		    quickview
+		    (
+		        layout
+		        (
+		            type = -1
+		            datablock1
+		            (
+		                layout type = -1
+		                fields
+		                (
+		                    Part
+		                    Lead_Time_Days
+		                    Order_Cycle_Days
+		                    Active_Status
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		            record
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		        action
+		        (
+		            on click
+		            (
+		                View Record
+		            )
+		            on right click
+		            (
+		                Edit
+		                Delete
+		                Duplicate
+		                View Record
+		            )
+		        )
+		    )
+		    detailview
+		    (
+		        layout
+		        (
+		            type = 1
+		            datablock1
+		            (
+		                layout type = -2
+		                fields
+		                (
+		                    Part
+		                    Lead_Time_Days
+		                    Lead_Time_Factor
+		                    Variability_Factor
+		                    Order_Cycle_Days
+		                    Active_Status
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		    )
+		}
+	
+		report All_Employees
+		{
+		    quickview
+		    (
+		        layout
+		        (
+		            type = -1
+		            datablock1
+		            (
+		                layout type = -1
+		                fields
+		                (
+		                    Employee_Name
+		                    Department
+		                    Role
+		                    Shift
+		                    Status
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		            record
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		        action
+		        (
+		            on click
+		            (
+		                View Record
+		            )
+		            on right click
+		            (
+		                Edit
+		                Delete
+		                Duplicate
+		                View Record
+		            )
+		        )
+		    )
+		    detailview
+		    (
+		        layout
+		        (
+		            type = 1
+		            datablock1
+		            (
+		                layout type = -2
+		                fields
+		                (
+		                    Employee_Name
+		                    Department
+		                    Role
+		                    Shift
+		                    Location
+		                    Employment_Type
+		                    Status
+		                    Join_Date
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		    )
+		}
+	
+		report Employees_By_Department
+		{
+		    quickview
+		    (
+		        layout
+		        (
+		            type = -1
+		            datablock1
+		            (
+		                layout type = -1
+		                fields
+		                (
+		                    Employee_Name
+		                    Department
+		                    Role
+		                    Shift
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		            record
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		        action
+		        (
+		            on click
+		            (
+		                View Record
+		            )
+		            on right click
+		            (
+		                Edit
+		                Delete
+		                Duplicate
+		                View Record
+		            )
+		        )
+		    )
+		    detailview
+		    (
+		        layout
+		        (
+		            type = 1
+		            datablock1
+		            (
+		                layout type = -2
+		                fields
+		                (
+		                    Employee_Name
+		                    Department
+		                    Role
+		                    Shift
+		                    Employment_Type
+		                )
+		            )
+		        )
+		
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		    )
+		}
+	
+		report All_HC_Actual
+		{
+		    quickview
+		    (
+		        layout
+		        (
+		            type = -1
+		            datablock1
+		            (
+		                layout type = -1
+		                fields
+		                (
+		                    Entry_Date
+		                    Department
+		                    Shift
+		                    Present_Count
+		                    Absent_Count
+		                    Contractor_Count
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		            record
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		        action
+		        (
+		            on click
+		            (
+		                View Record
+		            )
+		            on right click
+		            (
+		                Edit
+		                Delete
+		                Duplicate
+		                View Record
+		            )
+		        )
+		    )
+		    detailview
+		    (
+		        layout
+		        (
+		            type = 1
+		            datablock1
+		            (
+		                layout type = -2
+		                fields
+		                (
+		                    Entry_Date
+		                    Department
+		                    Shift
+		                    Present_Count
+		                    Absent_Count
+		                    Contractor_Count
+		                    Total_Workforce
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		    )
+		}
+	
+		report Department_HC_Actual
+		{
+		    quickview
+		    (
+		        layout
+		        (
+		            type = -1
+		            datablock1
+		            (
+		                layout type = -1
+		                fields
+		                (
+		                    Department
+		                    Entry_Date
+		                    Present_Count
+		                    Absent_Count
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		            record
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		        action
+		        (
+		            on click
+		            (
+		                View Record
+		            )
+		            on right click
+		            (
+		                Edit
+		                Delete
+		                Duplicate
+		                View Record
+		            )
+		        )
+		    )
+		    detailview
+		    (
+		        layout
+		        (
+		            type = 1
+		            datablock1
+		            (
+		                layout type = -2
+		                fields
+		                (
+		                    Department
+		                    Entry_Date
+		                    Shift
+		                    Present_Count
+		                    Absent_Count
+		                    Total_Workforce
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		    )
+		}
+	
+		report HC_Gap_Alert_Log
+		{
+		    quickview
+		    (
+		        layout
+		        (
+		            type = -1
+		            datablock1
+		            (
+		                layout type = -1
+		                fields
+		                (
+		                    Calc_Date
+		                    Department
+		                    Shift
+		                    Gap
+		                    Alert_Triggered
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		            record
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		        action
+		        (
+		            on click
+		            (
+		                View Record
+		            )
+		            on right click
+		            (
+		                Edit
+		                Delete
+		                Duplicate
+		                View Record
+		            )
+		        )
+		    )
+		    detailview
+		    (
+		        layout
+		        (
+		            type = 1
+		            datablock1
+		            (
+		                layout type = -2
+		                fields
+		                (
+		                    Calc_Date
+		                    Department
+		                    Production_Line
+		                    Shift
+		                    Required_HC_Rounded
+		                    Gap
+		                    Utilisation_Percent
+		                    Alert_Triggered
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		    )
+		}
+	
+		report HC_Summary
+		{
+		    quickview
+		    (
+		        layout
+		        (
+		            type = -1
+		            datablock1
+		            (
+		                layout type = -1
+		                fields
+		                (
+		                    Calc_Date
+		                    Department
+		                    Shift
+		                    Required_HC_Rounded
+		                    Gap
+		                    Utilisation_Percent
+		                    Alert_Triggered
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		            record
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		        action
+		        (
+		            on click
+		            (
+		                View Record
+		            )
+		            on right click
+		            (
+		                Edit
+		                Delete
+		                Duplicate
+		                View Record
+		            )
+		        )
+		    )
+		    detailview
+		    (
+		        layout
+		        (
+		            type = 1
+		            datablock1
+		            (
+		                layout type = -2
+		                fields
+		                (
+		                    Calc_Date
+		                    Department
+		                    Production_Line
+		                    Shift
+		                    Planned_Output
+		                    Required_HC
+		                    Required_HC_Rounded
+		                    Gap
+		                    Utilisation_Percent
+		                    Alert_Triggered
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		    )
+		}
+	
+		report Shift_Utilisation_Summary
+		{
+		    quickview
+		    (
+		        layout
+		        (
+		            type = -1
+		            datablock1
+		            (
+		                layout type = -1
+		                fields
+		                (
+		                    Shift
+		                    Department
+		                    Required_HC_Rounded
+		                    Gap
+		                    Utilisation_Percent
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		            record
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		        action
+		        (
+		            on click
+		            (
+		                View Record
+		            )
+		            on right click
+		            (
+		                Edit
+		                Delete
+		                Duplicate
+		                View Record
+		            )
+		        )
+		    )
+		    detailview
+		    (
+		        layout
+		        (
+		            type = 1
+		            datablock1
+		            (
+		                layout type = -2
+		                fields
+		                (
+		                    Shift
+		                    Department
+		                    Required_HC_Rounded
+		                    Gap
+		                    Utilisation_Percent
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		    )
+		}
+	
+		report All_NFP_Status
+		{
+		    quickview
+		    (
+		        layout
+		        (
+		            type = -1
+		            datablock1
+		            (
+		                layout type = -1
+		                fields
+		                (
+		                    NFP_Date
+		                    Part
+		                    NFP
+		                    Status
+		                    Action_Triggered
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		            record
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		        action
+		        (
+		            on click
+		            (
+		                View Record
+		            )
+		            on right click
+		            (
+		                Edit
+		                Delete
+		                Duplicate
+		                View Record
+		            )
+		        )
+		    )
+		    detailview
+		    (
+		        layout
+		        (
+		            type = 1
+		            datablock1
+		            (
+		                layout type = -2
+		                fields
+		                (
+		                    NFP_Date
+		                    Part
+		                    NFP
+		                    Status
+		                    Red_Zone_Value
+		                    Yellow_Zone_Value
+		                    Action_Triggered
+		                    PO_Draft_Created
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		    )
+		}
+	
+		report NFP_Trend
+		{
+		    quickview
+		    (
+		        layout
+		        (
+		            type = -1
+		            datablock1
+		            (
+		                layout type = -1
+		                fields
+		                (
+		                    NFP_Date
+		                    Part
+		                    NFP
+		                    Status
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		            record
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		        action
+		        (
+		            on click
+		            (
+		                View Record
+		            )
+		            on right click
+		            (
+		                Edit
+		                Delete
+		                Duplicate
+		                View Record
+		            )
+		        )
+		    )
+		    detailview
+		    (
+		        layout
+		        (
+		            type = 1
+		            datablock1
+		            (
+		                layout type = -2
+		                fields
+		                (
+		                    NFP_Date
+		                    Part
+		                    NFP
+		                    Status
+		                    Red_Zone_Value
+		                    Yellow_Zone_Value
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		    )
+		}
+	
+		report Parts_In_RED
+		{
+		    quickview
+		    (
+		        layout
+		        (
+		            type = -1
+		            datablock1
+		            (
+		                layout type = -1
+		                fields
+		                (
+		                    NFP_Date
+		                    Part
+		                    NFP
+		                    Action_Triggered
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		            record
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		        action
+		        (
+		            on click
+		            (
+		                View Record
+		            )
+		            on right click
+		            (
+		                Edit
+		                Delete
+		                Duplicate
+		                View Record
+		            )
+		        )
+		    )
+		    detailview
+		    (
+		        layout
+		        (
+		            type = 1
+		            datablock1
+		            (
+		                layout type = -2
+		                fields
+		                (
+		                    NFP_Date
+		                    Part
+		                    NFP
+		                    Red_Zone_Value
+		                    Action_Triggered
+		                    PO_Draft_Created
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		    )
+		}
+	
+		report Active_Parts
+		{
+		    quickview
+		    (
+		        layout
+		        (
+		            type = -1
+		            datablock1
+		            (
+		                layout type = -1
+		                fields
+		                (
+		                    Part_Code
+		                    Part_Description
+		                    Category
+		                    MOQ
+		                    ADU
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		            record
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		        action
+		        (
+		            on click
+		            (
+		                View Record
+		            )
+		            on right click
+		            (
+		                Edit
+		                Delete
+		                Duplicate
+		                View Record
+		            )
+		        )
+		    )
+		    detailview
+		    (
+		        layout
+		        (
+		            type = 1
+		            datablock1
+		            (
+		                layout type = -2
+		                fields
+		                (
+		                    Part_Code
+		                    Part_Description
+		                    Category
+		                    Supplier
+		                    MOQ
+		                    ADU
+		                    Lead_Time_Days
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		    )
+		}
+	
+		report All_Parts
+		{
+		    quickview
+		    (
+		        layout
+		        (
+		            type = -1
+		            datablock1
+		            (
+		                layout type = -1
+		                fields
+		                (
+		                    Part_Code
+		                    Part_Description
+		                    Category
+		                    MOQ
+		                    ADU
+		                    Status
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		            record
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		        action
+		        (
+		            on click
+		            (
+		                View Record
+		            )
+		            on right click
+		            (
+		                Edit
+		                Delete
+		                Duplicate
+		                View Record
+		            )
+		        )
+		    )
+		    detailview
+		    (
+		        layout
+		        (
+		            type = 1
+		            datablock1
+		            (
+		                layout type = -2
+		                fields
+		                (
+		                    Part_Code
+		                    Part_Description
+		                    Category
+		                    Supplier
+		                    Unit
+		                    MOQ
+		                    ADU
+		                    ADU_Last_Updated
+		                    Lead_Time_Days
+		                    Status
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		    )
+		}
+	
+		report All_Production_Plans
+		{
+		    quickview
+		    (
+		        layout
+		        (
+		            type = -1
+		            datablock1
+		            (
+		                layout type = -1
+		                fields
+		                (
+		                    Production_Line
+		                    SKU
+		                    Planned_Output_Units
+		                    Week
+		                    Status
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		            record
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		        action
+		        (
+		            on click
+		            (
+		                View Record
+		            )
+		            on right click
+		            (
+		                Edit
+		                Delete
+		                Duplicate
+		                View Record
+		            )
+		        )
+		    )
+		    detailview
+		    (
+		        layout
+		        (
+		            type = 1
+		            datablock1
+		            (
+		                layout type = -2
+		                fields
+		                (
+		                    Production_Line
+		                    SKU
+		                    Planned_Output_Units
+		                    Cycle_Time
+		                    Week
+		                    Shift
+		                    Status
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		    )
+		}
+	
+		report Weekly_Production_Plans
+		{
+		    quickview
+		    (
+		        layout
+		        (
+		            type = -1
+		            datablock1
+		            (
+		                layout type = -1
+		                fields
+		                (
+		                    Production_Line
+		                    SKU
+		                    Planned_Output_Units
+		                    Week
+		                    Shift
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		            record
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		        action
+		        (
+		            on click
+		            (
+		                View Record
+		            )
+		            on right click
+		            (
+		                Edit
+		                Delete
+		                Duplicate
+		                View Record
+		            )
+		        )
+		    )
+		    detailview
+		    (
+		        layout
+		        (
+		            type = 1
+		            datablock1
+		            (
+		                layout type = -2
+		                fields
+		                (
+		                    Production_Line
+		                    SKU
+		                    Planned_Output_Units
+		                    Cycle_Time
+		                    Week
+		                    Shift
+		                    Status
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		    )
+		}
+	
+		report All_Shifts
+		{
+		    quickview
+		    (
+		        layout
+		        (
+		            type = -1
+		            datablock1
+		            (
+		                layout type = -1
+		                fields
+		                (
+		                    Shift_Name
+		                    Production_Line
+		                    Start_Time
+		                    End_Time
+		                    Available_Hours
+		                    Status
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		            record
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		        action
+		        (
+		            on click
+		            (
+		                View Record
+		            )
+		            on right click
+		            (
+		                Edit
+		                Delete
+		                Duplicate
+		                View Record
+		            )
+		        )
+		    )
+		    detailview
+		    (
+		        layout
+		        (
+		            type = 1
+		            datablock1
+		            (
+		                layout type = -2
+		                fields
+		                (
+		                    Shift_Name
+		                    Production_Line
+		                    Start_Time
+		                    End_Time
+		                    Break_Duration_Minutes
+		                    Available_Hours
+		                    Status
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		    )
+		}
+	
+		report ADU_History
+		{
+		    quickview
+		    (
+		        layout
+		        (
+		            type = 1
+		            datablock1
+		            (
+		                layout type = -1
+		                fields
+		                (
+		                    Alert_Date
+		                    Part
+		                    Alert_Type
+		                    Buffer_Status
+		                    NFP_At_Alert
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		            record
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		        action
+		        (
+		            on click
+		            (
+		                View Record
+		            )
+		            on right click
+		            (
+		                Edit
+		                Delete
+		                Duplicate
+		                View Record
+		            )
+		        )
+		    )
+		    detailview
+		    (
+		        layout
+		        (
+		            type = 1
+		            datablock1
+		            (
+		                layout type = -2
+		                fields
+		                (
+		                    Alert_Date
+		                    Part
+		                    Alert_Type
+		                    Buffer_Status
+		                    NFP_At_Alert
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		    )
+		}
+	
+		report All_Supply_Alerts
+		{
+		    quickview
+		    (
+		        layout
+		        (
+		            type = -1
+		            datablock1
+		            (
+		                layout type = -1
+		                fields
+		                (
+		                    Alert_Date
+		                    Part
+		                    Alert_Type
+		                    Buffer_Status
+		                    Acknowledged
+		                    "Acknowledge Alert"
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		            record
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		        action
+		        (
+		            on click
+		            (
+		                View Record
+		            )
+		            on right click
+		            (
+		                Edit
+		                Delete
+		                Duplicate
+		                View Record
+		            )
+		        )
+		    )
+		    detailview
+		    (
+		        layout
+		        (
+		            type = 1
+		            datablock1
+		            (
+		                layout type = -2
+		                fields
+		                (
+		                    Alert_Date
+		                    Part
+		                    Alert_Type
+		                    Buffer_Status
+		                    NFP_At_Alert
+		                    Acknowledged
+		                    Acknowledged_By
+		                    Acknowledged_Date
+		                    PO_Draft_Created
+		                    "Acknowledge Alert"
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		    )
+		}
+	
+		report Unacknowledged_Alerts
+		{
+		    quickview
+		    (
+		        layout
+		        (
+		            type = 1
+		            datablock1
+		            (
+		                layout type = -1
+		                fields
+		                (
+		                    Alert_Date
+		                    Part
+		                    Alert_Type
+		                    Buffer_Status
+		                    "Acknowledge Alert"
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		            record
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		        action
+		        (
+		            on click
+		            (
+		                View Record
+		            )
+		            on right click
+		            (
+		                Edit
+		                Delete
+		                Duplicate
+		                View Record
+		            )
+		        )
+		    )
+		    detailview
+		    (
+		        layout
+		        (
+		            type = 1
+		            datablock1
+		            (
+		                layout type = -2
+		                fields
+		                (
+		                    Alert_Date
+		                    Part
+		                    Alert_Type
+		                    Buffer_Status
+		                    NFP_At_Alert
+		                    PO_Draft_Created
+		                    "Acknowledge Alert"
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		    )
+		}
+	}
+	menu
+	{
+	    space Headcount_Space
+	    {
+	        displayname = "Headcount Planning"
+	        icon = "users-multiple-11"
+	
+	        section HC_Dashboard_Section
+	        {
+	            displayname = "Dashboards"
+	            icon = "business-chart-bar-33"
+	
+	            page Headcount_Dashboard
+	            {
+	                icon = "business-chart-pie-36"
+	            }
+	        }
+	
+	        section HC_Planning_Section
+	        {
+	            displayname = "Planning"
+	            icon = "business-board-30"
+	
+	            form Headcount_Calculator
+	            {
+	                icon = "business-calculator"
+	            }
+	            report HC_Summary
+	            {
+	                icon = "business-chart-bar-32"
+	            }
+	            report HC_Gap_Alert_Log
+	            {
+	                icon = "business-goal-65"
+	            }
+	            report Shift_Utilisation_Summary
+	            {
+	                icon = "business-chart-growth"
+	            }
+	        }
+	
+	        section HC_Attendance_Section
+	        {
+	            displayname = "Attendance"
+	            icon = "users-badge-13"
+	
+	            form HC_Actual_Entry
+	            {
+	                icon = "users-add-27"
+	            }
+	            report All_HC_Actual
+	            {
+	                icon = "tech-desktop"
+	            }
+	            report Department_HC_Actual
+	            {
+	                icon = "business-hierarchy-53"
+	            }
+	        }
+	
+	        section HC_MasterData_Section
+	        {
+	            displayname = "Master Data"
+	            icon = "business-briefcase-24"
+	
+	            form Employee_Master
+	            {
+	                icon = "users-single-body"
+	            }
+	            report All_Employees
+	            {
+	                icon = "users-multiple-19"
+	            }
+	            report Employees_By_Department
+	            {
+	                icon = "business-hierarchy-55"
+	            }
+	            form Production_Plan
+	            {
+	                icon = "business-board-28"
+	            }
+	            report All_Production_Plans
+	            {
+	                icon = "tech-desktop"
+	            }
+	            report Weekly_Production_Plans
+	            {
+	                icon = "business-agenda"
+	            }
+	            form Shift_Configuration
+	            {
+	                icon = "business-progress"
+	            }
+	            report All_Shifts
+	            {
+	                icon = "tech-desktop"
+	            }
+	        }
+	
+	        section SharedAnalytics_Section
+	        {
+	            type = shared_user_report_section
+	            displayname = "Reports"
+	            icon = "business-chart-bar-33"
+	        }
+	    }
+	
+	    space DDMRP_Space
+	    {
+	        displayname = "DDMRP Buffer Engine"
+	        icon = "business-factory"
+	
+	        section DDMRP_Dashboard_Section
+	        {
+	            displayname = "Dashboards"
+	            icon = "business-chart-bar-33"
+	
+	            page DDMRP_Buffer_Dashboard
+	            {
+	                icon = "business-chart-pie-35"
+	            }
+	        }
+	
+	        section Buffer_Management_Section
+	        {
+	            displayname = "Buffer Management"
+	            icon = "business-stock"
+	
+	            form Buffer_Profile_Levels
+	            {
+	                icon = "business-strategy"
+	            }
+	            report All_Buffer_Profiles
+	            {
+	                icon = "tech-desktop"
+	            }
+	            form Decoupling_Point_Master
+	            {
+	                icon = "business-connect"
+	            }
+	            report All_Decoupling_Points
+	            {
+	                icon = "tech-desktop"
+	            }
+	            report Active_Decoupling_Points
+	            {
+	                icon = "business-goal-64"
+	            }
+	        }
+	
+	        section Status_Alerts_Section
+	        {
+	            displayname = "Status & Alerts"
+	            icon = "business-badge"
+	
+	            form NFP_Status_Log
+	            {
+	                icon = "business-notes"
+	            }
+	            report All_NFP_Status
+	            {
+	                icon = "business-chart-bar-32"
+	            }
+	            report Parts_In_RED
+	            {
+	                icon = "business-goal-65"
+	            }
+	            report NFP_Trend
+	            {
+	                icon = "business-chart-growth"
+	            }
+	            form Supply_Alert_Log
+	            {
+	                icon = "business-sign"
+	            }
+	            report All_Supply_Alerts
+	            {
+	                icon = "tech-desktop"
+	            }
+	            report Unacknowledged_Alerts
+	            {
+	                icon = "objects-cone"
+	            }
+	            report ADU_History
+	            {
+	                icon = "business-chart-growth"
+	            }
+	        }
+	
+	        section Stock_Section
+	        {
+	            displayname = "Stock"
+	            icon = "business-briefcase-26"
+	
+	            form Daily_Stock_Snapshot
+	            {
+	                icon = "business-math"
+	            }
+	            report All_Stock_Snapshots
+	            {
+	                icon = "tech-desktop"
+	            }
+	            report Latest_Stock_Snapshots
+	            {
+	                icon = "business-chart-bar-32"
+	            }
+	        }
+	
+	        section DDMRP_MasterData_Section
+	        {
+	            displayname = "Part Master"
+	            icon = "business-books"
+	
+	            form Part_SKU_Master
+	            {
+	                icon = "business-briefcase-25"
+	            }
+	            report All_Parts
+	            {
+	                icon = "users-multiple-19"
+	            }
+	            report Active_Parts
+	            {
+	                icon = "business-goal-64"
+	            }
+	        }
+	
+	    }
+	
+	    preference
+	    {
+	        icon
+	        {
+	            style = outline
+	            show = {space,section,component}
+	        }
+	    }
+	}
+	customize
+	{
+	    layout
+	    {
+	        theme = "theme_6"
+	        variant = "variant_1"
+	    }
+	
+	    font = "lato"
+	
+	    color options
+	    {
+	        color = "11"
+	    }
+	
+	    logo
+	    {
+	        preference = "app_name"
+	        placement = "left"
+	    }
+	}
+	}
+}

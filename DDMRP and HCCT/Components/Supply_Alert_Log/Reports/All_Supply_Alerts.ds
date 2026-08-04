@@ -1,0 +1,48 @@
+default list All_Supply_Alerts
+{
+    displayName = "All Supply Alerts"
+    show all rows from Supply_Alert_Log
+    (
+        Alert_Date
+        Part
+        Alert_Type
+        Buffer_Status
+        NFP_At_Alert
+        Acknowledged
+        Acknowledged_By
+        Acknowledged_Date
+        PO_Draft_Created
+        custom action "Acknowledge Alert"
+        (
+            workflow = Acknowledge_Alert_Button
+            show action for each record = true
+            column header = "Action"
+            success message = "Alert acknowledged successfully"
+            condition = (Acknowledged == false)
+        )
+    )
+    filters ( Part  Alert_Type  Buffer_Status  Acknowledged )
+    sort by ( Alert_Date descending )
+    conditional formatting
+    (
+        "RED Alert"
+        {
+            condition = (Buffer_Status == "RED")
+            fields = [Buffer_Status, Part]
+            format = "background-color:#FFE0E0;color:#CC0000;font-weight:bold"
+        }
+        "YELLOW Alert"
+        {
+            condition = (Buffer_Status == "YELLOW")
+            fields = [Buffer_Status]
+            format = "background-color:#FFF3CD;color:#856404"
+        }
+        "Unacknowledged"
+        {
+            condition = (Acknowledged == false)
+            fields = [Alert_Date, Part]
+            format = "background-color:#FFF0E0;color:#92400E;font-weight:bold"
+        }
+
+    )
+}

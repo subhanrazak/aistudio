@@ -1,0 +1,25 @@
+Acknowledge_Alert_On_Success as "Acknowledge Alert On Edit"
+{
+    type = form
+    form = Supply_Alert_Log
+    record event = on edit
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if (input.Acknowledged == true && (input.Acknowledged_By == "" || input.Acknowledged_By == null))
+                {
+                    update Supply_Alert_Log[ID == input.ID]
+                    [
+                        Acknowledged_By = zoho.loginuser
+                        Acknowledged_Date = zoho.currentdate
+                    ];
+                }
+
+            )
+        }
+    }
+}
