@@ -1,0 +1,56 @@
+Click_of_submit2 as "Click of submit"
+{
+
+				type =  form
+				form = Assign_Driver
+				button = Submit
+				on click
+				{
+					actions 
+					{
+					on click
+					(
+						delivery_rec = Outbound_Deliveries_Form[ID == input.Delivery_Number];
+										if(delivery_rec.count() > 0)
+										{
+											try 
+											{
+												delivery_rec.Driver=input.Driver;
+												delivery_rec.Vehicle=input.Vehicle;
+												// 		delivery_rec.Driver_Users_Field.email=input.Driver.Email;
+												delivery_rec.Delivery_Status="Assigned";
+												insert into Timeline
+												[
+													Delivery_Number=input.Delivery_Number
+													Action_field="Driver Assigned"
+													Description="Assigned to " + input.Driver.Driver_Name + " · Vehicle " + input.Vehicle.Vehicle_Number + " · Route " + input.Delivery_Number.Route_Number + " · Stop #" + input.Delivery_Number.Stop_Sequence
+													Date_Time=zoho.currenttime
+													Added_User=zoho.loginuser
+												]
+												// 	Notifications
+												res = zoho.pushNotification(input.Driver.Email,"New delivery assigned to you - " + input.Delivery_Number.Delivery_Number,"New delivery assigned to you","All_Outbound_Deliveries",input.Delivery_Number.ID);
+											}	catch (e)
+											{
+												delivery_rec.Delivery_Status="Pending";
+												insert into Timeline
+												[
+													Delivery_Number=input.Delivery_Number
+													Action_field="Assignment Failed"
+													Description="Driver user not found for " + ifnull(input.Driver.Driver_Name,"Unknown") + " (" + ifnull(input.Driver.Email,"No email") + ")"
+													Date_Time=zoho.currenttime
+													Added_User=zoho.loginuser
+												]
+												delivery_rec.Vehicle=null;
+												delivery_rec.Driver=null;
+											}
+											openUrl("#Script:page.parent.refresh ","parent window");
+										}
+										else
+										{
+											alert "Delivery record is not found";
+										}
+					)
+					}
+				}
+			
+}

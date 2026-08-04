@@ -1,0 +1,40 @@
+Validation_on_always1 as "Validation on always"
+{
+
+				type =  form
+				form = POD_Form
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											mismatch_count = 0;
+										for each  line_item in input.Items
+										{
+											if(line_item.Delivered_Qty == null)
+											{
+												mismatch_count = mismatch_count + 1;
+											}
+											else
+											{
+												if(line_item.Pending_Qty > 0 && line_item.Reason_Code.isEmpty() || line_item.Image.isEmpty())
+												{
+													mismatch_count = mismatch_count + 1;
+												}
+											}
+										}
+										if(mismatch_count > 0)
+										{
+											alert "Please select reason for pending qty";
+											cancel submit;
+										}
+						)
+					}
+				}
+
+			
+}

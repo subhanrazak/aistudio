@@ -1,0 +1,179 @@
+void insertOutboundDeliveries()
+{
+
+                 	// ═══ CLEAN ALL DATA ═══
+                 	delete from Outbound_Deliveries_Form[ID != 0];
+                 	delete from Outbound_Delivery_Line_Items[ID != 0];
+                 	delete from Timeline[ID != 0];
+                 	delete from Start[ID != 0];
+                 	delete from Arrived[ID != 0];
+                 	delete from POD_Line_Items[ID != 0];
+                 	delete from POD_Form[ID != 0];
+                 	delete from New_Customer[ID != 0];
+                 	delete from Customer_Address[ID != 0];
+                 	delete from Driver[ID != 0];
+                 	delete from New_Product[ID != 0];
+                 	// ═══════════════════════════════════
+                 	// 1. DRIVERS
+                 	// ═══════════════════════════════════
+                 	drivers_json = {{"name":"Rajesh Kumar","email":"rajesh.k@logistics.com","mobile":"9876543210","dob":"15-Mar-1990","license":"TN-DL-1990034567"},{"name":"Suresh Mani","email":"suresh.m@logistics.com","mobile":"9876543211","dob":"22-Jul-1988","license":"TN-DL-1988045678"},{"name":"Karthik Selvam","email":"karthik.s@logistics.com","mobile":"9876543212","dob":"08-Nov-1992","license":"TN-DL-1992056789"},{"name":"Murugan Vel","email":"murugan.v@logistics.com","mobile":"9876543213","dob":"30-Jan-1985","license":"TN-DL-1985067890"}};
+                 	driver_map = Map();
+                 	for each  d in drivers_json
+                 	{
+                 		did = insert into Driver
+                 		[
+                 			Driver_Name=d.get("name")
+                 			Email=d.get("email")
+                 			Mobile_Number=d.get("mobile")
+                 			Date_Of_Birth=d.get("dob")
+                 			License_Number=d.get("license")
+                 			Share_App=true
+                 			Status="Active"
+                 			Added_User=zoho.loginuser
+                 		];
+                 		driver_map.put(d.get("name"),did);
+                 	}
+                 	// ═══════════════════════════════════
+                 	// 2. PRODUCTS
+                 	// ═══════════════════════════════════
+                 	products_json = {{"name":"Rice 25kg Bag","weight":25},{"name":"Wheat Flour 10kg","weight":10},{"name":"Sugar 5kg","weight":5},{"name":"Cooking Oil 5L","weight":4.5},{"name":"Cooking Oil 1L","weight":0.9},{"name":"Tea Powder 500g","weight":0.5},{"name":"Toor Dal 1kg","weight":1},{"name":"Salt 1kg","weight":1},{"name":"Basmati Rice 10kg","weight":10},{"name":"Soap Pack","weight":1.2},{"name":"Detergent Powder 1kg","weight":1},{"name":"Rava 1kg","weight":1},{"name":"Jaggery 500g","weight":0.5},{"name":"Coconut Oil 500ml","weight":0.5},{"name":"Ghee 1L","weight":0.9}};
+                 	product_map = Map();
+                 	for each  p in products_json
+                 	{
+                 		pid = insert into New_Product
+                 		[
+                 			Product_Name=p.get("name")
+                 			Weight=p.get("weight")
+                 			Added_User=zoho.loginuser
+                 		];
+                 		product_map.put(p.get("name"),pid);
+                 	}
+                 	// ═══════════════════════════════════
+                 	// 3. CUSTOMERS + ADDRESSES
+                 	// ═══════════════════════════════════
+                 	customers_json = {{"name":"ABC Traders","phone":"044-25671234","email":"abc.traders@email.com","addr_name":"Main Branch","addr_type":"Delivery","line1":"45, Rajaji Street","line2":"Near Central Railway Station","city":"Chennai","state":"Tamil Nadu","pin":"600003"},{"name":"Sri Ganesh Stores","phone":"044-27451234","email":"sriganesh@email.com","addr_name":"Warehouse","addr_type":"Delivery","line1":"12, GST Road","line2":"Opposite Bus Stand","city":"Chengalpattu","state":"Tamil Nadu","pin":"603001"},{"name":"Vijay Agencies","phone":"044-22341567","email":"vijay.agencies@email.com","addr_name":"Godown","addr_type":"Delivery","line1":"78, Main Road","line2":"Near Tambaram Station","city":"Chennai","state":"Tamil Nadu","pin":"600045"},{"name":"Lakshmi Distributors","phone":"044-22451890","email":"lakshmi.dist@email.com","addr_name":"Head Office","addr_type":"Delivery","line1":"23/A, Velachery Main Road","line2":"Near Phoenix Mall","city":"Chennai","state":"Tamil Nadu","pin":"600042"},{"name":"Karthik Enterprises","phone":"044-22501234","email":"karthik.ent@email.com","addr_name":"Factory","addr_type":"Delivery","line1":"SIDCO Industrial Estate","line2":"Plot 14, Phase II","city":"Chennai","state":"Tamil Nadu","pin":"600032"},{"name":"Modern Retail Mart","phone":"044-26181234","email":"modern.retail@email.com","addr_name":"Store","addr_type":"Delivery","line1":"AA Block, 2nd Avenue","line2":"Anna Nagar West","city":"Chennai","state":"Tamil Nadu","pin":"600040"},{"name":"Sun Super Market","phone":"044-24341234","email":"sun.super@email.com","addr_name":"T.Nagar Branch","addr_type":"Delivery","line1":"15, Usman Road","line2":"Near Panagal Park","city":"Chennai","state":"Tamil Nadu","pin":"600017"},{"name":"Green Foods Pvt Ltd","phone":"044-26571234","email":"green.foods@email.com","addr_name":"Processing Unit","addr_type":"Delivery","line1":"Industrial Avenue","line2":"Behind Ambattur OT","city":"Chennai","state":"Tamil Nadu","pin":"600053"},{"name":"Elite Wholesale","phone":"044-24891234","email":"elite.wholesale@email.com","addr_name":"Godown","addr_type":"Delivery","line1":"116, Mount Poonamallee Road","line2":"Porur Junction","city":"Chennai","state":"Tamil Nadu","pin":"600116"},{"name":"Sai Enterprises","phone":"044-22641234","email":"sai.ent@email.com","addr_name":"Office","addr_type":"Delivery","line1":"8, Pallavaram Main Road","line2":"Near Airport","city":"Chennai","state":"Tamil Nadu","pin":"600043"},{"name":"Murugan Stores","phone":"044-25891234","email":"murugan.stores@email.com","addr_name":"Shop","addr_type":"Delivery","line1":"32, Mint Street","line2":"Sowcarpet","city":"Chennai","state":"Tamil Nadu","pin":"600079"},{"name":"Saravana Agencies","phone":"044-24561234","email":"saravana.ag@email.com","addr_name":"Warehouse","addr_type":"Delivery","line1":"10, Arcot Road","line2":"Vadapalani","city":"Chennai","state":"Tamil Nadu","pin":"600026"}};
+                 	customer_map = Map();
+                 	for each  c in customers_json
+                 	{
+                 		cid = insert into New_Customer
+                 		[
+                 			Customer_Name=c.get("name")
+                 			Customer_Phone=c.get("phone")
+                 			Customer_Email=c.get("email")
+                 			Added_User=zoho.loginuser
+                 		];
+                 		caid = insert into Customer_Address
+                 		[
+                 			Customer=cid
+                 			Address_Name=c.get("addr_name")
+                 			Address_Type=c.get("addr_type")
+                 			Customer_Address.address_line_1=c.get("line1")
+                 			Customer_Address.address_line_2=c.get("line2")
+                 			Customer_Address.district_city=c.get("city")
+                 			Customer_Address.state_province=c.get("state")
+                 			Customer_Address.postal_Code=c.get("pin")
+                 			Customer_Address.country="India"
+                 			Is_Default_Address=true
+                 			Added_User=zoho.loginuser
+                 		];
+                 		// Build full address string for delivery
+                 		full_addr = c.get("line1") + ", " + c.get("line2") + ", " + c.get("city") + ", " + c.get("state") + " - " + c.get("pin");
+                 		customer_map.put(c.get("name"),{"id":cid,"address":full_addr,"address_id":caid});
+                 	}
+                 	for each  crecs in New_Customer[ID != 0]
+                 	{
+                 		crecs.Customer_ID="CUS-" + crecs.S_No;
+                 	}
+                 	// ═══════════════════════════════════
+                 	// 4. OUTBOUND DELIVERIES (20 records)
+                 	// ═══════════════════════════════════
+                 	deliveries_json = {{"dn":"OD-10001","customer":"ABC Traders","date":"20-Jun-2026","route":"R001","stop":1,"driver":"Rajesh Kumar","window_start":"09:00:00","window_end":"12:00:00","instructions":"Handle with care","items":{{"product":"Rice 25kg Bag","qty":4},{"product":"Wheat Flour 10kg","qty":3},{"product":"Sugar 5kg","qty":2},{"product":"Cooking Oil 1L","qty":12},{"product":"Tea Powder 500g","qty":6}}},{"dn":"OD-10002","customer":"Sri Ganesh Stores","date":"20-Jun-2026","route":"R001","stop":2,"driver":"Rajesh Kumar","window_start":"10:00:00","window_end":"13:00:00","instructions":"Deliver before noon","items":{{"product":"Rice 25kg Bag","qty":2},{"product":"Sugar 5kg","qty":4},{"product":"Salt 1kg","qty":10},{"product":"Toor Dal 1kg","qty":8}}},{"dn":"OD-10003","customer":"Vijay Agencies","date":"20-Jun-2026","route":"R001","stop":3,"driver":"Rajesh Kumar","window_start":"11:00:00","window_end":"14:00:00","instructions":"Customer signature required","items":{{"product":"Basmati Rice 10kg","qty":5},{"product":"Cooking Oil 5L","qty":3},{"product":"Soap Pack","qty":12},{"product":"Detergent Powder 1kg","qty":8}}},{"dn":"OD-10004","customer":"Lakshmi Distributors","date":"20-Jun-2026","route":"R001","stop":4,"driver":"Rajesh Kumar","window_start":"13:00:00","window_end":"16:00:00","instructions":"Call before delivery","items":{{"product":"Rice 25kg Bag","qty":3},{"product":"Sugar 5kg","qty":5},{"product":"Salt 1kg","qty":8}}},{"dn":"OD-10005","customer":"Karthik Enterprises","date":"20-Jun-2026","route":"R001","stop":5,"driver":"Rajesh Kumar","window_start":"14:00:00","window_end":"17:00:00","instructions":"Fragile items inside","items":{{"product":"Ghee 1L","qty":10},{"product":"Coconut Oil 500ml","qty":20}}},{"dn":"OD-10006","customer":"Modern Retail Mart","date":"20-Jun-2026","route":"R002","stop":1,"driver":"Suresh Mani","window_start":"09:00:00","window_end":"12:00:00","instructions":"Deliver to warehouse gate","items":{{"product":"Rice 25kg Bag","qty":6},{"product":"Toor Dal 1kg","qty":20},{"product":"Sugar 5kg","qty":10}}},{"dn":"OD-10007","customer":"Sun Super Market","date":"20-Jun-2026","route":"R002","stop":2,"driver":"Suresh Mani","window_start":"10:00:00","window_end":"13:00:00","instructions":"Verify item count","items":{{"product":"Rice 25kg Bag","qty":8},{"product":"Cooking Oil 5L","qty":5},{"product":"Soap Pack","qty":20}}},{"dn":"OD-10008","customer":"Green Foods Pvt Ltd","date":"20-Jun-2026","route":"R002","stop":3,"driver":"Suresh Mani","window_start":"11:00:00","window_end":"14:00:00","instructions":"Keep away from moisture","items":{{"product":"Wheat Flour 10kg","qty":4},{"product":"Sugar 5kg","qty":6},{"product":"Salt 1kg","qty":15}}},{"dn":"OD-10009","customer":"Elite Wholesale","date":"20-Jun-2026","route":"R002","stop":4,"driver":"Suresh Mani","window_start":"13:00:00","window_end":"16:00:00","instructions":"Customer unavailable after 5 PM","items":{{"product":"Basmati Rice 10kg","qty":6},{"product":"Tea Powder 500g","qty":12},{"product":"Detergent Powder 1kg","qty":10}}},{"dn":"OD-10010","customer":"Sai Enterprises","date":"20-Jun-2026","route":"R002","stop":5,"driver":"Suresh Mani","window_start":"14:00:00","window_end":"17:00:00","instructions":"Deliver at back entrance","items":{{"product":"Rice 25kg Bag","qty":4},{"product":"Cooking Oil 1L","qty":15},{"product":"Toor Dal 1kg","qty":10}}},{"dn":"OD-10011","customer":"Murugan Stores","date":"21-Jun-2026","route":"R003","stop":1,"driver":"Karthik Selvam","window_start":"09:00:00","window_end":"12:00:00","instructions":"Narrow lane - small vehicle only","items":{{"product":"Rava 1kg","qty":15},{"product":"Jaggery 500g","qty":20},{"product":"Coconut Oil 500ml","qty":10}}},{"dn":"OD-10012","customer":"Saravana Agencies","date":"21-Jun-2026","route":"R003","stop":2,"driver":"Karthik Selvam","window_start":"10:00:00","window_end":"13:00:00","instructions":"Ask for Mr. Rajan at counter","items":{{"product":"Rice 25kg Bag","qty":10},{"product":"Wheat Flour 10kg","qty":5},{"product":"Ghee 1L","qty":8}}},{"dn":"OD-10013","customer":"ABC Traders","date":"21-Jun-2026","route":"R003","stop":3,"driver":"Karthik Selvam","window_start":"11:00:00","window_end":"14:00:00","instructions":"Second delivery this week","items":{{"product":"Cooking Oil 5L","qty":6},{"product":"Tea Powder 500g","qty":10},{"product":"Toor Dal 1kg","qty":15}}},{"dn":"OD-10014","customer":"Sun Super Market","date":"21-Jun-2026","route":"R003","stop":4,"driver":"Karthik Selvam","window_start":"13:00:00","window_end":"16:00:00","instructions":"Verify expiry dates","items":{{"product":"Ghee 1L","qty":12},{"product":"Coconut Oil 500ml","qty":15},{"product":"Tea Powder 500g","qty":8}}},{"dn":"OD-10015","customer":"Green Foods Pvt Ltd","date":"21-Jun-2026","route":"R003","stop":5,"driver":"Karthik Selvam","window_start":"14:00:00","window_end":"17:00:00","instructions":"Dock #2 only","items":{{"product":"Rice 25kg Bag","qty":12},{"product":"Sugar 5kg","qty":8}}},{"dn":"OD-10016","customer":"Lakshmi Distributors","date":"22-Jun-2026","route":"R004","stop":1,"driver":"Murugan Vel","window_start":"09:00:00","window_end":"12:00:00","instructions":"Bulk order - bring trolley","items":{{"product":"Rice 25kg Bag","qty":15},{"product":"Wheat Flour 10kg","qty":8},{"product":"Sugar 5kg","qty":12}}},{"dn":"OD-10017","customer":"Karthik Enterprises","date":"22-Jun-2026","route":"R004","stop":2,"driver":"Murugan Vel","window_start":"10:00:00","window_end":"13:00:00","instructions":"Security check at gate","items":{{"product":"Cooking Oil 5L","qty":10},{"product":"Detergent Powder 1kg","qty":15},{"product":"Soap Pack","qty":25}}},{"dn":"OD-10018","customer":"Modern Retail Mart","date":"22-Jun-2026","route":"R004","stop":3,"driver":"Murugan Vel","window_start":"11:00:00","window_end":"14:00:00","instructions":"Stack neatly in storage room","items":{{"product":"Basmati Rice 10kg","qty":8},{"product":"Rava 1kg","qty":10},{"product":"Jaggery 500g","qty":12}}},{"dn":"OD-10019","customer":"Elite Wholesale","date":"22-Jun-2026","route":"R004","stop":4,"driver":"Murugan Vel","window_start":"13:00:00","window_end":"16:00:00","instructions":"Invoice copy required","items":{{"product":"Rice 25kg Bag","qty":6},{"product":"Toor Dal 1kg","qty":12},{"product":"Salt 1kg","qty":20},{"product":"Cooking Oil 1L","qty":10}}},{"dn":"OD-10020","customer":"Murugan Stores","date":"22-Jun-2026","route":"R004","stop":5,"driver":"Murugan Vel","window_start":"14:00:00","window_end":"17:00:00","instructions":"Owner Mr. Murugan will receive","items":{{"product":"Ghee 1L","qty":6},{"product":"Coconut Oil 500ml","qty":12},{"product":"Tea Powder 500g","qty":15},{"product":"Rava 1kg","qty":8}}}};
+                 	// ═══════════════════════════════════
+                 	// 5. INSERT DELIVERIES + LINE ITEMS + TIMELINE
+                 	// ═══════════════════════════════════
+                 	for each  del in deliveries_json
+                 	{
+                 		cust_data = customer_map.get(del.get("customer"));
+                 		cust_id = cust_data.get("id");
+                 		cust_addr = cust_data.get("address");
+                 		drv_id = driver_map.get(del.get("driver"));
+                 		drv_name = del.get("driver");
+                 		// Calculate totals from line items
+                 		items_list = del.get("items");
+                 		total_items = 0;
+                 		total_weight = 0;
+                 		for each  li in items_list
+                 		{
+                 			qty = li.get("qty");
+                 			prod_name = li.get("product");
+                 			prod_weight = 0;
+                 			for each  pw in products_json
+                 			{
+                 				if(pw.get("name") == prod_name)
+                 				{
+                 					prod_weight = pw.get("weight");
+                 					break;
+                 				}
+                 			}
+                 			total_items = total_items + qty;
+                 			total_weight = total_weight + qty * prod_weight;
+                 		}
+                 		// Insert delivery
+                 		od_id = insert into Outbound_Deliveries_Form
+                 		[
+                 			Delivery_Number=del.get("dn")
+                 			Customer=cust_id
+                 			Customer_Address=cust_data.get("address_id")
+                 			Delivery_Address=cust_addr
+                 			Planned_Delivery_Date=del.get("date")
+                 			Route_Number=del.get("route")
+                 			Stop_Sequence=del.get("stop")
+                 			Total_Items=total_items
+                 			Total_Weight_kg=total_weight.round(2)
+                 			Special_Instructions=del.get("instructions")
+                 			Delivery_Status="Assigned"
+                 			Delivery_Outcome=""
+                 			Delivery_Window_Start=del.get("window_start")
+                 			Delivery_Window_End=del.get("window_end")
+                 			Driver=drv_id
+                 			Delivery_Outcome="Pending"
+                 			SAP_ID="SAP-" + del.get("dn").getSuffix("OD-")
+                 			Order_Date=zoho.currenttime
+                 			Added_User=zoho.loginuser
+                 		];
+                 		// Insert line items
+                 		for each  li in items_list
+                 		{
+                 			prod_id = product_map.get(li.get("product"));
+                 			insert into Outbound_Delivery_Line_Items
+                 			[
+                 				Outbound_Deliveries_SAP=od_id
+                 				Product=prod_id
+                 				Ordered_Qty=li.get("qty")
+                 				Delivered_Qty=0
+                 				Pending_Qty=li.get("qty")
+                 				Status="Pending"
+                 				Added_User=zoho.loginuser
+                 			]
+                 		}
+                 		// Insert timeline entries
+                 		insert into Timeline
+                 		[
+                 			Delivery_Number=od_id
+                 			Action_field="Synced from SAP"
+                 			Description=del.get("dn") + " synced · " + del.get("customer") + " · " + total_items + " items · " + total_weight.round(1) + " kg"
+                 			Date_Time=zoho.currenttime
+                 			Added_User=zoho.loginuser
+                 		]
+                 		insert into Timeline
+                 		[
+                 			Delivery_Number=od_id
+                 			Action_field="Driver Assigned"
+                 			Description="Assigned to " + drv_name + " · Route " + del.get("route") + " · Stop #" + del.get("stop")
+                 			Date_Time=zoho.currenttime
+                 			Added_User=zoho.loginuser
+                 		]
+                 	}
+                 	info "Done! Inserted: 4 drivers, 15 products, 12 customers, 20 deliveries";
+                 
+}

@@ -1,0 +1,32 @@
+Submit_action_on_add as "Submit action on add"
+{
+
+				type =  form
+				form = Receipient_Details
+
+				record event = on add
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											delivery_rec = Outbound_Deliveries_Form[ID == input.Delivery_Number];
+										delivery_rec.Delivery_Status="POD Captured";
+										insert into Timeline
+										[
+											Action_field="Signature Captured"
+											Driver_ID=input.Delivery_Number.Driver
+											Description="Signed by " + input.Receipient_Printed_Name + " (" + input.Receipient_Role + ")"
+											Delivery_Number=input.Delivery_Number
+											Date_Time=zoho.currenttime
+											Added_User=zoho.loginuser
+										]
+										openUrl("#Script:page.parent.refresh ","parent window");
+						)
+					}
+				}
+
+			
+}

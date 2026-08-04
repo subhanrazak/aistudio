@@ -1,0 +1,71 @@
+Click_of_submit1 as "Click of submit"
+{
+
+				type =  form
+				form = Collect_Customer_Feedback
+				button = Submit
+				on click
+				{
+					actions 
+					{
+					on click
+					(
+						if(input.Customer_ID.isEmpty() == false && input.Outbound_Delivery_ID.isEmpty() == false)
+										{
+											if(input.Customer_ID.length() <= 21 && input.Outbound_Delivery_ID.length() <= 21)
+											{
+												customer_rec = New_Customer[ID == input.Customer_ID.toLong()];
+												delivery_rec = Outbound_Deliveries_Form[ID == input.Outbound_Delivery_ID.toLong()];
+												if(customer_rec.count() > 0 && delivery_rec.count() > 0)
+												{
+													if(delivery_rec.Customer.ID == input.Customer_ID.toLong())
+													{
+														if(delivery_rec.Delivery_Status in {"POD Submitted","POD Approved","POD Rejected"})
+														{
+															feedback_exist_rec = Customer_Feedback[Delivery_Number == input.Outbound_Delivery_ID.toNumber()];
+															if(feedback_exist_rec.count() > 0)
+															{
+																alert "Feedback already exist for this delivery";
+															}
+															else
+															{
+																insert into Customer_Feedback
+																[
+																	Rating=input.Rating
+																	Rating_Display=thisapp.Util.RatingStars({"rating":input.Rating,"show_count":true})
+																	Customer=customer_rec.ID
+																	Delivery_Number=delivery_rec.ID
+																	Feedback=input.Feedback
+																	Added_User=zoho.loginuser
+																]
+															}
+														}
+														else
+														{
+															alert "POD not yet to submitted";
+														}
+													}
+													else
+													{
+														alert "Invalid Customer ID for this Outbound Delivery";
+													}
+												}
+												else
+												{
+													alert "Invalid Customer ID or Outbound Delivery ID - Not exist";
+												}
+											}
+											else
+											{
+												alert "Invalid Customer ID or Outbound Delivery ID";
+											}
+										}
+										else
+										{
+											alert "Customer ID and Outbound Delivery ID are required";
+										}
+					)
+					}
+				}
+			
+}

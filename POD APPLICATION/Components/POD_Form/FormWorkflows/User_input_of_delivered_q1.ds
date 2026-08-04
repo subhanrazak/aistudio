@@ -1,0 +1,36 @@
+User_input_of_delivered_q1 as "User input of delivered qty"
+{
+
+				type =  form
+				form = POD_Form
+
+				record event = on add or edit
+
+				on user input of Items.Delivered_Qty
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(row.Delivered_Qty >= 0 && row.Delivered_Qty <= row.Ordered_Qty)
+										{
+											row.Pending_Qty=row.Ordered_Qty - row.Delivered_Qty;
+										}
+										else
+										{
+											alert "Invalid Qty entry";
+											row.Delivered_Qty=row.Ordered_Qty;
+											row.Pending_Qty=0;
+										}
+										/* if(row.Pending_Qty > 0 && row.Reason_Code.isEmpty() == false){
+											notes_prompt = "Generate a concise delivery note in exactly 2 lines using: Ordered Qty="+row.Ordered_Qty+", Delivered Qty="+row.Delivered_Qty+", Pending Qty="+row.Pending_Qty+", Reason='"+row.Reason_Code+"'. Output only the note with no headings or bullet points.";
+											ai_output =  thisapp.Util.askGemini(notes_prompt);
+											info ai_output;
+											row.Notes = ai_output;
+										} */
+						)
+					}
+				}
+
+			
+}

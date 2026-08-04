@@ -1,0 +1,54 @@
+Click_of_submit3 as "Click of submit"
+{
+
+				type =  form
+				form = Verify_OTP
+				button = Verify
+				on click
+				{
+					actions 
+					{
+					on click
+					(
+						if(input.OTP != null)
+										{
+											delivery_rec = Outbound_Deliveries_Form[ID == input.Delivery_Number];
+											if(input.OTP == delivery_rec.OTP)
+											{
+												delivery_rec.OTP_Verified=true;
+												co = Outbound_Delivery_Line_Items[Outbound_Deliveries_SAP == input.Delivery_Number].count();
+												timeline_rec = Timeline[Delivery_Number == input.Delivery_Number && Action_field == "Awaiting OTP"];
+												if(timeline_rec.count() > 0)
+												{
+													timeline_rec.Action_field="OTP Verified";
+													timeline_rec.Description="Customer OTP verified successfully. Delivery is ready for POD capture.";
+													timeline_rec.Date_Time=zoho.currenttime;
+												}
+												insert into Timeline
+												[
+													Action_field="Verification Completed"
+													Driver_ID=input.Delivery_Number.Driver
+													Description="All " + co + " items verified"
+													Delivery_Number=input.Delivery_Number
+													Date_Time=zoho.currenttime
+													Added_User=zoho.loginuser
+												]
+											}
+											else
+											{
+												delivery_rec.OTP_Verified=false;
+											}
+											if(zoho.device.type == "web")
+											{
+												openUrl("#Script:page.parent.refresh ","parent window");
+											}
+										}
+										else
+										{
+											alert "Please enter OTP";
+										}
+					)
+					}
+				}
+			
+}

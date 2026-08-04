@@ -1,0 +1,28 @@
+Submit_action_on_always3 as "Submit action on always"
+{
+
+				type =  form
+				form = Outbound_Deliveries_Form
+
+				record event = on add or edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Planned_Delivery_Date < zoho.currentdate || (input.Planned_Delivery_Date == zoho.currentdate && zoho.currenttime.getHour() >= 18))
+										{
+											input.Is_Overdue = true;
+										}
+										else
+										{
+											input.Is_Overdue = false;
+										}
+						)
+					}
+				}
+
+			
+}

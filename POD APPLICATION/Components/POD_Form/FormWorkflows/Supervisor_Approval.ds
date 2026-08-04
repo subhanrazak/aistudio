@@ -1,0 +1,45 @@
+Supervisor_Approval as "Supervisor Approval"
+{
+
+				type =  approval
+				form = POD_Form
+				display fields = [Delivery_Number,POD_ID,S_No]
+				on start
+				{
+				}
+				on level 1
+				{
+					approvers
+					(
+			 			role = "Supervisor"
+					)
+					on approve 
+					{
+						actions 
+						{
+							sendmail
+							(
+								from : zoho.loginuserid
+								to : approver.submitter
+								subject : "Approval Request"
+								message : "Your request has been approved."
+							)
+						}
+					}
+					on reject
+					{
+
+						actions 
+						{
+							sendmail
+							(
+								from : zoho.loginuserid
+								to : approver.submitter
+								subject : "Approval Request"
+								message : "Your request has been rejected."
+							)
+						}
+					}
+				}
+			
+}

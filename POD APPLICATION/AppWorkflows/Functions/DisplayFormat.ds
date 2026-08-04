@@ -1,0 +1,62 @@
+string Util.DisplayFormat(map params)
+{
+
+                 	img_field_value = params.get("img_field_value");
+                 	report_name = params.get("report_name");
+                 	field_name = params.get("field_name");
+                 	name = params.get("name");
+                 	secondary_text = params.get("secondary_text");
+                 	recID = params.get("recID");
+                 	style_txt = ".zc-pa-rt-clearfix { display: inline-block; vertical-align: top; } .zc-pa-rt-flt-left { float: left; } .zc-pa-rt .zc-pa-rt-img-wrapper { width: 40px; height: 40px; border-radius: 50%; padding: 5px 10px 5px 0px; box-sizing: border-box; } .zc-pa-rt .zc-pa-rt-img-wrapper img { width: 100%; height: 100%; object-fit: contain; border-radius: 50%; } .zc-pa-rt-primary-text {font-size: 14px; line-height: 1.5; font-weight: 500; letter-spacing: 0.1px; color: #131635; display: block; } .zc-pa-rt-secondary-text { font-size: 13px; line-height: 1.5; font-weight: 400; letter-spacing: 0.1px; color: #666D79; display: block; } .zc-pa-rt.zc-pa-rt-clearfix {display: flex; align-items: center;}";
+                 	rtl_txt = ".zc-rtl-wrapper .zc-pa-rt-flt-left { float: right; } .zc-rtl-wrapper .zc-pa-rt-img-wrapper { padding: 5px 0px 5px 10px; }";
+                 	style_txt = " <style> " + style_txt + rtl_txt + " </style> ";
+                 	// img_field_value should be fetched image field value.
+                 	// report_name should be source report of image, The report must be shared with the user/ portal user.
+                 	// field_name should be actual name of image field.
+                 	final_img = "";
+                 	if(img_field_value != null && img_field_value != "")
+                 	{
+                 		// 		image_url = img_field_value.getSuffix("src = \"").getPrefix("\" lowqual");
+                 		// 		image_name = image_url.getSuffix("/image/");
+                 		// 		src = image_url.replaceAll("/sharedBy/appLinkName/viewLinkName/fieldName/image/",zoho.appuri + report_name + "/" + field_name + "/image/");
+                 		// 		emp_photo = "<img src=" + zoho.appuri + "report/Employees_Report/" + employee.ID + "/Photo/download-file?filepath=/" + employee.Photo + "&mediaType=1>";
+                 		// 		src = zoho.appuri + "report/" + report_name + "/" + recID + "/" + field_name + "/download-file?filepath=/" + img_field_value.getSuffix("image/").getPrefix("\"") + "&mediaType=1";
+                 		image_url = img_field_value.getSuffix("src = \"").getPrefix("\" lowqual");
+                 		image_name = image_url.getSuffix("/image/");
+                 		src = zoho.appuri + "report/" + report_name + "/" + recID + "/" + field_name + "/download-file?filepath=/" + image_name + "&mediaType=1";
+                 		final_img = "<style>.emp-photo{ height: 50px; border-radius: 10px; }</style><img src=" + src + " >";
+                 	}
+                 	else
+                 	{
+                 		avatar = "";
+                 		letter_to_be_displayed = "";
+                 		if(name != null)
+                 		{
+                 			name_to_list = name.toList(" ");
+                 			for each index list_index in name_to_list
+                 			{
+                 				if(name_to_list.get(list_index) != "")
+                 				{
+                 					letter_to_be_displayed = letter_to_be_displayed + name_to_list.get(list_index).subString(0,1).toUpperCase();
+                 				}
+                 				if(list_index == 3)
+                 				{
+                 					break;
+                 				}
+                 			}
+                 			avatar_style = "<style>.custom-letter-avatar{height: 100%; width: 100%;border-radius:10px;display: flex;align-items: center;justify-content: center;font-size:14px;}</style>";
+                 			background_color = "#5051f9";
+                 			background_color = "#" + randomNumber(1000000,9999999).toHex();
+                 			avatar = avatar_style + "<span style=' width: 100%; height: 100%; border-radius: 50%; display: block; background-color: " + background_color + "; font-size: 13px; font-weight: 400; line-height: 30px; color: #FFF; letter-spacing: 0.1px; text-align: center; '>" + letter_to_be_displayed + "</span>";
+                 			final_img = avatar;
+                 		}
+                 	}
+                 	Dis_Format = style_txt + "<div class='zc-pa-rt zc-pa-rt-clearfix'><div class='zc-pa-rt-flt-left zc-pa-rt-img-wrapper'>" + final_img.replaceAll("width=100%","style='width: 30px; height: 30px; border-radius: 50%; object-fit: contain;'") + "</div><div class='zc-pa-rt-flt-left'><span class='zc-pa-rt-primary-text'>" + name + "</span>";
+                 	if(secondary_text != null)
+                 	{
+                 		Dis_Format = Dis_Format + "<span class='zc-pa-rt-secondary-text'>" + secondary_text + "</span>";
+                 	}
+                 	Dis_Format = Dis_Format + "</div>";
+                 	return Dis_Format;
+                 
+}

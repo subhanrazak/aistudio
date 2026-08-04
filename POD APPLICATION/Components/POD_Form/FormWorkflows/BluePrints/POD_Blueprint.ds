@@ -1,0 +1,109 @@
+POD_Blueprint as "POD Blueprint"
+{
+
+        			type = Blueprint
+        			form = POD_Form
+        			start
+        			{
+            			start stage = "Submitted"
+            			chart data
+            			{
+                			from port : B
+                			to port   : T3
+                			position  : "0 0"
+                			path      : [27.849999999999994,36.84,27.849999999999994,46.84,27.849999999999994,58.447695744880534,27.880564118877153,58.447695744880534,27.880564118877153,70.05539148976106,27.880564118877153,80.05539148976106]
+            			}
+        			}
+        			stages
+        			{
+           			"Submitted"
+           			{
+               			chart data
+               			{
+                   			position : "-25.59097925773756 80.05539148976106"
+               			}
+           			}
+           			"Approve POD"
+           			{
+               			chart data
+               			{
+                   			position : "-294.59097925773756 141.05539148976106"
+               			}
+           			}
+           			"Reject POD"
+           			{
+               			chart data
+               			{
+                   			position : "177.50756302024433 138.58316106424914"
+               			}
+           			}
+        			}
+        			transitions
+        			{
+    				Approve as "Approve"
+    				{
+         				type = normal
+         				from stage = "Submitted"
+         				to stage = "Approve POD"
+         				before
+         				{
+            				transition owner
+            				(
+                				permissions = {"Administrator", "Supervisor"}
+             				)
+            				transition criteria = (Status == "Submitted")
+         				}
+         				during
+         				{
+            				action = open_form
+            				form = Approve_POD
+            				set values
+            				(
+                   				POD_ID = input.ID
+            				)
+         				}
+         				after
+         				{
+         				}
+         				chart data
+         				{
+             				from port : L1
+             				to port   : T3
+             				path      : [-25.59097925773756,105.85930638737187,-35.59097925773756,105.85930638737187,-229.49243697975567,105.85930638737187,-229.49243697975567,118.45734893856647,-229.49243697975567,131.05539148976106,-229.49243697975567,141.05539148976106]
+        				}
+  				}
+    				Reject as "Reject"
+    				{
+         				type = normal
+         				from stage = "Submitted"
+         				to stage = "Reject POD"
+         				before
+         				{
+            				transition owner
+            				(
+                				permissions = {"Administrator", "Supervisor"}
+             				)
+            				transition criteria = (Status == "Submitted")
+         				}
+         				during
+         				{
+            				action = open_form
+            				form = Reject_POD
+            				set values
+            				(
+                   				POD_ID = input.ID
+            				)
+         				}
+         				after
+         				{
+         				}
+         				chart data
+         				{
+             				from port : R1
+             				to port   : T3
+             				path      : [81.35210749549186,105.85930638737187,91.35210749549186,105.85930638737187,235.61660334510123,105.85930638737187,235.61660334510123,117.2212337258105,235.61660334510123,128.58316106424914,235.61660334510123,138.58316106424914]
+        				}
+  				}
+        			}
+    			
+}

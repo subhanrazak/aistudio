@@ -1,0 +1,40 @@
+Resend as "Resend"
+{
+
+				type =  form
+				form = Verify_OTP
+				button = Resend_OTP
+				on click
+				{
+					actions 
+					{
+					on click
+					(
+						delivery_rec = Outbound_Deliveries_Form[ID == input.Delivery_Number];
+										tracking_link = "https://creatorapp.zohopublic.com/creatorsolutions_zylker84/pod/page-perma/Order_Tracking/btKVpHWZfTYpRuTEXvVzY3AH1m4SfEP4yOk2J7eQhRyqWOT9CQj7GX8FYp5QqVhperTeHtRvgY5TFTNnBaMQ7UZERaBqehf1Cp2E?order_id=" + delivery_rec.ID + "&page_action=detail";
+										if(delivery_rec.Need_OTP_Verification == true)
+										{
+											delivery_rec.OTP=randomNumber(10000,99999);
+											content = "<div style='font-family: Arial, sans-serif; color: #333333; line-height: 1.6;'> <p>Dear <strong>" + delivery_rec.Customer.Customer_Name + "</strong>,</p> <p> Greetings! </p> <p> Your delivery has been scheduled and is being processed. You can track the status of your delivery using the details below. </p> <div style='background:#f3f4f6;border:1px solid #d1d5db;border-radius:8px;padding:20px;margin:20px 0;text-align:center;'> <p style='margin:0;font-size:16px;color:#555;'>Delivery Verification OTP</p> <div style='font-size:36px;font-weight:bold;letter-spacing:8px;color:#2563eb;margin:10px 0;'> " + delivery_rec.OTP + " </div> <p style='margin:0;font-size:14px;color:#666;'> Please share this OTP with the delivery driver to complete your delivery. </p> </div> <table cellpadding='8' cellspacing='0'' border='1' style='border-collapse: collapse; width: 100%; max-width: 600px;'> <tr> <td><strong>Delivery Number</strong></td> <td>" + delivery_rec.Delivery_Number + "</td> </tr> <tr> <td><strong>Planned Delivery Date</strong></td> <td>" + delivery_rec.Planned_Delivery_Date + "</td> </tr> <tr> <td><strong>Delivery Address</strong></td> <td>" + delivery_rec.Delivery_Address + "</td> </tr> </table> <br> <div style='text-align: center;'> <a href='" + tracking_link + "' style='background-color: #2563eb; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 5px; display: inline-block; font-weight: bold;'> Track Delivery </a> </div> <br> <p> The tracking page will provide real-time updates on your delivery status and proof of delivery once the shipment is completed. </p> <p> If you have any questions regarding your delivery, please contact our support team. </p> <p> Thank you for choosing us. </p> <p> Regards,<br> <strong>Logistics Team</strong><br> </p> </div>";
+										}
+										else
+										{
+											content = "<div style='font-family: Arial, sans-serif; color: #333333; line-height: 1.6;'> <p>Dear <strong>" + delivery_rec.Customer.Customer_Name + "</strong>,</p> <p> Greetings! </p> <p> Your delivery has been scheduled and is being processed. You can track the status of your delivery using the details below. </p> <table cellpadding='8' cellspacing='0'' border='1' style='border-collapse: collapse; width: 100%; max-width: 600px;'> <tr> <td><strong>Delivery Number</strong></td> <td>" + delivery_rec.Delivery_Number + "</td> </tr> <tr> <td><strong>Planned Delivery Date</strong></td> <td>" + delivery_rec.Planned_Delivery_Date + "</td> </tr> <tr> <td><strong>Delivery Address</strong></td> <td>" + delivery_rec.Delivery_Address + "</td> </tr> </table> <br> <div style='text-align: center;'> <a href='" + tracking_link + "' style='background-color: #2563eb; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 5px; display: inline-block; font-weight: bold;'> Track Delivery </a> </div> <br> <p> The tracking page will provide real-time updates on your delivery status and proof of delivery once the shipment is completed. </p> <p> If you have any questions regarding your delivery, please contact our support team. </p> <p> Thank you for choosing us. </p> <p> Regards,<br> <strong>Logistics Team</strong><br> </p> </div>";
+										}
+										sendmail
+										[
+											from :zoho.adminuserid
+											to :delivery_rec.Customer.Customer_Email
+											cc:"hariprasath.j.1997@gmail.com"
+											subject :"Your Delivery Has Been Scheduled – #" + delivery_rec.Delivery_Number
+											message :content
+										]
+										if(zoho.device.type == "web")
+										{
+											openUrl("#Script:page.parent.refresh ","parent window");
+										}
+					)
+					}
+				}
+			
+}

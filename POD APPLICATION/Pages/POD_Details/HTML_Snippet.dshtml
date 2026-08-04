@@ -1,0 +1,1038 @@
+<%
+	if(input.page_action.isEmpty())
+	{
+		%>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --zcs-navy: #0F172A; --zcs-slate: #334155; --zcs-muted: #64748B; --zcs-light: #94A3B8;
+  --zcs-faint: #CBD5E1; --zcs-border: #E2E8F0; --zcs-bg: #F1F5F9; --zcs-bg-warm: #F8FAFC; --zcs-surface: #FFF;
+  --zcs-blue: #2563EB; --zcs-blue-bg: #EFF6FF; --zcs-blue-border: #BFDBFE;
+  --zcs-green: #16A34A; --zcs-green-bg: #F0FDF4; --zcs-green-border: #BBF7D0;
+  --zcs-amber: #D97706; --zcs-amber-bg: #FFFBEB; --zcs-amber-border: #FDE68A;
+  --zcs-red: #DC2626; --zcs-red-bg: #FEF2F2; --zcs-red-border: #FECACA;
+  --zcs-radius: 12px; --zcs-radius-sm: 8px; --zcs-radius-xs: 6px;
+  --zcs-font: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+}
+html, body { height: 100%; }
+body { font-family: var(--zcs-font); background: var(--zcs-bg); color: var(--zcs-navy); -webkit-font-smoothing: antialiased; }
+
+/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 LAYOUT \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
+.zcs-shell { min-height: 100vh; }
+.zcs-layout { display: flex; min-height: 100vh; }
+.zcs-main { flex: 1; overflow-y: auto; padding: 24px 28px; min-width: 0; }
+.zcs-panel {
+  width: 300px; background: var(--zcs-surface); border-left: 1px solid var(--zcs-border);
+  overflow-y: auto; padding: 20px; flex-shrink: 0;
+}
+
+/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 BUTTONS \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
+.zcs-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 11px 20px; border-radius: var(--zcs-radius-sm); border: none;
+  font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.12s;
+  text-decoration: none; line-height: 1; white-space: nowrap;
+}
+.zcs-btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+.zcs-btn-primary { background: var(--zcs-blue); color: #fff; }
+.zcs-btn-green { background: var(--zcs-green); color: #fff; }
+.zcs-btn-ghost { background: var(--zcs-bg-warm); color: var(--zcs-slate); border: 1px solid var(--zcs-border); }
+.zcs-btn:active { transform: scale(0.97); }
+
+/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 CHIPS \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
+.zcs-chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+.zcs-chip-dot { width: 6px; height: 6px; border-radius: 50%; }
+.zcs-chip-blue { background: var(--zcs-blue-bg); color: var(--zcs-blue); }
+.zcs-chip-blue .zcs-chip-dot { background: var(--zcs-blue); }
+.zcs-chip-green { background: var(--zcs-green-bg); color: var(--zcs-green); }
+.zcs-chip-green .zcs-chip-dot { background: var(--zcs-green); }
+.zcs-chip-red { background: var(--zcs-red-bg); color: var(--zcs-red); }
+.zcs-chip-red .zcs-chip-dot { background: var(--zcs-red); }
+
+/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 PAGE HEADER \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
+.zcs-page-head {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  margin-bottom: 20px; gap: 12px; flex-wrap: wrap;
+}
+.zcs-page-head-left { display: flex; align-items: flex-start; gap: 12px; flex: 1; min-width: 0; }
+.zcs-back {
+  width: 38px; height: 38px; border-radius: var(--zcs-radius-sm);
+  border: 1px solid var(--zcs-border); background: var(--zcs-surface);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--zcs-slate); flex-shrink: 0; margin-top: 2px; text-decoration: none;
+}
+.zcs-back svg { width: 18px; height: 18px; }
+.zcs-page-title-wrap { min-width: 0; }
+.zcs-page-title {
+  font-size: 22px; font-weight: 900; letter-spacing: -0.04em; color: var(--zcs-navy);
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+.zcs-page-sub { font-size: 13px; color: var(--zcs-muted); margin-top: 3px; }
+.zcs-page-actions { display: flex; gap: 8px; flex-shrink: 0; }
+
+/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 OUTCOME BANNER \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
+.zcs-ob {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px; border-radius: var(--zcs-radius); margin-bottom: 20px; flex-wrap: wrap; gap: 12px;
+}
+.zcs-ob-green { background: var(--zcs-green-bg); border: 1px solid var(--zcs-green-border); }
+.zcs-ob-amber { background: var(--zcs-amber-bg); border: 1px solid var(--zcs-amber-border); }
+.zcs-ob-red { background: var(--zcs-red-bg); border: 1px solid var(--zcs-red-border); }
+
+.zcs-ob-left { display: flex; align-items: center; gap: 12px; }
+.zcs-ob-icon {
+  width: 44px; height: 44px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.zcs-ob-icon svg { width: 22px; height: 22px; color: #fff; }
+.zcs-ob-icon.zcs-green { background: var(--zcs-green); }
+.zcs-ob-icon.zcs-amber { background: var(--zcs-amber); }
+.zcs-ob-icon.zcs-red { background: var(--zcs-red); }
+
+.zcs-ob-title { font-size: 17px; font-weight: 800; color: var(--zcs-navy); letter-spacing: -0.02em; }
+.zcs-ob-sub { font-size: 12px; color: var(--zcs-muted); margin-top: 2px; }
+
+.zcs-ob-badge {
+  padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: 800;
+}
+.zcs-ob-badge.zcs-green { background: var(--zcs-green); color: #fff; }
+.zcs-ob-badge.zcs-amber { background: var(--zcs-amber); color: #fff; }
+.zcs-ob-badge.zcs-red { background: var(--zcs-red); color: #fff; }
+
+/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 STAT GRID \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
+.zcs-stat-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 12px; margin-bottom: 20px;
+}
+.zcs-stat-card {
+  background: var(--zcs-surface); border: 1px solid var(--zcs-border);
+  border-radius: var(--zcs-radius); padding: 18px 16px; text-align: center;
+}
+.zcs-stat-val {
+  font-size: 26px; font-weight: 900; letter-spacing: -0.04em;
+  color: var(--zcs-navy); font-variant-numeric: tabular-nums; line-height: 1;
+}
+.zcs-stat-val.zcs-green { color: var(--zcs-green); }
+.zcs-stat-val.zcs-amber { color: var(--zcs-amber); }
+.zcs-stat-val.zcs-blue { color: var(--zcs-blue); }
+.zcs-stat-label {
+  font-size: 10px; font-weight: 700; color: var(--zcs-light);
+  text-transform: uppercase; letter-spacing: 0.06em; margin-top: 6px;
+}
+.zcs-stat-sub { font-size: 11px; color: var(--zcs-muted); margin-top: 2px; }
+
+/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 DELIVERY JOURNEY \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
+.zcs-journey {
+  display: flex; align-items: center; padding: 20px 16px; overflow-x: auto;
+}
+.zcs-jstep {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 6px; flex-shrink: 0; min-width: 72px;
+}
+.zcs-jdot {
+  width: 30px; height: 30px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+}
+.zcs-jdot svg { width: 14px; height: 14px; }
+.zcs-jdot.zcs-jdone { background: var(--zcs-green); }
+.zcs-jdot.zcs-jdone svg { color: #fff; }
+.zcs-jdot.zcs-jcurrent { background: var(--zcs-blue-bg); border: 2.5px solid var(--zcs-blue); }
+.zcs-jdot.zcs-jcurrent svg { color: var(--zcs-blue); }
+.zcs-jdot.zcs-jreject { background: var(--zcs-red); }
+.zcs-jdot.zcs-jreject svg { color: #fff; }
+.zcs-jlabel { font-size: 10px; font-weight: 700; color: var(--zcs-muted); text-align: center; }
+.zcs-jtime { font-size: 9px; color: var(--zcs-light); text-align: center; }
+.zcs-jline { flex: 1; min-width: 20px; height: 2px; background: var(--zcs-green); margin-bottom: 34px; }
+.zcs-jline.zcs-jpending { background: none; border-top: 2px dashed var(--zcs-faint); height: 0; }
+
+/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 APPROVAL CARD \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
+.zcs-approval {
+  background: var(--zcs-surface); border: 2px solid var(--zcs-blue);
+  border-radius: var(--zcs-radius); padding: 20px; margin-bottom: 20px;
+}
+.zcs-approval-head {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 4px;
+}
+.zcs-approval-icon {
+  width: 32px; height: 32px; border-radius: 50%; background: var(--zcs-blue-bg);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.zcs-approval-icon svg { width: 16px; height: 16px; color: var(--zcs-blue); }
+.zcs-approval-title { font-size: 15px; font-weight: 800; color: var(--zcs-navy); }
+.zcs-approval-sub {
+  font-size: 12px; color: var(--zcs-muted); margin-bottom: 16px;
+  padding-bottom: 14px; border-bottom: 1px solid var(--zcs-border);
+}
+.zcs-approval-btns { display: flex; gap: 10px; }
+.zcs-btn-approve {
+  flex: 1; padding: 14px; background: var(--zcs-green); color: #fff;
+  border: none; border-radius: var(--zcs-radius-sm); font-size: 14px;
+  font-weight: 700; cursor: pointer; display: flex; align-items: center;
+  justify-content: center; gap: 8px; text-decoration: none;
+}
+.zcs-btn-reject {
+  flex: 1; padding: 14px; background: var(--zcs-surface); color: var(--zcs-red);
+  border: 2px solid var(--zcs-red-border); border-radius: var(--zcs-radius-sm);
+  font-size: 14px; font-weight: 700; cursor: pointer; display: flex;
+  align-items: center; justify-content: center; gap: 8px; text-decoration: none;
+}
+.zcs-btn-approve svg, .zcs-btn-reject svg { width: 18px; height: 18px; }
+.zcs-btn-approve:hover { background: #15803D; }
+.zcs-btn-reject:hover { background: var(--zcs-red-bg); }
+
+/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 REJECTION CARD \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
+.zcs-rejected {
+  background: var(--zcs-red-bg); border: 1px solid var(--zcs-red-border);
+  border-radius: var(--zcs-radius); padding: 16px; margin-bottom: 20px;
+  display: flex; gap: 12px; align-items: flex-start;
+}
+.zcs-rejected-icon {
+  width: 36px; height: 36px; border-radius: 50%; background: var(--zcs-red);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.zcs-rejected-icon svg { width: 16px; height: 16px; color: #fff; }
+.zcs-rejected-title { font-size: 12px; font-weight: 700; color: var(--zcs-red); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+.zcs-rejected-text { font-size: 13px; color: #991B1B; line-height: 1.5; }
+.zcs-rejected-by { font-size: 11px; color: var(--zcs-light); margin-top: 4px; }
+
+/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 CARDS \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
+.zcs-card { background: var(--zcs-surface); border: 1px solid var(--zcs-border); border-radius: var(--zcs-radius); overflow: hidden; }
+.zcs-vcols { display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px; align-items: start; }
+
+.zcs-info-head {
+  padding: 12px 16px; font-size: 11px; font-weight: 700; color: var(--zcs-muted);
+  text-transform: uppercase; letter-spacing: 0.06em;
+  border-bottom: 1px solid var(--zcs-border); background: var(--zcs-bg-warm);
+}
+.zcs-info-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 11px 16px; border-bottom: 1px solid var(--zcs-bg); font-size: 13px; gap: 12px;
+}
+.zcs-info-row:last-child { border-bottom: none; }
+.zcs-info-k { color: var(--zcs-muted); font-weight: 500; white-space: nowrap; flex-shrink: 0; }
+.zcs-info-v { font-weight: 700; color: var(--zcs-navy); text-align: right; max-width: 60%; word-break: break-word; }
+.zcs-info-v.zcs-green { color: var(--zcs-green); }
+.zcs-info-v.zcs-amber { color: var(--zcs-amber); }
+.zcs-info-v.zcs-red { color: var(--zcs-red); }
+
+/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 VERIFICATION BAR \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
+.zcs-vbar { padding: 14px 16px 0; }
+.zcs-vbar-track { height: 8px; background: var(--zcs-bg); border-radius: 4px; overflow: hidden; }
+.zcs-vbar-fill { height: 100%; border-radius: 4px; }
+.zcs-vbar-fill.zcs-green { background: var(--zcs-green); }
+.zcs-vbar-fill.zcs-amber { background: var(--zcs-amber); }
+.zcs-vbar-stats { display: flex; gap: 8px; padding: 14px 16px; }
+.zcs-vbar-stat { flex: 1; text-align: center; padding: 10px 0; border-radius: var(--zcs-radius-sm); background: var(--zcs-bg-warm); }
+.zcs-vbar-stat-val { font-size: 20px; font-weight: 900; color: var(--zcs-navy); font-variant-numeric: tabular-nums; }
+.zcs-vbar-stat-label { font-size: 10px; font-weight: 700; color: var(--zcs-light); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 2px; }
+
+/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 ITEMS TABLE \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
+.zcs-tbl-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid var(--zcs-border); }
+.zcs-tbl-title { font-size: 14px; font-weight: 700; color: var(--zcs-navy); }
+.zcs-tbl-count { font-size: 12px; color: var(--zcs-muted); }
+.zcs-itbl { width: 100%; border-collapse: collapse; }
+.zcs-itbl th { font-size: 10px; font-weight: 700; color: var(--zcs-light); text-transform: uppercase; letter-spacing: 0.06em; padding: 10px 16px; text-align: left; background: var(--zcs-bg-warm); }
+.zcs-itbl td { padding: 12px 16px; border-bottom: 1px solid var(--zcs-bg); font-size: 13px; }
+.zcs-itbl tr:last-child td { border-bottom: none; }
+.zcs-itbl .zcs-r { text-align: right; }
+.zcs-iname { font-weight: 600; color: var(--zcs-navy); }
+.zcs-iqty { font-weight: 800; font-size: 14px; font-variant-numeric: tabular-nums; }
+
+.zcs-ri-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.zcs-ri-dot.zcs-ri-ok { background: var(--zcs-green); }
+.zcs-ri-dot.zcs-ri-warn { background: var(--zcs-amber); }
+
+/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 DISCREPANCY ITEMS \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
+.zcs-disc-item { border-bottom: 2px solid var(--zcs-amber-border); }
+.zcs-disc-item:last-child { border-bottom: none; }
+.zcs-disc-item-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px 0; }
+.zcs-disc-item-name { font-size: 14px; font-weight: 700; color: var(--zcs-navy); }
+.zcs-disc-item-badge { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; background: var(--zcs-amber-bg); color: var(--zcs-amber); border: 1px solid var(--zcs-amber-border); }
+
+/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 SIGNATURE IMAGE \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
+.zcs-sig-img { padding: 16px; text-align: center; border-top: 1px solid var(--zcs-bg); }
+.zcs-sig-img img { max-width: 100%; max-height: 140px; border: 1px dashed var(--zcs-faint); border-radius: var(--zcs-radius-sm); padding: 8px; background: var(--zcs-bg-warm); }
+
+/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 PHOTO GRID \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
+.zcs-photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 8px; padding: 12px 16px; }
+.zcs-photo-thumb { aspect-ratio: 1; border-radius: var(--zcs-radius-sm); overflow: hidden; border: 1px solid var(--zcs-border); background: var(--zcs-bg); display: flex; align-items: center; justify-content: center; }
+.zcs-photo-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.zcs-photo-thumb svg { width: 24px; height: 24px; color: var(--zcs-faint); }
+
+/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 CUSTOMER CARD \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
+.zcs-driver-row { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--zcs-bg); }
+.zcs-driver-avatar {
+  width: 40px; height: 40px; border-radius: 10px;
+  background: linear-gradient(135deg, var(--zcs-blue), #6366F1);
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-weight: 800; font-size: 14px; flex-shrink: 0;
+}
+.zcs-driver-name { font-size: 14px; font-weight: 700; color: var(--zcs-navy); }
+.zcs-driver-meta { font-size: 12px; color: var(--zcs-muted); margin-top: 1px; }
+
+/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 DELIVERY NOTES \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
+.zcs-notes-body { padding: 14px 16px; font-size: 13px; color: var(--zcs-slate); line-height: 1.6; }
+
+/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 INSTRUCTIONS \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
+.zcs-instr {
+  display: flex; gap: 12px; padding: 14px 16px;
+  background: var(--zcs-amber-bg); border: 1px solid var(--zcs-amber-border);
+  border-radius: var(--zcs-radius);
+}
+.zcs-instr > svg { width: 20px; height: 20px; color: var(--zcs-amber); flex-shrink: 0; margin-top: 1px; }
+.zcs-instr-title { font-size: 11px; font-weight: 700; color: var(--zcs-amber); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 2px; }
+.zcs-instr-text { font-size: 13px; color: #78350F; line-height: 1.5; }
+
+/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 RIGHT PANEL: TIMELINE \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
+.zcs-rp-section { margin-bottom: 20px; }
+.zcs-rp-label { font-size: 10px; font-weight: 700; color: var(--zcs-light); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
+
+.zcs-tl-item { display: flex; gap: 10px; padding-bottom: 14px; position: relative; }
+.zcs-tl-item:last-child { padding-bottom: 0; }
+.zcs-tl-item:not(:last-child)::after { content: ""; position: absolute; left: 10px; top: 24px; bottom: 0; width: 2px; background: var(--zcs-border); }
+.zcs-tl-dot { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--zcs-border); background: var(--zcs-surface); display: flex; align-items: center; justify-content: center; flex-shrink: 0; z-index: 1; }
+.zcs-tl-dot svg { width: 11px; height: 11px; color: var(--zcs-light); }
+.zcs-tl-dot.zcs-tl-done { background: var(--zcs-green); border-color: var(--zcs-green); }
+.zcs-tl-dot.zcs-tl-done svg { color: #fff; }
+.zcs-tl-dot.zcs-tl-active { border-color: var(--zcs-blue); background: var(--zcs-blue-bg); }
+.zcs-tl-dot.zcs-tl-active svg { color: var(--zcs-blue); }
+.zcs-tl-dot.zcs-tl-error { background: var(--zcs-red); border-color: var(--zcs-red); }
+.zcs-tl-dot.zcs-tl-error svg { color: #fff; }
+.zcs-tl-item-done::after { background: var(--zcs-green) !important; }
+.zcs-tl-title { font-size: 12px; font-weight: 600; color: var(--zcs-navy); }
+.zcs-tl-title.zcs-tl-future { color: var(--zcs-light); }
+.zcs-tl-time { font-size: 11px; color: var(--zcs-light); }
+.zcs-tl-desc { font-size: 11px; color: var(--zcs-light); margin-top: 2px; line-height: 1.4; }
+
+/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 RESPONSIVE \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
+@media (max-width: 1200px) {
+  .zcs-stat-grid { grid-template-columns: repeat(2, 1fr); }
+  .zcs-vcols { grid-template-columns: 1fr; }
+}
+@media (max-width: 768px) {
+  .zcs-layout { flex-direction: column; }
+  .zcs-main { padding: 14px; }
+  .zcs-panel { width: 100%; border-left: none; border-top: 1px solid var(--zcs-border); }
+  .zcs-page-title { font-size: 18px; }
+  .zcs-page-head { flex-direction: column; }
+  .zcs-page-actions { width: 100%; }
+  .zcs-page-actions .zcs-btn { flex: 1; }
+  .zcs-stat-grid { grid-template-columns: 1fr 1fr; }
+  .zcs-vcols { grid-template-columns: 1fr; }
+  .zcs-ob { flex-direction: column; align-items: flex-start; }
+  .zcs-itbl .zcs-hide-mob { display: none; }
+  .zcs-approval-btns { flex-direction: column; }
+}
+</style>
+</head>
+<body>
+<div class="zcs-shell">
+<div class="zcs-layout">
+<main class="zcs-main">
+
+  <!-- \u2550\u2550\u2550 HEADER \u2550\u2550\u2550 -->
+  <div class="zcs-page-head">
+    <div class="zcs-page-head-left">
+      <a href="#" class="zcs-back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="m15 18-6-6 6-6"/></svg>
+      </a>
+      <div class="zcs-page-title-wrap">
+        <div class="zcs-page-title">
+          POD \u2014 OD-10018
+          <span class="zcs-chip zcs-chip-blue"><span class="zcs-chip-dot"></span> POD Submitted</span>
+        </div>
+        <div class="zcs-page-sub">Modern Retail Mart \u00B7 Route R004 \u00B7 Stop #3</div>
+      </div>
+    </div>
+    <div class="zcs-page-actions">
+<%
+		export_url = "/export" + zoho.appuri + "pdf/POD_Details?pod_id=" + input.pod_id + "&page_action=print&isc5page=true";
+		%>
+<a href="<%=export_url%>" target="_blank" class="zcs-btn zcs-btn-ghost">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+    <polyline points="6 9 6 2 18 2 18 9"/>
+    <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+    <rect width="12" height="8" x="6" y="14"/>
+  </svg>
+  Print / PDF
+</a>
+
+    </div>
+  </div>
+
+  <!-- \u2550\u2550\u2550 OUTCOME BANNER \u2014 Delivered \u2550\u2550\u2550 -->
+  <div class="zcs-ob zcs-ob-amber">
+    <div class="zcs-ob-left">
+      <div class="zcs-ob-icon zcs-amber">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+      </div>
+      <div>
+        <div class="zcs-ob-title">Partially Delivered</div>
+        <div class="zcs-ob-sub">2/3 items matched \u00B7 1 discrepancy</div>
+      </div>
+    </div>
+    <div class="zcs-ob-badge zcs-amber">Partially Delivered</div>
+  </div>
+
+  <!-- \u2550\u2550\u2550 STAT CARDS \u2550\u2550\u2550 -->
+  <div class="zcs-stat-grid">
+    <div class="zcs-stat-card">
+      <div class="zcs-stat-val">3</div>
+      <div class="zcs-stat-label">Total Items</div>
+      <div class="zcs-stat-sub">96 kg</div>
+    </div>
+    <div class="zcs-stat-card">
+      <div class="zcs-stat-val zcs-green">2</div>
+      <div class="zcs-stat-label">Matched</div>
+      <div class="zcs-stat-sub">67% match rate</div>
+    </div>
+    <div class="zcs-stat-card">
+      <div class="zcs-stat-val zcs-amber">1</div>
+      <div class="zcs-stat-label">Discrepancies</div>
+      <div class="zcs-stat-sub">1 item</div>
+    </div>
+    <div class="zcs-stat-card">
+      <div class="zcs-stat-val zcs-blue">12 min</div>
+      <div class="zcs-stat-label">Transit Time</div>
+      <div class="zcs-stat-sub">45.4 km</div>
+    </div>
+  </div>
+
+  <!-- \u2550\u2550\u2550 JOURNEY \u2550\u2550\u2550 -->
+  <div class="zcs-card" style="margin-bottom:20px">
+    <div class="zcs-info-head">Delivery Journey</div>
+    <div class="zcs-journey">
+      <div class="zcs-jstep">
+        <div class="zcs-jdot zcs-jdone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+        <div class="zcs-jlabel">Started</div>
+        <div class="zcs-jtime">02:46 PM</div>
+      </div>
+      <div class="zcs-jline"></div>
+      <div class="zcs-jstep">
+        <div class="zcs-jdot zcs-jdone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+        <div class="zcs-jlabel">Arrived</div>
+        <div class="zcs-jtime">02:47 PM</div>
+      </div>
+      <div class="zcs-jline"></div>
+      <div class="zcs-jstep">
+        <div class="zcs-jdot zcs-jdone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+        <div class="zcs-jlabel">Verified</div>
+        <div class="zcs-jtime">02:56 PM</div>
+      </div>
+      <div class="zcs-jline"></div>
+      <div class="zcs-jstep">
+        <div class="zcs-jdot zcs-jdone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+        <div class="zcs-jlabel">Signed</div>
+        <div class="zcs-jtime">03:00 PM</div>
+      </div>
+      <div class="zcs-jline"></div>
+      <div class="zcs-jstep">
+        <div class="zcs-jdot zcs-jdone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+        <div class="zcs-jlabel">Submitted</div>
+        <div class="zcs-jtime">03:02 PM</div>
+      </div>
+      <div class="zcs-jline zcs-jpending"></div>
+      <div class="zcs-jstep">
+        <div class="zcs-jdot zcs-jcurrent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+        <div class="zcs-jlabel" style="color:var(--zcs-blue)">Pending</div>
+        <div class="zcs-jtime">Awaiting</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- \u2550\u2550\u2550 APPROVAL ACTION \u2550\u2550\u2550 -->
+  <div class="zcs-approval">
+    <div class="zcs-approval-head">
+      <div class="zcs-approval-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg>
+      </div>
+      <div class="zcs-approval-title">Supervisor Action Required</div>
+    </div>
+    <div class="zcs-approval-sub">Review the details below and approve or reject this POD</div>
+    <div class="zcs-approval-btns">
+      <a href="#" class="zcs-btn-approve">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg>
+        Approve POD
+      </a>
+      <a href="#" class="zcs-btn-reject">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        Reject POD
+      </a>
+    </div>
+  </div>
+
+  <!-- \u2550\u2550\u2550 REJECTION REASON (hidden by default \u2014 show when rejected) \u2550\u2550\u2550 -->
+  <!--
+  <div class="zcs-rejected">
+    <div class="zcs-rejected-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </div>
+    <div>
+      <div class="zcs-rejected-title">Rejection Reason</div>
+      <div class="zcs-rejected-text">Photos are blurry \u2014 please retake photos of damaged items and re-submit.</div>
+      <div class="zcs-rejected-by">Rejected by Priya M \u00B7 19-Jun-2026 03:30 PM</div>
+    </div>
+  </div>
+  -->
+
+  <!-- \u2550\u2550\u2550 2-COLUMN LAYOUT \u2550\u2550\u2550 -->
+  <div class="zcs-vcols">
+
+    <!-- \u2550\u2550\u2550 LEFT COLUMN \u2550\u2550\u2550 -->
+    <div>
+
+      <!-- Verification Summary -->
+      <div class="zcs-card" style="margin-bottom:14px">
+        <div class="zcs-info-head">Verification Summary</div>
+        <div class="zcs-vbar">
+          <div class="zcs-vbar-track">
+            <div class="zcs-vbar-fill zcs-amber" style="width:67%"></div>
+          </div>
+        </div>
+        <div class="zcs-vbar-stats">
+          <div class="zcs-vbar-stat">
+            <div class="zcs-vbar-stat-val" style="color:var(--zcs-green)">2</div>
+            <div class="zcs-vbar-stat-label">Matched</div>
+          </div>
+          <div class="zcs-vbar-stat">
+            <div class="zcs-vbar-stat-val" style="color:var(--zcs-amber)">1</div>
+            <div class="zcs-vbar-stat-label">Discrepancy</div>
+          </div>
+          <div class="zcs-vbar-stat">
+            <div class="zcs-vbar-stat-val">3</div>
+            <div class="zcs-vbar-stat-label">Total</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Items Table -->
+      <div class="zcs-card" style="margin-bottom:14px">
+        <div class="zcs-tbl-head">
+          <div class="zcs-tbl-title">Verified Items</div>
+          <div class="zcs-tbl-count">2 matched \u00B7 1 discrepancy</div>
+        </div>
+        <table class="zcs-itbl">
+          <thead>
+            <tr><th style="width:24px"></th><th>Item</th><th class="zcs-r">Ordered</th><th class="zcs-r">Delivered</th><th class="zcs-r zcs-hide-mob">Pending</th><th class="zcs-hide-mob">Reason</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><div class="zcs-ri-dot zcs-ri-ok" style="margin:0 auto"></div></td>
+              <td><div class="zcs-iname">Basmati Rice 10kg</div></td>
+              <td class="zcs-r"><span class="zcs-iqty">8</span></td>
+              <td class="zcs-r"><span class="zcs-iqty" style="color:var(--zcs-green)">8</span></td>
+              <td class="zcs-r zcs-hide-mob">0</td>
+              <td class="zcs-hide-mob" style="font-size:12px;color:var(--zcs-muted)">\u2014</td>
+            </tr>
+            <tr>
+              <td><div class="zcs-ri-dot zcs-ri-warn" style="margin:0 auto"></div></td>
+              <td><div class="zcs-iname">Rava 1kg</div></td>
+              <td class="zcs-r"><span class="zcs-iqty">10</span></td>
+              <td class="zcs-r"><span class="zcs-iqty" style="color:var(--zcs-amber)">7</span></td>
+              <td class="zcs-r zcs-hide-mob">3</td>
+              <td class="zcs-hide-mob" style="font-size:12px;color:var(--zcs-muted)">Damaged in transit</td>
+            </tr>
+            <tr>
+              <td><div class="zcs-ri-dot zcs-ri-ok" style="margin:0 auto"></div></td>
+              <td><div class="zcs-iname">Jaggery 500g</div></td>
+              <td class="zcs-r"><span class="zcs-iqty">12</span></td>
+              <td class="zcs-r"><span class="zcs-iqty" style="color:var(--zcs-green)">12</span></td>
+              <td class="zcs-r zcs-hide-mob">0</td>
+              <td class="zcs-hide-mob" style="font-size:12px;color:var(--zcs-muted)">\u2014</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Discrepancies -->
+      <div class="zcs-card" style="margin-bottom:14px">
+        <div class="zcs-info-head" style="color:var(--zcs-amber);background:var(--zcs-amber-bg)">Discrepancies (1)</div>
+        <div class="zcs-disc-item">
+          <div class="zcs-disc-item-head">
+            <span class="zcs-disc-item-name">Rava 1kg</span>
+            <span class="zcs-disc-item-badge">3 short</span>
+          </div>
+          <div class="zcs-info-row"><span class="zcs-info-k">Ordered \u2192 Delivered</span><span class="zcs-info-v zcs-amber">10 \u2192 7</span></div>
+          <div class="zcs-info-row"><span class="zcs-info-k">Reason</span><span class="zcs-info-v">Damaged in transit</span></div>
+          <div class="zcs-info-row"><span class="zcs-info-k">Photo</span><span class="zcs-info-v zcs-green">\u2713 Attached</span></div>
+          <div class="zcs-info-row"><span class="zcs-info-k">Notes</span><span class="zcs-info-v">3 bags torn during loading</span></div>
+        </div>
+      </div>
+
+      <!-- Delivery Notes -->
+      <div class="zcs-card" style="margin-bottom:14px">
+        <div class="zcs-info-head">Delivery Notes</div>
+        <div class="zcs-notes-body">Delivered at back entrance. Stack neatly in storage room as instructed. Customer requested morning deliveries going forward.</div>
+      </div>
+
+    </div>
+
+    <!-- \u2550\u2550\u2550 RIGHT COLUMN \u2550\u2550\u2550 -->
+    <div>
+
+      <!-- Recipient & Signature -->
+      <div class="zcs-card" style="margin-bottom:14px">
+        <div class="zcs-info-head">Recipient &amp; Signature</div>
+        <div class="zcs-info-row"><span class="zcs-info-k">Name</span><span class="zcs-info-v">Mr. Rajan Kumar</span></div>
+        <div class="zcs-info-row"><span class="zcs-info-k">Role</span><span class="zcs-info-v">Store Manager</span></div>
+        <div class="zcs-info-row"><span class="zcs-info-k">Phone</span><span class="zcs-info-v">+91 98765 43210</span></div>
+        <div class="zcs-info-row"><span class="zcs-info-k">Signed at</span><span class="zcs-info-v zcs-green">03:00 PM</span></div>
+        <div class="zcs-sig-img">
+          <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='280' height='100' fill='%23f8fafc'%3E%3Crect width='280' height='100' rx='8'/%3E%3Cpath d='M30 70 C50 30, 80 80, 110 50 S160 30, 190 60 S230 40, 250 55' fill='none' stroke='%230f172a' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E" alt="Signature" />
+        </div>
+      </div>
+
+      <!-- Delivery Photos -->
+      <div class="zcs-card" style="margin-bottom:14px">
+        <div class="zcs-info-head">Delivery Photos</div>
+        <div class="zcs-photo-grid">
+          <div class="zcs-photo-thumb">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+          </div>
+          <div class="zcs-photo-thumb">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Delivery Details -->
+      <div class="zcs-card" style="margin-bottom:14px">
+        <div class="zcs-info-head">Delivery Details</div>
+        <div class="zcs-info-row"><span class="zcs-info-k">Delivery #</span><span class="zcs-info-v">OD-10018</span></div>
+        <div class="zcs-info-row"><span class="zcs-info-k">Customer</span><span class="zcs-info-v">Modern Retail Mart</span></div>
+        <div class="zcs-info-row"><span class="zcs-info-k">Address</span><span class="zcs-info-v">AA Block, 2nd Avenue, Anna Nagar West, Chennai</span></div>
+        <div class="zcs-info-row"><span class="zcs-info-k">Route / Stop</span><span class="zcs-info-v">R004 \u00B7 #3</span></div>
+        <div class="zcs-info-row"><span class="zcs-info-k">Window</span><span class="zcs-info-v zcs-green">11:00 AM \u2013 02:00 PM</span></div>
+        <div class="zcs-info-row"><span class="zcs-info-k">SAP Doc</span><span class="zcs-info-v">SAP-10018</span></div>
+      </div>
+
+      <!-- Driver -->
+      <div class="zcs-card" style="margin-bottom:14px">
+        <div class="zcs-info-head">Driver</div>
+        <div class="zcs-driver-row">
+          <div class="zcs-driver-avatar">MV</div>
+          <div>
+            <div class="zcs-driver-name">Murugan Vel</div>
+            <div class="zcs-driver-meta">9876543213</div>
+          </div>
+        </div>
+        <div class="zcs-info-row"><span class="zcs-info-k">Transit Time</span><span class="zcs-info-v">12 min</span></div>
+        <div class="zcs-info-row"><span class="zcs-info-k">Time at Customer</span><span class="zcs-info-v">16 min</span></div>
+        <div class="zcs-info-row"><span class="zcs-info-k">Distance</span><span class="zcs-info-v">45.4 km</span></div>
+      </div>
+
+      <!-- Special Instructions -->
+      <div class="zcs-instr">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+        <div>
+          <div class="zcs-instr-title">Special Instructions</div>
+          <div class="zcs-instr-text">Stack neatly in storage room</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- \u2550\u2550\u2550 RIGHT PANEL \u2550\u2550\u2550 -->
+<aside class="zcs-panel">
+  <div class="zcs-rp-section">
+    <div class="zcs-rp-label">Activity Timeline</div>
+
+    <div class="zcs-tl-item zcs-tl-item-done">
+      <div class="zcs-tl-dot zcs-tl-done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+      <div><div class="zcs-tl-title">Synced from SAP</div><div class="zcs-tl-time">12:22 PM</div><div class="zcs-tl-desc">OD-10018 synced \u00B7 Modern Retail Mart \u00B7 30 items \u00B7 96 kg</div></div>
+    </div>
+
+    <div class="zcs-tl-item zcs-tl-item-done">
+      <div class="zcs-tl-dot zcs-tl-done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+      <div><div class="zcs-tl-title">Driver Assigned</div><div class="zcs-tl-time">12:22 PM</div><div class="zcs-tl-desc">Assigned to Murugan Vel \u00B7 Route R004 \u00B7 Stop #3</div></div>
+    </div>
+
+    <div class="zcs-tl-item zcs-tl-item-done">
+      <div class="zcs-tl-dot zcs-tl-done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+      <div><div class="zcs-tl-title">Delivery Started</div><div class="zcs-tl-time">02:46 PM</div><div class="zcs-tl-desc">Driver started the delivery</div></div>
+    </div>
+
+    <div class="zcs-tl-item zcs-tl-item-done">
+      <div class="zcs-tl-dot zcs-tl-done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+      <div><div class="zcs-tl-title">In Transit</div><div class="zcs-tl-time">02:46 PM</div><div class="zcs-tl-desc">Route: 45.40 km \u00B7 ETA 38 min</div></div>
+    </div>
+
+    <div class="zcs-tl-item zcs-tl-item-done">
+      <div class="zcs-tl-dot zcs-tl-done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+      <div><div class="zcs-tl-title">Arrived at Customer</div><div class="zcs-tl-time">02:47 PM</div><div class="zcs-tl-desc">Arrived at AA Block, 2nd Avenue, Anna Nagar</div></div>
+    </div>
+
+    <div class="zcs-tl-item zcs-tl-item-done">
+      <div class="zcs-tl-dot zcs-tl-done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+      <div><div class="zcs-tl-title">Verification Completed</div><div class="zcs-tl-time">02:56 PM</div><div class="zcs-tl-desc">3 items verified \u00B7 1 discrepancy</div></div>
+    </div>
+
+    <div class="zcs-tl-item zcs-tl-item-done">
+      <div class="zcs-tl-dot zcs-tl-done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+      <div><div class="zcs-tl-title">Signature Captured</div><div class="zcs-tl-time">03:00 PM</div><div class="zcs-tl-desc">Signed by Mr. Rajan Kumar (Store Manager)</div></div>
+    </div>
+
+    <div class="zcs-tl-item">
+      <div class="zcs-tl-dot zcs-tl-active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+      <div><div class="zcs-tl-title">POD Submitted</div><div class="zcs-tl-time">03:02 PM</div><div class="zcs-tl-desc">Outcome: Partially Delivered \u00B7 1 discrepancy \u00B7 Awaiting approval</div></div>
+    </div>
+  </div>
+
+  <!-- Today's Stats -->
+  <div class="zcs-rp-section">
+    <div class="zcs-rp-label">Today's Stats</div>
+    <div class="zcs-card">
+      <div class="zcs-info-row"><span class="zcs-info-k">Stops</span><span class="zcs-info-v zcs-green">3 / 5</span></div>
+      <div class="zcs-info-row"><span class="zcs-info-k">Distance</span><span class="zcs-info-v">112 km</span></div>
+      <div class="zcs-info-row"><span class="zcs-info-k">Weight</span><span class="zcs-info-v">486 kg</span></div>
+    </div>
+  </div>
+</aside>
+
+</div>
+</div>
+<%
+	}
+	else if(input.page_action == "print")
+	{
+		%>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  color: #000; background: #fff;
+  font-size: 12px; line-height: 1.4;
+  max-width: 800px; margin: 0 auto; padding: 32px;
+}
+
+/* \u2550\u2550\u2550 Print button \u2550\u2550\u2550 */
+.no-print {
+  display: flex; gap: 8px; margin-bottom: 20px;
+}
+.no-print button, .no-print a {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 10px 20px; border-radius: 6px; border: 1px solid #ccc;
+  font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: none;
+  color: #333; background: #fff;
+}
+.no-print button { background: #0F172A; color: #fff; border-color: #0F172A; }
+
+/* \u2550\u2550\u2550 Header \u2550\u2550\u2550 */
+.pod-title {
+  font-size: 32px; font-weight: 900; letter-spacing: 2px;
+  text-transform: uppercase; margin-bottom: 4px;
+}
+.pod-company {
+  font-size: 13px; color: #333; margin-bottom: 20px;
+}
+
+/* \u2550\u2550\u2550 Bordered tables for layout \u2550\u2550\u2550 */
+.pod-grid {
+  width: 100%; border-collapse: collapse; margin-bottom: 16px;
+}
+.pod-grid td {
+  border: 1px solid #000; padding: 6px 10px; vertical-align: top;
+}
+.pod-grid .pod-label {
+  font-weight: 700; font-size: 11px; white-space: nowrap; width: 160px;
+  background: #f5f5f5;
+}
+.pod-grid .pod-value {
+  font-size: 12px; min-width: 140px;
+}
+
+/* Half-half grid */
+.pod-half {
+  width: 100%; border-collapse: collapse; margin-bottom: 16px;
+}
+.pod-half td {
+  width: 50%; vertical-align: top; padding: 0;
+}
+.pod-half td:first-child { padding-right: 8px; }
+.pod-half td:last-child { padding-left: 8px; }
+.pod-half .pod-grid { margin-bottom: 0; }
+
+/* \u2550\u2550\u2550 Section title \u2550\u2550\u2550 */
+.pod-section {
+  font-size: 12px; font-weight: 700; text-transform: uppercase;
+  background: #000; color: #fff; padding: 5px 10px;
+  margin-bottom: 0;
+}
+
+/* \u2550\u2550\u2550 Items table \u2550\u2550\u2550 */
+.pod-items {
+  width: 100%; border-collapse: collapse; margin-bottom: 16px;
+}
+.pod-items th {
+  background: #e8e8e8; border: 1px solid #000;
+  padding: 6px 8px; font-size: 11px; font-weight: 700;
+  text-align: left; text-transform: uppercase;
+}
+.pod-items td {
+  border: 1px solid #000; padding: 6px 8px; font-size: 12px;
+  height: 26px;
+}
+.pod-items .r { text-align: right; }
+.pod-items .c { text-align: center; }
+.pod-items .bold { font-weight: 700; }
+
+/* Status styling */
+.pod-match { color: #000; }
+.pod-short { font-weight: 700; }
+
+/* \u2550\u2550\u2550 Totals row \u2550\u2550\u2550 */
+.pod-totals {
+  width: 100%; border-collapse: collapse; margin-bottom: 24px;
+}
+.pod-totals td {
+  border: 1px solid #000; padding: 8px 10px; font-size: 12px;
+}
+.pod-totals .pod-label { font-weight: 700; background: #f5f5f5; width: auto; }
+
+/* \u2550\u2550\u2550 Discrepancy table \u2550\u2550\u2550 */
+.pod-disc-section { margin-bottom: 16px; }
+
+/* \u2550\u2550\u2550 Notes \u2550\u2550\u2550 */
+.pod-notes {
+  width: 100%; border-collapse: collapse; margin-bottom: 24px;
+}
+.pod-notes td {
+  border: 1px solid #000; padding: 8px 10px; font-size: 12px;
+  min-height: 40px;
+}
+.pod-notes .pod-label { font-weight: 700; background: #f5f5f5; width: 180px; }
+
+/* \u2550\u2550\u2550 Signature block \u2550\u2550\u2550 */
+.pod-sig-grid {
+  width: 100%; border-collapse: collapse; margin-top: 32px;
+}
+.pod-sig-grid td {
+  width: 50%; vertical-align: top; padding: 0;
+}
+.pod-sig-grid td:first-child { padding-right: 24px; }
+.pod-sig-grid td:last-child { padding-left: 24px; }
+
+.pod-sig-block { margin-bottom: 20px; }
+.pod-sig-label {
+  font-size: 11px; font-weight: 700; margin-bottom: 4px;
+}
+.pod-sig-line {
+  border-bottom: 1px solid #000; height: 32px; margin-bottom: 4px;
+}
+.pod-sig-img {
+  border: 1px solid #ccc; padding: 8px; margin-bottom: 4px;
+  text-align: center; min-height: 60px;
+}
+.pod-sig-img img { max-height: 60px; }
+.pod-sig-date { font-size: 10px; color: #666; }
+
+/* \u2550\u2550\u2550 Footer \u2550\u2550\u2550 */
+.pod-footer {
+  margin-top: 24px; padding-top: 10px;
+  border-top: 2px solid #000;
+  display: flex; justify-content: space-between;
+  font-size: 9px; color: #666;
+}
+
+/* \u2550\u2550\u2550 PRINT \u2550\u2550\u2550 */
+@media print {
+  body { padding: 0; max-width: 100%; }
+  .no-print { display: none !important; }
+  .pod-items, .pod-grid, .pod-totals, .pod-notes { page-break-inside: avoid; }
+  .pod-sig-grid { page-break-inside: avoid; }
+  @page { margin: 12mm; }
+}
+</style>
+</head>
+<body>
+
+<!-- Print button -->
+<div class="no-print">
+  <button onclick="window.print()">\u2399 Print / Save as PDF</button>
+  <a href="#" onclick="history.back();return false;">\u2190 Back</a>
+</div>
+
+<!-- \u2550\u2550\u2550 HEADER \u2550\u2550\u2550 -->
+<div class="pod-title">Proof of Delivery</div>
+<div class="pod-company">Your Company Name \u00B7 Unit 33, 4 Main Road, Chennai, Tamil Nadu \u2014 600040</div>
+
+<!-- \u2550\u2550\u2550 2-COLUMN: Customer + POD Info \u2550\u2550\u2550 -->
+<table class="pod-half"><tr>
+  <td>
+    <table class="pod-grid">
+      <tr><td class="pod-label">Customer Name:</td><td class="pod-value">Modern Retail Mart</td></tr>
+      <tr><td class="pod-label">Delivery Address:</td><td class="pod-value">AA Block, 2nd Avenue, Anna Nagar West, Chennai - 600040</td></tr>
+      <tr><td class="pod-label">Contact Person:</td><td class="pod-value">Mr. Rajan Kumar</td></tr>
+      <tr><td class="pod-label">Contact Number:</td><td class="pod-value">+91 98765 43210</td></tr>
+    </table>
+  </td>
+  <td>
+    <table class="pod-grid">
+      <tr><td class="pod-label">POD Number:</td><td class="pod-value">OD-10018</td></tr>
+      <tr><td class="pod-label">POD Date:</td><td class="pod-value">19-Jun-2026</td></tr>
+      <tr><td class="pod-label">POD Time:</td><td class="pod-value">03:02 PM</td></tr>
+      <tr><td class="pod-label">Delivery Agent:</td><td class="pod-value">Murugan Vel</td></tr>
+      <tr><td class="pod-label">Agent Tel No:</td><td class="pod-value">9876543213</td></tr>
+    </table>
+  </td>
+</tr></table>
+
+<!-- \u2550\u2550\u2550 NOTES FOR DELIVERY AGENT \u2550\u2550\u2550 -->
+<table class="pod-notes">
+  <tr>
+    <td class="pod-label">Notes For Delivery Agent:</td>
+    <td>Stack neatly in storage room</td>
+  </tr>
+</table>
+
+<!-- \u2550\u2550\u2550 ITEMS DELIVERED \u2550\u2550\u2550 -->
+<div class="pod-section">Items Delivered</div>
+<table class="pod-items">
+  <thead>
+    <tr>
+      <th style="width:30px">#</th>
+      <th>Item Name</th>
+      <th style="width:70px" class="c">Ordered</th>
+      <th style="width:70px" class="c">Delivered</th>
+      <th style="width:70px" class="c">Pending</th>
+      <th style="width:70px" class="c">Received</th>
+      <th>Reason / Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="c">1</td>
+      <td class="bold">Basmati Rice 10kg</td>
+      <td class="c">8</td>
+      <td class="c">8</td>
+      <td class="c">0</td>
+      <td class="c">Y</td>
+      <td>\u2014</td>
+    </tr>
+    <tr>
+      <td class="c">2</td>
+      <td class="bold">Rava 1kg</td>
+      <td class="c">10</td>
+      <td class="c pod-short">7</td>
+      <td class="c pod-short">3</td>
+      <td class="c">Partial</td>
+      <td>Damaged in transit \u2014 3 bags torn</td>
+    </tr>
+    <tr>
+      <td class="c">3</td>
+      <td class="bold">Jaggery 500g</td>
+      <td class="c">12</td>
+      <td class="c">12</td>
+      <td class="c">0</td>
+      <td class="c">Y</td>
+      <td>\u2014</td>
+    </tr>
+    <!-- Empty rows for manual use -->
+    <tr><td class="c">4</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td class="c">5</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td class="c">6</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td class="c">7</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td class="c">8</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+  </tbody>
+</table>
+
+<!-- \u2550\u2550\u2550 TOTALS \u2550\u2550\u2550 -->
+<table class="pod-totals">
+  <tr>
+    <td class="pod-label">Total Items Ordered:</td>
+    <td style="width:80px" class="bold">30</td>
+    <td class="pod-label">Total Items Delivered:</td>
+    <td style="width:80px" class="bold">27</td>
+    <td class="pod-label">Total Pending:</td>
+    <td style="width:80px" class="bold">3</td>
+  </tr>
+  <tr>
+    <td class="pod-label">Total Weight (kg):</td>
+    <td class="bold">96</td>
+    <td class="pod-label">Delivery Outcome:</td>
+    <td colspan="3" class="bold">Partially Delivered</td>
+  </tr>
+</table>
+
+<!-- \u2550\u2550\u2550 DISCREPANCIES \u2550\u2550\u2550 -->
+<div class="pod-disc-section">
+  <div class="pod-section">Discrepancies</div>
+  <table class="pod-items">
+    <thead>
+      <tr>
+        <th>Item</th>
+        <th class="c" style="width:70px">Ordered</th>
+        <th class="c" style="width:70px">Delivered</th>
+        <th class="c" style="width:70px">Short</th>
+        <th>Reason</th>
+        <th class="c" style="width:70px">Photo</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="bold">Rava 1kg</td>
+        <td class="c">10</td>
+        <td class="c">7</td>
+        <td class="c bold">3</td>
+        <td>Damaged in transit \u2014 3 bags torn during loading</td>
+        <td class="c">Yes</td>
+      </tr>
+      <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+      <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- \u2550\u2550\u2550 DELIVERY NOTES \u2550\u2550\u2550 -->
+<table class="pod-notes">
+  <tr>
+    <td class="pod-label">Delivery Notes:</td>
+    <td>Delivered at back entrance. Customer requested morning deliveries going forward.</td>
+  </tr>
+</table>
+
+<!-- \u2550\u2550\u2550 SIGNATURES \u2550\u2550\u2550 -->
+<table class="pod-sig-grid"><tr>
+  <td>
+    <div class="pod-sig-block">
+      <div class="pod-sig-label">Received by (Print Name):</div>
+      <div class="pod-sig-line" style="display:flex;align-items:flex-end;padding-bottom:4px">Mr. Rajan Kumar \u2014 Store Manager</div>
+    </div>
+    <div class="pod-sig-block">
+      <div class="pod-sig-label">Client Signature:</div>
+      <div class="pod-sig-img">
+        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='60' fill='%23fff'%3E%3Crect width='240' height='60'/%3E%3Cpath d='M15 45 C35 15, 55 55, 85 30 S125 15, 150 40 S185 20, 215 38' fill='none' stroke='%23000' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E" alt="Signature" />
+      </div>
+    </div>
+    <div class="pod-sig-block">
+      <div class="pod-sig-label">Date:</div>
+      <div class="pod-sig-line" style="display:flex;align-items:flex-end;padding-bottom:4px">19-Jun-2026 \u00B7 03:00 PM</div>
+    </div>
+  </td>
+  <td>
+    <div class="pod-sig-block">
+      <div class="pod-sig-label">Delivery Agent Name:</div>
+      <div class="pod-sig-line" style="display:flex;align-items:flex-end;padding-bottom:4px">Murugan Vel</div>
+    </div>
+    <div class="pod-sig-block">
+      <div class="pod-sig-label">Delivery Agent Signature:</div>
+      <div class="pod-sig-line"></div>
+    </div>
+    <div class="pod-sig-block">
+      <div class="pod-sig-label">Date:</div>
+      <div class="pod-sig-line" style="display:flex;align-items:flex-end;padding-bottom:4px">19-Jun-2026 \u00B7 03:02 PM</div>
+    </div>
+  </td>
+</tr></table>
+
+<!-- \u2550\u2550\u2550 FOOTER \u2550\u2550\u2550 -->
+<div class="pod-footer">
+  <div>POD Ref: OD-10018 \u00B7 SAP: SAP-10018</div>
+  <div>Route: R004 \u00B7 Stop #3</div>
+  <div>This document is computer generated</div>
+</div>
+<%
+	}
+%>

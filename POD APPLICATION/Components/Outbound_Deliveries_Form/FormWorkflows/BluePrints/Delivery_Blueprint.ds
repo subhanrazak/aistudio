@@ -1,0 +1,289 @@
+Delivery_Blueprint as "Delivery Blueprint"
+{
+
+        			type = Blueprint
+        			form = Outbound_Deliveries_Form
+        			start
+        			{
+            			start stage = "Assigned"
+            			chart data
+            			{
+                			from port : B
+                			to port   : T3
+                			position  : "0 -9"
+                			path      : [27.849999999999994,27.840000000000003,27.849999999999994,37.84,27.849999999999994,61.778094844895705,27.560832726354654,61.778094844895705,27.560832726354654,85.7161896897914,27.560832726354654,95.7161896897914]
+            			}
+        			}
+        			stages
+        			{
+           			"Delivery Started"
+           			{
+               			chart data
+               			{
+                   			position : "-44.840468342135296 267.7053914897611"
+               			}
+           			}
+           			"Arrived at customer location"
+           			{
+               			chart data
+               			{
+                   			position : "-80.6687149033396 412.8156610642492"
+               			}
+           			}
+           			"Items Verified"
+           			{
+               			chart data
+               			{
+                   			position : "-35.352361804547286 565.6211745429736"
+               			}
+           			}
+           			"POD Captured"
+           			{
+               			chart data
+               			{
+                   			position : "-39.18671925621709 765.7114502169097"
+               			}
+           			}
+           			"Submit POD"
+           			{
+               			chart data
+               			{
+                   			position : "-32.18671925621709 937.7159640006066"
+               			}
+           			}
+           			"Assigned"
+           			{
+               			chart data
+               			{
+                   			position : "-22.18671925621709 95.7161896897914"
+               			}
+           			}
+           			"OTP Verified"
+           			{
+               			chart data
+               			{
+                   			position : "265.8132807437829 564.3237937958281"
+               			}
+           			}
+        			}
+        			transitions
+        			{
+    				Start as "Start"
+    				{
+         				type = normal
+         				from stage = "Assigned"
+         				to stage = "Delivery Started"
+         				before
+         				{
+            				transition owner
+            				(
+                				permissions = {"Administrator", "Driver", "Admin"}
+             				)
+            				transition criteria = (Delivery_Status == "Assigned")
+         				}
+         				during
+         				{
+            				action = open_form
+            				form = Start
+            				set values
+            				(
+                   				Delivery_Number = input.ID
+            				)
+         				}
+         				after
+         				{
+         				}
+         				chart data
+         				{
+             				from port : B3
+             				to port   : T3
+             				path      : [27.560832726354654,147.32401948501303,27.560832726354654,157.32401948501303,27.560832726354654,207.51470548738706,27.009546408991127,207.51470548738706,27.009546408991127,257.7053914897611,27.009546408991127,267.7053914897611]
+        				}
+  				}
+    				Arrived as "Arrived"
+    				{
+         				type = normal
+         				from stage = "Delivery Started"
+         				to stage = "Arrived at customer location"
+         				before
+         				{
+            				transition owner
+            				(
+                				permissions = {"Administrator", "Driver", "Admin"}
+             				)
+            				transition criteria = (Delivery_Status == "In Transit")
+         				}
+         				during
+         				{
+            				action = open_form
+            				form = Arrived
+            				set values
+            				(
+                   				Delivery_Number = input.ID
+            				)
+         				}
+         				after
+         				{
+         				}
+         				chart data
+         				{
+             				from port : B3
+             				to port   : T3
+             				path      : [27.009546408991127,319.3132212849827,27.009546408991127,329.3132212849827,27.009546408991127,366.0644411746159,28.813280743782926,366.0644411746159,28.813280743782926,402.8156610642492,28.813280743782926,412.8156610642492]
+        				}
+  				}
+    				Verify_Items as "Verify Items"
+    				{
+         				type = normal
+         				from stage = "Arrived at customer location"
+         				to stage = "Items Verified"
+         				before
+         				{
+            				transition owner
+            				(
+                				permissions = {"Administrator", "Driver", "Admin"}
+             				)
+            				transition criteria = (Delivery_Status == "Arrived")
+         				}
+         				during
+         				{
+            				action = open_form
+            				form = POD_Form
+            				set values
+            				(
+                   				Delivery_Number = input.ID
+            				)
+         				}
+         				after
+         				{
+         				}
+         				chart data
+         				{
+             				from port : B3
+             				to port   : T3
+             				path      : [28.813280743782926,464.4234908594708,28.813280743782926,474.4234908594708,28.813280743782926,515.0223327012222,29.14068120585648,515.0223327012222,29.14068120585648,555.6211745429736,29.14068120585648,565.6211745429736]
+        				}
+  				}
+    				Capture_POD as "Capture POD"
+    				{
+         				type = normal
+         				from stage = "Items Verified"
+         				to stage = "POD Captured"
+         				before
+         				{
+            				transition owner
+            				(
+                				permissions = {"Administrator", "Driver", "Admin"}
+             				)
+            				transition criteria = (Delivery_Status == "Verified" && Need_OTP_Verification == false)
+         				}
+         				during
+         				{
+            				action = open_form
+            				form = Receipient_Details
+            				set values
+            				(
+                   				Delivery_Number = input.ID
+            				)
+         				}
+         				after
+         				{
+         				}
+         				chart data
+         				{
+             				from port : B3
+             				to port   : T3
+             				path      : [29.14068120585648,617.2290043381952,29.14068120585648,627.2290043381952,29.14068120585648,691.4702272775525,28.305812584753085,691.4702272775525,28.305812584753085,755.7114502169097,28.305812584753085,765.7114502169097]
+        				}
+  				}
+    				Submit_POD as "Submit POD"
+    				{
+         				type = normal
+         				from stage = "POD Captured"
+         				to stage = "Submit POD"
+         				before
+         				{
+            				transition owner
+            				(
+                				permissions = {"Administrator", "Driver", "Admin"}
+             				)
+            				transition criteria = (Delivery_Status == "POD Captured")
+         				}
+         				during
+         				{
+            				action = open_form
+            				form = Submit_POD
+            				set values
+            				(
+                   				Delivery_Number = input.ID
+            				)
+         				}
+         				after
+         				{
+         				}
+         				chart data
+         				{
+             				from port : B3
+             				to port   : T3
+             				path      : [28.305812584753085,817.3192800121313,28.305812584753085,827.3192800121313,28.305812584753085,877.517622006369,28.337314354772623,877.517622006369,28.337314354772623,927.7159640006066,28.337314354772623,937.7159640006066]
+        				}
+  				}
+    				Verify_OTP as "Verify OTP"
+    				{
+         				type = normal
+         				from stage = "Items Verified"
+         				to stage = "OTP Verified"
+         				before
+         				{
+            				transition criteria = (Need_OTP_Verification == true && OTP_Verified == false)
+         				}
+         				during
+         				{
+            				action = open_form
+            				form = Verify_OTP
+            				set values
+            				(
+                   				Delivery_Number = input.ID
+            				)
+         				}
+         				after
+         				{
+         				}
+         				chart data
+         				{
+             				from port : R1
+             				to port   : L1
+             				path      : [93.63372421626025,591.4250894405843,103.63372421626025,591.4250894405843,179.72350248002158,591.4250894405843,179.72350248002158,590.1277086934389,255.8132807437829,590.1277086934389,265.8132807437829,590.1277086934389]
+        				}
+  				}
+    				Capture_POD1 as "Capture POD"
+    				{
+         				type = normal
+         				from stage = "OTP Verified"
+         				to stage = "POD Captured"
+         				before
+         				{
+            				transition criteria = (Need_OTP_Verification == true && OTP_Verified == true)
+         				}
+         				during
+         				{
+            				action = open_form
+            				form = Receipient_Details
+            				set values
+            				(
+                   				Delivery_Number = input.ID
+            				)
+         				}
+         				after
+         				{
+         				}
+         				chart data
+         				{
+             				from port : B3
+             				to port   : R1
+             				path      : [327.1878239983273,615.9316235910497,327.1878239983273,625.9316235910497,327.1878239983273,791.5153651145205,216.49308421202528,791.5153651145205,105.79834442572326,791.5153651145205,95.79834442572326,791.5153651145205]
+        				}
+  				}
+        			}
+    			
+}

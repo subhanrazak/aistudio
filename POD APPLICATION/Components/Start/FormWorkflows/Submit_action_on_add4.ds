@@ -1,0 +1,43 @@
+Submit_action_on_add4 as "Submit action on add"
+{
+
+				type =  form
+				form = Start
+
+				record event = on add
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											delivery_rec = Outbound_Deliveries_Form[ID == input.Delivery_Number];
+										input.Driver = input.Delivery_Number.Driver;
+										delivery_rec.Delivery_Status="In Transit";
+										delivery_rec.Driver_Start_Time=zoho.currenttime;
+										insert into Timeline
+										[
+											Action_field="Delivery Started"
+											Driver_ID=input.Delivery_Number.Driver
+											Description="Driver started the delivery"
+											Delivery_Number=input.Delivery_Number
+											Date_Time=zoho.currenttime
+											Added_User=zoho.loginuser
+										]
+										insert into Timeline
+										[
+											Action_field="In Transit"
+											Driver_ID=input.Delivery_Number.Driver
+											Description="Route: " + delivery_rec.Distance_km + " km · ETA " + delivery_rec.Duration_min + " min · Destination: " + input.Delivery_Number.Delivery_Address
+											Delivery_Number=input.Delivery_Number
+											Date_Time=zoho.currenttime
+											Added_User=zoho.loginuser
+										]
+										openUrl("#Script:page.parent.refresh ","parent window");
+						)
+					}
+				}
+
+			
+}

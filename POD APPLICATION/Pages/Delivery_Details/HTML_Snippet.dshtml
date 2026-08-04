@@ -1,0 +1,978 @@
+<%
+	delivery_rec = Outbound_Deliveries_Form[ID == input.delivery_id];
+	%>
+<style>
+<%=thisapp.Styles.outboundDetailViewStyles()%>
+.zc-delivery-action-form .formContainer{
+	display: none;
+}
+.zc-delivery-action-form input.zc-live-primary-btn {
+    float: right;
+}
+.zc-delivery-action-form .form-outer-wrapper{
+	box-shadow: none !important;
+}
+</style>
+
+<div class="zcs-shell">
+<div class="zcs-layout">
+<main class="zcs-main">
+<%
+	if(delivery_rec.Delivery_Status in {"Pending","Assigned","In Transit"})
+	{
+		%>
+<!-- \u2500\u2500 DETAIL \u2500\u2500 -->
+  <div class="zcs-view zcs-active" id="v-detail">
+    <div class="zcs-page-head">
+      <div class="zcs-page-head-left">
+        <a href='#Report:All_Outbound_Deliveries' class="zcs-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="m15 18-6-6 6-6"/></svg></a>
+        <div class="zcs-page-title-wrap">
+          <div class="zcs-page-title"><%=delivery_rec.Delivery_Number%> <span class="zcs-chip zcs-chip-pending"><span class="zcs-chip-dot"></span> <%=delivery_rec.Delivery_Status%></span></div>
+          <div class="zcs-page-sub"><%=delivery_rec.Customer.Customer_Name%> \u00B7 Stop #<%=delivery_rec.Stop_Sequence%> of 6 \u00B7 Route <%=delivery_rec.Route_Number%></div>
+        </div>
+      </div>
+      <div class="zcs-page-actions">
+<%
+		if(delivery_rec.Delivery_Status in {"Pending","Assigned"})
+		{
+			%>
+<a href='#Form:Start?Delivery_Number=<%=input.delivery_id%>&Action_field=Start&zc_LoadIn=dialog' class="zcs-btn zcs-btn-primary" ><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4M12 16h4M8 11h.01M8 16h.01"/></svg> Start</a>
+		<!--<div class='zc-delivery-action-form' elName='zc-component' formLinkName='Start' params='Delivery_Number=<%=input.delivery_id%>&zc_Header=false&amp;zc_SuccMsg=Data Added Successfully!&amp;zc_SubmitVal=Start&amp;zc_ResetVal=Reset' zc_MobileView="inline">Loading Form...</div>-->
+<%
+		}
+		else if(delivery_rec.Delivery_Status == "In Transit")
+		{
+			%>
+<a href='#Form:Arrived?Delivery_Number=<%=input.delivery_id%>&Action_field=Arrived&zc_LoadIn=dialog' class="zcs-btn zcs-btn-primary" ><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4M12 16h4M8 11h.01M8 16h.01"/></svg> Arrived</a>
+<%
+		}
+		%>
+</div>
+    </div>
+    <div class="zcs-instr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg><div><div class="zcs-instr-title">Special Instructions</div><div class="zcs-instr-text"><%=delivery_rec.Special_Instructions%></div></div></div>
+    <div class="zcs-grid-2">
+      <div class="zcs-card">
+        <!--<iframe class="zcs-map-frame" src="https://www.google.com/maps/embed?pb=!1m28!1m12!1m3!1d48380.75!2d-74.19!3d40.72!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!4m13!3e6!4m5!1s0x89c2547e0e225139%3A0x28e1f3e4d7f5db6a!2sNewark%20NJ!3m2!1d40.735657!2d-74.1723667!4m5!1s0x89c253b8ddf53591%3A0x4b6a8d32a5e6d8c8!2s42%20Industrial%20Blvd%2C%20Newark%2C%20NJ!3m2!1d40.7394!2d-74.1724!5e0!3m2!1sen!2sus!4v1" allowfullscreen loading="lazy"></iframe>-->
+<%
+		if(delivery_rec.Delivery_Status == "In Transit")
+		{
+			start_rec = Start[Delivery_Number == input.delivery_id];
+			%>
+<iframe 
+  class="zcs-map-frame"
+  src="https://maps.google.com/maps?saddr=<%=encodeUrl(start_rec.Modified_Location)%>&daddr=<%=encodeUrl(delivery_rec.Delivery_Address)%>&output=embed"
+  allowfullscreen loading="lazy">
+</iframe>
+<%
+		}
+		else if(delivery_rec.Delivery_Status in {"Pending","Assigned"})
+		{
+			%>
+<div class="zcs-map-empty">
+  <div class="zcs-map-empty-icon">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+      <path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"/>
+      <circle cx="12" cy="10" r="3"/>
+    </svg>
+  </div>
+  <div class="zcs-map-empty-title">Route not available</div>
+  <div class="zcs-map-empty-text">Tap <strong>Start</strong> to capture your location and view the route to customer</div>
+</div>
+<%
+		}
+		%>
+<div class="zcs-map-footer">
+                <div>
+                  <div class="zcs-map-addr"><%=delivery_rec.Delivery_Address%></div>
+                </div><a href="https://www.google.com/maps/dir/?api=1&destination=<%=delivery_rec.Delivery_Address%>"
+                  target="_blank" class="zcs-btn zcs-btn-red zcs-btn-sm"><svg viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <polygon points="3 11 22 2 13 21 11 13 3 11" />
+                  </svg> Navigate</a>
+              </div>
+
+        
+      </div>
+      <div>
+        <div class="zcs-card" style="margin-bottom:12px"><div class="zcs-cust"><div class="zcs-cust-avatar"><%=thisapp.Util.getInitials(delivery_rec.Customer.Customer_Name)%></div><div class="zcs-cust-body"><div class="zcs-cust-name"><%=delivery_rec.Customer.Customer_Name%></div><div class="zcs-cust-addr"><%=delivery_rec.Delivery_Address%></div><div class="zcs-cust-actions"><a href="tel: <%=delivery_rec.Customer.Customer_Phone%>" class="zcs-cust-btn zcs-cust-btn-primary"><i value="ui-3-phone-call" html="ui-3-phone-call" class="ui-3-phone-call zc-li-outline"></i> Call</a><a href="sms:<%=delivery_rec.Customer.Customer_Phone%>" class="zcs-cust-btn"><i value="ui-2-chat" html="ui-2-chat" class="ui-2-chat zc-li-outline"></i> Message</a></div></div></div></div>
+        <div class="zcs-card"><div class="zcs-info-row"><span class="zcs-info-k">Route / Stop</span><span class="zcs-info-v"><%=delivery_rec.Route_Number%> \u00B7 #<%=delivery_rec.Stop_Sequence%> of 6</span></div><div class="zcs-info-row"><span class="zcs-info-k">Delivery Window</span><span class="zcs-info-v zcs-green"><%=delivery_rec.Delivery_Window_Start%> \u2013 <%=delivery_rec.Delivery_Window_End%></span></div><div class="zcs-info-row"><span class="zcs-info-k">Total Items</span><span class="zcs-info-v"><%=delivery_rec.Total_Items%></span></div><div class="zcs-info-row"><span class="zcs-info-k">Total Weight</span><span class="zcs-info-v"><%=delivery_rec.Total_Weight_kg%> kg</span></div><div class="zcs-info-row"><span class="zcs-info-k">SAP Doc</span><span class="zcs-info-v"><%=delivery_rec.SAP_ID%></span></div></div>
+      </div>
+    </div>
+    <div class="zcs-card">
+      <div class="zcs-tbl-head"><div class="zcs-tbl-title">Order Items</div><div class="zcs-tbl-count"><%=delivery_rec.Total_Items%> items \u00B7 <%=delivery_rec.Total_Weight_kg%> kg</div></div>
+      <table class="zcs-itbl">
+	  <thead>
+	  	<tr>
+			<th>Item</th>
+			<!--<th class="zcs-hide-mob">Batch</th>-->
+			<th class="zcs-r">Qty</th>
+			<th class="zcs-r zcs-hide-mob">Weight</th>
+		</tr>
+	  </thead>
+	  <tbody>
+<%
+		for each  item in Outbound_Delivery_Line_Items[Outbound_Deliveries_SAP == input.delivery_id]
+		{
+			%>
+<tr>
+	<td>
+		<div class="zcs-icell">
+			<div class="zcs-ithumb">
+				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/></svg>
+			</div>
+		<div>
+		<div class="zcs-iname"><%=item.Product.Product_Name%></div>
+		<!--<div class="zcs-imat">MAT-1001</div>-->
+		</div>
+		</div>
+	</td>
+	<!--<td class="zcs-ibatch zcs-hide-mob">B2026-441</td>-->
+	<td class="zcs-r"><span class="zcs-iqty"><%=item.Ordered_Qty%></span> <span class="zcs-iuom">EA</span></td>
+	<td class="zcs-r zcs-hide-mob" style="font-weight:600;color:var(--zcs-slate)"><%=item.Total_Weight%> kg</td>
+</tr>
+<%
+		}
+		%>
+</tbody></table>
+    </div>
+  </div>
+<%
+	}
+	else if(delivery_rec.Delivery_Status in {"Arrived"})
+	{
+		%>
+<div class="zcs-view zcs-active" id="v-verify">
+  <div class="zcs-page-head">
+    <div class="zcs-page-head-left">
+      <a href="#Report:All_Outbound_Deliveries" class="zcs-back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="m15 18-6-6 6-6"/></svg>
+      </a>
+      <div class="zcs-page-title-wrap">
+        <div class="zcs-page-title">Verify Delivery Items</div>
+        <div class="zcs-page-sub"><%=delivery_rec.Delivery_Number%> \u00B7 <%=delivery_rec.Customer.Customer_Name%></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Steps -->
+  <div class="zcs-steps">
+    <div class="zcs-step zcs-step-active"><div class="zcs-step-track"></div><div class="zcs-step-lbl">Verify Items</div></div>
+    <div class="zcs-step"><div class="zcs-step-track"></div><div class="zcs-step-lbl">Signature</div></div>
+    <div class="zcs-step"><div class="zcs-step-track"></div><div class="zcs-step-lbl">Notes &amp; Submit</div></div>
+  </div>
+
+  <!-- \u2605 NEW: Info strip above form -->
+  <div class="zcs-verify-info-strip">
+    <!-- Customer -->
+    <div class="zcs-vis-card">
+      <div class="zcs-vis-icon zcs-vis-blue">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+        </svg>
+      </div>
+      <div class="zcs-vis-body">
+        <div class="zcs-vis-label">Customer</div>
+        <div class="zcs-vis-value"><%=delivery_rec.Customer.Customer_Name%></div>
+      </div>
+    </div>
+    <!-- Address -->
+    <div class="zcs-vis-card">
+      <div class="zcs-vis-icon zcs-vis-red">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"/><circle cx="12" cy="10" r="3"/>
+        </svg>
+      </div>
+      <div class="zcs-vis-body">
+        <div class="zcs-vis-label">Delivery Address</div>
+        <div class="zcs-vis-value"><%=delivery_rec.Delivery_Address%></div>
+      </div>
+    </div>
+    <!-- Items / Weight -->
+    <div class="zcs-vis-card">
+      <div class="zcs-vis-icon zcs-vis-purple">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/>
+        </svg>
+      </div>
+      <div class="zcs-vis-body">
+        <div class="zcs-vis-label">Total</div>
+        <div class="zcs-vis-value"><%=delivery_rec.Total_Items%> items \u00B7 <%=delivery_rec.Total_Weight_kg%> kg</div>
+      </div>
+    </div>
+    <!-- Delivery Window -->
+<%
+		w_start = toString(delivery_rec.Delivery_Window_Start,"hh:mm a");
+		w_end = toString(delivery_rec.Delivery_Window_End,"hh:mm a");
+		%>
+<div class="zcs-vis-card">
+      <div class="zcs-vis-icon zcs-vis-green">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+        </svg>
+      </div>
+      <div class="zcs-vis-body">
+        <div class="zcs-vis-label">Window</div>
+        <div class="zcs-vis-value"><%=w_start%> \u2013 <%=w_end%></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- \u2605 NEW: Special Instructions (if exists) -->
+<%
+		if(delivery_rec.Special_Instructions != null && delivery_rec.Special_Instructions != "")
+		{
+			%>
+<div class="zcs-instr" style="margin-bottom:16px">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+      <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
+      <path d="M12 9v4"/><path d="M12 17h.01"/>
+    </svg>
+    <div>
+      <div class="zcs-instr-title">Special Instructions</div>
+      <div class="zcs-instr-text"><%=delivery_rec.Special_Instructions%></div>
+    </div>
+  </div>
+<%
+		}
+		%>
+<!-- \u2605 NEW: Quick guide -->
+  <div class="zcs-verify-guide">
+    <div class="zcs-verify-guide-item">
+      <span class="zcs-vg-num">1</span>
+      <span>Check physical items against ordered qty</span>
+    </div>
+    <div class="zcs-verify-guide-item">
+      <span class="zcs-vg-num">2</span>
+      <span>Enter actual delivered qty</span>
+    </div>
+    <div class="zcs-verify-guide-item">
+      <span class="zcs-vg-num">3</span>
+      <span>If qty differs \u2014 select reason &amp; take photo</span>
+    </div>
+  </div>
+
+  <!-- Verify Form -->
+  <div class="zcs-verify-form-wrap">
+          <div elName='zc-component' formLinkName='POD_Form' params='Action_field=Verify Items&Delivery_Number=<%=input.delivery_id%>&zc_Header=false&amp;zc_SuccMsg=Data Added Successfully!&amp;zc_SubmitVal=Next&amp;zc_ResetVal=Reset' zc_MobileView="inline">Loading Form...</div>
+  </div>
+
+</div>
+<%
+	}
+	else if(delivery_rec.Delivery_Status == "Verified")
+	{
+		// Pre-calculate
+		verify_items_rec = POD_Line_Items[POD_ID.Delivery_Number == input.delivery_id];
+		v_items = POD_Line_Items[POD_ID.Delivery_Number == input.delivery_id];
+		disc_items = POD_Line_Items[POD_ID.Delivery_Number == input.delivery_id && Delivered_Qty != Ordered_Qty];
+		disc_count = disc_items.count();
+		total_count = v_items.count();
+		matched_count = total_count - disc_count;
+		arrived_tl = Timeline[Delivery_Number == input.delivery_id && Action_field == "Arrived at Customer"];
+		arrived_time = if(arrived_tl.count() > 0,toString(arrived_tl.Date_Time,"hh:mm a"),"\u2014");
+		w_start = toString(delivery_rec.Delivery_Window_Start,"hh:mm a");
+		w_end = toString(delivery_rec.Delivery_Window_End,"hh:mm a");
+		draft_pod_rec = POD_Form[Delivery_Number == input.delivery_id && Status == "Draft"];
+		%>
+<div class="zcs-view zcs-active" id="v-signature">
+  <div class="zcs-page-head">
+    <div class="zcs-page-head-left">
+      <a href="#Report:All_Outbound_Deliveries" class="zcs-back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="m15 18-6-6 6-6"/></svg>
+      </a>
+      <div class="zcs-page-title-wrap">
+        <div class="zcs-page-title">Capture Signature</div>
+        <div class="zcs-page-sub"><%=delivery_rec.Delivery_Number%> \u00B7 <%=delivery_rec.Customer.Customer_Name%></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Steps -->
+  <div class="zcs-steps">
+    <div class="zcs-step zcs-step-done"><div class="zcs-step-track"></div><div class="zcs-step-lbl">Verify Items</div></div>
+    <div class="zcs-step zcs-step-active"><div class="zcs-step-track"></div><div class="zcs-step-lbl">Signature</div></div>
+    <div class="zcs-step"><div class="zcs-step-track"></div><div class="zcs-step-lbl">Notes &amp; Submit</div></div>
+  </div>
+
+  <!-- \u2605 Discrepancy alert (if any) -->
+<%
+		if(disc_count > 0)
+		{
+			%>
+<div class="zcs-disc" style="border-radius:var(--zcs-radius);margin-bottom:16px">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+      <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
+      <path d="M12 9v4"/><path d="M12 17h.01"/>
+    </svg>
+    <p><%=disc_count%> item(s) with quantity discrepancy. Customer signs for actual quantities delivered.</p>
+  </div>
+<%
+		}
+		%>
+<!-- \u2605 2-column layout: Form left, Info right -->
+  <div class="zcs-vcols">
+
+    <!-- LEFT: Form -->
+    <div>
+      <div class="zcs-verify-form-wrap">
+        <div elName='zc-component' formLinkName='Receipient_Details' 
+             params='Delivery_Number=<%=input.delivery_id%>&Verify_Items=<%=verify_items_rec.ID%>&zc_Header=false&zc_SuccMsg=Data Added Successfully!&zc_SubmitVal=Next&zc_ResetVal=Reset' zc_MobileView="inline">
+          Loading Form...
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Context cards -->
+    <div>
+
+      <!-- \u2605 Verification Summary -->
+      <div class="zcs-card" style="margin-bottom:12px">
+        <div class="zcs-info-head">Verification Summary</div>
+        <div class="zcs-verify-summary-bar">
+          <div class="zcs-vsb-fill" style="width:<%=(matched_count * 100 / total_count).round(0)%>%"></div>
+        </div>
+        <div class="zcs-verify-summary-stats">
+          <div class="zcs-vss-item">
+            <div class="zcs-vss-val zcs-green"><%=matched_count%></div>
+            <div class="zcs-vss-label">Matched</div>
+          </div>
+          <div class="zcs-vss-item">
+            <div class="zcs-vss-val zcs-amber"><%=disc_count%></div>
+            <div class="zcs-vss-label">Discrepancy</div>
+          </div>
+          <div class="zcs-vss-item">
+            <div class="zcs-vss-val"><%=total_count%></div>
+            <div class="zcs-vss-label">Total</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- \u2605 Delivered Items -->
+      <div class="zcs-card" style="margin-bottom:12px">
+        <div class="zcs-info-head">Delivered Items</div>
+        <div style="padding:10px 16px">
+<%
+		for each  vi in v_items
+		{
+			vi_color = if(vi.Delivered_Qty == vi.Ordered_Qty,"zcs-ri-ok","zcs-ri-warn");
+			%>
+<div class="zcs-ri">
+            <div class="zcs-ri-dot <%=vi_color%>"></div>
+            <div class="zcs-ri-name"><%=vi.Product.Product_Display%></div>
+            <div class="zcs-ri-qty <%=vi_color%>"><%=vi.Delivered_Qty%>/<%=vi.Ordered_Qty%></div>
+          </div>
+<%
+		}
+		%>
+</div>
+      </div>
+
+      <!-- \u2605 Discrepancy Details (if any) -->
+<%
+		if(disc_count > 0)
+		{
+			%>
+<div class="zcs-card" style="margin-bottom:12px">
+        <div class="zcs-info-head" style="color:var(--zcs-amber);background:var(--zcs-amber-bg)">
+          Discrepancies (<%=disc_count%>)
+        </div>
+<%
+			for each  di in disc_items
+			{
+				%>
+<div class="zcs-disc-item">
+          <div class="zcs-info-row">
+            <span class="zcs-info-k">Item</span>
+            <span class="zcs-info-v"><%=di.Product.Product_Display%></span>
+          </div>
+          <div class="zcs-info-row">
+            <span class="zcs-info-k">Qty</span>
+            <span class="zcs-info-v zcs-amber"><%=di.Ordered_Qty%> \u2192 <%=di.Delivered_Qty%></span>
+          </div>
+          <div class="zcs-info-row">
+            <span class="zcs-info-k">Reason</span>
+            <span class="zcs-info-v"><%=ifnull(di.Reason_Code,"\u2014")%></span>
+          </div>
+        </div>
+<%
+			}
+			%>
+</div>
+<%
+		}
+		%>
+<!-- \u2605 Delivery Info -->
+      <div class="zcs-card" style="margin-bottom:12px">
+        <div class="zcs-info-head">Delivery Info</div>
+        <div class="zcs-info-row">
+          <span class="zcs-info-k">Delivery #</span>
+          <span class="zcs-info-v"><%=delivery_rec.Delivery_Number%></span>
+        </div>
+        <div class="zcs-info-row">
+          <span class="zcs-info-k">Customer</span>
+          <span class="zcs-info-v"><%=delivery_rec.Customer.Customer_Name%></span>
+        </div>
+        <div class="zcs-info-row">
+          <span class="zcs-info-k">Address</span>
+          <span class="zcs-info-v"><%=delivery_rec.Delivery_Address%></span>
+        </div>
+        <div class="zcs-info-row">
+          <span class="zcs-info-k">Route / Stop</span>
+          <span class="zcs-info-v"><%=delivery_rec.Route_Number%> \u00B7 #<%=delivery_rec.Stop_Sequence%></span>
+        </div>
+        <div class="zcs-info-row">
+          <span class="zcs-info-k">Window</span>
+          <span class="zcs-info-v zcs-green"><%=w_start%> \u2013 <%=w_end%></span>
+        </div>
+        <div class="zcs-info-row">
+          <span class="zcs-info-k">Arrived</span>
+          <span class="zcs-info-v"><%=arrived_time%></span>
+        </div>
+        <div class="zcs-info-row">
+          <span class="zcs-info-k">SAP Doc</span>
+          <span class="zcs-info-v"><%=delivery_rec.SAP_ID%></span>
+        </div>
+      </div>
+
+      <!-- \u2605 Special Instructions -->
+<%
+		if(delivery_rec.Special_Instructions != null && delivery_rec.Special_Instructions != "")
+		{
+			%>
+<div class="zcs-instr">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
+          <path d="M12 9v4"/><path d="M12 17h.01"/>
+        </svg>
+        <div>
+          <div class="zcs-instr-title">Special Instructions</div>
+          <div class="zcs-instr-text"><%=delivery_rec.Special_Instructions%></div>
+        </div>
+      </div>
+<%
+		}
+		%>
+</div>
+  </div>
+</div>
+<%
+	}
+	else if(delivery_rec.Delivery_Status == "POD Captured")
+	{
+		v_items = POD_Line_Items[POD_ID.Delivery_Number == input.delivery_id];
+		disc_items = POD_Line_Items[POD_ID.Delivery_Number == input.delivery_id && Delivered_Qty != Ordered_Qty];
+		disc_count = disc_items.count();
+		total_count = v_items.count();
+		matched_count = total_count - disc_count;
+		pod_rec = POD_Form[Delivery_Number == input.delivery_id];
+		arrived_tl = Timeline[Delivery_Number == input.delivery_id && Action_field == "Arrived at Customer"];
+		arrived_time = if(arrived_tl.count() > 0,toString(arrived_tl.Date_Time,"dd-MMM-yyyy hh:mm a"),"\u2014");
+		started_tl = Timeline[Delivery_Number == input.delivery_id && Action_field == "Delivery Started"];
+		started_time = if(started_tl.count() > 0,toString(started_tl.Date_Time,"hh:mm a"),"\u2014");
+		verified_tl = Timeline[Delivery_Number == input.delivery_id && Action_field == "Verification Completed"];
+		verified_time = if(verified_tl.count() > 0,toString(verified_tl.Date_Time,"hh:mm a"),"\u2014");
+		sig_tl = Timeline[Delivery_Number == input.delivery_id && Action_field == "Signature Captured"];
+		sig_time = if(sig_tl.count() > 0,toString(sig_tl.Date_Time,"hh:mm a"),"\u2014");
+		w_start = toString(delivery_rec.Delivery_Window_Start,"hh:mm a");
+		w_end = toString(delivery_rec.Delivery_Window_End,"hh:mm a");
+		%>
+<div class="zcs-view zcs-active" id="v-review">
+  <div class="zcs-page-head">
+    <div class="zcs-page-head-left">
+      <a href="#Report:All_Outbound_Deliveries" class="zcs-back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="m15 18-6-6 6-6"/></svg>
+      </a>
+      <div class="zcs-page-title-wrap">
+        <div class="zcs-page-title">Review &amp; Submit</div>
+        <div class="zcs-page-sub"><%=delivery_rec.Delivery_Number%> \u00B7 <%=delivery_rec.Customer.Customer_Name%></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Steps -->
+  <div class="zcs-steps">
+    <div class="zcs-step zcs-step-done"><div class="zcs-step-track"></div><div class="zcs-step-lbl">Verify Items</div></div>
+    <div class="zcs-step zcs-step-done"><div class="zcs-step-track"></div><div class="zcs-step-lbl">Signature</div></div>
+    <div class="zcs-step zcs-step-active"><div class="zcs-step-track"></div><div class="zcs-step-lbl">Notes &amp; Submit</div></div>
+  </div>
+
+  <div class="zcs-vcols">
+
+    <!-- \u2550\u2550\u2550 LEFT COLUMN \u2550\u2550\u2550 -->
+    <div>
+      <!-- Signature confirmed -->
+      <div class="zcs-sig-ok" style="margin-bottom:14px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg>
+        <span>Signature captured</span>
+      </div>
+
+      <!-- Confirmation warning -->
+       <!-- <div class="zcs-submit-warning" style="margin-bottom:16px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>
+        </svg>
+        <span>Once submitted, this POD cannot be modified.</span>
+      </div>-->
+	  
+	   <!-- \u2605 NEW: Recipient Details -->
+      <div class="zcs-card" style="margin-bottom:12px">
+        <div class="zcs-info-head">Recipient Details</div>
+        <div class="zcs-info-row">
+          <span class="zcs-info-k">Name</span>
+          <span class="zcs-info-v"><%=ifnull(pod_rec.Receipient_Details.Receipient_Printed_Name,"\u2014")%></span>
+        </div>
+        <div class="zcs-info-row">
+          <span class="zcs-info-k">Role</span>
+          <span class="zcs-info-v"><%=ifnull(pod_rec.Receipient_Details.Receipient_Role,"\u2014")%></span>
+        </div>
+        <div class="zcs-info-row">
+          <span class="zcs-info-k">Phone</span>
+          <span class="zcs-info-v"><%=ifnull(pod_rec.Receipient_Details.Receipient_Phone,"\u2014")%></span>
+        </div>
+        <div class="zcs-info-row">
+          <span class="zcs-info-k">Signature</span>
+          <span class="zcs-info-v zcs-green">\u2713 Captured at <%=sig_time%></span>
+        </div>
+      </div>
+      <!-- Submit Form -->
+
+       <div class="zcs-verify-form-wrap" style="margin-bottom:16px">
+        <div elName='zc-component' formLinkName='Submit_POD' 
+             params='Delivery_Number=<%=input.delivery_id%>&zc_Header=false&zc_SuccMsg=Data Added Successfully!&zc_SubmitVal=Submit POD for Approval&zc_ResetVal=Reset' zc_MobileView="inline">
+          Loading Form...
+        </div>
+      </div>
+    </div>
+
+    <!-- \u2550\u2550\u2550 RIGHT COLUMN \u2550\u2550\u2550 -->
+    <div>
+      <!-- Overview -->
+      <div class="zcs-card" style="margin-bottom:12px">
+        <div class="zcs-info-head">Overview</div>
+        <div class="zcs-info-row">
+          <span class="zcs-info-k">Delivery #</span>
+          <span class="zcs-info-v"><%=delivery_rec.Delivery_Number%></span>
+        </div>
+        <div class="zcs-info-row">
+          <span class="zcs-info-k">Customer</span>
+          <span class="zcs-info-v"><%=delivery_rec.Customer.Customer_Name%></span>
+        </div>
+        <div class="zcs-info-row">
+          <span class="zcs-info-k">Address</span>
+          <span class="zcs-info-v"><%=delivery_rec.Delivery_Address%></span>
+        </div>
+        <div class="zcs-info-row">
+          <span class="zcs-info-k">Route</span>
+          <span class="zcs-info-v"><%=delivery_rec.Route_Number%> \u00B7 #<%=delivery_rec.Stop_Sequence%></span>
+        </div>
+        <div class="zcs-info-row">
+          <span class="zcs-info-k">Window</span>
+          <span class="zcs-info-v zcs-green"><%=w_start%> \u2013 <%=w_end%></span>
+        </div>
+        <div class="zcs-info-row">
+          <span class="zcs-info-k">Arrived</span>
+          <span class="zcs-info-v"><%=arrived_time%></span>
+        </div>
+        <div class="zcs-info-row">
+          <span class="zcs-info-k">Signature</span>
+          <span class="zcs-info-v zcs-green">\u2713 Captured</span>
+        </div>
+        <div class="zcs-info-row">
+          <span class="zcs-info-k">SAP Doc</span>
+          <span class="zcs-info-v"><%=delivery_rec.SAP_ID%></span>
+        </div>
+      </div>
+
+      <!-- Items -->
+      <div class="zcs-card" style="margin-bottom:12px">
+        <div class="zcs-info-head">Items (<%=total_count%>)</div>
+        <div style="padding:10px 16px">
+<%
+		for each  vi in v_items
+		{
+			vi_color = if(vi.Delivered_Qty == vi.Ordered_Qty,"zcs-ri-ok","zcs-ri-warn");
+			%>
+<div class="zcs-ri">
+            <div class="zcs-ri-dot <%=vi_color%>"></div>
+            <div class="zcs-ri-name"><%=vi.Product.Product_Display%></div>
+            <div class="zcs-ri-qty <%=vi_color%>"><%=vi.Delivered_Qty%>/<%=vi.Ordered_Qty%></div>
+          </div>
+<%
+		}
+		%>
+</div>
+      </div>
+
+      <!-- Discrepancies -->
+<%
+		if(disc_count > 0)
+		{
+			%>
+<div class="zcs-card" style="margin-bottom:12px">
+        <div class="zcs-info-head" style="color:var(--zcs-amber);background:var(--zcs-amber-bg)">
+          Discrepancies (<%=disc_count%>)
+        </div>
+<%
+			for each  di in disc_items
+			{
+				%>
+<div class="zcs-disc-item">
+          <div class="zcs-info-row">
+            <span class="zcs-info-k">Item</span>
+            <span class="zcs-info-v"><%=di.Product.Product_Display%></span>
+          </div>
+          <div class="zcs-info-row">
+            <span class="zcs-info-k">Qty</span>
+            <span class="zcs-info-v zcs-amber"><%=di.Ordered_Qty%> \u2192 <%=di.Delivered_Qty%></span>
+          </div>
+          <div class="zcs-info-row">
+            <span class="zcs-info-k">Reason</span>
+            <span class="zcs-info-v"><%=ifnull(di.Reason_Code,"\u2014")%></span>
+          </div>
+          <div class="zcs-info-row">
+            <span class="zcs-info-k">Photo</span>
+            <span class="zcs-info-v <%=if(di.Image != null,"zcs-green","zcs-amber")%>">
+              <%=if(di.Image != null,"\u2713 Attached","\u2717 Missing")%>
+            </span>
+          </div>
+        </div>
+<%
+			}
+			%>
+</div>
+<%
+		}
+		else
+		{
+			%>
+<div class="zcs-card" style="margin-bottom:12px">
+        <div class="zcs-info-head" style="color:var(--zcs-green);background:var(--zcs-green-bg)">
+          Discrepancies (0)
+        </div>
+        <div class="zcs-info-row">
+          <span class="zcs-info-k">Status</span>
+          <span class="zcs-info-v zcs-green">\u2713 All items match</span>
+        </div>
+      </div>
+<%
+		}
+		%>
+<!-- Special Instructions -->
+<%
+		if(delivery_rec.Special_Instructions != null && delivery_rec.Special_Instructions != "")
+		{
+			%>
+<div class="zcs-instr">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
+          <path d="M12 9v4"/><path d="M12 17h.01"/>
+        </svg>
+        <div>
+          <div class="zcs-instr-title">Special Instructions</div>
+          <div class="zcs-instr-text"><%=delivery_rec.Special_Instructions%></div>
+        </div>
+      </div>
+<%
+		}
+		%>
+</div>
+  </div>
+</div>
+<%
+	}
+	else if(delivery_rec.Delivery_Status in {"POD Submitted"})
+	{
+		%>
+<!-- \u2500\u2500 SUCCESS \u2500\u2500 -->
+<%
+		// Pre-calculate values
+		verify_lines = POD_Line_Items[POD_ID.Delivery_Number == input.delivery_id];
+		disc_items = POD_Line_Items[POD_ID.Delivery_Number == input.delivery_id && Delivered_Qty != Ordered_Qty];
+		disc_count = disc_items.count();
+		total_count = verify_lines.count();
+		pod_rec = POD_Form[Delivery_Number == input.delivery_id];
+		has_signature = pod_rec != null && pod_rec.Receipient_Details.Receipient_Signature != null;
+		// Outcome color
+		outcome = delivery_rec.Delivery_Outcome;
+		outcome_color = if(outcome == "Delivered","zcs-green",if(outcome == "Pending","","zcs-amber"));
+		%>
+<div class="zcs-view" id="v-success">
+  <div class="zcs-success">
+    <div class="zcs-success-ring">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round">
+        <path d="M20 6 9 17l-5-5"/>
+      </svg>
+    </div>
+    <div class="zcs-success-t">POD Submitted</div>
+    <div class="zcs-success-s">
+      Delivery <strong><%=delivery_rec.Delivery_Number%></strong> sent for approval
+    </div>
+
+    <!-- Outcome Badge -->
+    <div class="zcs-outcome-badge <%=outcome_color%>" style="margin-bottom:20px">
+      <%=outcome%>
+    </div>
+
+    <div class="zcs-success-grid">
+      <!-- Delivery Card -->
+      <div class="zcs-card">
+        <div class="zcs-info-head">Delivery</div>
+        <div class="zcs-info-row">
+          <span class="zcs-info-k">Number</span>
+          <span class="zcs-info-v"><%=delivery_rec.Delivery_Number%></span>
+        </div>
+        <div class="zcs-info-row">
+          <span class="zcs-info-k">Customer</span>
+          <span class="zcs-info-v"><%=delivery_rec.Customer.Customer_Name%></span>
+        </div>
+        <div class="zcs-info-row">
+          <span class="zcs-info-k">Items</span>
+          <span class="zcs-info-v"><%=delivery_rec.Total_Items%> (<%=delivery_rec.Total_Weight_kg%> kg)</span>
+        </div>
+        <div class="zcs-info-row">
+          <span class="zcs-info-k">Route / Stop</span>
+          <span class="zcs-info-v"><%=delivery_rec.Route_Number%> \u00B7 #<%=delivery_rec.Stop_Sequence%></span>
+        </div>
+      </div>
+
+      <!-- Status Card -->
+      <div class="zcs-card">
+        <div class="zcs-info-head">Status</div>
+        <div class="zcs-info-row">
+          <span class="zcs-info-k">Outcome</span>
+          <span class="zcs-info-v <%=outcome_color%>"><%=outcome%></span>
+        </div>
+        <div class="zcs-info-row">
+          <span class="zcs-info-k">Verified</span>
+          <span class="zcs-info-v zcs-green"><%=total_count%> / <%=total_count%></span>
+        </div>
+        <div class="zcs-info-row">
+          <span class="zcs-info-k">Discrepancies</span>
+          <span class="zcs-info-v <%=if(disc_count > 0,"zcs-amber","zcs-green")%>">
+            <%=if(disc_count > 0,disc_count + " item(s)","None")%>
+          </span>
+        </div>
+        <div class="zcs-info-row">
+          <span class="zcs-info-k">Signature</span>
+          <span class="zcs-info-v <%=if(has_signature,"zcs-green","zcs-amber")%>">
+            <%=if(has_signature,"\u2713 Captured","\u2717 Missing")%>
+          </span>
+        </div>
+        <div class="zcs-info-row">
+          <span class="zcs-info-k">Approval</span>
+          <span class="zcs-info-v">Pending</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Discrepancy Details (if any) -->
+<%
+		if(disc_count > 0)
+		{
+			%>
+<div class="zcs-card" style="width:100%;max-width:600px;margin-top:16px;text-align:left">
+      <div class="zcs-info-head" style="color:var(--zcs-amber);background:var(--zcs-amber-bg)">
+        Discrepancies (<%=disc_count%>)
+      </div>
+<%
+			for each  di in disc_items
+			{
+				%>
+<div class="zcs-info-row">
+        <span class="zcs-info-k"><%=di.Product.Product.Product_Name%></span>
+        <span class="zcs-info-v zcs-amber"><%=di.Ordered_Qty%> \u2192 <%=di.Delivered_Qty%></span>
+      </div>
+<%
+			}
+			%>
+</div>
+<%
+		}
+		%>
+</div>
+</div>
+<%
+	}
+	%>
+</main>
+
+<!-- \u2550\u2550\u2550 RIGHT PANEL \u2550\u2550\u2550 -->
+<aside class="zcs-panel" id="zcsPanel">
+  <div class="zcs-drawer-bar"></div>
+
+  <!-- \u2550\u2550\u2550 ACTIVITY TIMELINE \u2550\u2550\u2550 -->
+  <div class="zcs-rp-section">
+    <div class="zcs-rp-label">Activity Timeline</div>
+<%
+	tl_entries = Timeline[Delivery_Number == input.delivery_id] sort by Added_Time asc;
+	tl_total = tl_entries.count();
+	tl_index = 0;
+	// Icon map based on action
+	// Done = checkmark, Active = compass, Future = dot
+	if(tl_total == 0)
+	{
+		%>
+<div style="text-align:center;padding:20px 0">
+        <div style="font-size:24px;margin-bottom:6px">?</div>
+        <div style="font-size:12px;color:var(--zcs-light)">No activity yet</div>
+      </div>
+<%
+	}
+	for each  tl in tl_entries
+	{
+		tl_index = tl_index + 1;
+		is_last = tl_index == tl_total;
+		// Determine dot style
+		if(is_last)
+		{
+			item_class = "";
+			dot_class = "zcs-tl-active";
+		}
+		else
+		{
+			item_class = "zcs-tl-item-done";
+			dot_class = "zcs-tl-done";
+		}
+		// Format timestamp
+		tl_time = toString(tl.Date_Time,"hh:mm a");
+		// Duration text
+		dur_text = "";
+		// Pick icon SVG based on action type
+		if(tl.Action_field == "Synced from SAP")
+		{
+			icon_svg = "<path d='M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4'/><polyline points='7 10 12 15 17 10'/><line x1='12' y1='15' x2='12' y2='3'/>";
+		}
+		else if(tl.Action_field == "Delivery Started" || tl.Action_field == "Re-attempt Started")
+		{
+			icon_svg = "<rect x='1' y='3' width='15' height='13'/><path d='M16 8h4l3 3v5h-7V8z'/>";
+		}
+		else if(tl.Action_field == "Arrived")
+		{
+			icon_svg = "<path d='M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z'/><circle cx='12' cy='10' r='3'/>";
+		}
+		else if(tl.Action_field == "Verification Completed")
+		{
+			icon_svg = "<rect width='8' height='4' x='8' y='2' rx='1'/><path d='M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2'/>";
+		}
+		else if(tl.Action_field == "Signature Captured")
+		{
+			icon_svg = "<path d='M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z'/>";
+		}
+		else if(tl.Action_field == "Signature Refused")
+		{
+			icon_svg = "<circle cx='12' cy='12' r='10'/><line x1='15' y1='9' x2='9' y2='15'/><line x1='9' y1='9' x2='15' y2='15'/>";
+		}
+		else if(tl.Action_field == "POD Submitted" || tl.Action_field == "POD Re-submitted")
+		{
+			icon_svg = "<path d='M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4'/><polyline points='17 8 12 3 7 8'/><line x1='12' y1='3' x2='12' y2='15'/>";
+		}
+		else if(tl.Action_field == "POD Approved")
+		{
+			icon_svg = "<path d='M20 6 9 17l-5-5'/>";
+		}
+		else if(tl.Action_field == "POD Rejected")
+		{
+			icon_svg = "<circle cx='12' cy='12' r='10'/><line x1='15' y1='9' x2='9' y2='15'/><line x1='9' y1='9' x2='15' y2='15'/>";
+		}
+		else if(tl.Action_field == "Driver Reassigned")
+		{
+			icon_svg = "<path d='M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2'/><circle cx='9' cy='7' r='4'/><polyline points='16 11 18 13 22 9'/>";
+		}
+		else if(tl.Action_field == "Issue Reported" || tl.Action_field == "Window Alert")
+		{
+			icon_svg = "<path d='m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z'/><path d='M12 9v4'/><path d='M12 17h.01'/>";
+		}
+		else if(tl.Action_field == "SAP Updated")
+		{
+			icon_svg = "<path d='M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z'/>";
+		}
+		else
+		{
+			// Default: checkmark for done, dot for active
+			if(is_last)
+			{
+				icon_svg = "<polygon points='3 11 22 2 13 21 11 13 3 11'/>";
+			}
+			else
+			{
+				icon_svg = "<path d='M20 6 9 17l-5-5'/>";
+			}
+		}
+		// Color override for warnings/rejections
+		dot_override = "";
+		if(tl.Action_field == "POD Rejected" || tl.Action_field == "Issue Reported" || tl.Action_field == "Signature Refused")
+		{
+			dot_override = "zcs-tl-error";
+		}
+		else if(tl.Action_field == "Window Alert")
+		{
+			dot_override = "zcs-tl-warn";
+		}
+		%>
+<div class="zcs-tl-item <%=item_class%>">
+      <div class="zcs-tl-dot <%=dot_class%> <%=dot_override%>">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" 
+             stroke-width="<%=if(is_last,"2","3")%>" stroke-linecap="round" stroke-linejoin="round">
+          <%=icon_svg%>
+        </svg>
+      </div>
+      <div class="zcs-tl-body">
+        <div class="zcs-tl-title <%=if(is_last,"","")%>"><%=tl.Action_field%></div>
+        <div class="zcs-tl-time"><%=tl_time%><%=dur_text%></div>
+<%
+		if(tl.Description != null && tl.Description != "")
+		{
+			%>
+<div class="zcs-tl-desc"><%=tl.Description%></div>
+<%
+		}
+		%>
+</div>
+    </div>
+<%
+	}
+	%>
+</div>
+
+  <!-- \u2550\u2550\u2550 TODAY'S STATS (Dynamic) \u2550\u2550\u2550 -->
+  <div class="zcs-rp-section">
+    <div class="zcs-rp-label">Today's Stats</div>
+<%
+	// Get today's deliveries for this driver
+	driver_id = delivery_rec.Driver;
+	today_deliveries = Outbound_Deliveries_Form[Driver == driver_id && Planned_Delivery_Date == zoho.currentdate];
+	total_stops = today_deliveries.count();
+	completed_stops = 0;
+	total_weight = 0;
+	total_distance = 0;
+	for each  td in today_deliveries
+	{
+		total_weight = total_weight + ifnull(td.Total_Weight_kg,0);
+		total_distance = total_distance + ifnull(td.Distance_km,0);
+	}
+	%>
+<div class="zcs-card">
+      <div class="zcs-info-row">
+        <span class="zcs-info-k">Distance</span>
+        <span class="zcs-info-v"><%=total_distance%> km</span>
+      </div>
+      <div class="zcs-info-row">
+        <span class="zcs-info-k">Completed</span>
+        <span class="zcs-info-v <%=if(completed_stops == total_stops,"zcs-green","")%>">
+          <%=completed_stops%> / <%=total_stops%>
+        </span>
+      </div>
+      <div class="zcs-info-row">
+        <span class="zcs-info-k">Weight</span>
+        <span class="zcs-info-v"><%=total_weight%> kg</span>
+      </div>
+    </div>
+  </div>
+
+</aside>
+
+<div class="zcs-overlay" id="zcsOverlay" onclick="zcsTogglePanel()"></div>
+<button class="zcs-panel-fab" id="zcsFab" onclick="zcsTogglePanel()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"/><circle cx="12" cy="10" r="3"/></svg></button>
+
+</div>
+</div>
