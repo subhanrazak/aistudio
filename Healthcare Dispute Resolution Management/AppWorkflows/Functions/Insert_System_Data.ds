@@ -1,36 +1,144 @@
 void Insert_System_Data()
 {
-
-                 	insert into ID_Configuration
-                 	[
-                 		Added_User=zoho.loginuser
-                 		Case_ID="Case ID -"
-                 		Charge_ID="Charge ID -"
-                 		Dispute_ID="Dispute ID -"
-                 		Insurance_Payer_ID="Payer ID -"
-                 		Patient_ID="Patient ID -"
-                 		Resolution_ID="Resolution ID -"
-                 		User_ID="User ID -"
-                 	]
-                 	roleRecID = insert into Role
-                 	[
-                 		Added_User=zoho.loginuser
-                 		Permission_Set="Administrator"
-                 		Role="System Administrator"
-                 	];
-                 	adminRecCount = User[Email == zoho.adminuserid].count();
-                 	if(adminRecCount == 0)
-                 	{
-                 		userRecID = insert into User
-                 		[
-                 			Name.first_name="Admin"
-                 			Name.last_name=zoho.adminuser
-                 			Email=zoho.adminuserid
-                 			Role=roleRecID
-                 			Added_User=zoho.adminuser
-                 		];
-                 		userRec = User[ID == userRecID];
-                 		userRec.User_ID="User ID -" + userRec.Auto_Number;
-                 	}
-                 
+	if(ID_Configuration[ID != 0].count() == 0)
+	{
+		insert into ID_Configuration
+		[
+			Added_User=zoho.loginuser
+			Case_ID="Case ID -"
+			Charge_ID="Charge ID -"
+			Dispute_ID="Dispute ID -"
+			Insurance_Payer_ID="Payer ID -"
+			Patient_ID="Patient ID -"
+			Resolution_ID="Resolution ID -"
+			User_ID="User ID -"
+		];
+	}
+	sysAdminRole = Role[Role == "System Administrator"];
+	if(sysAdminRole.count() == 0)
+	{
+		roleRecID = insert into Role
+		[
+			Added_User=zoho.loginuser
+			Permission_Set="Administrator"
+			Role="System Administrator"
+		];
+	}
+	else
+	{
+		roleRecID = sysAdminRole.ID;
+	}
+	if(Role[Role == "Senior Billing Analyst"].count() == 0)
+	{
+		insert into Role
+		[
+			Added_User=zoho.loginuser
+			Permission_Set="Approver"
+			Role="Senior Billing Analyst"
+			Approval_Limit_From=0.00
+			Approval_Limit_To=5000.00
+		];
+	}
+	if(Role[Role == "Revenue Cycle Manager"].count() == 0)
+	{
+		insert into Role
+		[
+			Added_User=zoho.loginuser
+			Permission_Set="Approver"
+			Role="Revenue Cycle Manager"
+			Approval_Limit_From=5001.00
+			Approval_Limit_To=25000.00
+		];
+	}
+	if(Role[Role == "Revenue Cycle Director"].count() == 0)
+	{
+		insert into Role
+		[
+			Added_User=zoho.loginuser
+			Permission_Set="Approver"
+			Role="Revenue Cycle Director"
+			Approval_Limit_From=25001.00
+		];
+	}
+	if(Role[Role == "Billing Analyst"].count() == 0)
+	{
+		insert into Role
+		[
+			Added_User=zoho.loginuser
+			Permission_Set="Investigator"
+			Role="Billing Analyst"
+		];
+	}
+	if(Role[Role == "Managed Care Analyst"].count() == 0)
+	{
+		insert into Role
+		[
+			Added_User=zoho.loginuser
+			Permission_Set="Investigator"
+			Role="Managed Care Analyst"
+		];
+	}
+	if(Role[Role == "Patient Service Executive"].count() == 0)
+	{
+		insert into Role
+		[
+			Added_User=zoho.loginuser
+			Permission_Set="Service Executive"
+			Role="Patient Service Executive"
+		];
+	}
+	if(SLA_Matrix[Priority == "Low"].count() == 0)
+	{
+		insert into SLA_Matrix
+		[
+			Added_User=zoho.loginuser
+			Priority="Low"
+			Investigation_and_Resolution_SLA_days=15
+			Resolution_Approval_SLA_days=5
+		];
+	}
+	if(SLA_Matrix[Priority == "Medium"].count() == 0)
+	{
+		insert into SLA_Matrix
+		[
+			Added_User=zoho.loginuser
+			Priority="Medium"
+			Investigation_and_Resolution_SLA_days=10
+			Resolution_Approval_SLA_days=3
+		];
+	}
+	if(SLA_Matrix[Priority == "High"].count() == 0)
+	{
+		insert into SLA_Matrix
+		[
+			Added_User=zoho.loginuser
+			Priority="High"
+			Investigation_and_Resolution_SLA_days=5
+			Resolution_Approval_SLA_days=2
+		];
+	}
+	if(SLA_Matrix[Priority == "Critical"].count() == 0)
+	{
+		insert into SLA_Matrix
+		[
+			Added_User=zoho.loginuser
+			Priority="Critical"
+			Investigation_and_Resolution_SLA_days=2
+			Resolution_Approval_SLA_days=1
+		];
+	}
+	adminRecCount = User[Email == zoho.adminuserid].count();
+	if(adminRecCount == 0)
+	{
+		userRecID = insert into User
+		[
+			Name.first_name="Admin"
+			Name.last_name=zoho.adminuser
+			Email=zoho.adminuserid
+			Role=roleRecID
+			Added_User=zoho.adminuser
+		];
+		userRec = User[ID == userRecID];
+		userRec.User_ID="User ID -" + userRec.Auto_Number;
+	}
 }
