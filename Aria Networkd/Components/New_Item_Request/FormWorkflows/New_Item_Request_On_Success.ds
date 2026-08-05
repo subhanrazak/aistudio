@@ -1,0 +1,27 @@
+New_Item_Request_On_Success as "New Item Request - On Success"
+{
+
+				type =  form
+				form = New_Item_Request
+
+				record event = on add
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											input.status = "PCA_Review";
+										pca_list = thisapp.Get_Employees_By_Profile("PRODUCT_CHANGE_ANALYST");
+										merge_map = Map();
+										merge_map.put("nir_id",input.nir_id);
+										merge_map.put("title",input.description);
+										thisapp.Send_Template_Email("NIR_SUBMITTED",pca_list,merge_map);
+										thisapp.Write_Activity_Log("New_Item_Request",input.nir_id,"status","Submitted","PCA_Review",input.raised_by_employee);
+						)
+					}
+				}
+
+			
+}

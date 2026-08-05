@@ -1,0 +1,577 @@
+<%
+	root_found = false;
+	root_is_assembly = false;
+	child_ids = List();
+	qty_by_item = Map();
+	line_status_by_item = Map();
+	max_depth_notice = false;
+	if(input.item_id != null)
+	{
+		root_rec = Item_Master[ID == input.item_id && is_deleted == false];
+		if(root_rec.count() > 0)
+		{
+			root_found = true;
+			if(root_rec.part_type == "Assembly")
+			{
+				root_is_assembly = true;
+			}
+			current_level = List();
+			root_state = Map();
+			root_state.put("item_id",root_rec.ID);
+			root_state.put("path_qty",1.0);
+			root_state.put("path","|" + root_rec.ID.toString() + "|");
+			current_level.add(root_state);
+			depth = 0;
+			depth_steps = List();
+			depth_steps.add(1);
+			depth_steps.add(2);
+			depth_steps.add(3);
+			depth_steps.add(4);
+			depth_steps.add(5);
+			depth_steps.add(6);
+			depth_steps.add(7);
+			depth_steps.add(8);
+			depth_steps.add(9);
+			depth_steps.add(10);
+			for each  depth_marker in depth_steps
+			{
+				if(current_level.size() > 0 && depth < 10)
+				{
+					next_level = List();
+					for each  parent_state in current_level
+					{
+						parent_id = parent_state.get("item_id");
+						parent_path_qty = ifnull(parent_state.get("path_qty"),1.0);
+						parent_path = ifnull(parent_state.get("path"),"");
+						for each  bom_line in BOM_Line[parent_item == parent_id && is_struck == false]
+						{
+							child_id = bom_line.child_item;
+							if(child_id != null)
+							{
+								line_qty = ifnull(bom_line.quantity,0.0);
+								path_qty = parent_path_qty * line_qty;
+								child_key = child_id.toString();
+								existing_qty = ifnull(qty_by_item.get(child_key),0.0);
+								qty_by_item.put(child_key,existing_qty + path_qty);
+								status_text = ifnull(bom_line.manufacturer_approval_status,"Pending_Review");
+								existing_status = ifnull(line_status_by_item.get(child_key),"");
+								if(existing_status == "")
+								{
+									line_status_by_item.put(child_key,status_text);
+								}
+								else if(!existing_status.contains(status_text))
+								{
+									line_status_by_item.put(child_key,existing_status + ", " + status_text);
+								}
+								if(child_id not in child_ids)
+								{
+									child_ids.add(child_id);
+								}
+								child_token = "|" + child_id.toString() + "|";
+								if(!parent_path.contains(child_token))
+								{
+									next_state = Map();
+									next_state.put("item_id",child_id);
+									next_state.put("path_qty",path_qty);
+									next_state.put("path",parent_path + child_id.toString() + "|");
+									next_level.add(next_state);
+								}
+							}
+						}
+					}
+					current_level = next_level;
+					depth = depth + 1;
+				}
+			}
+			if(current_level.size() > 0)
+			{
+				max_depth_notice = true;
+			}
+		}
+	}
+	%>
+<style>
+:root { --zcs-theme-brand-color: var(--zcs_brand_color); --zcs-light-bg-color: var(--zcs_brand_light_color); --zcs-primary-text-color: var(--zcs_primary_text_color); --zcs-secondary-text-color: var(--zcs_secondary_text_color); --zcs-teritiary-text-color: var(--zcs_tertiary_text_color); --zcs-border-color: var(--zcs_tertiary_border_color); --zcs-white-color: #FFFFFF; --zcs-black-color: #000000; --zcs-thead-color: #F9FAFE; --zcs-tr-h-color: #F9FAFE; }
+.zcs-w-full { width: 100%; } .zcs-wh-full { width: 100%; height: 100%; } .zcs-flex { display: flex; } .zcs-inline-flex { display: inline-flex; } .zcs-row { display: flex; flex-wrap: wrap; } .zcs-direction-column { flex-direction: column; } .zcs-align-items-center { align-items: center; } .zcs-align-items-start { align-items: flex-start; } .zcs-justify-center { justify-content: center; } .zcs-justify-space-between { justify-content: space-between; } .zcs-gap-4 { gap: .25rem; } .zcs-gap-6 { gap: .375rem; } .zcs-gap-8 { gap: .5rem; } .zcs-gap-10 { gap: .625rem; } .zcs-gap-12 { gap: .75rem; } .zcs-gap-16 { gap: 1rem; } .zcs-p-2 { padding: .125rem; } .zcs-p-8 { padding: .5rem; } .zcs-p-20 { padding: 1.25rem; } .zcs-px-10 { padding-left: .625rem; padding-right: .625rem; } .zcs-px-16 { padding-left: 1rem; padding-right: 1rem; } .zcs-px-24 { padding-left: 1.5rem; padding-right: 1.5rem; } .zcs-px-30 { padding-left: 1.875rem; padding-right: 1.875rem; } .zcs-py-2 { padding-top: .125rem; padding-bottom: .125rem; } .zcs-py-8 { padding-top: .5rem; padding-bottom: .5rem; } .zcs-py-12 { padding-top: .75rem; padding-bottom: .75rem; } .zcs-py-16 { padding-top: 1rem; padding-bottom: 1rem; } .zcs-py-24 { padding-top: 1.5rem; padding-bottom: 1.5rem; } .zcs-m-0 { margin: 0; } .zcs-mt-10 { margin-top: .625rem; } .zcs-mx-0 { margin-left: 0; margin-right: 0; } .zcs-mb-0 { margin-bottom: 0; } .zcs-font-12 { font-size: .75rem; } .zcs-font-13 { font-size: .8125rem; } .zcs-font-14 { font-size: .875rem; } .zcs-font-16 { font-size: 1rem; } .zcs-font-18 { font-size: 1.125rem; } .zcs-font-22 { font-size: 1.375rem; } .zcs-font-normal { font-weight: 400; } .zcs-font-medium { font-weight: 500; } .zcs-font-semibold { font-weight: 600; } .zcs-lh-body { line-height: 1.5; } .zcs-lh-heading { line-height: 1.25; } .zcs-color-primary { color: var(--zcs-primary-text-color); } .zcs-color-secondary { color: var(--zcs-secondary-text-color); } .zcs-color-tertiary { color: var(--zcs-teritiary-text-color); } .zcs-color-theme { color: var(--zcs-theme-brand-color); } .zcs-text-left { text-align: left; } .zcs-text-right { text-align: right; } .zcs-text-center { text-align: center; } .zcs-rounded-sm { border-radius: .25rem; } .zcs-rounded-md { border-radius: .375rem; } .zcs-rounded-lg { border-radius: .5rem; } .zcs-box-border { box-sizing: border-box; } .zcs-ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .zcs-sticky { position: sticky; } .zcs-relative { position: relative; } a { text-decoration: none; }
+.aria-sourcing-page { box-sizing: border-box; min-height: 100%; background: var(--zcs-page-bg-color,#F3F3F4); color: var(--zcs-primary-text-color); font-family: inherit; }
+.aria-sourcing-shell { max-width: 1440px; margin: 0 auto; padding: 0 20px 28px; }
+.zcs-page-header { background: var(--zcs-white-color); border-bottom: 1px solid var(--zcs_tertiary_border_color); }
+.aria-header-kicker { color: var(--zcs-secondary-text-color); margin-top: 4px; }
+.aria-card { background: var(--zcs-white-color); border: 1px solid var(--zcs_tertiary_border_color); border-radius: 12px; box-shadow: 0 1px 2px rgba(16,24,40,.04); margin-top: 16px; overflow: hidden; }
+.aria-card-header { padding: 18px 20px; border-bottom: 1px solid var(--zcs_tertiary_border_color); background: var(--zcs-white-color); }
+.aria-card-title { margin: 0; color: var(--zcs-primary-text-color); font-size: 17px; line-height: 1.25; font-weight: 600; }
+.aria-card-subtitle { margin: 4px 0 0; color: var(--zcs-secondary-text-color); font-size: 13px; line-height: 1.45; }
+.aria-root-grid { display: grid; grid-template-columns: minmax(0,1.5fr) repeat(3,minmax(120px,.5fr)); gap: 12px; padding: 16px 20px; }
+.aria-root-cell { border: 1px solid var(--zcs_tertiary_border_color); border-radius: 10px; padding: 12px; background: #FBFCFF; }
+.aria-root-label { color: var(--zcs-secondary-text-color); font-size: 12px; line-height: 1.35; margin-bottom: 4px; }
+.aria-root-value { color: var(--zcs-primary-text-color); font-size: 14px; line-height: 1.35; font-weight: 600; }
+.aria-warning { margin: 14px 20px 0; padding: 12px 14px; border-radius: 10px; border: 1px solid #FAAE13; background: #FFF8E7; color: #7A5200; display: flex; align-items: flex-start; gap: 8px; font-size: 13px; line-height: 1.45; }
+.aria-source-line { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid #EEF0F6; }
+.aria-source-line:last-child { border-bottom: 0; }
+.aria-slot { min-width: 92px; color: var(--zcs-secondary-text-color); font-size: 12px; font-weight: 600; }
+.aria-mfg-name { color: var(--zcs-primary-text-color); font-weight: 600; }
+.aria-mpn { color: var(--zcs-secondary-text-color); font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+.aria-muted { color: var(--zcs-secondary-text-color); }
+.aria-empty-inline { color: var(--zcs-secondary-text-color); font-size: 13px; padding: 8px 0; }
+.zcs-table-wrapper { border: 1px solid var(--zcs_tertiary_border_color); background-color: var(--zcs-white-color); overflow: auto; }
+.zcs-table-wrapper table { line-height: normal; border-collapse: collapse; min-width: 980px; }
+.zcs-table-wrapper table thead { top: 0; }
+.zcs-table-wrapper table thead tr th { background-color: var(--zcs-thead-color); box-shadow: 0 -1px 0 0 var(--zcs_tertiary_border_color) inset; white-space: nowrap; }
+.zcs-table-wrapper table thead tr.zcs-tspace th { background-color: var(--zcs-white-color); box-shadow: none; }
+.zcs-table-wrapper table tbody tr td { border-top: 1px solid var(--zcs_tertiary_border_color); vertical-align: top; }
+.zcs-table-wrapper table tbody tr:first-child td { border-color: transparent; }
+.zcs-table-wrapper table tbody tr:hover td { background-color: var(--zcs-tr-h-color); }
+.zcs-badge { width: auto; white-space: nowrap; }
+.zcs-badge-filled { border: 1px solid transparent; }
+.zcs-badge-filled.zcs-badge-theme { background-color: var(--zcs_brand_color); border-color: var(--zcs_brand_color); color: var(--zcs-white-color); }
+.zcs-badge-filled.zcs-badge-green { background-color: #179E6C; border-color: #179E6C; color: var(--zcs-white-color); }
+.zcs-badge-filled.zcs-badge-red { background-color: #FE455D; border-color: #FE455D; color: var(--zcs-white-color); }
+.zcs-badge-filled.zcs-badge-grey { background-color: #242424; border-color: #242424; color: var(--zcs-white-color); }
+.zcs-badge-filled.zcs-badge-yellow { background-color: #FAAE13; border-color: #FAAE13; color: var(--zcs-white-color); }
+.zcs-badge-filled.zcs-badge-blue { background-color: #2A6FFC; border-color: #2A6FFC; color: var(--zcs-white-color); }
+.zcs-badge-filled.zcs-badge-orange { background-color: #F4660C; border-color: #F4660C; color: var(--zcs-white-color); }
+.zcs-nodata-wrapper { min-height: 280px; background: var(--zcs-white-color); border: 1px solid var(--zcs_tertiary_border_color); border-radius: 12px; }
+@media (max-width: 768px) { .aria-sourcing-shell { padding: 0 12px 20px; } .zcs-page-header { padding: 14px 16px; } .aria-root-grid { grid-template-columns: 1fr; padding: 14px; } .aria-card-header { padding: 14px; } }
+</style>
+<div class="aria-sourcing-page">
+		<div class='zcs-page-header zcs-w-full zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-8 zcs-px-30 zcs-py-24 zcs-box-border'>
+				<div class='zcs-flex zcs-direction-column zcs-gap-4 zcs-ellipsis'>
+						<h5 class='zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-ellipsis zcs-m-0'>Item Sourcing View</h5>
+						<div class='aria-header-kicker zcs-font-13 zcs-lh-body'>Flattened manufacturer and MPN sourcing for a top-level assembly.</div>
+				</div>
+				<div class='zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-theme'>
+						<i class='zc-li-outline ui-1-check-circle-08'></i>
+						<span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'>Internal PLM</span>
+				</div>
+		</div>
+		<div class="aria-sourcing-shell">
+<%
+	if(input.item_id == null)
+	{
+		%>
+<div class='zcs-nodata-wrapper zcs-wh-full zcs-flex zcs-align-items-center zcs-justify-center zcs-text-center'>
+						<div class='zcs-nodata-content zcs-p-20 zcs-box-border'>
+								<h5 class='zcs-nodata-header zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-mt-10 zcs-mx-0 zcs-mb-0'>Select an assembly</h5>
+								<div class='zcs-font-14 zcs-color-secondary zcs-lh-body'>Open this page with an item_id parameter, for example #Page:Item_Sourcing_View?item_id=123456789.</div>
+						</div>
+				</div>
+<%
+	}
+	else if(!root_found)
+	{
+		%>
+<div class='zcs-nodata-wrapper zcs-wh-full zcs-flex zcs-align-items-center zcs-justify-center zcs-text-center'>
+						<div class='zcs-nodata-content zcs-p-20 zcs-box-border'>
+								<h5 class='zcs-nodata-header zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-mt-10 zcs-mx-0 zcs-mb-0'>Item not found</h5>
+								<div class='zcs-font-14 zcs-color-secondary zcs-lh-body'>No active Item_Master record was found for item_id <%=input.item_id%>.</div>
+						</div>
+				</div>
+<%
+	}
+	else
+	{
+		%>
+<div class="aria-card">
+						<div class="aria-card-header">
+								<h2 class="aria-card-title"><%=ifnull(root_rec.apn,"No APN")%></h2>
+								<p class="aria-card-subtitle"><%=ifnull(root_rec.description,"No description")%></p>
+						</div>
+						<div class="aria-root-grid">
+								<div class="aria-root-cell">
+										<div class="aria-root-label">Top-level item</div>
+										<div class="aria-root-value"><%=ifnull(root_rec.part_name,"-")%></div>
+								</div>
+								<div class="aria-root-cell">
+										<div class="aria-root-label">Part type</div>
+										<div class="aria-root-value"><%=ifnull(root_rec.part_type,"-")%></div>
+								</div>
+								<div class="aria-root-cell">
+										<div class="aria-root-label">Lifecycle</div>
+										<div class="aria-root-value"><%=ifnull(root_rec.lifecycle_phase,"-")%></div>
+								</div>
+								<div class="aria-root-cell">
+										<div class="aria-root-label">Flattened rows</div>
+										<div class="aria-root-value"><%=child_ids.size()%></div>
+								</div>
+						</div>
+<%
+		if(!root_is_assembly)
+		{
+			%>
+<div class="aria-warning"><i class='zc-li-outline ui-2-time'></i><span>The selected top-level item is not marked as Assembly. Sourcing rows below are shown only if active BOM lines exist.</span></div>
+<%
+		}
+		if(max_depth_notice)
+		{
+			%>
+<div class="aria-warning"><i class='zc-li-outline ui-2-time'></i><span>BOM traversal stopped at depth 10 to avoid runaway recursion. Quantities reflect paths rendered up to that depth.</span></div>
+<%
+		}
+		%>
+</div>
+<%
+		if(child_ids.size() == 0)
+		{
+			%>
+<div class='zcs-nodata-wrapper zcs-wh-full zcs-flex zcs-align-items-center zcs-justify-center zcs-text-center' style='margin-top:16px;'>
+						<div class='zcs-nodata-content zcs-p-20 zcs-box-border'>
+								<h5 class='zcs-nodata-header zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-mt-10 zcs-mx-0 zcs-mb-0'>No active BOM sourcing rows</h5>
+								<div class='zcs-font-14 zcs-color-secondary zcs-lh-body'>This assembly has no non-struck BOM_Line children to flatten.</div>
+						</div>
+				</div>
+<%
+		}
+		else
+		{
+			%>
+<div class="aria-card">
+						<div class="aria-card-header">
+								<h2 class="aria-card-title">Manufacturer View</h2>
+								<p class="aria-card-subtitle">One row per flattened component, with all populated manufacturer and MPN alternates. Global approval comes from Manufacturer_Master; BOM-line approval comes from BOM_Line.manufacturer_approval_status.</p>
+						</div>
+						<div class='zcs-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative'>
+								<table class='zcs-w-full'>
+										<thead class='zcs-sticky'>
+												<tr>
+														<th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>APN</th>
+														<th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Description</th>
+														<th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Total Quantity</th>
+														<th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>BOM-line Approval</th>
+														<th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Manufacturer / MPN Alternates</th>
+												</tr>
+												<tr class='zcs-tspace'><th class='zcs-p-2 zcs-box-border' colspan='5'> </th></tr>
+										</thead>
+										<tbody>
+<%
+			for each  child_id in child_ids
+			{
+				item_key = child_id.toString();
+				item_rec = Item_Master[ID == child_id && is_deleted == false];
+				if(item_rec.count() > 0)
+				{
+					total_qty = ifnull(qty_by_item.get(item_key),0.0);
+					line_approval = ifnull(line_status_by_item.get(item_key),"Pending_Review");
+					line_badge_class = "zcs-badge-yellow";
+					if(line_approval == "Approved")
+					{
+						line_badge_class = "zcs-badge-green";
+					}
+					else if(line_approval.contains("Unapproved"))
+					{
+						line_badge_class = "zcs-badge-red";
+					}
+					else if(line_approval.contains(","))
+					{
+						line_badge_class = "zcs-badge-orange";
+					}
+					source_maps = List();
+					if(item_rec.mfg_0 != null || ifnull(item_rec.mpn_0,"") != "")
+					{
+						src = Map();
+						src.put("slot","mfg_0/mpn_0");
+						src.put("label","Primary");
+						src.put("mfg_id",item_rec.mfg_0);
+						src.put("mpn",item_rec.mpn_0);
+						source_maps.add(src);
+					}
+					if(item_rec.mfg_1 != null || ifnull(item_rec.mpn_1,"") != "")
+					{
+						src = Map();
+						src.put("slot","mfg_1/mpn_1");
+						src.put("label","Alternate 1");
+						src.put("mfg_id",item_rec.mfg_1);
+						src.put("mpn",item_rec.mpn_1);
+						source_maps.add(src);
+					}
+					if(item_rec.mfg_2 != null || ifnull(item_rec.mpn_2,"") != "")
+					{
+						src = Map();
+						src.put("slot","mfg_2/mpn_2");
+						src.put("label","Alternate 2");
+						src.put("mfg_id",item_rec.mfg_2);
+						src.put("mpn",item_rec.mpn_2);
+						source_maps.add(src);
+					}
+					if(item_rec.mfg_3 != null || ifnull(item_rec.mpn_3,"") != "")
+					{
+						src = Map();
+						src.put("slot","mfg_3/mpn_3");
+						src.put("label","Alternate 3");
+						src.put("mfg_id",item_rec.mfg_3);
+						src.put("mpn",item_rec.mpn_3);
+						source_maps.add(src);
+					}
+					if(item_rec.mfg_4 != null || ifnull(item_rec.mpn_4,"") != "")
+					{
+						src = Map();
+						src.put("slot","mfg_4/mpn_4");
+						src.put("label","Alternate 4");
+						src.put("mfg_id",item_rec.mfg_4);
+						src.put("mpn",item_rec.mpn_4);
+						source_maps.add(src);
+					}
+					if(item_rec.mfg_5 != null || ifnull(item_rec.mpn_5,"") != "")
+					{
+						src = Map();
+						src.put("slot","mfg_5/mpn_5");
+						src.put("label","Alternate 5");
+						src.put("mfg_id",item_rec.mfg_5);
+						src.put("mpn",item_rec.mpn_5);
+						source_maps.add(src);
+					}
+					%>
+<tr>
+														<td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-semibold zcs-lh-body zcs-color-primary'><%=ifnull(item_rec.apn,"-")%></td>
+														<td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=ifnull(item_rec.description,"-")%></td>
+														<td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=total_qty%></td>
+														<td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body'>
+																<div class='zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border <%=line_badge_class%>'>
+																		<span class='zcs-badge-text zcs-font-12 zcs-font-normal zcs-lh-body'><%=line_approval%></span>
+																</div>
+														</td>
+														<td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'>
+<%
+					if(source_maps.size() == 0)
+					{
+						%>
+<div class="aria-empty-inline">No manufacturer or MPN alternates populated.</div>
+<%
+					}
+					else
+					{
+						for each  src in source_maps
+						{
+							mfg_id = src.get("mfg_id");
+							mfg_name = "No manufacturer";
+							mfg_status_label = "Not linked";
+							mfg_badge_class = "zcs-badge-grey";
+							if(mfg_id != null)
+							{
+								mfr_rec = Manufacturer_Master[ID == mfg_id];
+								if(mfr_rec.count() > 0)
+								{
+									mfg_name = ifnull(mfr_rec.manufacturer_name,"Unnamed manufacturer");
+									if(mfr_rec.is_approved == true)
+									{
+										mfg_status_label = "Globally Approved";
+										mfg_badge_class = "zcs-badge-green";
+									}
+									else
+									{
+										mfg_status_label = "Global Unapproved";
+										mfg_badge_class = "zcs-badge-red";
+									}
+									if(mfr_rec.is_active != true)
+									{
+										mfg_status_label = mfg_status_label + " / Inactive";
+										mfg_badge_class = "zcs-badge-orange";
+									}
+								}
+								else
+								{
+									mfg_name = "Manufacturer record not found";
+									mfg_status_label = "Missing Master";
+									mfg_badge_class = "zcs-badge-red";
+								}
+							}
+							%>
+<div class="aria-source-line">
+																		<span class="aria-slot"><%=src.get("label")%></span>
+																		<span class="aria-mfg-name"><%=mfg_name%></span>
+																		<span class="aria-mpn"><%=ifnull(src.get("mpn"),"No MPN")%></span>
+																		<span class="aria-muted"><%=src.get("slot")%></span>
+																		<div class='zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border <%=mfg_badge_class%>'>
+																				<span class='zcs-badge-text zcs-font-12 zcs-font-normal zcs-lh-body'><%=mfg_status_label%></span>
+																		</div>
+																</div>
+<%
+						}
+					}
+					%>
+</td>
+												</tr>
+<%
+				}
+			}
+			%>
+</tbody>
+								</table>
+						</div>
+				</div>
+				<div class="aria-card">
+						<div class="aria-card-header">
+								<h2 class="aria-card-title">MPN View</h2>
+								<p class="aria-card-subtitle">One row per populated mfg_N/mpn_N pair for procurement review of all alternates across the flattened BOM.</p>
+						</div>
+						<div class='zcs-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative'>
+								<table class='zcs-w-full'>
+										<thead class='zcs-sticky'>
+												<tr>
+														<th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>APN</th>
+														<th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Description</th>
+														<th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Total Quantity</th>
+														<th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Slot</th>
+														<th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>MPN</th>
+														<th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Manufacturer</th>
+														<th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Global Mfr Approval</th>
+														<th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>BOM-line Approval</th>
+												</tr>
+												<tr class='zcs-tspace'><th class='zcs-p-2 zcs-box-border' colspan='8'> </th></tr>
+										</thead>
+										<tbody>
+<%
+			mpn_row_count = 0;
+			for each  child_id in child_ids
+			{
+				item_key = child_id.toString();
+				item_rec = Item_Master[ID == child_id && is_deleted == false];
+				if(item_rec.count() > 0)
+				{
+					total_qty = ifnull(qty_by_item.get(item_key),0.0);
+					line_approval = ifnull(line_status_by_item.get(item_key),"Pending_Review");
+					line_badge_class = "zcs-badge-yellow";
+					if(line_approval == "Approved")
+					{
+						line_badge_class = "zcs-badge-green";
+					}
+					else if(line_approval.contains("Unapproved"))
+					{
+						line_badge_class = "zcs-badge-red";
+					}
+					else if(line_approval.contains(","))
+					{
+						line_badge_class = "zcs-badge-orange";
+					}
+					source_maps = List();
+					if(item_rec.mfg_0 != null || ifnull(item_rec.mpn_0,"") != "")
+					{
+						src = Map();
+						src.put("slot","mfg_0/mpn_0");
+						src.put("label","Primary");
+						src.put("mfg_id",item_rec.mfg_0);
+						src.put("mpn",item_rec.mpn_0);
+						source_maps.add(src);
+					}
+					if(item_rec.mfg_1 != null || ifnull(item_rec.mpn_1,"") != "")
+					{
+						src = Map();
+						src.put("slot","mfg_1/mpn_1");
+						src.put("label","Alternate 1");
+						src.put("mfg_id",item_rec.mfg_1);
+						src.put("mpn",item_rec.mpn_1);
+						source_maps.add(src);
+					}
+					if(item_rec.mfg_2 != null || ifnull(item_rec.mpn_2,"") != "")
+					{
+						src = Map();
+						src.put("slot","mfg_2/mpn_2");
+						src.put("label","Alternate 2");
+						src.put("mfg_id",item_rec.mfg_2);
+						src.put("mpn",item_rec.mpn_2);
+						source_maps.add(src);
+					}
+					if(item_rec.mfg_3 != null || ifnull(item_rec.mpn_3,"") != "")
+					{
+						src = Map();
+						src.put("slot","mfg_3/mpn_3");
+						src.put("label","Alternate 3");
+						src.put("mfg_id",item_rec.mfg_3);
+						src.put("mpn",item_rec.mpn_3);
+						source_maps.add(src);
+					}
+					if(item_rec.mfg_4 != null || ifnull(item_rec.mpn_4,"") != "")
+					{
+						src = Map();
+						src.put("slot","mfg_4/mpn_4");
+						src.put("label","Alternate 4");
+						src.put("mfg_id",item_rec.mfg_4);
+						src.put("mpn",item_rec.mpn_4);
+						source_maps.add(src);
+					}
+					if(item_rec.mfg_5 != null || ifnull(item_rec.mpn_5,"") != "")
+					{
+						src = Map();
+						src.put("slot","mfg_5/mpn_5");
+						src.put("label","Alternate 5");
+						src.put("mfg_id",item_rec.mfg_5);
+						src.put("mpn",item_rec.mpn_5);
+						source_maps.add(src);
+					}
+					for each  src in source_maps
+					{
+						mpn_row_count = mpn_row_count + 1;
+						mfg_id = src.get("mfg_id");
+						mfg_name = "No manufacturer";
+						mfg_status_label = "Not linked";
+						mfg_badge_class = "zcs-badge-grey";
+						if(mfg_id != null)
+						{
+							mfr_rec = Manufacturer_Master[ID == mfg_id];
+							if(mfr_rec.count() > 0)
+							{
+								mfg_name = ifnull(mfr_rec.manufacturer_name,"Unnamed manufacturer");
+								if(mfr_rec.is_approved == true)
+								{
+									mfg_status_label = "Globally Approved";
+									mfg_badge_class = "zcs-badge-green";
+								}
+								else
+								{
+									mfg_status_label = "Global Unapproved";
+									mfg_badge_class = "zcs-badge-red";
+								}
+								if(mfr_rec.is_active != true)
+								{
+									mfg_status_label = mfg_status_label + " / Inactive";
+									mfg_badge_class = "zcs-badge-orange";
+								}
+							}
+							else
+							{
+								mfg_name = "Manufacturer record not found";
+								mfg_status_label = "Missing Master";
+								mfg_badge_class = "zcs-badge-red";
+							}
+						}
+						%>
+<tr>
+														<td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-semibold zcs-lh-body zcs-color-primary'><%=ifnull(item_rec.apn,"-")%></td>
+														<td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=ifnull(item_rec.description,"-")%></td>
+														<td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=total_qty%></td>
+														<td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-secondary'><%=src.get("slot")%></td>
+														<td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-semibold zcs-lh-body zcs-color-primary'><span class="aria-mpn"><%=ifnull(src.get("mpn"),"No MPN")%></span></td>
+														<td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=mfg_name%></td>
+														<td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body'>
+																<div class='zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border <%=mfg_badge_class%>'>
+																		<span class='zcs-badge-text zcs-font-12 zcs-font-normal zcs-lh-body'><%=mfg_status_label%></span>
+																</div>
+														</td>
+														<td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body'>
+																<div class='zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border <%=line_badge_class%>'>
+																		<span class='zcs-badge-text zcs-font-12 zcs-font-normal zcs-lh-body'><%=line_approval%></span>
+																</div>
+														</td>
+												</tr>
+<%
+					}
+				}
+			}
+			if(mpn_row_count == 0)
+			{
+				%>
+<tr class='zcs-tnodata'>
+														<td class='zcs-px-16 zcs-py-16 zcs-box-border zcs-text-center zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-secondary' colspan='8'>No populated manufacturer or MPN alternates were found in mfg_0/mpn_0 through mfg_5/mpn_5.</td>
+												</tr>
+<%
+			}
+			%>
+</tbody>
+								</table>
+						</div>
+				</div>
+<%
+		}
+	}
+	%>
+</div>
+</div>

@@ -1,0 +1,26 @@
+Change_Request_On_Success as "Change Request - On Success"
+{
+
+				type =  form
+				form = Change_Request
+
+				record event = on add
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											pca_list = thisapp.Get_Employees_By_Profile("PRODUCT_CHANGE_ANALYST");
+										merge_map = Map();
+										merge_map.put("request_id",input.request_id);
+										merge_map.put("title",input.title);
+										thisapp.Send_Template_Email("REQUEST_SUBMITTED",pca_list,merge_map);
+										thisapp.Write_Activity_Log("Change_Request",input.request_id,"status","",input.status,input.requested_by_employee);
+						)
+					}
+				}
+
+			
+}

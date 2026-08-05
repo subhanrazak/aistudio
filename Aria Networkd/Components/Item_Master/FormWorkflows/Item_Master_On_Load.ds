@@ -1,0 +1,60 @@
+Item_Master_On_Load as "Item Master - On Load"
+{
+
+				type =  form
+				form = Item_Master
+
+				record event = on add or edit
+
+				on load
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											hide variant_of;
+										hide variant_code;
+										if(input.is_variant == true)
+										{
+											show variant_of;
+											show variant_code;
+										}
+										hide bom_lines;
+										if(input.part_type == "Assembly")
+										{
+											show bom_lines;
+										}
+										disable apn;
+										disable part_status;
+										disable lifecycle_phase;
+										disable revision;
+										disable is_deviated;
+										disable is_deleted;
+										disable deleted_on;
+										disable deleted_by_employee;
+										if(input.lifecycle_phase == "Deprecated")
+										{
+											alert "This item is deprecated, use with caution.";
+										}
+										if(input.lifecycle_phase == "Obsolete")
+										{
+											alert "Obsolete, cannot be added to new BOMs.";
+										}
+										if(input.lifecycle_phase == "Abandoned")
+										{
+											alert "Abandoned, use Recover to reinstate this item.";
+										}
+										if(input.is_deviated == true)
+										{
+											alert "This item is currently under an active deviation.";
+										}
+										if(input.is_deleted == true)
+										{
+											alert "This item is soft-deleted and hidden from normal reports.";
+										}
+						)
+					}
+				}
+
+			
+}

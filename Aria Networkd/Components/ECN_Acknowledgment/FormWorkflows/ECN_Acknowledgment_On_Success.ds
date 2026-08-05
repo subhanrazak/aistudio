@@ -1,0 +1,32 @@
+ECN_Acknowledgment_On_Success as "ECN Acknowledgment - On Success"
+{
+
+				type =  form
+				form = ECN_Acknowledgment
+
+				record event = on add or edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											emp_id = thisapp.Get_Employee_For_Login(zoho.loginuser);
+										emp_rec = Employee_Master[ID == emp_id];
+										if(emp_id != 0 && emp_id == input.recipient_employee || (emp_rec.count() > 0 && emp_rec.profile_label == "ADMIN"))
+										{
+											input.acknowledged_on = zoho.currenttime;
+											input.status = "Acknowledged";
+											co_rec = Change_Order[ID == input.change_order];
+											if(co_rec.count() > 0)
+											{
+												thisapp.Write_Activity_Log("ECN_Acknowledgment",co_rec.order_id,"acknowledgment","Pending","Acknowledged",input.recipient_employee);
+											}
+										}
+						)
+					}
+				}
+
+			
+}

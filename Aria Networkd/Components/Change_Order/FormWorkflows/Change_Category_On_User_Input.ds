@@ -1,0 +1,46 @@
+Change_Category_On_User_Input as "Change Order - Change Category On User Input"
+{
+
+				type =  form
+				form = Change_Order
+
+				record event = on add or edit
+
+				on user input of change_category
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.status == null || input.status == "" || input.status == "Open")
+										{
+											input.approvers.clear();
+											category_key = "ECO";
+											if(input.change_category == "Manufacturing_MCO")
+											{
+												category_key = "MCO";
+											}
+											else if(input.change_category == "Process_PCO")
+											{
+												category_key = "PCO";
+											}
+											else if(input.change_category == "Deviation")
+											{
+												category_key = "Deviation";
+											}
+											for each  route_line in Approval_Matrix_Template[change_category == category_key && is_active == true] sort by sequence_no
+											{
+												app_row = Change_Order.approvers();
+												app_row.approver=route_line.approver;
+												app_row.sequence_no=route_line.sequence_no;
+												app_row.decision="Pending";
+												app_row.added_by_cost_rule=false;
+												input.approvers.insert(app_row);
+											}
+										}
+						)
+					}
+				}
+
+			
+}

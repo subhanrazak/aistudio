@@ -1,0 +1,33 @@
+Approval_Remarks_On_Load as "Approval Remarks - On Load"
+{
+
+				type =  form
+				form = Approval_Remarks
+
+				record event = on add or edit
+
+				on load
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											emp_id = thisapp.Get_Employee_For_Login(zoho.loginuser);
+										if(emp_id != 0 && input.action_by_employee == null)
+										{
+											input.action_by_employee = emp_id;
+										}
+										if(input.action_date == null)
+										{
+											input.action_date = zoho.currenttime;
+										}
+										disable remarks_id;
+										disable linked_change_order;
+										disable action_by_employee;
+										disable action_date;
+						)
+					}
+				}
+
+			
+}

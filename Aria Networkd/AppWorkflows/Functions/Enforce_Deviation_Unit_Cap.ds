@@ -1,0 +1,35 @@
+void Enforce_Deviation_Unit_Cap(int change_order_id)
+{
+
+                 	co_rec = Change_Order[ID == change_order_id];
+                 	if(co_rec.count() > 0 && co_rec.change_category == "Deviation" && co_rec.max_unit_count != null)
+                 	{
+                 		if(ifnull(co_rec.units_consumed,0) >= ifnull(co_rec.max_unit_count,0))
+                 		{
+                 			old_status = co_rec.status;
+                 			co_rec.status="Expired";
+                 			for each  affected_row in co_rec.affected_items
+                 			{
+                 				item_rec = Item_Master[ID == affected_row.child_item];
+                 				if(item_rec.count() > 0)
+                 				{
+                 					item_rec.is_deviated=false;
+                 				}
+                 			}
+                 			thisapp.Write_Activity_Log("Change_Order",co_rec.order_id,"status",old_status,"Expired",co_rec.created_by_employee);
+                 		}
+                 		else if(co_rec.unit_cap_warning_shown == false && ifnull(co_rec.units_consumed,0) * 100 >= ifnull(co_rec.max_unit_count,0) * 80)
+                 		{
+                 			co_rec.unit_cap_warning_shown=true;
+                 			recips = List();
+                 			recips.add(co_rec.created_by_employee);
+                 			merge_map = Map();
+                 			merge_map.put("order_id",co_rec.order_id);
+                 			merge_map.put("units_consumed",co_rec.units_consumed);
+                 			merge_map.put("max_unit_count",co_rec.max_unit_count);
+                 			thisapp.Send_Template_Email("DEVIATION_CAP_WARNING",recips,merge_map);
+                 			thisapp.Write_Activity_Log("Change_Order",co_rec.order_id,"unit_cap_warning","","80_percent",co_rec.created_by_employee);
+                 		}
+                 	}
+                 
+}

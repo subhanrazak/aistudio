@@ -1,0 +1,161 @@
+form Change_Request
+{
+
+			displayname = "Change Request"
+			Request_Details
+			(
+				type = section
+				displayname = "Request Details"
+	 			row = 1
+	 			column = 0   
+				width = medium
+			)
+			unique request_id
+			(
+    			type = text
+				displayname = "Request ID"
+	 			row = 1
+	 			column = 1   
+				width = medium
+			)
+			must have request_type
+			(
+				type = picklist
+				displayname = "Request Type"
+				values = {"Engineering_ECR","Manufacturing_MCR"}
+	 			row = 1
+	 			column = 2   
+				width = medium
+			)
+			must have title
+			(
+    			type = text
+				displayname = "Title"
+	 			row = 1
+	 			column = 1   
+				width = medium
+			)
+			must have problem_description
+			(
+    			type = textarea
+				displayname = "Problem Description"
+				height = 120px
+	 			row = 1
+	 			column = 2   
+				width = medium
+			)
+			must have proposed_fix
+			(
+    			type = textarea
+				displayname = "Proposed Fix"
+				height = 120px
+	 			row = 1
+	 			column = 1   
+				width = medium
+			)
+			estimated_cost_impact
+			(
+				displayname = "Estimated Cost Impact"
+				type = INR
+				maxchar = 16
+	 			row = 1
+	 			column = 2   
+				width = medium
+			)
+			attachment
+			(
+    			type = upload file
+				displayname = "Attachment"
+				browse = local_drive, google_docs, zoho_docs
+	 			row = 1
+	 			column = 1   
+				width = medium
+			)
+			must have requested_by_employee
+			(
+				type = picklist	
+				displayname = "Requested By Employee"
+				values  = Employee_Master[is_active == true].ID
+    			displayformat = [employee_name]
+	 			row = 1
+	 			column = 2   
+				width = medium
+			)
+			status
+			(
+				type = picklist
+				displayname = "Status"
+				values = {"Submitted","Acknowledged","Converted_to_Order","Rejected"}
+				initial value = "Submitted"
+	 			row = 1
+	 			column = 1   
+				width = medium
+			)
+			analyst_remarks
+			(
+    			type = textarea
+				displayname = "Analyst Remarks"
+				height = 100px
+	 			row = 1
+	 			column = 2   
+				width = medium
+			)
+			created_date
+			(
+    			type = datetime
+				displayname = "Created Date"
+				timedisplayoptions = "hh:mm:ss"
+				alloweddays = 0,1,2,3,4,5,6
+	 			row = 1
+	 			column = 1   
+				width = medium
+			)
+			Affected_Items_Section
+			(
+				type = section
+				displayname = "Affected Items"
+	 			row = 2
+	 			column = 0   
+				width = medium
+			)
+			affected_items
+			(
+				type = grid
+				displayname = "Affected Items"
+				values  = Change_Request_Affected_Item.ID
+	 			row = 2
+	 			column = 1   
+				width = medium
+			)
+	
+			actions
+			{
+				on add
+				{
+					Submit
+					(
+   						type = submit
+   						displayname = "Submit"
+					)
+					Reset
+					(
+   						type = reset
+   						displayname = "Reset"
+					)
+				}
+				on edit
+				{
+					Update
+					(
+   						type = submit
+   						displayname = "Update"
+					)
+					Cancel
+					(
+   						type = cancel
+   						displayname = "Cancel"
+					)
+				}
+			}
+		
+}

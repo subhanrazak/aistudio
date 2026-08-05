@@ -1,0 +1,47 @@
+<%
+	openCO = Change_Order[status != "Complete" && status != "Cancelled"].count();
+	pendingApprovals = Approval_Matrix_Line[decision == "Pending"].count();
+	pendingECN = ECN_Acknowledgment[status == "Pending"].count();
+	activeDeviations = Change_Order[change_category == "Deviation" && status == "Effective"].count();
+	releasedItems = Item_Master[is_deleted == false && lifecycle_phase == "Production"].count();
+	myProfile = "";
+	emp = Employee_Master[email == zoho.loginuserid && is_active == true];
+	if(emp.count() > 0)
+	{
+		myProfile = ifnull(emp.profile_label,"");
+	}
+	%>
+<style>
+.plm-home{background:#F3F3F4;padding:20px;color:var(--zcs_primary_text_color);box-sizing:border-box}.plm-head{background:#fff;border:1px solid var(--zcs_tertiary_border_color);border-radius:14px;padding:20px;margin-bottom:16px;display:flex;justify-content:space-between;gap:16px;align-items:flex-start}.plm-head h1{margin:0;font-size:24px;line-height:1.2}.plm-head p{margin:6px 0 0;color:var(--zcs_secondary_text_color)}.plm-badge{display:inline-flex;align-items:center;gap:6px;background:#EAF2FF;color:#2A6FFC;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:600}.plm-kpis{display:grid;grid-template-columns:repeat(5,minmax(140px,1fr));gap:12px}.plm-kpi{background:#fff;border:1px solid var(--zcs_tertiary_border_color);border-radius:14px;padding:16px;box-sizing:border-box}.plm-kpi .icon{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:var(--zcs_brand_light_color);color:var(--zcs_brand_color);margin-bottom:10px}.plm-kpi .label{color:var(--zcs_secondary_text_color);font-size:12px}.plm-kpi .value{font-size:28px;font-weight:700;margin-top:4px}.plm-kpi a{color:inherit;text-decoration:none}@media(max-width:900px){.plm-kpis{grid-template-columns:1fr 1fr}.plm-head{display:block}}@media(max-width:520px){.plm-kpis{grid-template-columns:1fr}.plm-home{padding:12px}}
+</style>
+<div class="plm-home">
+	<div class="plm-head">
+		<div>
+			<h1>PLM Dashboard Home</h1>
+			<p>Live view of engineering change, item lifecycle, sourcing, deviations, ECN acknowledgments, and recent activity.</p>
+		</div>
+		<span class="plm-badge"><i class="zc-li-outline users-single-01"></i>
+<%
+	if(myProfile != "")
+	{
+		%>
+<%=myProfile%>
+<%
+	}
+	else
+	{
+		%>
+Role-aware
+<%
+	}
+	%>
+</span>
+	</div>
+	<div class="plm-kpis">
+		<a class="plm-kpi" href="#Report:All_Change_Orders"><div class="icon"><i class="zc-li-outline files-single-content-03"></i></div><div class="label">Open Change Orders</div><div class="value"><%=openCO%></div></a>
+		<a class="plm-kpi" href="#Report:My_Pending_Approvals"><div class="icon"><i class="zc-li-outline ui-1-check-circle-08"></i></div><div class="label">My Pending Approvals</div><div class="value"><%=pendingApprovals%></div></a>
+		<a class="plm-kpi" href="#Report:My_Pending_ECN_Acknowledgments"><div class="icon"><i class="zc-li-outline ui-2-time"></i></div><div class="label">Pending ECN Acks</div><div class="value"><%=pendingECN%></div></a>
+		<a class="plm-kpi" href="#Report:Open_Deviations_Calendar"><div class="icon"><i class="zc-li-outline travel-info"></i></div><div class="label">Active Deviations</div><div class="value"><%=activeDeviations%></div></a>
+		<a class="plm-kpi" href="#Report:Items_By_Lifecycle"><div class="icon"><i class="zc-li-outline design_app"></i></div><div class="label">Production Items</div><div class="value"><%=releasedItems%></div></a>
+	</div>
+</div>

@@ -1,0 +1,125 @@
+default list All_Items
+{
+
+			displayName = "All Items"
+			show all rows from Item_Master  [is_deleted == false]  
+			(
+				apn
+				category
+				description
+				part_status
+				lifecycle_phase
+				revision
+				part_type
+				is_variant
+				variant_of
+				mfg_0
+				mpn_0
+				is_deviated
+				owner_employee
+				custom action "Release to Design"
+				(
+	  			workflow = Release_to_Design
+				column header = "Release to Design"
+				success message = "Opening Change Order path."
+				condition = (lifecycle_phase == "Unreleased")
+				)
+				custom action "Release to Production"
+				(
+	  			workflow = Release_to_Production
+				column header = "Release to Production"
+				success message = "Opening Change Order path."
+				condition = (lifecycle_phase == "Design")
+				)
+				custom action "Deprecate"
+				(
+	  			workflow = Deprecate_Item
+				column header = "Deprecate"
+				success message = "Item deprecated."
+				condition = (lifecycle_phase == "Production")
+				)
+				custom action "Obsolete"
+				(
+	  			workflow = Obsolete_Item
+				column header = "Obsolete"
+				success message = "Item obsoleted."
+				condition = (lifecycle_phase == "Production" || lifecycle_phase == "Deprecated")
+				)
+				custom action "Re-activate"
+				(
+	  			workflow = Reactivate_Item
+				column header = "Re-activate"
+				success message = "Item re-activated."
+				condition = (lifecycle_phase == "Deprecated" || lifecycle_phase == "Obsolete")
+				)
+				custom action "Abandon"
+				(
+	  			workflow = Abandon_Item
+				column header = "Abandon"
+				success message = "Item abandoned."
+				condition = (lifecycle_phase == "Unreleased" && part_status == "In_Work")
+				)
+				custom action "Recover"
+				(
+	  			workflow = Recover_Item
+				column header = "Recover"
+				success message = "Item recovered."
+				condition = (lifecycle_phase == "Abandoned")
+				)
+				custom action "Delete"
+				(
+	  			workflow = Soft_Delete_Item
+				column header = "Delete"
+				success message = "Item soft-deleted."
+				condition = (lifecycle_phase == "Unreleased")
+				)
+				custom action "Duplicate"
+				(
+	  			workflow = Duplicate_Item
+				column header = "Duplicate"
+				success message = "Item duplicated."
+				)
+			)
+			filters
+			(
+				category
+				lifecycle_phase
+				part_status
+				is_variant
+				part_type
+				is_deviated
+				owner_employee
+			)
+			sort by
+			(
+				apn ascending
+			)
+			conditional formatting
+			(
+				"Deprecated Item"
+				{
+				condition = (lifecycle_phase == "Deprecated")
+				fields = [apn, lifecycle_phase]
+				format = "background-color:#FFF4D6;color:#8A5A00;font-weight:bold"
+				}
+				"Obsolete Item"
+				{
+				condition = (lifecycle_phase == "Obsolete")
+				fields = [apn, lifecycle_phase]
+				format = "background-color:#FFE0E0;color:#A00000;font-weight:bold"
+				}
+				"Deviated Item"
+				{
+				condition = (is_deviated == true)
+				fields = [apn, is_deviated]
+				format = "background-color:#E9F2FF;color:#004C97;font-weight:bold"
+				}
+				"Abandoned Item"
+				{
+				condition = (lifecycle_phase == "Abandoned")
+				fields = [apn, lifecycle_phase]
+				format = "background-color:#EEEEEE;color:#555555"
+				}
+			)
+		
+}

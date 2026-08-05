@@ -1,0 +1,589 @@
+<%
+	root_item = Item_Master[ID == -1];
+	has_request = false;
+	root_found = false;
+	root_id = 0;
+	root_apn = "-";
+	root_desc = "-";
+	root_part_type = "-";
+	root_lifecycle = "-";
+	root_category = "-";
+	direct_child_count = 0;
+	total_line_count = 0;
+	aggregate_rows = List();
+	depth_cap = 8;
+	cap_hit = false;
+	non_assembly_warning = false;
+	missing_root_message = "";
+	if(input.item_id != null && input.item_id > 0)
+	{
+		has_request = true;
+		root_item = Item_Master[ID == input.item_id && is_deleted == false];
+	}
+	if(root_item.count() > 0)
+	{
+		root_found = true;
+		root_id = root_item.ID;
+		root_apn = ifnull(root_item.apn,"-");
+		root_desc = ifnull(root_item.description,"-");
+		root_part_type = ifnull(root_item.part_type,"-");
+		root_lifecycle = ifnull(root_item.lifecycle_phase,"-");
+		root_category = "-";
+		if(root_item.category != null)
+		{
+			root_cat_rec = Category_Master[ID == root_item.category];
+			if(root_cat_rec.count() > 0)
+			{
+				root_category = ifnull(root_cat_rec.category_name,"-");
+			}
+		}
+		direct_child_count = BOM_Line[parent_item == root_id && is_struck == false].count();
+		if(root_part_type != "Assembly" || root_lifecycle in {"Obsolete","Abandoned"})
+		{
+			non_assembly_warning = true;
+		}
+		agg_order = List();
+		agg_qty_map = Map();
+		agg_status_map = Map();
+		agg_depth_map = Map();
+		frontier_ids = List();
+		frontier_qtys = List();
+		frontier_depths = List();
+		frontier_paths = List();
+		frontier_ids.add(root_id);
+		frontier_qtys.add(1.0);
+		frontier_depths.add(0);
+		frontier_paths.add("," + root_id + ",");
+		traversal_depth = 0;
+		depth_steps = List();
+		depth_steps.add(1);
+		depth_steps.add(2);
+		depth_steps.add(3);
+		depth_steps.add(4);
+		depth_steps.add(5);
+		depth_steps.add(6);
+		depth_steps.add(7);
+		depth_steps.add(8);
+		for each  depth_marker in depth_steps
+		{
+			if(frontier_ids.size() > 0 && traversal_depth < depth_cap)
+			{
+				next_ids = List();
+				next_qtys = List();
+				next_depths = List();
+				next_paths = List();
+				for each index fidx in frontier_ids
+				{
+					parent_id = frontier_ids.get(fidx);
+					parent_qty = frontier_qtys.get(fidx);
+					parent_depth = frontier_depths.get(fidx);
+					parent_path = frontier_paths.get(fidx);
+					for each  bom_line in BOM_Line[parent_item == parent_id && is_struck == false]
+					{
+						total_line_count = total_line_count + 1;
+						child_id = bom_line.child_item;
+						child_key = child_id.toString();
+						line_qty = ifnull(bom_line.quantity,0);
+						accumulated_qty = parent_qty * line_qty;
+						approval_status = ifnull(bom_line.manufacturer_approval_status,"Pending_Review");
+						child_depth = parent_depth + 1;
+						if(agg_qty_map.get(child_key) != null)
+						{
+							updated_qty = ifnull(agg_qty_map.get(child_key),0) + accumulated_qty;
+							agg_qty_map.put(child_key,updated_qty);
+							current_status = ifnull(agg_status_map.get(child_key),"Pending_Review");
+							if(current_status != approval_status)
+							{
+								if(current_status == "Unapproved" || approval_status == "Unapproved")
+								{
+									current_status = "Unapproved";
+								}
+								else
+								{
+									current_status = "Mixed";
+								}
+								agg_status_map.put(child_key,current_status);
+							}
+							if(child_depth < ifnull(agg_depth_map.get(child_key),child_depth))
+							{
+								agg_depth_map.put(child_key,child_depth);
+							}
+						}
+						else
+						{
+							agg_order.add(child_key);
+							agg_qty_map.put(child_key,accumulated_qty);
+							agg_status_map.put(child_key,approval_status);
+							agg_depth_map.put(child_key,child_depth);
+						}
+						child_token = "," + child_id + ",";
+						if(parent_path.contains(child_token))
+						{
+							cap_hit = true;
+						}
+						else
+						{
+							child_children = BOM_Line[parent_item == child_id && is_struck == false].count();
+							if(child_children > 0)
+							{
+								if(child_depth < depth_cap)
+								{
+									next_ids.add(child_id);
+									next_qtys.add(accumulated_qty);
+									next_depths.add(child_depth);
+									next_paths.add((parent_path + child_id) + ",");
+								}
+								else
+								{
+									cap_hit = true;
+								}
+							}
+						}
+					}
+				}
+				frontier_ids = next_ids;
+				frontier_qtys = next_qtys;
+				frontier_depths = next_depths;
+				frontier_paths = next_paths;
+				traversal_depth = traversal_depth + 1;
+			}
+		}
+		for each  child_key in agg_order
+		{
+			child_item_id = child_key.toLong();
+			item_rec = Item_Master[ID == child_item_id && is_deleted == false];
+			row_map = Map();
+			row_map.put("item_id",child_item_id);
+			row_map.put("total_quantity",ifnull(agg_qty_map.get(child_key),0));
+			row_map.put("approval_status",ifnull(agg_status_map.get(child_key),"Pending_Review"));
+			row_map.put("depth",ifnull(agg_depth_map.get(child_key),0));
+			if(item_rec.count() > 0)
+			{
+				row_map.put("apn",ifnull(item_rec.apn,"-"));
+				row_map.put("description",ifnull(item_rec.description,"-"));
+				category_text = "-";
+				if(item_rec.category != null)
+				{
+					cat_rec = Category_Master[ID == item_rec.category];
+					if(cat_rec.count() > 0)
+					{
+						category_text = ifnull(cat_rec.category_name,"-");
+					}
+				}
+				row_map.put("category",category_text);
+				mfg_text = "-";
+				if(item_rec.mfg_0 != null)
+				{
+					mfg_rec = Manufacturer_Master[ID == item_rec.mfg_0];
+					if(mfg_rec.count() > 0)
+					{
+						mfg_text = ifnull(mfg_rec.manufacturer_name,"-");
+					}
+				}
+				row_map.put("mfg_0",mfg_text);
+				row_map.put("mpn_0",ifnull(item_rec.mpn_0,"-"));
+				row_map.put("lifecycle",ifnull(item_rec.lifecycle_phase,"-"));
+				row_map.put("found",true);
+			}
+			else
+			{
+				row_map.put("apn","Missing item");
+				row_map.put("description","The child lookup could not be resolved.");
+				row_map.put("category","-");
+				row_map.put("mfg_0","-");
+				row_map.put("mpn_0","-");
+				row_map.put("lifecycle","Unknown");
+				row_map.put("found",false);
+			}
+			aggregate_rows.add(row_map);
+		}
+	}
+	else if(has_request == true)
+	{
+		missing_root_message = "No active Item Master record was found for item_id " + input.item_id + ".";
+	}
+	%>
+<style>
+/* ZCS global utility subset used by this page. */
+:root {
+	--zcs-theme-brand-color: var(--zcs_brand_color);
+	--zcs-primary-text-color: var(--zcs_primary_text_color);
+	--zcs-secondary-text-color: var(--zcs_secondary_text_color);
+	--zcs-teritiary-text-color: var(--zcs_tertiary_text_color);
+	--zcs-border-color: var(--zcs_tertiary_border_color);
+	--zcs-white-color: #FFFFFF;
+	--zcs-page-bg-color: #F3F3F4;
+	--zcs-thead-color: #F9FAFE;
+	--zcs-tr-h-color: #F9FAFE;
+	font-size: 16px;
+	line-height: 1.5;
+}
+.zcs-w-full { width: 100%; }
+.zcs-wh-full { width: 100%; height: 100%; }
+.zcs-flex { display: flex; }
+.zcs-inline-flex { display: inline-flex; }
+.zcs-row { display: flex; flex-wrap: wrap; }
+.zcs-align-items-center { align-items: center; }
+.zcs-justify-center { justify-content: center; }
+.zcs-justify-space-between { justify-content: space-between; }
+.zcs-gap-8 { gap: 0.5rem; }
+.zcs-gap-10 { gap: 0.625rem; }
+.zcs-gap-12 { gap: 0.75rem; }
+.zcs-gap-16 { gap: 1rem; }
+.zcs-p-20 { padding: 1.25rem; }
+.zcs-p-24 { padding: 1.5rem; }
+.zcs-px-10 { padding-left: 0.625rem; padding-right: 0.625rem; }
+.zcs-px-16 { padding-left: 1rem; padding-right: 1rem; }
+.zcs-py-2 { padding-top: 0.125rem; padding-bottom: 0.125rem; }
+.zcs-py-8 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+.zcs-py-12 { padding-top: 0.75rem; padding-bottom: 0.75rem; }
+.zcs-m-0 { margin: 0; }
+.zcs-mt-8 { margin-top: 0.5rem; }
+.zcs-mt-10 { margin-top: 0.625rem; }
+.zcs-mt-12 { margin-top: 0.75rem; }
+.zcs-mt-16 { margin-top: 1rem; }
+.zcs-mb-0 { margin-bottom: 0; }
+.zcs-mx-0 { margin-left: 0; margin-right: 0; }
+.zcs-box-border { box-sizing: border-box; }
+.zcs-relative { position: relative; }
+.zcs-sticky { position: sticky; }
+.zcs-rounded-sm { border-radius: 0.25rem; }
+.zcs-rounded-md { border-radius: 0.375rem; }
+.zcs-rounded-lg { border-radius: 0.5rem; }
+.zcs-text-left { text-align: left; }
+.zcs-text-right { text-align: right; }
+.zcs-text-center { text-align: center; }
+.zcs-font-12 { font-size: 0.75rem; }
+.zcs-font-13 { font-size: 0.8125rem; }
+.zcs-font-14 { font-size: 0.875rem; }
+.zcs-font-16 { font-size: 1rem; }
+.zcs-font-18 { font-size: 1.125rem; }
+.zcs-font-22 { font-size: 1.375rem; }
+.zcs-font-normal { font-weight: 400; }
+.zcs-font-medium { font-weight: 500; }
+.zcs-font-semibold { font-weight: 600; }
+.zcs-font-bold { font-weight: 700; }
+.zcs-lh-body { line-height: 1.5; }
+.zcs-lh-heading { line-height: 1.25; }
+.zcs-color-primary { color: var(--zcs-primary-text-color); }
+.zcs-color-secondary { color: var(--zcs-secondary-text-color); }
+.zcs-color-tertiary { color: var(--zcs-teritiary-text-color); }
+.zcs-color-theme { color: var(--zcs-theme-brand-color); }
+.zcs-overflow-auto { overflow: auto; }
+.zcs-card { background-color: var(--zcs-white-color); border: 1px solid #e7e7ee; border-radius: 12px; }
+a { text-decoration: none; }
+
+/* ZCS component CSS: table-simple-table. */
+.zcs-table-wrapper { border: 1px solid var(--zcs-border-color); background-color: var(--zcs-white-color); overflow: auto; }
+.zcs-table-wrapper table { line-height: normal; border-collapse: collapse; min-width: 1180px; }
+.zcs-table-wrapper table thead { top: 0px; z-index: 2; }
+.zcs-table-wrapper table thead tr th { background-color: var(--zcs-thead-color); box-shadow: 0px -1px 0px 0px var(--zcs-border-color) inset; white-space: nowrap; }
+.zcs-table-wrapper table thead tr.zcs-tspace th { background-color: var(--zcs-white-color); box-shadow: none; }
+.zcs-table-wrapper table tbody tr td { border-top: 1px solid var(--zcs-border-color); vertical-align: top; }
+.zcs-table-wrapper table tbody tr:first-child td { border-color: transparent; }
+.zcs-table-wrapper table tbody tr:hover td { background-color: var(--zcs-tr-h-color); }
+.zcs-table-wrapper table tbody tr:first-child:hover td { border-color: var(--zcs-border-color); }
+
+/* ZCS component CSS: banner-outline-banner-with-icon. */
+.zcs-toast-link:hover { text-decoration: underline; }
+.zcs-outline-toast { border: 1px solid; }
+.zcs-theme-toast { background-color: var(--zcs_component_hover_color); }
+.zcs-outline-toast.zcs-theme-toast { border: 1px solid var(--zcs_brand_color); }
+.zcs-warning-toast { background-color: #fef4e5; color: #663c01; }
+
+/* ZCS component CSS: button-primary-outline-button-no-icon. */
+.zcs-button { width: auto; min-width: 5rem; min-height: 36px; }
+.zcs-primary-outline-button { border: 1px solid var(--zcs_brand_color); background-color: var(--zcs-white-color); color: var(--zcs_brand_color); }
+.zcs-primary-outline-button:hover { background-color: var(--zcs_component_hover_color); border-color: var(--zcs_brand_color); color: var(--zcs_brand_color); }
+.zcs-button-icon { width: 16px; max-height: 16px; }
+
+/* ZCS component CSS: badge-filled-badge. */
+.zcs-badge { width: auto; white-space: nowrap; }
+.zcs-badge-filled { border: 1px solid transparent; }
+.zcs-badge-filled.zcs-badge-theme { background-color: var(--zcs_brand_color); border-color: var(--zcs_brand_color); color: var(--zcs-white-color); }
+.zcs-badge-filled.zcs-badge-green { background-color: #179E6C; border-color: #179E6C; color: var(--zcs-white-color); }
+.zcs-badge-filled.zcs-badge-red { background-color: #FE455D; border-color: #FE455D; color: var(--zcs-white-color); }
+.zcs-badge-filled.zcs-badge-grey { background-color: #242424; border-color: #242424; color: var(--zcs-white-color); }
+.zcs-badge-filled.zcs-badge-yellow { background-color: #FAAE13; border-color: #FAAE13; color: var(--zcs-white-color); }
+.zcs-badge-filled.zcs-badge-blue { background-color: #2A6FFC; border-color: #2A6FFC; color: var(--zcs-white-color); }
+.zcs-badge-filled.zcs-badge-orange { background-color: #F4660C; border-color: #F4660C; color: var(--zcs-white-color); }
+
+/* ZCS component CSS: no-data-no-data-text-with-image. */
+.zcs-nodata-wrapper { min-height: 220px; }
+.zcs-nodata-img { width: 84px; height: 84px; }
+
+/* BOM Flatten custom styling. */
+.bom-flat-page { background: var(--zcs-page-bg-color); padding: 20px; box-sizing: border-box; min-height: 100%; color: var(--zcs-primary-text-color); font-family: Arial, sans-serif; }
+.bom-flat-header { margin-bottom: 16px; }
+.bom-flat-title { display: flex; align-items: center; gap: 10px; }
+.bom-flat-title i { color: var(--zcs_brand_color); font-size: 22px; }
+.bom-root-card { margin-bottom: 14px; }
+.bom-root-grid { display: grid; grid-template-columns: minmax(180px, 1fr) minmax(280px, 2fr) repeat(4, minmax(120px, auto)); gap: 14px; align-items: center; }
+.bom-root-label { display: block; color: var(--zcs-secondary-text-color); font-size: 12px; margin-bottom: 3px; }
+.bom-root-value { color: var(--zcs-primary-text-color); font-size: 14px; font-weight: 600; }
+.bom-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 14px 0; flex-wrap: wrap; }
+.bom-toolbar-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.bom-empty { padding: 28px; text-align: center; }
+.bom-empty i { display: block; color: var(--zcs_brand_color); font-size: 34px; margin-bottom: 10px; }
+.bom-prompt-form { display: flex; gap: 10px; justify-content: center; align-items: end; flex-wrap: wrap; margin-top: 14px; }
+.bom-prompt-field { text-align: left; }
+.bom-prompt-field label { display: block; color: var(--zcs-secondary-text-color); font-size: 12px; margin-bottom: 4px; }
+.bom-prompt-field input { min-height: 36px; min-width: 280px; border: 1px solid var(--zcs-border-color); border-radius: 6px; padding: 6px 10px; box-sizing: border-box; font-size: 14px; color: var(--zcs-primary-text-color); background: #FFFFFF; }
+.bom-desc { max-width: 360px; white-space: normal; }
+.bom-apn { white-space: nowrap; font-weight: 600; }
+.bom-qty { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.bom-warning { margin: 12px 0; }
+.bom-summary-note { color: var(--zcs-secondary-text-color); font-size: 13px; }
+.bom-print-note { color: var(--zcs-secondary-text-color); font-size: 12px; }
+@media (max-width: 900px) {
+	.bom-flat-page { padding: 12px; }
+	.bom-root-grid { grid-template-columns: 1fr; }
+	.bom-toolbar { align-items: flex-start; }
+}
+@media print {
+	.bom-flat-page { background: #FFFFFF; padding: 0; color: #000000; }
+	.bom-flat-header, .bom-root-card, .zcs-card, .zcs-table-wrapper { border: 0; box-shadow: none; }
+	.bom-toolbar-actions, .bom-prompt-form { display: none; }
+	.zcs-table-wrapper { overflow: visible; }
+	.zcs-table-wrapper table { min-width: 0; width: 100%; font-size: 10px; }
+	.zcs-table-wrapper table thead { position: static; display: table-header-group; }
+	.zcs-table-wrapper table thead tr th, .zcs-table-wrapper table tbody tr td { padding: 5px 6px; border-color: #A0A0A0; }
+	.zcs-table-wrapper table tbody tr { page-break-inside: avoid; }
+	.zcs-badge { color: #000000 !important; background: #FFFFFF !important; border: 1px solid #777777 !important; }
+}
+</style>
+
+<div class='bom-flat-page'>
+	<div class='bom-flat-header zcs-card zcs-p-20'>
+		<div class='bom-flat-title'>
+			<i class='zc-li-outline files-2-archive-drawer'></i>
+			<div>
+				<h2 class='zcs-m-0 zcs-font-22 zcs-font-semibold zcs-lh-heading zcs-color-primary'>Flattened BOM</h2>
+				<p class='zcs-m-0 zcs-mt-8 zcs-font-14 zcs-color-secondary'>Flat aggregated procurement component list for one top-level assembly.</p>
+			</div>
+		</div>
+	</div>
+<%
+	if(has_request == false)
+	{
+		%>
+<div class='bom-empty zcs-card'>
+		<div class='zcs-nodata-wrapper zcs-wh-full zcs-flex zcs-align-items-center zcs-justify-center zcs-text-center'>
+			<div class='zcs-nodata-content zcs-p-20 zcs-box-border'>
+				<i class='zc-li-outline ui-1-edit-72'></i>
+				<h3 class='zcs-m-0 zcs-font-18 zcs-font-semibold zcs-color-primary'>Select a top-level assembly</h3>
+				<p class='zcs-m-0 zcs-mt-8 zcs-font-14 zcs-color-secondary'>Open this page from an Item Master record or enter an Item Master ID below. Use an assembly item for a procurement-ready rollup.</p>
+				<form class='bom-prompt-form' method='get' action='#Page:BOM_Flatten_Page'>
+					<div class='bom-prompt-field'>
+						<label for='bom_flat_item_id'>Item Master ID</label>
+						<input id='bom_flat_item_id' name='item_id' type='number' placeholder='Example: 123456789'>
+					</div>
+					<button class='zcs-button zcs-primary-outline-button zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body' type='submit'>
+						<span class='zcs-button-text'>Flatten BOM</span>
+					</button>
+				</form>
+				<p class='zcs-m-0 zcs-mt-12 zcs-font-13 zcs-color-tertiary'>URL format: #Page:BOM_Flatten_Page?item_id=123456789. You can find the ID by opening a row from All Items.</p>
+			</div>
+		</div>
+	</div>
+<%
+	}
+	else if(root_found == false)
+	{
+		%>
+<div class='bom-empty zcs-card'>
+		<i class='zc-li-outline ui-2-time'></i>
+		<h3 class='zcs-m-0 zcs-font-18 zcs-font-semibold zcs-color-primary'>Item not found</h3>
+		<p class='zcs-m-0 zcs-mt-8 zcs-font-14 zcs-color-secondary'><%=missing_root_message%></p>
+		<form class='bom-prompt-form' method='get' action='#Page:BOM_Flatten_Page'>
+			<div class='bom-prompt-field'>
+				<label for='bom_flat_retry'>Try another Item Master ID</label>
+				<input id='bom_flat_retry' name='item_id' type='number' placeholder='Enter item_id'>
+			</div>
+			<button class='zcs-button zcs-primary-outline-button zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body' type='submit'>
+				<span class='zcs-button-text'>Flatten BOM</span>
+			</button>
+		</form>
+	</div>
+<%
+	}
+	else
+	{
+		%>
+<div class='bom-root-card zcs-card zcs-p-20'>
+		<div class='bom-root-grid'>
+			<div>
+				<span class='bom-root-label'>Root APN</span>
+				<span class='bom-root-value'><%=root_apn%></span>
+			</div>
+			<div>
+				<span class='bom-root-label'>Description</span>
+				<span class='bom-root-value'><%=root_desc%></span>
+			</div>
+			<div>
+				<span class='bom-root-label'>Category</span>
+				<span class='bom-root-value'><%=root_category%></span>
+			</div>
+			<div>
+				<span class='bom-root-label'>Part Type</span>
+				<span class='bom-root-value'><%=root_part_type%></span>
+			</div>
+			<div>
+				<span class='bom-root-label'>Lifecycle</span>
+				<span class='bom-root-value'><%=root_lifecycle%></span>
+			</div>
+			<div>
+				<span class='bom-root-label'>Direct Lines</span>
+				<span class='bom-root-value'><%=direct_child_count%></span>
+			</div>
+		</div>
+	</div>
+<%
+		if(non_assembly_warning == true)
+		{
+			%>
+<div class='zcs-toast zcs-outline-toast zcs-warning-toast zcs-w-full zcs-flex zcs-gap-8 zcs-px-16 zcs-py-12 zcs-rounded-sm zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body bom-warning'>
+			<i class='zcs-toast-icon zcs-no-shrink zcs-lh-body zc-li-outline travel-info'></i>
+			<div class='zcs-toast-text'>
+				<p class='zcs-m-0'>Warning: this root item is not a normal active assembly. Part type is <strong><%=root_part_type%></strong> and lifecycle is <strong><%=root_lifecycle%></strong>. Verify before procurement use.</p>
+			</div>
+		</div>
+<%
+		}
+		if(direct_child_count == 0)
+		{
+			%>
+<div class='zcs-toast zcs-outline-toast zcs-warning-toast zcs-w-full zcs-flex zcs-gap-8 zcs-px-16 zcs-py-12 zcs-rounded-sm zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body bom-warning'>
+			<i class='zcs-toast-icon zcs-no-shrink zcs-lh-body zc-li-outline travel-info'></i>
+			<div class='zcs-toast-text'>
+				<p class='zcs-m-0'>Warning: no active BOM_Line children were found for this root item.</p>
+			</div>
+		</div>
+<%
+		}
+		if(cap_hit == true)
+		{
+			%>
+<div class='zcs-toast zcs-outline-toast zcs-warning-toast zcs-w-full zcs-flex zcs-gap-8 zcs-px-16 zcs-py-12 zcs-rounded-sm zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body bom-warning'>
+			<i class='zcs-toast-icon zcs-no-shrink zcs-lh-body zc-li-outline travel-info'></i>
+			<div class='zcs-toast-text'>
+				<p class='zcs-m-0'>Traversal stopped at the <%=depth_cap%>-level depth cap or skipped a repeated branch to prevent cycles. Review nested assemblies if the expected list is incomplete.</p>
+			</div>
+		</div>
+<%
+		}
+		%>
+<div class='bom-toolbar'>
+		<div>
+			<div class='zcs-font-16 zcs-font-semibold zcs-color-primary'>Aggregated Components</div>
+			<div class='bom-summary-note'>Rows: <%=aggregate_rows.size()%>. Source BOM lines traversed: <%=total_line_count%>. Multiplicative quantity uses parent accumulated quantity times BOM line quantity.</div>
+		</div>
+		<div class='bom-toolbar-actions'>
+			<a class='zcs-button zcs-primary-outline-button zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body' href='#Report:All_Items?ID=<%=root_id%>' target='_self'>
+				<span class='zcs-button-text'>Open Root Item</span>
+			</a>
+			<a class='zcs-button zcs-primary-outline-button zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body' href='#Page:BOM_Browser?item_id=<%=root_id%>' target='_self'>
+				<span class='zcs-button-text'>Open BOM Browser</span>
+			</a>
+		</div>
+	</div>
+
+	<div class='zcs-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative'>
+		<table class='zcs-w-full'>
+			<thead class='zcs-sticky'>
+				<tr>
+					<th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>APN</th>
+					<th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Description</th>
+					<th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Category</th>
+					<th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Total Quantity</th>
+					<th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Primary Manufacturer</th>
+					<th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Primary MPN</th>
+					<th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Lifecycle</th>
+					<th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Manufacturer Approval Status</th>
+				</tr>
+				<tr class='zcs-tspace'><th class='zcs-py-2 zcs-box-border' colspan='8'></th></tr>
+			</thead>
+			<tbody>
+<%
+		if(aggregate_rows.size() == 0)
+		{
+			%>
+<tr>
+					<td class='bom-empty zcs-px-16 zcs-py-8 zcs-box-border zcs-text-center zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-secondary' colspan='8'>No aggregated components to display.</td>
+				</tr>
+<%
+		}
+		else
+		{
+			for each  row_map in aggregate_rows
+			{
+				row_apn = ifnull(row_map.get("apn"),"-");
+				row_desc = ifnull(row_map.get("description"),"-");
+				row_category = ifnull(row_map.get("category"),"-");
+				row_qty = ifnull(row_map.get("total_quantity"),0);
+				row_mfg = ifnull(row_map.get("mfg_0"),"-");
+				row_mpn = ifnull(row_map.get("mpn_0"),"-");
+				row_lifecycle = ifnull(row_map.get("lifecycle"),"-");
+				row_approval = ifnull(row_map.get("approval_status"),"Pending_Review");
+				row_approval_display = row_approval.replaceAll("_"," ");
+				life_class = "zcs-badge-yellow";
+				if(row_lifecycle == "Production")
+				{
+					life_class = "zcs-badge-green";
+				}
+				else if(row_lifecycle == "Design")
+				{
+					life_class = "zcs-badge-blue";
+				}
+				else if(row_lifecycle == "Deprecated")
+				{
+					life_class = "zcs-badge-orange";
+				}
+				else if(row_lifecycle == "Obsolete" || row_lifecycle == "Abandoned")
+				{
+					life_class = "zcs-badge-red";
+				}
+				else if(row_lifecycle == "Unreleased")
+				{
+					life_class = "zcs-badge-yellow";
+				}
+				else
+				{
+					life_class = "zcs-badge-grey";
+				}
+				approval_class = "zcs-badge-orange";
+				if(row_approval == "Approved")
+				{
+					approval_class = "zcs-badge-green";
+				}
+				else if(row_approval == "Unapproved")
+				{
+					approval_class = "zcs-badge-red";
+				}
+				else if(row_approval == "Mixed")
+				{
+					approval_class = "zcs-badge-blue";
+				}
+				%>
+<tr>
+					<td class='bom-apn zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=row_apn%></td>
+					<td class='bom-desc zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=row_desc%></td>
+					<td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=row_category%></td>
+					<td class='bom-qty zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=row_qty%></td>
+					<td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=row_mfg%></td>
+					<td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=row_mpn%></td>
+					<td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left'><span class='zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border <%=life_class%>'><span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'><%=row_lifecycle%></span></span></td>
+					<td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left'><span class='zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border <%=approval_class%>'><span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'><%=row_approval_display%></span></span></td>
+				</tr>
+<%
+			}
+		}
+		%>
+</tbody>
+		</table>
+	</div>
+	<p class='bom-print-note zcs-m-0 zcs-mt-12'>Print or export this page for a procurement-friendly flat table. Buttons and prompt controls are hidden in print media.</p>
+<%
+	}
+	%>
+</div>

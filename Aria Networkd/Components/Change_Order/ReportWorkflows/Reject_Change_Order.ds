@@ -1,0 +1,40 @@
+Reject_Change_Order as "Reject Change Order"
+{
+
+				type =  functions
+				form = Change_Order
+				execution type = for each record	
+				on start
+				{
+					actions 
+					{
+					on click
+					(
+						emp_id = thisapp.Get_Employee_For_Login(zoho.loginuser);
+										rejected_any = false;
+										for each  app_row in input.approvers
+										{
+											if(emp_id != 0 && app_row.approver == emp_id && app_row.decision == "Pending")
+											{
+												app_row.decision="Rejected";
+												app_row.decided_on=zoho.currenttime;
+												rejected_any = true;
+											}
+										}
+										if(rejected_any == true)
+										{
+											old_status = input.status;
+											input.status = "Rejected";
+											merge_map = Map();
+											merge_map.put("order_id",input.order_id);
+											merge_map.put("title",input.title);
+											creator_recipients = List();
+											creator_recipients.add(input.created_by_employee);
+											thisapp.Send_Template_Email("CHANGE_ORDER_REJECTED",creator_recipients,merge_map);
+											thisapp.Write_Activity_Log("Change_Order",input.order_id,"status",old_status,"Rejected",input.created_by_employee);
+										}
+					)
+					}
+				}
+			
+}

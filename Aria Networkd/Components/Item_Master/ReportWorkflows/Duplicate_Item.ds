@@ -1,0 +1,44 @@
+Duplicate_Item as "Duplicate Item"
+{
+
+				type =  functions
+				form = Item_Master
+				execution type = for each record	
+				on start
+				{
+					actions 
+					{
+					on click
+					(
+						emp_id = thisapp.Get_Employee_For_Login(zoho.loginuser);
+										emp_rec = Employee_Master[ID == emp_id];
+										if(emp_rec.count() > 0 && emp_rec.profile_label in {"PRODUCT_CHANGE_ANALYST","ENGINEER","ADMIN"})
+										{
+											insert into Item_Master
+											[
+												category=input.category
+												description=input.description
+												part_name=input.part_name
+												decal_name=input.decal_name
+												part_type=input.part_type
+												value=input.value
+												voltage=input.voltage
+												temperature=input.temperature
+												part_status="In_Work"
+												lifecycle_phase="Unreleased"
+												revision="-"
+												is_variant=input.is_variant
+												variant_of=input.variant_of
+												variant_code=input.variant_code
+												mfg_0=input.mfg_0
+												owner_employee=emp_id
+												created_date=zoho.currenttime
+												is_deleted=false
+												Added_User=zoho.loginuser
+											]
+										}
+					)
+					}
+				}
+			
+}

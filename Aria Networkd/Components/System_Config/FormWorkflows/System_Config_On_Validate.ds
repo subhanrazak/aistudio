@@ -1,0 +1,26 @@
+System_Config_On_Validate as "System Config - On Validate"
+{
+
+				type =  form
+				form = System_Config
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											active_configs = System_Config[is_active == true && ID != input.ID];
+										if(input.is_active == true && active_configs.count() > 0)
+										{
+											alert "Only one active System Config record is allowed.";
+											cancel submit;
+										}
+						)
+					}
+				}
+
+			
+}

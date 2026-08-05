@@ -1,0 +1,59 @@
+list All_Open_Requests
+{
+
+			displayName = "All Open Requests"
+			show all rows from Change_Request  [status == "Submitted" || status == "Acknowledged"]  
+			(
+				request_id
+				request_type
+				title
+				status
+				requested_by_employee
+				created_date
+				custom action "Acknowledge"
+				(
+	  			workflow = Acknowledge_Request
+				column header = "Acknowledge"
+				success message = "Request acknowledged."
+				condition = (status == "Submitted")
+				)
+				custom action "Reject"
+				(
+	  			workflow = Reject_Request
+				column header = "Reject"
+				success message = "Request rejected."
+				)
+				custom action "Convert to Order"
+				(
+	  			workflow = Convert_to_Order
+				column header = "Convert to Order"
+				success message = "Opening Change Order draft."
+				condition = (status == "Acknowledged")
+				)
+			)
+			filters
+			(
+				request_type
+				status
+			)
+			sort by
+			(
+				created_date ascending
+			)
+			conditional formatting
+			(
+				"Submitted"
+				{
+				condition = (status == "Submitted")
+				fields = [request_id, status]
+				format = "background-color:#E9F2FF;color:#004C97;font-weight:bold"
+				}
+				"Acknowledged"
+				{
+				condition = (status == "Acknowledged")
+				fields = [request_id, status]
+				format = "background-color:#FFF4D6;color:#8A5A00;font-weight:bold"
+				}
+			)
+		
+}

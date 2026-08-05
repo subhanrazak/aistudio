@@ -1,0 +1,80 @@
+Approval_Remarks_On_Success as "Approval Remarks - On Success"
+{
+
+				type =  form
+				form = Approval_Remarks
+
+				record event = on add
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											co_rec = Change_Order[ID == input.linked_change_order];
+										if(co_rec.count() > 0)
+										{
+											old_status = co_rec.status;
+											if(input.action == "Comment")
+											{
+												thisapp.Write_Activity_Log("Change_Order",co_rec.order_id,"approval_comment","",input.remarks,input.action_by_employee);
+											}
+											else
+											{
+												for each  app_row in co_rec.approvers
+												{
+													if(app_row.approver == input.action_by_employee)
+													{
+														app_row.decision=input.action;
+														app_row.decided_on=input.action_date;
+													}
+												}
+												rejected_count = 0;
+												pending_count = 0;
+												for each  status_row in co_rec.approvers
+												{
+													if(status_row.decision == "Rejected")
+													{
+														rejected_count = rejected_count + 1;
+													}
+													if(status_row.decision == "Pending")
+													{
+														pending_count = pending_count + 1;
+													}
+												}
+												if(rejected_count > 0)
+												{
+													co_rec.status="Rejected";
+												}
+												else if(pending_count == 0)
+												{
+													co_rec.status="Approved";
+												}
+												else if(co_rec.status == "Rejected")
+												{
+													co_rec.status="Approval_In_Progress";
+												}
+												merge_map = Map();
+												merge_map.put("order_id",co_rec.order_id);
+												merge_map.put("title",co_rec.title);
+												merge_map.put("decision",input.action);
+												creator_recipients = List();
+												creator_recipients.add(co_rec.created_by_employee);
+												if(input.action == "Rejected")
+												{
+													thisapp.Send_Template_Email("CHANGE_ORDER_REJECTED",creator_recipients,merge_map);
+												}
+												else if(co_rec.status == "Approved")
+												{
+													thisapp.Send_Template_Email("CHANGE_ORDER_APPROVED",creator_recipients,merge_map);
+												}
+												thisapp.Write_Activity_Log("Change_Order",co_rec.order_id,"approval_decision",old_status,co_rec.status,input.action_by_employee);
+											}
+										}
+						)
+					}
+				}
+
+			
+}

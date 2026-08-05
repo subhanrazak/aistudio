@@ -1,0 +1,48 @@
+BOM_Line_Child_Item_On_User_Input as "BOM Line - Child Item On User Input"
+{
+
+				type =  form
+				form = BOM_Line
+
+				record event = on add or edit
+
+				on user input of child_item
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.child_item != null)
+										{
+											child_rec = Item_Master[ID == input.child_item];
+											if(child_rec.count() > 0)
+											{
+												if(child_rec.lifecycle_phase == "Obsolete")
+												{
+													alert "Cannot add an Obsolete item to a BOM.";
+													input.child_item = null;
+												}
+												else if(child_rec.mfg_0 != null)
+												{
+													mfg_rec = Manufacturer_Master[ID == child_rec.mfg_0];
+													if(mfg_rec.count() > 0 && mfg_rec.is_approved == true)
+													{
+														input.manufacturer_approval_status = "Approved";
+													}
+													else if(mfg_rec.count() > 0)
+													{
+														input.manufacturer_approval_status = "Unapproved";
+													}
+													else
+													{
+														input.manufacturer_approval_status = "Pending_Review";
+													}
+												}
+											}
+										}
+						)
+					}
+				}
+
+			
+}

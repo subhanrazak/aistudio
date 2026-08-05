@@ -1,0 +1,31 @@
+Obsolete_Item as "Obsolete Item"
+{
+
+				type =  functions
+				form = Item_Master
+				execution type = for each record	
+				on start
+				{
+					actions 
+					{
+					on click
+					(
+						emp_id = thisapp.Get_Employee_For_Login(zoho.loginuser);
+										emp_rec = Employee_Master[ID == emp_id];
+										if(emp_rec.count() > 0 && emp_rec.profile_label in {"PRODUCT_CHANGE_ANALYST","ADMIN"})
+										{
+											active_where_used = BOM_Line[child_item == input.ID && is_struck == false && parent_item.is_deleted == false];
+											if(active_where_used.count() == 0)
+											{
+												old_phase = input.lifecycle_phase;
+												input.lifecycle_phase = "Obsolete";
+												input.part_status = "Obsolete";
+												thisapp.Notify_Item_Subscribers(input.ID,"SUBSCRIPTION_ALERT",Map(),true);
+												thisapp.Write_Activity_Log("Item_Master",input.apn,"lifecycle_phase",old_phase,"Obsolete",input.owner_employee);
+											}
+										}
+					)
+					}
+				}
+			
+}

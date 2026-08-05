@@ -1,0 +1,771 @@
+map Seed_Development_Data(string confirmation)
+{
+
+                 	result = Map();
+                 	result.put("status","blocked");
+                 	result.put("records_created",0);
+                 	if(confirmation != "SEED_DEVELOPMENT_ONLY")
+                 	{
+                 		result.put("message","No data added. Run only in the development environment with confirmation SEED_DEVELOPMENT_ONLY.");
+                 		return result;
+                 	}
+                 	if(ifnull(zoho.loginuserid,"") == "")
+                 	{
+                 		result.put("message","A signed-in Creator developer is required to seed Employee Master.");
+                 		return result;
+                 	}
+                 	created_count = 0;
+                 	completed_seed = Activity_Log[log_id == "DEV-SEED-V1" && new_value == "COMPLETE"];
+                 	if(completed_seed.count() > 0)
+                 	{
+                 		result.put("status","already_seeded");
+                 		result.put("message","Development sample data V1 already exists.");
+                 		return result;
+                 	}
+                 	developer_employee = Employee_Master[email == zoho.loginuserid];
+                 	if(developer_employee.count() == 0)
+                 	{
+                 		employee_id = insert into Employee_Master
+                 		[
+                 			employee_name="Development Administrator"
+                 			creator_user=zoho.loginuser
+                 			email=zoho.loginuserid
+                 			profile_label="ADMIN"
+                 			department="Product Lifecycle Management"
+                 			is_active=true
+                 			notification_opt_in=false
+                 			Added_User=zoho.loginuser
+                 		];
+                 		created_count = created_count + 1;
+                 	}
+                 	else
+                 	{
+                 		employee_id = developer_employee.ID;
+                 	}
+                 	if(Category_Master[category_name == "DEV Resistor"].count() == 0)
+                 	{
+                 		insert into Category_Master
+                 		[
+                 			category_name="DEV Resistor"
+                 			prefix="DVR"
+                 			item_group="Electrical_Component"
+                 			item_type="Library_Component"
+                 			id_digit_length=5
+                 			version_digit_length=2
+                 			last_issued_number=8
+                 			is_active=true
+                 			Added_User=zoho.loginuser
+                 		]
+                 		created_count = created_count + 1;
+                 	}
+                 	if(Category_Master[category_name == "DEV Mechanical"].count() == 0)
+                 	{
+                 		insert into Category_Master
+                 		[
+                 			category_name="DEV Mechanical"
+                 			prefix="DVM"
+                 			item_group="Mechanical_Component"
+                 			item_type="Library_Component"
+                 			id_digit_length=5
+                 			version_digit_length=2
+                 			last_issued_number=4
+                 			is_active=true
+                 			Added_User=zoho.loginuser
+                 		]
+                 		created_count = created_count + 1;
+                 	}
+                 	if(Category_Master[category_name == "DEV Assembly"].count() == 0)
+                 	{
+                 		insert into Category_Master
+                 		[
+                 			category_name="DEV Assembly"
+                 			prefix="DVA"
+                 			item_group="Assembly"
+                 			item_type="Assembly_Component"
+                 			id_digit_length=5
+                 			version_digit_length=2
+                 			last_issued_number=3
+                 			is_active=true
+                 			Added_User=zoho.loginuser
+                 		]
+                 		created_count = created_count + 1;
+                 	}
+                 	resistor_category = Category_Master[category_name == "DEV Resistor"];
+                 	mechanical_category = Category_Master[category_name == "DEV Mechanical"];
+                 	assembly_category = Category_Master[category_name == "DEV Assembly"];
+                 	if(Manufacturer_Master[manufacturer_name == "DEV Vishay Components"].count() == 0)
+                 	{
+                 		insert into Manufacturer_Master
+                 		[
+                 			manufacturer_name="DEV Vishay Components"
+                 			manufacturer_code="DVV"
+                 			country="United States"
+                 			is_approved=true
+                 			is_active=true
+                 			contact_name="Development Contact"
+                 			contact_email="dev.vishay@example.com"
+                 			Added_User=zoho.loginuser
+                 		]
+                 		created_count = created_count + 1;
+                 	}
+                 	if(Manufacturer_Master[manufacturer_name == "DEV TE Connectivity"].count() == 0)
+                 	{
+                 		insert into Manufacturer_Master
+                 		[
+                 			manufacturer_name="DEV TE Connectivity"
+                 			manufacturer_code="DVT"
+                 			country="Switzerland"
+                 			is_approved=true
+                 			is_active=true
+                 			contact_name="Development Contact"
+                 			contact_email="dev.te@example.com"
+                 			Added_User=zoho.loginuser
+                 		]
+                 		created_count = created_count + 1;
+                 	}
+                 	if(Manufacturer_Master[manufacturer_name == "DEV Local Fabrication"].count() == 0)
+                 	{
+                 		insert into Manufacturer_Master
+                 		[
+                 			manufacturer_name="DEV Local Fabrication"
+                 			manufacturer_code="DVL"
+                 			country="India"
+                 			is_approved=false
+                 			is_active=true
+                 			contact_name="Development Contact"
+                 			contact_email="dev.fabrication@example.com"
+                 			Added_User=zoho.loginuser
+                 		]
+                 		created_count = created_count + 1;
+                 	}
+                 	vishay = Manufacturer_Master[manufacturer_name == "DEV Vishay Components"];
+                 	te_connectivity = Manufacturer_Master[manufacturer_name == "DEV TE Connectivity"];
+                 	local_fabrication = Manufacturer_Master[manufacturer_name == "DEV Local Fabrication"];
+                 	if(Notification_Template[template_key == "DEV_CHANGE_SUBMITTED"].count() == 0)
+                 	{
+                 		insert into Notification_Template
+                 		[
+                 			template_key="DEV_CHANGE_SUBMITTED"
+                 			subject="Development change order submitted"
+                 			body="A development-only change order has been submitted for review."
+                 			is_active=true
+                 			Added_User=zoho.loginuser
+                 		]
+                 		created_count = created_count + 1;
+                 	}
+                 	if(Notification_Template[template_key == "DEV_ECN_RELEASED"].count() == 0)
+                 	{
+                 		insert into Notification_Template
+                 		[
+                 			template_key="DEV_ECN_RELEASED"
+                 			subject="Development ECN released"
+                 			body="A development-only engineering change notice is ready for acknowledgment."
+                 			is_active=true
+                 			Added_User=zoho.loginuser
+                 		]
+                 		created_count = created_count + 1;
+                 	}
+                 	if(System_Config[config_name == "DEV_PLM_CONFIG"].count() == 0)
+                 	{
+                 		insert into System_Config
+                 		[
+                 			config_name="DEV_PLM_CONFIG"
+                 			finance_approval_threshold_inr=100000.00
+                 			reference_designator_check_enabled=true
+                 			internal_ecn_only=true
+                 			is_active=false
+                 			notes="Development-only sample configuration. The active production configuration is not changed."
+                 			Added_User=zoho.loginuser
+                 		]
+                 		created_count = created_count + 1;
+                 	}
+                 	if(Approval_Matrix_Template[change_category == "ECO" && approver == employee_id && sequence_no == 91].count() == 0)
+                 	{
+                 		insert into Approval_Matrix_Template
+                 		[
+                 			change_category="ECO"
+                 			approver=employee_id
+                 			sequence_no=91
+                 			is_default_finance_approver=false
+                 			is_active=true
+                 			Added_User=zoho.loginuser
+                 		]
+                 		created_count = created_count + 1;
+                 	}
+                 	if(Approval_Matrix_Template[change_category == "Deviation" && approver == employee_id && sequence_no == 92].count() == 0)
+                 	{
+                 		insert into Approval_Matrix_Template
+                 		[
+                 			change_category="Deviation"
+                 			approver=employee_id
+                 			sequence_no=92
+                 			is_default_finance_approver=false
+                 			is_active=true
+                 			Added_User=zoho.loginuser
+                 		]
+                 		created_count = created_count + 1;
+                 	}
+                 	if(New_Item_Request[nir_id == "DEV-NIR-001"].count() == 0)
+                 	{
+                 		insert into New_Item_Request
+                 		[
+                 			nir_id="DEV-NIR-001"
+                 			category=resistor_category.ID
+                 			item_type_derived="Library_Component"
+                 			description="Development 10 kOhm precision resistor"
+                 			manufacturer="DEV Vishay Components"
+                 			part_number="DEV-CRCW0603-10K"
+                 			package="0603"
+                 			datasheet_links="https://example.com/dev-resistor"
+                 			raised_by_employee=employee_id
+                 			status="Approved"
+                 			request_datetime=zoho.currenttime.addDay(-30)
+                 			apn="DEV-R-00001"
+                 			mpn="DEV-CRCW0603-10K"
+                 			package_detail="0603, 1%, 0.1 W"
+                 			single_source="No"
+                 			supply_risk="Low"
+                 			rohs="Compliant"
+                 			comments="Development-only approved request"
+                 			Added_User=zoho.loginuser
+                 		]
+                 		created_count = created_count + 1;
+                 	}
+                 	if(New_Item_Request[nir_id == "DEV-NIR-002"].count() == 0)
+                 	{
+                 		insert into New_Item_Request
+                 		[
+                 			nir_id="DEV-NIR-002"
+                 			category=mechanical_category.ID
+                 			item_type_derived="Library_Component"
+                 			description="Development rack mounting bracket"
+                 			manufacturer="DEV Local Fabrication"
+                 			part_number="DEV-BRKT-42"
+                 			package="Sheet metal"
+                 			raised_by_employee=employee_id
+                 			status="PCA_Review"
+                 			request_datetime=zoho.currenttime.addDay(-8)
+                 			mpn="DEV-BRKT-42"
+                 			single_source="Yes"
+                 			supply_risk="Medium"
+                 			rohs="Compliant"
+                 			alternate_1_manufacturer=local_fabrication.ID
+                 			alternate_1_mpn="DEV-BRKT-42A"
+                 			comments="Development-only request under review"
+                 			Added_User=zoho.loginuser
+                 		]
+                 		created_count = created_count + 1;
+                 	}
+                 	nir_one = New_Item_Request[nir_id == "DEV-NIR-001"];
+                 	if(Item_Master[apn == "DEV-R-00001"].count() == 0)
+                 	{
+                 		insert into Item_Master
+                 		[
+                 			apn="DEV-R-00001"
+                 			category=resistor_category.ID
+                 			description="10 kOhm precision resistor"
+                 			part_name="Precision Resistor"
+                 			part_type="Component"
+                 			value="10 kOhm"
+                 			voltage="75 V"
+                 			temperature="-55 C to 155 C"
+                 			part_status="Released"
+                 			lifecycle_phase="Production"
+                 			revision="A"
+                 			mfg_0=vishay.ID
+                 			mpn_0="DEV-CRCW0603-10K"
+                 			owner_employee=employee_id
+                 			created_date=zoho.currenttime.addDay(-120)
+                 			nir_source=nir_one.ID
+                 			is_deleted=false
+                 			Added_User=zoho.loginuser
+                 		]
+                 		created_count = created_count + 1;
+                 	}
+                 	if(Item_Master[apn == "DEV-R-00002"].count() == 0)
+                 	{
+                 		insert into Item_Master
+                 		[
+                 			apn="DEV-R-00002"
+                 			category=resistor_category.ID
+                 			description="4.7 kOhm general-purpose resistor"
+                 			part_name="General Resistor"
+                 			part_type="Component"
+                 			value="4.7 kOhm"
+                 			part_status="Released"
+                 			lifecycle_phase="Production"
+                 			revision="A"
+                 			mfg_0=vishay.ID
+                 			mpn_0="DEV-RC0603-4K7"
+                 			owner_employee=employee_id
+                 			created_date=zoho.currenttime.addDay(-100)
+                 			is_deleted=false
+                 			Added_User=zoho.loginuser
+                 		]
+                 		created_count = created_count + 1;
+                 	}
+                 	if(Item_Master[apn == "DEV-CON-00001"].count() == 0)
+                 	{
+                 		insert into Item_Master
+                 		[
+                 			apn="DEV-CON-00001"
+                 			category=resistor_category.ID
+                 			description="Eight-position board connector"
+                 			part_name="Board Connector"
+                 			part_type="Component"
+                 			part_status="Released"
+                 			lifecycle_phase="Design"
+                 			revision="B"
+                 			mfg_0=te_connectivity.ID
+                 			mpn_0="DEV-1-234567-8"
+                 			owner_employee=employee_id
+                 			created_date=zoho.currenttime.addDay(-80)
+                 			is_deleted=false
+                 			Added_User=zoho.loginuser
+                 		]
+                 		created_count = created_count + 1;
+                 	}
+                 	if(Item_Master[apn == "DEV-BRKT-00001"].count() == 0)
+                 	{
+                 		insert into Item_Master
+                 		[
+                 			apn="DEV-BRKT-00001"
+                 			category=mechanical_category.ID
+                 			description="Rack mounting bracket"
+                 			part_name="Mounting Bracket"
+                 			part_type="Component"
+                 			part_status="In_Work"
+                 			lifecycle_phase="Design"
+                 			revision="-"
+                 			mfg_0=local_fabrication.ID
+                 			mpn_0="DEV-BRKT-42"
+                 			owner_employee=employee_id
+                 			created_date=zoho.currenttime.addDay(-20)
+                 			is_deleted=false
+                 			Added_User=zoho.loginuser
+                 		]
+                 		created_count = created_count + 1;
+                 	}
+                 	if(Item_Master[apn == "DEV-PCBA-00001"].count() == 0)
+                 	{
+                 		insert into Item_Master
+                 		[
+                 			apn="DEV-PCBA-00001"
+                 			category=assembly_category.ID
+                 			description="Development controller PCBA"
+                 			part_name="Controller PCBA"
+                 			part_type="Assembly"
+                 			part_status="Released"
+                 			lifecycle_phase="Production"
+                 			revision="C"
+                 			owner_employee=employee_id
+                 			created_date=zoho.currenttime.addDay(-70)
+                 			is_deleted=false
+                 			Added_User=zoho.loginuser
+                 		]
+                 		created_count = created_count + 1;
+                 	}
+                 	if(Item_Master[apn == "DEV-ASSY-00001"].count() == 0)
+                 	{
+                 		insert into Item_Master
+                 		[
+                 			apn="DEV-ASSY-00001"
+                 			category=assembly_category.ID
+                 			description="Development network appliance assembly"
+                 			part_name="Network Appliance"
+                 			part_type="Assembly"
+                 			part_status="In_Work"
+                 			lifecycle_phase="Design"
+                 			revision="B"
+                 			owner_employee=employee_id
+                 			created_date=zoho.currenttime.addDay(-35)
+                 			is_deleted=false
+                 			Added_User=zoho.loginuser
+                 		]
+                 		created_count = created_count + 1;
+                 	}
+                 	if(Item_Master[apn == "DEV-DOC-00001"].count() == 0)
+                 	{
+                 		insert into Item_Master
+                 		[
+                 			apn="DEV-DOC-00001"
+                 			category=assembly_category.ID
+                 			description="Development assembly instruction"
+                 			part_name="Assembly Instruction"
+                 			part_type="Document"
+                 			part_status="Released"
+                 			lifecycle_phase="Production"
+                 			revision="A"
+                 			owner_employee=employee_id
+                 			created_date=zoho.currenttime.addDay(-60)
+                 			is_deleted=false
+                 			Added_User=zoho.loginuser
+                 		]
+                 		created_count = created_count + 1;
+                 	}
+                 	if(Item_Master[apn == "DEV-OLD-00001"].count() == 0)
+                 	{
+                 		insert into Item_Master
+                 		[
+                 			apn="DEV-OLD-00001"
+                 			category=mechanical_category.ID
+                 			description="Development obsolete enclosure"
+                 			part_name="Legacy Enclosure"
+                 			part_type="Component"
+                 			part_status="Obsolete"
+                 			lifecycle_phase="Obsolete"
+                 			revision="D"
+                 			owner_employee=employee_id
+                 			created_date=zoho.currenttime.addDay(-300)
+                 			is_deleted=true
+                 			deleted_on=zoho.currenttime.addDay(-15)
+                 			deleted_by_employee=employee_id
+                 			deleted_reason="Development soft-delete example"
+                 			Added_User=zoho.loginuser
+                 		]
+                 		created_count = created_count + 1;
+                 	}
+                 	resistor_one = Item_Master[apn == "DEV-R-00001"];
+                 	resistor_two = Item_Master[apn == "DEV-R-00002"];
+                 	connector_one = Item_Master[apn == "DEV-CON-00001"];
+                 	bracket_one = Item_Master[apn == "DEV-BRKT-00001"];
+                 	pcba_one = Item_Master[apn == "DEV-PCBA-00001"];
+                 	assembly_one = Item_Master[apn == "DEV-ASSY-00001"];
+                 	if(BOM_Line[parent_item == pcba_one.ID && child_item == resistor_one.ID && line_number == 10].count() == 0)
+                 	{
+                 		insert into BOM_Line
+                 		[
+                 			parent_item=pcba_one.ID
+                 			line_number=10
+                 			child_item=resistor_one.ID
+                 			quantity=12.0
+                 			reference_designator="R1-R12"
+                 			manufacturer_approval_status="Approved"
+                 			bom_notes="Development BOM line"
+                 			is_struck=false
+                 			Added_User=zoho.loginuser
+                 		]
+                 		created_count = created_count + 1;
+                 	}
+                 	if(BOM_Line[parent_item == pcba_one.ID && child_item == connector_one.ID && line_number == 20].count() == 0)
+                 	{
+                 		insert into BOM_Line
+                 		[
+                 			parent_item=pcba_one.ID
+                 			line_number=20
+                 			child_item=connector_one.ID
+                 			quantity=2.0
+                 			reference_designator="J1-J2"
+                 			manufacturer_approval_status="Approved"
+                 			bom_notes="Development BOM line"
+                 			is_struck=false
+                 			Added_User=zoho.loginuser
+                 		]
+                 		created_count = created_count + 1;
+                 	}
+                 	if(BOM_Line[parent_item == assembly_one.ID && child_item == pcba_one.ID && line_number == 10].count() == 0)
+                 	{
+                 		insert into BOM_Line
+                 		[
+                 			parent_item=assembly_one.ID
+                 			line_number=10
+                 			child_item=pcba_one.ID
+                 			quantity=1.0
+                 			manufacturer_approval_status="Approved"
+                 			bom_notes="Development top-level BOM line"
+                 			is_struck=false
+                 			Added_User=zoho.loginuser
+                 		]
+                 		created_count = created_count + 1;
+                 	}
+                 	if(BOM_Line[parent_item == assembly_one.ID && child_item == bracket_one.ID && line_number == 20].count() == 0)
+                 	{
+                 		insert into BOM_Line
+                 		[
+                 			parent_item=assembly_one.ID
+                 			line_number=20
+                 			child_item=bracket_one.ID
+                 			quantity=2.0
+                 			manufacturer_approval_status="Pending_Review"
+                 			bom_notes="Development pending approval line"
+                 			is_struck=false
+                 			Added_User=zoho.loginuser
+                 		]
+                 		created_count = created_count + 1;
+                 	}
+                 	if(Change_Request_Affected_Item[item == pcba_one.ID && notes == "DEV-ECR-001 affected item"].count() == 0)
+                 	{
+                 		insert into Change_Request_Affected_Item
+                 		[
+                 			item=pcba_one.ID
+                 			notes="DEV-ECR-001 affected item"
+                 			Added_User=zoho.loginuser
+                 		]
+                 		created_count = created_count + 1;
+                 	}
+                 	if(Change_Request_Affected_Item[item == bracket_one.ID && notes == "DEV-MCR-001 affected item"].count() == 0)
+                 	{
+                 		insert into Change_Request_Affected_Item
+                 		[
+                 			item=bracket_one.ID
+                 			notes="DEV-MCR-001 affected item"
+                 			Added_User=zoho.loginuser
+                 		]
+                 		created_count = created_count + 1;
+                 	}
+                 	if(Change_Request[request_id == "DEV-ECR-001"].count() == 0)
+                 	{
+                 		insert into Change_Request
+                 		[
+                 			request_id="DEV-ECR-001"
+                 			request_type="Engineering_ECR"
+                 			title="Improve controller input protection"
+                 			problem_description="Development scenario: surge margin is below the desired target."
+                 			proposed_fix="Add a protection component and revise the PCBA."
+                 			estimated_cost_impact=85000.00
+                 			requested_by_employee=employee_id
+                 			status="Converted_to_Order"
+                 			analyst_remarks="Development request converted to an ECO."
+                 			created_date=zoho.currenttime.addDay(-18)
+                 			Added_User=zoho.loginuser
+                 		]
+                 		created_count = created_count + 1;
+                 	}
+                 	if(Change_Request[request_id == "DEV-MCR-001"].count() == 0)
+                 	{
+                 		insert into Change_Request
+                 		[
+                 			request_id="DEV-MCR-001"
+                 			request_type="Manufacturing_MCR"
+                 			title="Increase bracket hole tolerance"
+                 			problem_description="Development scenario: assembly fit is inconsistent."
+                 			proposed_fix="Increase the mounting-hole tolerance by 0.1 mm."
+                 			estimated_cost_impact=25000.00
+                 			requested_by_employee=employee_id
+                 			status="Acknowledged"
+                 			analyst_remarks="Development manufacturing review in progress."
+                 			created_date=zoho.currenttime.addDay(-10)
+                 			Added_User=zoho.loginuser
+                 		]
+                 		created_count = created_count + 1;
+                 	}
+                 	ecr_one = Change_Request[request_id == "DEV-ECR-001"];
+                 	if(Change_Order_Affected_Item[child_item == pcba_one.ID && current_revision == "C" && target_lifecycle_phase == "Production"].count() == 0)
+                 	{
+                 		insert into Change_Order_Affected_Item
+                 		[
+                 			child_item=pcba_one.ID
+                 			current_revision="C"
+                 			planned_revision_bump=true
+                 			target_lifecycle_phase="Production"
+                 			software_load_instruction="No software load change."
+                 			Added_User=zoho.loginuser
+                 		]
+                 		created_count = created_count + 1;
+                 	}
+                 	if(Change_Order_Affected_Item[child_item == resistor_two.ID && current_revision == "A" && target_lifecycle_phase == "Design"].count() == 0)
+                 	{
+                 		insert into Change_Order_Affected_Item
+                 		[
+                 			child_item=resistor_two.ID
+                 			current_revision="A"
+                 			planned_revision_bump=false
+                 			target_lifecycle_phase="Design"
+                 			software_load_instruction="Not applicable."
+                 			Added_User=zoho.loginuser
+                 		]
+                 		created_count = created_count + 1;
+                 	}
+                 	if(Change_Order_Disposition[affected_item == pcba_one.ID && disposition_notes == "DEV-ECO-001 disposition"].count() == 0)
+                 	{
+                 		insert into Change_Order_Disposition
+                 		[
+                 			affected_item=pcba_one.ID
+                 			new_buys="Pivot_to_New_Revision"
+                 			wip="Rework_Mid_Line"
+                 			production_stock="Use_Up"
+                 			fgi="Hold"
+                 			logistics="Hold_in_Transit"
+                 			spares_depot="Use_as_Spare"
+                 			disposition_notes="DEV-ECO-001 disposition"
+                 			Added_User=zoho.loginuser
+                 		]
+                 		created_count = created_count + 1;
+                 	}
+                 	if(Approval_Matrix_Line[approver == employee_id && sequence_no == 901].count() == 0)
+                 	{
+                 		insert into Approval_Matrix_Line
+                 		[
+                 			approver=employee_id
+                 			sequence_no=901
+                 			decision="Approved"
+                 			decided_on=zoho.currenttime.addDay(-3)
+                 			added_by_cost_rule=false
+                 			Added_User=zoho.loginuser
+                 		]
+                 		created_count = created_count + 1;
+                 	}
+                 	if(Approval_Matrix_Line[approver == employee_id && sequence_no == 902].count() == 0)
+                 	{
+                 		insert into Approval_Matrix_Line
+                 		[
+                 			approver=employee_id
+                 			sequence_no=902
+                 			decision="Pending"
+                 			added_by_cost_rule=true
+                 			Added_User=zoho.loginuser
+                 		]
+                 		created_count = created_count + 1;
+                 	}
+                 	if(Change_Order[order_id == "DEV-ECO-001"].count() == 0)
+                 	{
+                 		insert into Change_Order
+                 		[
+                 			order_id="DEV-ECO-001"
+                 			source_request=ecr_one.ID
+                 			change_category="Engineering_ECO"
+                 			title="Controller input protection update"
+                 			description="Development ECO covering a PCBA revision and stock disposition."
+                 			estimated_cost_impact=85000.00
+                 			effectivity_type="Permanent_Immediate"
+                 			effective_date=zoho.currentdate.addDay(-2)
+                 			units_consumed=0
+                 			status="Approved"
+                 			created_by_employee=employee_id
+                 			created_date=zoho.currenttime.addDay(-14)
+                 			release_error_flag=false
+                 			Added_User=zoho.loginuser
+                 		]
+                 		created_count = created_count + 1;
+                 	}
+                 	if(Change_Order[order_id == "DEV-DEV-001"].count() == 0)
+                 	{
+                 		insert into Change_Order
+                 		[
+                 			order_id="DEV-DEV-001"
+                 			change_category="Deviation"
+                 			title="Temporary alternate resistor authorization"
+                 			description="Development deviation allowing a controlled alternate resistor."
+                 			estimated_cost_impact=12000.00
+                 			effectivity_type="Temporary_Deviation"
+                 			effective_date=zoho.currentdate.addDay(-5)
+                 			expiration_date=zoho.currentdate.addDay(45)
+                 			max_unit_count=500
+                 			alternative_component=resistor_two.ID
+                 			units_consumed=120
+                 			status="Effective"
+                 			created_by_employee=employee_id
+                 			created_date=zoho.currenttime.addDay(-7)
+                 			unit_cap_warning_shown=false
+                 			release_error_flag=false
+                 			Added_User=zoho.loginuser
+                 		]
+                 		created_count = created_count + 1;
+                 	}
+                 	eco_one = Change_Order[order_id == "DEV-ECO-001"];
+                 	deviation_one = Change_Order[order_id == "DEV-DEV-001"];
+                 	if(Approval_Remarks[remarks_id == "DEV-REM-001"].count() == 0)
+                 	{
+                 		insert into Approval_Remarks
+                 		[
+                 			remarks_id="DEV-REM-001"
+                 			linked_change_order=eco_one.ID
+                 			action="Approved"
+                 			action_by_employee=employee_id
+                 			action_date=zoho.currenttime.addDay(-3)
+                 			remarks="Development approval record."
+                 			Added_User=zoho.loginuser
+                 		]
+                 		created_count = created_count + 1;
+                 	}
+                 	if(Item_Subscription[subscriber_employee == employee_id && item == pcba_one.ID && scope == "This_Item_and_Full_Indented_BOM"].count() == 0)
+                 	{
+                 		insert into Item_Subscription
+                 		[
+                 			subscriber_employee=employee_id
+                 			item=pcba_one.ID
+                 			scope="This_Item_and_Full_Indented_BOM"
+                 			is_active=true
+                 			Added_User=zoho.loginuser
+                 		]
+                 		created_count = created_count + 1;
+                 	}
+                 	if(Item_Revision_History[history_id == "DEV-REV-001"].count() == 0)
+                 	{
+                 		insert into Item_Revision_History
+                 		[
+                 			history_id="DEV-REV-001"
+                 			item=pcba_one.ID
+                 			revision_label="C"
+                 			effective_change_order=eco_one.ID
+                 			snapshot_json="{\"apn\":\"DEV-PCBA-00001\",\"revision\":\"C\",\"environment\":\"development\"}"
+                 			effective_date=zoho.currenttime.addDay(-2)
+                 			Added_User=zoho.loginuser
+                 		]
+                 		created_count = created_count + 1;
+                 	}
+                 	if(ECN_Acknowledgment[ack_id == "DEV-ACK-001"].count() == 0)
+                 	{
+                 		insert into ECN_Acknowledgment
+                 		[
+                 			ack_id="DEV-ACK-001"
+                 			change_order=eco_one.ID
+                 			recipient_employee=employee_id
+                 			acknowledged_on=zoho.currenttime.addDay(-1)
+                 			comments="Development acknowledgment."
+                 			status="Acknowledged"
+                 			Added_User=zoho.loginuser
+                 		]
+                 		created_count = created_count + 1;
+                 	}
+                 	if(Deviation_Consumption_Entry[linked_deviation == deviation_one.ID && batch_reference == "DEV-BATCH-001"].count() == 0)
+                 	{
+                 		insert into Deviation_Consumption_Entry
+                 		[
+                 			linked_deviation=deviation_one.ID
+                 			units_built_this_batch=120
+                 			batch_reference="DEV-BATCH-001"
+                 			recorded_by_employee=employee_id
+                 			recorded_on=zoho.currenttime.addDay(-1)
+                 			Added_User=zoho.loginuser
+                 		]
+                 		created_count = created_count + 1;
+                 	}
+                 	if(Activity_Log[log_id == "DEV-LOG-001"].count() == 0)
+                 	{
+                 		insert into Activity_Log
+                 		[
+                 			log_id="DEV-LOG-001"
+                 			activity_record_type="Item_Master"
+                 			record_id="DEV-PCBA-00001"
+                 			field_changed="revision"
+                 			old_value="B"
+                 			new_value="C"
+                 			changed_by_employee=employee_id
+                 			changed_on=zoho.currenttime.addDay(-2)
+                 			Added_User=zoho.loginuser
+                 		]
+                 		created_count = created_count + 1;
+                 	}
+                 	if(Activity_Log[log_id == "DEV-SEED-V1"].count() == 0)
+                 	{
+                 		insert into Activity_Log
+                 		[
+                 			log_id="DEV-SEED-V1"
+                 			activity_record_type="Activity_Log"
+                 			record_id="DEV-SEED-V1"
+                 			field_changed="seed_status"
+                 			old_value="NOT_STARTED"
+                 			new_value="COMPLETE"
+                 			changed_by_employee=employee_id
+                 			changed_on=zoho.currenttime
+                 			Added_User=zoho.loginuser
+                 		]
+                 		created_count = created_count + 1;
+                 	}
+                 	result.put("status","complete");
+                 	result.put("records_created",created_count);
+                 	result.put("message","Development sample data V1 is ready across all 21 forms.");
+                 	return result;
+                 
+}

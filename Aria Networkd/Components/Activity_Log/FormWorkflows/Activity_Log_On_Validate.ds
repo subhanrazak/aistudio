@@ -1,0 +1,35 @@
+Activity_Log_On_Validate as "Activity Log - On Validate"
+{
+
+				type =  form
+				form = Activity_Log
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											emp_id = thisapp.Get_Employee_For_Login(zoho.loginuser);
+										emp_rec = Employee_Master[ID == emp_id];
+										if(emp_rec.count() == 0 || emp_rec.profile_label != "ADMIN")
+										{
+											alert "Activity Log is system-managed and cannot be edited manually.";
+											cancel submit;
+										}
+										if(input.log_id == null || input.log_id == "")
+										{
+											input.log_id = thisapp.Generate_Record_Code("LOG-");
+										}
+										if(input.changed_on == null)
+										{
+											input.changed_on = zoho.currenttime;
+										}
+						)
+					}
+				}
+
+			
+}

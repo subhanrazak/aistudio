@@ -1,0 +1,212 @@
+<%
+	history_records = Item_Revision_History[ID == input.history_id];
+	record_found = false;
+	item_text = "-";
+	revision_text = "-";
+	change_order_text = "-";
+	effective_date_text = "-";
+	history_code = "-";
+	snapshot_text = "";
+	not_found_text = "No Item Revision History record was found for the supplied history_id.";
+	if(history_records.count() > 0)
+	{
+		record_found = true;
+		history_rec = history_records;
+		history_code = ifnull(history_rec.history_id,history_rec.ID.toString());
+		revision_text = ifnull(history_rec.revision_label,"-");
+		snapshot_text = ifnull(history_rec.snapshot_json,"");
+		if(history_rec.item != null)
+		{
+			item_text = history_rec.item;
+		}
+		if(history_rec.effective_change_order != null)
+		{
+			change_order_text = history_rec.effective_change_order;
+		}
+		if(history_rec.effective_date != null)
+		{
+			effective_date_text = history_rec.effective_date.toString("dd-MMM-yyyy HH:mm");
+		}
+	}
+	item_text = item_text.toString().replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
+	revision_text = revision_text.toString().replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
+	change_order_text = change_order_text.toString().replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
+	effective_date_text = effective_date_text.toString().replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
+	history_code = history_code.toString().replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
+	snapshot_text = snapshot_text.toString().replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
+	not_found_text = not_found_text.toString().replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
+	%>
+<style>
+.snapshot-page {
+	background: #F3F3F4;
+	color: #111827;
+	font-family: Arial, sans-serif;
+	min-height: 100%;
+	padding: 20px;
+	box-sizing: border-box;
+}
+.snapshot-shell {
+	max-width: 1180px;
+	margin: 0 auto;
+}
+.snapshot-header {
+	background: #FFFFFF;
+	border: 1px solid #E5E7EB;
+	border-radius: 12px;
+	padding: 18px 20px;
+	margin-bottom: 16px;
+}
+.snapshot-title {
+	font-size: 20px;
+	line-height: 1.25;
+	font-weight: 600;
+	margin: 0;
+}
+.snapshot-subtitle {
+	color: #6B7280;
+	font-size: 13px;
+	line-height: 1.5;
+	margin: 6px 0 0;
+}
+.snapshot-card {
+	background: #FFFFFF;
+	border: 1px solid #E5E7EB;
+	border-radius: 12px;
+	margin-bottom: 16px;
+	overflow: hidden;
+}
+.snapshot-card-title {
+	border-bottom: 1px solid #E5E7EB;
+	font-size: 16px;
+	font-weight: 600;
+	margin: 0;
+	padding: 14px 18px;
+}
+.snapshot-card-body {
+	padding: 18px;
+}
+.snapshot-grid {
+	display: grid;
+	grid-template-columns: 190px minmax(0, 1fr);
+	gap: 12px 18px;
+}
+.snapshot-label {
+	color: #6B7280;
+	font-size: 13px;
+	font-weight: 600;
+}
+.snapshot-value {
+	color: #111827;
+	font-size: 14px;
+	word-break: break-word;
+}
+.snapshot-badge {
+	background: #EEF2FF;
+	border: 1px solid #CBD5E1;
+	border-radius: 999px;
+	color: #1E3A8A;
+	display: inline-block;
+	font-size: 12px;
+	font-weight: 600;
+	padding: 5px 10px;
+}
+.snapshot-raw {
+	background: #0F172A;
+	border-radius: 10px;
+	color: #E5E7EB;
+	font-family: Consolas, Menlo, Monaco, monospace;
+	font-size: 13px;
+	line-height: 1.55;
+	margin: 0;
+	max-height: 480px;
+	overflow: auto;
+	padding: 16px;
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+.snapshot-empty {
+	background: #F9FAFB;
+	border: 1px dashed #CBD5E1;
+	border-radius: 10px;
+	color: #6B7280;
+	font-size: 14px;
+	line-height: 1.5;
+	padding: 16px;
+}
+@media (max-width: 700px) {
+	.snapshot-page {
+		padding: 12px;
+	}
+	.snapshot-grid {
+		grid-template-columns: 1fr;
+	}
+}
+</style>
+
+<div class="snapshot-page">
+	<div class="snapshot-shell">
+		<div class="snapshot-header">
+			<h1 class="snapshot-title">Item Revision Snapshot</h1>
+			<p class="snapshot-subtitle">Read-only view of Item_Revision_History and its saved snapshot_json.</p>
+		</div>
+<%
+	if(record_found == true)
+	{
+		%>
+<section class="snapshot-card">
+			<h2 class="snapshot-card-title">Snapshot Details</h2>
+			<div class="snapshot-card-body">
+				<div class="snapshot-grid">
+					<div class="snapshot-label">History ID</div>
+					<div class="snapshot-value"><span class="snapshot-badge"><%=history_code%></span></div>
+
+					<div class="snapshot-label">Item</div>
+					<div class="snapshot-value"><%=item_text%></div>
+
+					<div class="snapshot-label">Revision Label</div>
+					<div class="snapshot-value"><%=revision_text%></div>
+
+					<div class="snapshot-label">Effective Change Order</div>
+					<div class="snapshot-value"><%=change_order_text%></div>
+
+					<div class="snapshot-label">Effective Date</div>
+					<div class="snapshot-value"><%=effective_date_text%></div>
+				</div>
+			</div>
+		</section>
+
+		<section class="snapshot-card">
+			<h2 class="snapshot-card-title">Snapshot JSON</h2>
+			<div class="snapshot-card-body">
+<%
+		if(snapshot_text != "")
+		{
+			%>
+<pre class="snapshot-raw"><%=snapshot_text%></pre>
+<%
+		}
+		else
+		{
+			%>
+<div class="snapshot-empty">No snapshot_json value is stored on this Item Revision History record.</div>
+<%
+		}
+		%>
+</div>
+		</section>
+<%
+	}
+	else
+	{
+		%>
+<section class="snapshot-card">
+			<h2 class="snapshot-card-title">Snapshot Not Found</h2>
+			<div class="snapshot-card-body">
+				<div class="snapshot-empty"><%=not_found_text%></div>
+			</div>
+		</section>
+<%
+	}
+	%>
+</div>
+</div>

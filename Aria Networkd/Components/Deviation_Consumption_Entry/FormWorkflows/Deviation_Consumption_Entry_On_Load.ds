@@ -1,0 +1,31 @@
+Deviation_Consumption_Entry_On_Load as "Deviation Consumption Entry - On Load"
+{
+
+				type =  form
+				form = Deviation_Consumption_Entry
+
+				record event = on add or edit
+
+				on load
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											emp_id = thisapp.Get_Employee_For_Login(zoho.loginuser);
+										if(emp_id != 0 && input.recorded_by_employee == null)
+										{
+											input.recorded_by_employee = emp_id;
+										}
+										if(input.recorded_on == null)
+										{
+											input.recorded_on = zoho.currenttime;
+										}
+										disable recorded_by_employee;
+										disable recorded_on;
+						)
+					}
+				}
+
+			
+}
