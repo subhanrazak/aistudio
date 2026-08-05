@@ -1,0 +1,15 @@
+void Cascade_Revision_History(int item_id, int change_order_id)
+{
+    thisapp.Create_Item_Revision_Snapshot(item_id, change_order_id);
+    where_used = thisapp.Get_Where_Used_Direct(item_id);
+    for each used_map in where_used
+    {
+        parent_id = used_map.get("parent_item_id");
+        thisapp.Create_Item_Revision_Snapshot(parent_id, change_order_id);
+        parent_rec = Item_Master[ID == parent_id];
+        if (parent_rec.count() > 0)
+        {
+            thisapp.Write_Activity_Log("Item_Master", parent_rec.apn, "revision_cascade", "", "snapshot", parent_rec.owner_employee);
+        }
+    }
+}

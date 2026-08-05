@@ -1,0 +1,50 @@
+Change_Order_On_Success as "Change Order - On Success"
+{
+    type = form
+    form = Change_Order
+    record event = on add or edit
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if (input.status == "Open")
+                {
+                    old_status = input.status;
+                    input.status = "Approval_In_Progress";
+                    first_seq = 999999;
+                    first_approvers = List();
+                    for each app_row in input.approvers
+                    {
+                        if (app_row.decision == "Pending" && ifnull(app_row.sequence_no,0) < first_seq)
+                        {
+                            first_seq = app_row.sequence_no;
+                        }
+                    }
+                    for each notify_row in input.approvers
+                    {
+                        if (notify_row.decision == "Pending" && notify_row.sequence_no == first_seq)
+                        {
+                            first_approvers.add(notify_row.approver);
+                        }
+                    }
+                    merge_map = Map();
+                    merge_map.put("order_id", input.order_id);
+                    merge_map.put("title", input.title);
+                    thisapp.Send_Template_Email("CHANGE_ORDER_APPROVAL_PENDING", first_approvers, merge_map);
+                    thisapp.Write_Activity_Log("Change_Order", input.order_id, "status", old_status, "Approval_In_Progress", input.created_by_employee);
+                    if (input.source_request != null)
+                    {
+                        source_rec = Change_Request[ID == input.source_request];
+                        if (source_rec.count() > 0)
+                        {
+                            source_rec.status = "Converted_to_Order";
+                        }
+                    }
+                }
+            )
+        }
+    }
+}

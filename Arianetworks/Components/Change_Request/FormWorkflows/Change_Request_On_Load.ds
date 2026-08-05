@@ -1,0 +1,32 @@
+Change_Request_On_Load as "Change Request - On Load"
+{
+    type = form
+    form = Change_Request
+    record event = on add or edit
+
+    on load
+    {
+        actions
+        {
+            custom deluge script
+            (
+                emp_id = thisapp.Get_Employee_For_Login(zoho.loginuser);
+                if (emp_id != 0 && input.requested_by_employee == null)
+                {
+                    input.requested_by_employee = emp_id;
+                }
+                if (input.created_date == null)
+                {
+                    input.created_date = zoho.currenttime;
+                }
+                if (input.status == null || input.status == "")
+                {
+                    input.status = "Submitted";
+                }
+                disable requested_by_employee;
+                disable request_id;
+                disable status;
+            )
+        }
+    }
+}

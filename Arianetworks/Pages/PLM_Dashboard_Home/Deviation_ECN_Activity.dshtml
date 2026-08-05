@@ -1,0 +1,32 @@
+<%
+soon = zoho.currentdate.addDay(7);
+openDevs = Change_Order[change_category == "Deviation" && status == "Effective"] sort by expiration_date range from 0 to 5;
+pendingAcks = ECN_Acknowledgment[status == "Pending"] sort by ID desc range from 0 to 5;
+activity = Activity_Log[ID != 0] sort by changed_on desc range from 0 to 9;
+%>
+<style>
+.plm-wide{background:#fff;border:1px solid var(--zcs_tertiary_border_color);border-radius:14px;padding:18px;margin:0 20px 20px;box-sizing:border-box}.plm-wide h2{font-size:17px;margin:0 0 12px}.plm-grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}.plm-panel{border:1px solid #EEF0F6;border-radius:12px;padding:12px}.plm-panel h3{margin:0 0 10px;font-size:14px}.plm-line{padding:9px 0;border-bottom:1px solid #EEF0F6}.plm-line:last-child{border-bottom:0}.plm-line-title{font-size:13px;font-weight:600}.plm-line-meta{font-size:12px;color:var(--zcs_secondary_text_color);margin-top:3px}.plm-flag{display:inline-flex;align-items:center;gap:5px;background:#FE455D;color:#fff;border-radius:999px;padding:3px 7px;font-size:11px;margin-left:6px}.plm-empty2{color:var(--zcs_secondary_text_color);font-size:13px;padding:8px 0}.plm-wide a{color:var(--zcs_brand_color);text-decoration:none}@media(max-width:950px){.plm-grid3{grid-template-columns:1fr}.plm-wide{margin:0 12px 14px}}
+</style>
+<div class="plm-wide">
+  <h2>Deviation, ECN, and Activity Watch</h2>
+  <div class="plm-grid3">
+    <div class="plm-panel"><h3>Open Deviations</h3>
+      <% drows = 0; for each d in openDevs { drows = drows + 1; expSoon = false; if(d.expiration_date != null && d.expiration_date <= soon){expSoon = true;} %>
+      <div class="plm-line"><div class="plm-line-title"><%=ifnull(d.order_id,d.ID.toString())%><% if(expSoon) { %><span class="plm-flag"><i class="zc-li-outline ui-2-time"></i>Within 7 days</span><% } %></div><div class="plm-line-meta">Expires: <%=ifnull(d.expiration_date,"Not set")%> | Used: <%=ifnull(d.units_consumed,0)%>/<%=ifnull(d.max_unit_count,0)%></div></div>
+      <% } if(drows == 0) { %><div class="plm-empty2">No active deviations found.</div><% } %>
+      <a href="#Report:Open_Deviations_Calendar">Open deviations calendar</a>
+    </div>
+    <div class="plm-panel"><h3>Pending ECN Acknowledgments</h3>
+      <% arows = 0; for each e in pendingAcks { arows = arows + 1; coText = "Change Order"; if(e.change_order != null){eco = Change_Order[ID == e.change_order]; if(eco.count() > 0){coText = ifnull(eco.order_id,eco.ID.toString());}} %>
+      <div class="plm-line"><div class="plm-line-title"><%=ifnull(e.ack_id,e.ID.toString())%></div><div class="plm-line-meta"><%=coText%> | <%=ifnull(e.status,"Pending")%></div></div>
+      <% } if(arows == 0) { %><div class="plm-empty2">No pending ECN acknowledgments.</div><% } %>
+      <a href="#Report:My_Pending_ECN_Acknowledgments">Open ECN inbox</a>
+    </div>
+    <div class="plm-panel"><h3>Recent Activity</h3>
+      <% lrows = 0; for each l in activity { lrows = lrows + 1; %>
+      <div class="plm-line"><div class="plm-line-title"><%=ifnull(l.activity_record_type,"Record")%> <%=ifnull(l.record_id,"")%></div><div class="plm-line-meta"><%=ifnull(l.field_changed,"Change")%>: <%=ifnull(l.old_value,"-")%> to <%=ifnull(l.new_value,"-")%> | <%=ifnull(l.changed_on,"-")%></div></div>
+      <% } if(lrows == 0) { %><div class="plm-empty2">No activity has been logged yet.</div><% } %>
+      <a href="#Report:Audit_History">Open audit history</a>
+    </div>
+  </div>
+</div>

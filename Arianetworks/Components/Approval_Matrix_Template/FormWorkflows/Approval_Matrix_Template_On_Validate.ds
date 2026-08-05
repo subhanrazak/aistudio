@@ -1,0 +1,30 @@
+Approval_Matrix_Template_On_Validate as "Approval Matrix Template - On Validate"
+{
+    type = form
+    form = Approval_Matrix_Template
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if (ifnull(input.sequence_no,0) <= 0)
+                {
+                    alert "Sequence No must be greater than 0.";
+                    cancel submit;
+                }
+                if (input.is_default_finance_approver == true && input.approver != null)
+                {
+                    emp_rec = Employee_Master[ID == input.approver];
+                    if (emp_rec.count() > 0 && emp_rec.profile_label not in {"FINANCE_APPROVER","ADMIN"})
+                    {
+                        alert "Default finance approver should be an active FINANCE_APPROVER or ADMIN employee.";
+                        cancel submit;
+                    }
+                }
+            )
+        }
+    }
+}

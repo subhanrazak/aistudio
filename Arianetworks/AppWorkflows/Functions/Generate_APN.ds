@@ -1,0 +1,24 @@
+string Generate_APN(int category_id)
+{
+    apn_value = "";
+    category_rec = Category_Master[ID == category_id && is_active == true];
+    if (category_rec.count() > 0)
+    {
+        next_number = ifnull(category_rec.last_issued_number,0) + 1;
+        version_len = ifnull(category_rec.version_digit_length,2);
+        id_len = ifnull(category_rec.id_digit_length,5);
+        version_text = "0";
+        if (version_len > 1)
+        {
+            version_text = "0".repeat(version_len - 1) + version_text;
+        }
+        seq_text = next_number.toString();
+        if (seq_text.length() < id_len)
+        {
+            seq_text = "0".repeat(id_len - seq_text.length()) + seq_text;
+        }
+        apn_value = category_rec.prefix + "-" + seq_text + "-" + version_text;
+        category_rec.last_issued_number = next_number;
+    }
+    return apn_value;
+}

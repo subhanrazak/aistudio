@@ -1,0 +1,30 @@
+void Notify_Item_Subscribers(int item_id, string event_key, map merge_map, bool include_full_bom)
+{
+    recipient_ids = List();
+    for each sub_rec in Item_Subscription[item == item_id && is_active == true]
+    {
+        if (sub_rec.subscriber_employee not in recipient_ids)
+        {
+            recipient_ids.add(sub_rec.subscriber_employee);
+        }
+    }
+    if (include_full_bom == true)
+    {
+        bom_items = thisapp.Flatten_BOM(item_id);
+        for each bom_item in bom_items
+        {
+            child_id = bom_item.get("item_id");
+            for each child_sub in Item_Subscription[item == child_id && is_active == true]
+            {
+                if (child_sub.subscriber_employee not in recipient_ids)
+                {
+                    recipient_ids.add(child_sub.subscriber_employee);
+                }
+            }
+        }
+    }
+    if (recipient_ids.size() > 0)
+    {
+        thisapp.Send_Template_Email(event_key, recipient_ids, merge_map);
+    }
+}

@@ -1,0 +1,679 @@
+<%
+  raw_item_ids = "";
+  has_request = false;
+  selected_items = List();
+  requested_ids = List();
+  invalid_count = 0;
+
+  if(input.item_ids != null)
+  {
+    raw_item_ids = input.item_ids.trim();
+  }
+  if(raw_item_ids != "")
+  {
+    has_request = true;
+    id_tokens = raw_item_ids.toList(",");
+    for each raw_token in id_tokens
+    {
+      token_text = raw_token.trim();
+      parsed_id = 0;
+      if(token_text != "")
+      {
+        try
+        {
+          parsed_id = token_text.toLong();
+        }
+        catch (parse_error)
+        {
+          parsed_id = 0;
+        }
+        if(parsed_id > 0)
+        {
+          if(parsed_id not in requested_ids)
+          {
+            item_rec = Item_Master[ID == parsed_id && is_deleted == false];
+            if(item_rec.count() > 0)
+            {
+              requested_ids.add(parsed_id);
+              item_map = Map();
+              item_map.put("id",item_rec.ID);
+              item_map.put("apn",ifnull(item_rec.apn,"-"));
+              item_map.put("description",ifnull(item_rec.description,"-"));
+              item_map.put("revision",ifnull(item_rec.revision,"-"));
+              item_map.put("part_type",ifnull(item_rec.part_type,"-"));
+              item_map.put("lifecycle",ifnull(item_rec.lifecycle_phase,"-"));
+              item_map.put("variant_code",ifnull(item_rec.variant_code,""));
+              item_map.put("is_variant",ifnull(item_rec.is_variant,false));
+              variant_context = "";
+              variant_code_text = ifnull(item_rec.variant_code,"");
+              if(variant_code_text != "")
+              {
+                variant_context = "Variant code: " + variant_code_text;
+              }
+              if(item_rec.variant_of != null)
+              {
+                variant_base = Item_Master[ID == item_rec.variant_of && is_deleted == false];
+                if(variant_base.count() > 0)
+                {
+                  if(variant_context != "")
+                  {
+                    variant_context = variant_context + " | ";
+                  }
+                  variant_context = variant_context + "Variant of " + ifnull(variant_base.apn,"Item " + variant_base.ID);
+                }
+              }
+              item_map.put("variant_context",variant_context);
+              selected_items.add(item_map);
+            }
+            else
+            {
+              invalid_count = invalid_count + 1;
+            }
+          }
+        }
+        else
+        {
+          invalid_count = invalid_count + 1;
+        }
+      }
+    }
+  }
+
+  ready_to_compare = selected_items.size() >= 2;
+  depth_cap = 10;
+  global_apn_order = List();
+  global_desc_map = Map();
+  assembly_qty_maps = Map();
+  assembly_line_counts = Map();
+  assembly_direct_counts = Map();
+  assembly_cap_map = Map();
+  total_traversed = 0;
+  cap_any = false;
+  matched_rows = 0;
+  changed_rows = 0;
+  missing_rows = 0;
+  added_rows = 0;
+  diff_rows = 0;
+
+  if(ready_to_compare == true)
+  {
+    for each asm_map in selected_items
+    {
+      root_id = asm_map.get("id");
+      asm_key = root_id.toString();
+      agg_order = List();
+      agg_qty_map = Map();
+      agg_desc_map = Map();
+      frontier_ids = List();
+      frontier_qtys = List();
+      frontier_depths = List();
+      frontier_paths = List();
+      frontier_ids.add(root_id);
+      frontier_qtys.add(1.0);
+      frontier_depths.add(0);
+      frontier_paths.add("," + root_id + ",");
+      traversal_depth = 0;
+      cap_hit = false;
+      traversed_lines = 0;
+      direct_line_count = BOM_Line[parent_item == root_id && is_struck == false].count();
+      depth_steps = List();
+      depth_steps.add(1);
+      depth_steps.add(2);
+      depth_steps.add(3);
+      depth_steps.add(4);
+      depth_steps.add(5);
+      depth_steps.add(6);
+      depth_steps.add(7);
+      depth_steps.add(8);
+      depth_steps.add(9);
+      depth_steps.add(10);
+
+      for each depth_marker in depth_steps
+      {
+        if(frontier_ids.size() > 0 && traversal_depth < depth_cap)
+        {
+          next_ids = List();
+          next_qtys = List();
+          next_depths = List();
+          next_paths = List();
+          for each index fidx in frontier_ids
+          {
+            parent_id = frontier_ids.get(fidx);
+            parent_qty = frontier_qtys.get(fidx);
+            parent_depth = frontier_depths.get(fidx);
+            parent_path = frontier_paths.get(fidx);
+            for each bom_line in BOM_Line[parent_item == parent_id && is_struck == false]
+            {
+              traversed_lines = traversed_lines + 1;
+              child_id = bom_line.child_item;
+              line_qty = ifnull(bom_line.quantity,0);
+              accumulated_qty = parent_qty * line_qty;
+              child_depth = parent_depth + 1;
+              child_item = Item_Master[ID == child_id && is_deleted == false];
+              child_apn = "Missing item " + child_id;
+              child_desc = "The child lookup could not be resolved.";
+              if(child_item.count() > 0)
+              {
+                child_apn = ifnull(child_item.apn,"Item " + child_id);
+                child_desc = ifnull(child_item.description,"-");
+              }
+
+              if(agg_qty_map.get(child_apn) != null)
+              {
+                agg_qty_map.put(child_apn,ifnull(agg_qty_map.get(child_apn),0) + accumulated_qty);
+              }
+              else
+              {
+                agg_order.add(child_apn);
+                agg_qty_map.put(child_apn,accumulated_qty);
+                agg_desc_map.put(child_apn,child_desc);
+                if(child_apn not in global_apn_order)
+                {
+                  global_apn_order.add(child_apn);
+                  global_desc_map.put(child_apn,child_desc);
+                }
+              }
+
+              child_token = "," + child_id + ",";
+              if(parent_path.contains(child_token))
+              {
+                cap_hit = true;
+              }
+              else
+              {
+                child_children = BOM_Line[parent_item == child_id && is_struck == false].count();
+                if(child_children > 0)
+                {
+                  if(child_depth < depth_cap)
+                  {
+                    next_ids.add(child_id);
+                    next_qtys.add(accumulated_qty);
+                    next_depths.add(child_depth);
+                    next_paths.add(parent_path + child_id + ",");
+                  }
+                  else
+                  {
+                    cap_hit = true;
+                  }
+                }
+              }
+            }
+          }
+          frontier_ids = next_ids;
+          frontier_qtys = next_qtys;
+          frontier_depths = next_depths;
+          frontier_paths = next_paths;
+          traversal_depth = traversal_depth + 1;
+        }
+      }
+      assembly_qty_maps.put(asm_key,agg_qty_map);
+      assembly_line_counts.put(asm_key,traversed_lines);
+      assembly_direct_counts.put(asm_key,direct_line_count);
+      assembly_cap_map.put(asm_key,cap_hit);
+      total_traversed = total_traversed + traversed_lines;
+      if(cap_hit == true)
+      {
+        cap_any = true;
+      }
+    }
+
+    base_asm = selected_items.get(0);
+    base_key = base_asm.get("id").toString();
+    base_qty_map = assembly_qty_maps.get(base_key);
+    selected_count = selected_items.size();
+    for each apn_key in global_apn_order
+    {
+      base_present = base_qty_map.get(apn_key) != null;
+      base_qty = ifnull(base_qty_map.get(apn_key),0);
+      present_count = 0;
+      missing_count = 0;
+      row_diff_count = 0;
+      for each index midx in selected_items
+      {
+        asm_for_count = selected_items.get(midx);
+        qty_map_for_count = assembly_qty_maps.get(asm_for_count.get("id").toString());
+        qty_value_for_count = qty_map_for_count.get(apn_key);
+        if(qty_value_for_count == null)
+        {
+          missing_count = missing_count + 1;
+        }
+        else
+        {
+          present_count = present_count + 1;
+          if(midx > 0 && base_present == true && qty_value_for_count != base_qty)
+          {
+            row_diff_count = row_diff_count + 1;
+          }
+        }
+      }
+      if(present_count == selected_count && row_diff_count == 0)
+      {
+        matched_rows = matched_rows + 1;
+      }
+      else
+      {
+        changed_rows = changed_rows + 1;
+        if(base_present == false)
+        {
+          added_rows = added_rows + 1;
+        }
+        else if(missing_count > 0)
+        {
+          missing_rows = missing_rows + 1;
+        }
+        else
+        {
+          diff_rows = diff_rows + 1;
+        }
+      }
+    }
+  }
+%>
+<style>
+/* ZCS global utility subset used once for this page. */
+:root {
+  --zcs-theme-brand-color: var(--zcs_brand_color);
+  --zcs-light-bg-color: var(--zcs_brand_light_color);
+  --zcs-page-bg-color: #F3F3F4;
+  --zcs-primary-text-color: var(--zcs_primary_text_color);
+  --zcs-secondary-text-color: var(--zcs_secondary_text_color);
+  --zcs-teritiary-text-color: var(--zcs_tertiary_text_color);
+  --zcs-border-color: var(--zcs_tertiary_border_color);
+  --zcs-white-color: #FFFFFF;
+  --zcs-thead-color: #F9FAFE;
+  --zcs-tr-h-color: #F9FAFE;
+  font-size: 16px;
+  line-height: 1.5;
+}
+.zcs-w-full { width: 100%; }
+.zcs-wh-full { width: 100%; height: 100%; }
+.zcs-flex { display: flex; }
+.zcs-inline-flex { display: inline-flex; }
+.zcs-row { display: flex; flex-wrap: wrap; }
+.zcs-align-items-start { align-items: flex-start; }
+.zcs-align-items-center { align-items: center; }
+.zcs-justify-center { justify-content: center; }
+.zcs-justify-space-between { justify-content: space-between; }
+.zcs-gap-4 { gap: 0.25rem; }
+.zcs-gap-8 { gap: 0.5rem; }
+.zcs-gap-10 { gap: 0.625rem; }
+.zcs-gap-12 { gap: 0.75rem; }
+.zcs-gap-16 { gap: 1rem; }
+.zcs-p-8 { padding: 0.5rem; }
+.zcs-p-20 { padding: 1.25rem; }
+.zcs-px-10 { padding-left: 0.625rem; padding-right: 0.625rem; }
+.zcs-px-16 { padding-left: 1rem; padding-right: 1rem; }
+.zcs-px-30 { padding-left: 1.875rem; padding-right: 1.875rem; }
+.zcs-py-2 { padding-top: 0.125rem; padding-bottom: 0.125rem; }
+.zcs-py-8 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+.zcs-py-12 { padding-top: 0.75rem; padding-bottom: 0.75rem; }
+.zcs-py-24 { padding-top: 1.5rem; padding-bottom: 1.5rem; }
+.zcs-m-0 { margin: 0; }
+.zcs-mt-6 { margin-top: 0.375rem; }
+.zcs-mt-8 { margin-top: 0.5rem; }
+.zcs-mt-10 { margin-top: 0.625rem; }
+.zcs-mt-12 { margin-top: 0.75rem; }
+.zcs-mt-16 { margin-top: 1rem; }
+.zcs-mb-0 { margin-bottom: 0; }
+.zcs-mx-0 { margin-left: 0; margin-right: 0; }
+.zcs-box-border { box-sizing: border-box; }
+.zcs-relative { position: relative; }
+.zcs-sticky { position: sticky; }
+.zcs-rounded-sm { border-radius: 0.25rem; }
+.zcs-rounded-md { border-radius: 0.375rem; }
+.zcs-rounded-lg { border-radius: 0.5rem; }
+.zcs-rounded-xl { border-radius: 0.75rem; }
+.zcs-text-left { text-align: left; }
+.zcs-text-right { text-align: right; }
+.zcs-text-center { text-align: center; }
+.zcs-font-12 { font-size: 0.75rem; }
+.zcs-font-13 { font-size: 0.8125rem; }
+.zcs-font-14 { font-size: 0.875rem; }
+.zcs-font-16 { font-size: 1rem; }
+.zcs-font-18 { font-size: 1.125rem; }
+.zcs-font-22 { font-size: 1.375rem; }
+.zcs-font-normal { font-weight: 400; }
+.zcs-font-medium { font-weight: 500; }
+.zcs-font-semibold { font-weight: 600; }
+.zcs-font-bold { font-weight: 700; }
+.zcs-lh-body { line-height: 1.5; }
+.zcs-lh-heading { line-height: 1.25; }
+.zcs-color-primary { color: var(--zcs-primary-text-color); }
+.zcs-color-secondary { color: var(--zcs-secondary-text-color); }
+.zcs-color-tertiary { color: var(--zcs-teritiary-text-color); }
+.zcs-color-theme { color: var(--zcs-theme-brand-color); }
+.zcs-ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.zcs-overflow-auto { overflow: auto; }
+.zcs-card { background-color: var(--zcs-white-color); border: 1px solid #e7e7ee; border-radius: 12px; }
+a { text-decoration: none; }
+
+/* ZCS component CSS: header-heading-with-actions and button styles. */
+.zcs-page-header { background: var(--zcs-white-color); border: 1px solid #e7e7ee; border-radius: 12px; }
+.zcs-button { width: auto; min-width: 5rem; min-height: 36px; }
+.zcs-primary-outline-button { border: 1px solid var(--zcs_brand_color); background-color: var(--zcs-white-color); color: var(--zcs_brand_color); }
+.zcs-primary-outline-button:hover { background-color: var(--zcs_component_hover_color); border-color: var(--zcs_brand_color); color: var(--zcs_brand_color); }
+.zcs-button-icon { width: 16px; max-height: 16px; }
+
+/* ZCS component CSS: table-simple-table. */
+.zcs-table-wrapper { border: 1px solid var(--zcs-border-color); background-color: var(--zcs-white-color); overflow: auto; }
+.zcs-table-wrapper table { line-height: normal; border-collapse: collapse; min-width: 980px; }
+.zcs-table-wrapper table thead { top: 0px; z-index: 2; }
+.zcs-table-wrapper table thead tr th { background-color: var(--zcs-thead-color); box-shadow: 0px -1px 0px 0px var(--zcs-border-color) inset; white-space: nowrap; vertical-align: bottom; }
+.zcs-table-wrapper table thead tr.zcs-tspace th { background-color: var(--zcs-white-color); box-shadow: none; }
+.zcs-table-wrapper table tbody tr td { border-top: 1px solid var(--zcs-border-color); vertical-align: top; }
+.zcs-table-wrapper table tbody tr:first-child td { border-color: transparent; }
+.zcs-table-wrapper table tbody tr:hover td { background-color: var(--zcs-tr-h-color); }
+.zcs-table-wrapper table tbody tr:first-child:hover td { border-color: var(--zcs-border-color); }
+
+/* ZCS component CSS: badge-outlined-badge. */
+.zcs-badge { width: auto; white-space: nowrap; }
+.zcs-badge-outline { border: 1px solid; }
+.zcs-badge-outline.zcs-badge-theme { color: var(--zcs_brand_color); }
+.zcs-badge-outline.zcs-badge-green { color: #179E6C; }
+.zcs-badge-outline.zcs-badge-red { color: #FE455D; }
+.zcs-badge-outline.zcs-badge-grey { color: #242424; }
+.zcs-badge-outline.zcs-badge-yellow { color: #FAAE13; }
+.zcs-badge-outline.zcs-badge-blue { color: #2A6FFC; }
+.zcs-badge-outline.zcs-badge-orange { color: #F4660C; }
+
+/* ZCS component CSS: no-data-no-data-text-only. */
+.zcs-nodata-wrapper { min-height: 220px; }
+
+/* BOM Compare custom styling. */
+.bom-compare-page { background: var(--zcs-page-bg-color); padding: 20px; box-sizing: border-box; min-height: 100%; color: var(--zcs-primary-text-color); font-family: Arial, sans-serif; }
+.bom-title-block { min-width: 0; }
+.bom-header-icon { color: var(--zcs_brand_color); font-size: 24px; }
+.bom-page-note { max-width: 760px; }
+.bom-prompt { padding: 28px; text-align: center; }
+.bom-prompt i { display: block; color: var(--zcs_brand_color); font-size: 34px; margin-bottom: 10px; }
+.bom-prompt-form { display: flex; gap: 10px; justify-content: center; align-items: end; flex-wrap: wrap; margin-top: 16px; }
+.bom-prompt-field { text-align: left; }
+.bom-prompt-field label { display: block; color: var(--zcs-secondary-text-color); font-size: 12px; margin-bottom: 4px; }
+.bom-prompt-field input { min-height: 36px; min-width: 360px; border: 1px solid var(--zcs-border-color); border-radius: 6px; padding: 6px 10px; box-sizing: border-box; font-size: 14px; color: var(--zcs-primary-text-color); background: #FFFFFF; }
+.bom-context-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(240px,1fr)); gap: 12px; margin: 16px 0; }
+.bom-assembly-card { padding: 14px; }
+.bom-assembly-role { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+.bom-assembly-role i { color: var(--zcs_brand_color); }
+.bom-card-label { display: block; color: var(--zcs-secondary-text-color); font-size: 12px; margin-bottom: 3px; }
+.bom-card-value { color: var(--zcs-primary-text-color); font-size: 14px; font-weight: 600; }
+.bom-card-desc { margin-top: 8px; color: var(--zcs-secondary-text-color); font-size: 13px; }
+.bom-card-meta { margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap; }
+.bom-summary-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(145px,1fr)); gap: 12px; margin: 0 0 16px 0; }
+.bom-kpi { padding: 14px; }
+.bom-kpi-label { color: var(--zcs-secondary-text-color); font-size: 12px; }
+.bom-kpi-value { color: var(--zcs-primary-text-color); font-size: 24px; font-weight: 700; line-height: 1.15; margin-top: 4px; }
+.bom-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 16px 0 12px 0; flex-wrap: wrap; }
+.bom-toolbar-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.bom-warning { margin: 12px 0; padding: 12px 14px; border: 1px solid #FAAE13; border-radius: 8px; color: #8A5B00; background: #FCF4E6; }
+.bom-warning i { margin-right: 8px; color: #8A5B00; }
+.bom-desc { max-width: 420px; white-space: normal; }
+.bom-apn { white-space: nowrap; font-weight: 600; }
+.bom-qty { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.bom-qty-cell { border-radius: 6px; padding: 5px 8px; display: inline-block; min-width: 52px; text-align: right; }
+.bom-qty-match { background: #E4FCF3; color: #179E6C; }
+.bom-qty-diff { background: #FCF4E6; color: #9D6700; font-weight: 700; }
+.bom-qty-missing { background: #FDE3E6; color: #FE455D; font-weight: 700; text-align: center; }
+.bom-qty-added { background: #E8EFFF; color: #2A6FFC; font-weight: 700; }
+.bom-th-sub { display: block; color: var(--zcs-secondary-text-color); font-size: 12px; font-weight: 400; margin-top: 2px; }
+.bom-status-cell { min-width: 150px; }
+.bom-print-note { color: var(--zcs-secondary-text-color); font-size: 12px; margin-top: 12px; }
+@media (max-width: 900px) {
+  .bom-compare-page { padding: 12px; }
+  .zcs-page-header { padding: 16px; align-items: flex-start; }
+  .bom-prompt-field input { min-width: 260px; width: 100%; }
+}
+@media print {
+  .bom-compare-page { background: #FFFFFF; padding: 0; color: #000000; }
+  .zcs-page-header, .zcs-card, .zcs-table-wrapper { border: 0; box-shadow: none; }
+  .bom-toolbar-actions, .bom-prompt-form { display: none; }
+  .zcs-table-wrapper { overflow: visible; }
+  .zcs-table-wrapper table { min-width: 0; width: 100%; font-size: 10px; }
+  .zcs-table-wrapper table thead { position: static; display: table-header-group; }
+  .zcs-table-wrapper table thead tr th, .zcs-table-wrapper table tbody tr td { padding: 5px 6px; border-color: #A0A0A0; }
+  .zcs-table-wrapper table tbody tr { page-break-inside: avoid; }
+  .zcs-badge, .bom-qty-cell { color: #000000 !important; background: #FFFFFF !important; border: 1px solid #777777 !important; }
+}
+</style>
+
+<div class='bom-compare-page'>
+  <div class='zcs-page-header zcs-w-full zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-8 zcs-px-30 zcs-py-24 zcs-box-border'>
+    <div class='zcs-flex zcs-align-items-center zcs-gap-12 zcs-ellipsis bom-title-block'>
+      <i class='bom-header-icon zc-li-outline design-2-selection'></i>
+      <div class='zcs-ellipsis'>
+        <h2 class='zcs-font-22 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-ellipsis zcs-m-0'>BOM Compare</h2>
+        <p class='bom-page-note zcs-m-0 zcs-mt-6 zcs-font-14 zcs-color-secondary'>Compare two or more flattened BOMs side-by-side. The first selected item is treated as the base assembly.</p>
+      </div>
+    </div>
+    <% if(ready_to_compare == true) { base_header = selected_items.get(0); base_header_id = base_header.get("id"); %>
+      <div class='zcs-flex zcs-align-items-center zcs-gap-12 bom-toolbar-actions'>
+        <a class='zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body' href='#Page:BOM_Browser?item_id=<%=base_header_id%>' target='_self'>
+          <i class='zcs-button-icon zc-li-outline arrows-1-tail-right'></i>
+          <span class='zcs-button-text'>Open Base BOM</span>
+        </a>
+        <a class='zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body' href='#Page:BOM_Flatten_Page?item_id=<%=base_header_id%>' target='_self'>
+          <i class='zcs-button-icon zc-li-outline files-2-archive-drawer'></i>
+          <span class='zcs-button-text'>Flatten Base</span>
+        </a>
+      </div>
+    <% } %>
+  </div>
+
+  <% if(ready_to_compare == false) { %>
+    <div class='bom-prompt zcs-card zcs-mt-16'>
+      <div class='zcs-nodata-wrapper zcs-wh-full zcs-flex zcs-align-items-center zcs-justify-center zcs-text-center'>
+        <div class='zcs-nodata-content zcs-p-20 zcs-box-border'>
+          <i class='zc-li-outline ui-1-edit-72'></i>
+          <h3 class='zcs-m-0 zcs-font-18 zcs-font-semibold zcs-color-primary'>Select at least two Item Master records</h3>
+          <% if(has_request == true) { %>
+            <p class='zcs-m-0 zcs-mt-8 zcs-font-14 zcs-color-secondary'>Only <%=selected_items.size()%> valid active Item Master record(s) were resolved from the item_ids parameter. Invalid, duplicate, or deleted IDs are ignored.</p>
+          <% } else { %>
+            <p class='zcs-m-0 zcs-mt-8 zcs-font-14 zcs-color-secondary'>Pass comma-separated Item Master IDs. Put the base assembly first, followed by one or more variants or alternate assemblies.</p>
+          <% } %>
+          <form class='bom-prompt-form' method='get' action='#Page:BOM_Compare'>
+            <div class='bom-prompt-field'>
+              <label for='bom_compare_item_ids'>Item Master IDs</label>
+              <input id='bom_compare_item_ids' name='item_ids' type='text' placeholder='Example: 123456789,123456790,123456791'>
+            </div>
+            <button class='zcs-button zcs-primary-outline-button zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body' type='submit'>
+              <i class='zcs-button-icon zc-li-outline design-2-selection'></i>
+              <span class='zcs-button-text'>Compare BOMs</span>
+            </button>
+          </form>
+          <p class='zcs-m-0 zcs-mt-12 zcs-font-13 zcs-color-tertiary'>URL format: #Page:BOM_Compare?item_ids=BASE_ID,VARIANT_ID. Use IDs from the All Items report.</p>
+          <% if(invalid_count > 0) { %>
+            <p class='zcs-m-0 zcs-mt-8 zcs-font-13 zcs-color-tertiary'>Ignored invalid or unresolved token count: <%=invalid_count%>.</p>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  <% } else { %>
+    <div class='bom-context-grid'>
+      <%
+        for each index asm_index in selected_items
+        {
+          asm = selected_items.get(asm_index);
+          asm_id = asm.get("id");
+          asm_key = asm_id.toString();
+          asm_apn = ifnull(asm.get("apn"),"-");
+          asm_desc = ifnull(asm.get("description"),"-");
+          asm_rev = ifnull(asm.get("revision"),"-");
+          asm_lifecycle = ifnull(asm.get("lifecycle"),"-");
+          asm_variant_context = ifnull(asm.get("variant_context"),"");
+          asm_role = "Variant " + asm_index;
+          if(asm_index == 0)
+          {
+            asm_role = "Base";
+          }
+          direct_count = ifnull(assembly_direct_counts.get(asm_key),0);
+          line_count = ifnull(assembly_line_counts.get(asm_key),0);
+      %>
+        <div class='bom-assembly-card zcs-card'>
+          <div class='bom-assembly-role zcs-font-13 zcs-font-semibold zcs-color-theme'>
+            <i class='zc-li-outline ui-1-check-circle-08'></i>
+            <span><%=asm_role%></span>
+          </div>
+          <span class='bom-card-label'>APN</span>
+          <span class='bom-card-value'><%=asm_apn%></span>
+          <div class='bom-card-desc'><%=asm_desc%></div>
+          <div class='bom-card-meta'>
+            <span class='zcs-badge zcs-badge-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-theme'><span class='zcs-badge-text zcs-font-13 zcs-font-normal zcs-lh-body'>Rev <%=asm_rev%></span></span>
+            <span class='zcs-badge zcs-badge-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-grey'><span class='zcs-badge-text zcs-font-13 zcs-font-normal zcs-lh-body'><%=asm_lifecycle%></span></span>
+            <span class='zcs-badge zcs-badge-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-blue'><span class='zcs-badge-text zcs-font-13 zcs-font-normal zcs-lh-body'><%=direct_count%> direct</span></span>
+            <span class='zcs-badge zcs-badge-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-orange'><span class='zcs-badge-text zcs-font-13 zcs-font-normal zcs-lh-body'><%=line_count%> traversed</span></span>
+          </div>
+          <% if(asm_variant_context != "") { %>
+            <div class='zcs-mt-8 zcs-font-13 zcs-color-secondary'><%=asm_variant_context%></div>
+          <% } else if(asm_index > 0) { %>
+            <div class='zcs-mt-8 zcs-font-13 zcs-color-secondary'>No variant_of or variant_code context on this item.</div>
+          <% } %>
+        </div>
+      <% } %>
+    </div>
+
+    <% if(cap_any == true) { %>
+      <div class='bom-warning zcs-font-14'>
+        <i class='zc-li-outline travel-info'></i>One or more BOM traversals hit the <%=depth_cap%>-level cap or skipped a repeated branch to prevent a cycle. Review nested assemblies if the comparison looks incomplete.
+      </div>
+    <% } %>
+
+    <div class='bom-summary-grid'>
+      <div class='bom-kpi zcs-card'><div class='bom-kpi-label'>Assemblies</div><div class='bom-kpi-value'><%=selected_items.size()%></div></div>
+      <div class='bom-kpi zcs-card'><div class='bom-kpi-label'>Aligned APNs</div><div class='bom-kpi-value'><%=global_apn_order.size()%></div></div>
+      <div class='bom-kpi zcs-card'><div class='bom-kpi-label'>Matched Rows</div><div class='bom-kpi-value'><%=matched_rows%></div></div>
+      <div class='bom-kpi zcs-card'><div class='bom-kpi-label'>Changed Rows</div><div class='bom-kpi-value'><%=changed_rows%></div></div>
+      <div class='bom-kpi zcs-card'><div class='bom-kpi-label'>BOM Lines Traversed</div><div class='bom-kpi-value'><%=total_traversed%></div></div>
+    </div>
+
+    <div class='bom-toolbar'>
+      <div>
+        <div class='zcs-font-16 zcs-font-semibold zcs-color-primary'>Flattened BOM Alignment</div>
+        <div class='zcs-font-13 zcs-color-secondary'>Quantities are multiplicative across nested BOM levels and aggregated by child APN. Status compares each row to the first selected base item.</div>
+      </div>
+      <div class='bom-toolbar-actions'>
+        <a class='zcs-button zcs-primary-outline-button zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body' href='#Report:All_Items' target='_self'>
+          <i class='zcs-button-icon zc-li-outline ui-1-edit-72'></i>
+          <span class='zcs-button-text'>All Items</span>
+        </a>
+      </div>
+    </div>
+
+    <div class='zcs-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative'>
+      <table class='zcs-w-full'>
+        <thead class='zcs-sticky'>
+          <tr>
+            <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Component APN</th>
+            <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Description</th>
+            <% for each index hidx in selected_items { h_asm = selected_items.get(hidx); h_apn = ifnull(h_asm.get("apn"),"-"); h_label = "Variant " + hidx; if(hidx == 0) { h_label = "Base"; } %>
+              <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'><%=h_label%><span class='bom-th-sub'><%=h_apn%></span></th>
+            <% } %>
+            <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Delta Status</th>
+          </tr>
+          <tr class='zcs-tspace'><th class='zcs-py-2 zcs-box-border' colspan='<%=selected_items.size() + 3%>'></th></tr>
+        </thead>
+        <tbody>
+          <% if(global_apn_order.size() == 0) { %>
+            <tr>
+              <td class='bom-prompt zcs-px-16 zcs-py-8 zcs-box-border zcs-text-center zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-secondary' colspan='<%=selected_items.size() + 3%>'>No active BOM_Line children were found under any selected item.</td>
+            </tr>
+          <% } else { %>
+            <%
+              for each apn_key in global_apn_order
+              {
+                row_desc = ifnull(global_desc_map.get(apn_key),"-");
+                base_present = base_qty_map.get(apn_key) != null;
+                base_qty = ifnull(base_qty_map.get(apn_key),0);
+                present_count = 0;
+                missing_count = 0;
+                row_diff_count = 0;
+                for each index sidx in selected_items
+                {
+                  count_asm = selected_items.get(sidx);
+                  count_qty_map = assembly_qty_maps.get(count_asm.get("id").toString());
+                  count_qty = count_qty_map.get(apn_key);
+                  if(count_qty == null)
+                  {
+                    missing_count = missing_count + 1;
+                  }
+                  else
+                  {
+                    present_count = present_count + 1;
+                    if(sidx > 0 && base_present == true && count_qty != base_qty)
+                    {
+                      row_diff_count = row_diff_count + 1;
+                    }
+                  }
+                }
+                status_text = "Matched";
+                status_class = "zcs-badge-green";
+                if(present_count == selected_items.size() && row_diff_count == 0)
+                {
+                  status_text = "Matched";
+                  status_class = "zcs-badge-green";
+                }
+                else if(base_present == false)
+                {
+                  status_text = "Added vs base";
+                  status_class = "zcs-badge-blue";
+                }
+                else if(missing_count > 0 && row_diff_count > 0)
+                {
+                  status_text = "Missing and quantity differs";
+                  status_class = "zcs-badge-orange";
+                }
+                else if(missing_count > 0)
+                {
+                  status_text = "Missing in variant";
+                  status_class = "zcs-badge-red";
+                }
+                else
+                {
+                  status_text = "Quantity differs";
+                  status_class = "zcs-badge-orange";
+                }
+            %>
+              <tr>
+                <td class='bom-apn zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=apn_key%></td>
+                <td class='bom-desc zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=row_desc%></td>
+                <%
+                  for each index qidx in selected_items
+                  {
+                    q_asm = selected_items.get(qidx);
+                    q_qty_map = assembly_qty_maps.get(q_asm.get("id").toString());
+                    q_qty_value = q_qty_map.get(apn_key);
+                    qty_class = "bom-qty-cell bom-qty-missing";
+                    qty_display = "-";
+                    if(q_qty_value != null)
+                    {
+                      qty_display = q_qty_value;
+                      if(qidx == 0)
+                      {
+                        qty_class = "bom-qty-cell bom-qty-match";
+                      }
+                      else if(base_present == false)
+                      {
+                        qty_class = "bom-qty-cell bom-qty-added";
+                      }
+                      else if(q_qty_value != base_qty)
+                      {
+                        qty_class = "bom-qty-cell bom-qty-diff";
+                      }
+                      else
+                      {
+                        qty_class = "bom-qty-cell bom-qty-match";
+                      }
+                    }
+                %>
+                  <td class='bom-qty zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><span class='<%=qty_class%>'><%=qty_display%></span></td>
+                <% } %>
+                <td class='bom-status-cell zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left'>
+                  <span class='zcs-badge zcs-badge-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border <%=status_class%>'><span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'><%=status_text%></span></span>
+                </td>
+              </tr>
+            <% } %>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+    <p class='bom-print-note'>Print or export this page for an export-friendly side-by-side BOM comparison. Interactive navigation buttons are hidden in print media.</p>
+  <% } %>
+</div>

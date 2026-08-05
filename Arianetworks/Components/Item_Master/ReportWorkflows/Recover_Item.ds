@@ -1,0 +1,25 @@
+Recover_Item as "Recover Item"
+{
+    type = functions
+    form = Item_Master
+    execution type = for each record
+
+    on start
+    {
+        actions
+        {
+            on click
+            (
+                emp_id = thisapp.Get_Employee_For_Login(zoho.loginuser);
+                emp_rec = Employee_Master[ID == emp_id];
+                if (emp_rec.count() > 0 && emp_rec.profile_label in {"PRODUCT_CHANGE_ANALYST","ADMIN"})
+                {
+                    old_phase = input.lifecycle_phase;
+                    input.lifecycle_phase = "Unreleased";
+                    input.part_status = "In_Work";
+                    thisapp.Write_Activity_Log("Item_Master", input.apn, "lifecycle_phase", old_phase, "Unreleased", input.owner_employee);
+                }
+            )
+        }
+    }
+}

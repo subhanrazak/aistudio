@@ -1,0 +1,112 @@
+Change_Order_On_Validate as "Change Order - On Validate"
+{
+    type = form
+    form = Change_Order
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if (input.order_id == null || input.order_id == "")
+                {
+                    prefix_val = "ECO-";
+                    if (input.change_category == "Manufacturing_MCO")
+                    {
+                        prefix_val = "MCO-";
+                    }
+                    else if (input.change_category == "Process_PCO")
+                    {
+                        prefix_val = "PCO-";
+                    }
+                    else if (input.change_category == "Deviation")
+                    {
+                        prefix_val = "DEV-";
+                    }
+                    input.order_id = thisapp.Generate_Record_Code(prefix_val);
+                }
+                active_config = System_Config[is_active == true] sort by Added_Time desc;
+                if (active_config.count() == 0 || active_config.finance_approval_threshold_inr == null)
+                {
+                    alert "Active system configuration with finance approval threshold is required before submitting a Change Order.";
+                    cancel submit;
+                }
+                if (input.affected_items == null || input.affected_items.isEmpty())
+                {
+                    alert "At least one affected item is required.";
+                    cancel submit;
+                }
+                if (input.approvers == null || input.approvers.isEmpty())
+                {
+                    alert "At least one approver is required.";
+                    cancel submit;
+                }
+                if (input.effectivity_type == "Temporary_Deviation")
+                {
+                    if (input.expiration_date == null)
+                    {
+                        alert "Expiration Date is required for temporary deviations.";
+                        cancel submit;
+                    }
+                    if (ifnull(input.max_unit_count,0) <= 0)
+                    {
+                        alert "Max Unit Count must be greater than 0 for temporary deviations.";
+                        cancel submit;
+                    }
+                }
+                if (input.change_category == "Deviation")
+                {
+                    for each affected_row in input.affected_items
+                    {
+                        if (affected_row.child_item != null)
+                        {
+                            item_rec = Item_Master[ID == affected_row.child_item];
+                            if (item_rec.count() > 0 && item_rec.lifecycle_phase not in {"Design","Production"})
+                            {
+                                alert "Deviation affected items must be in Design or Production lifecycle phase.";
+                                cancel submit;
+                            }
+                        }
+                    }
+                }
+                if (active_config.count() > 0 && ifnull(input.estimated_cost_impact,0) >= ifnull(active_config.finance_approval_threshold_inr,0))
+                {
+                    finance_exists = false;
+                    max_seq = 0;
+                    for each existing_app in input.approvers
+                    {
+                        if (ifnull(existing_app.sequence_no,0) > max_seq)
+                        {
+                            max_seq = existing_app.sequence_no;
+                        }
+                        if (existing_app.added_by_cost_rule == true)
+                        {
+                            finance_exists = true;
+                        }
+                    }
+                    if (finance_exists == false)
+                    {
+                        finance_route = Approval_Matrix_Template[is_default_finance_approver == true && is_active == true] sort by sequence_no;
+                        if (finance_route.count() == 0)
+                        {
+                            alert "Finance approval threshold is met, but no active default finance approver is configured.";
+                            cancel submit;
+                        }
+                        for each finance_line in finance_route
+                        {
+                            max_seq = max_seq + 1;
+                            finance_row = Change_Order.approvers();
+                            finance_row.approver = finance_line.approver;
+                            finance_row.sequence_no = max_seq;
+                            finance_row.decision = "Pending";
+                            finance_row.added_by_cost_rule = true;
+                            input.approvers.insert(finance_row);
+                        }
+                    }
+                }
+            )
+        }
+    }
+}

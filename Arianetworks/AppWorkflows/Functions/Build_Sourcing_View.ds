@@ -1,0 +1,20 @@
+list Build_Sourcing_View(int root_item_id)
+{
+    rows = List();
+    bom_rows = thisapp.Flatten_BOM(root_item_id);
+    for each bom_map in bom_rows
+    {
+        item_rec = Item_Master[ID == bom_map.get("item_id")];
+        if (item_rec.count() > 0)
+        {
+            row_map = Map();
+            row_map.put("apn", item_rec.apn);
+            row_map.put("primary_mfg", item_rec.mfg_0);
+            row_map.put("primary_mpn", item_rec.mpn_0);
+            row_map.put("lifecycle_phase", item_rec.lifecycle_phase);
+            row_map.put("depth", bom_map.get("depth"));
+            rows.add(row_map);
+        }
+    }
+    return rows;
+}

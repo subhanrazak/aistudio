@@ -1,0 +1,29 @@
+<%
+my_emp = Employee_Master[email == zoho.loginuserid && is_active == true];
+my_id = 0;
+if(my_emp.count() > 0){my_id = my_emp.ID;}
+approvals = Approval_Matrix_Line[decision == "Pending"] sort by sequence_no range from 0 to 4;
+myNirs = New_Item_Request[raised_by_employee == my_id && status != "Approved" && status != "Rejected"] sort by request_datetime desc range from 0 to 4;
+myRequests = Change_Request[requested_by_employee == my_id && status != "Converted" && status != "Rejected"] sort by created_date desc range from 0 to 4;
+%>
+<style>
+.plm-queue{background:#fff;border:1px solid var(--zcs_tertiary_border_color);border-radius:14px;padding:18px;margin:0 20px 16px 10px;box-sizing:border-box}.plm-queue h2{font-size:17px;margin:0 0 12px}.plm-list{display:grid;gap:10px}.plm-item{border:1px solid #EEF0F6;border-radius:10px;padding:10px}.plm-title{font-size:14px;font-weight:600;color:var(--zcs_primary_text_color)}.plm-meta{font-size:12px;color:var(--zcs_secondary_text_color);margin-top:4px}.plm-empty{color:var(--zcs_secondary_text_color);font-size:13px;padding:12px;border:1px dashed var(--zcs_tertiary_border_color);border-radius:10px}.plm-q-actions{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 0}.plm-q-link{font-size:12px;color:var(--zcs_brand_color);text-decoration:none;border:1px solid var(--zcs_brand_color);border-radius:999px;padding:6px 10px}@media(max-width:700px){.plm-queue{margin:0 12px 14px}}
+</style>
+<div class="plm-queue">
+  <h2>My Pending Approvals</h2>
+  <div class="plm-list">
+  <% rows = 0; for each a in approvals { rows = rows + 1; approverName = "Pending approver"; if(a.approver != null){ap = Employee_Master[ID == a.approver]; if(ap.count() > 0){approverName = ifnull(ap.employee_name,"Approver");}} %>
+    <div class="plm-item"><div class="plm-title"><%=approverName%></div><div class="plm-meta">Sequence <%=ifnull(a.sequence_no,"-")%> | Decision <%=ifnull(a.decision,"Pending")%></div></div>
+  <% } if(rows == 0) { %><div class="plm-empty">No pending approval rows are currently visible.</div><% } %>
+  </div>
+  <div class="plm-q-actions"><a class="plm-q-link" href="#Report:My_Pending_Approvals">Open approval inbox</a></div>
+</div>
+<div class="plm-queue">
+  <h2>My Engineering Requests</h2>
+  <div class="plm-list">
+  <% requestRows = 0; for each n in myNirs { requestRows = requestRows + 1; %><div class="plm-item"><div class="plm-title"><%=ifnull(n.nir_id,n.ID.toString())%></div><div class="plm-meta"><%=ifnull(n.description,"New item request")%> | <%=ifnull(n.status,"Open")%></div></div><% } %>
+  <% for each r in myRequests { requestRows = requestRows + 1; %><div class="plm-item"><div class="plm-title"><%=ifnull(r.request_id,r.ID.toString())%> - <%=ifnull(r.title,"")%></div><div class="plm-meta"><%=ifnull(r.request_type,"Change")%> | <%=ifnull(r.status,"Open")%></div></div><% } %>
+  <% if(requestRows == 0) { %><div class="plm-empty">No personal open NIR/ECR/MCR requests are currently visible.</div><% } %>
+  </div>
+  <div class="plm-q-actions"><a class="plm-q-link" href="#Report:My_NIRs">My NIRs</a><a class="plm-q-link" href="#Report:My_Requests">My Requests</a></div>
+</div>

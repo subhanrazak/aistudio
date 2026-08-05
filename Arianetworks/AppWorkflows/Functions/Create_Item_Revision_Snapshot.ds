@@ -1,0 +1,22 @@
+void Create_Item_Revision_Snapshot(int item_id, int change_order_id)
+{
+    item_rec = Item_Master[ID == item_id];
+    if (item_rec.count() > 0)
+    {
+        snapshot_map = Map();
+        snapshot_map.put("apn", item_rec.apn);
+        snapshot_map.put("revision", item_rec.revision);
+        snapshot_map.put("lifecycle_phase", item_rec.lifecycle_phase);
+        snapshot_map.put("part_status", item_rec.part_status);
+        snapshot_map.put("description", item_rec.description);
+        insert into Item_Revision_History
+        [
+            history_id = thisapp.Generate_Record_Code("REV-")
+            item = item_rec.ID
+            revision_label = item_rec.revision
+            effective_change_order = change_order_id
+            snapshot_json = snapshot_map.toString()
+            effective_date = zoho.currenttime
+        ];
+    }
+}

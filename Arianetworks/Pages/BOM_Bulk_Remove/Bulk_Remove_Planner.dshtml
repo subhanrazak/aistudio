@@ -1,0 +1,433 @@
+<%
+  base = "https://creatorapp.zoho.com/" + zoho.adminuser + "/" + zoho.appname + "/";
+  reportBase = base + "report-embed/";
+  pageBase = base + "page-embed/";
+  formBase = base + "form-embed/";
+
+  reportChrome = "?zc_Header=false&amp;zc_Footer=true&amp;zc_AddRec=false&amp;zc_EditRec=false&amp;zc_DelRec=false&amp;zc_DuplRec=false&amp;zc_Search=true&amp;zc_ColMenu=true&amp;zc_MoreAction=false";
+  pageChrome = "?zc_Header=false&amp;zc_Footer=false";
+  formChrome = "?zc_Header=true&amp;zc_Footer=true";
+
+  allItemsUrl = reportBase + "All_Items/" + reportChrome;
+  whereUsedUrl = reportBase + "Where_Used/" + reportChrome;
+  whereExplorerUrl = pageBase + "Where_Used_Explorer/" + pageChrome;
+  redlineUrl = pageBase + "BOM_Redline_Viewer/" + pageChrome;
+  allChangeOrdersUrl = reportBase + "All_Change_Orders/" + reportChrome;
+  changeOrderFormUrl = formBase + "Change_Order/" + formChrome + "&amp;change_category=Engineering_ECO&amp;title=Bulk%20BOM%20Remove%20Proposal&amp;description=Bulk%20BOM%20removal%20proposal.%20Record%20selected%20child%20item%20IDs,%20affected%20parent%20assembly%20IDs,%20and%20BOM%20redline%20removal%20instructions.%20Released%20BOM%20changes%20apply%20only%20after%20approval%20and%20release.&amp;effectivity_type=Permanent_Immediate&amp;status=Open";
+
+  allItemsShell = "#Report:All_Items";
+  whereUsedShell = "#Report:Where_Used";
+  whereExplorerShell = "#Page:Where_Used_Explorer";
+  redlineShell = "#Page:BOM_Redline_Viewer";
+  changeOrderShell = "#Form:Change_Order?zc_LoadIn=dialog&amp;zc_Header=true&amp;change_category=Engineering_ECO&amp;title=Bulk%20BOM%20Remove%20Proposal&amp;description=Bulk%20BOM%20removal%20proposal.%20Record%20selected%20child%20item%20IDs,%20affected%20parent%20assembly%20IDs,%20and%20redline%20removal%20instructions.&amp;effectivity_type=Permanent_Immediate&amp;status=Open";
+  allChangeOrdersShell = "#Report:All_Change_Orders";
+%>
+<style>
+/* ZCS global utility subset included once for this page. Component classes are adapted from zcs-global, header-heading-with-actions, banner-outline-banner-with-icon, no-data-no-data-with-buttons, table-simple-table, and button-primary-button. */
+:root {
+  --zcs-theme-brand-color: var(--zcs_brand_color);
+  --zcs-light-bg-color: var(--zcs_brand_light_color);
+  --zcs-page-bg-color: #F3F3F4;
+  --zcs-primary-text-color: var(--zcs_primary_text_color);
+  --zcs-secondary-text-color: var(--zcs_secondary_text_color);
+  --zcs-teritiary-text-color: var(--zcs_tertiary_text_color);
+  --zcs-border-color: var(--zcs_tertiary_border_color);
+  --zcs-white-color: #FFFFFF;
+  --zcs-thead-color: #F9FAFE;
+  --zcs-tr-h-color: #F9FAFE;
+  font-size: 16px;
+  line-height: 1.5;
+}
+.bom-bulk-remove * { box-sizing: border-box; }
+.bom-bulk-remove a { text-decoration: none; }
+.zcs-w-full { width: 100%; }
+.zcs-wh-full { width: 100%; height: 100%; }
+.zcs-flex { display: flex; }
+.zcs-inline-flex { display: inline-flex; }
+.zcs-row { display: flex; flex-wrap: wrap; }
+.zcs-direction-column { flex-direction: column; }
+.zcs-align-items-center { align-items: center; }
+.zcs-align-items-start { align-items: flex-start; }
+.zcs-justify-center { justify-content: center; }
+.zcs-justify-space-between { justify-content: space-between; }
+.zcs-gap-6 { gap: 0.375rem; }
+.zcs-gap-8 { gap: 0.5rem; }
+.zcs-gap-10 { gap: 0.625rem; }
+.zcs-gap-12 { gap: 0.75rem; }
+.zcs-gap-16 { gap: 1rem; }
+.zcs-gap-20 { gap: 1.25rem; }
+.zcs-p-8 { padding: 0.5rem; }
+.zcs-p-16 { padding: 1rem; }
+.zcs-p-20 { padding: 1.25rem; }
+.zcs-px-12 { padding-left: 0.75rem; padding-right: 0.75rem; }
+.zcs-px-16 { padding-left: 1rem; padding-right: 1rem; }
+.zcs-px-24 { padding-left: 1.5rem; padding-right: 1.5rem; }
+.zcs-px-30 { padding-left: 1.875rem; padding-right: 1.875rem; }
+.zcs-py-2 { padding-top: 0.125rem; padding-bottom: 0.125rem; }
+.zcs-py-8 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+.zcs-py-10 { padding-top: 0.625rem; padding-bottom: 0.625rem; }
+.zcs-py-12 { padding-top: 0.75rem; padding-bottom: 0.75rem; }
+.zcs-py-16 { padding-top: 1rem; padding-bottom: 1rem; }
+.zcs-py-24 { padding-top: 1.5rem; padding-bottom: 1.5rem; }
+.zcs-m-0 { margin: 0; }
+.zcs-mx-0 { margin-left: 0; margin-right: 0; }
+.zcs-mt-6 { margin-top: 0.375rem; }
+.zcs-mt-8 { margin-top: 0.5rem; }
+.zcs-mt-10 { margin-top: 0.625rem; }
+.zcs-mt-12 { margin-top: 0.75rem; }
+.zcs-mt-16 { margin-top: 1rem; }
+.zcs-mt-20 { margin-top: 1.25rem; }
+.zcs-mb-0 { margin-bottom: 0; }
+.zcs-box-border { box-sizing: border-box; }
+.zcs-relative { position: relative; }
+.zcs-sticky { position: sticky; }
+.zcs-rounded-sm { border-radius: 0.25rem; }
+.zcs-rounded-md { border-radius: 0.375rem; }
+.zcs-rounded-lg { border-radius: 0.5rem; }
+.zcs-rounded-xl { border-radius: 0.75rem; }
+.zcs-text-left { text-align: left; }
+.zcs-text-right { text-align: right; }
+.zcs-text-center { text-align: center; }
+.zcs-font-12 { font-size: 0.75rem; }
+.zcs-font-13 { font-size: 0.8125rem; }
+.zcs-font-14 { font-size: 0.875rem; }
+.zcs-font-15 { font-size: 0.9375rem; }
+.zcs-font-16 { font-size: 1rem; }
+.zcs-font-18 { font-size: 1.125rem; }
+.zcs-font-20 { font-size: 1.25rem; }
+.zcs-font-22 { font-size: 1.375rem; }
+.zcs-font-normal { font-weight: 400; }
+.zcs-font-medium { font-weight: 500; }
+.zcs-font-semibold { font-weight: 600; }
+.zcs-font-bold { font-weight: 700; }
+.zcs-lh-body { line-height: 1.5; }
+.zcs-lh-heading { line-height: 1.25; }
+.zcs-color-primary { color: var(--zcs-primary-text-color); }
+.zcs-color-secondary { color: var(--zcs-secondary-text-color); }
+.zcs-color-tertiary, .zcs-color-teritiary { color: var(--zcs-teritiary-text-color); }
+.zcs-color-theme { color: var(--zcs-theme-brand-color); }
+.zcs-color-white { color: var(--zcs-white-color); }
+.zcs-ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.zcs-card { background-color: var(--zcs-white-color); border: 1px solid #e7e7ee; border-radius: 12px; }
+
+/* Button component */
+.zcs-button { width: auto; min-width: 5rem; min-height: 36px; transition: all 0.2s linear; }
+.zcs-primary-button { background-color: var(--zcs_brand_color); color: var(--zcs_brand_foreground_color); }
+.zcs-primary-button.zcs-button:hover { background-color: var(--zcs_brand_dark_color); color: var(--zcs_brand_foreground_color); }
+.zcs-primary-outline-button { border: 1px solid var(--zcs_brand_color); background-color: var(--zcs-white-color); color: var(--zcs_brand_color); }
+.zcs-primary-outline-button:hover { background-color: var(--zcs_component_hover_color); border-color: var(--zcs_brand_color); color: var(--zcs_brand_color); }
+.zcs-secondary-button { border: 1px solid var(--zcs_tertiary_border_color); background-color: var(--zcs_light_grey_color); color: var(--zcs_primary_text_color); }
+.zcs-secondary-button:hover { border-color: var(--zcs_brand_color); color: var(--zcs_brand_color); background-color: var(--zcs_component_hover_color); }
+.zcs-button-icon { width: 16px; max-height: 16px; }
+
+/* Header component */
+.zcs-page-header { background: var(--zcs-white-color); border: 1px solid #e7e7ee; border-radius: 12px; }
+.zcs-page-header .zcs-header-icon { color: var(--zcs_brand_color); font-size: 24px; }
+
+/* Banner component */
+.zcs-toast-link:hover { text-decoration: underline; }
+.zcs-outline-toast { border: 1px solid; }
+.zcs-theme-toast { background-color: var(--zcs_component_hover_color); }
+.zcs-outline-toast.zcs-theme-toast { border: 1px solid var(--zcs_brand_color); }
+.zcs-warning-toast { background-color: #fef4e5; color: #663c01; border-color: #ed6c03; }
+.zcs-toast-icon { font-size: 18px; margin-top: 2px; }
+
+/* Table component */
+.zcs-table-wrapper { border: 1px solid var(--zcs_tertiary_border_color); background-color: var(--zcs-white-color); overflow: auto; }
+.zcs-table-wrapper table { line-height: normal; border-collapse: collapse; min-width: 920px; }
+.zcs-table-wrapper table thead { top: 0; z-index: 2; }
+.zcs-table-wrapper table thead tr th { background-color: var(--zcs-thead-color); box-shadow: 0 -1px 0 0 var(--zcs_tertiary_border_color) inset; white-space: nowrap; }
+.zcs-table-wrapper table thead tr.zcs-tspace th { background-color: var(--zcs-white-color); box-shadow: none; }
+.zcs-table-wrapper table tbody tr td { border-top: 1px solid var(--zcs_tertiary_border_color); vertical-align: top; }
+.zcs-table-wrapper table tbody tr:first-child td { border-color: transparent; }
+.zcs-table-wrapper table tbody tr:hover td { background-color: var(--zcs-tr-h-color); }
+
+/* Page specific layout */
+.bom-bulk-remove { min-height: 100%; background: var(--zcs-page-bg-color); color: var(--zcs-primary-text-color); padding: 20px; }
+.bbr-shell { display: grid; grid-template-columns: minmax(320px, 420px) minmax(0, 1fr); gap: 18px; align-items: start; margin-top: 18px; }
+.bbr-left, .bbr-right { display: flex; flex-direction: column; gap: 16px; }
+.bbr-card-title { display: flex; align-items: center; gap: 8px; }
+.bbr-card-title i { color: var(--zcs_brand_color); font-size: 18px; }
+.bbr-card-desc { color: var(--zcs-secondary-text-color); font-size: 13px; margin-top: 6px; }
+.bbr-step-list { display: grid; gap: 10px; margin-top: 14px; }
+.bbr-step { display: grid; grid-template-columns: 30px 1fr; gap: 10px; align-items: start; padding: 12px; border: 1px solid var(--zcs_tertiary_border_color); border-radius: 10px; background: #FFFFFF; }
+.bbr-step i { color: var(--zcs_brand_color); font-size: 18px; margin-top: 2px; }
+.bbr-step strong { display: block; font-size: 14px; color: var(--zcs-primary-text-color); }
+.bbr-step span { display: block; font-size: 13px; color: var(--zcs-secondary-text-color); margin-top: 2px; }
+.bbr-form-grid { display: grid; gap: 10px; margin-top: 12px; }
+.bbr-field label { display: block; font-size: 12px; color: var(--zcs-secondary-text-color); margin-bottom: 4px; }
+.bbr-field input, .bbr-field textarea { width: 100%; min-height: 36px; border: 1px solid var(--zcs_tertiary_border_color); border-radius: 6px; padding: 8px 10px; background: #FFFFFF; color: var(--zcs-primary-text-color); font-size: 14px; }
+.bbr-field textarea { min-height: 88px; resize: vertical; }
+.bbr-action-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+.bbr-mini-link { display: inline-flex; align-items: center; gap: 6px; color: var(--zcs_brand_color); border: 1px solid var(--zcs_tertiary_border_color); border-radius: 6px; padding: 6px 10px; background: #FFFFFF; font-size: 13px; line-height: 1.2; }
+.bbr-mini-link:hover { border-color: var(--zcs_brand_color); background: var(--zcs_component_hover_color); }
+.bbr-preview-frame { width: 100%; min-height: 680px; border: 1px solid var(--zcs_tertiary_border_color); border-radius: 12px; background: #FFFFFF; }
+.bbr-preview-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.bbr-quick-links { display: flex; gap: 8px; flex-wrap: wrap; }
+.bbr-note { border-left: 3px solid var(--zcs_brand_color); background: var(--zcs_component_hover_color); border-radius: 8px; padding: 12px; font-size: 13px; color: var(--zcs-secondary-text-color); }
+.bbr-warning-note { border: 1px solid #ed6c03; background: #fef4e5; color: #663c01; }
+.bbr-empty { min-height: 220px; }
+.bbr-nodata-icon { color: var(--zcs_brand_color); font-size: 38px; display: block; margin-bottom: 12px; }
+.bbr-check { width: 16px; height: 16px; accent-color: var(--zcs_brand_color); }
+.bbr-status-pill { display: inline-flex; align-items: center; gap: 6px; border: 1px solid #ed6c03; background: #fef4e5; color: #663c01; border-radius: 999px; padding: 3px 9px; white-space: nowrap; }
+.bbr-code { font-family: monospace; font-size: 12px; color: var(--zcs-primary-text-color); background: #F6F7FB; border: 1px solid var(--zcs_tertiary_border_color); border-radius: 6px; padding: 8px; overflow-wrap: anywhere; }
+@media (max-width: 1100px) {
+  .bbr-shell { grid-template-columns: 1fr; }
+  .bbr-preview-frame { min-height: 560px; }
+}
+@media (max-width: 576px) {
+  .bom-bulk-remove { padding: 12px; }
+  .zcs-page-header { padding: 16px; align-items: flex-start; flex-direction: column; }
+  .zcs-page-header .zcs-button-text { display: none; }
+  .bbr-action-row .zcs-button, .bbr-action-row .bbr-mini-link { width: 100%; justify-content: center; }
+}
+</style>
+
+<div class='bom-bulk-remove'>
+  <div class='zcs-page-header zcs-w-full zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-8 zcs-px-30 zcs-py-24 zcs-box-border'>
+    <div class='zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-10 zcs-ellipsis'>
+      <i class='zcs-header-icon zc-li-outline ui-1-trash-simple'></i>
+      <div class='zcs-ellipsis'>
+        <h2 class='zcs-font-22 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-ellipsis zcs-m-0'>BOM Bulk Remove Planner</h2>
+        <p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-secondary zcs-m-0 zcs-mt-6'>Plan child-item removals as a Change Order proposal. This page does not directly delete or strike BOM lines.</p>
+      </div>
+    </div>
+    <div class='zcs-flex zcs-align-items-center zcs-gap-12'>
+      <a class='zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body' href='<%=allChangeOrdersShell%>' target='_self'>
+        <i class='zcs-button-icon zc-li-outline files-2-archive-drawer'></i>
+        <span class='zcs-button-text'>All Change Orders</span>
+      </a>
+      <a class='zcs-button zcs-primary-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body' href='<%=changeOrderShell%>' target='_self'>
+        <i class='zcs-button-icon zc-li-outline ui-1-simple-add'></i>
+        <span class='zcs-button-text'>Open CO Form</span>
+      </a>
+    </div>
+  </div>
+
+  <div class='zcs-toast zcs-outline-toast zcs-warning-toast zcs-w-full zcs-flex zcs-gap-8 zcs-px-16 zcs-py-12 zcs-rounded-sm zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body zcs-mt-16'>
+    <i class='zcs-toast-icon zcs-no-shrink zcs-lh-body zc-li-outline travel-info'></i>
+    <div class='zcs-toast-text'>
+      <p class='zcs-m-0'><strong>Released BOMs require an approved Change Order.</strong> Bulk removal is proposed by Change_Order redline instructions and planned removal flags. Actual BOM removal or strike status applies only after approval and release through controlled workflows.</p>
+    </div>
+  </div>
+
+  <div class='bbr-shell'>
+    <div class='bbr-left'>
+      <div class='zcs-card zcs-p-20'>
+        <div class='bbr-card-title'>
+          <i class='zc-li-outline ui-1-check-circle-08'></i>
+          <h3 class='zcs-m-0 zcs-font-18 zcs-font-semibold zcs-color-primary'>Workflow</h3>
+        </div>
+        <p class='bbr-card-desc zcs-m-0'>Use the reports and pages below to gather child and parent IDs, then create or open a Change Order proposal. The page itself only reads and navigates.</p>
+        <div class='bbr-step-list'>
+          <div class='bbr-step'>
+            <i class='zc-li-outline files-2-archive-drawer'></i>
+            <div><strong>1. Select child item candidates</strong><span>Search All Items, confirm item APN, lifecycle, revision, and Item Master ID.</span></div>
+          </div>
+          <div class='bbr-step'>
+            <i class='zc-li-outline arrows-1-tail-right'></i>
+            <div><strong>2. Inspect where-used results</strong><span>Open Where Used Explorer or the Where Used report for the child item. Select only the affected parent assemblies.</span></div>
+          </div>
+          <div class='bbr-step'>
+            <i class='zc-li-outline ui-1-edit-72'></i>
+            <div><strong>3. Create a controlled proposal</strong><span>Use Propose_Bulk_Remove_Change_Order from a controlled action, or open Change_Order and paste the selected IDs and redline instructions.</span></div>
+          </div>
+          <div class='bbr-step'>
+            <i class='zc-li-outline ui-2-time'></i>
+            <div><strong>4. Release applies changes</strong><span>Review BOM_Redline_Viewer before release. Removal flags are effective only after approval and release.</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class='zcs-card zcs-p-20'>
+        <div class='bbr-card-title'>
+          <i class='zc-li-outline ui-1-edit-72'></i>
+          <h3 class='zcs-m-0 zcs-font-18 zcs-font-semibold zcs-color-primary'>Search and selection controls</h3>
+        </div>
+        <p class='bbr-card-desc zcs-m-0'>These controls update the preview pane only. They do not create, update, delete, or strike BOM records.</p>
+
+        <form class='bbr-form-grid' action='<%=reportBase%>All_Items/' method='get' target='bulkPlannerFrame'>
+          <input type='hidden' name='zc_Header' value='false'>
+          <input type='hidden' name='zc_Footer' value='true'>
+          <input type='hidden' name='zc_AddRec' value='false'>
+          <input type='hidden' name='zc_EditRec' value='false'>
+          <input type='hidden' name='zc_DelRec' value='false'>
+          <div class='bbr-field'>
+            <label for='bbr_apn'>Child item APN or exact item field value</label>
+            <input id='bbr_apn' name='apn' type='text' placeholder='Example: CAP-100-001'>
+          </div>
+          <button class='zcs-button zcs-primary-outline-button zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body' type='submit'>
+            <i class='zcs-button-icon zc-li-outline arrows-1-tail-right'></i>
+            <span class='zcs-button-text'>Search All Items</span>
+          </button>
+        </form>
+
+        <form class='bbr-form-grid zcs-mt-16' action='<%=pageBase%>Where_Used_Explorer/' method='get' target='bulkPlannerFrame'>
+          <input type='hidden' name='zc_Header' value='false'>
+          <input type='hidden' name='zc_Footer' value='false'>
+          <div class='bbr-field'>
+            <label for='bbr_item_id'>Child Item Master ID for upward BOM traversal</label>
+            <input id='bbr_item_id' name='item_id' type='number' placeholder='Paste the Item Master ID'>
+          </div>
+          <button class='zcs-button zcs-primary-outline-button zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body' type='submit'>
+            <i class='zcs-button-icon zc-li-outline arrows-1-tail-right'></i>
+            <span class='zcs-button-text'>Open Where Used Explorer</span>
+          </button>
+        </form>
+
+        <form class='bbr-form-grid zcs-mt-16' action='<%=reportBase%>Where_Used/' method='get' target='bulkPlannerFrame'>
+          <input type='hidden' name='zc_Header' value='false'>
+          <input type='hidden' name='zc_Footer' value='true'>
+          <input type='hidden' name='zc_AddRec' value='false'>
+          <input type='hidden' name='zc_EditRec' value='false'>
+          <input type='hidden' name='zc_DelRec' value='false'>
+          <div class='bbr-field'>
+            <label for='bbr_child_item_lookup'>Where Used report child_item ID</label>
+            <input id='bbr_child_item_lookup' name='child_item' type='number' placeholder='Paste the child Item Master ID'>
+          </div>
+          <button class='zcs-button zcs-primary-outline-button zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body' type='submit'>
+            <i class='zcs-button-icon zc-li-outline files-2-archive-drawer'></i>
+            <span class='zcs-button-text'>Open Where Used Report</span>
+          </button>
+        </form>
+      </div>
+
+      <div class='zcs-card zcs-p-20'>
+        <div class='bbr-card-title'>
+          <i class='zc-li-outline ui-1-simple-add'></i>
+          <h3 class='zcs-m-0 zcs-font-18 zcs-font-semibold zcs-color-primary'>Controlled proposal path</h3>
+        </div>
+        <p class='bbr-card-desc zcs-m-0'>After confirming child and parent selections, create the Change Order proposal through an approved action or the Change_Order form.</p>
+        <div class='bbr-note zcs-mt-12'>
+          Preferred controlled function/action: <span class='bbr-code'>thisapp.Propose_Bulk_Remove_Change_Order(child_item_ids, parent_item_ids)</span>
+        </div>
+        <div class='bbr-action-row'>
+          <a class='zcs-button zcs-primary-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body' href='<%=changeOrderFormUrl%>' target='bulkPlannerFrame'>
+            <i class='zcs-button-icon zc-li-outline ui-1-simple-add'></i>
+            <span class='zcs-button-text'>Open CO Form in Preview</span>
+          </a>
+          <a class='zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body' href='<%=changeOrderShell%>' target='_self'>
+            <i class='zcs-button-icon zc-li-outline ui-1-edit-72'></i>
+            <span class='zcs-button-text'>Open CO Form Dialog</span>
+          </a>
+        </div>
+        <div class='bbr-warning-note zcs-rounded-md zcs-p-16 zcs-mt-16 zcs-font-13'>
+          Do not use report delete actions for released BOM removals. The proposal should carry the child item IDs, parent assembly IDs, reason, and redline instructions. Approval and release workflows perform the final mutation.
+        </div>
+      </div>
+    </div>
+
+    <div class='bbr-right'>
+      <div class='zcs-card zcs-p-20'>
+        <div class='bbr-preview-toolbar'>
+          <div class='bbr-card-title'>
+            <i class='zc-li-outline files-2-archive-drawer'></i>
+            <h3 class='zcs-m-0 zcs-font-18 zcs-font-semibold zcs-color-primary'>Preview and evidence</h3>
+          </div>
+          <div class='bbr-quick-links'>
+            <a class='bbr-mini-link' href='<%=allItemsUrl%>' target='bulkPlannerFrame'><i class='zc-li-outline files-2-archive-drawer'></i> All Items</a>
+            <a class='bbr-mini-link' href='<%=whereUsedUrl%>' target='bulkPlannerFrame'><i class='zc-li-outline arrows-1-tail-right'></i> Where Used</a>
+            <a class='bbr-mini-link' href='<%=allChangeOrdersUrl%>' target='bulkPlannerFrame'><i class='zc-li-outline ui-1-edit-72'></i> Change Orders</a>
+          </div>
+        </div>
+        <p class='bbr-card-desc zcs-m-0 zcs-mt-8'>Use the preview to identify child item IDs, direct parent assembly IDs, and open Change Orders. Links below also open the app-shell pages and reports if a full-screen view is needed.</p>
+        <iframe name='bulkPlannerFrame' class='bbr-preview-frame zcs-mt-16' src='<%=allItemsUrl%>'></iframe>
+        <div class='bbr-action-row'>
+          <a class='bbr-mini-link' href='<%=allItemsShell%>' target='_self'><i class='zc-li-outline files-2-archive-drawer'></i> Open All_Items</a>
+          <a class='bbr-mini-link' href='<%=whereUsedShell%>' target='_self'><i class='zc-li-outline arrows-1-tail-right'></i> Open Where_Used</a>
+          <a class='bbr-mini-link' href='<%=whereExplorerShell%>' target='_self'><i class='zc-li-outline arrows-1-tail-right'></i> Open Where_Used_Explorer</a>
+          <a class='bbr-mini-link' href='<%=redlineShell%>' target='_self'><i class='zc-li-outline ui-1-edit-72'></i> Open BOM_Redline_Viewer</a>
+        </div>
+      </div>
+
+      <div class='zcs-card zcs-p-20'>
+        <div class='bbr-card-title'>
+          <i class='zc-li-outline ui-1-check-circle-08'></i>
+          <h3 class='zcs-m-0 zcs-font-18 zcs-font-semibold zcs-color-primary'>Local selection worksheet</h3>
+        </div>
+        <p class='bbr-card-desc zcs-m-0'>This worksheet is a visual checklist only. It is intentionally not saved by the page. Transfer confirmed IDs into the controlled Change Order proposal.</p>
+        <div class='zcs-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative zcs-mt-12'>
+          <table class='zcs-w-full'>
+            <thead class='zcs-sticky'>
+              <tr>
+                <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Select</th>
+                <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Planning record</th>
+                <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>What to capture</th>
+                <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Proposal instruction</th>
+                <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Release status</th>
+              </tr>
+              <tr class='zcs-tspace'><th class='zcs-py-2 zcs-box-border' colspan='5'></th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left'><input class='bbr-check' type='checkbox'></td>
+                <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary'>Child item candidate</td>
+                <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-secondary'>Item Master ID, APN, current revision, lifecycle phase.</td>
+                <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-secondary'>Request removal of this child from selected parent assemblies by redline.</td>
+                <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14'><span class='bbr-status-pill'><i class='zc-li-outline ui-2-time'></i> Pending CO</span></td>
+              </tr>
+              <tr>
+                <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left'><input class='bbr-check' type='checkbox'></td>
+                <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary'>Affected parent assembly</td>
+                <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-secondary'>Parent Item Master ID, APN, BOM line number, current quantity.</td>
+                <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-secondary'>Mark the matching BOM line as planned removal in the Change Order redline.</td>
+                <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14'><span class='bbr-status-pill'><i class='zc-li-outline ui-2-time'></i> Pending CO</span></td>
+              </tr>
+              <tr>
+                <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left'><input class='bbr-check' type='checkbox'></td>
+                <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary'>Indirect ancestor impact</td>
+                <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-secondary'>Where-used path, level, and cumulative path quantity.</td>
+                <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-secondary'>Add review notes for assemblies affected through the selected direct parent.</td>
+                <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14'><span class='bbr-status-pill'><i class='zc-li-outline ui-2-time'></i> Pending CO</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class='zcs-card zcs-p-20 bbr-empty'>
+        <div class='zcs-nodata-wrapper zcs-wh-full zcs-flex zcs-align-items-center zcs-justify-center zcs-text-center'>
+          <div class='zcs-nodata-content zcs-p-20 zcs-box-border'>
+            <i class='bbr-nodata-icon zc-li-outline travel-info'></i>
+            <h5 class='zcs-nodata-header zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-mt-10 zcs-mx-0 zcs-mb-0'>No proposal selections are stored on this page</h5>
+            <p class='zcs-nodata-desc zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-teritiary zcs-mt-12 zcs-mx-0 zcs-mb-0'>The planner starts empty by design. Search an item, inspect where-used results, then use the controlled Change Order process to persist the removal plan.</p>
+            <div class='zcs-nodata-btn-wrapper zcs-row zcs-align-items-center zcs-justify-center zcs-gap-16 zcs-mt-20'>
+              <a class='zcs-button zcs-secondary-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body' href='<%=whereExplorerShell%>' target='_self'>
+                <i class='zcs-button-icon zc-li-outline arrows-1-tail-right'></i>
+                <span class='zcs-button-text'>Where Used Explorer</span>
+              </a>
+              <a class='zcs-button zcs-primary-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body' href='<%=changeOrderShell%>' target='_self'>
+                <i class='zcs-button-icon zc-li-outline ui-1-simple-add'></i>
+                <span class='zcs-button-text'>Create Proposal</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class='zcs-card zcs-p-20'>
+        <div class='bbr-card-title'>
+          <i class='zc-li-outline ui-1-edit-72'></i>
+          <h3 class='zcs-m-0 zcs-font-18 zcs-font-semibold zcs-color-primary'>Redline viewer shortcut</h3>
+        </div>
+        <p class='bbr-card-desc zcs-m-0'>After a proposal exists, preview parent-specific removal redlines before approving or releasing.</p>
+        <form class='bbr-form-grid zcs-mt-12' action='<%=pageBase%>BOM_Redline_Viewer/' method='get' target='bulkPlannerFrame'>
+          <input type='hidden' name='zc_Header' value='false'>
+          <input type='hidden' name='zc_Footer' value='false'>
+          <div class='bbr-field'>
+            <label for='bbr_co_id'>Change Order ID</label>
+            <input id='bbr_co_id' name='change_order_id' type='number' placeholder='Paste Change_Order ID'>
+          </div>
+          <div class='bbr-field'>
+            <label for='bbr_parent_id'>Parent Item Master ID</label>
+            <input id='bbr_parent_id' name='parent_item_id' type='number' placeholder='Paste parent assembly ID'>
+          </div>
+          <button class='zcs-button zcs-primary-outline-button zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body' type='submit'>
+            <i class='zcs-button-icon zc-li-outline ui-1-edit-72'></i>
+            <span class='zcs-button-text'>Preview Redline</span>
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

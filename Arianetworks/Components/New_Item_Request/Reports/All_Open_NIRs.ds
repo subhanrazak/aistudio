@@ -1,0 +1,61 @@
+list All_Open_NIRs
+{
+    displayName = "All Open NIRs"
+    show all rows from New_Item_Request [status == "PCA_Review" || status == "Library_Review"]
+    (
+        nir_id
+        category
+        item_type_derived
+        description
+        raised_by_employee
+        status
+        request_datetime
+        custom action "Approve"
+        (
+            workflow = Approve_NIR
+            show action for each record = true
+            column header = "Approve"
+            success message = "NIR approved and item draft created."
+        )
+        custom action "Route to Library Review"
+        (
+            workflow = Route_NIR_to_Library_Review
+            show action for each record = true
+            column header = "Route to Library Review"
+            success message = "NIR routed to Library Review."
+            condition = (status == "PCA_Review")
+        )
+        custom action "Reject"
+        (
+            workflow = Reject_NIR
+            show action for each record = true
+            column header = "Reject"
+            success message = "NIR rejected."
+        )
+    )
+    filters
+    (
+        category
+        item_type_derived
+        status
+    )
+    sort by
+    (
+        request_datetime ascending
+    )
+    conditional formatting
+    (
+        "PCA Review"
+        {
+            condition = (status == "PCA_Review")
+            fields = [nir_id, status]
+            format = "background-color:#E9F2FF;color:#004C97;font-weight:bold"
+        }
+        "Library Review"
+        {
+            condition = (status == "Library_Review")
+            fields = [nir_id, status]
+            format = "background-color:#FFF4D6;color:#8A5A00;font-weight:bold"
+        }
+    )
+}

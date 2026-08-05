@@ -1,0 +1,34 @@
+Comment_Change_Order as "Comment Change Order"
+{
+    type = functions
+    form = Change_Order
+    execution type = for each record
+
+    on start
+    {
+        actions
+        {
+            on click
+            (
+                emp_id = thisapp.Get_Employee_For_Login(zoho.loginuser);
+                emp_rec = Employee_Master[ID == emp_id];
+                allowed = false;
+                for each app_row in input.approvers
+                {
+                    if (emp_id != 0 && app_row.approver == emp_id && app_row.decision == "Pending")
+                    {
+                        allowed = true;
+                    }
+                }
+                if (emp_rec.count() > 0 && emp_rec.profile_label in {"PRODUCT_CHANGE_ANALYST","ADMIN"})
+                {
+                    allowed = true;
+                }
+                if (allowed == true)
+                {
+                    openUrl("#Form:Approval_Remarks?linked_change_order=" + input.ID, "same window");
+                }
+            )
+        }
+    }
+}

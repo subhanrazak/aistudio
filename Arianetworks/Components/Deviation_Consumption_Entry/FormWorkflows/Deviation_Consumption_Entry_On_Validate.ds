@@ -1,0 +1,38 @@
+Deviation_Consumption_Entry_On_Validate as "Deviation Consumption Entry - On Validate"
+{
+    type = form
+    form = Deviation_Consumption_Entry
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if (ifnull(input.units_built_this_batch,0) <= 0)
+                {
+                    alert "Units Built This Batch must be at least 1.";
+                    cancel submit;
+                }
+                dev_rec = Change_Order[ID == input.linked_deviation];
+                if (dev_rec.count() == 0 || dev_rec.change_category != "Deviation" || dev_rec.status != "Effective")
+                {
+                    alert "Consumption can only be recorded against an effective deviation.";
+                    cancel submit;
+                }
+                if (dev_rec.max_unit_count == null || ifnull(dev_rec.max_unit_count,0) <= 0)
+                {
+                    alert "The linked deviation has no unit cap. Consumption cannot be recorded without a cap.";
+                    cancel submit;
+                }
+                remaining_units = ifnull(dev_rec.max_unit_count,0) - ifnull(dev_rec.units_consumed,0);
+                if (input.units_built_this_batch > remaining_units)
+                {
+                    alert "This batch exceeds the deviation cap. Remaining units: " + remaining_units + ", requested batch units: " + input.units_built_this_batch + ".";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}

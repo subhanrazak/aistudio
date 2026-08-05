@@ -1,0 +1,61 @@
+list My_Pending_Approvals
+{
+    displayName = "My Pending Approvals"
+    show all rows from Change_Order [status == "Approval_In_Progress"]
+    (
+        order_id
+        change_category
+        title
+        estimated_cost_impact
+        created_by_employee
+        created_date
+        (
+            displayformat = dateonly
+        )
+        custom action "Approve"
+        (
+            workflow = Approve_Change_Order
+            show action for each record = true
+            column header = "Approve"
+            success message = "Approval recorded."
+            condition = (status == "Approval_In_Progress")
+            confirmation before execution
+            (
+                message for individual record = "Approve this change order?"
+                confirm button text = "Approve"
+                cancel button text = "Cancel"
+            )
+        )
+        custom action "Reject"
+        (
+            workflow = Reject_Change_Order
+            show action for each record = true
+            column header = "Reject"
+            success message = "Rejection recorded."
+            condition = (status == "Approval_In_Progress")
+            confirmation before execution
+            (
+                message for individual record = "Reject this change order?"
+                confirm button text = "Reject"
+                cancel button text = "Cancel"
+            )
+        )
+        custom action "Comment"
+        (
+            workflow = Comment_Change_Order
+            show action for each record = true
+            column header = "Comment"
+            success message = "Opening approval remarks."
+            condition = (status == "Approval_In_Progress")
+        )
+    )
+    filters
+    (
+        change_category
+        created_by_employee
+    )
+    sort by
+    (
+        created_date ascending
+    )
+}

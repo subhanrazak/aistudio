@@ -1,0 +1,25 @@
+list Get_Where_Used_Indirect(int item_id)
+{
+    result_list = List();
+    frontier = thisapp.Get_Where_Used_Direct(item_id);
+    depth_steps = {1,2,3,4,5,6,7,8,9,10};
+    for each depth_step in depth_steps
+    {
+        if (frontier.size() > 0)
+        {
+            next_frontier = List();
+            for each used_map in frontier
+            {
+                result_list.add(used_map);
+                parent_id = used_map.get("parent_item_id");
+                parent_used = thisapp.Get_Where_Used_Direct(parent_id);
+                for each parent_map in parent_used
+                {
+                    next_frontier.add(parent_map);
+                }
+            }
+            frontier = next_frontier;
+        }
+    }
+    return result_list;
+}

@@ -1,0 +1,74 @@
+Item_Master_On_Validate as "Item Master - On Validate"
+{
+    type = form
+    form = Item_Master
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if (input.owner_employee == null)
+                {
+                    emp_id = thisapp.Get_Employee_For_Login(zoho.loginuser);
+                    if (emp_id != 0)
+                    {
+                        input.owner_employee = emp_id;
+                    }
+                }
+                if (input.lifecycle_phase == null || input.lifecycle_phase == "")
+                {
+                    input.lifecycle_phase = "Unreleased";
+                }
+                if (input.part_status == null || input.part_status == "")
+                {
+                    input.part_status = "In_Work";
+                }
+                if (input.revision == null || input.revision == "")
+                {
+                    input.revision = "-";
+                }
+                if (input.created_date == null)
+                {
+                    input.created_date = zoho.currenttime;
+                }
+                if (input.apn == null || input.apn == "")
+                {
+                    if (input.nir_source == null)
+                    {
+                        input.apn = thisapp.Generate_APN(input.category);
+                    }
+                }
+                if (input.is_variant == true)
+                {
+                    if (input.variant_of == null)
+                    {
+                        alert "Variant Of is required when Is Variant is selected.";
+                        cancel submit;
+                    }
+                    base_item = Item_Master[ID == input.variant_of];
+                    if (base_item.count() > 0 && base_item.is_variant == true)
+                    {
+                        alert "Nested variants are not allowed.";
+                        cancel submit;
+                    }
+                }
+                has_bom_lines = false;
+                if (input.bom_lines != null)
+                {
+                    for each bom_row in input.bom_lines
+                    {
+                        has_bom_lines = true;
+                    }
+                }
+                if (input.part_type != "Assembly" && has_bom_lines == true)
+                {
+                    alert "Only Assembly items can carry BOM lines.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}

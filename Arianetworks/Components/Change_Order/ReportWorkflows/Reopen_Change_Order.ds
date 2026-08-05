@@ -1,0 +1,29 @@
+Reopen_Change_Order as "Re-open Change Order"
+{
+    type = functions
+    form = Change_Order
+    execution type = for each record
+
+    on start
+    {
+        actions
+        {
+            on click
+            (
+                emp_id = thisapp.Get_Employee_For_Login(zoho.loginuser);
+                emp_rec = Employee_Master[ID == emp_id];
+                if (emp_rec.count() > 0 && emp_rec.profile_label == "ADMIN" && input.status == "Rejected")
+                {
+                    for each app_row in input.approvers
+                    {
+                        app_row.decision = "Pending";
+                        app_row.decided_on = null;
+                    }
+                    old_status = input.status;
+                    input.status = "Approval_In_Progress";
+                    thisapp.Write_Activity_Log("Change_Order", input.order_id, "status", old_status, "Approval_In_Progress", input.created_by_employee);
+                }
+            )
+        }
+    }
+}

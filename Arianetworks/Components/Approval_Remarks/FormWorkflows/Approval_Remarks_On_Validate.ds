@@ -1,0 +1,63 @@
+Approval_Remarks_On_Validate as "Approval Remarks - On Validate"
+{
+    type = form
+    form = Approval_Remarks
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if (input.remarks_id == null || input.remarks_id == "")
+                {
+                    input.remarks_id = thisapp.Generate_Record_Code("APR-");
+                }
+                if (input.action == "Rejected" && (input.remarks == null || input.remarks.trim() == ""))
+                {
+                    alert "Remarks are required when rejecting a Change Order.";
+                    cancel submit;
+                }
+                if (input.linked_change_order == null)
+                {
+                    alert "A linked Change Order is required.";
+                    cancel submit;
+                }
+                if (input.action_by_employee == null)
+                {
+                    alert "Action By Employee is required.";
+                    cancel submit;
+                }
+                emp_rec = Employee_Master[ID == input.action_by_employee];
+                co_rec = Change_Order[ID == input.linked_change_order];
+                if (co_rec.count() == 0)
+                {
+                    alert "Linked Change Order could not be found.";
+                    cancel submit;
+                }
+                if (emp_rec.count() == 0)
+                {
+                    alert "Action employee could not be found.";
+                    cancel submit;
+                }
+                if (input.action in {"Approved","Rejected"} && emp_rec.profile_label != "ADMIN")
+                {
+                    approver_match = false;
+                    for each app_row in co_rec.approvers
+                    {
+                        if (app_row.approver == input.action_by_employee)
+                        {
+                            approver_match = true;
+                        }
+                    }
+                    if (approver_match == false)
+                    {
+                        alert "Only listed approvers or Admin can record approval decisions.";
+                        cancel submit;
+                    }
+                }
+            )
+        }
+    }
+}

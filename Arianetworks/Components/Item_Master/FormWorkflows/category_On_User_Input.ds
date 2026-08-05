@@ -1,0 +1,25 @@
+Item_Master_Category_On_User_Input as "Item Master - Category On User Input"
+{
+    type = form
+    form = Item_Master
+    record event = on add or edit
+
+    on user input of category
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if (input.category != null)
+                {
+                    cat_rec = Category_Master[ID == input.category];
+                    if (cat_rec.count() > 0 && cat_rec.item_group == "Assembly")
+                    {
+                        input.part_type = "Assembly";
+                        show bom_lines;
+                    }
+                }
+            )
+        }
+    }
+}

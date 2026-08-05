@@ -1,0 +1,44 @@
+Approve_Change_Order as "Approve Change Order"
+{
+    type = functions
+    form = Change_Order
+    execution type = for each record
+
+    on start
+    {
+        actions
+        {
+            on click
+            (
+                emp_id = thisapp.Get_Employee_For_Login(zoho.loginuser);
+                approved_any = false;
+                for each app_row in input.approvers
+                {
+                    if (emp_id != 0 && app_row.approver == emp_id && app_row.decision == "Pending")
+                    {
+                        app_row.decision = "Approved";
+                        app_row.decided_on = zoho.currenttime;
+                        approved_any = true;
+                    }
+                }
+                if (approved_any == true)
+                {
+                    pending_count = 0;
+                    for each pending_row in input.approvers
+                    {
+                        if (pending_row.decision == "Pending")
+                        {
+                            pending_count = pending_count + 1;
+                        }
+                    }
+                    if (pending_count == 0)
+                    {
+                        old_status = input.status;
+                        input.status = "Approved";
+                        thisapp.Write_Activity_Log("Change_Order", input.order_id, "status", old_status, "Approved", input.created_by_employee);
+                    }
+                }
+            )
+        }
+    }
+}

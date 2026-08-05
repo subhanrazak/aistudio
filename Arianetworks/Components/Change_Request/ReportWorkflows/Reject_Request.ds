@@ -1,0 +1,31 @@
+Reject_Request as "Reject Request"
+{
+    type = functions
+    form = Change_Request
+    execution type = for each record
+
+    on start
+    {
+        actions
+        {
+            on click
+            (
+                emp_id = thisapp.Get_Employee_For_Login(zoho.loginuser);
+                emp_rec = Employee_Master[ID == emp_id];
+                if (emp_rec.count() > 0 && emp_rec.profile_label in {"PRODUCT_CHANGE_ANALYST","ADMIN"} && input.analyst_remarks != null && input.analyst_remarks.trim() != "")
+                {
+                    old_status = input.status;
+                    input.status = "Rejected";
+                    merge_map = Map();
+                    merge_map.put("request_id", input.request_id);
+                    merge_map.put("title", input.title);
+                    merge_map.put("remarks", input.analyst_remarks);
+                    requester_recipients = List();
+                    requester_recipients.add(input.requested_by_employee);
+                    thisapp.Send_Template_Email("REQUEST_REJECTED", requester_recipients, merge_map);
+                    thisapp.Write_Activity_Log("Change_Request", input.request_id, "status", old_status, "Rejected", input.requested_by_employee);
+                }
+            )
+        }
+    }
+}

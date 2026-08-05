@@ -1,0 +1,30 @@
+void Send_Template_Email(string template_key, list employee_recipients, map merge_map)
+{
+    template_map = thisapp.Get_Template(template_key);
+    subject_text = template_map.get("subject");
+    body_text = template_map.get("body");
+    for each merge_key in merge_map.keys()
+    {
+        subject_text = subject_text.replaceAll("${" + merge_key + "}", merge_map.get(merge_key).toString());
+        body_text = body_text.replaceAll("${" + merge_key + "}", merge_map.get(merge_key).toString());
+    }
+    to_list = List();
+    for each emp_id in employee_recipients
+    {
+        emp_rec = Employee_Master[ID == emp_id && is_active == true && notification_opt_in == true];
+        if (emp_rec.count() > 0 && emp_rec.email not in {"",null})
+        {
+            to_list.add(emp_rec.email);
+        }
+    }
+    if (to_list.size() > 0)
+    {
+        sendmail
+        (
+            from : zoho.adminuserid
+            to : to_list
+            subject : subject_text
+            message : body_text
+        );
+    }
+}

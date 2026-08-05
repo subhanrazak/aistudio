@@ -1,0 +1,40 @@
+Deviation_Auto_Expiry as "Deviation Auto Expiry"
+{
+    type = schedule
+    form = Change_Order[change_category == "Deviation" && status == "Effective" && expiration_date <= zoho.currentdate]
+    start = expiration_date at "00:00:00"
+    frequency = daily
+    time zone = "Asia/Kolkata"
+
+    on start
+    {
+        actions
+        {
+            on load
+            (
+                old_status = input.status;
+                for each affected_row in input.affected_items
+                {
+                    if (affected_row.child_item != null)
+                    {
+                        item_rec = Item_Master[ID == affected_row.child_item];
+                        if (item_rec.count() > 0)
+                        {
+                            item_rec.is_deviated = false;
+                        }
+                    }
+                }
+                input.status = "Expired";
+                admin_list = thisapp.Get_Employees_By_Profile("ADMIN");
+                merge_map = Map();
+                merge_map.put("order_id", input.order_id);
+                merge_map.put("title", input.title);
+                creator_recipients = List();
+                creator_recipients.add(input.created_by_employee);
+                thisapp.Send_Template_Email("DEVIATION_EXPIRED", creator_recipients, merge_map);
+                thisapp.Send_Template_Email("DEVIATION_EXPIRED", admin_list, merge_map);
+                thisapp.Write_Activity_Log("Change_Order", input.order_id, "status", old_status, "Expired", input.created_by_employee);
+            )
+        }
+    }
+}

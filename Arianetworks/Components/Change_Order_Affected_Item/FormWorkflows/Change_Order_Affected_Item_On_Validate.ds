@@ -1,0 +1,29 @@
+Change_Order_Affected_Item_On_Validate as "Change Order Affected Item - On Validate"
+{
+    type = form
+    form = Change_Order_Affected_Item
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if (input.child_item != null)
+                {
+                    item_rec = Item_Master[ID == input.child_item];
+                    if (item_rec.count() > 0)
+                    {
+                        input.current_revision = item_rec.revision;
+                        if (item_rec.part_type == "Software_Firmware" && (input.software_load_instruction == null || input.software_load_instruction.trim() == ""))
+                        {
+                            alert "Software Load Instruction is mandatory for Software/Firmware items.";
+                            cancel submit;
+                        }
+                    }
+                }
+            )
+        }
+    }
+}

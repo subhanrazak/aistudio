@@ -1,0 +1,25 @@
+New_Item_Request_On_Validate as "New Item Request - On Validate"
+{
+    type = form
+    form = New_Item_Request
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if (input.nir_id == null || input.nir_id == "")
+                {
+                    input.nir_id = thisapp.Generate_Record_Code("NIR-");
+                }
+                if (input.status == "Rejected" && (input.rejection_reason == null || input.rejection_reason.trim() == ""))
+                {
+                    alert "Rejection Reason is mandatory when rejecting a NIR.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}

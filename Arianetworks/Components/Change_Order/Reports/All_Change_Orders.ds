@@ -1,0 +1,123 @@
+default list All_Change_Orders
+{
+    displayName = "All Change Orders"
+    show all rows from Change_Order
+    (
+        order_id
+        change_category
+        title
+        status
+        estimated_cost_impact
+        (
+            display = total
+        )
+        effectivity_type
+        expiration_date
+        units_consumed
+        release_error_flag
+        (
+            displaytrue = "Release Error"
+            displayfalse = "Clear"
+        )
+        created_by_employee
+        created_date
+        (
+            displayformat = dateonly
+        )
+        custom action "Withdraw"
+        (
+            workflow = Withdraw_Change_Order
+            show action for each record = true
+            column header = "Withdraw"
+            success message = "Change order withdrawn."
+            condition = (status == "Open" || status == "Submitted" || status == "Approval_In_Progress")
+            confirmation before execution
+            (
+                message for individual record = "Withdraw this change order?"
+                confirm button text = "Withdraw"
+                cancel button text = "Cancel"
+            )
+        )
+        custom action "Force Approval"
+        (
+            workflow = Force_Approval
+            show action for each record = true
+            column header = "Force Approval"
+            success message = "Change order force-approved."
+            condition = (status == "Approval_In_Progress")
+        )
+        custom action "Release"
+        (
+            workflow = Release_Change_Order_Action
+            show action for each record = true
+            column header = "Release"
+            success message = "Release attempted. Check release status and error flags."
+            condition = (status == "Approved")
+        )
+        custom action "Re-open"
+        (
+            workflow = Reopen_Change_Order
+            show action for each record = true
+            column header = "Re-open"
+            success message = "Change order re-opened."
+            condition = (status == "Rejected")
+        )
+    )
+    filters
+    (
+        change_category
+        status
+        effectivity_type
+        created_by_employee
+        release_error_flag
+    )
+    sort by
+    (
+        created_date descending
+    )
+    conditional formatting
+    (
+        "Rejected"
+        {
+            condition = (status == "Rejected")
+            fields = [order_id, status, title]
+            format = "background-color:#FDE2E2;color:#991B1B;font-weight:bold"
+        }
+        "Expired"
+        {
+            condition = (status == "Expired")
+            fields = [order_id, status, expiration_date]
+            format = "background-color:#FFF3CD;color:#92400E;font-weight:bold"
+        }
+        "Cancelled"
+        {
+            condition = (status == "Cancelled")
+            fields = [order_id, status]
+            format = "background-color:#E5E7EB;color:#374151"
+        }
+        "Approved"
+        {
+            condition = (status == "Approved")
+            fields = [order_id, status]
+            format = "background-color:#DCFCE7;color:#166534;font-weight:bold"
+        }
+        "Effective"
+        {
+            condition = (status == "Effective")
+            fields = [order_id, status]
+            format = "background-color:#DBEAFE;color:#1D4ED8;font-weight:bold"
+        }
+        "Complete"
+        {
+            condition = (status == "Complete")
+            fields = [order_id, status]
+            format = "background-color:#ECFDF5;color:#047857"
+        }
+        "Release Error"
+        {
+            condition = (release_error_flag == true)
+            fields = [order_id, release_error_flag, status]
+            format = "background-color:#FEE2E2;color:#B91C1C;font-weight:bold"
+        }
+    )
+}

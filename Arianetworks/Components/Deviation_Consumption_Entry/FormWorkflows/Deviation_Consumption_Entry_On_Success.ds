@@ -1,0 +1,28 @@
+Deviation_Consumption_Entry_On_Success as "Deviation Consumption Entry - On Success"
+{
+    type = form
+    form = Deviation_Consumption_Entry
+    record event = on add
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                dev_rec = Change_Order[ID == input.linked_deviation];
+                if (dev_rec.count() > 0)
+                {
+                    total_units = 0;
+                    for each cons_rec in Deviation_Consumption_Entry[linked_deviation == input.linked_deviation]
+                    {
+                        total_units = total_units + ifnull(cons_rec.units_built_this_batch,0);
+                    }
+                    dev_rec.units_consumed = total_units;
+                    thisapp.Enforce_Deviation_Unit_Cap(dev_rec.ID);
+                    thisapp.Write_Activity_Log("Deviation_Consumption_Entry", dev_rec.order_id, "units_consumed", "", total_units.toString(), input.recorded_by_employee);
+                }
+            )
+        }
+    }
+}

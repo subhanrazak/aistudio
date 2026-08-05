@@ -1,0 +1,33 @@
+Release_Change_Order_Action as "Release Change Order"
+{
+    type = functions
+    form = Change_Order
+    execution type = for each record
+
+    on start
+    {
+        actions
+        {
+            on click
+            (
+                emp_id = thisapp.Get_Employee_For_Login(zoho.loginuser);
+                emp_rec = Employee_Master[ID == emp_id];
+                if (emp_rec.count() > 0 && emp_rec.profile_label in {"PRODUCT_CHANGE_ANALYST","ADMIN"} && input.status == "Approved")
+                {
+                    try
+                    {
+                        input.release_last_attempt_on = zoho.currenttime;
+                        thisapp.Release_Change_Order(input.ID);
+                    }
+                    catch (release_error)
+                    {
+                        input.release_error_flag = true;
+                        input.release_error_details = release_error.toString();
+                        input.release_last_attempt_on = zoho.currenttime;
+                        thisapp.Write_Activity_Log("Change_Order", input.order_id, "release_error", "", release_error.toString(), input.created_by_employee);
+                    }
+                }
+            )
+        }
+    }
+}

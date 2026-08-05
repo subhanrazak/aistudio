@@ -1,0 +1,45 @@
+Effectivity_Type_On_User_Input as "Change Order - Effectivity Type On User Input"
+{
+    type = form
+    form = Change_Order
+    record event = on add or edit
+
+    on user input of effectivity_type
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if (input.effectivity_type == "Permanent_Scheduled")
+                {
+                    show effective_date;
+                    hide expiration_date;
+                    hide max_unit_count;
+                    hide alternative_component;
+                    input.expiration_date = null;
+                    input.max_unit_count = null;
+                    input.alternative_component = null;
+                }
+                else if (input.effectivity_type == "Temporary_Deviation")
+                {
+                    hide effective_date;
+                    show expiration_date;
+                    show max_unit_count;
+                    show alternative_component;
+                    input.effective_date = null;
+                }
+                else
+                {
+                    hide effective_date;
+                    hide expiration_date;
+                    hide max_unit_count;
+                    hide alternative_component;
+                    input.effective_date = null;
+                    input.expiration_date = null;
+                    input.max_unit_count = null;
+                    input.alternative_component = null;
+                }
+            )
+        }
+    }
+}

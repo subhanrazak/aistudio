@@ -1,0 +1,42 @@
+calendar Open_Deviations_Calendar
+{
+    displayName = "Open Deviations Calendar"
+    show all rows from Change_Order [change_category == "Deviation" && status == "Effective"]
+    (
+        order_id
+        title
+        change_category
+        status
+        effectivity_type
+        expiration_date
+        created_by_employee
+    )
+    filters
+    (
+        status
+        effectivity_type
+        created_by_employee
+    )
+    options
+    (
+        display type = month
+        week start day = monday
+        display field = order_id
+        start date = expiration_date
+        default date
+        (
+            day = Today
+            month = Currentmonth
+            year = Currentyear
+        )
+    )
+    conditional formatting
+    (
+        "Expiring Soon"
+        {
+            condition = (expiration_date in next 7 days)
+            fields = [order_id, title, expiration_date]
+            format = "background-color:#FEE2E2;color:#B91C1C;font-weight:bold"
+        }
+    )
+}

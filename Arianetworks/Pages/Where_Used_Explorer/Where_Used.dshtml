@@ -1,0 +1,619 @@
+<%
+  component_item = Item_Master[ID == -1];
+  has_request = false;
+  item_found = false;
+  component_id = 0;
+  component_apn = "-";
+  component_desc = "-";
+  component_revision = "-";
+  component_part_type = "-";
+  component_lifecycle = "-";
+  direct_rows = List();
+  indirect_rows = List();
+  direct_parent_count = 0;
+  active_impacted_count = 0;
+  depth_cap = 8;
+  cap_hit = false;
+  cycle_hit = false;
+  missing_message = "";
+
+  if(input.item_id != null && input.item_id > 0)
+  {
+    has_request = true;
+    component_item = Item_Master[ID == input.item_id && is_deleted == false];
+  }
+
+  if(has_request == true && component_item.count() == 0)
+  {
+    missing_message = "No active Item Master record was found for item_id " + input.item_id + ".";
+  }
+
+  if(component_item.count() > 0)
+  {
+    item_found = true;
+    component_id = component_item.ID;
+    component_apn = ifnull(component_item.apn,"-");
+    component_desc = ifnull(component_item.description,"-");
+    component_revision = ifnull(component_item.revision,"-");
+    component_part_type = ifnull(component_item.part_type,"-");
+    component_lifecycle = ifnull(component_item.lifecycle_phase,"-");
+
+    frontier_ids = List();
+    frontier_qtys = List();
+    frontier_depths = List();
+    frontier_tokens = List();
+    frontier_labels = List();
+
+    for each bom_line in BOM_Line[child_item == component_id && is_struck == false]
+    {
+      parent_id = bom_line.parent_item;
+      if(parent_id != null)
+      {
+        parent_rec = Item_Master[ID == parent_id && is_deleted == false];
+        parent_apn = "Item " + parent_id;
+        parent_desc = "Parent item not found or deleted";
+        parent_lifecycle = "Unknown";
+        parent_part_type = "-";
+        parent_found = false;
+        if(parent_rec.count() > 0)
+        {
+          parent_found = true;
+          parent_apn = ifnull(parent_rec.apn,"-");
+          parent_desc = ifnull(parent_rec.description,"-");
+          parent_lifecycle = ifnull(parent_rec.lifecycle_phase,"-");
+          parent_part_type = ifnull(parent_rec.part_type,"-");
+          if(parent_lifecycle not in {"Obsolete","Abandoned"})
+          {
+            active_impacted_count = active_impacted_count + 1;
+          }
+        }
+        line_qty = ifnull(bom_line.quantity,0);
+        relationship_text = "Direct BOM parent";
+        if(bom_line.line_number != null)
+        {
+          relationship_text = relationship_text + " line " + bom_line.line_number;
+        }
+        direct_map = Map();
+        direct_map.put("parent_id",parent_id);
+        direct_map.put("parent_apn",parent_apn);
+        direct_map.put("parent_description",parent_desc);
+        direct_map.put("relationship",relationship_text);
+        direct_map.put("quantity",line_qty);
+        direct_map.put("lifecycle",parent_lifecycle);
+        direct_map.put("part_type",parent_part_type);
+        direct_map.put("found",parent_found);
+        direct_rows.add(direct_map);
+
+        direct_token_seed = "," + component_id + ",";
+        parent_token = "," + parent_id + ",";
+        if(direct_token_seed.contains(parent_token))
+        {
+          cycle_hit = true;
+        }
+        else
+        {
+          frontier_ids.add(parent_id);
+          frontier_qtys.add(line_qty);
+          frontier_depths.add(1);
+          frontier_tokens.add(direct_token_seed + parent_id + ",");
+          frontier_labels.add(component_apn + " -> " + parent_apn);
+        }
+      }
+    }
+    direct_parent_count = direct_rows.size();
+
+    traversal_depth = 1;
+    depth_steps = List();
+    depth_steps.add(1);
+    depth_steps.add(2);
+    depth_steps.add(3);
+    depth_steps.add(4);
+    depth_steps.add(5);
+    depth_steps.add(6);
+    depth_steps.add(7);
+    depth_steps.add(8);
+
+    for each depth_marker in depth_steps
+    {
+      if(frontier_ids.size() > 0 && traversal_depth < depth_cap)
+      {
+        next_ids = List();
+        next_qtys = List();
+        next_depths = List();
+        next_tokens = List();
+        next_labels = List();
+        for each index fidx in frontier_ids
+        {
+          current_child_id = frontier_ids.get(fidx);
+          current_qty = frontier_qtys.get(fidx);
+          current_depth = frontier_depths.get(fidx);
+          current_tokens = frontier_tokens.get(fidx);
+          current_label = frontier_labels.get(fidx);
+          for each parent_line in BOM_Line[child_item == current_child_id && is_struck == false]
+          {
+            ancestor_id = parent_line.parent_item;
+            if(ancestor_id != null)
+            {
+              ancestor_token = "," + ancestor_id + ",";
+              if(current_tokens.contains(ancestor_token))
+              {
+                cycle_hit = true;
+              }
+              else
+              {
+                line_qty = ifnull(parent_line.quantity,0);
+                path_qty = current_qty * line_qty;
+                ancestor_depth = current_depth + 1;
+                ancestor_rec = Item_Master[ID == ancestor_id && is_deleted == false];
+                ancestor_apn = "Item " + ancestor_id;
+                ancestor_desc = "Ancestor item not found or deleted";
+                ancestor_lifecycle = "Unknown";
+                ancestor_part_type = "-";
+                ancestor_found = false;
+                if(ancestor_rec.count() > 0)
+                {
+                  ancestor_found = true;
+                  ancestor_apn = ifnull(ancestor_rec.apn,"-");
+                  ancestor_desc = ifnull(ancestor_rec.description,"-");
+                  ancestor_lifecycle = ifnull(ancestor_rec.lifecycle_phase,"-");
+                  ancestor_part_type = ifnull(ancestor_rec.part_type,"-");
+                  if(ancestor_lifecycle not in {"Obsolete","Abandoned"})
+                  {
+                    active_impacted_count = active_impacted_count + 1;
+                  }
+                }
+                path_label = current_label + " -> " + ancestor_apn;
+                relationship_text = "Level " + ancestor_depth + " ancestor";
+                if(parent_line.line_number != null)
+                {
+                  relationship_text = relationship_text + " via BOM line " + parent_line.line_number;
+                }
+                indirect_map = Map();
+                indirect_map.put("parent_id",ancestor_id);
+                indirect_map.put("parent_apn",ancestor_apn);
+                indirect_map.put("parent_description",ancestor_desc);
+                indirect_map.put("relationship",relationship_text);
+                indirect_map.put("path_quantity",path_qty);
+                indirect_map.put("lifecycle",ancestor_lifecycle);
+                indirect_map.put("part_type",ancestor_part_type);
+                indirect_map.put("path",path_label);
+                indirect_map.put("depth",ancestor_depth);
+                indirect_map.put("found",ancestor_found);
+                indirect_rows.add(indirect_map);
+
+                if(ancestor_depth < depth_cap)
+                {
+                  next_ids.add(ancestor_id);
+                  next_qtys.add(path_qty);
+                  next_depths.add(ancestor_depth);
+                  next_tokens.add(current_tokens + ancestor_id + ",");
+                  next_labels.add(path_label);
+                }
+                else
+                {
+                  more_parents = BOM_Line[child_item == ancestor_id && is_struck == false].count();
+                  if(more_parents > 0)
+                  {
+                    cap_hit = true;
+                  }
+                }
+              }
+            }
+          }
+        }
+        frontier_ids = next_ids;
+        frontier_qtys = next_qtys;
+        frontier_depths = next_depths;
+        frontier_tokens = next_tokens;
+        frontier_labels = next_labels;
+        traversal_depth = traversal_depth + 1;
+      }
+    }
+    if(frontier_ids.size() > 0 && traversal_depth >= depth_cap)
+    {
+      cap_hit = true;
+    }
+  }
+%>
+<style>
+:root {
+  --zcs-theme-brand-color: var(--zcs_brand_color);
+  --zcs-primary-text-color: var(--zcs_primary_text_color);
+  --zcs-secondary-text-color: var(--zcs_secondary_text_color);
+  --zcs-teritiary-text-color: var(--zcs_tertiary_text_color);
+  --zcs-white-color: #FFFFFF;
+  --zcs-page-bg-color: #F3F3F4;
+  --zcs-thead-color: #F9FAFE;
+  --zcs-tr-h-color: #F9FAFE;
+  font-size: 16px;
+  line-height: 1.5;
+}
+a { text-decoration: none; }
+.zcs-w-full { width: 100%; }
+.zcs-wh-full { width: 100%; height: 100%; }
+.zcs-flex { display: flex; }
+.zcs-inline-flex { display: inline-flex; }
+.zcs-row { display: flex; flex-wrap: wrap; }
+.zcs-align-items-center { align-items: center; }
+.zcs-align-items-start { align-items: flex-start; }
+.zcs-justify-center { justify-content: center; }
+.zcs-justify-space-between { justify-content: space-between; }
+.zcs-gap-6 { gap: 0.375rem; }
+.zcs-gap-8 { gap: 0.5rem; }
+.zcs-gap-10 { gap: 0.625rem; }
+.zcs-gap-12 { gap: 0.75rem; }
+.zcs-gap-16 { gap: 1rem; }
+.zcs-p-20 { padding: 1.25rem; }
+.zcs-p-24 { padding: 1.5rem; }
+.zcs-px-10 { padding-left: 0.625rem; padding-right: 0.625rem; }
+.zcs-px-12 { padding-left: 0.75rem; padding-right: 0.75rem; }
+.zcs-px-16 { padding-left: 1rem; padding-right: 1rem; }
+.zcs-py-2 { padding-top: 0.125rem; padding-bottom: 0.125rem; }
+.zcs-py-6 { padding-top: 0.375rem; padding-bottom: 0.375rem; }
+.zcs-py-8 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+.zcs-py-12 { padding-top: 0.75rem; padding-bottom: 0.75rem; }
+.zcs-m-0 { margin: 0; }
+.zcs-mt-8 { margin-top: 0.5rem; }
+.zcs-mt-10 { margin-top: 0.625rem; }
+.zcs-mt-12 { margin-top: 0.75rem; }
+.zcs-mt-16 { margin-top: 1rem; }
+.zcs-mb-0 { margin-bottom: 0; }
+.zcs-mx-0 { margin-left: 0; margin-right: 0; }
+.zcs-box-border { box-sizing: border-box; }
+.zcs-relative { position: relative; }
+.zcs-sticky { position: sticky; }
+.zcs-rounded-sm { border-radius: 0.25rem; }
+.zcs-rounded-md { border-radius: 0.375rem; }
+.zcs-rounded-lg { border-radius: 0.5rem; }
+.zcs-text-left { text-align: left; }
+.zcs-text-right { text-align: right; }
+.zcs-text-center { text-align: center; }
+.zcs-font-12 { font-size: 0.75rem; }
+.zcs-font-13 { font-size: 0.8125rem; }
+.zcs-font-14 { font-size: 0.875rem; }
+.zcs-font-16 { font-size: 1rem; }
+.zcs-font-18 { font-size: 1.125rem; }
+.zcs-font-22 { font-size: 1.375rem; }
+.zcs-font-normal { font-weight: 400; }
+.zcs-font-medium { font-weight: 500; }
+.zcs-font-semibold { font-weight: 600; }
+.zcs-font-bold { font-weight: 700; }
+.zcs-lh-body { line-height: 1.5; }
+.zcs-lh-heading { line-height: 1.25; }
+.zcs-color-primary { color: var(--zcs-primary-text-color); }
+.zcs-color-secondary { color: var(--zcs-secondary-text-color); }
+.zcs-color-tertiary { color: var(--zcs-teritiary-text-color); }
+.zcs-color-theme { color: var(--zcs-theme-brand-color); }
+.zcs-overflow-auto { overflow: auto; }
+.zcs-card { background-color: var(--zcs-white-color); border: 1px solid #e7e7ee; border-radius: 12px; }
+
+.zcs-table-wrapper { border: 1px solid var(--zcs_tertiary_border_color); background-color: var(--zcs-white-color); overflow: auto; }
+.zcs-table-wrapper table { line-height: normal; border-collapse: collapse; min-width: 1120px; }
+.zcs-table-wrapper table thead { top: 0px; z-index: 2; }
+.zcs-table-wrapper table thead tr th { background-color: var(--zcs-thead-color); box-shadow: 0px -1px 0px 0px var(--zcs_tertiary_border_color) inset; white-space: nowrap; }
+.zcs-table-wrapper table thead tr.zcs-tspace th { background-color: var(--zcs-white-color); box-shadow: none; }
+.zcs-table-wrapper table tbody tr td { border-top: 1px solid var(--zcs_tertiary_border_color); vertical-align: top; }
+.zcs-table-wrapper table tbody tr:first-child td { border-color: transparent; }
+.zcs-table-wrapper table tbody tr:hover td { background-color: var(--zcs-tr-h-color); }
+.zcs-table-wrapper table thead tr th.zcs-green,
+.zcs-table-wrapper table tbody tr td.zcs-green,
+.zcs-table-wrapper table tbody tr td .zcs-green { color: #179e6c; }
+.zcs-table-wrapper table thead tr th.zcs-red,
+.zcs-table-wrapper table tbody tr td.zcs-red,
+.zcs-table-wrapper table tbody tr td .zcs-red { color: #fe455d; }
+.zcs-table-wrapper table thead tr th.zcs-yellow,
+.zcs-table-wrapper table tbody tr td.zcs-yellow,
+.zcs-table-wrapper table tbody tr td .zcs-yellow { color: #b8770d; }
+.zcs-table-wrapper table thead tr th.zcs-blue,
+.zcs-table-wrapper table tbody tr td.zcs-blue,
+.zcs-table-wrapper table tbody tr td .zcs-blue { color: #09598e; }
+
+.zcs-badge { width: auto; white-space: nowrap; }
+.zcs-badge-outline { border: 1px solid; }
+.zcs-badge-outline.zcs-badge-theme { color: var(--zcs_brand_color); }
+.zcs-badge-outline.zcs-badge-green { color: #179E6C; }
+.zcs-badge-outline.zcs-badge-red { color: #FE455D; }
+.zcs-badge-outline.zcs-badge-grey { color: #242424; }
+.zcs-badge-outline.zcs-badge-yellow { color: #FAAE13; }
+.zcs-badge-outline.zcs-badge-blue { color: #2A6FFC; }
+.zcs-badge-outline.zcs-badge-orange { color: #F4660C; }
+
+.zcs-button { width: auto; min-width: 5rem; min-height: 36px; }
+.zcs-primary-outline-button { border: 1px solid var(--zcs_brand_color); background-color: var(--zcs-white-color); color: var(--zcs_brand_color); }
+.zcs-primary-outline-button:hover { background-color: var(--zcs_component_hover_color); border-color: var(--zcs_brand_color); color: var(--zcs_brand_color); }
+.zcs-button-icon { width: 16px; max-height: 16px; }
+
+.where-used { background: var(--zcs-page-bg-color); padding: 20px; box-sizing: border-box; min-height: 100%; color: var(--zcs-primary-text-color); }
+.where-header { margin-bottom: 16px; }
+.where-header-title { display: flex; align-items: center; gap: 10px; }
+.where-header-title i { color: var(--zcs_brand_color); font-size: 22px; }
+.where-root-card { margin-bottom: 16px; }
+.where-root-grid { display: grid; grid-template-columns: minmax(180px, 1fr) minmax(260px, 2fr) repeat(4, minmax(100px, auto)); gap: 14px; align-items: center; }
+.where-root-label { display: block; color: var(--zcs-secondary-text-color); font-size: 12px; margin-bottom: 3px; }
+.where-root-value { color: var(--zcs-primary-text-color); font-size: 14px; font-weight: 600; }
+.where-section { margin-top: 18px; }
+.where-section-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+.where-section-title { display: flex; align-items: center; gap: 8px; }
+.where-section-title i { color: var(--zcs_brand_color); font-size: 18px; }
+.where-summary-note { color: var(--zcs-secondary-text-color); font-size: 13px; }
+.where-apn a { color: var(--zcs_brand_color); font-weight: 600; }
+.where-desc { max-width: 380px; white-space: normal; }
+.where-path { max-width: 460px; white-space: normal; color: var(--zcs-secondary-text-color); }
+.where-relationship { max-width: 230px; white-space: normal; }
+.where-link-stack { display: flex; gap: 7px; align-items: center; flex-wrap: wrap; margin-top: 4px; }
+.where-mini-link { display: inline-flex; align-items: center; gap: 5px; color: var(--zcs_brand_color); border: 1px solid var(--zcs_tertiary_border_color); border-radius: 6px; padding: 4px 8px; background: #FFFFFF; font-size: 12px; line-height: 1.2; }
+.where-mini-link:hover { border-color: var(--zcs_brand_color); background: var(--zcs_component_hover_color); }
+.where-cue { display: grid; gap: 6px; min-width: 250px; }
+.where-cue-text { color: var(--zcs-secondary-text-color); font-size: 12px; line-height: 1.35; }
+.where-query { color: var(--zcs-teritiary-text-color); font-size: 12px; line-height: 1.35; word-break: break-word; }
+.where-empty { padding: 28px; text-align: center; }
+.where-empty i { display: block; color: var(--zcs_brand_color); font-size: 34px; margin-bottom: 10px; }
+.where-prompt-form { display: flex; gap: 10px; justify-content: center; align-items: end; flex-wrap: wrap; margin-top: 14px; }
+.where-prompt-field { text-align: left; }
+.where-prompt-field label { display: block; color: var(--zcs-secondary-text-color); font-size: 12px; margin-bottom: 4px; }
+.where-prompt-field input { min-height: 36px; min-width: 260px; border: 1px solid var(--zcs_tertiary_border_color); border-radius: 6px; padding: 6px 10px; box-sizing: border-box; font-size: 14px; color: var(--zcs-primary-text-color); background: #FFFFFF; }
+.where-warning { margin-top: 12px; padding: 12px 14px; border: 1px solid #FAAE13; border-radius: 8px; color: #8A5B00; background: #FCF4E6; }
+.where-critical { margin-top: 12px; padding: 12px 14px; border: 1px solid #FE455D; border-radius: 8px; color: #9B1C2B; background: #FDE3E6; }
+@media (max-width: 980px) {
+  .where-used { padding: 12px; }
+  .where-root-grid { grid-template-columns: 1fr; }
+  .where-section-head { align-items: flex-start; }
+}
+</style>
+
+<div class='where-used'>
+  <div class='where-header zcs-card zcs-p-20'>
+    <div class='where-header-title'>
+      <i class='zc-li-outline arrows-1-tail-right'></i>
+      <div>
+        <h2 class='zcs-m-0 zcs-font-22 zcs-font-semibold zcs-lh-heading zcs-color-primary'>Where Used Explorer</h2>
+        <p class='zcs-m-0 zcs-mt-8 zcs-font-14 zcs-color-secondary'>Direct and indirect upward BOM traversal for impact analysis, change-order review, and obsolete checks.</p>
+      </div>
+    </div>
+  </div>
+
+<% if(has_request == false) { %>
+  <div class='where-empty zcs-card'>
+    <div class='zcs-nodata-wrapper zcs-wh-full zcs-flex zcs-align-items-center zcs-justify-center zcs-text-center'>
+      <div class='zcs-nodata-content zcs-p-20 zcs-box-border'>
+        <i class='zc-li-outline ui-1-edit-72'></i>
+        <h3 class='zcs-m-0 zcs-font-18 zcs-font-semibold zcs-color-primary'>Select a component item</h3>
+        <p class='zcs-m-0 zcs-mt-8 zcs-font-14 zcs-color-secondary'>Open this page with an Item Master ID to see all direct parents and higher-level assemblies that use the component.</p>
+        <form class='where-prompt-form' method='get' action='#Page:Where_Used_Explorer'>
+          <div class='where-prompt-field'>
+            <label for='where_item_id'>Item Master ID</label>
+            <input id='where_item_id' name='item_id' type='number' placeholder='Example: 123456789'>
+          </div>
+          <button class='zcs-button zcs-primary-outline-button zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body' type='submit'>
+            <i class='zcs-button-icon zc-li-outline arrows-1-tail-right'></i>
+            <span class='zcs-button-text'>Explore Usage</span>
+          </button>
+        </form>
+        <div class='where-link-stack zcs-justify-center zcs-mt-12'>
+          <a class='where-mini-link' href='#Report:All_Items' target='_self'><i class='zc-li-outline files-2-archive-drawer'></i> Browse All Items</a>
+        </div>
+        <p class='zcs-m-0 zcs-mt-12 zcs-font-13 zcs-color-tertiary'>URL format: #Page:Where_Used_Explorer?item_id=123456789.</p>
+      </div>
+    </div>
+  </div>
+<% } else if(item_found == false) { %>
+  <div class='where-empty zcs-card'>
+    <i class='zc-li-outline ui-2-time'></i>
+    <h3 class='zcs-m-0 zcs-font-18 zcs-font-semibold zcs-color-primary'>Item not found</h3>
+    <p class='zcs-m-0 zcs-mt-8 zcs-font-14 zcs-color-secondary'><%=missing_message%></p>
+    <form class='where-prompt-form' method='get' action='#Page:Where_Used_Explorer'>
+      <div class='where-prompt-field'>
+        <label for='where_retry'>Try another Item Master ID</label>
+        <input id='where_retry' name='item_id' type='number' placeholder='Enter item_id'>
+      </div>
+      <button class='zcs-button zcs-primary-outline-button zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body' type='submit'>
+        <span class='zcs-button-text'>Explore Usage</span>
+      </button>
+    </form>
+  </div>
+<% } else { %>
+  <div class='where-root-card zcs-card zcs-p-20'>
+    <div class='where-root-grid'>
+      <div>
+        <span class='where-root-label'>Component APN</span>
+        <span class='where-root-value'><%=component_apn%></span>
+      </div>
+      <div>
+        <span class='where-root-label'>Description</span>
+        <span class='where-root-value'><%=component_desc%></span>
+      </div>
+      <div>
+        <span class='where-root-label'>Revision</span>
+        <span class='where-root-value'><%=component_revision%></span>
+      </div>
+      <div>
+        <span class='where-root-label'>Part Type</span>
+        <span class='where-root-value'><%=component_part_type%></span>
+      </div>
+      <div>
+        <span class='where-root-label'>Lifecycle</span>
+        <span class='where-root-value'><%=component_lifecycle%></span>
+      </div>
+      <div>
+        <span class='where-root-label'>Impact Rows</span>
+        <span class='where-root-value'><%=direct_rows.size() + indirect_rows.size()%></span>
+      </div>
+    </div>
+    <div class='where-link-stack zcs-mt-12'>
+      <a class='where-mini-link' href='#Report:All_Items?ID=<%=component_id%>' target='_self'><i class='zc-li-outline files-2-archive-drawer'></i> Open Component Item</a>
+      <a class='where-mini-link' href='#Page:BOM_Browser?item_id=<%=component_id%>' target='_self'><i class='zc-li-outline arrows-1-tail-right'></i> Open BOM Browser</a>
+    </div>
+  </div>
+
+  <% if(component_lifecycle in {"Deprecated","Obsolete","Abandoned"} && active_impacted_count > 0) { %>
+    <div class='where-critical zcs-flex zcs-gap-8 zcs-px-16 zcs-py-12 zcs-rounded-sm zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body'>
+      <i class='zc-li-outline travel-info'></i>
+      <div>
+        <p class='zcs-m-0'><strong>Obsolete check:</strong> this component lifecycle is <%=component_lifecycle%> and it is still present in <%=active_impacted_count%> active where-used path row(s). Review parent assemblies and change orders before release or procurement actions.</p>
+      </div>
+    </div>
+  <% } %>
+
+  <% if(cycle_hit == true || cap_hit == true) { %>
+    <div class='where-warning zcs-flex zcs-gap-8 zcs-px-16 zcs-py-12 zcs-rounded-sm zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body'>
+      <i class='zc-li-outline travel-info'></i>
+      <div>
+        <p class='zcs-m-0'>Traversal note: repeated branches were skipped to prevent cycles, or traversal stopped at the <%=depth_cap%>-level depth cap. Review BOM structure if expected ancestors are missing.</p>
+      </div>
+    </div>
+  <% } %>
+
+  <div class='where-section'>
+    <div class='where-section-head'>
+      <div>
+        <div class='where-section-title'>
+          <i class='zc-li-outline arrows-1-tail-right'></i>
+          <h3 class='zcs-m-0 zcs-font-18 zcs-font-semibold zcs-color-primary'>Direct Assemblies</h3>
+        </div>
+        <div class='where-summary-note'>Rows: <%=direct_rows.size()%>. Source: BOM_Line where child_item equals selected item and is_struck is false.</div>
+      </div>
+    </div>
+    <div class='zcs-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative'>
+      <table class='zcs-w-full'>
+        <thead class='zcs-sticky'>
+          <tr>
+            <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Parent APN</th>
+            <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Parent Description</th>
+            <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Relationship</th>
+            <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Quantity</th>
+            <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Lifecycle Phase</th>
+            <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Change-Order Cue</th>
+          </tr>
+          <tr class='zcs-tspace'><th class='zcs-py-2 zcs-box-border' colspan='6'></th></tr>
+        </thead>
+        <tbody>
+<% if(direct_rows.size() == 0) { %>
+          <tr>
+            <td class='where-empty zcs-px-16 zcs-py-8 zcs-box-border zcs-text-center zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-secondary' colspan='6'>No direct active BOM parents found for this component.</td>
+          </tr>
+<% } else { %>
+<%
+    for each row_map in direct_rows
+    {
+      row_parent_id = row_map.get("parent_id");
+      row_apn = ifnull(row_map.get("parent_apn"),"-");
+      row_desc = ifnull(row_map.get("parent_description"),"-");
+      row_relationship = ifnull(row_map.get("relationship"),"Direct BOM parent");
+      row_qty = ifnull(row_map.get("quantity"),0);
+      row_lifecycle = ifnull(row_map.get("lifecycle"),"Unknown");
+      life_display = row_lifecycle.replaceAll("_"," ");
+      life_class = "zcs-badge-yellow";
+      if(row_lifecycle == "Production") { life_class = "zcs-badge-green"; } else if(row_lifecycle == "Design") { life_class = "zcs-badge-blue"; } else if(row_lifecycle == "Deprecated") { life_class = "zcs-badge-orange"; } else if(row_lifecycle == "Obsolete" || row_lifecycle == "Abandoned") { life_class = "zcs-badge-red"; } else if(row_lifecycle == "Unreleased") { life_class = "zcs-badge-yellow"; } else { life_class = "zcs-badge-grey"; }
+%>
+          <tr>
+            <td class='where-apn zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'>
+              <a href='#Report:All_Items?ID=<%=row_parent_id%>' target='_self'><%=row_apn%></a>
+              <div class='where-link-stack'>
+                <a class='where-mini-link' href='#Page:BOM_Browser?item_id=<%=row_parent_id%>' target='_self'>BOM</a>
+              </div>
+            </td>
+            <td class='where-desc zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=row_desc%></td>
+            <td class='where-relationship zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=row_relationship%></td>
+            <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=row_qty%></td>
+            <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'>
+              <div class='zcs-badge zcs-badge-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border <%=life_class%>'>
+                <span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'><%=life_display%></span>
+              </div>
+            </td>
+            <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'>
+              <div class='where-cue'>
+                <div class='where-link-stack'>
+                  <a class='where-mini-link' href='#Report:All_Change_Orders?status=Open' target='_self'>Open COs</a>
+                  <a class='where-mini-link' href='#Report:Change_Order_Affected_Items?child_item=<%=row_parent_id%>' target='_self'>Affected rows</a>
+                </div>
+                <div class='where-cue-text'>Review open change orders before changing or obsoleting this component.</div>
+                <div class='where-query'>Suggested query: affected_items.child_item == <%=row_parent_id%> and status in Open, Submitted, Approval_In_Progress, Approved.</div>
+              </div>
+            </td>
+          </tr>
+<%  } %>
+<% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class='where-section'>
+    <div class='where-section-head'>
+      <div>
+        <div class='where-section-title'>
+          <i class='zc-li-outline arrows-1-tail-right'></i>
+          <h3 class='zcs-m-0 zcs-font-18 zcs-font-semibold zcs-color-primary'>Indirect Assemblies</h3>
+        </div>
+        <div class='where-summary-note'>Rows: <%=indirect_rows.size()%>. Recursive upward traversal from direct parents with multiplicative path quantity. Depth cap: <%=depth_cap%>.</div>
+      </div>
+    </div>
+    <div class='zcs-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative'>
+      <table class='zcs-w-full'>
+        <thead class='zcs-sticky'>
+          <tr>
+            <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Parent APN</th>
+            <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Parent Description</th>
+            <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Relationship</th>
+            <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Path Quantity</th>
+            <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Lifecycle Phase</th>
+            <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Path</th>
+            <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Change-Order Cue</th>
+          </tr>
+          <tr class='zcs-tspace'><th class='zcs-py-2 zcs-box-border' colspan='7'></th></tr>
+        </thead>
+        <tbody>
+<% if(indirect_rows.size() == 0) { %>
+          <tr>
+            <td class='where-empty zcs-px-16 zcs-py-8 zcs-box-border zcs-text-center zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-secondary' colspan='7'>No indirect parent assemblies found above the direct parents.</td>
+          </tr>
+<% } else { %>
+<%
+    for each row_map in indirect_rows
+    {
+      row_parent_id = row_map.get("parent_id");
+      row_apn = ifnull(row_map.get("parent_apn"),"-");
+      row_desc = ifnull(row_map.get("parent_description"),"-");
+      row_relationship = ifnull(row_map.get("relationship"),"Indirect ancestor");
+      row_qty = ifnull(row_map.get("path_quantity"),0);
+      row_lifecycle = ifnull(row_map.get("lifecycle"),"Unknown");
+      row_path = ifnull(row_map.get("path"),"-");
+      life_display = row_lifecycle.replaceAll("_"," ");
+      life_class = "zcs-badge-yellow";
+      if(row_lifecycle == "Production") { life_class = "zcs-badge-green"; } else if(row_lifecycle == "Design") { life_class = "zcs-badge-blue"; } else if(row_lifecycle == "Deprecated") { life_class = "zcs-badge-orange"; } else if(row_lifecycle == "Obsolete" || row_lifecycle == "Abandoned") { life_class = "zcs-badge-red"; } else if(row_lifecycle == "Unreleased") { life_class = "zcs-badge-yellow"; } else { life_class = "zcs-badge-grey"; }
+%>
+          <tr>
+            <td class='where-apn zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'>
+              <a href='#Report:All_Items?ID=<%=row_parent_id%>' target='_self'><%=row_apn%></a>
+              <div class='where-link-stack'>
+                <a class='where-mini-link' href='#Page:BOM_Browser?item_id=<%=row_parent_id%>' target='_self'>BOM</a>
+              </div>
+            </td>
+            <td class='where-desc zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=row_desc%></td>
+            <td class='where-relationship zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=row_relationship%></td>
+            <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=row_qty%></td>
+            <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'>
+              <div class='zcs-badge zcs-badge-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border <%=life_class%>'>
+                <span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'><%=life_display%></span>
+              </div>
+            </td>
+            <td class='where-path zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-13 zcs-font-normal zcs-lh-body'><%=row_path%></td>
+            <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'>
+              <div class='where-cue'>
+                <div class='where-link-stack'>
+                  <a class='where-mini-link' href='#Report:All_Change_Orders?status=Open' target='_self'>Open COs</a>
+                  <a class='where-mini-link' href='#Report:Change_Order_Affected_Items?child_item=<%=row_parent_id%>' target='_self'>Affected rows</a>
+                </div>
+                <div class='where-cue-text'>Treat this ancestor as impacted through the displayed path quantity.</div>
+                <div class='where-query'>Suggested query: affected_items.child_item == <%=row_parent_id%> and status in Open, Submitted, Approval_In_Progress, Approved.</div>
+              </div>
+            </td>
+          </tr>
+<%  } %>
+<% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+<% } %>
+</div>

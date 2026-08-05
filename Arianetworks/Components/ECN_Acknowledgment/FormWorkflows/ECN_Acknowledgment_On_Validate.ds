@@ -1,0 +1,32 @@
+ECN_Acknowledgment_On_Validate as "ECN Acknowledgment - On Validate"
+{
+    type = form
+    form = ECN_Acknowledgment
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if (input.ack_id == null || input.ack_id == "")
+                {
+                    input.ack_id = thisapp.Generate_Record_Code("ACK-");
+                }
+                emp_id = thisapp.Get_Employee_For_Login(zoho.loginuser);
+                emp_rec = Employee_Master[ID == emp_id];
+                if (emp_id == 0)
+                {
+                    alert "Logged-in employee record is required to acknowledge ECNs.";
+                    cancel submit;
+                }
+                if (emp_id != input.recipient_employee && (emp_rec.count() == 0 || emp_rec.profile_label != "ADMIN"))
+                {
+                    alert "Only the assigned recipient or Admin can submit this acknowledgment.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}

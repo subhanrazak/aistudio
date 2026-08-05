@@ -1,0 +1,71 @@
+Change_Order_On_Load as "Change Order - On Load"
+{
+    type = form
+    form = Change_Order
+    record event = on add or edit
+
+    on load
+    {
+        actions
+        {
+            custom deluge script
+            (
+                emp_id = thisapp.Get_Employee_For_Login(zoho.loginuser);
+                if (emp_id != 0 && input.created_by_employee == null)
+                {
+                    input.created_by_employee = emp_id;
+                }
+                if (input.created_date == null)
+                {
+                    input.created_date = zoho.currenttime;
+                }
+                if (input.status == null || input.status == "")
+                {
+                    input.status = "Open";
+                }
+                if (input.units_consumed == null)
+                {
+                    input.units_consumed = 0;
+                }
+                disable order_id;
+                disable created_by_employee;
+                disable created_date;
+                disable status;
+                disable units_consumed;
+                disable unit_cap_warning_shown;
+                disable release_error_flag;
+                disable release_error_details;
+                disable release_last_attempt_on;
+                if (input.effectivity_type == "Permanent_Scheduled")
+                {
+                    show effective_date;
+                    hide expiration_date;
+                    hide max_unit_count;
+                    hide alternative_component;
+                }
+                else if (input.effectivity_type == "Temporary_Deviation")
+                {
+                    hide effective_date;
+                    show expiration_date;
+                    show max_unit_count;
+                    show alternative_component;
+                }
+                else
+                {
+                    hide effective_date;
+                    hide expiration_date;
+                    hide max_unit_count;
+                    hide alternative_component;
+                }
+                if (input.status != "Open")
+                {
+                    disable change_category;
+                }
+                else
+                {
+                    enable change_category;
+                }
+            )
+        }
+    }
+}

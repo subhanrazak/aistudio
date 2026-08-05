@@ -1,0 +1,65 @@
+BOM_Line_On_Validate as "BOM Line - On Validate"
+{
+    type = form
+    form = BOM_Line
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if (input.parent_item != null && input.child_item != null && input.parent_item == input.child_item)
+                {
+                    alert "A BOM line cannot reference the parent item as its own child.";
+                    cancel submit;
+                }
+                if (input.child_item != null)
+                {
+                    child_rec = Item_Master[ID == input.child_item];
+                    if (child_rec.count() > 0 && child_rec.lifecycle_phase == "Obsolete")
+                    {
+                        alert "Cannot add an Obsolete item to a BOM.";
+                        cancel submit;
+                    }
+                }
+                if (input.parent_item != null)
+                {
+                    parent_rec = Item_Master[ID == input.parent_item];
+                    if (parent_rec.count() > 0 && parent_rec.part_type != "Assembly")
+                    {
+                        alert "Only Assembly items can carry BOM lines.";
+                        cancel submit;
+                    }
+                }
+                config_rec = System_Config[is_active == true];
+                check_refdes = true;
+                if (config_rec.count() > 0)
+                {
+                    check_refdes = config_rec.reference_designator_check_enabled;
+                }
+                if (check_refdes == true && input.reference_designator != null && input.reference_designator.trim() != "")
+                {
+                    ref_list = input.reference_designator.toList(",");
+                    if (ref_list.size() != input.quantity.toLong())
+                    {
+                        alert "Reference designator count must match Quantity when checking is enabled.";
+                        cancel submit;
+                    }
+                    unique_refs = List();
+                    for each ref_val in ref_list
+                    {
+                        clean_ref = ref_val.trim();
+                        if (clean_ref in unique_refs)
+                        {
+                            alert "Duplicate reference designator detected: " + clean_ref;
+                            cancel submit;
+                        }
+                        unique_refs.add(clean_ref);
+                    }
+                }
+            )
+        }
+    }
+}

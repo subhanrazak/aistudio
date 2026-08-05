@@ -1,0 +1,37 @@
+<%
+statuses = {"Open","Submitted","Approval_In_Progress","Approved","Effective","Complete","Rejected","Cancelled"};
+maxCO = 1;
+status_counts = Map();
+for each s in statuses
+{
+    c = Change_Order[status == s].count();
+    status_counts.put(s,c);
+    if(c > maxCO){maxCO = c;}
+}
+phases = {"Unreleased","Design","Production","Deprecated","Obsolete"};
+maxItem = 1;
+phase_counts = Map();
+for each p in phases
+{
+    pc = Item_Master[is_deleted == false && lifecycle_phase == p].count();
+    phase_counts.put(p,pc);
+    if(pc > maxItem){maxItem = pc;}
+}
+%>
+<style>
+.plm-card{background:#fff;border:1px solid var(--zcs_tertiary_border_color);border-radius:14px;padding:18px;margin:0 10px 16px 20px;box-sizing:border-box}.plm-card h2{font-size:17px;margin:0 0 12px}.plm-rowbar{display:grid;grid-template-columns:150px 1fr 44px;gap:10px;align-items:center;margin:9px 0}.plm-label{font-size:13px;color:var(--zcs_secondary_text_color);overflow:hidden;text-overflow:ellipsis}.plm-track{height:10px;background:#EEF0F6;border-radius:999px;overflow:hidden}.plm-fill{height:10px;background:#2A6FFC;border-radius:999px}.plm-fill.green{background:#179E6C}.plm-fill.orange{background:#F4660C}.plm-fill.red{background:#FE455D}.plm-count{text-align:right;font-weight:600;font-size:13px}.plm-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.plm-link{font-size:12px;color:var(--zcs_brand_color);text-decoration:none;border:1px solid var(--zcs_brand_color);border-radius:999px;padding:6px 10px}@media(max-width:700px){.plm-card{margin:0 12px 14px}.plm-rowbar{grid-template-columns:1fr}}
+</style>
+<div class="plm-card">
+  <h2>Change Orders by Status</h2>
+  <% for each s in statuses { pct = (status_counts.get(s) * 100) / maxCO; cls=""; if(s == "Complete" || s == "Effective"){cls="green";} if(s == "Rejected" || s == "Cancelled"){cls="red";} %>
+  <div class="plm-rowbar"><div class="plm-label"><%=s%></div><div class="plm-track"><div class="plm-fill <%=cls%>" style="width:<%=pct%>%"></div></div><div class="plm-count"><%=status_counts.get(s)%></div></div>
+  <% } %>
+  <div class="plm-actions"><a class="plm-link" href="#Report:All_Change_Orders">Open Change Orders</a><a class="plm-link" href="#Report:Change_Orders_By_Status">Status Report</a></div>
+</div>
+<div class="plm-card">
+  <h2>Items by Lifecycle Phase</h2>
+  <% for each p in phases { pct2 = (phase_counts.get(p) * 100) / maxItem; cls2=""; if(p == "Production"){cls2="green";} if(p == "Deprecated"){cls2="orange";} if(p == "Obsolete"){cls2="red";} %>
+  <div class="plm-rowbar"><div class="plm-label"><%=p%></div><div class="plm-track"><div class="plm-fill <%=cls2%>" style="width:<%=pct2%>%"></div></div><div class="plm-count"><%=phase_counts.get(p)%></div></div>
+  <% } %>
+  <div class="plm-actions"><a class="plm-link" href="#Report:All_Items">All Items</a><a class="plm-link" href="#Report:Items_By_Lifecycle">Lifecycle Report</a></div>
+</div>

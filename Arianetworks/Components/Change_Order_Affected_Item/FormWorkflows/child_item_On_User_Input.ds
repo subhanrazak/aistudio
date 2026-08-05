@@ -1,0 +1,29 @@
+CO_Affected_Item_Child_Input as "CO Affected Item - Child Item Input"
+{
+    type = form
+    form = Change_Order_Affected_Item
+    record event = on add or edit
+
+    on user input of child_item
+    {
+        actions
+        {
+            custom deluge script
+            (
+                hide software_load_instruction;
+                if (input.child_item != null)
+                {
+                    item_rec = Item_Master[ID == input.child_item];
+                    if (item_rec.count() > 0)
+                    {
+                        input.current_revision = item_rec.revision;
+                        if (item_rec.part_type == "Software_Firmware")
+                        {
+                            show software_load_instruction;
+                        }
+                    }
+                }
+            )
+        }
+    }
+}

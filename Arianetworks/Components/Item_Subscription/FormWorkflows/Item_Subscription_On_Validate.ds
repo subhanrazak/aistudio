@@ -1,0 +1,28 @@
+Item_Subscription_On_Validate as "Item Subscription - On Validate"
+{
+    type = form
+    form = Item_Subscription
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                emp_id = thisapp.Get_Employee_For_Login(zoho.loginuser);
+                if (emp_id != 0 && input.subscriber_employee != emp_id)
+                {
+                    alert "You can subscribe only yourself.";
+                    cancel submit;
+                }
+                duplicate_sub = Item_Subscription[ID != input.ID && subscriber_employee == input.subscriber_employee && item == input.item && is_active == true];
+                if (duplicate_sub.count() > 0)
+                {
+                    alert "You are already subscribed to this item.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}

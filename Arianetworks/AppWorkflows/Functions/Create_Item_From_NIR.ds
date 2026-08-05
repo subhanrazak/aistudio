@@ -1,0 +1,46 @@
+int Create_Item_From_NIR(int nir_id)
+{
+    created_item_id = 0;
+    nir_record_id = nir_id.toLong();
+    nir_rec = New_Item_Request[ID == nir_record_id];
+    if (nir_rec.count() > 0)
+    {
+        apn_value = nir_rec.apn;
+        if (apn_value == null || apn_value == "")
+        {
+            apn_value = thisapp.Generate_APN(nir_rec.category);
+            nir_rec.apn = apn_value;
+        }
+        primary_mfg = null;
+        if (nir_rec.manufacturer not in {"",null})
+        {
+            mfg_rec = Manufacturer_Master[manufacturer_name == nir_rec.manufacturer && is_active == true];
+            if (mfg_rec.count() > 0)
+            {
+                primary_mfg = mfg_rec.ID;
+            }
+        }
+        created_item_id = insert into Item_Master
+        [
+            apn = apn_value
+            category = nir_rec.category
+            description = nir_rec.description
+            part_name = nir_rec.description
+            part_type = "Component"
+            lifecycle_phase = "Unreleased"
+            revision = "-"
+            owner_employee = nir_rec.raised_by_employee
+            created_date = zoho.currenttime
+            nir_source = nir_rec.ID
+            mfg_0 = primary_mfg
+            mpn_0 = nir_rec.part_number
+        ];
+        recips = List();
+        recips.add(nir_rec.raised_by_employee);
+        merge_map = Map();
+        merge_map.put("nir_id", nir_rec.nir_id);
+        merge_map.put("apn", apn_value);
+        thisapp.Send_Template_Email("NIR_ITEM_CREATED", recips, merge_map);
+    }
+    return created_item_id;
+}

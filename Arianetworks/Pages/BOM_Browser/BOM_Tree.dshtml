@@ -1,0 +1,378 @@
+<%
+  root_item = Item_Master[ID == -1];
+  apn_value = "";
+  lookup_label = "";
+  has_request = false;
+  if(input.apn != null)
+  {
+    apn_value = input.apn.trim();
+  }
+  if(input.item_id != null && input.item_id > 0)
+  {
+    has_request = true;
+    lookup_label = "Item ID " + input.item_id;
+    root_item = Item_Master[ID == input.item_id && is_deleted == false];
+  }
+  else if(apn_value != "")
+  {
+    has_request = true;
+    lookup_label = "APN " + apn_value;
+    root_item = Item_Master[apn == apn_value && is_deleted == false];
+  }
+  root_found = false;
+  if(root_item.count() > 0)
+  {
+    root_found = true;
+    root_id = root_item.ID;
+    root_apn = ifnull(root_item.apn,"-");
+    root_desc = ifnull(root_item.description,"-");
+    root_rev = ifnull(root_item.revision,"-");
+    root_lifecycle = ifnull(root_item.lifecycle_phase,"Unreleased");
+    root_life_class = "zcs-badge-yellow";
+    if(root_lifecycle == "Production")
+    {
+      root_life_class = "zcs-badge-green";
+    }
+    else if(root_lifecycle == "Design")
+    {
+      root_life_class = "zcs-badge-blue";
+    }
+    else if(root_lifecycle == "Deprecated")
+    {
+      root_life_class = "zcs-badge-orange";
+    }
+    else if(root_lifecycle == "Obsolete" || root_lifecycle == "Abandoned")
+    {
+      root_life_class = "zcs-badge-red";
+    }
+    else if(root_lifecycle == "Unreleased")
+    {
+      root_life_class = "zcs-badge-yellow";
+    }
+    else
+    {
+      root_life_class = "zcs-badge-grey";
+    }
+  }
+%>
+<style>
+/* ZCS component CSS: zcs-global utility subset used by this page. */
+:root {
+  --zcs-theme-brand-color: var(--zcs_brand_color);
+  --zcs-primary-text-color: var(--zcs_primary_text_color);
+  --zcs-secondary-text-color: var(--zcs_secondary_text_color);
+  --zcs-teritiary-text-color: var(--zcs_tertiary_text_color);
+  --zcs-white-color: #FFFFFF;
+  --zcs-black-color: #000000;
+  --zcs-thead-color: #F9FAFE;
+  --zcs-tr-h-color: #F9FAFE;
+  font-size: 16px;
+  line-height: 1.5;
+}
+.zcs-w-full { width: 100%; }
+.zcs-flex { display: flex; }
+.zcs-inline-flex { display: inline-flex; }
+.zcs-row { display: flex; flex-wrap: wrap; }
+.zcs-align-items-center { align-items: center; }
+.zcs-justify-center { justify-content: center; }
+.zcs-justify-space-between { justify-content: space-between; }
+.zcs-gap-6 { gap: 0.375rem; }
+.zcs-gap-8 { gap: 0.5rem; }
+.zcs-gap-12 { gap: 0.75rem; }
+.zcs-gap-16 { gap: 1rem; }
+.zcs-p-20 { padding: 1.25rem; }
+.zcs-p-24 { padding: 1.5rem; }
+.zcs-px-10 { padding-left: 0.625rem; padding-right: 0.625rem; }
+.zcs-px-12 { padding-left: 0.75rem; padding-right: 0.75rem; }
+.zcs-px-16 { padding-left: 1rem; padding-right: 1rem; }
+.zcs-py-2 { padding-top: 0.125rem; padding-bottom: 0.125rem; }
+.zcs-py-6 { padding-top: 0.375rem; padding-bottom: 0.375rem; }
+.zcs-py-8 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+.zcs-m-0 { margin: 0; }
+.zcs-mt-8 { margin-top: 0.5rem; }
+.zcs-mt-12 { margin-top: 0.75rem; }
+.zcs-mt-16 { margin-top: 1rem; }
+.zcs-mb-0 { margin-bottom: 0; }
+.zcs-box-border { box-sizing: border-box; }
+.zcs-relative { position: relative; }
+.zcs-sticky { position: sticky; }
+.zcs-rounded-sm { border-radius: 0.25rem; }
+.zcs-rounded-md { border-radius: 0.375rem; }
+.zcs-rounded-lg { border-radius: 0.5rem; }
+.zcs-text-left { text-align: left; }
+.zcs-text-right { text-align: right; }
+.zcs-text-center { text-align: center; }
+.zcs-font-12 { font-size: 0.75rem; }
+.zcs-font-13 { font-size: 0.8125rem; }
+.zcs-font-14 { font-size: 0.875rem; }
+.zcs-font-16 { font-size: 1rem; }
+.zcs-font-18 { font-size: 1.125rem; }
+.zcs-font-22 { font-size: 1.375rem; }
+.zcs-font-normal { font-weight: 400; }
+.zcs-font-medium { font-weight: 500; }
+.zcs-font-semibold { font-weight: 600; }
+.zcs-font-bold { font-weight: 700; }
+.zcs-lh-body { line-height: 1.5; }
+.zcs-lh-heading { line-height: 1.25; }
+.zcs-color-primary { color: var(--zcs-primary-text-color); }
+.zcs-color-secondary { color: var(--zcs-secondary-text-color); }
+.zcs-color-tertiary { color: var(--zcs-teritiary-text-color); }
+.zcs-color-theme { color: var(--zcs-theme-brand-color); }
+.zcs-ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.zcs-overflow-auto { overflow: auto; }
+.zcs-card { background-color: var(--zcs-white-color); border: 1px solid #e7e7ee; border-radius: 12px; }
+a { text-decoration: none; }
+
+/* ZCS component CSS: table-simple-table. */
+.zcs-table-wrapper { border: 1px solid var(--zcs_tertiary_border_color); background-color: var(--zcs-white-color); overflow: auto; }
+.zcs-table-wrapper table { line-height: normal; border-collapse: collapse; min-width: 1120px; }
+.zcs-table-wrapper table thead { top: 0px; z-index: 2; }
+.zcs-table-wrapper table thead tr th { background-color: var(--zcs-thead-color); box-shadow: 0px -1px 0px 0px var(--zcs_tertiary_border_color) inset; white-space: nowrap; }
+.zcs-table-wrapper table thead tr.zcs-tspace th { background-color: var(--zcs-white-color); box-shadow: none; }
+.zcs-table-wrapper table tbody tr td { border-top: 1px solid var(--zcs_tertiary_border_color); vertical-align: middle; }
+.zcs-table-wrapper table tbody tr:first-child td { border-color: transparent; }
+.zcs-table-wrapper table tbody tr:hover td { background-color: var(--zcs-tr-h-color); }
+
+/* ZCS component CSS: badge-filled-badge. */
+.zcs-badge { width: auto; white-space: nowrap; }
+.zcs-badge-filled { border: 1px solid transparent; }
+.zcs-badge-filled.zcs-badge-theme { background-color: var(--zcs_brand_color); border-color: var(--zcs_brand_color); color: var(--zcs-white-color); }
+.zcs-badge-filled.zcs-badge-green { background-color: #179E6C; border-color: #179E6C; color: var(--zcs-white-color); }
+.zcs-badge-filled.zcs-badge-red { background-color: #FE455D; border-color: #FE455D; color: var(--zcs-white-color); }
+.zcs-badge-filled.zcs-badge-grey { background-color: #242424; border-color: #242424; color: var(--zcs-white-color); }
+.zcs-badge-filled.zcs-badge-yellow { background-color: #FAAE13; border-color: #FAAE13; color: var(--zcs-white-color); }
+.zcs-badge-filled.zcs-badge-blue { background-color: #2A6FFC; border-color: #2A6FFC; color: var(--zcs-white-color); }
+.zcs-badge-filled.zcs-badge-orange { background-color: #F4660C; border-color: #F4660C; color: var(--zcs-white-color); }
+
+/* ZCS component CSS: button-primary-outline-button. */
+.zcs-button { width: auto; min-width: 5rem; min-height: 36px; }
+.zcs-primary-outline-button { border: 1px solid var(--zcs_brand_color); background-color: var(--zcs-white-color); color: var(--zcs_brand_color); }
+.zcs-primary-outline-button:hover { background-color: var(--zcs_component_hover_color); border-color: var(--zcs_brand_color); color: var(--zcs_brand_color); }
+.zcs-button-icon { width: 16px; max-height: 16px; }
+
+/* BOM Browser custom hierarchy styling. */
+.bom-browser { background: var(--zcs-page-bg-color, #F3F3F4); padding: 20px; box-sizing: border-box; min-height: 100%; color: var(--zcs-primary-text-color); }
+.bom-header { margin-bottom: 16px; }
+.bom-header-title { display: flex; align-items: center; gap: 10px; }
+.bom-header-title i { color: var(--zcs_brand_color); font-size: 22px; }
+.bom-root-card { margin-bottom: 16px; }
+.bom-root-grid { display: grid; grid-template-columns: minmax(220px, 1.2fr) minmax(260px, 2fr) repeat(2, minmax(120px, auto)); gap: 14px; align-items: center; }
+.bom-root-label { display: block; color: var(--zcs-secondary-text-color); font-size: 12px; margin-bottom: 3px; }
+.bom-root-value { color: var(--zcs-primary-text-color); font-size: 14px; font-weight: 600; }
+.bom-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 14px 0; flex-wrap: wrap; }
+.bom-toolbar-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.bom-control-disabled { opacity: 0.58; cursor: default; pointer-events: none; }
+.bom-expanded-note { color: var(--zcs-secondary-text-color); font-size: 13px; }
+.bom-line-cell { white-space: nowrap; }
+.bom-level { display: inline-flex; align-items: center; justify-content: center; min-width: 30px; margin-right: 8px; padding: 1px 6px; border-radius: 4px; background: #F1F2F8; color: var(--zcs-secondary-text-color); font-size: 12px; }
+.bom-node { display: inline-flex; align-items: center; gap: 7px; min-width: 0; }
+.bom-node i { color: var(--zcs_brand_color); font-size: 14px; }
+.bom-node a { color: var(--zcs_brand_color); font-weight: 600; }
+.bom-depth-1 .bom-node { padding-left: 0; }
+.bom-depth-2 .bom-node { padding-left: 24px; }
+.bom-depth-3 .bom-node { padding-left: 48px; }
+.bom-depth-4 .bom-node { padding-left: 72px; }
+.bom-depth-5 .bom-node { padding-left: 96px; }
+.bom-depth-6 .bom-node { padding-left: 120px; }
+.bom-depth-7 .bom-node { padding-left: 144px; }
+.bom-depth-8 .bom-node { padding-left: 168px; }
+.bom-row .bom-node:before { content: ''; display: inline-block; width: 14px; height: 1px; background: var(--zcs_tertiary_border_color); margin-right: 2px; }
+.bom-desc { max-width: 360px; white-space: normal; }
+.bom-link-stack { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.bom-mini-link { display: inline-flex; align-items: center; gap: 5px; color: var(--zcs_brand_color); border: 1px solid var(--zcs_tertiary_border_color); border-radius: 6px; padding: 4px 8px; background: #FFFFFF; font-size: 12px; }
+.bom-mini-link:hover { border-color: var(--zcs_brand_color); background: var(--zcs_component_hover_color); }
+.bom-empty { padding: 28px; text-align: center; }
+.bom-empty i { display: block; color: var(--zcs_brand_color); font-size: 34px; margin-bottom: 10px; }
+.bom-prompt-form { display: flex; gap: 10px; justify-content: center; align-items: end; flex-wrap: wrap; margin-top: 14px; }
+.bom-prompt-field { text-align: left; }
+.bom-prompt-field label { display: block; color: var(--zcs-secondary-text-color); font-size: 12px; margin-bottom: 4px; }
+.bom-prompt-field input { min-height: 36px; min-width: 260px; border: 1px solid var(--zcs_tertiary_border_color); border-radius: 6px; padding: 6px 10px; box-sizing: border-box; font-size: 14px; color: var(--zcs-primary-text-color); background: #FFFFFF; }
+.bom-warning { margin-top: 12px; padding: 12px 14px; border: 1px solid #FAAE13; border-radius: 8px; color: #8A5B00; background: #FCF4E6; }
+@media (max-width: 900px) {
+  .bom-browser { padding: 12px; }
+  .bom-root-grid { grid-template-columns: 1fr; }
+  .bom-toolbar { align-items: flex-start; }
+}
+</style>
+
+<div class='bom-browser'>
+  <div class='bom-header zcs-card zcs-p-20'>
+    <div class='bom-header-title'>
+      <i class='zc-li-outline arrows-1-tail-right'></i>
+      <div>
+        <h2 class='zcs-m-0 zcs-font-22 zcs-font-semibold zcs-lh-heading zcs-color-primary'>BOM Browser</h2>
+        <p class='zcs-m-0 zcs-mt-8 zcs-font-14 zcs-color-secondary'>Multi-level assembly tree with line, child item, quantity, revision, lifecycle, and approval context.</p>
+      </div>
+    </div>
+  </div>
+
+<% if(has_request == false) { %>
+  <div class='bom-empty zcs-card'>
+    <i class='zc-li-outline ui-1-edit-72'></i>
+    <h3 class='zcs-m-0 zcs-font-18 zcs-font-semibold zcs-color-primary'>Enter an APN to browse its BOM</h3>
+    <p class='zcs-m-0 zcs-mt-8 zcs-font-14 zcs-color-secondary'>Provide an APN, or open this page with item_id for an exact Item Master record.</p>
+    <form class='bom-prompt-form' method='get' action='#Page:BOM_Browser'>
+      <div class='bom-prompt-field'>
+        <label for='bom_apn'>APN</label>
+        <input id='bom_apn' name='apn' type='text' placeholder='Example: ASM-00001-00'>
+      </div>
+      <button class='zcs-button zcs-primary-outline-button zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body' type='submit'>
+        <i class='zcs-button-icon zc-li-outline arrows-1-tail-right'></i>
+        <span class='zcs-button-text'>Open BOM</span>
+      </button>
+    </form>
+    <p class='zcs-m-0 zcs-mt-12 zcs-font-13 zcs-color-tertiary'>URL format: #Page:BOM_Browser?apn=YOUR_APN or #Page:BOM_Browser?item_id=123456789</p>
+  </div>
+<% } else if(root_found == false) { %>
+  <div class='bom-empty zcs-card'>
+    <i class='zc-li-outline ui-2-time'></i>
+    <h3 class='zcs-m-0 zcs-font-18 zcs-font-semibold zcs-color-primary'>No Item Master record found</h3>
+    <p class='zcs-m-0 zcs-mt-8 zcs-font-14 zcs-color-secondary'>Could not resolve <strong><%=lookup_label%></strong>. Check that the item exists and is not deleted.</p>
+    <form class='bom-prompt-form' method='get' action='#Page:BOM_Browser'>
+      <div class='bom-prompt-field'>
+        <label for='bom_apn_retry'>Try another APN</label>
+        <input id='bom_apn_retry' name='apn' type='text' placeholder='Enter APN'>
+      </div>
+      <button class='zcs-button zcs-primary-outline-button zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body' type='submit'>
+        <i class='zcs-button-icon zc-li-outline arrows-1-tail-right'></i>
+        <span class='zcs-button-text'>Open BOM</span>
+      </button>
+    </form>
+  </div>
+<% } else { %>
+  <div class='bom-root-card zcs-card zcs-p-20'>
+    <div class='bom-root-grid'>
+      <div>
+        <span class='bom-root-label'>Root APN</span>
+        <span class='bom-root-value'><%=root_apn%></span>
+      </div>
+      <div>
+        <span class='bom-root-label'>Description</span>
+        <span class='bom-root-value'><%=root_desc%></span>
+      </div>
+      <div>
+        <span class='bom-root-label'>Revision</span>
+        <span class='bom-root-value'><%=root_rev%></span>
+      </div>
+      <div>
+        <span class='bom-root-label'>Lifecycle</span>
+        <span class='zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border <%=root_life_class%>'><span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'><%=root_lifecycle%></span></span>
+      </div>
+    </div>
+  </div>
+
+  <div class='bom-toolbar'>
+    <div>
+      <div class='zcs-font-16 zcs-font-semibold zcs-color-primary'>Expanded BOM Tree</div>
+      <div class='bom-expanded-note'>Rendered expanded by default. Depth cap: 8 levels to avoid execution limits.</div>
+    </div>
+    <div class='bom-toolbar-actions'>
+      <span class='zcs-button zcs-primary-outline-button zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body bom-control-disabled'>
+        <i class='zcs-button-icon zc-li-outline arrows-1-tail-right'></i>
+        <span class='zcs-button-text'>Expand All</span>
+      </span>
+      <span class='zcs-button zcs-primary-outline-button zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body bom-control-disabled'>
+        <i class='zcs-button-icon zc-li-outline ui-2-time'></i>
+        <span class='zcs-button-text'>Collapse All</span>
+      </span>
+      <a class='zcs-button zcs-primary-outline-button zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body' href='#Report:All_Items?ID=<%=root_id%>' target='_self'>
+        <i class='zcs-button-icon zc-li-outline ui-1-edit-72'></i>
+        <span class='zcs-button-text'>Open Root Item</span>
+      </a>
+    </div>
+  </div>
+
+  <div class='zcs-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative'>
+    <table class='zcs-w-full'>
+      <thead class='zcs-sticky'>
+        <tr>
+          <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Line</th>
+          <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Child APN</th>
+          <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Description</th>
+          <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Quantity</th>
+          <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Revision</th>
+          <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Lifecycle</th>
+          <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Approval</th>
+          <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Links</th>
+        </tr>
+        <tr class='zcs-tspace'><th class='zcs-py-2 zcs-box-border' colspan='8'></th></tr>
+      </thead>
+      <tbody>
+<%
+  row_count = 0;
+  cap_hit = false;
+  for each line1 in BOM_Line[parent_item == root_id && is_struck == false] sort by line_number asc
+  {
+    row_count = row_count + 1;
+    child1 = Item_Master[ID == line1.child_item && is_deleted == false];
+    child1_found = child1.count() > 0;
+    if(child1_found)
+    {
+      child1_id = child1.ID;
+      child1_apn = ifnull(child1.apn,"-");
+      child1_desc = ifnull(child1.description,"-");
+      child1_rev = ifnull(child1.revision,"-");
+      child1_lifecycle = ifnull(child1.lifecycle_phase,"Unreleased");
+    }
+    else
+    {
+      child1_id = 0;
+      child1_apn = "Missing item";
+      child1_desc = "The child lookup could not be resolved.";
+      child1_rev = "-";
+      child1_lifecycle = "Unknown";
+    }
+    life1_class = "zcs-badge-yellow";
+    if(child1_lifecycle == "Production") { life1_class = "zcs-badge-green"; } else if(child1_lifecycle == "Design") { life1_class = "zcs-badge-blue"; } else if(child1_lifecycle == "Deprecated") { life1_class = "zcs-badge-orange"; } else if(child1_lifecycle == "Obsolete" || child1_lifecycle == "Abandoned") { life1_class = "zcs-badge-red"; } else if(child1_lifecycle == "Unreleased") { life1_class = "zcs-badge-yellow"; } else { life1_class = "zcs-badge-grey"; }
+    approval1 = ifnull(line1.manufacturer_approval_status,"Pending_Review");
+    approval1_display = approval1.replaceAll("_"," ");
+    approval1_class = "zcs-badge-orange";
+    if(approval1 == "Approved") { approval1_class = "zcs-badge-green"; } else if(approval1 == "Unapproved") { approval1_class = "zcs-badge-red"; }
+%>
+        <tr class='bom-row bom-depth-1'>
+          <td class='bom-line-cell zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><span class='bom-level'>L1</span><%=ifnull(line1.line_number,"-")%></td>
+          <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><span class='bom-node'><i class='zc-li-outline arrows-1-tail-right'></i><% if(child1_found) { %><a href='#Report:All_Items?ID=<%=child1_id%>' target='_self'><%=child1_apn%></a><% } else { %><span><%=child1_apn%></span><% } %></span></td>
+          <td class='bom-desc zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=child1_desc%></td>
+          <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=ifnull(line1.quantity,0)%></td>
+          <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=child1_rev%></td>
+          <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left'><span class='zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border <%=life1_class%>'><span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'><%=child1_lifecycle%></span></span></td>
+          <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left'><span class='zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border <%=approval1_class%>'><span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'><%=approval1_display%></span></span></td>
+          <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left'><% if(child1_found) { %><div class='bom-link-stack'><a class='bom-mini-link' href='#Report:All_Items?ID=<%=child1_id%>' target='_self'><i class='zc-li-outline ui-1-edit-72'></i>Item</a><a class='bom-mini-link' href='#Page:BOM_Browser?item_id=<%=child1_id%>' target='_self'><i class='zc-li-outline arrows-1-tail-right'></i>Child BOM</a></div><% } else { %><span class='zcs-font-13 zcs-color-tertiary'>Unavailable</span><% } %></td>
+        </tr>
+<%  if(child1_found) { for each line2 in BOM_Line[parent_item == child1_id && is_struck == false] sort by line_number asc { row_count = row_count + 1; child2 = Item_Master[ID == line2.child_item && is_deleted == false]; child2_found = child2.count() > 0; if(child2_found) { child2_id = child2.ID; child2_apn = ifnull(child2.apn,"-"); child2_desc = ifnull(child2.description,"-"); child2_rev = ifnull(child2.revision,"-"); child2_lifecycle = ifnull(child2.lifecycle_phase,"Unreleased"); } else { child2_id = 0; child2_apn = "Missing item"; child2_desc = "The child lookup could not be resolved."; child2_rev = "-"; child2_lifecycle = "Unknown"; } life2_class = "zcs-badge-yellow"; if(child2_lifecycle == "Production") { life2_class = "zcs-badge-green"; } else if(child2_lifecycle == "Design") { life2_class = "zcs-badge-blue"; } else if(child2_lifecycle == "Deprecated") { life2_class = "zcs-badge-orange"; } else if(child2_lifecycle == "Obsolete" || child2_lifecycle == "Abandoned") { life2_class = "zcs-badge-red"; } else if(child2_lifecycle == "Unreleased") { life2_class = "zcs-badge-yellow"; } else { life2_class = "zcs-badge-grey"; } approval2 = ifnull(line2.manufacturer_approval_status,"Pending_Review"); approval2_display = approval2.replaceAll("_"," "); approval2_class = "zcs-badge-orange"; if(approval2 == "Approved") { approval2_class = "zcs-badge-green"; } else if(approval2 == "Unapproved") { approval2_class = "zcs-badge-red"; } %>
+        <tr class='bom-row bom-depth-2'>
+          <td class='bom-line-cell zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><span class='bom-level'>L2</span><%=ifnull(line2.line_number,"-")%></td>
+          <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><span class='bom-node'><i class='zc-li-outline arrows-1-tail-right'></i><% if(child2_found) { %><a href='#Report:All_Items?ID=<%=child2_id%>' target='_self'><%=child2_apn%></a><% } else { %><span><%=child2_apn%></span><% } %></span></td>
+          <td class='bom-desc zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=child2_desc%></td>
+          <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=ifnull(line2.quantity,0)%></td>
+          <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=child2_rev%></td>
+          <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left'><span class='zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border <%=life2_class%>'><span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'><%=child2_lifecycle%></span></span></td>
+          <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left'><span class='zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border <%=approval2_class%>'><span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'><%=approval2_display%></span></span></td>
+          <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left'><% if(child2_found) { %><div class='bom-link-stack'><a class='bom-mini-link' href='#Report:All_Items?ID=<%=child2_id%>' target='_self'><i class='zc-li-outline ui-1-edit-72'></i>Item</a><a class='bom-mini-link' href='#Page:BOM_Browser?item_id=<%=child2_id%>' target='_self'><i class='zc-li-outline arrows-1-tail-right'></i>Child BOM</a></div><% } else { %><span class='zcs-font-13 zcs-color-tertiary'>Unavailable</span><% } %></td>
+        </tr>
+<%  if(child2_found) { for each line3 in BOM_Line[parent_item == child2_id && is_struck == false] sort by line_number asc { row_count = row_count + 1; child3 = Item_Master[ID == line3.child_item && is_deleted == false]; child3_found = child3.count() > 0; if(child3_found) { child3_id = child3.ID; child3_apn = ifnull(child3.apn,"-"); child3_desc = ifnull(child3.description,"-"); child3_rev = ifnull(child3.revision,"-"); child3_lifecycle = ifnull(child3.lifecycle_phase,"Unreleased"); } else { child3_id = 0; child3_apn = "Missing item"; child3_desc = "The child lookup could not be resolved."; child3_rev = "-"; child3_lifecycle = "Unknown"; } life3_class = "zcs-badge-yellow"; if(child3_lifecycle == "Production") { life3_class = "zcs-badge-green"; } else if(child3_lifecycle == "Design") { life3_class = "zcs-badge-blue"; } else if(child3_lifecycle == "Deprecated") { life3_class = "zcs-badge-orange"; } else if(child3_lifecycle == "Obsolete" || child3_lifecycle == "Abandoned") { life3_class = "zcs-badge-red"; } else if(child3_lifecycle == "Unreleased") { life3_class = "zcs-badge-yellow"; } else { life3_class = "zcs-badge-grey"; } approval3 = ifnull(line3.manufacturer_approval_status,"Pending_Review"); approval3_display = approval3.replaceAll("_"," "); approval3_class = "zcs-badge-orange"; if(approval3 == "Approved") { approval3_class = "zcs-badge-green"; } else if(approval3 == "Unapproved") { approval3_class = "zcs-badge-red"; } %>
+        <tr class='bom-row bom-depth-3'><td class='bom-line-cell zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><span class='bom-level'>L3</span><%=ifnull(line3.line_number,"-")%></td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><span class='bom-node'><i class='zc-li-outline arrows-1-tail-right'></i><% if(child3_found) { %><a href='#Report:All_Items?ID=<%=child3_id%>' target='_self'><%=child3_apn%></a><% } else { %><span><%=child3_apn%></span><% } %></span></td><td class='bom-desc zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=child3_desc%></td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=ifnull(line3.quantity,0)%></td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=child3_rev%></td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left'><span class='zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border <%=life3_class%>'><span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'><%=child3_lifecycle%></span></span></td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left'><span class='zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border <%=approval3_class%>'><span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'><%=approval3_display%></span></span></td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left'><% if(child3_found) { %><div class='bom-link-stack'><a class='bom-mini-link' href='#Report:All_Items?ID=<%=child3_id%>' target='_self'><i class='zc-li-outline ui-1-edit-72'></i>Item</a><a class='bom-mini-link' href='#Page:BOM_Browser?item_id=<%=child3_id%>' target='_self'><i class='zc-li-outline arrows-1-tail-right'></i>Child BOM</a></div><% } else { %><span class='zcs-font-13 zcs-color-tertiary'>Unavailable</span><% } %></td></tr>
+<%  if(child3_found) { for each line4 in BOM_Line[parent_item == child3_id && is_struck == false] sort by line_number asc { row_count = row_count + 1; child4 = Item_Master[ID == line4.child_item && is_deleted == false]; child4_found = child4.count() > 0; if(child4_found) { child4_id = child4.ID; child4_apn = ifnull(child4.apn,"-"); child4_desc = ifnull(child4.description,"-"); child4_rev = ifnull(child4.revision,"-"); child4_lifecycle = ifnull(child4.lifecycle_phase,"Unreleased"); } else { child4_id = 0; child4_apn = "Missing item"; child4_desc = "The child lookup could not be resolved."; child4_rev = "-"; child4_lifecycle = "Unknown"; } life4_class = "zcs-badge-yellow"; if(child4_lifecycle == "Production") { life4_class = "zcs-badge-green"; } else if(child4_lifecycle == "Design") { life4_class = "zcs-badge-blue"; } else if(child4_lifecycle == "Deprecated") { life4_class = "zcs-badge-orange"; } else if(child4_lifecycle == "Obsolete" || child4_lifecycle == "Abandoned") { life4_class = "zcs-badge-red"; } else if(child4_lifecycle == "Unreleased") { life4_class = "zcs-badge-yellow"; } else { life4_class = "zcs-badge-grey"; } approval4 = ifnull(line4.manufacturer_approval_status,"Pending_Review"); approval4_display = approval4.replaceAll("_"," "); approval4_class = "zcs-badge-orange"; if(approval4 == "Approved") { approval4_class = "zcs-badge-green"; } else if(approval4 == "Unapproved") { approval4_class = "zcs-badge-red"; } %>
+        <tr class='bom-row bom-depth-4'><td class='bom-line-cell zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><span class='bom-level'>L4</span><%=ifnull(line4.line_number,"-")%></td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><span class='bom-node'><i class='zc-li-outline arrows-1-tail-right'></i><% if(child4_found) { %><a href='#Report:All_Items?ID=<%=child4_id%>' target='_self'><%=child4_apn%></a><% } else { %><span><%=child4_apn%></span><% } %></span></td><td class='bom-desc zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=child4_desc%></td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=ifnull(line4.quantity,0)%></td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=child4_rev%></td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left'><span class='zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border <%=life4_class%>'><span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'><%=child4_lifecycle%></span></span></td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left'><span class='zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border <%=approval4_class%>'><span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'><%=approval4_display%></span></span></td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left'><% if(child4_found) { %><div class='bom-link-stack'><a class='bom-mini-link' href='#Report:All_Items?ID=<%=child4_id%>' target='_self'><i class='zc-li-outline ui-1-edit-72'></i>Item</a><a class='bom-mini-link' href='#Page:BOM_Browser?item_id=<%=child4_id%>' target='_self'><i class='zc-li-outline arrows-1-tail-right'></i>Child BOM</a></div><% } else { %><span class='zcs-font-13 zcs-color-tertiary'>Unavailable</span><% } %></td></tr>
+<%  if(child4_found) { for each line5 in BOM_Line[parent_item == child4_id && is_struck == false] sort by line_number asc { row_count = row_count + 1; child5 = Item_Master[ID == line5.child_item && is_deleted == false]; child5_found = child5.count() > 0; if(child5_found) { child5_id = child5.ID; child5_apn = ifnull(child5.apn,"-"); child5_desc = ifnull(child5.description,"-"); child5_rev = ifnull(child5.revision,"-"); child5_lifecycle = ifnull(child5.lifecycle_phase,"Unreleased"); } else { child5_id = 0; child5_apn = "Missing item"; child5_desc = "The child lookup could not be resolved."; child5_rev = "-"; child5_lifecycle = "Unknown"; } life5_class = "zcs-badge-yellow"; if(child5_lifecycle == "Production") { life5_class = "zcs-badge-green"; } else if(child5_lifecycle == "Design") { life5_class = "zcs-badge-blue"; } else if(child5_lifecycle == "Deprecated") { life5_class = "zcs-badge-orange"; } else if(child5_lifecycle == "Obsolete" || child5_lifecycle == "Abandoned") { life5_class = "zcs-badge-red"; } else if(child5_lifecycle == "Unreleased") { life5_class = "zcs-badge-yellow"; } else { life5_class = "zcs-badge-grey"; } approval5 = ifnull(line5.manufacturer_approval_status,"Pending_Review"); approval5_display = approval5.replaceAll("_"," "); approval5_class = "zcs-badge-orange"; if(approval5 == "Approved") { approval5_class = "zcs-badge-green"; } else if(approval5 == "Unapproved") { approval5_class = "zcs-badge-red"; } %>
+        <tr class='bom-row bom-depth-5'><td class='bom-line-cell zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><span class='bom-level'>L5</span><%=ifnull(line5.line_number,"-")%></td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><span class='bom-node'><i class='zc-li-outline arrows-1-tail-right'></i><% if(child5_found) { %><a href='#Report:All_Items?ID=<%=child5_id%>' target='_self'><%=child5_apn%></a><% } else { %><span><%=child5_apn%></span><% } %></span></td><td class='bom-desc zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=child5_desc%></td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=ifnull(line5.quantity,0)%></td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=child5_rev%></td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left'><span class='zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border <%=life5_class%>'><span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'><%=child5_lifecycle%></span></span></td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left'><span class='zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border <%=approval5_class%>'><span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'><%=approval5_display%></span></span></td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left'><% if(child5_found) { %><div class='bom-link-stack'><a class='bom-mini-link' href='#Report:All_Items?ID=<%=child5_id%>' target='_self'><i class='zc-li-outline ui-1-edit-72'></i>Item</a><a class='bom-mini-link' href='#Page:BOM_Browser?item_id=<%=child5_id%>' target='_self'><i class='zc-li-outline arrows-1-tail-right'></i>Child BOM</a></div><% } else { %><span class='zcs-font-13 zcs-color-tertiary'>Unavailable</span><% } %></td></tr>
+<%  if(child5_found) { for each line6 in BOM_Line[parent_item == child5_id && is_struck == false] sort by line_number asc { row_count = row_count + 1; child6 = Item_Master[ID == line6.child_item && is_deleted == false]; child6_found = child6.count() > 0; if(child6_found) { child6_id = child6.ID; child6_apn = ifnull(child6.apn,"-"); child6_desc = ifnull(child6.description,"-"); child6_rev = ifnull(child6.revision,"-"); child6_lifecycle = ifnull(child6.lifecycle_phase,"Unreleased"); } else { child6_id = 0; child6_apn = "Missing item"; child6_desc = "The child lookup could not be resolved."; child6_rev = "-"; child6_lifecycle = "Unknown"; } life6_class = "zcs-badge-yellow"; if(child6_lifecycle == "Production") { life6_class = "zcs-badge-green"; } else if(child6_lifecycle == "Design") { life6_class = "zcs-badge-blue"; } else if(child6_lifecycle == "Deprecated") { life6_class = "zcs-badge-orange"; } else if(child6_lifecycle == "Obsolete" || child6_lifecycle == "Abandoned") { life6_class = "zcs-badge-red"; } else if(child6_lifecycle == "Unreleased") { life6_class = "zcs-badge-yellow"; } else { life6_class = "zcs-badge-grey"; } approval6 = ifnull(line6.manufacturer_approval_status,"Pending_Review"); approval6_display = approval6.replaceAll("_"," "); approval6_class = "zcs-badge-orange"; if(approval6 == "Approved") { approval6_class = "zcs-badge-green"; } else if(approval6 == "Unapproved") { approval6_class = "zcs-badge-red"; } %>
+        <tr class='bom-row bom-depth-6'><td class='bom-line-cell zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><span class='bom-level'>L6</span><%=ifnull(line6.line_number,"-")%></td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><span class='bom-node'><i class='zc-li-outline arrows-1-tail-right'></i><% if(child6_found) { %><a href='#Report:All_Items?ID=<%=child6_id%>' target='_self'><%=child6_apn%></a><% } else { %><span><%=child6_apn%></span><% } %></span></td><td class='bom-desc zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=child6_desc%></td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=ifnull(line6.quantity,0)%></td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=child6_rev%></td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left'><span class='zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border <%=life6_class%>'><span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'><%=child6_lifecycle%></span></span></td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left'><span class='zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border <%=approval6_class%>'><span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'><%=approval6_display%></span></span></td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left'><% if(child6_found) { %><div class='bom-link-stack'><a class='bom-mini-link' href='#Report:All_Items?ID=<%=child6_id%>' target='_self'><i class='zc-li-outline ui-1-edit-72'></i>Item</a><a class='bom-mini-link' href='#Page:BOM_Browser?item_id=<%=child6_id%>' target='_self'><i class='zc-li-outline arrows-1-tail-right'></i>Child BOM</a></div><% } else { %><span class='zcs-font-13 zcs-color-tertiary'>Unavailable</span><% } %></td></tr>
+<%  if(child6_found) { for each line7 in BOM_Line[parent_item == child6_id && is_struck == false] sort by line_number asc { row_count = row_count + 1; child7 = Item_Master[ID == line7.child_item && is_deleted == false]; child7_found = child7.count() > 0; if(child7_found) { child7_id = child7.ID; child7_apn = ifnull(child7.apn,"-"); child7_desc = ifnull(child7.description,"-"); child7_rev = ifnull(child7.revision,"-"); child7_lifecycle = ifnull(child7.lifecycle_phase,"Unreleased"); } else { child7_id = 0; child7_apn = "Missing item"; child7_desc = "The child lookup could not be resolved."; child7_rev = "-"; child7_lifecycle = "Unknown"; } life7_class = "zcs-badge-yellow"; if(child7_lifecycle == "Production") { life7_class = "zcs-badge-green"; } else if(child7_lifecycle == "Design") { life7_class = "zcs-badge-blue"; } else if(child7_lifecycle == "Deprecated") { life7_class = "zcs-badge-orange"; } else if(child7_lifecycle == "Obsolete" || child7_lifecycle == "Abandoned") { life7_class = "zcs-badge-red"; } else if(child7_lifecycle == "Unreleased") { life7_class = "zcs-badge-yellow"; } else { life7_class = "zcs-badge-grey"; } approval7 = ifnull(line7.manufacturer_approval_status,"Pending_Review"); approval7_display = approval7.replaceAll("_"," "); approval7_class = "zcs-badge-orange"; if(approval7 == "Approved") { approval7_class = "zcs-badge-green"; } else if(approval7 == "Unapproved") { approval7_class = "zcs-badge-red"; } %>
+        <tr class='bom-row bom-depth-7'><td class='bom-line-cell zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><span class='bom-level'>L7</span><%=ifnull(line7.line_number,"-")%></td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><span class='bom-node'><i class='zc-li-outline arrows-1-tail-right'></i><% if(child7_found) { %><a href='#Report:All_Items?ID=<%=child7_id%>' target='_self'><%=child7_apn%></a><% } else { %><span><%=child7_apn%></span><% } %></span></td><td class='bom-desc zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=child7_desc%></td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=ifnull(line7.quantity,0)%></td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=child7_rev%></td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left'><span class='zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border <%=life7_class%>'><span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'><%=child7_lifecycle%></span></span></td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left'><span class='zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border <%=approval7_class%>'><span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'><%=approval7_display%></span></span></td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left'><% if(child7_found) { %><div class='bom-link-stack'><a class='bom-mini-link' href='#Report:All_Items?ID=<%=child7_id%>' target='_self'><i class='zc-li-outline ui-1-edit-72'></i>Item</a><a class='bom-mini-link' href='#Page:BOM_Browser?item_id=<%=child7_id%>' target='_self'><i class='zc-li-outline arrows-1-tail-right'></i>Child BOM</a></div><% } else { %><span class='zcs-font-13 zcs-color-tertiary'>Unavailable</span><% } %></td></tr>
+<%  if(child7_found) { for each line8 in BOM_Line[parent_item == child7_id && is_struck == false] sort by line_number asc { row_count = row_count + 1; child8 = Item_Master[ID == line8.child_item && is_deleted == false]; child8_found = child8.count() > 0; if(child8_found) { child8_id = child8.ID; child8_apn = ifnull(child8.apn,"-"); child8_desc = ifnull(child8.description,"-"); child8_rev = ifnull(child8.revision,"-"); child8_lifecycle = ifnull(child8.lifecycle_phase,"Unreleased"); if(BOM_Line[parent_item == child8_id && is_struck == false].count() > 0) { cap_hit = true; } } else { child8_id = 0; child8_apn = "Missing item"; child8_desc = "The child lookup could not be resolved."; child8_rev = "-"; child8_lifecycle = "Unknown"; } life8_class = "zcs-badge-yellow"; if(child8_lifecycle == "Production") { life8_class = "zcs-badge-green"; } else if(child8_lifecycle == "Design") { life8_class = "zcs-badge-blue"; } else if(child8_lifecycle == "Deprecated") { life8_class = "zcs-badge-orange"; } else if(child8_lifecycle == "Obsolete" || child8_lifecycle == "Abandoned") { life8_class = "zcs-badge-red"; } else if(child8_lifecycle == "Unreleased") { life8_class = "zcs-badge-yellow"; } else { life8_class = "zcs-badge-grey"; } approval8 = ifnull(line8.manufacturer_approval_status,"Pending_Review"); approval8_display = approval8.replaceAll("_"," "); approval8_class = "zcs-badge-orange"; if(approval8 == "Approved") { approval8_class = "zcs-badge-green"; } else if(approval8 == "Unapproved") { approval8_class = "zcs-badge-red"; } %>
+        <tr class='bom-row bom-depth-8'><td class='bom-line-cell zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><span class='bom-level'>L8</span><%=ifnull(line8.line_number,"-")%></td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><span class='bom-node'><i class='zc-li-outline arrows-1-tail-right'></i><% if(child8_found) { %><a href='#Report:All_Items?ID=<%=child8_id%>' target='_self'><%=child8_apn%></a><% } else { %><span><%=child8_apn%></span><% } %></span></td><td class='bom-desc zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=child8_desc%></td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=ifnull(line8.quantity,0)%></td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=child8_rev%></td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left'><span class='zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border <%=life8_class%>'><span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'><%=child8_lifecycle%></span></span></td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left'><span class='zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border <%=approval8_class%>'><span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'><%=approval8_display%></span></span></td><td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left'><% if(child8_found) { %><div class='bom-link-stack'><a class='bom-mini-link' href='#Report:All_Items?ID=<%=child8_id%>' target='_self'><i class='zc-li-outline ui-1-edit-72'></i>Item</a><a class='bom-mini-link' href='#Page:BOM_Browser?item_id=<%=child8_id%>' target='_self'><i class='zc-li-outline arrows-1-tail-right'></i>Child BOM</a></div><% } else { %><span class='zcs-font-13 zcs-color-tertiary'>Unavailable</span><% } %></td></tr>
+<%  } } } } } } } } } } } } } } } %>
+<% if(row_count == 0) { %>
+        <tr class='bom-row'>
+          <td class='bom-empty zcs-px-16 zcs-py-8 zcs-box-border zcs-text-center zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-secondary' colspan='8'>No active BOM_Line children found for this root item.</td>
+        </tr>
+<% } %>
+      </tbody>
+    </table>
+  </div>
+<% if(cap_hit == true) { %>
+  <div class='bom-warning zcs-font-14'>Additional child levels exist beyond the 8-level rendering cap. Open a level-8 child with Child BOM to continue browsing that branch.</div>
+<% } %>
+<% } %>
+</div>

@@ -1,0 +1,37 @@
+list Flatten_BOM(int root_item_id)
+{
+    flattened = List();
+    visited = List();
+    current_level = List();
+    current_level.add(root_item_id);
+    depth = 0;
+    depth_steps = {1,2,3,4,5,6,7,8,9,10};
+    for each depth_step in depth_steps
+    {
+        if (current_level.size() > 0)
+        {
+            next_level = List();
+            for each parent_id in current_level
+            {
+                if (parent_id not in visited)
+                {
+                    visited.add(parent_id);
+                    for each bom_line in BOM_Line[parent_item == parent_id && is_struck == false]
+                    {
+                        row_map = Map();
+                        row_map.put("parent_item_id", parent_id);
+                        row_map.put("item_id", bom_line.child_item);
+                        row_map.put("line_id", bom_line.ID);
+                        row_map.put("quantity", bom_line.quantity);
+                        row_map.put("depth", depth + 1);
+                        flattened.add(row_map);
+                        next_level.add(bom_line.child_item);
+                    }
+                }
+            }
+            current_level = next_level;
+            depth = depth + 1;
+        }
+    }
+    return flattened;
+}

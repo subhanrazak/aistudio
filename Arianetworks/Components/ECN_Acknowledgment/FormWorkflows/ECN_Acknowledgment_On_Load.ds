@@ -1,0 +1,30 @@
+ECN_Acknowledgment_On_Load as "ECN Acknowledgment - On Load"
+{
+    type = form
+    form = ECN_Acknowledgment
+    record event = on add or edit
+
+    on load
+    {
+        actions
+        {
+            custom deluge script
+            (
+                emp_id = thisapp.Get_Employee_For_Login(zoho.loginuser);
+                if (emp_id != 0 && input.recipient_employee == null)
+                {
+                    input.recipient_employee = emp_id;
+                }
+                if (input.status == null || input.status == "")
+                {
+                    input.status = "Pending";
+                }
+                disable ack_id;
+                disable change_order;
+                disable recipient_employee;
+                disable acknowledged_on;
+                disable status;
+            )
+        }
+    }
+}

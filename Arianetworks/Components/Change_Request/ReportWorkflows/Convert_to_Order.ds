@@ -1,0 +1,22 @@
+Convert_to_Order as "Convert to Order"
+{
+    type = functions
+    form = Change_Request
+    execution type = for each record
+
+    on start
+    {
+        actions
+        {
+            on click
+            (
+                emp_id = thisapp.Get_Employee_For_Login(zoho.loginuser);
+                emp_rec = Employee_Master[ID == emp_id];
+                if (emp_rec.count() > 0 && emp_rec.profile_label in {"PRODUCT_CHANGE_ANALYST","ADMIN"})
+                {
+                    openUrl("#Form:Change_Order?source_request=" + input.ID + "&title=" + input.title + "&description=" + input.problem_description + "&estimated_cost_impact=" + input.estimated_cost_impact, "same window");
+                }
+            )
+        }
+    }
+}

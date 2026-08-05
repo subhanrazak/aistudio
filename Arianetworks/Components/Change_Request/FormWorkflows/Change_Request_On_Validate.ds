@@ -1,0 +1,29 @@
+Change_Request_On_Validate as "Change Request - On Validate"
+{
+    type = form
+    form = Change_Request
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if (input.request_id == null || input.request_id == "")
+                {
+                    prefix_val = "ECR-";
+                    if (input.request_type == "Manufacturing_MCR")
+                    {
+                        prefix_val = "MCR-";
+                    }
+                    input.request_id = thisapp.Generate_Record_Code(prefix_val);
+                }
+                if (input.status == null || input.status == "")
+                {
+                    input.status = "Submitted";
+                }
+            )
+        }
+    }
+}
