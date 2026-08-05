@@ -1,0 +1,210 @@
+form Batch_Monitor
+{
+    displayname = "Batch Monitor"
+
+    Batch_Information
+    (
+        type    = section
+        row     = 1
+        column  = 0
+    )
+    must have unique Batch_Number
+    (
+        type        = text
+        displayname = "Batch Number (CHARG)"
+        maxchar     = 10
+        row         = 1
+    )
+    must have Material
+    (
+        type          = picklist
+        displayname   = "Material"
+        values        = Materials.ID
+        displayformat = [Material_Number]
+        searchable    = true
+        row           = 1
+    )
+    must have Manufacturing_Date
+    (
+        type        = date
+        displayname = "Manufacturing Date (HSDAT)"
+        row         = 1
+    )
+    must have Expiry_Date
+    (
+        type        = date
+        displayname = "Expiry Date / SLED (VFDAT)"
+        row         = 1
+    )
+    Storage_Location
+    (
+        type          = picklist
+        displayname   = "Storage Location (LGORT)"
+        values        = Storage_Locations.ID
+        displayformat = [Location_Code]
+        searchable    = true
+        row           = 1
+    )
+    SAP_Plant_Code
+    (
+        type        = text
+        displayname = "Plant Code (WERKS)"
+        maxchar     = 10
+        row         = 1
+    )
+    Material_Group_Name
+    (
+        type        = text
+        displayname = "Material Group"
+        maxchar     = 100
+        row         = 1
+    )
+
+    Stock_Quantities
+    (
+        type       = section
+        displayname = "Stock Quantities"
+        visibility = true
+        row        = 2
+        column     = 1
+    )
+    Unrestricted_Stock
+    (
+        type         = decimal
+        displayname  = "Unrestricted Stock (CLABS)"
+        decimalplace = 3
+        row          = 2
+    )
+    QI_Stock
+    (
+        type         = decimal
+        displayname  = "QI Stock (CINSM)"
+        decimalplace = 3
+        row          = 2
+    )
+    Blocked_Stock
+    (
+        type         = decimal
+        displayname  = "Blocked Stock (CSPEM)"
+        decimalplace = 3
+        row          = 2
+    )
+    Batch_Unit_of_Measure
+    (
+        type        = text
+        displayname = "Unit of Measure"
+        maxchar     = 10
+        row         = 2
+    )
+
+    Shelf_Life_Analysis
+    (
+        type       = section
+        displayname = "Shelf Life Analysis"
+        visibility = true
+        row        = 3
+        column     = 1
+    )
+    Days_To_Expiry
+    (
+        type        = formula
+        displayname = "Days to Expiry"
+        value       = Expiry_Date - zoho.currentdate
+        visibility  = true
+        row         = 3
+    )
+    Pct_Shelf_Life_Remaining
+    (
+        type        = formula
+        displayname = "% Shelf Life Remaining"
+        value       = ((Expiry_Date - zoho.currentdate) * 100) / (Expiry_Date - Manufacturing_Date)
+        visibility  = true
+        row         = 3
+    )
+    Status_Color
+    (
+        type          = picklist
+        displayname   = "Status"
+        values        = {"Green", "Amber", "Red"}
+        initial value = "Green"
+        row           = 3
+    )
+    Std_Cost_Per_Unit
+    (
+        type         = decimal
+        displayname  = "Std Cost per Unit"
+        decimalplace = 2
+        row          = 3
+    )
+    Value_At_Risk
+    (
+        type        = formula
+        displayname = "Value at Risk"
+        value       = Unrestricted_Stock * Std_Cost_Per_Unit
+        visibility  = true
+        row         = 3
+    )
+
+    Thresholds_And_Sync
+    (
+        type       = section
+        displayname = "Thresholds & Sync"
+        visibility = true
+        row        = 4
+        column     = 1
+    )
+    Amber_Threshold_Days
+    (
+        type        = number
+        displayname = "Amber Threshold (Days)"
+        row         = 4
+    )
+    Red_Threshold_Days
+    (
+        type        = number
+        displayname = "Red Threshold (Days)"
+        row         = 4
+    )
+    Last_Synced_Date
+    (
+        type        = date
+        displayname = "Last Synced Date"
+        row         = 4
+    )
+    Batch_Notes
+    (
+        type        = textarea
+        displayname = "Notes"
+        row         = 4
+    )
+
+    actions
+    {
+        on add
+        {
+            Submit
+            (
+                type = submit
+                displayname = "Save Batch"
+            )
+            Reset
+            (
+                type = reset
+                displayname = "Reset"
+            )
+        }
+        on edit
+        {
+            Update
+            (
+                type = submit
+                displayname = "Update Batch"
+            )
+            Cancel
+            (
+                type = cancel
+                displayname = "Cancel"
+            )
+        }
+    }
+}

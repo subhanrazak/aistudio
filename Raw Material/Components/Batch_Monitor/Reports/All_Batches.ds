@@ -1,0 +1,47 @@
+default list All_Batches
+{
+    displayName = "All Batches"
+    show all rows from Batch_Monitor
+    (
+        Batch_Number
+        Material
+        Expiry_Date
+        Days_To_Expiry
+        Pct_Shelf_Life_Remaining
+        Status_Color
+        Unrestricted_Stock
+        Value_At_Risk
+        Storage_Location
+        Material_Group_Name
+        Last_Synced_Date
+
+        custom action "Create Disposition"
+        (
+            workflow = Create_Disposition
+            show action for each record = true
+        )
+    )
+    filters ( Status_Color  Material  Storage_Location )
+    sort by ( Days_To_Expiry ascending )
+    conditional formatting
+    (
+        "Red Batches"
+        {
+            condition = (Status_Color == "Red")
+            fields = [Status_Color]
+            format = "background-color:#FFCCCC;color:#CC0000"
+        }
+        "Amber Batches"
+        {
+            condition = (Status_Color == "Amber")
+            fields = [Status_Color]
+            format = "background-color:#FFF3CD;color:#856404"
+        }
+        "Green Batches"
+        {
+            condition = (Status_Color == "Green")
+            fields = [Status_Color]
+            format = "background-color:#D4EDDA;color:#155724"
+        }
+    )
+}

@@ -1,0 +1,46 @@
+Batch_Monitor_On_Success as "Set Status on Save"
+{
+    type = form
+    form = Batch_Monitor
+    record event = on add
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+            matRec = Materials[ID == input.Material];
+            mgRec = Material_Groups[ID == matRec.Material_Group];
+            amberDays = mgRec.Amber_Warning_Days;
+            redDays = mgRec.Red_Alert_Days;
+            update Batch_Monitor [ID == input.ID]
+            [
+                Amber_Threshold_Days = amberDays
+                Red_Threshold_Days = redDays
+                Std_Cost_Per_Unit = matRec.Standard_Cost
+                Material_Group_Name = mgRec.Material_Group_Name
+                Last_Synced_Date = zoho.currentdate
+            ];
+            daysLeft = input.Expiry_Date - zoho.currentdate;
+            newStatus = "Green";
+            if(daysLeft <= 0)
+            {
+                newStatus = "Red";
+            }
+            else if(daysLeft <= redDays)
+            {
+                newStatus = "Red";
+            }
+            else if(daysLeft <= amberDays)
+            {
+                newStatus = "Amber";
+            }
+            update Batch_Monitor [ID == input.ID]
+            [
+                Status_Color = newStatus
+            ];
+            )
+        }
+    }
+}

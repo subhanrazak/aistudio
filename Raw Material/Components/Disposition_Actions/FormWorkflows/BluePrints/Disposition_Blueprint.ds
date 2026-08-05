@@ -1,0 +1,404 @@
+Disposition_Blueprint as "Disposition Workflow"
+{
+    type = blueprint
+    form = Disposition_Actions
+
+    start
+    {
+        start stage = "Pending"
+    }
+
+    stages
+    {
+        "Pending"          { }
+        "In Review"        { }
+        "Pending Re-test"  { }
+        "Approved"         { }
+        "Rejected"         { }
+    }
+
+    transitions
+    {
+        Submit_for_Review as "Submit for Review"
+        {
+            type       = normal
+            from stage = "Pending"
+            to stage   = "In Review"
+
+            before
+            {
+                transition owner
+                (
+                    permissions = {"Warehouse_Manager", "Admin"}
+                )
+                tooltip message = "Submit this disposition request for review"
+                confirmation before execution
+                (
+                    message            = "Submit this disposition request for review?"
+                    confirm button text = "Yes, Submit"
+                    cancel button text = "Cancel"
+                )
+            }
+
+            during
+            {
+                action = update_fields
+                workflow status = true
+                visible fields = [Disposition_Notes, Requester_Name]
+            }
+
+            after
+            {
+                actions
+                {
+                    custom deluge script
+                    (
+                    update Disposition_Actions [ID == input.ID] [ Status = "In Review" ];
+                    batchNum = Batch_Monitor[ID == input.Batch_Reference].Batch_Number;
+                    sendmail
+                    (
+                        from    : zoho.adminuserid
+                        to      : zoho.adminuserid
+                        subject : "[Disposition] " + input.Action_Type + " submitted — Batch: " + batchNum
+                        message : "A disposition request has been submitted for review.<br><br>Batch: " + batchNum + "<br>Action: " + input.Action_Type + "<br>Notes: " + input.Disposition_Notes
+                    );
+                    )
+                }
+            }
+        }
+
+        Send_to_Retest as "Send for Re-test"
+        {
+            type       = normal
+            from stage = "In Review"
+            to stage   = "Pending Re-test"
+
+            before
+            {
+                transition owner
+                (
+                    permissions = {"QA_Manager", "Admin"}
+                )
+                transition criteria = (Action_Type == "Extend Shelf Life")
+                tooltip message = "Send for re-testing — Extend Shelf Life requests only"
+            }
+
+            during
+            {
+                action = update_fields
+                workflow status = true
+                visible fields = [QA_Review_Notes, QA_Reviewer, QA_Review_Date, Retest_Lab_Reference]
+            }
+
+            after
+            {
+                actions
+                {
+                    custom deluge script
+                    (
+                    update Disposition_Actions [ID == input.ID] [ Status = "Pending Re-test" ];
+                    batchNum = Batch_Monitor[ID == input.Batch_Reference].Batch_Number;
+                    sendmail
+                    (
+                        from    : zoho.adminuserid
+                        to      : zoho.adminuserid
+                        subject : "[Re-test Required] " + input.Action_Type + " — Batch: " + batchNum
+                        message : "Disposition sent for re-testing.<br><br>Batch: " + batchNum + "<br>Lab Reference: " + input.Retest_Lab_Reference
+                    );
+                    )
+                }
+            }
+        }
+
+        Retest_Complete_Approve as "Re-test Complete — Approve"
+        {
+            type       = normal
+            from stage = "Pending Re-test"
+            to stage   = "Approved"
+
+            before
+            {
+                transition owner
+                (
+                    permissions = {"QA_Manager", "Admin"}
+                )
+                tooltip message = "Mark re-test complete and approve shelf life extension"
+                confirmation before execution
+                (
+                    message            = "Mark re-test complete and approve shelf life extension?"
+                    confirm button text = "Approve"
+                    cancel button text  = "Cancel"
+                )
+            }
+
+            during
+            {
+                action = update_fields
+                workflow status = true
+                visible fields = [Retest_Outcome, QA_Review_Notes]
+            }
+
+            after
+            {
+                actions
+                {
+                    custom deluge script
+                    (
+                    update Disposition_Actions [ID == input.ID] [ Status = "Approved" Approval_Date = zoho.currentdate ];
+                    batchNum = Batch_Monitor[ID == input.Batch_Reference].Batch_Number;
+                    sendmail
+                    (
+                        from    : zoho.adminuserid
+                        to      : zoho.adminuserid
+                        subject : "[APPROVED] Extend Shelf Life — Batch: " + batchNum
+                        message : "Re-test approved. Shelf life extension granted.<br><br>Batch: " + batchNum + "<br>Outcome: " + input.Retest_Outcome + "<br>Please update SAP accordingly."
+                    );
+                    )
+                }
+            }
+        }
+
+        Retest_Reject as "Re-test — Reject"
+        {
+            type       = normal
+            from stage = "Pending Re-test"
+            to stage   = "Rejected"
+
+            before
+            {
+                transition owner
+                (
+                    permissions = {"QA_Manager", "Admin"}
+                )
+                tooltip message = "Reject extension after re-test"
+                confirmation before execution
+                (
+                    message            = "Reject this extension after re-test?"
+                    confirm button text = "Reject"
+                    cancel button text  = "Cancel"
+                )
+            }
+
+            during
+            {
+                action = update_fields
+                workflow status = true
+                visible fields = [Rejection_Reason]
+            }
+
+            after
+            {
+                actions
+                {
+                    custom deluge script
+                    (
+                    update Disposition_Actions [ID == input.ID] [ Status = "Rejected" ];
+                    batchNum = Batch_Monitor[ID == input.Batch_Reference].Batch_Number;
+                    sendmail
+                    (
+                        from    : zoho.adminuserid
+                        to      : zoho.adminuserid
+                        subject : "[REJECTED] Re-test — Batch: " + batchNum
+                        message : "Shelf life extension rejected after re-test.<br><br>Batch: " + batchNum + "<br>Reason: " + input.Rejection_Reason
+                    );
+                    )
+                }
+            }
+        }
+
+        Approve_Consume as "Approve — Consume"
+        {
+            type       = normal
+            from stage = "In Review"
+            to stage   = "Approved"
+
+            before
+            {
+                transition owner
+                (
+                    permissions = {"Warehouse_Manager"}
+                )
+                transition criteria = (Action_Type == "Consume (Priority Use)")
+                tooltip message = "Approve priority consumption — Warehouse Manager only"
+                confirmation before execution
+                (
+                    message            = "Approve this priority consumption request?"
+                    confirm button text = "Approve"
+                    cancel button text  = "Cancel"
+                )
+            }
+
+            during
+            {
+                action = update_fields
+                workflow status = true
+                visible fields = [QA_Review_Notes, Requester_Name]
+            }
+
+            after
+            {
+                actions
+                {
+                    custom deluge script
+                    (
+                    update Disposition_Actions [ID == input.ID] [ Status = "Approved" Approval_Date = zoho.currentdate ];
+                    batchNum = Batch_Monitor[ID == input.Batch_Reference].Batch_Number;
+                    sendmail
+                    (
+                        from    : zoho.adminuserid
+                        to      : zoho.adminuserid
+                        subject : "[APPROVED] Consume (Priority Use) — Batch: " + batchNum
+                        message : "Priority consumption approved.<br><br>Batch: " + batchNum + "<br>Please expedite production order and update SAP with Goods Issue."
+                    );
+                    )
+                }
+            }
+        }
+
+        Approve_Return_to_Vendor as "Approve — Return to Vendor"
+        {
+            type       = normal
+            from stage = "In Review"
+            to stage   = "Approved"
+
+            before
+            {
+                transition owner
+                (
+                    permissions = {"Admin"}
+                )
+                transition criteria = (Action_Type == "Return to Vendor")
+                tooltip message = "Approve return to vendor — Procurement (Admin)"
+                confirmation before execution
+                (
+                    message            = "Approve return to vendor?"
+                    confirm button text = "Approve"
+                    cancel button text  = "Cancel"
+                )
+            }
+
+            during
+            {
+                action = update_fields
+                workflow status = true
+                visible fields = [QA_Review_Notes, Controller_Approval_Notes]
+            }
+
+            after
+            {
+                actions
+                {
+                    custom deluge script
+                    (
+                    update Disposition_Actions [ID == input.ID] [ Status = "Approved" Approval_Date = zoho.currentdate ];
+                    batchNum = Batch_Monitor[ID == input.Batch_Reference].Batch_Number;
+                    sendmail
+                    (
+                        from    : zoho.adminuserid
+                        to      : zoho.adminuserid
+                        subject : "[APPROVED] Return to Vendor — Batch: " + batchNum
+                        message : "Return to Vendor approved.<br><br>Batch: " + batchNum + "<br>Please initiate return process against original PO in SAP."
+                    );
+                    )
+                }
+            }
+        }
+
+        Approve_Standard as "Approve — Dispose / Transfer"
+        {
+            type       = normal
+            from stage = "In Review"
+            to stage   = "Approved"
+
+            before
+            {
+                transition owner
+                (
+                    permissions = {"QA_Manager", "Plant_Controller", "Admin"}
+                )
+                transition criteria = (Action_Type == "Dispose / Write-Off" || Action_Type == "Transfer to Alternate Use")
+                tooltip message = "Approve Dispose / Transfer — QA Manager and Plant Controller"
+                confirmation before execution
+                (
+                    message            = "Approve this disposition action?"
+                    confirm button text = "Approve"
+                    cancel button text  = "Cancel"
+                )
+            }
+
+            during
+            {
+                action = update_fields
+                workflow status = true
+                visible fields = [QA_Review_Notes, QA_Reviewer, QA_Review_Date, Controller_Approval_Notes, Controller_Reviewer]
+            }
+
+            after
+            {
+                actions
+                {
+                    custom deluge script
+                    (
+                    update Disposition_Actions [ID == input.ID] [ Status = "Approved" Approval_Date = zoho.currentdate ];
+                    batchNum = Batch_Monitor[ID == input.Batch_Reference].Batch_Number;
+                    sendmail
+                    (
+                        from    : zoho.adminuserid
+                        to      : zoho.adminuserid
+                        subject : "[APPROVED] " + input.Action_Type + " — Batch: " + batchNum
+                        message : "Disposition approved.<br><br>Batch: " + batchNum + "<br>Action: " + input.Action_Type + "<br>Please execute the corresponding action in SAP and update the SAP Action Reference on this record."
+                    );
+                    )
+                }
+            }
+        }
+
+        Reject_from_Review as "Reject"
+        {
+            type       = normal
+            from stage = "In Review"
+            to stage   = "Rejected"
+
+            before
+            {
+                transition owner
+                (
+                    permissions = {"QA_Manager", "Plant_Controller", "Admin"}
+                )
+                tooltip message = "Reject this disposition request"
+                confirmation before execution
+                (
+                    message            = "Reject this disposition request?"
+                    confirm button text = "Reject"
+                    cancel button text  = "Cancel"
+                )
+            }
+
+            during
+            {
+                action = update_fields
+                workflow status = true
+                visible fields = [Rejection_Reason]
+            }
+
+            after
+            {
+                actions
+                {
+                    custom deluge script
+                    (
+                    update Disposition_Actions [ID == input.ID] [ Status = "Rejected" ];
+                    batchNum = Batch_Monitor[ID == input.Batch_Reference].Batch_Number;
+                    sendmail
+                    (
+                        from    : zoho.adminuserid
+                        to      : zoho.adminuserid
+                        subject : "[REJECTED] " + input.Action_Type + " — Batch: " + batchNum
+                        message : "Disposition request rejected.<br><br>Batch: " + batchNum + "<br>Action: " + input.Action_Type + "<br>Reason: " + input.Rejection_Reason
+                    );
+                    )
+                }
+            }
+        }
+    }
+}

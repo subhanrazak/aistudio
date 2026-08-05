@@ -1,0 +1,3645 @@
+application "Raw-Material"
+{
+	date format = "dd-MMM-yyyy"
+	time zone = "Asia/Kolkata"
+	time format = "24-hr"
+
+
+
+	forms
+	{
+		form Batch_Monitor
+		{
+		    displayname = "Batch Monitor"
+		
+		    Batch_Information
+		    (
+		        type    = section
+		        row     = 1
+		        column  = 0
+		    )
+		    must have unique Batch_Number
+		    (
+		        type        = text
+		        displayname = "Batch Number (CHARG)"
+		        maxchar     = 10
+		        row         = 1
+		    )
+		    must have Material
+		    (
+		        type          = picklist
+		        displayname   = "Material"
+		        values        = Materials.ID
+		        displayformat = [Material_Number]
+		        searchable    = true
+		        row           = 1
+		    )
+		    must have Manufacturing_Date
+		    (
+		        type        = date
+		        displayname = "Manufacturing Date (HSDAT)"
+		        row         = 1
+		    )
+		    must have Expiry_Date
+		    (
+		        type        = date
+		        displayname = "Expiry Date / SLED (VFDAT)"
+		        row         = 1
+		    )
+		    Storage_Location
+		    (
+		        type          = picklist
+		        displayname   = "Storage Location (LGORT)"
+		        values        = Storage_Locations.ID
+		        displayformat = [Location_Code]
+		        searchable    = true
+		        row           = 1
+		    )
+		    SAP_Plant_Code
+		    (
+		        type        = text
+		        displayname = "Plant Code (WERKS)"
+		        maxchar     = 10
+		        row         = 1
+		    )
+		    Material_Group_Name
+		    (
+		        type        = text
+		        displayname = "Material Group"
+		        maxchar     = 100
+		        row         = 1
+		    )
+		
+		    Stock_Quantities
+		    (
+		        type       = section
+		        displayname = "Stock Quantities"
+		        visibility = true
+		        row        = 2
+		        column     = 1
+		    )
+		    Unrestricted_Stock
+		    (
+		        type         = decimal
+		        displayname  = "Unrestricted Stock (CLABS)"
+		        decimalplace = 3
+		        row          = 2
+		    )
+		    QI_Stock
+		    (
+		        type         = decimal
+		        displayname  = "QI Stock (CINSM)"
+		        decimalplace = 3
+		        row          = 2
+		    )
+		    Blocked_Stock
+		    (
+		        type         = decimal
+		        displayname  = "Blocked Stock (CSPEM)"
+		        decimalplace = 3
+		        row          = 2
+		    )
+		    Batch_Unit_of_Measure
+		    (
+		        type        = text
+		        displayname = "Unit of Measure"
+		        maxchar     = 10
+		        row         = 2
+		    )
+		
+		    Shelf_Life_Analysis
+		    (
+		        type       = section
+		        displayname = "Shelf Life Analysis"
+		        visibility = true
+		        row        = 3
+		        column     = 1
+		    )
+		    Days_To_Expiry
+		    (
+		        type        = formula
+		        displayname = "Days to Expiry"
+		        value       = Expiry_Date - zoho.currentdate
+		        visibility  = true
+		        row         = 3
+		    )
+		    Pct_Shelf_Life_Remaining
+		    (
+		        type        = formula
+		        displayname = "% Shelf Life Remaining"
+		        value       = ((Expiry_Date - zoho.currentdate) * 100) / (Expiry_Date - Manufacturing_Date)
+		        visibility  = true
+		        row         = 3
+		    )
+		    Status_Color
+		    (
+		        type          = picklist
+		        displayname   = "Status"
+		        values        = {"Green", "Amber", "Red"}
+		        initial value = "Green"
+		        row           = 3
+		    )
+		    Std_Cost_Per_Unit
+		    (
+		        type         = decimal
+		        displayname  = "Std Cost per Unit"
+		        decimalplace = 2
+		        row          = 3
+		    )
+		    Value_At_Risk
+		    (
+		        type        = formula
+		        displayname = "Value at Risk"
+		        value       = Unrestricted_Stock * Std_Cost_Per_Unit
+		        visibility  = true
+		        row         = 3
+		    )
+		
+		    Thresholds_And_Sync
+		    (
+		        type       = section
+		        displayname = "Thresholds & Sync"
+		        visibility = true
+		        row        = 4
+		        column     = 1
+		    )
+		    Amber_Threshold_Days
+		    (
+		        type        = number
+		        displayname = "Amber Threshold (Days)"
+		        row         = 4
+		    )
+		    Red_Threshold_Days
+		    (
+		        type        = number
+		        displayname = "Red Threshold (Days)"
+		        row         = 4
+		    )
+		    Last_Synced_Date
+		    (
+		        type        = date
+		        displayname = "Last Synced Date"
+		        row         = 4
+		    )
+		    Batch_Notes
+		    (
+		        type        = textarea
+		        displayname = "Notes"
+		        row         = 4
+		    )
+		
+		    actions
+		    {
+		        on add
+		        {
+		            Submit
+		            (
+		                type = submit
+		                displayname = "Save Batch"
+		            )
+		            Reset
+		            (
+		                type = reset
+		                displayname = "Reset"
+		            )
+		        }
+		        on edit
+		        {
+		            Update
+		            (
+		                type = submit
+		                displayname = "Update Batch"
+		            )
+		            Cancel
+		            (
+		                type = cancel
+		                displayname = "Cancel"
+		            )
+		        }
+		    }
+		}
+
+		form Disposition_Actions
+		{
+		    displayname = "Disposition Actions"
+		
+		    Disposition_Details
+		    (
+		        type    = section
+		        row     = 1
+		        column  = 0
+		    )
+		    must have Batch_Reference
+		    (
+		        type          = picklist
+		        displayname   = "Batch Reference"
+		        values        = Batch_Monitor.ID
+		        displayformat = [Batch_Number]
+		        searchable    = true
+		        row           = 1
+		    )
+		    must have Action_Type
+		    (
+		        type        = picklist
+		        displayname = "Action Type"
+		        values      = {"Consume (Priority Use)", "Extend Shelf Life", "Return to Vendor", "Dispose / Write-Off", "Transfer to Alternate Use"}
+		        row         = 1
+		    )
+		    Requested_Date
+		    (
+		        type          = date
+		        displayname   = "Request Date"
+		        initial value = "${zoho.currentdate}"
+		        row           = 1
+		    )
+		    Requester_Name
+		    (
+		        type        = text
+		        displayname = "Requested By"
+		        maxchar     = 100
+		        row         = 1
+		    )
+		    Disposition_Notes
+		    (
+		        type        = textarea
+		        displayname = "Disposition Notes / Justification"
+		        row         = 1
+		    )
+		
+		    Review_And_Approval
+		    (
+		        type       = section
+		        displayname = "Review & Approval"
+		        visibility = true
+		        row        = 2
+		        column     = 1
+		    )
+		    Status
+		    (
+		        type          = picklist
+		        displayname   = "Status"
+		        values        = {"Pending", "In Review", "Pending Re-test", "Approved", "Rejected"}
+		        initial value = "Pending"
+		        row           = 2
+		    )
+		    QA_Review_Notes
+		    (
+		        type        = textarea
+		        displayname = "QA Review Notes"
+		        row         = 2
+		    )
+		    QA_Reviewer
+		    (
+		        type        = text
+		        displayname = "QA Reviewer"
+		        maxchar     = 100
+		        row         = 2
+		    )
+		    QA_Review_Date
+		    (
+		        type        = date
+		        displayname = "QA Review Date"
+		        row         = 2
+		    )
+		    Retest_Lab_Reference
+		    (
+		        type        = text
+		        displayname = "Re-test Lab Reference"
+		        maxchar     = 50
+		        row         = 2
+		    )
+		    Retest_Outcome
+		    (
+		        type        = textarea
+		        displayname = "Re-test Outcome / Result"
+		        row         = 2
+		    )
+		    Controller_Approval_Notes
+		    (
+		        type        = textarea
+		        displayname = "Controller Approval Notes"
+		        row         = 2
+		    )
+		    Controller_Reviewer
+		    (
+		        type        = text
+		        displayname = "Controller Reviewer"
+		        maxchar     = 100
+		        row         = 2
+		    )
+		    Approval_Date
+		    (
+		        type        = date
+		        displayname = "Approval Date"
+		        row         = 2
+		    )
+		    Rejection_Reason
+		    (
+		        type        = textarea
+		        displayname = "Rejection Reason"
+		        row         = 2
+		    )
+		
+		    SAP_Action_Reference_Section
+		    (
+		        type       = section
+		        displayname = "SAP Action Reference"
+		        visibility = true
+		        row        = 3
+		        column     = 1
+		    )
+		    SAP_Action_Reference
+		    (
+		        type        = text
+		        displayname = "SAP Action Reference No."
+		        maxchar     = 20
+		        row         = 3
+		    )
+		    SAP_Action_Date
+		    (
+		        type        = date
+		        displayname = "SAP Action Date"
+		        row         = 3
+		    )
+		    Action_Completed_In_SAP
+		    (
+		        type          = checkbox
+		        displayname   = "Action Completed in SAP?"
+		        initial value = false
+		        row           = 3
+		    )
+		
+		    actions
+		    {
+		        on add
+		        {
+		            Submit
+		            (
+		                type = submit
+		                displayname = "Submit Request"
+		            )
+		            Reset
+		            (
+		                type = reset
+		                displayname = "Reset"
+		            )
+		        }
+		        on edit
+		        {
+		            Update
+		            (
+		                type = submit
+		                displayname = "Update"
+		            )
+		            Cancel
+		            (
+		                type = cancel
+		                displayname = "Cancel"
+		            )
+		        }
+		    }
+		
+		    blueprint components
+		    {
+		        stages = {"Pending", "In Review", "Pending Re-test", "Approved", "Rejected"}
+		    }
+		}
+
+		form FEFO_Log
+		{
+		    displayname = "FEFO Goods Issue Log"
+		
+		    Goods_Issue_Details
+		    (
+		        type    = section
+		        row     = 1
+		        column  = 0
+		    )
+		    must have GI_Date
+		    (
+		        type          = date
+		        displayname   = "GI Date"
+		        initial value = "${zoho.currentdate}"
+		        row           = 1
+		    )
+		    must have Material
+		    (
+		        type          = picklist
+		        displayname   = "Material"
+		        values        = Materials.ID
+		        displayformat = [Material_Number]
+		        searchable    = true
+		        row           = 1
+		    )
+		    must have Batch_Consumed
+		    (
+		        type          = picklist
+		        displayname   = "Batch Consumed"
+		        values        = Batch_Monitor.ID
+		        displayformat = [Batch_Number]
+		        searchable    = true
+		        row           = 1
+		    )
+		    must have Quantity_Issued
+		    (
+		        type         = decimal
+		        displayname  = "Quantity Issued"
+		        decimalplace = 3
+		        row          = 1
+		    )
+		    UoM
+		    (
+		        type        = text
+		        displayname = "Unit of Measure"
+		        maxchar     = 10
+		        row         = 1
+		    )
+		    Production_Order_Ref
+		    (
+		        type        = text
+		        displayname = "Production Order / Reference"
+		        maxchar     = 20
+		        row         = 1
+		    )
+		
+		    FEFO_Compliance
+		    (
+		        type       = section
+		        displayname = "FEFO Compliance"
+		        visibility = true
+		        row        = 2
+		        column     = 1
+		    )
+		    Was_Oldest_Batch
+		    (
+		        type          = checkbox
+		        displayname   = "Was the Oldest (First-Expiring) Batch Used?"
+		        initial value = true
+		        row           = 2
+		    )
+		    FEFO_Compliance_Notes
+		    (
+		        type        = textarea
+		        displayname = "FEFO Notes (explain if non-compliant)"
+		        row         = 2
+		    )
+		    Recorded_By
+		    (
+		        type        = text
+		        displayname = "Recorded By"
+		        maxchar     = 100
+		        row         = 2
+		    )
+		
+		    actions
+		    {
+		        on add
+		        {
+		            Submit
+		            (
+		                type = submit
+		                displayname = "Log GI"
+		            )
+		            Reset
+		            (
+		                type = reset
+		                displayname = "Reset"
+		            )
+		        }
+		        on edit
+		        {
+		            Update
+		            (
+		                type = submit
+		                displayname = "Update"
+		            )
+		            Cancel
+		            (
+		                type = cancel
+		                displayname = "Cancel"
+		            )
+		        }
+		    }
+		}
+
+		form Material_Groups
+		{
+		    displayname = "Material Groups"
+		
+		    Basic_Info
+		    (
+		        type    = section
+		        row     = 1
+		        column  = 0
+		    )
+		    must have unique Material_Group_Code
+		    (
+		        type        = text
+		        displayname = "Material Group Code"
+		        maxchar     = 20
+		        row         = 1
+		    )
+		    must have Material_Group_Name
+		    (
+		        type        = text
+		        displayname = "Material Group Name"
+		        maxchar     = 100
+		        row         = 1
+		    )
+		    Example_Materials
+		    (
+		        type        = textarea
+		        displayname = "Example Materials"
+		        row         = 1
+		    )
+		    Description
+		    (
+		        type        = textarea
+		        displayname = "Description"
+		        row         = 1
+		    )
+		
+		    Alert_Thresholds
+		    (
+		        type       = section
+		        displayname = "Alert Thresholds"
+		        visibility = true
+		        row        = 2
+		        column     = 1
+		    )
+		    must have Amber_Warning_Days
+		    (
+		        type        = number
+		        displayname = "Amber Warning (Days Before Expiry)"
+		        row         = 2
+		    )
+		    must have Red_Alert_Days
+		    (
+		        type        = number
+		        displayname = "Red Alert (Days Before Expiry)"
+		        row         = 2
+		    )
+		
+		    actions
+		    {
+		        on add
+		        {
+		            Submit
+		            (
+		                type = submit
+		                displayname = "Save"
+		            )
+		            Reset
+		            (
+		                type = reset
+		                displayname = "Reset"
+		            )
+		        }
+		        on edit
+		        {
+		            Update
+		            (
+		                type = submit
+		                displayname = "Update"
+		            )
+		            Cancel
+		            (
+		                type = cancel
+		                displayname = "Cancel"
+		            )
+		        }
+		    }
+		}
+
+		form Materials
+		{
+		    displayname = "Materials"
+		
+		    Material_Master
+		    (
+		        type    = section
+		        row     = 1
+		        column  = 0
+		    )
+		    must have unique Material_Number
+		    (
+		        type        = text
+		        displayname = "Material Number (MATNR)"
+		        maxchar     = 18
+		        row         = 1
+		    )
+		    must have Material_Description
+		    (
+		        type        = text
+		        displayname = "Material Description (MAKTX)"
+		        maxchar     = 200
+		        row         = 1
+		    )
+		    must have Material_Group
+		    (
+		        type          = picklist
+		        displayname   = "Material Group"
+		        values        = Material_Groups.ID
+		        displayformat = [Material_Group_Name]
+		        searchable    = true
+		        row           = 1
+		    )
+		    Unit_of_Measure
+		    (
+		        type        = text
+		        displayname = "Base Unit of Measure"
+		        maxchar     = 10
+		        row         = 1
+		    )
+		
+		    Shelf_Life_Settings
+		    (
+		        type       = section
+		        displayname = "Shelf Life Settings"
+		        visibility = true
+		        row        = 2
+		        column     = 1
+		    )
+		    Total_Shelf_Life_Days
+		    (
+		        type        = number
+		        displayname = "Total Shelf Life (Days) — MHDHB"
+		        row         = 2
+		    )
+		    Min_Remaining_Shelf_Life_Days
+		    (
+		        type        = number
+		        displayname = "Min Remaining Shelf Life (Days) — MHDRZ"
+		        row         = 2
+		    )
+		    Standard_Cost
+		    (
+		        type         = decimal
+		        displayname  = "Standard Cost per Unit (STPRS)"
+		        decimalplace = 2
+		        row          = 2
+		    )
+		    Currency
+		    (
+		        type        = text
+		        displayname = "Currency"
+		        maxchar     = 3
+		        row         = 2
+		    )
+		
+		    actions
+		    {
+		        on add
+		        {
+		            Submit
+		            (
+		                type = submit
+		                displayname = "Save"
+		            )
+		            Reset
+		            (
+		                type = reset
+		                displayname = "Reset"
+		            )
+		        }
+		        on edit
+		        {
+		            Update
+		            (
+		                type = submit
+		                displayname = "Update"
+		            )
+		            Cancel
+		            (
+		                type = cancel
+		                displayname = "Cancel"
+		            )
+		        }
+		    }
+		}
+
+		form Storage_Locations
+		{
+		    displayname = "Storage Locations"
+		
+		    Location_Info
+		    (
+		        type    = section
+		        row     = 1
+		        column  = 0
+		    )
+		    must have unique Location_Code
+		    (
+		        type        = text
+		        displayname = "Location Code (LGORT)"
+		        maxchar     = 10
+		        row         = 1
+		    )
+		    must have Location_Name
+		    (
+		        type        = text
+		        displayname = "Location Name (LGOBE)"
+		        maxchar     = 100
+		        row         = 1
+		    )
+		    Plant_Code
+		    (
+		        type        = text
+		        displayname = "Plant Code (WERKS)"
+		        maxchar     = 10
+		        row         = 1
+		    )
+		    Location_Description
+		    (
+		        type        = textarea
+		        displayname = "Description"
+		        row         = 1
+		    )
+		
+		    actions
+		    {
+		        on add
+		        {
+		            Submit
+		            (
+		                type = submit
+		                displayname = "Save"
+		            )
+		            Reset
+		            (
+		                type = reset
+		                displayname = "Reset"
+		            )
+		        }
+		        on edit
+		        {
+		            Update
+		            (
+		                type = submit
+		                displayname = "Update"
+		            )
+		            Cancel
+		            (
+		                type = cancel
+		                displayname = "Cancel"
+		            )
+		        }
+		    }
+		}
+	}
+
+	reports
+	{
+		default list All_Batches
+		{
+		    displayName = "All Batches"
+		    show all rows from Batch_Monitor
+		    (
+		        Batch_Number
+		        Material
+		        Expiry_Date
+		        Days_To_Expiry
+		        Pct_Shelf_Life_Remaining
+		        Status_Color
+		        Unrestricted_Stock
+		        Value_At_Risk
+		        Storage_Location
+		        Material_Group_Name
+		        Last_Synced_Date
+		
+		        custom action "Create Disposition"
+		        (
+		            workflow = Create_Disposition
+		            show action for each record = true
+		        )
+		    )
+		    filters ( Status_Color  Material  Storage_Location )
+		    sort by ( Days_To_Expiry ascending )
+		    conditional formatting
+		    (
+		        "Red Batches"
+		        {
+		            condition = (Status_Color == "Red")
+		            fields = [Status_Color]
+		            format = "background-color:#FFCCCC;color:#CC0000"
+		        }
+		        "Amber Batches"
+		        {
+		            condition = (Status_Color == "Amber")
+		            fields = [Status_Color]
+		            format = "background-color:#FFF3CD;color:#856404"
+		        }
+		        "Green Batches"
+		        {
+		            condition = (Status_Color == "Green")
+		            fields = [Status_Color]
+		            format = "background-color:#D4EDDA;color:#155724"
+		        }
+		    )
+		}
+
+		list Amber_Warning_Batches
+		{
+		    displayName = "Amber — Warning Batches"
+		    show all rows from Batch_Monitor [Status_Color == "Amber"]
+		    (
+		        Batch_Number
+		        Material
+		        Expiry_Date
+		        Days_To_Expiry
+		        Pct_Shelf_Life_Remaining
+		        Unrestricted_Stock
+		        Value_At_Risk
+		        Storage_Location
+		        Status_Color
+		        Material_Group_Name
+		
+		        custom action "Create Disposition"
+		        (
+		            workflow = Create_Disposition
+		            show action for each record = true
+		        )
+		    )
+		    sort by ( Days_To_Expiry ascending )
+		}
+
+		calendar Expiry_Calendar
+		{
+		    displayName = "Expiry Calendar"
+		    show all rows from Batch_Monitor
+		    (
+		        Batch_Number
+		        Material
+		        Expiry_Date
+		        Status_Color
+		    )
+		    options
+		    (
+		        display type  = month
+		        display field = Batch_Number
+		        start date    = Expiry_Date
+		        default date
+		        (
+		            day   = Today
+		            month = Currentmonth
+		            year  = Currentyear
+		        )
+		    )
+		}
+
+		list Red_Alert_Batches
+		{
+		    displayName = "Red — Expired Batches"
+		    show all rows from Batch_Monitor [Status_Color == "Red"]
+		    (
+		        Batch_Number
+		        Material
+		        Expiry_Date
+		        Days_To_Expiry
+		        Unrestricted_Stock
+		        Value_At_Risk
+		        Storage_Location
+		        Status_Color
+		        Material_Group_Name
+		
+		        custom action "Create Disposition"
+		        (
+		            workflow = Create_Disposition
+		            show action for each record = true
+		        )
+		    )
+		    sort by ( Days_To_Expiry ascending )
+		}
+
+		kanban Status_Kanban
+		{
+		    displayName = "Batch Status Board"
+		    show all rows from Batch_Monitor
+		    (
+		        Batch_Number
+		        Material
+		        Expiry_Date
+		        Days_To_Expiry
+		        Storage_Location
+		        Status_Color
+		    )
+		    sort by ( Days_To_Expiry ascending )
+		    options
+		    (
+		        display field = Status_Color
+		        sort order   = ascending
+		        record count = enable
+		    )
+		}
+
+		list Top_5_Urgent_Batches
+		{
+		    displayName = "Top 5 Most Urgent Batches"
+		    show all rows from Batch_Monitor [Status_Color != "Green"]
+		    (
+		        Batch_Number
+		        Material
+		        Expiry_Date
+		        Days_To_Expiry
+		        Status_Color
+		        Unrestricted_Stock
+		        Value_At_Risk
+		    )
+		    sort by ( Days_To_Expiry ascending )
+		}
+
+		default list All_Dispositions
+		{
+		    displayName = "All Disposition Actions"
+		    show all rows from Disposition_Actions
+		    (
+		        Batch_Reference
+		        Action_Type
+		        Status
+		        Requested_Date
+		        Requester_Name
+		        Approval_Date
+		        Action_Completed_In_SAP
+		    )
+		    filters ( Status  Action_Type )
+		    sort by ( Requested_Date descending )
+		    conditional formatting
+		    (
+		        "Pending"
+		        {
+		            condition = (Status == "Pending")
+		            fields = [Status]
+		            format = "background-color:#E2E3E5;color:#383d41"
+		        }
+		        "In Review"
+		        {
+		            condition = (Status == "In Review")
+		            fields = [Status]
+		            format = "background-color:#FFF3CD;color:#856404"
+		        }
+		        "Pending Re-test"
+		        {
+		            condition = (Status == "Pending Re-test")
+		            fields = [Status]
+		            format = "background-color:#CCE5FF;color:#004085"
+		        }
+		        "Approved"
+		        {
+		            condition = (Status == "Approved")
+		            fields = [Status]
+		            format = "background-color:#D4EDDA;color:#155724"
+		        }
+		        "Rejected"
+		        {
+		            condition = (Status == "Rejected")
+		            fields = [Status]
+		            format = "background-color:#F8D7DA;color:#721C24"
+		        }
+		    )
+		}
+
+		kanban Disposition_Kanban
+		{
+		    displayName = "Disposition Board"
+		    show all rows from Disposition_Actions
+		    (
+		        Batch_Reference
+		        Action_Type
+		        Status
+		        Requested_Date
+		        Requester_Name
+		    )
+		    sort by ( Requested_Date ascending )
+		    options
+		    (
+		        display field = Status
+		        sort order   = ascending
+		        record count = enable
+		    )
+		}
+
+		list Pending_Dispositions
+		{
+		    displayName = "Pending & In Review"
+		    show all rows from Disposition_Actions [Status == "Pending" || Status == "In Review" || Status == "Pending Re-test"]
+		    (
+		        Batch_Reference
+		        Action_Type
+		        Status
+		        Requested_Date
+		        Requester_Name
+		        Disposition_Notes
+		    )
+		    sort by ( Requested_Date ascending )
+		}
+
+		default list All_FEFO_Logs
+		{
+		    displayName = "All GI Logs"
+		    show all rows from FEFO_Log
+		    (
+		        GI_Date
+		        Material
+		        Batch_Consumed
+		        Quantity_Issued
+		        UoM
+		        Was_Oldest_Batch
+		        Production_Order_Ref
+		        Recorded_By
+		    )
+		    filters ( Material  Was_Oldest_Batch )
+		    sort by ( GI_Date descending )
+		    conditional formatting
+		    (
+		        "Non-Compliant GI"
+		        {
+		            condition = (Was_Oldest_Batch == false)
+		            fields = [Was_Oldest_Batch]
+		            format = "background-color:#F8D7DA;color:#721C24"
+		        }
+		    )
+		}
+
+		calendar GI_Calendar
+		{
+		    displayName = "GI Calendar"
+		    show all rows from FEFO_Log
+		    (
+		        GI_Date
+		        Material
+		        Batch_Consumed
+		        Quantity_Issued
+		    )
+		    options
+		    (
+		        display type  = month
+		        display field = Material
+		        start date    = GI_Date
+		        default date
+		        (
+		            day   = Today
+		            month = Currentmonth
+		            year  = Currentyear
+		        )
+		    )
+		}
+
+		default list All_Material_Groups
+		{
+		    displayName = "All Material Groups"
+		    show all rows from Material_Groups
+		    (
+		        Material_Group_Code
+		        Material_Group_Name
+		        Amber_Warning_Days
+		        Red_Alert_Days
+		        Example_Materials
+		        Description
+		    )
+		    sort by ( Material_Group_Name ascending )
+		}
+
+		default list All_Materials
+		{
+		    displayName = "All Materials"
+		    show all rows from Materials
+		    (
+		        Material_Number
+		        Material_Description
+		        Material_Group
+		        Total_Shelf_Life_Days
+		        Min_Remaining_Shelf_Life_Days
+		        Standard_Cost
+		        Currency
+		        Unit_of_Measure
+		    )
+		    filters ( Material_Group )
+		    sort by ( Material_Number ascending )
+		}
+
+		list Materials_By_Group
+		{
+		    displayName = "Materials by Group"
+		    show all rows from Materials
+		    (
+		        Material_Number
+		        Material_Description
+		        Material_Group
+		        Total_Shelf_Life_Days
+		        Standard_Cost
+		    )
+		    group by ( Material_Group ascending )
+		    sort by ( Material_Number ascending )
+		}
+
+		default list All_Storage_Locations
+		{
+		    displayName = "All Storage Locations"
+		    show all rows from Storage_Locations
+		    (
+		        Location_Code
+		        Location_Name
+		        Plant_Code
+		        Location_Description
+		    )
+		    sort by ( Location_Code ascending )
+		}
+	}
+
+	pages
+	{
+		page Shelf_Life_Dashboard
+		{
+					displayname = "Shelf-Life Dashboard"
+					Content="<zml>\n\t<layout>\n\t\t<row>\n\t\t\t<column width='100%'>\n\t\t\t\t<dsp id='Shelf_Life_Dashboard_Header' elementName='Shelf_Life_Dashboard_Header'>\n\t\t\t\t\t<![CDATA[htmlpage Shelf_Life_Dashboard_Header()\n\t\t\t\t\t\tcontent\n\t\t\t\t\t\t&lt;%{%&gt;\n\t\t\t\t\t\t\t\t&lt;style&gt;\n/* ===== zcs-global.css ===== */\n:root { --zcs-theme-brand-color: var(--zcs_brand_color); --zcs-light-bg-color: var(--zcs_brand_light_color); --zcs-app-header-color: #1c1c40; --zcs-page-bg-color: #F3F3F4; --zcs-primary-text-color: var(--zcs_primary_text_color); --zcs-secondary-text-color: var(--zcs_secondary_text_color); --zcs-teritiary-text-color: var(--zcs_tertiary_text_color); --zcs-border-color: var(--zcs_tertiary_border_color); --zcs-placeholder-color: #878895; --zcs-white-color: #FFFFFF; --zcs-black-color: #000000; }\n.zcs-flex { display: flex; }\n.zcs-align-items-center { align-items: center; }\n.zcs-justify-space-between { justify-content: space-between; }\n.zcs-direction-column { flex-direction: column; }\n.zcs-gap-4 { gap: 0.25rem; }\n.zcs-m-0 { margin: 0; }\n.zcs-font-bold { font-weight: 700; }\n\n/* Header component styles */\n.slm-header {\n\tbackground: linear-gradient(135deg, #1a237e 0%, #283593 100%);\n\tpadding: 20px 28px;\n\tbox-sizing: border-box;\n\twidth: 100%;\n}\n.slm-header-title {\n\tfont-size: 22px;\n\tfont-weight: 800;\n\tcolor: #ffffff;\n\tmargin: 0 0 4px 0;\n\tdisplay: flex;\n\talign-items: center;\n\tgap: 10px;\n}\n.slm-header-subtitle {\n\tfont-size: 13px;\n\tcolor: rgba(255,255,255,0.75);\n\tmargin: 0;\n}\n.slm-header-icon {\n\tfont-size: 22px;\n\tcolor: #ffffff;\n}\n.slm-date-badge {\n\tbackground: rgba(255,255,255,0.15);\n\tborder: 1px solid rgba(255,255,255,0.3);\n\tborder-radius: 8px;\n\tpadding: 8px 16px;\n\tcolor: #ffffff;\n\tfont-size: 13px;\n\tfont-weight: 600;\n\twhite-space: nowrap;\n\tdisplay: flex;\n\talign-items: center;\n\tgap: 6px;\n}\n&lt;/style&gt;\n&lt;div class=&quot;slm-header zcs-flex zcs-align-items-center zcs-justify-space-between&quot;&gt;\n\t&lt;div class=&quot;zcs-flex zcs-direction-column zcs-gap-4&quot;&gt;\n\t\t&lt;h1 class=&quot;slm-header-title&quot;&gt;\n\t\t\t&lt;i class=&quot;slm-header-icon zc-li-outline science-chemistry-flask-01&quot;&gt;&lt;/i&gt;\n\t\t\tRaw Material Shelf-Life Monitor\n\t\t&lt;/h1&gt;\n\t\t&lt;p class=&quot;slm-header-subtitle&quot;&gt;Real-time expiry tracking, FEFO compliance, and disposition management&lt;/p&gt;\n\t&lt;/div&gt;\n\t&lt;div class=&quot;slm-date-badge&quot;&gt;\n\t\t&lt;i class=&quot;zc-li-outline ui-1-calendar-grid-58&quot; style=&quot;font-size:14px;&quot;&gt;&lt;/i&gt;\n\t\t&lt;%=zoho.currentdate.toString(&quot;dd MMM yyyy&quot;)%&gt;\n\t&lt;/div&gt;\n&lt;/div&gt;\n\t\t\t\t\t\t&lt;%}%&gt;\n\t\t\t\t\t]]>\n\t\t\t\t</dsp>\n\t\t\t</column>\n\t\t</row>\n\t\t<row>\n\t\t\t<column width='65%'>\n\t\t\t\t<dsp id='Traffic_Light_KPIs' elementName='Traffic_Light_KPIs'>\n\t\t\t\t\t<![CDATA[htmlpage Traffic_Light_KPIs()\n\t\t\t\t\t\tcontent\n\t\t\t\t\t\t&lt;%{%&gt;\n\t\t\t\t\t\t\t\t&lt;style&gt;\n.slm-kpi-grid {\n\tdisplay: grid;\n\tgrid-template-columns: 1fr 1fr 1fr;\n\tgap: 12px;\n\tpadding: 12px;\n\tbox-sizing: border-box;\n\twidth: 100%;\n}\n.slm-kpi-card {\n\tborder-radius: 12px;\n\tpadding: 20px 16px;\n\tbox-sizing: border-box;\n\tdisplay: flex;\n\tflex-direction: column;\n\talign-items: center;\n\ttext-align: center;\n\tgap: 6px;\n}\n.slm-kpi-card-red {\n\tbackground: linear-gradient(135deg, #c62828 0%, #e53935 100%);\n}\n.slm-kpi-card-amber {\n\tbackground: linear-gradient(135deg, #e65100 0%, #f57c00 100%);\n}\n.slm-kpi-card-green {\n\tbackground: linear-gradient(135deg, #1b5e20 0%, #388e3c 100%);\n}\n.slm-kpi-icon {\n\tfont-size: 28px;\n\tcolor: rgba(255,255,255,0.85);\n\tmargin-bottom: 4px;\n}\n.slm-kpi-count {\n\tfont-size: 52px;\n\tfont-weight: 800;\n\tcolor: #ffffff;\n\tline-height: 1;\n\tmargin: 0;\n}\n.slm-kpi-label {\n\tfont-size: 14px;\n\tfont-weight: 700;\n\tcolor: rgba(255,255,255,0.95);\n\tmargin: 4px 0 0 0;\n}\n.slm-kpi-sub {\n\tfont-size: 11px;\n\tcolor: rgba(255,255,255,0.7);\n\tmargin: 0;\n}\n&lt;/style&gt;\n&lt;div class=&quot;slm-kpi-grid&quot;&gt;\n\t&lt;div class=&quot;slm-kpi-card slm-kpi-card-red&quot;&gt;\n\t\t&lt;i class=&quot;slm-kpi-icon zc-li-solid ui-1-simple-remove&quot;&gt;&lt;/i&gt;\n\t\t&lt;p class=&quot;slm-kpi-count&quot;&gt;&lt;%=Batch_Monitor[Status_Color == &quot;Red&quot;].count()%&gt;&lt;/p&gt;\n\t\t&lt;p class=&quot;slm-kpi-label&quot;&gt;Expired Batches&lt;/p&gt;\n\t\t&lt;p class=&quot;slm-kpi-sub&quot;&gt;Immediate Action Required&lt;/p&gt;\n\t&lt;/div&gt;\n\t&lt;div class=&quot;slm-kpi-card slm-kpi-card-amber&quot;&gt;\n\t\t&lt;i class=&quot;slm-kpi-icon zc-li-solid ui-2-time&quot;&gt;&lt;/i&gt;\n\t\t&lt;p class=&quot;slm-kpi-count&quot;&gt;&lt;%=Batch_Monitor[Status_Color == &quot;Amber&quot;].count()%&gt;&lt;/p&gt;\n\t\t&lt;p class=&quot;slm-kpi-label&quot;&gt;Warning Zone&lt;/p&gt;\n\t\t&lt;p class=&quot;slm-kpi-sub&quot;&gt;Approaching Expiry&lt;/p&gt;\n\t&lt;/div&gt;\n\t&lt;div class=&quot;slm-kpi-card slm-kpi-card-green&quot;&gt;\n\t\t&lt;i class=&quot;slm-kpi-icon zc-li-solid ui-1-check-circle-08&quot;&gt;&lt;/i&gt;\n\t\t&lt;p class=&quot;slm-kpi-count&quot;&gt;&lt;%=Batch_Monitor[Status_Color == &quot;Green&quot;].count()%&gt;&lt;/p&gt;\n\t\t&lt;p class=&quot;slm-kpi-label&quot;&gt;Safe Batches&lt;/p&gt;\n\t\t&lt;p class=&quot;slm-kpi-sub&quot;&gt;Within Shelf Life&lt;/p&gt;\n\t&lt;/div&gt;\n&lt;/div&gt;\n\t\t\t\t\t\t&lt;%}%&gt;\n\t\t\t\t\t]]>\n\t\t\t\t</dsp>\n\t\t\t</column>\n\t\t\t<column width='35%'>\n\t\t\t\t<dsp id='Risk_Summary' elementName='Risk_Summary'>\n\t\t\t\t\t<![CDATA[htmlpage Risk_Summary()\n\t\t\t\t\t\tcontent\n\t\t\t\t\t\t&lt;%{%&gt;\n\t\t\t\t\t\t\t\t&lt;style&gt;\n.slm-risk-wrap {\n\tdisplay: flex;\n\tflex-direction: column;\n\tgap: 12px;\n\tpadding: 12px;\n\tbox-sizing: border-box;\n\theight: 100%;\n}\n.slm-risk-card {\n\tbackground: #ffffff;\n\tborder-radius: 10px;\n\tpadding: 18px 16px;\n\tbox-sizing: border-box;\n\tdisplay: flex;\n\tflex-direction: column;\n\tgap: 8px;\n\tflex: 1;\n\tborder: 1px solid #e7e7ee;\n}\n.slm-risk-card-red {\n\tborder-left: 4px solid #c62828;\n}\n.slm-risk-card-orange {\n\tborder-left: 4px solid #f57c00;\n}\n.slm-risk-card-header {\n\tdisplay: flex;\n\talign-items: center;\n\tgap: 8px;\n}\n.slm-risk-card-icon-red {\n\tfont-size: 18px;\n\tcolor: #c62828;\n}\n.slm-risk-card-icon-orange {\n\tfont-size: 18px;\n\tcolor: #f57c00;\n}\n.slm-risk-card-title {\n\tfont-size: 12px;\n\tfont-weight: 600;\n\tcolor: #555577;\n\tmargin: 0;\n\ttext-transform: uppercase;\n\tletter-spacing: 0.5px;\n}\n.slm-risk-value {\n\tfont-size: 32px;\n\tfont-weight: 800;\n\tcolor: #1a1a2e;\n\tmargin: 0;\n\tline-height: 1.1;\n}\n.slm-risk-value-red {\n\tcolor: #c62828;\n}\n.slm-risk-value-orange {\n\tcolor: #e65100;\n}\n&lt;/style&gt;\n&lt;div class=&quot;slm-risk-wrap&quot;&gt;\n\t&lt;div class=&quot;slm-risk-card slm-risk-card-red&quot;&gt;\n\t\t&lt;div class=&quot;slm-risk-card-header&quot;&gt;\n\t\t\t&lt;i class=&quot;slm-risk-card-icon-red zc-li-outline e-commerce-money-bag&quot;&gt;&lt;/i&gt;\n\t\t\t&lt;p class=&quot;slm-risk-card-title&quot;&gt;Total Value at Risk&lt;/p&gt;\n\t\t&lt;/div&gt;\n\t\t&lt;p class=&quot;slm-risk-value slm-risk-value-red&quot;&gt;&lt;%=Batch_Monitor[Status_Color == &quot;Red&quot;].sum(Value_At_Risk) + Batch_Monitor[Status_Color == &quot;Amber&quot;].sum(Value_At_Risk)%&gt;&lt;/p&gt;\n\t&lt;/div&gt;\n\t&lt;div class=&quot;slm-risk-card slm-risk-card-orange&quot;&gt;\n\t\t&lt;div class=&quot;slm-risk-card-header&quot;&gt;\n\t\t\t&lt;i class=&quot;slm-risk-card-icon-orange zc-li-outline ui-1-notes-paper-text&quot;&gt;&lt;/i&gt;\n\t\t\t&lt;p class=&quot;slm-risk-card-title&quot;&gt;Open Disposition Actions&lt;/p&gt;\n\t\t&lt;/div&gt;\n\t\t&lt;p class=&quot;slm-risk-value slm-risk-value-orange&quot;&gt;&lt;%=Disposition_Actions[Status == &quot;Pending&quot; || Status == &quot;In Review&quot; || Status == &quot;Pending Re-test&quot;].count()%&gt;&lt;/p&gt;\n\t&lt;/div&gt;\n&lt;/div&gt;\n\t\t\t\t\t\t&lt;%}%&gt;\n\t\t\t\t\t]]>\n\t\t\t\t</dsp>\n\t\t\t</column>\n\t\t</row>\n\t\t<row>\n\t\t\t<column width='55%'>\n\t\t\t\t<chart elementName='Expiry_Timeline_Chart'\n\t\t\t title='Expiry Timeline - Next 90 Days'\n\t\t\t titleColor='#222326'\n\t\t\t boldTitle='true'\n\t\t\t type='Bar'\n\t\t\t xtitle='Expiry Month'\n\t\t\t ytitle='Batch Count'\n\t\t\t bgColor='#FFFFFF'\n\t\t\t theme='theme1'\n\t\t\t legendPos='none'\n\t\t\t heightType='custom'\n\t\t\t heightValue='320px'\n\t\t\t appLinkName='thisapp'\n\t\t\t formLinkName='Batch_Monitor'\n\t\t\t xfield='Expiry_Date'\n\t\t\t dateGrouping='month_year'\n\t\t\t yfields='count:ID'\n\t\t\t showDataLabel='true' />\n\t\t\t</column>\n\t\t\t<column width='45%'>\n\t\t\t\t<gauge elementName='FEFO_Compliance_Gauge'\n\t\t\t title='FEFO Compliance %'\n\t\t\t titleColor='#222326'\n\t\t\t boldTitle='true'\n\t\t\t type='3'\n\t\t\t displayType='Percentage against a number'\n\t\t\t value='thisapp.FEFO_Log.ID.count'\n\t\t\t compareTo='100'\n\t\t\t color='#1b5e20'\n\t\t\t size='24px'\n\t\t\t bgColor='#FFFFFF'\n\t\t\t theme='theme1'\n\t\t\t criteria='Was_Oldest_Batch == true'>\n\t<target size='14px' color='#1b5e20' fontFamily='default' value='95' />\n\t<ranges>\n\t\t<range color='#e53935' width='60' />\n\t\t<range color='#f57c00' width='20' />\n\t\t<range color='#388e3c' width='20' />\n\t</ranges>\n\t<maximumvalue size='14px' color='#555555' value='100' />\n</gauge>\n\t\t\t</column>\n\t\t</row>\n\t\t<row>\n\t\t\t<column width='40%'>\n\t\t\t\t<dsp id='topAtRiskSnippet' elementName='Top_At_Risk'>\n\t\t\t\t\t<![CDATA[htmlpage topAtRiskSnippet()\n\t\t\t\t\t\t content\n\t\t\t\t\t\t &lt;%{%&gt;\n\t\t\t\t\t\t\t\t &lt;style&gt;\n.tar-card { background: #fff; border-radius: 10px; padding: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow: hidden; }\n.tar-header { background: #fff; padding: 14px 16px; display: flex; align-items: center; border-bottom: 1px solid #f0f0f0; }\n.tar-icon { width: 32px; height: 32px; border-radius: 16px; background: #fdecea; display: flex; align-items: center; justify-content: center; margin-right: 10px; flex-shrink: 0; font-size: 14px; color: #c62828; font-weight: 700; }\n.tar-title { font-size: 15px; font-weight: 700; color: #1a1a2e; }\n.tar-row { display: flex; align-items: center; padding: 10px 16px; border-bottom: 1px solid #f5f5f5; }\n.tar-row:last-child { border-bottom: none; }\n.tar-rank { width: 32px; font-size: 17px; font-weight: 800; color: #c62828; flex-shrink: 0; }\n.tar-name { flex: 1; font-size: 13px; color: #333; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }\n.tar-count { font-size: 18px; font-weight: 800; color: #e53935; min-width: 40px; text-align: right; }\n.tar-empty { padding: 20px 16px; color: #999; font-size: 13px; text-align: center; }\n&lt;/style&gt;\n&lt;div class=&quot;tar-card&quot;&gt;\n\t&lt;div class=&quot;tar-header&quot;&gt;\n\t\t&lt;div class=&quot;tar-icon&quot;&gt;!&lt;/div&gt;\n\t\t&lt;div class=&quot;tar-title&quot;&gt;Top 10 Materials at Risk (Red/Amber Batches)&lt;/div&gt;\n\t&lt;/div&gt;\n\t&lt;div&gt;\n&lt;%\n\t// Aggregate Red+Amber batch count per material\n\triskBatches = Batch_Monitor[Status_Color == &quot;Red&quot; || Status_Color == &quot;Amber&quot;];\n\tallMaterials = Materials[ID != 0];\n\tmatCountList = list();\n\tfor each mat in allMaterials\n\t{\n\t\tcnt = Batch_Monitor[Status_Color == &quot;Red&quot; || Status_Color == &quot;Amber&quot;].count();\n\t\tmatBatches = Batch_Monitor[Status_Color == &quot;Red&quot; || Status_Color == &quot;Amber&quot; &amp;&amp; Material == mat.ID];\n\t\tbatchCnt = matBatches.count();\n\t\tif(batchCnt &gt; 0)\n\t\t{\n\t\t\tpadded = &quot;00000&quot; + batchCnt;\n\t\t\tpadded = padded.subString(padded.length() - 6);\n\t\t\tmatCountList.add(padded + &quot;||&quot; + mat.Material_Number + &quot; - &quot; + mat.Material_Description);\n\t\t}\n\t}\n\tmatCountList = matCountList.sort(false);\n\trank = 1;\n\tif(matCountList.size() == 0)\n\t{\n\t\t%&gt;&lt;div class=&quot;tar-empty&quot;&gt;No at-risk batches found.&lt;/div&gt;&lt;%\n\t}\n\tfor each item in matCountList\n\t{\n\t\tif(rank &lt;= 10)\n\t\t{\n\t\t\tcntStr = item.getPrefix(&quot;||&quot;);\n\t\t\tmatName = item.getSuffix(&quot;||&quot;);\n\t\t\tbatchCount = cntStr.toLong();\n\t\t\t%&gt;&lt;div class=&quot;tar-row&quot;&gt;\n\t\t\t\t&lt;div class=&quot;tar-rank&quot;&gt;&lt;%=rank%&gt;&lt;/div&gt;\n\t\t\t\t&lt;div class=&quot;tar-name&quot;&gt;&lt;%=matName%&gt;&lt;/div&gt;\n\t\t\t\t&lt;div class=&quot;tar-count&quot;&gt;&lt;%=batchCount%&gt;&lt;/div&gt;\n\t\t\t&lt;/div&gt;&lt;%\n\t\t\trank = rank + 1;\n\t\t}\n\t}\n%&gt;\n\t&lt;/div&gt;\n&lt;/div&gt;\n\t\t\t\t\t\t &lt;%}%&gt;\n\t\t\t\t ]]>\n\t\t\t\t</dsp>\n\t\t\t</column>\n\t\t\t<column width='60%'>\n\t\t\t\t<report elementName='Disposition_Tracker_Report'\n\t\t\t\tappLinkName='thisapp'\n\t\t\t\tlinkName='Pending_Dispositions'\n\t\t\t\tiszreport='false'\n\t\t\t\tzc_Footer='true'\n\t\t\t\tzc_AddRec='true'\n\t\t\t\tzc_EditRec='true'\n\t\t\t\tzc_DelRec='false'\n\t\t\t\tzc_DuplRec='false'\n\t\t\t\tzc_Search='true'\n\t\t\t\tzc_Print='false'\n\t\t\t\tzc_Export='false'\n\t\t\t\tzc_EditBulkRec='false'\n\t\t\t\tzc_BulkDelete='false'\n\t\t\t\tzc_BulkDuplicate='false'\n\t\t\t\theightType='custom'\n\t\t\t\theightValue='320' />\n\t\t\t</column>\n\t\t</row>\n\t\t<row>\n\t\t\t<column width='50%'>\n\t\t\t\t<chart elementName='Status_Distribution_Chart'\n\t\t\t title='Batch Status Distribution'\n\t\t\t titleColor='#222326'\n\t\t\t boldTitle='true'\n\t\t\t type='Donut'\n\t\t\t bgColor='#FFFFFF'\n\t\t\t theme='theme1'\n\t\t\t legendPos='center.bottom'\n\t\t\t heightType='custom'\n\t\t\t heightValue='320px'\n\t\t\t appLinkName='thisapp'\n\t\t\t formLinkName='Batch_Monitor'\n\t\t\t xfield='Status_Color'\n\t\t\t yfields='count:ID'\n\t\t\t showDataLabel='true' />\n\t\t\t</column>\n\t\t\t<column width='50%'>\n\t\t\t\t<dsp id='varByGroupSnippet' elementName='VAR_By_Group'>\n\t\t\t\t\t<![CDATA[htmlpage varByGroupSnippet()\n\t\t\t\t\t\t content\n\t\t\t\t\t\t &lt;%{%&gt;\n\t\t\t\t\t\t\t\t &lt;style&gt;\n.vbg-card { background: #fff; border-radius: 10px; padding: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow: hidden; }\n.vbg-header { background: #fff; padding: 14px 16px; display: flex; align-items: center; border-bottom: 1px solid #f0f0f0; }\n.vbg-icon { width: 32px; height: 32px; border-radius: 16px; background: #fdecea; display: flex; align-items: center; justify-content: center; margin-right: 10px; flex-shrink: 0; font-size: 14px; color: #c62828; font-weight: 700; }\n.vbg-title { font-size: 15px; font-weight: 700; color: #1a1a2e; }\n.vbg-row { display: flex; align-items: center; padding: 10px 16px; border-bottom: 1px solid #f5f5f5; }\n.vbg-row:last-child { border-bottom: none; }\n.vbg-rank { width: 32px; font-size: 17px; font-weight: 800; color: #c62828; flex-shrink: 0; }\n.vbg-name { flex: 1; font-size: 13px; color: #333; }\n.vbg-val { font-size: 13px; font-weight: 700; color: #c62828; min-width: 80px; text-align: right; }\n.vbg-empty { padding: 20px 16px; color: #999; font-size: 13px; text-align: center; }\n&lt;/style&gt;\n&lt;div class=&quot;vbg-card&quot;&gt;\n\t&lt;div class=&quot;vbg-header&quot;&gt;\n\t\t&lt;div class=&quot;vbg-icon&quot;&gt;$&lt;/div&gt;\n\t\t&lt;div class=&quot;vbg-title&quot;&gt;Value at Risk by Material Group&lt;/div&gt;\n\t&lt;/div&gt;\n\t&lt;div&gt;\n&lt;%\n\t// Compute VAR sum per Material Group from risk batches\n\tallGroups = Material_Groups[ID != 0];\n\tgrpVarList = list();\n\tfor each grp in allGroups\n\t{\n\t\tgrpBatches = Batch_Monitor[Status_Color == &quot;Red&quot; || Status_Color == &quot;Amber&quot; &amp;&amp; Material_Group_Name == grp.Material_Group_Name];\n\t\tvarSum = grpBatches.sum(Value_At_Risk);\n\t\tif(varSum &gt; 0)\n\t\t{\n\t\t\t// Pad for sorting (large number = high VAR)\n\t\t\tpadded = &quot;000000000000&quot; + varSum.round(0).toLong();\n\t\t\tpadded = padded.subString(padded.length() - 12);\n\t\t\tgrpVarList.add(padded + &quot;||&quot; + grp.Material_Group_Name);\n\t\t}\n\t}\n\tgrpVarList = grpVarList.sort(false);\n\trank = 1;\n\tif(grpVarList.size() == 0)\n\t{\n\t\t%&gt;&lt;div class=&quot;vbg-empty&quot;&gt;No value at risk data found.&lt;/div&gt;&lt;%\n\t}\n\tfor each item in grpVarList\n\t{\n\t\tif(rank &lt;= 10)\n\t\t{\n\t\t\tgrpName = item.getSuffix(&quot;||&quot;);\n\t\t\tvarVal = item.getPrefix(&quot;||&quot;).toLong();\n\t\t\t%&gt;&lt;div class=&quot;vbg-row&quot;&gt;\n\t\t\t\t&lt;div class=&quot;vbg-rank&quot;&gt;&lt;%=rank%&gt;&lt;/div&gt;\n\t\t\t\t&lt;div class=&quot;vbg-name&quot;&gt;&lt;%=grpName%&gt;&lt;/div&gt;\n\t\t\t\t&lt;div class=&quot;vbg-val&quot;&gt;&lt;%=varVal%&gt;&lt;/div&gt;\n\t\t\t&lt;/div&gt;&lt;%\n\t\t\trank = rank + 1;\n\t\t}\n\t}\n%&gt;\n\t&lt;/div&gt;\n&lt;/div&gt;\n\t\t\t\t\t\t &lt;%}%&gt;\n\t\t\t\t ]]>\n\t\t\t\t</dsp>\n\t\t\t</column>\n\t\t</row>\n\t\t<row>\n\t\t\t<column width='100%'>\n\t\t\t\t<report elementName='Top_5_Urgent_Report'\n\t\t\t\tappLinkName='thisapp'\n\t\t\t\tlinkName='Top_5_Urgent_Batches'\n\t\t\t\tiszreport='false'\n\t\t\t\tzc_Footer='false'\n\t\t\t\tzc_AddRec='false'\n\t\t\t\tzc_EditRec='false'\n\t\t\t\tzc_DelRec='false'\n\t\t\t\tzc_DuplRec='false'\n\t\t\t\tzc_Search='false'\n\t\t\t\tzc_Print='false'\n\t\t\t\tzc_Export='false'\n\t\t\t\tzc_EditBulkRec='false'\n\t\t\t\tzc_BulkDelete='false'\n\t\t\t\tzc_BulkDuplicate='false'\n\t\t\t\theightType='custom'\n\t\t\t\theightValue='240' />\n\t\t\t</column>\n\t\t</row>\n\t\t<row>\n\t\t\t<column width='100%'>\n\t\t\t\t<chart elementName='Monthly_Writeoff_Trend'\n\t\t\t title='Monthly Value at Risk Trend (Red Batches)'\n\t\t\t titleColor='#222326'\n\t\t\t boldTitle='true'\n\t\t\t type='Line'\n\t\t\t xtitle='Month'\n\t\t\t ytitle='Value at Risk'\n\t\t\t bgColor='#FFFFFF'\n\t\t\t theme='theme1'\n\t\t\t legendPos='none'\n\t\t\t heightType='custom'\n\t\t\t heightValue='300px'\n\t\t\t appLinkName='thisapp'\n\t\t\t formLinkName='Batch_Monitor'\n\t\t\t xfield='Last_Synced_Date'\n\t\t\t dateGrouping='month_year'\n\t\t\t yfields='sum:Value_At_Risk'\n\t\t\t showDataLabel='false'\n\t\t\t DelugeCriteria='Status_Color == &quot;Red&quot;' />\n\t\t\t</column>\n\t\t</row>\n\t</layout>\n</zml>"
+		}
+	}
+
+	workflow
+	{
+		form
+		{
+			Batch_Monitor_On_Edit_Success as "Set Status on Edit"
+			{
+			    type = form
+			    form = Batch_Monitor
+			    record event = on edit
+			
+			    on success
+			    {
+			        actions
+			        {
+			            custom deluge script
+			            (
+			            matRec = Materials[ID == input.Material];
+			            mgRec = Material_Groups[ID == matRec.Material_Group];
+			            amberDays = mgRec.Amber_Warning_Days;
+			            redDays = mgRec.Red_Alert_Days;
+			            update Batch_Monitor [ID == input.ID]
+			            [
+			                Amber_Threshold_Days = amberDays
+			                Red_Threshold_Days = redDays
+			                Std_Cost_Per_Unit = matRec.Standard_Cost
+			                Material_Group_Name = mgRec.Material_Group_Name
+			                Last_Synced_Date = zoho.currentdate
+			            ];
+			            daysLeft = input.Expiry_Date - zoho.currentdate;
+			            newStatus = "Green";
+			            if(daysLeft <= 0)
+			            {
+			                newStatus = "Red";
+			            }
+			            else if(daysLeft <= redDays)
+			            {
+			                newStatus = "Red";
+			            }
+			            else if(daysLeft <= amberDays)
+			            {
+			                newStatus = "Amber";
+			            }
+			            update Batch_Monitor [ID == input.ID]
+			            [
+			                Status_Color = newStatus
+			            ];
+			            )
+			        }
+			    }
+			}
+
+			Batch_Monitor_On_Success as "Set Status on Save"
+			{
+			    type = form
+			    form = Batch_Monitor
+			    record event = on add
+			
+			    on success
+			    {
+			        actions
+			        {
+			            custom deluge script
+			            (
+			            matRec = Materials[ID == input.Material];
+			            mgRec = Material_Groups[ID == matRec.Material_Group];
+			            amberDays = mgRec.Amber_Warning_Days;
+			            redDays = mgRec.Red_Alert_Days;
+			            update Batch_Monitor [ID == input.ID]
+			            [
+			                Amber_Threshold_Days = amberDays
+			                Red_Threshold_Days = redDays
+			                Std_Cost_Per_Unit = matRec.Standard_Cost
+			                Material_Group_Name = mgRec.Material_Group_Name
+			                Last_Synced_Date = zoho.currentdate
+			            ];
+			            daysLeft = input.Expiry_Date - zoho.currentdate;
+			            newStatus = "Green";
+			            if(daysLeft <= 0)
+			            {
+			                newStatus = "Red";
+			            }
+			            else if(daysLeft <= redDays)
+			            {
+			                newStatus = "Red";
+			            }
+			            else if(daysLeft <= amberDays)
+			            {
+			                newStatus = "Amber";
+			            }
+			            update Batch_Monitor [ID == input.ID]
+			            [
+			                Status_Color = newStatus
+			            ];
+			            )
+			        }
+			    }
+			}
+		}
+
+		schedule
+		{
+			Batch_Monitor_Nightly_Refresh as "Nightly Batch Status Refresh"
+			{
+			    type      = schedule
+			    start     = "2025-01-01 06:00:00"
+			    frequency = daily
+			    time zone = "Asia/Kolkata"
+			
+			    on start
+			    {
+			        actions
+			        {
+			            on load
+			            (
+			            newRedBatches = list();
+			            newAmberBatches = list();
+			
+			            // Paginated fetch: process up to 600 records (3 blocks of 200)
+			            // For apps with >600 batches, schedule a second workflow or extend blocks
+			            r1 = Batch_Monitor[ID > 0] range from 1 to 200;
+			            for each batch in r1
+			            {
+			                daysLeft = batch.Expiry_Date - zoho.currentdate;
+			                amberDays = batch.Amber_Threshold_Days;
+			                redDays = batch.Red_Threshold_Days;
+			                prevStatus = batch.Status_Color;
+			                newStatus = "Green";
+			                if(daysLeft <= 0)
+			                {
+			                    newStatus = "Red";
+			                }
+			                else if(daysLeft <= redDays)
+			                {
+			                    newStatus = "Red";
+			                }
+			                else if(daysLeft <= amberDays)
+			                {
+			                    newStatus = "Amber";
+			                }
+			                if(newStatus != prevStatus)
+			                {
+			                    update Batch_Monitor [ID == batch.ID] [ Status_Color = newStatus ];
+			                    if(newStatus == "Red")
+			                    {
+			                        newRedBatches.add(batch.Batch_Number + " - " + daysLeft + " days");
+			                    }
+			                    else if(newStatus == "Amber")
+			                    {
+			                        newAmberBatches.add(batch.Batch_Number + " - " + daysLeft + " days remaining");
+			                    }
+			                }
+			            }
+			
+			            r2 = Batch_Monitor[ID > 0] range from 201 to 400;
+			            for each batch in r2
+			            {
+			                daysLeft = batch.Expiry_Date - zoho.currentdate;
+			                amberDays = batch.Amber_Threshold_Days;
+			                redDays = batch.Red_Threshold_Days;
+			                prevStatus = batch.Status_Color;
+			                newStatus = "Green";
+			                if(daysLeft <= 0)
+			                {
+			                    newStatus = "Red";
+			                }
+			                else if(daysLeft <= redDays)
+			                {
+			                    newStatus = "Red";
+			                }
+			                else if(daysLeft <= amberDays)
+			                {
+			                    newStatus = "Amber";
+			                }
+			                if(newStatus != prevStatus)
+			                {
+			                    update Batch_Monitor [ID == batch.ID] [ Status_Color = newStatus ];
+			                    if(newStatus == "Red")
+			                    {
+			                        newRedBatches.add(batch.Batch_Number + " - " + daysLeft + " days");
+			                    }
+			                    else if(newStatus == "Amber")
+			                    {
+			                        newAmberBatches.add(batch.Batch_Number + " - " + daysLeft + " days remaining");
+			                    }
+			                }
+			            }
+			
+			            r3 = Batch_Monitor[ID > 0] range from 401 to 600;
+			            for each batch in r3
+			            {
+			                daysLeft = batch.Expiry_Date - zoho.currentdate;
+			                amberDays = batch.Amber_Threshold_Days;
+			                redDays = batch.Red_Threshold_Days;
+			                prevStatus = batch.Status_Color;
+			                newStatus = "Green";
+			                if(daysLeft <= 0)
+			                {
+			                    newStatus = "Red";
+			                }
+			                else if(daysLeft <= redDays)
+			                {
+			                    newStatus = "Red";
+			                }
+			                else if(daysLeft <= amberDays)
+			                {
+			                    newStatus = "Amber";
+			                }
+			                if(newStatus != prevStatus)
+			                {
+			                    update Batch_Monitor [ID == batch.ID] [ Status_Color = newStatus ];
+			                    if(newStatus == "Red")
+			                    {
+			                        newRedBatches.add(batch.Batch_Number + " - " + daysLeft + " days");
+			                    }
+			                    else if(newStatus == "Amber")
+			                    {
+			                        newAmberBatches.add(batch.Batch_Number + " - " + daysLeft + " days remaining");
+			                    }
+			                }
+			            }
+			
+			            if(newRedBatches.size() > 0 || newAmberBatches.size() > 0)
+			            {
+			                alertMsg = "<h3>Daily Shelf-Life Alert — " + zoho.currentdate.toString("dd-MMM-yyyy") + "</h3>";
+			                if(newRedBatches.size() > 0)
+			                {
+			                    alertMsg = alertMsg + "<h4 style='color:red'>NEW RED Batches (Expired/Critical):</h4><ul>";
+			                    for each item in newRedBatches
+			                    {
+			                        alertMsg = alertMsg + "<li>" + item + "</li>";
+			                    }
+			                    alertMsg = alertMsg + "</ul>";
+			                }
+			                if(newAmberBatches.size() > 0)
+			                {
+			                    alertMsg = alertMsg + "<h4 style='color:orange'>NEW AMBER Batches (Warning):</h4><ul>";
+			                    for each item in newAmberBatches
+			                    {
+			                        alertMsg = alertMsg + "<li>" + item + "</li>";
+			                    }
+			                    alertMsg = alertMsg + "</ul>";
+			                }
+			                sendmail
+			                (
+			                    from    : zoho.adminuserid
+			                    to      : zoho.adminuserid
+			                    subject : "[Shelf-Life Alert] " + newRedBatches.size() + " Red, " + newAmberBatches.size() + " Amber — " + zoho.currentdate.toString("dd-MMM-yyyy")
+			                    message : alertMsg
+			                );
+			            }
+			            )
+			        }
+			    }
+			}
+		}
+
+		functions
+		{
+			Create_Disposition as "Create Disposition"
+			{
+			    type           = functions
+			    form           = Batch_Monitor
+			    execution type = for each record
+			
+			    on start
+			    {
+			        actions
+			        {
+			            on click
+			            (
+			            openUrl("#Form:Disposition_Actions?Batch_Reference=" + input.ID, "same window");
+			            )
+			        }
+			    }
+			}
+		}
+
+		blueprint
+		{
+			Disposition_Blueprint as "Disposition Workflow"
+			{
+			    type = blueprint
+			    form = Disposition_Actions
+			
+			    start
+			    {
+			        start stage = "Pending"
+			    }
+			
+			    stages
+			    {
+			        "Pending"          { }
+			        "In Review"        { }
+			        "Pending Re-test"  { }
+			        "Approved"         { }
+			        "Rejected"         { }
+			    }
+			
+			    transitions
+			    {
+			        Submit_for_Review as "Submit for Review"
+			        {
+			            type       = normal
+			            from stage = "Pending"
+			            to stage   = "In Review"
+			
+			            before
+			            {
+			                transition owner
+			                (
+			                    permissions = {"Warehouse_Manager", "Admin"}
+			                )
+			                tooltip message = "Submit this disposition request for review"
+			                confirmation before execution
+			                (
+			                    message            = "Submit this disposition request for review?"
+			                    confirm button text = "Yes, Submit"
+			                    cancel button text = "Cancel"
+			                )
+			            }
+			
+			            during
+			            {
+			                action = update_fields
+			                workflow status = true
+			                visible fields = [Disposition_Notes, Requester_Name]
+			            }
+			
+			            after
+			            {
+			                actions
+			                {
+			                    custom deluge script
+			                    (
+			                    update Disposition_Actions [ID == input.ID] [ Status = "In Review" ];
+			                    batchNum = Batch_Monitor[ID == input.Batch_Reference].Batch_Number;
+			                    sendmail
+			                    (
+			                        from    : zoho.adminuserid
+			                        to      : zoho.adminuserid
+			                        subject : "[Disposition] " + input.Action_Type + " submitted — Batch: " + batchNum
+			                        message : "A disposition request has been submitted for review.<br><br>Batch: " + batchNum + "<br>Action: " + input.Action_Type + "<br>Notes: " + input.Disposition_Notes
+			                    );
+			                    )
+			                }
+			            }
+			        }
+			
+			        Send_to_Retest as "Send for Re-test"
+			        {
+			            type       = normal
+			            from stage = "In Review"
+			            to stage   = "Pending Re-test"
+			
+			            before
+			            {
+			                transition owner
+			                (
+			                    permissions = {"QA_Manager", "Admin"}
+			                )
+			                transition criteria = (Action_Type == "Extend Shelf Life")
+			                tooltip message = "Send for re-testing — Extend Shelf Life requests only"
+			            }
+			
+			            during
+			            {
+			                action = update_fields
+			                workflow status = true
+			                visible fields = [QA_Review_Notes, QA_Reviewer, QA_Review_Date, Retest_Lab_Reference]
+			            }
+			
+			            after
+			            {
+			                actions
+			                {
+			                    custom deluge script
+			                    (
+			                    update Disposition_Actions [ID == input.ID] [ Status = "Pending Re-test" ];
+			                    batchNum = Batch_Monitor[ID == input.Batch_Reference].Batch_Number;
+			                    sendmail
+			                    (
+			                        from    : zoho.adminuserid
+			                        to      : zoho.adminuserid
+			                        subject : "[Re-test Required] " + input.Action_Type + " — Batch: " + batchNum
+			                        message : "Disposition sent for re-testing.<br><br>Batch: " + batchNum + "<br>Lab Reference: " + input.Retest_Lab_Reference
+			                    );
+			                    )
+			                }
+			            }
+			        }
+			
+			        Retest_Complete_Approve as "Re-test Complete — Approve"
+			        {
+			            type       = normal
+			            from stage = "Pending Re-test"
+			            to stage   = "Approved"
+			
+			            before
+			            {
+			                transition owner
+			                (
+			                    permissions = {"QA_Manager", "Admin"}
+			                )
+			                tooltip message = "Mark re-test complete and approve shelf life extension"
+			                confirmation before execution
+			                (
+			                    message            = "Mark re-test complete and approve shelf life extension?"
+			                    confirm button text = "Approve"
+			                    cancel button text  = "Cancel"
+			                )
+			            }
+			
+			            during
+			            {
+			                action = update_fields
+			                workflow status = true
+			                visible fields = [Retest_Outcome, QA_Review_Notes]
+			            }
+			
+			            after
+			            {
+			                actions
+			                {
+			                    custom deluge script
+			                    (
+			                    update Disposition_Actions [ID == input.ID] [ Status = "Approved" Approval_Date = zoho.currentdate ];
+			                    batchNum = Batch_Monitor[ID == input.Batch_Reference].Batch_Number;
+			                    sendmail
+			                    (
+			                        from    : zoho.adminuserid
+			                        to      : zoho.adminuserid
+			                        subject : "[APPROVED] Extend Shelf Life — Batch: " + batchNum
+			                        message : "Re-test approved. Shelf life extension granted.<br><br>Batch: " + batchNum + "<br>Outcome: " + input.Retest_Outcome + "<br>Please update SAP accordingly."
+			                    );
+			                    )
+			                }
+			            }
+			        }
+			
+			        Retest_Reject as "Re-test — Reject"
+			        {
+			            type       = normal
+			            from stage = "Pending Re-test"
+			            to stage   = "Rejected"
+			
+			            before
+			            {
+			                transition owner
+			                (
+			                    permissions = {"QA_Manager", "Admin"}
+			                )
+			                tooltip message = "Reject extension after re-test"
+			                confirmation before execution
+			                (
+			                    message            = "Reject this extension after re-test?"
+			                    confirm button text = "Reject"
+			                    cancel button text  = "Cancel"
+			                )
+			            }
+			
+			            during
+			            {
+			                action = update_fields
+			                workflow status = true
+			                visible fields = [Rejection_Reason]
+			            }
+			
+			            after
+			            {
+			                actions
+			                {
+			                    custom deluge script
+			                    (
+			                    update Disposition_Actions [ID == input.ID] [ Status = "Rejected" ];
+			                    batchNum = Batch_Monitor[ID == input.Batch_Reference].Batch_Number;
+			                    sendmail
+			                    (
+			                        from    : zoho.adminuserid
+			                        to      : zoho.adminuserid
+			                        subject : "[REJECTED] Re-test — Batch: " + batchNum
+			                        message : "Shelf life extension rejected after re-test.<br><br>Batch: " + batchNum + "<br>Reason: " + input.Rejection_Reason
+			                    );
+			                    )
+			                }
+			            }
+			        }
+			
+			        Approve_Consume as "Approve — Consume"
+			        {
+			            type       = normal
+			            from stage = "In Review"
+			            to stage   = "Approved"
+			
+			            before
+			            {
+			                transition owner
+			                (
+			                    permissions = {"Warehouse_Manager"}
+			                )
+			                transition criteria = (Action_Type == "Consume (Priority Use)")
+			                tooltip message = "Approve priority consumption — Warehouse Manager only"
+			                confirmation before execution
+			                (
+			                    message            = "Approve this priority consumption request?"
+			                    confirm button text = "Approve"
+			                    cancel button text  = "Cancel"
+			                )
+			            }
+			
+			            during
+			            {
+			                action = update_fields
+			                workflow status = true
+			                visible fields = [QA_Review_Notes, Requester_Name]
+			            }
+			
+			            after
+			            {
+			                actions
+			                {
+			                    custom deluge script
+			                    (
+			                    update Disposition_Actions [ID == input.ID] [ Status = "Approved" Approval_Date = zoho.currentdate ];
+			                    batchNum = Batch_Monitor[ID == input.Batch_Reference].Batch_Number;
+			                    sendmail
+			                    (
+			                        from    : zoho.adminuserid
+			                        to      : zoho.adminuserid
+			                        subject : "[APPROVED] Consume (Priority Use) — Batch: " + batchNum
+			                        message : "Priority consumption approved.<br><br>Batch: " + batchNum + "<br>Please expedite production order and update SAP with Goods Issue."
+			                    );
+			                    )
+			                }
+			            }
+			        }
+			
+			        Approve_Return_to_Vendor as "Approve — Return to Vendor"
+			        {
+			            type       = normal
+			            from stage = "In Review"
+			            to stage   = "Approved"
+			
+			            before
+			            {
+			                transition owner
+			                (
+			                    permissions = {"Admin"}
+			                )
+			                transition criteria = (Action_Type == "Return to Vendor")
+			                tooltip message = "Approve return to vendor — Procurement (Admin)"
+			                confirmation before execution
+			                (
+			                    message            = "Approve return to vendor?"
+			                    confirm button text = "Approve"
+			                    cancel button text  = "Cancel"
+			                )
+			            }
+			
+			            during
+			            {
+			                action = update_fields
+			                workflow status = true
+			                visible fields = [QA_Review_Notes, Controller_Approval_Notes]
+			            }
+			
+			            after
+			            {
+			                actions
+			                {
+			                    custom deluge script
+			                    (
+			                    update Disposition_Actions [ID == input.ID] [ Status = "Approved" Approval_Date = zoho.currentdate ];
+			                    batchNum = Batch_Monitor[ID == input.Batch_Reference].Batch_Number;
+			                    sendmail
+			                    (
+			                        from    : zoho.adminuserid
+			                        to      : zoho.adminuserid
+			                        subject : "[APPROVED] Return to Vendor — Batch: " + batchNum
+			                        message : "Return to Vendor approved.<br><br>Batch: " + batchNum + "<br>Please initiate return process against original PO in SAP."
+			                    );
+			                    )
+			                }
+			            }
+			        }
+			
+			        Approve_Standard as "Approve — Dispose / Transfer"
+			        {
+			            type       = normal
+			            from stage = "In Review"
+			            to stage   = "Approved"
+			
+			            before
+			            {
+			                transition owner
+			                (
+			                    permissions = {"QA_Manager", "Plant_Controller", "Admin"}
+			                )
+			                transition criteria = (Action_Type == "Dispose / Write-Off" || Action_Type == "Transfer to Alternate Use")
+			                tooltip message = "Approve Dispose / Transfer — QA Manager and Plant Controller"
+			                confirmation before execution
+			                (
+			                    message            = "Approve this disposition action?"
+			                    confirm button text = "Approve"
+			                    cancel button text  = "Cancel"
+			                )
+			            }
+			
+			            during
+			            {
+			                action = update_fields
+			                workflow status = true
+			                visible fields = [QA_Review_Notes, QA_Reviewer, QA_Review_Date, Controller_Approval_Notes, Controller_Reviewer]
+			            }
+			
+			            after
+			            {
+			                actions
+			                {
+			                    custom deluge script
+			                    (
+			                    update Disposition_Actions [ID == input.ID] [ Status = "Approved" Approval_Date = zoho.currentdate ];
+			                    batchNum = Batch_Monitor[ID == input.Batch_Reference].Batch_Number;
+			                    sendmail
+			                    (
+			                        from    : zoho.adminuserid
+			                        to      : zoho.adminuserid
+			                        subject : "[APPROVED] " + input.Action_Type + " — Batch: " + batchNum
+			                        message : "Disposition approved.<br><br>Batch: " + batchNum + "<br>Action: " + input.Action_Type + "<br>Please execute the corresponding action in SAP and update the SAP Action Reference on this record."
+			                    );
+			                    )
+			                }
+			            }
+			        }
+			
+			        Reject_from_Review as "Reject"
+			        {
+			            type       = normal
+			            from stage = "In Review"
+			            to stage   = "Rejected"
+			
+			            before
+			            {
+			                transition owner
+			                (
+			                    permissions = {"QA_Manager", "Plant_Controller", "Admin"}
+			                )
+			                tooltip message = "Reject this disposition request"
+			                confirmation before execution
+			                (
+			                    message            = "Reject this disposition request?"
+			                    confirm button text = "Reject"
+			                    cancel button text  = "Cancel"
+			                )
+			            }
+			
+			            during
+			            {
+			                action = update_fields
+			                workflow status = true
+			                visible fields = [Rejection_Reason]
+			            }
+			
+			            after
+			            {
+			                actions
+			                {
+			                    custom deluge script
+			                    (
+			                    update Disposition_Actions [ID == input.ID] [ Status = "Rejected" ];
+			                    batchNum = Batch_Monitor[ID == input.Batch_Reference].Batch_Number;
+			                    sendmail
+			                    (
+			                        from    : zoho.adminuserid
+			                        to      : zoho.adminuserid
+			                        subject : "[REJECTED] " + input.Action_Type + " — Batch: " + batchNum
+			                        message : "Disposition request rejected.<br><br>Batch: " + batchNum + "<br>Action: " + input.Action_Type + "<br>Reason: " + input.Rejection_Reason
+			                    );
+			                    )
+			                }
+			            }
+			        }
+			    }
+			}
+		}
+	}
+
+	share_settings
+	{
+	"Admin"
+	{
+	    name        = "Admin"
+	    type        = Users_Permissions
+	    permissions = { Chat:false, Predefined:false, ApiAccess:true, PIIAccess:true, ePHIAccess:false }
+	    description = "Administrator — full configuration, master data, approves Return to Vendor"
+	
+	    ModulePermissions
+	    {
+	        Material_Groups
+	        {
+	            enabled          = Create,View,Viewall,Edit,Modifyall,Delete,Import,Export,Tab,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Material_Groups={"View","Edit","Delete"}
+	            }
+	        }
+	
+	        Storage_Locations
+	        {
+	            enabled          = Create,View,Viewall,Edit,Modifyall,Delete,Import,Export,Tab,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Storage_Locations={"View","Edit","Delete"}
+	            }
+	        }
+	
+	        Materials
+	        {
+	            enabled          = Create,View,Viewall,Edit,Modifyall,Delete,Import,Export,Tab,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Materials={"View","Edit","Delete"}
+	                Materials_By_Group={"View","Edit","Delete"}
+	            }
+	        }
+	
+	        Batch_Monitor
+	        {
+	            enabled          = Create,View,Viewall,Edit,Modifyall,Delete,Import,Export,Tab,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Batches={"View","Edit","Delete"}
+	                Red_Alert_Batches={"View","Edit","Delete"}
+	                Amber_Warning_Batches={"View","Edit","Delete"}
+	                Status_Kanban={"View","Edit","Delete"}
+	                Expiry_Calendar={"View","Edit","Delete"}
+	                Top_5_Urgent_Batches={"View","Edit","Delete"}
+	            }
+	        }
+	
+	        Disposition_Actions
+	        {
+	            enabled          = Create,View,Viewall,Edit,Modifyall,Delete,Tab,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Dispositions={"View","Edit","Delete"}
+	                Pending_Dispositions={"View","Edit","Delete"}
+	                Disposition_Kanban={"View","Edit","Delete"}
+	            }
+	        }
+	
+	        FEFO_Log
+	        {
+	            enabled          = Create,View,Viewall,Edit,Modifyall,Delete,Import,Export,Tab,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_FEFO_Logs={"View","Edit","Delete"}
+	                GI_Calendar={"View","Edit","Delete"}
+	            }
+	        }
+	
+	        Shelf_Life_Dashboard
+	        {
+	            enabled = tab
+	        }
+	    }
+	}
+	"Plant_Controller"
+	{
+	    name        = "Plant_Controller"
+	    type        = Users_Permissions
+	    permissions = { Chat:false, Predefined:false, ApiAccess:false, PIIAccess:false, ePHIAccess:false }
+	    description = "Plant finance — co-approves Dispose/Write-Off and Transfer; views Value at Risk"
+	
+	    ModulePermissions
+	    {
+	        Material_Groups
+	        {
+	            enabled          = View,Viewall,Search,Tab
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Material_Groups={"View"}
+	            }
+	        }
+	
+	        Storage_Locations
+	        {
+	            enabled          = View,Viewall,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Storage_Locations={"View"}
+	            }
+	        }
+	
+	        Materials
+	        {
+	            enabled          = View,Viewall,Search,Tab
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Materials={"View"}
+	                Materials_By_Group={"View"}
+	            }
+	        }
+	
+	        Batch_Monitor
+	        {
+	            enabled          = View,Viewall,Search,Tab,Export
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Batches={"View"}
+	                Red_Alert_Batches={"View"}
+	                Amber_Warning_Batches={"View"}
+	                Status_Kanban={"View"}
+	                Expiry_Calendar={"View"}
+	                Top_5_Urgent_Batches={"View"}
+	            }
+	        }
+	
+	        Disposition_Actions
+	        {
+	            enabled          = View,Viewall,Edit,Modifyall,Search,Tab
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Dispositions={"View"}
+	                Pending_Dispositions={"View"}
+	                Disposition_Kanban={"View"}
+	            }
+	        }
+	
+	        FEFO_Log
+	        {
+	            enabled          = View,Viewall,Search,Tab
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_FEFO_Logs={"View"}
+	                GI_Calendar={"View"}
+	            }
+	        }
+	
+	        Shelf_Life_Dashboard
+	        {
+	            enabled = tab
+	        }
+	    }
+	}
+	"QA_Manager"
+	{
+	    name        = "QA_Manager"
+	    type        = Users_Permissions
+	    permissions = { Chat:false, Predefined:false, ApiAccess:false, PIIAccess:false, ePHIAccess:false }
+	    description = "Quality assurance — approves Extend Shelf Life (after re-test), Dispose/Write-Off, Transfer"
+	
+	    ModulePermissions
+	    {
+	        Material_Groups
+	        {
+	            enabled          = View,Viewall,Search,Tab
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Material_Groups={"View"}
+	            }
+	        }
+	
+	        Storage_Locations
+	        {
+	            enabled          = View,Viewall,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Storage_Locations={"View"}
+	            }
+	        }
+	
+	        Materials
+	        {
+	            enabled          = View,Viewall,Search,Tab
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Materials={"View"}
+	                Materials_By_Group={"View"}
+	            }
+	        }
+	
+	        Batch_Monitor
+	        {
+	            enabled          = View,Viewall,Edit,Modifyall,Search,Tab,Export
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Batches={"View"}
+	                Red_Alert_Batches={"View"}
+	                Amber_Warning_Batches={"View"}
+	                Status_Kanban={"View"}
+	                Expiry_Calendar={"View"}
+	                Top_5_Urgent_Batches={"View"}
+	            }
+	        }
+	
+	        Disposition_Actions
+	        {
+	            enabled          = View,Viewall,Edit,Modifyall,Search,Tab
+	            allFieldsVisible = false
+	            FieldPermissions
+	            {
+	                Batch_Reference{visibility:true,readonly:true}
+	                Requester_Name{visibility:true,readonly:true}
+	                Disposition_Notes{visibility:true,readonly:true}
+	                Requested_Date{visibility:true,readonly:true}
+	                Action_Type{visibility:true,readonly:true}
+	            }
+	            ReportPermissions
+	            {
+	                All_Dispositions={"View"}
+	                Pending_Dispositions={"View"}
+	                Disposition_Kanban={"View"}
+	            }
+	        }
+	
+	        FEFO_Log
+	        {
+	            enabled          = View,Viewall,Search,Tab,Export
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_FEFO_Logs={"View"}
+	                GI_Calendar={"View"}
+	            }
+	        }
+	
+	        Shelf_Life_Dashboard
+	        {
+	            enabled = tab
+	        }
+	    }
+	}
+	"Warehouse_Manager"
+	{
+	    name        = "Warehouse_Manager"
+	    type        = Users_Permissions
+	    permissions = { Chat:false, Predefined:false, ApiAccess:false, PIIAccess:false, ePHIAccess:false }
+	    description = "Warehouse operations — monitors batches, initiates and approves Consume dispositions"
+	
+	    ModulePermissions
+	    {
+	        Material_Groups
+	        {
+	            enabled          = View,Viewall,Search,Tab
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Material_Groups={"View"}
+	            }
+	        }
+	
+	        Storage_Locations
+	        {
+	            enabled          = View,Viewall,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Storage_Locations={"View"}
+	            }
+	        }
+	
+	        Materials
+	        {
+	            enabled          = View,Viewall,Search,Tab
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Materials={"View"}
+	                Materials_By_Group={"View"}
+	            }
+	        }
+	
+	        Batch_Monitor
+	        {
+	            enabled          = Create,View,Viewall,Edit,Modifyall,Search,Tab,Export
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Batches={"View"}
+	                Red_Alert_Batches={"View"}
+	                Amber_Warning_Batches={"View"}
+	                Status_Kanban={"View"}
+	                Expiry_Calendar={"View"}
+	                Top_5_Urgent_Batches={"View"}
+	            }
+	        }
+	
+	        Disposition_Actions
+	        {
+	            enabled          = Create,View,Viewall,Edit,Search,Tab
+	            allFieldsVisible = false
+	            FieldPermissions
+	            {
+	                QA_Review_Notes{visibility:true,readonly:true}
+	                QA_Reviewer{visibility:true,readonly:true}
+	                QA_Review_Date{visibility:true,readonly:true}
+	                Retest_Lab_Reference{visibility:true,readonly:true}
+	                Retest_Outcome{visibility:true,readonly:true}
+	                Controller_Approval_Notes{visibility:true,readonly:true}
+	                Controller_Reviewer{visibility:true,readonly:true}
+	                Approval_Date{visibility:true,readonly:true}
+	                Rejection_Reason{visibility:true,readonly:true}
+	            }
+	            ReportPermissions
+	            {
+	                All_Dispositions={"View"}
+	                Pending_Dispositions={"View"}
+	                Disposition_Kanban={"View"}
+	            }
+	        }
+	
+	        FEFO_Log
+	        {
+	            enabled          = Create,View,Viewall,Edit,Modifyall,Delete,Search,Tab,Export
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_FEFO_Logs={"View"}
+	                GI_Calendar={"View"}
+	            }
+	        }
+	
+	        Shelf_Life_Dashboard
+	        {
+	            enabled = tab
+	        }
+	    }
+	}
+	roles
+	{
+	    "Admin"
+	    {
+	        description = "Raw material governance administrator"
+	
+	        "QA_Manager"
+	        {
+	            description = "Quality assurance approval role"
+	        }
+	
+	        "Warehouse_Manager"
+	        {
+	            description = "Warehouse operations approval role"
+	        }
+	
+	        "Plant_Controller"
+	        {
+	            description = "Plant finance approval role"
+	        }
+	    }
+	}
+	}
+
+	web
+	{
+	forms
+	{
+	    form Material_Groups
+	    {
+	        label placement = left
+	    }
+	    form Storage_Locations
+	    {
+	        label placement = left
+	    }
+	    form Materials
+	    {
+	        label placement = left
+	    }
+	    form Batch_Monitor
+	    {
+	        label placement = left
+	    }
+	    form Disposition_Actions
+	    {
+	        label placement = left
+	    }
+	    form FEFO_Log
+	    {
+	        label placement = left
+	    }
+	}
+	reports
+	{
+		report All_Batches
+		{
+		    quickview
+		    (
+		        layout
+		        (
+		            type = -1
+		            datablock1
+		            (
+		                layout type = -1
+		                fields
+		                (
+		                    Batch_Number
+		                    Material
+		                    Expiry_Date
+		                    Days_To_Expiry
+		                    Status_Color
+		                    Unrestricted_Stock
+		                    "Create Disposition"
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		            record
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		        action
+		        (
+		            on click
+		            (
+		                View Record
+		            )
+		            on right click
+		            (
+		                Edit
+		                Delete
+		                Duplicate
+		                View Record
+		            )
+		        )
+		    )
+		    detailview
+		    (
+		        layout
+		        (
+		            type = 1
+		            datablock1
+		            (
+		                layout type = -2
+		                fields
+		                (
+		                    Batch_Number
+		                    Material
+		                    Expiry_Date
+		                    Days_To_Expiry
+		                    Pct_Shelf_Life_Remaining
+		                    Status_Color
+		                    Unrestricted_Stock
+		                    Value_At_Risk
+		                    Storage_Location
+		                    Material_Group_Name
+		                    Last_Synced_Date
+		                    "Create Disposition"
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		    )
+		}
+	
+		report Amber_Warning_Batches
+		{
+		    quickview
+		    (
+		        layout
+		        (
+		            type = -1
+		            datablock1
+		            (
+		                layout type = -1
+		                fields
+		                (
+		                    Batch_Number
+		                    Material
+		                    Expiry_Date
+		                    Days_To_Expiry
+		                    Pct_Shelf_Life_Remaining
+		                    Unrestricted_Stock
+		                    "Create Disposition"
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		            record
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		        action
+		        (
+		            on click
+		            (
+		                View Record
+		            )
+		            on right click
+		            (
+		                Edit
+		                Delete
+		                Duplicate
+		                View Record
+		            )
+		        )
+		    )
+		    detailview
+		    (
+		        layout
+		        (
+		            type = 1
+		            datablock1
+		            (
+		                layout type = -2
+		                fields
+		                (
+		                    Batch_Number
+		                    Material
+		                    Expiry_Date
+		                    Days_To_Expiry
+		                    Pct_Shelf_Life_Remaining
+		                    Status_Color
+		                    Unrestricted_Stock
+		                    Value_At_Risk
+		                    Material_Group_Name
+		                    "Create Disposition"
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		    )
+		}
+	
+		report Expiry_Calendar
+		{
+		    quickview
+		    (
+		        layout
+		        (
+		            type = -1
+		            datablock1
+		            (
+		                layout type = -1
+		                fields
+		                (
+		                    Batch_Number
+		                    Material
+		                    Expiry_Date
+		                    Status_Color
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		            record
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		        action
+		        (
+		            on click
+		            (
+		                View Record
+		            )
+		            on right click
+		            (
+		                Edit
+		                Delete
+		                Duplicate
+		                View Record
+		            )
+		        )
+		    )
+		    detailview
+		    (
+		        layout
+		        (
+		            type = 1
+		            datablock1
+		            (
+		                layout type = -2
+		                fields
+		                (
+		                    Batch_Number
+		                    Material
+		                    Expiry_Date
+		                    Status_Color
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		    )
+		}
+	
+		report Red_Alert_Batches
+		{
+		    quickview
+		    (
+		        layout
+		        (
+		            type = -1
+		            datablock1
+		            (
+		                layout type = -1
+		                fields
+		                (
+		                    Batch_Number
+		                    Material
+		                    Expiry_Date
+		                    Days_To_Expiry
+		                    Unrestricted_Stock
+		                    Value_At_Risk
+		                    "Create Disposition"
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		            record
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		        action
+		        (
+		            on click
+		            (
+		                View Record
+		            )
+		            on right click
+		            (
+		                Edit
+		                Delete
+		                Duplicate
+		                View Record
+		            )
+		        )
+		    )
+		    detailview
+		    (
+		        layout
+		        (
+		            type = 1
+		            datablock1
+		            (
+		                layout type = -2
+		                fields
+		                (
+		                    Batch_Number
+		                    Material
+		                    Expiry_Date
+		                    Days_To_Expiry
+		                    Unrestricted_Stock
+		                    Value_At_Risk
+		                    Storage_Location
+		                    Status_Color
+		                    Material_Group_Name
+		                    "Create Disposition"
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		    )
+		}
+	
+		report Status_Kanban
+		{
+		    quickview
+		    (
+		        layout
+		        (
+		            type = -1
+		            datablock1
+		            (
+		                layout type = -1
+		                fields
+		                (
+		                    Batch_Number
+		                    Material
+		                    Expiry_Date
+		                    Days_To_Expiry
+		                    Status_Color
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		            record
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		        action
+		        (
+		            on click
+		            (
+		                View Record
+		            )
+		            on right click
+		            (
+		                Edit
+		                Delete
+		                Duplicate
+		                View Record
+		            )
+		        )
+		    )
+		    detailview
+		    (
+		        layout
+		        (
+		            type = 1
+		            datablock1
+		            (
+		                layout type = -2
+		                fields
+		                (
+		                    Batch_Number
+		                    Material
+		                    Expiry_Date
+		                    Days_To_Expiry
+		                    Status_Color
+		                    Storage_Location
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		    )
+		}
+	
+		report Top_5_Urgent_Batches
+		{
+		    quickview
+		    (
+		        layout
+		        (
+		            type = -1
+		            datablock1
+		            (
+		                layout type = -1
+		                fields
+		                (
+		                    Batch_Number
+		                    Material
+		                    Expiry_Date
+		                    Days_To_Expiry
+		                    Status_Color
+		                    Unrestricted_Stock
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		            record
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		        action
+		        (
+		            on click
+		            (
+		                View Record
+		            )
+		            on right click
+		            (
+		                Edit
+		                Delete
+		                Duplicate
+		                View Record
+		            )
+		        )
+		    )
+		    detailview
+		    (
+		        layout
+		        (
+		            type = 1
+		            datablock1
+		            (
+		                layout type = -2
+		                fields
+		                (
+		                    Batch_Number
+		                    Material
+		                    Expiry_Date
+		                    Days_To_Expiry
+		                    Status_Color
+		                    Unrestricted_Stock
+		                    Value_At_Risk
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		    )
+		}
+	
+		report All_Dispositions
+		{
+		    quickview
+		    (
+		        layout
+		        (
+		            type = -1
+		            datablock1
+		            (
+		                layout type = -1
+		                fields
+		                (
+		                    Batch_Reference
+		                    Action_Type
+		                    Status
+		                    Requested_Date
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		            record
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		        action
+		        (
+		            on click
+		            (
+		                View Record
+		            )
+		            on right click
+		            (
+		                Edit
+		                Delete
+		                Duplicate
+		                View Record
+		            )
+		        )
+		    )
+		    detailview
+		    (
+		        layout
+		        (
+		            type = 1
+		            datablock1
+		            (
+		                layout type = -2
+		                fields
+		                (
+		                    Batch_Reference
+		                    Action_Type
+		                    Status
+		                    Requested_Date
+		                    Requester_Name
+		                    Approval_Date
+		                    Action_Completed_In_SAP
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		    )
+		}
+	
+		report Disposition_Kanban
+		{
+		    quickview
+		    (
+		        layout
+		        (
+		            type = -1
+		            datablock1
+		            (
+		                layout type = -1
+		                fields
+		                (
+		                    Batch_Reference
+		                    Action_Type
+		                    Status
+		                    Requested_Date
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		            record
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		        action
+		        (
+		            on click
+		            (
+		                View Record
+		            )
+		            on right click
+		            (
+		                Edit
+		                Delete
+		                Duplicate
+		                View Record
+		            )
+		        )
+		    )
+		    detailview
+		    (
+		        layout
+		        (
+		            type = 1
+		            datablock1
+		            (
+		                layout type = -2
+		                fields
+		                (
+		                    Batch_Reference
+		                    Action_Type
+		                    Status
+		                    Requested_Date
+		                    Requester_Name
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		    )
+		}
+	
+		report Pending_Dispositions
+		{
+		    quickview
+		    (
+		        layout
+		        (
+		            type = -1
+		            datablock1
+		            (
+		                layout type = -1
+		                fields
+		                (
+		                    Batch_Reference
+		                    Action_Type
+		                    Status
+		                    Requested_Date
+		                    Requester_Name
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		            record
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		        action
+		        (
+		            on click
+		            (
+		                View Record
+		            )
+		            on right click
+		            (
+		                Edit
+		                Delete
+		                Duplicate
+		                View Record
+		            )
+		        )
+		    )
+		    detailview
+		    (
+		        layout
+		        (
+		            type = 1
+		            datablock1
+		            (
+		                layout type = -2
+		                fields
+		                (
+		                    Batch_Reference
+		                    Action_Type
+		                    Status
+		                    Requested_Date
+		                    Requester_Name
+		                    Disposition_Notes
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		    )
+		}
+	
+		report All_FEFO_Logs
+		{
+		    quickview
+		    (
+		        layout
+		        (
+		            type = -1
+		            datablock1
+		            (
+		                layout type = -1
+		                fields
+		                (
+		                    GI_Date
+		                    Material
+		                    Batch_Consumed
+		                    Quantity_Issued
+		                    Was_Oldest_Batch
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		            record
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		        action
+		        (
+		            on click
+		            (
+		                View Record
+		            )
+		            on right click
+		            (
+		                Edit
+		                Delete
+		                Duplicate
+		                View Record
+		            )
+		        )
+		    )
+		    detailview
+		    (
+		        layout
+		        (
+		            type = 1
+		            datablock1
+		            (
+		                layout type = -2
+		                fields
+		                (
+		                    GI_Date
+		                    Material
+		                    Batch_Consumed
+		                    Quantity_Issued
+		                    UoM
+		                    Was_Oldest_Batch
+		                    Production_Order_Ref
+		                    Recorded_By
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		    )
+		}
+	
+		report GI_Calendar
+		{
+		    quickview
+		    (
+		        layout
+		        (
+		            type = -1
+		            datablock1
+		            (
+		                layout type = -1
+		                fields
+		                (
+		                    GI_Date
+		                    Material
+		                    Batch_Consumed
+		                    Quantity_Issued
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		            record
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		        action
+		        (
+		            on click
+		            (
+		                View Record
+		            )
+		            on right click
+		            (
+		                Edit
+		                Delete
+		                Duplicate
+		                View Record
+		            )
+		        )
+		    )
+		    detailview
+		    (
+		        layout
+		        (
+		            type = 1
+		            datablock1
+		            (
+		                layout type = -2
+		                fields
+		                (
+		                    GI_Date
+		                    Material
+		                    Batch_Consumed
+		                    Quantity_Issued
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		    )
+		}
+	
+		report All_Material_Groups
+		{
+		    quickview
+		    (
+		        layout
+		        (
+		            type = -1
+		            datablock1
+		            (
+		                layout type = -1
+		                fields
+		                (
+		                    Material_Group_Code
+		                    Material_Group_Name
+		                    Amber_Warning_Days
+		                    Red_Alert_Days
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		            record
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		        action
+		        (
+		            on click
+		            (
+		                View Record
+		            )
+		            on right click
+		            (
+		                Edit
+		                Delete
+		                Duplicate
+		                View Record
+		            )
+		        )
+		    )
+		    detailview
+		    (
+		        layout
+		        (
+		            type = 1
+		            datablock1
+		            (
+		                layout type = -2
+		                fields
+		                (
+		                    Material_Group_Code
+		                    Material_Group_Name
+		                    Amber_Warning_Days
+		                    Red_Alert_Days
+		                    Description
+		                    Example_Materials
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		    )
+		}
+	
+		report All_Materials
+		{
+		    quickview
+		    (
+		        layout
+		        (
+		            type = -1
+		            datablock1
+		            (
+		                layout type = -1
+		                fields
+		                (
+		                    Material_Number
+		                    Material_Description
+		                    Material_Group
+		                    Total_Shelf_Life_Days
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		            record
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		        action
+		        (
+		            on click
+		            (
+		                View Record
+		            )
+		            on right click
+		            (
+		                Edit
+		                Delete
+		                Duplicate
+		                View Record
+		            )
+		        )
+		    )
+		    detailview
+		    (
+		        layout
+		        (
+		            type = 1
+		            datablock1
+		            (
+		                layout type = -2
+		                fields
+		                (
+		                    Material_Number
+		                    Material_Description
+		                    Material_Group
+		                    Total_Shelf_Life_Days
+		                    Min_Remaining_Shelf_Life_Days
+		                    Standard_Cost
+		                    Currency
+		                    Unit_of_Measure
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		    )
+		}
+	
+		report Materials_By_Group
+		{
+		    quickview
+		    (
+		        layout
+		        (
+		            type = -1
+		            datablock1
+		            (
+		                layout type = -1
+		                fields
+		                (
+		                    Material_Number
+		                    Material_Description
+		                    Material_Group
+		                    Total_Shelf_Life_Days
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		            record
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		        action
+		        (
+		            on click
+		            (
+		                View Record
+		            )
+		            on right click
+		            (
+		                Edit
+		                Delete
+		                Duplicate
+		                View Record
+		            )
+		        )
+		    )
+		    detailview
+		    (
+		        layout
+		        (
+		            type = 1
+		            datablock1
+		            (
+		                layout type = -2
+		                fields
+		                (
+		                    Material_Number
+		                    Material_Description
+		                    Material_Group
+		                    Total_Shelf_Life_Days
+		                    Standard_Cost
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		    )
+		}
+	
+		report All_Storage_Locations
+		{
+		    quickview
+		    (
+		        layout
+		        (
+		            type = -1
+		            datablock1
+		            (
+		                layout type = -1
+		                fields
+		                (
+		                    Location_Code
+		                    Location_Name
+		                    Plant_Code
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		            record
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		        action
+		        (
+		            on click
+		            (
+		                View Record
+		            )
+		            on right click
+		            (
+		                Edit
+		                Delete
+		                Duplicate
+		                View Record
+		            )
+		        )
+		    )
+		    detailview
+		    (
+		        layout
+		        (
+		            type = 1
+		            datablock1
+		            (
+		                layout type = -2
+		                fields
+		                (
+		                    Location_Code
+		                    Location_Name
+		                    Plant_Code
+		                    Location_Description
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header
+		            (
+		                Edit
+		                Duplicate
+		                Delete
+		            )
+		        )
+		    )
+		}
+	}
+	menu
+	{
+	    space Shelf_Life_Monitor_Space
+	    {
+	        displayname = "Shelf-Life Monitor"
+	        icon = "business-factory"
+	
+	        section Dashboard_Section
+	        {
+	            displayname = "Dashboard"
+	            icon = "business-chart"
+	
+	            page Shelf_Life_Dashboard
+	            {
+	                icon = "business-chart-bar-33"
+	            }
+	        }
+	
+	        section Batch_Monitoring_Section
+	        {
+	            displayname = "Batch Monitoring"
+	            icon = "business-stock"
+	
+	            form Batch_Monitor
+	            {
+	                icon = "business-stock"
+	            }
+	            report All_Batches
+	            {
+	                icon = "tech-desktop"
+	            }
+	            report Red_Alert_Batches
+	            {
+	                icon = "business-chart-growth"
+	            }
+	            report Amber_Warning_Batches
+	            {
+	                icon = "business-percentage-39"
+	            }
+	            report Status_Kanban
+	            {
+	                icon = "business-board-30"
+	            }
+	            report Expiry_Calendar
+	            {
+	                icon = "business-agenda"
+	            }
+	            report Top_5_Urgent_Batches
+	            {
+	                icon = "business-goal-64"
+	            }
+	        }
+	
+	        section Disposition_Section
+	        {
+	            displayname = "Disposition Actions"
+	            icon = "business-hammer"
+	
+	            form Disposition_Actions
+	            {
+	                icon = "business-hammer"
+	            }
+	            report All_Dispositions
+	            {
+	                icon = "tech-desktop"
+	            }
+	            report Pending_Dispositions
+	            {
+	                icon = "business-progress"
+	            }
+	            report Disposition_Kanban
+	            {
+	                icon = "business-board-28"
+	            }
+	        }
+	
+	        section FEFO_Section
+	        {
+	            displayname = "FEFO Compliance"
+	            icon = "business-chart-pie-36"
+	
+	            form FEFO_Log
+	            {
+	                icon = "business-notes"
+	            }
+	            report All_FEFO_Logs
+	            {
+	                icon = "tech-desktop"
+	            }
+	            report GI_Calendar
+	            {
+	                icon = "business-agenda"
+	            }
+	        }
+	
+	        section Master_Data_Section
+	        {
+	            displayname = "Master Data"
+	            icon = "business-briefcase-24"
+	
+	            form Materials
+	            {
+	                icon = "business-books"
+	            }
+	            report All_Materials
+	            {
+	                icon = "tech-desktop"
+	            }
+	            report Materials_By_Group
+	            {
+	                icon = "business-hierarchy-53"
+	            }
+	            form Material_Groups
+	            {
+	                icon = "business-hierarchy-55"
+	            }
+	            report All_Material_Groups
+	            {
+	                icon = "tech-desktop"
+	            }
+	            form Storage_Locations
+	            {
+	                icon = "location-pin"
+	            }
+	            report All_Storage_Locations
+	            {
+	                icon = "tech-desktop"
+	            }
+	        }
+	
+	        section SharedAnalytics_Section
+	        {
+	            type = shared_user_report_section
+	            displayname = "Reports"
+	            icon = "business-chart-bar-33"
+	        }
+	    }
+	
+	    preference
+	    {
+	        icon
+	        {
+	            style = outline
+	            show = {space,section,component}
+	        }
+	    }
+	}
+	customize
+	{
+	    font = "lato"
+	
+	    color options
+	    {
+	        color = "11"
+	    }
+	
+	    logo
+	    {
+	        preference = "app_icon"
+	        placement = "left"
+	    }
+	}
+	}
+}

@@ -1,0 +1,153 @@
+Batch_Monitor_Nightly_Refresh as "Nightly Batch Status Refresh"
+{
+    type      = schedule
+    start     = "2025-01-01 06:00:00"
+    frequency = daily
+    time zone = "Asia/Kolkata"
+
+    on start
+    {
+        actions
+        {
+            on load
+            (
+            newRedBatches = list();
+            newAmberBatches = list();
+
+            // Paginated fetch: process up to 600 records (3 blocks of 200)
+            // For apps with >600 batches, schedule a second workflow or extend blocks
+            r1 = Batch_Monitor[ID > 0] range from 1 to 200;
+            for each batch in r1
+            {
+                daysLeft = batch.Expiry_Date - zoho.currentdate;
+                amberDays = batch.Amber_Threshold_Days;
+                redDays = batch.Red_Threshold_Days;
+                prevStatus = batch.Status_Color;
+                newStatus = "Green";
+                if(daysLeft <= 0)
+                {
+                    newStatus = "Red";
+                }
+                else if(daysLeft <= redDays)
+                {
+                    newStatus = "Red";
+                }
+                else if(daysLeft <= amberDays)
+                {
+                    newStatus = "Amber";
+                }
+                if(newStatus != prevStatus)
+                {
+                    update Batch_Monitor [ID == batch.ID] [ Status_Color = newStatus ];
+                    if(newStatus == "Red")
+                    {
+                        newRedBatches.add(batch.Batch_Number + " - " + daysLeft + " days");
+                    }
+                    else if(newStatus == "Amber")
+                    {
+                        newAmberBatches.add(batch.Batch_Number + " - " + daysLeft + " days remaining");
+                    }
+                }
+            }
+
+            r2 = Batch_Monitor[ID > 0] range from 201 to 400;
+            for each batch in r2
+            {
+                daysLeft = batch.Expiry_Date - zoho.currentdate;
+                amberDays = batch.Amber_Threshold_Days;
+                redDays = batch.Red_Threshold_Days;
+                prevStatus = batch.Status_Color;
+                newStatus = "Green";
+                if(daysLeft <= 0)
+                {
+                    newStatus = "Red";
+                }
+                else if(daysLeft <= redDays)
+                {
+                    newStatus = "Red";
+                }
+                else if(daysLeft <= amberDays)
+                {
+                    newStatus = "Amber";
+                }
+                if(newStatus != prevStatus)
+                {
+                    update Batch_Monitor [ID == batch.ID] [ Status_Color = newStatus ];
+                    if(newStatus == "Red")
+                    {
+                        newRedBatches.add(batch.Batch_Number + " - " + daysLeft + " days");
+                    }
+                    else if(newStatus == "Amber")
+                    {
+                        newAmberBatches.add(batch.Batch_Number + " - " + daysLeft + " days remaining");
+                    }
+                }
+            }
+
+            r3 = Batch_Monitor[ID > 0] range from 401 to 600;
+            for each batch in r3
+            {
+                daysLeft = batch.Expiry_Date - zoho.currentdate;
+                amberDays = batch.Amber_Threshold_Days;
+                redDays = batch.Red_Threshold_Days;
+                prevStatus = batch.Status_Color;
+                newStatus = "Green";
+                if(daysLeft <= 0)
+                {
+                    newStatus = "Red";
+                }
+                else if(daysLeft <= redDays)
+                {
+                    newStatus = "Red";
+                }
+                else if(daysLeft <= amberDays)
+                {
+                    newStatus = "Amber";
+                }
+                if(newStatus != prevStatus)
+                {
+                    update Batch_Monitor [ID == batch.ID] [ Status_Color = newStatus ];
+                    if(newStatus == "Red")
+                    {
+                        newRedBatches.add(batch.Batch_Number + " - " + daysLeft + " days");
+                    }
+                    else if(newStatus == "Amber")
+                    {
+                        newAmberBatches.add(batch.Batch_Number + " - " + daysLeft + " days remaining");
+                    }
+                }
+            }
+
+            if(newRedBatches.size() > 0 || newAmberBatches.size() > 0)
+            {
+                alertMsg = "<h3>Daily Shelf-Life Alert — " + zoho.currentdate.toString("dd-MMM-yyyy") + "</h3>";
+                if(newRedBatches.size() > 0)
+                {
+                    alertMsg = alertMsg + "<h4 style='color:red'>NEW RED Batches (Expired/Critical):</h4><ul>";
+                    for each item in newRedBatches
+                    {
+                        alertMsg = alertMsg + "<li>" + item + "</li>";
+                    }
+                    alertMsg = alertMsg + "</ul>";
+                }
+                if(newAmberBatches.size() > 0)
+                {
+                    alertMsg = alertMsg + "<h4 style='color:orange'>NEW AMBER Batches (Warning):</h4><ul>";
+                    for each item in newAmberBatches
+                    {
+                        alertMsg = alertMsg + "<li>" + item + "</li>";
+                    }
+                    alertMsg = alertMsg + "</ul>";
+                }
+                sendmail
+                (
+                    from    : zoho.adminuserid
+                    to      : zoho.adminuserid
+                    subject : "[Shelf-Life Alert] " + newRedBatches.size() + " Red, " + newAmberBatches.size() + " Amber — " + zoho.currentdate.toString("dd-MMM-yyyy")
+                    message : alertMsg
+                );
+            }
+            )
+        }
+    }
+}

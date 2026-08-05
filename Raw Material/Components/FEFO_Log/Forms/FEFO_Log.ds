@@ -1,0 +1,116 @@
+form FEFO_Log
+{
+    displayname = "FEFO Goods Issue Log"
+
+    Goods_Issue_Details
+    (
+        type    = section
+        row     = 1
+        column  = 0
+    )
+    must have GI_Date
+    (
+        type          = date
+        displayname   = "GI Date"
+        initial value = "${zoho.currentdate}"
+        row           = 1
+    )
+    must have Material
+    (
+        type          = picklist
+        displayname   = "Material"
+        values        = Materials.ID
+        displayformat = [Material_Number]
+        searchable    = true
+        row           = 1
+    )
+    must have Batch_Consumed
+    (
+        type          = picklist
+        displayname   = "Batch Consumed"
+        values        = Batch_Monitor.ID
+        displayformat = [Batch_Number]
+        searchable    = true
+        row           = 1
+    )
+    must have Quantity_Issued
+    (
+        type         = decimal
+        displayname  = "Quantity Issued"
+        decimalplace = 3
+        row          = 1
+    )
+    UoM
+    (
+        type        = text
+        displayname = "Unit of Measure"
+        maxchar     = 10
+        row         = 1
+    )
+    Production_Order_Ref
+    (
+        type        = text
+        displayname = "Production Order / Reference"
+        maxchar     = 20
+        row         = 1
+    )
+
+    FEFO_Compliance
+    (
+        type       = section
+        displayname = "FEFO Compliance"
+        visibility = true
+        row        = 2
+        column     = 1
+    )
+    Was_Oldest_Batch
+    (
+        type          = checkbox
+        displayname   = "Was the Oldest (First-Expiring) Batch Used?"
+        initial value = true
+        row           = 2
+    )
+    FEFO_Compliance_Notes
+    (
+        type        = textarea
+        displayname = "FEFO Notes (explain if non-compliant)"
+        row         = 2
+    )
+    Recorded_By
+    (
+        type        = text
+        displayname = "Recorded By"
+        maxchar     = 100
+        row         = 2
+    )
+
+    actions
+    {
+        on add
+        {
+            Submit
+            (
+                type = submit
+                displayname = "Log GI"
+            )
+            Reset
+            (
+                type = reset
+                displayname = "Reset"
+            )
+        }
+        on edit
+        {
+            Update
+            (
+                type = submit
+                displayname = "Update"
+            )
+            Cancel
+            (
+                type = cancel
+                displayname = "Cancel"
+            )
+        }
+    }
+}

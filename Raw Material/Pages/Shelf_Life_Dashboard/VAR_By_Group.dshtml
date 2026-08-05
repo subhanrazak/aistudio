@@ -1,0 +1,57 @@
+<style>
+.vbg-card { background: #fff; border-radius: 10px; padding: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow: hidden; }
+.vbg-header { background: #fff; padding: 14px 16px; display: flex; align-items: center; border-bottom: 1px solid #f0f0f0; }
+.vbg-icon { width: 32px; height: 32px; border-radius: 16px; background: #fdecea; display: flex; align-items: center; justify-content: center; margin-right: 10px; flex-shrink: 0; font-size: 14px; color: #c62828; font-weight: 700; }
+.vbg-title { font-size: 15px; font-weight: 700; color: #1a1a2e; }
+.vbg-row { display: flex; align-items: center; padding: 10px 16px; border-bottom: 1px solid #f5f5f5; }
+.vbg-row:last-child { border-bottom: none; }
+.vbg-rank { width: 32px; font-size: 17px; font-weight: 800; color: #c62828; flex-shrink: 0; }
+.vbg-name { flex: 1; font-size: 13px; color: #333; }
+.vbg-val { font-size: 13px; font-weight: 700; color: #c62828; min-width: 80px; text-align: right; }
+.vbg-empty { padding: 20px 16px; color: #999; font-size: 13px; text-align: center; }
+</style>
+<div class="vbg-card">
+  <div class="vbg-header">
+    <div class="vbg-icon">$</div>
+    <div class="vbg-title">Value at Risk by Material Group</div>
+  </div>
+  <div>
+<%
+  // Compute VAR sum per Material Group from risk batches
+  allGroups = Material_Groups[ID != 0];
+  grpVarList = list();
+  for each grp in allGroups
+  {
+    grpBatches = Batch_Monitor[Status_Color == "Red" || Status_Color == "Amber" && Material_Group_Name == grp.Material_Group_Name];
+    varSum = grpBatches.sum(Value_At_Risk);
+    if(varSum > 0)
+    {
+      // Pad for sorting (large number = high VAR)
+      padded = "000000000000" + varSum.round(0).toLong();
+      padded = padded.subString(padded.length() - 12);
+      grpVarList.add(padded + "||" + grp.Material_Group_Name);
+    }
+  }
+  grpVarList = grpVarList.sort(false);
+  rank = 1;
+  if(grpVarList.size() == 0)
+  {
+    %><div class="vbg-empty">No value at risk data found.</div><%
+  }
+  for each item in grpVarList
+  {
+    if(rank <= 10)
+    {
+      grpName = item.getSuffix("||");
+      varVal = item.getPrefix("||").toLong();
+      %><div class="vbg-row">
+        <div class="vbg-rank"><%=rank%></div>
+        <div class="vbg-name"><%=grpName%></div>
+        <div class="vbg-val"><%=varVal%></div>
+      </div><%
+      rank = rank + 1;
+    }
+  }
+%>
+  </div>
+</div>

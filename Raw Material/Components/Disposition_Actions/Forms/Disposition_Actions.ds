@@ -1,0 +1,185 @@
+form Disposition_Actions
+{
+    displayname = "Disposition Actions"
+
+    Disposition_Details
+    (
+        type    = section
+        row     = 1
+        column  = 0
+    )
+    must have Batch_Reference
+    (
+        type          = picklist
+        displayname   = "Batch Reference"
+        values        = Batch_Monitor.ID
+        displayformat = [Batch_Number]
+        searchable    = true
+        row           = 1
+    )
+    must have Action_Type
+    (
+        type        = picklist
+        displayname = "Action Type"
+        values      = {"Consume (Priority Use)", "Extend Shelf Life", "Return to Vendor", "Dispose / Write-Off", "Transfer to Alternate Use"}
+        row         = 1
+    )
+    Requested_Date
+    (
+        type          = date
+        displayname   = "Request Date"
+        initial value = "${zoho.currentdate}"
+        row           = 1
+    )
+    Requester_Name
+    (
+        type        = text
+        displayname = "Requested By"
+        maxchar     = 100
+        row         = 1
+    )
+    Disposition_Notes
+    (
+        type        = textarea
+        displayname = "Disposition Notes / Justification"
+        row         = 1
+    )
+
+    Review_And_Approval
+    (
+        type       = section
+        displayname = "Review & Approval"
+        visibility = true
+        row        = 2
+        column     = 1
+    )
+    Status
+    (
+        type          = picklist
+        displayname   = "Status"
+        values        = {"Pending", "In Review", "Pending Re-test", "Approved", "Rejected"}
+        initial value = "Pending"
+        row           = 2
+    )
+    QA_Review_Notes
+    (
+        type        = textarea
+        displayname = "QA Review Notes"
+        row         = 2
+    )
+    QA_Reviewer
+    (
+        type        = text
+        displayname = "QA Reviewer"
+        maxchar     = 100
+        row         = 2
+    )
+    QA_Review_Date
+    (
+        type        = date
+        displayname = "QA Review Date"
+        row         = 2
+    )
+    Retest_Lab_Reference
+    (
+        type        = text
+        displayname = "Re-test Lab Reference"
+        maxchar     = 50
+        row         = 2
+    )
+    Retest_Outcome
+    (
+        type        = textarea
+        displayname = "Re-test Outcome / Result"
+        row         = 2
+    )
+    Controller_Approval_Notes
+    (
+        type        = textarea
+        displayname = "Controller Approval Notes"
+        row         = 2
+    )
+    Controller_Reviewer
+    (
+        type        = text
+        displayname = "Controller Reviewer"
+        maxchar     = 100
+        row         = 2
+    )
+    Approval_Date
+    (
+        type        = date
+        displayname = "Approval Date"
+        row         = 2
+    )
+    Rejection_Reason
+    (
+        type        = textarea
+        displayname = "Rejection Reason"
+        row         = 2
+    )
+
+    SAP_Action_Reference_Section
+    (
+        type       = section
+        displayname = "SAP Action Reference"
+        visibility = true
+        row        = 3
+        column     = 1
+    )
+    SAP_Action_Reference
+    (
+        type        = text
+        displayname = "SAP Action Reference No."
+        maxchar     = 20
+        row         = 3
+    )
+    SAP_Action_Date
+    (
+        type        = date
+        displayname = "SAP Action Date"
+        row         = 3
+    )
+    Action_Completed_In_SAP
+    (
+        type          = checkbox
+        displayname   = "Action Completed in SAP?"
+        initial value = false
+        row           = 3
+    )
+
+    actions
+    {
+        on add
+        {
+            Submit
+            (
+                type = submit
+                displayname = "Submit Request"
+            )
+            Reset
+            (
+                type = reset
+                displayname = "Reset"
+            )
+        }
+        on edit
+        {
+            Update
+            (
+                type = submit
+                displayname = "Update"
+            )
+            Cancel
+            (
+                type = cancel
+                displayname = "Cancel"
+            )
+        }
+    }
+
+    blueprint components
+    {
+        stages = {"Pending", "In Review", "Pending Re-test", "Approved", "Rejected"}
+    }
+}
