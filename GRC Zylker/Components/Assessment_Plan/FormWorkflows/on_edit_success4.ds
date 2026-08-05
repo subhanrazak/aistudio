@@ -1,0 +1,80 @@
+on_edit_success4 as "on edit success"
+{
+
+				type =  form
+				form = Assessment_Plan
+
+				record event = on edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											for each  internal in input.Internal_Resources
+										{
+											internal.Assessment_Plan=input.ID;
+											internal.User=internal.Name.Internal_Resource;
+										}
+										for each  external in input.External_Resources
+										{
+											external.Assessment_Plan=input.ID;
+										}
+										actionList = {"Plan Details","Coverage","Compliance","Resource","Budget"};
+										getIndex = if(input.Action_Field != "Budget",actionList.indexOf(input.Action_Field) + 1,null);
+										if(input.Stepper_Stage == "Plan Details")
+										{
+											departmentCount = Department_Coverage[Assessment_Plan == input.ID].count();
+											categoryCount = Risk_Category_Coverage[Assessment_Plan == input.ID].count();
+											processCount = Process_Selection[process == input.ID].count();
+											if(departmentCount > 0 || categoryCount > 0 || processCount > 0)
+											{
+												input.Stepper_Stage = "Coverage";
+											}
+										}
+										else if(input.Stepper_Stage == "Coverage")
+										{
+											standardCount = input.Industry_Standards.size();
+											if(standardCount > 0)
+											{
+												input.Stepper_Stage = "Compliance";
+											}
+										}
+										else if(input.Stepper_Stage == "Compliance")
+										{
+											resourceCount = Resource_Allocation[Assessment_Plan == input.ID].count();
+											if(resourceCount > 0)
+											{
+												input.Stepper_Stage = "Resource";
+											}
+										}
+										else if(input.Stepper_Stage == "Resource")
+										{
+											milestoneCount = Milestone_Planning[Assessment_Plan == input.ID].count();
+											if(Budget_Required != null && milestoneCount > 0)
+											{
+												input.Stepper_Stage = "Budget";
+											}
+										}
+										else if(input.Stepper_Stage == "Budget")
+										{
+										}
+										success message input.Action_Field + " information submitted successfully.";
+										currentAction = input.Action_Field;
+										input.Action_Field = "";
+										thisapp.Log.Audit_Log("Assessment_Plan",input.ID,"Update",User[Email == zoho.loginuserid].ID,input.Plan_Name);
+										if(currentAction != "Budget")
+										{
+											openUrl("#Page:Assessment_Plan_Page?page_action=add&recid=" + input.ID + "&action_field=" + encodeUrl(actionList.get(getIndex)),"same window");
+										}
+										else
+										{
+											openUrl("#Page:Assessment_Plan_Page?page_action=detailView&recid=" + input.ID,"same window");
+										}
+						)
+					}
+				}
+
+			
+}

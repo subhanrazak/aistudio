@@ -1,0 +1,72 @@
+update_Organization_Detai as "update Organization Detail"
+{
+
+				type =  form
+				form = Organization
+
+				record event = on edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											actionList = {"Basic Details","Scale","Address","Entity","Regulatory"};
+										getIndex = if(input.Action_Field != "Regulatory",actionList.indexOf(input.Action_Field) + 1,null);
+										if(input.Stepper_Stage == "Basic Details")
+										{
+											if(input.Organization_Size != null && input.Organization_Size != "")
+											{
+												input.Stepper_Stage = "Scale";
+											}
+										}
+										else if(input.Stepper_Stage == "Scale")
+										{
+											addressCount = input.Address_Information.count();
+											if(addressCount > 0)
+											{
+												input.Stepper_Stage = "Address";
+											}
+										}
+										else if(input.Stepper_Stage == "Address")
+										{
+											getEntityCount = Entity[Organization == input.ID].count();
+											if(getEntityCount > 0)
+											{
+												input.Stepper_Stage = "Entity";
+											}
+										}
+										else if(input.Stepper_Stage == "Entity")
+										{
+											regulatoryCount = Regulatory_Jurisdictions[Organization == input.ID].count();
+											reportCount = Regulatory_Reporting_Requirements[Organization == input.ID].count();
+											frameworkCount = Risk_Compliance_Frameworks[Organization == input.ID].count();
+											if(regulatoryCount > 0 || reportCount > 0 || frameworkCount > 0)
+											{
+												input.Stepper_Stage = "Regulatory";
+											}
+										}
+										else if(input.Stepper_Stage == "Regulatory")
+										{
+										}
+										success message input.Action_Field + " information submitted successfully.";
+										currentAction = input.Action_Field;
+										input.Action_Field = "";
+										thisapp.Log.Audit_Log("Organization",input.ID,"Update",User[Email == zoho.loginuserid].ID,input.Organization_ID + " - " + input.Organization_Name);
+										//openUrl("#Page:Organization_Page?recid=" + input.ID,"same window");
+										if(currentAction != "Regulatory")
+										{
+											openUrl("#Page:Preferences?tab=organisations&page_action=add&recid=" + input.ID + "&action_field=" + encodeUrl(actionList.get(getIndex)),"same window");
+										}
+										else
+										{
+											openUrl("#Page:Preferences?tab=organisations","same window");
+										}
+										//openUrl("#Page:Preferences?tab=organisations&page_action=add&recid=" + input.ID,"same window");
+						)
+					}
+				}
+
+			
+}

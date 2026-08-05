@@ -1,0 +1,107 @@
+Resolution as "Resolution"
+{
+
+				type =  schedule
+				form = Add_Resolution
+				start = Vote_End_Date at "23:59:59"
+				time zone = "Asia/Kolkata"
+				on start
+				{
+					actions 
+					{
+					on load
+					(
+						/* --- Determine Voting Method based on Meeting_For --- */
+										votingMethod = "";
+										meetingFor = "";
+										mtgRec = Meeting[ID == input.Meeting];
+										if(mtgRec.count() > 0 && mtgRec.Meeting_For != null)
+										{
+											meetingFor = mtgRec.Meeting_For + "";
+										}
+										if(meetingFor == "Board")
+										{
+											brdRec = Board[ID != 0];
+											if(brdRec.count() > 0)
+											{
+												bType = brdRec.Board_Type_Board + "";
+												if(bType == "Single-Tier")
+												{
+													votingMethod = brdRec.Voting_Methods_Single + "";
+												}
+												else if(bType == "Two-Tier")
+												{
+													votingMethod = brdRec.Voting_Method_Two + "";
+												}
+												else if(bType == "Advisory")
+												{
+													votingMethod = brdRec.Voting_Methods_Advisory + "";
+												}
+											}
+										}
+										else if(meetingFor == "Commitee")
+										{
+											if(mtgRec.count() > 0 && mtgRec.Committee1 != null)
+											{
+												cmtRec = Committee[ID == mtgRec.Committee1];
+												if(cmtRec.count() > 0)
+												{
+													votingMethod = cmtRec.Voting_Method + "";
+												}
+											}
+										}
+										/* --- Count votes linked to THIS resolution --- */
+										totalApprove = 0;
+										totalReject = 0;
+										totalVotesCast = 0;
+										voteRecs = Vote[Resolution.ID == input.ID];
+										for each  vr in voteRecs
+										{
+											choice = vr.Your_Vote + "";
+											if(choice == "Approve")
+											{
+												totalApprove = totalApprove + 1;
+												totalVotesCast = totalVotesCast + 1;
+											}
+											else if(choice == "Reject")
+											{
+												totalReject = totalReject + 1;
+												totalVotesCast = totalVotesCast + 1;
+											}
+										}
+										/* --- Calculate pass/fail based on voting method --- */
+										resolutionResult = "Fail";
+										if(totalVotesCast > 0)
+										{
+											approvePercent = ((totalApprove * 100) / totalVotesCast).round(2);
+											if(votingMethod.containsIgnoreCase("Simple Majority") || votingMethod.contains(">50"))
+											{
+												if(approvePercent > 50)
+												{
+													resolutionResult = "Pass";
+												}
+											}
+											else if(votingMethod.containsIgnoreCase("Unanimous") || votingMethod.contains("100"))
+											{
+												if(approvePercent == 100)
+												{
+													resolutionResult = "Pass";
+												}
+											}
+											else if(votingMethod.containsIgnoreCase("Supermajority") || votingMethod.contains("75"))
+											{
+												if(approvePercent >= 75)
+												{
+													resolutionResult = "Pass";
+												}
+											}
+										}
+										input.Resolution = resolutionResult;
+										input.Status = "Voted";
+										agenda = Agenda_Item[ID == input.Agenda_Item];
+										agenda.Status="Tracker";
+					)
+					}
+				}
+			
+}

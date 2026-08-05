@@ -1,0 +1,129 @@
+Member_Details_Update as "Member Details Update"
+{
+
+				type =  form
+				form = Board
+
+				record event = on add or edit
+
+				on user input of Board_Member_Assigment_Supervisory_Two.Member
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											/* ===== Two-Tier - Member_Name On User Input ===== */
+										/* Auto-fetch Member_Type for the current row only */
+										if(row.Member != null)
+										{
+											user = User[ID == row.Member];
+											row.Member_Type=user.Member_Type;
+											row.Role1=user.Role;
+											disable row.Member_Type;
+											disable row.Role1;
+										}
+										/* ===== Count composition across BOTH subforms ===== */
+										executiveCount = 0;
+										nonExecutiveCount = 0;
+										independentCount = 0;
+										/* ----- Supervisory subform ----- */
+										for each  memRow in input.Board_Member_Assigment_Supervisory_Two
+										{
+											mType = memRow.Member_Type;
+											if(mType != null && mType != "")
+											{
+												if(mType == "Executive")
+												{
+													executiveCount = executiveCount + 1;
+												}
+												else if(mType == "Non-Executive")
+												{
+													nonExecutiveCount = nonExecutiveCount + 1;
+												}
+												else if(mType == "Independent")
+												{
+													independentCount = independentCount + 1;
+												}
+											}
+										}
+										/* ----- Management subform ----- */
+										for each  memRow in input.Board_Member_Assigment_Management_Two
+										{
+											mType = memRow.Member_Type;
+											if(mType != null && mType != "")
+											{
+												if(mType == "Executive")
+												{
+													executiveCount = executiveCount + 1;
+												}
+												else if(mType == "Non-Executive")
+												{
+													nonExecutiveCount = nonExecutiveCount + 1;
+												}
+												else if(mType == "Independent")
+												{
+													independentCount = independentCount + 1;
+												}
+											}
+										}
+										totalCount = executiveCount + nonExecutiveCount + independentCount;
+										execPct = 0;
+										nonExecPct = 0;
+										indPct = 0;
+										if(totalCount > 0)
+										{
+											execPct = round((executiveCount * 100.0) / totalCount,0).toLong();
+											nonExecPct = round((nonExecutiveCount * 100.0) / totalCount,0).toLong();
+											indPct = round((independentCount * 100.0) / totalCount,0).toLong();
+										}
+										thStyle = "text-align:left;font-size:14px;font-weight:400;color:#6b7280;padding:16px 24px;background:#f5f6f7;border-bottom:1px solid #ececec;";
+										tdLabel = "padding:20px 24px;font-size:14px;color:#111827;vertical-align:middle;white-space:nowrap;";
+										tdCount = "padding:20px 24px;font-size:14px;color:#374151;vertical-align:middle;";
+										tdBar = "padding:20px 24px;vertical-align:middle;";
+										borderRow = "border-bottom:1px solid #ececec;";
+										html = "<div style='font-family:Inter,Arial,sans-serif;width:70%;box-sizing:border-box;'>";
+										html = html + "<div style='display:flex;align-items:center;gap:14px;margin-bottom:14px;'>";
+										html = html + "<h3 style='font-size:15px;font-weight:600;color:#e8453c;margin:0;'>Composition Overview</h3>";
+										html = html + "<span style='background:#fdecec;color:#e8453c;font-size:13px;font-weight:500;padding:5px 14px;border-radius:6px;'>" + totalCount + " Members</span>";
+										html = html + "</div>";
+										html = html + "<div style='background:#fafafa;border:1px solid #f0f0f0;border-radius:10px;overflow:hidden;width:100%;box-sizing:border-box;'>";
+										html = html + "<table style='width:100%;border-collapse:collapse;table-layout:fixed;'>";
+										html = html + "<thead><tr>";
+										html = html + "<th style='" + thStyle + "width:25%;'>Classification</th>";
+										html = html + "<th style='" + thStyle + "width:15%;'>Count</th>";
+										html = html + "<th style='" + thStyle + "width:60%;'>Percentage</th>";
+										html = html + "</tr></thead><tbody>";
+										classifications = list();
+										classifications.add({"label":"Executive","cnt":executiveCount,"pct":execPct});
+										classifications.add({"label":"Non-Executive","cnt":nonExecutiveCount,"pct":nonExecPct});
+										classifications.add({"label":"Independent","cnt":independentCount,"pct":indPct});
+										rowIdx = 0;
+										totalRows = classifications.size();
+										for each  c in classifications
+										{
+											rowIdx = rowIdx + 1;
+											rowBorder = if(rowIdx == totalRows,"",borderRow);
+											cLabel = c.get("label");
+											cCnt = c.get("cnt");
+											cPct = c.get("pct");
+											html = html + "<tr>";
+											html = html + "<td style='" + tdLabel + rowBorder + "'>" + cLabel + "</td>";
+											html = html + "<td style='" + tdCount + rowBorder + "'>" + cCnt + "</td>";
+											html = html + "<td style='" + tdBar + rowBorder + "'>";
+											html = html + "<div style='display:flex;align-items:center;gap:16px;width:100%;'>";
+											html = html + "<div style='flex:1;height:10px;background:#eef0f3;border-radius:999px;overflow:hidden;'>";
+											html = html + "<div style='width:" + cPct + "%;height:100%;background:#f43f3f;border-radius:999px;'></div>";
+											html = html + "</div>";
+											html = html + "<span style='font-size:14px;color:#9ca3af;min-width:42px;text-align:right;'>" + cPct + "%</span>";
+											html = html + "</div>";
+											html = html + "</td>";
+											html = html + "</tr>";
+										}
+										html = html + "</tbody></table></div></div>";
+										input.Board_Composition_Notes_Two = html;
+						)
+					}
+				}
+
+			
+}

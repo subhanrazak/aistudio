@@ -1,0 +1,805 @@
+<%
+	page_link_name = "Risk_Entries_Page";
+	language = thisapp.Content.translation();
+	%>
+<style>
+<%=thisapp.Styles.App_CSS()%>
+<%=thisapp.Styles.Button()%>
+<%=thisapp.Styles.Panel()%>
+<%=thisapp.Styles.Horizontal_Tab()%>
+<%=thisapp.Styles_Creator.Filter()%>
+<%=thisapp.Styles_Creator.Report_Card()%>
+<%=thisapp.Styles_Page.Common_View()%>
+</style>
+<%
+	if(input.page_action == "add")
+	{
+		actionList = {"Risk Info","Controls"};
+		current_stepper = if(input.recid != null,Risk_Entry[ID == input.recid].Stepper_Stage,"Risk Info");
+		input.action_field = if(input.action_field.isEmpty() || input.action_field == "" || input.action_field == null || input.action_field == "null",current_stepper,input.action_field);
+		actionParam = if(input.action_field.isEmpty(),"","&Action_Field=" + input.action_field);
+		formParam = if(input.recid != null,"&recLinkID=" + input.recid + "&viewLinkName=Risk_Entries" + actionParam,actionParam);
+		previoushrefLink = if(input.action_field != "Risk Info",'#Page:' + page_link_name + '?page_action=add&recid=' + input.recid + '&action_field=' + encodeUrl(actionList.get(actionList.indexOf(input.action_field) - 1)),"");
+		previoushrefAction = if(input.action_field != "Risk Info","href=" + previoushrefLink,"");
+		buttonName = if(input.action_field == "Controls","Submit","Continue");
+		backurl = if(input.recid != null,"#Page:" + page_link_name + "?page_action=detailView&recid=" + input.recid,"#Page:" + page_link_name);
+		%>
+<style>
+.form-action-container {
+    position: relative;
+}
+.zc-form-footer .form-action-container .form-action.formbutton .form-label {
+    display: flex;
+    width: auto;
+    padding: 0px;
+} 
+.form-action-container label:before {
+    content: '<%=buttonName%>';
+    min-width: 75px;
+    height: 36px;
+    display: inline-block;
+    vertical-align: middle;
+    background-color: var(--theme_brand_color);
+    border-radius: var(--input_radius);
+    padding: 8px 15px;
+    font-size: 14px;
+    line-height: 17px;
+    font-weight: 400;
+    text-align: center;
+    color: var(--primary_btn_fClr);
+    cursor: pointer;
+    position: absolute;
+    top: 14px;
+    right: 30px;
+}
+.form-action-container .zc-live-primary-btn {
+    background-color: transparent;
+    color: transparent;
+    margin: 0px;
+    position: relative;
+    z-index: 1;
+}
+  .choice-table-row .choice-table-cell > span > label.choice-label-text::before {
+      position:absolute;
+  }
+    /* Visited Styles */
+    .zcs-stepper-status {
+        width: 32px;
+        height: 32px;
+        background-color: var(--zcs_brand_color);
+        
+    }
+
+    .zcs-stepper-count {
+        border: 1px solid var(--zcs_tertiary_border_color);
+        display: none;
+    }
+
+    .zcs-stepper-icon.zcs-stepper-failed {
+        display: none;
+    }
+
+    .zcs-stepper-level {
+        display: none;
+        background-color: var(--zcs_brand_color);
+    }
+
+    .zcs-stepper:not(:last-child):before {
+        content: '';
+        width: 100%;
+        height: 1px;
+        border-top: 1px solid var(--zcs_brand_color);
+        box-sizing: border-box;
+        position: absolute;
+        top: calc((32px - 1px) / 2);
+        left: 50%;
+    }
+
+    /* Active Styles */
+    .zcs-stepper-active .zcs-stepper-status {
+        border: 1px solid var(--zcs_brand_color);
+        
+        background-color: var(--zcs-white-color);
+    }
+
+    .zcs-stepper-active .zcs-stepper-count {
+        display: flex;
+        border-width: 0px;
+        color: var(--zcs_brand_color);
+    }
+
+    .zcs-stepper-active .zcs-stepper-icon {
+        display: none;
+    }
+
+    .zcs-stepper-active .zcs-stepper-text {
+        font-weight: 500;
+        color: var(--zcs_brand_color);
+    }
+
+    .zcs-stepper.zcs-stepper-active:before,
+    .zcs-stepper.zcs-stepper-active~.zcs-stepper:before {
+        border-color: var(--zcs_tertiary_border_color);
+    }
+
+    /* Stepper Failed */
+    .zcs-stepper-active.zcs-stepper-failed .zcs-stepper-status {
+        background-color: #FE455D;
+        border-color: #FE455D;
+    }
+
+    .zcs-stepper-active.zcs-stepper-failed .zcs-stepper-count {
+        display: none;
+    }
+
+    .zcs-stepper-active.zcs-stepper-failed .zcs-stepper-icon.zcs-stepper-failed {
+        display: flex;
+    }
+
+    .zcs-stepper-active.zcs-stepper-failed .zcs-stepper-text {
+        font-weight: 500;
+        color: var(--zcs_primary_text_color);
+    }
+
+    /* Level Styles */
+    .zcs-stepper-active.zcs-stepper-level-active .zcs-stepper-count,
+    .zcs-stepper-active.zcs-stepper-level-active .zcs-stepper-icon {
+        display: none;
+    }
+
+    .zcs-stepper-active.zcs-stepper-level-active .zcs-stepper-level {
+        display: flex;
+    }
+
+    /* Unvisited Styles */
+    .zcs-stepper-active~.zcs-stepper .zcs-stepper-status {
+        background-color: var(--zcs-white-color);
+    }
+
+    .zcs-stepper-active~.zcs-stepper .zcs-stepper-count {
+        display: flex;
+    }
+
+    .zcs-stepper-active~.zcs-stepper .zcs-stepper-icon {
+        display: none;
+    }
+
+    .zcs-stepper-active~.zcs-stepper .zcs-stepper-text {
+        color: var(--zcs_tertiary_text_color);
+    }
+
+    @media (max-width: 575px) {
+        .zcs-stepper-wrapper ul {
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .zcs-stepper-wrapper ul .zcs-stepper {
+            flex-direction: row;
+            gap: 16px;
+        }
+
+        .zcs-stepper:not(:last-child):before {
+            width: 1px;
+            height: 100%;
+            border-left: 1px solid var(--zcs_brand_color);
+            left: calc((32px - 1px) / 2);
+        }
+    }
+
+    .zc-rtl-wrapper .zcs-stepper:not(:last-child):before {
+        left: auto;
+        right: 50%;
+    }
+
+    @media (max-width: 575px) {
+        .zc-rtl-wrapper .zcs-stepper:not(:last-child):before {
+            border-left: 1px solid var(--zcs_brand_color);
+            left: auto;
+            right: calc((32px - 1px) / 2);
+        }
+    }
+    
+    .zcs-icon-stepper-wrapper .zcs-stepper-status {
+        width: 48px;
+        height: 48px;
+    }
+
+    .zcs-icon-stepper-wrapper .zcs-stepper:not(:last-child):before {
+        top: calc((48px - 1px) / 2);
+    }
+
+    .zcs-icon-stepper-wrapper .zcs-stepper-active .zcs-stepper-status {
+        background-color: #FFE5E6;
+    }
+
+    .zcs-icon-stepper-wrapper .zcs-stepper-active .zcs-stepper-icon {
+        display: flex;
+        color: var(--zcs_brand_color);
+    }
+
+    .zcs-icon-stepper-wrapper .zcs-stepper-active~.zcs-stepper .zcs-stepper-status {
+        background-color: #E5E7EB;
+    }
+
+    .zcs-icon-stepper-wrapper .zcs-stepper-active~.zcs-stepper .zcs-stepper-icon {
+        display: flex;
+        color: #62748E;
+    }
+
+    @media (max-width: 575px) {
+        .zcs-icon-stepper-wrapper .zcs-stepper:not(:last-child):before {
+            left: calc((48px - 1px) / 2);
+        }
+    }
+
+    @media (max-width: 575px) {
+        .zc-rtl-wrapper .zcs-icon-stepper-wrapper .zcs-stepper:not(:last-child):before {
+            right: calc((48px - 1px) / 2);
+        }
+    }
+
+
+.zcs-page-container { background-color: #F5F6FA; } .zcs-back:hover { color: #131635; }
+.zcs-card {
+    box-shadow: 0px 0px 6px 0px #E6E6E6;
+}
+/* .zcs-stepper-wrapper {
+    border-bottom: 1px solid #e7e7ee;
+} */
+.zcs-wizard-page .zcs-form .zc-form-fullheight, .zcs-wizard-page .zcs-form .row, .zcs-wizard-page .zcs-form .form-outer-wrapper form.form-table { width: 100%; height: 100%; background-color: transparent; } .zcs-wizard-page .zcs-form .zc-form-fullheight .form-outer-wrapper { height: 100% !important; border-width: 0px; background-color: transparent; } .zcs-wizard-page .zcs-form .form-outer-wrapper form.form-table { display: flex; flex-direction: column; } .zcs-wizard-page .zcs-form .form-outer-wrapper .zc-mobile-scroll-ctr { display: flex; flex-direction: column; height: 100%; padding: 0px; } .zcs-wizard-page .zcs-form form .zc-form-scroll-wrapper { background-color: var(--zcs-white-color); border: 1px solid #e7e7ee; border-radius: 12px; box-shadow: 0px 0px 6px 0px #E6E6E6; padding: 20px; box-sizing: border-box; } .zcs-page-container.zcs-wizard-page .zcs-form .zc-form-fullheight .form-outer-wrapper .form-table .formContainer { flex: 1; padding: 20px 10%; box-sizing: border-box; overflow: auto; background-color: transparent; } .zcs-wizard-page .zcs-form form .zc-footer-wrapper .zc-form-footer .formbutton { display: flex; align-items: center; padding: 20px 30px; box-sizing: border-box; justify-content: end; }
+
+@media (max-width: 768px) {
+    body:not(.zc-mobile) .zcs-page-container, body:not(.zc-mobile) .zcs-page-container-inner { height: auto; }
+    .zcs-wizard-page .zcs-page-header,
+    .zc-mobile .zcs-page-container.zcs-wizard-page .zcs-form .zc-form-fullheight .form-outer-wrapper .form-table .formContainer,
+    .zc-mobile .zcs-wizard-page .zcs-form form .zc-footer-wrapper .zc-form-footer .formbutton {
+        padding: 16px 20px;
+    }
+/*  .zcs-page-content {
+        padding: 0px 20px 20px;
+    } */
+    body:not(.zc-mobile) .zcs-card {
+        background-color: transparent;
+        border-color: transparent;
+    }
+    body:not(.zc-mobile) .zcs-stepper-wrapper {
+        border-bottom-width: 0px;
+    }
+}
+@media (max-width: 575px) {
+    .zcs-stepper-wrapper ul {
+        flex-direction: row;
+    }
+    .zcs-stepper-wrapper ul .zcs-stepper {
+        flex-direction: column;
+    }
+    .zcs-stepper-text {
+        display: none;
+    }
+    .zcs-stepper:not(:last-child):before {
+        width: 100%;
+        height: 1px;
+        top: calc((32px - 1px) / 2);
+        left: 50%;
+    }
+}
+.zcs-form .zc-footer-wrapper{
+     background-color: var(--zcs-white-color);
+       
+}
+.zcs-button-disable
+{
+    color:#99A1AF !important;
+}
+</style>
+<div class='zcs-page-container zcs-wizard-page zcs-wh-full'>
+    <div class='zcs-page-container-inner zcs-wh-full zcs-flex zcs-direction-column'>
+
+<div class='zcs-page-header zcs-w-full zcs-flex  zcs-gap-8 zcs-px-30 zcs-py-24 zcs-box-border'>
+
+            <a href="<%=backurl%>" class="zcs-back">
+					<i class="zcs-back-icon zcs-font-22 zcs-color-tertiary fa fa-angle-left"></i>
+				</a>
+			<div class='zcs-flex zcs-direction-column zcs-gap-6'>
+			<h5 class='zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-ellipsis zcs-m-0'> <%=language.get("grc.assessment.addRisk")%> </h5>
+			<p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-ellipsis zcs-m-0'> <%=language.get("grc.assessment.processIdentificationSubHeader")%> </p>
+			</div>
+        </div>
+        <div class='zcs-page-content zcs-col-common zcs-overflow-auto'>
+            <div class='zcs-wh-full zcs-flex zcs-direction-column zcs-box-border zcs-overflow-hidden zcs-relative'>
+			
+			<div class='zcs-stepper-wrapper zcs-icon-stepper-wrapper'>
+    <ul class='zcs-flex zcs-gap-8 zcs-p-0 zcs-m-0'>
+<%
+		stepCount = 1;
+		iconList = {"travel-hotel","files-single-folded-content"};
+		for each  step in actionList
+		{
+			currentStage = if(input.recid != null,Risk_Entry[ID == input.recid].Stepper_Stage,"Risk Info");
+			getIndex = actionList.indexOf(currentStage) + 1;
+			ahrefAction = "";
+			if(stepCount <= getIndex)
+			{
+				ahrefLink = '#Page:' + page_link_name + '?page_action=add&recid=' + input.recid + '&action_field=' + encodeUrl(step);
+				ahrefAction = "href=" + ahrefLink;
+			}
+			%>
+<a class='zcs-stepper zcs-col-common zcs-flex zcs-direction-column zcs-align-items-center zcs-gap-4 zcs-text-center zcs-relative <%=if(step == input.action_field,"zcs-stepper-active","")%>' <%=ahrefAction%> >
+							<div class='zcs-stepper-status zcs-flex zcs-direction-column zcs-align-items-center zcs-justify-center zcs-rounded-half zcs-text-center zcs-relative zcs-box-border zcs-relative'>
+                <i class='zcs-stepper-icon zcs-font-18 zcs-font-semibold zcs-color-white zc-li-outline <%=iconList.get(stepCount - 1)%>'></i>
+            </div>
+            <span class='zcs-stepper-text zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'> <%=step%></span>
+						
+						
+							</a>
+<%
+			stepCount = stepCount + 1;
+		}
+		%>
+</ul>
+</div>
+			
+
+				<div class='zcs-col-common zcs-overflow-auto'>
+					<div class='zcs-form' zc_MobileView='inline' elName='zc-component' formLinkName='Risk_Entry' params='zc_Header=false&zc_Focus=false<%=formParam%>'></div>
+				</div>
+				<a class='zcs-button zcs-secondary-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body'
+    <%=previoushrefAction%> style='position: absolute;bottom: 14px;left: 40px;'>
+	<span class='zcs-button-text <%=if(input.action_field == "Risk Info","zcs-button-disable","")%>'> <%=language.get("grc.button.previous")%> </span>
+</a>
+            </div>
+        </div>
+
+</div>
+</div>
+<%
+	}
+	else if(input.page_action == "detailView")
+	{
+		riskDet = Risk_Entry[ID == input.recid];
+		colorCode = riskDet.Risk_Level.Color_Code;
+		backgroundColor = colorCode + "26";
+		if(riskDet.Likelihood.Label == "Very Low")
+		{
+			likelihoodBadge = "zcs-badge-green";
+		}
+		else if(riskDet.Likelihood.Label == "Low")
+		{
+			likelihoodBadge = "zcs-badge-yellow";
+		}
+		else if(riskDet.Likelihood.Label == "Medium")
+		{
+			likelihoodBadge = "zcs-badge-blue";
+		}
+		else if(riskDet.Likelihood.Label == "High")
+		{
+			likelihoodBadge = "zcs-badge-orange";
+		}
+		else if(riskDet.Likelihood.Label == "Very High")
+		{
+			likelihoodBadge = "zcs-badge-red";
+		}
+		if(riskDet.Impact.Label == "Negligible")
+		{
+			impactBadge = "zcs-badge-green";
+		}
+		else if(riskDet.Impact.Label == "Minor")
+		{
+			impactBadge = "zcs-badge-yellow";
+		}
+		else if(riskDet.Impact.Label == "Moderate")
+		{
+			impactBadge = "zcs-badge-blue";
+		}
+		else if(riskDet.Impact.Label == "Major")
+		{
+			impactBadge = "zcs-badge-orange";
+		}
+		else if(riskDet.Impact.Label == "Catastrophic")
+		{
+			impactBadge = "zcs-badge-red";
+		}
+		%>
+<style>
+	<%=thisapp.Styles.Badge()%>
+<%=thisapp.Styles.Progress_Bar()%>
+<%=thisapp.Styles.Divider()%>
+<%=thisapp.Styles.Label_Value()%>
+<%=thisapp.Styles.Avatar()%>
+.zcs-risk-button{
+	border: 1px solid #62748E !important;
+    color: #62748E !important;;
+}
+.zcs-labelvalue-wrapper.zcs-labelvalue-with-bg {
+    background-color: #F8FAFC !important;
+}
+	</style>
+	<div class='zcs-page-container zcs-page-fleet_driver zcs-wh-full'>
+    <div class='zcs-page-container-inner zcs-wh-full zcs-flex zcs-direction-column'>
+        <div class='zcs-page-header zcs-w-full zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-8 zcs-px-30 zcs-py-24 zcs-box-border'>
+			<div class='zcs-flex zcs-gap-16 zcs-ellipsis'>
+				<a class='zcs-back' href='#Page:<%=page_link_name%>'>
+					<i class='zcs-back-icon zcs-font-22 zcs-color-tertiary fa fa-angle-left'></i>
+				</a>
+				<div class='zcs-flex zcs-direction-column zcs-gap-6 zcs-ellipsis'>
+					<div class='zcs-row zcs-align-items-center zcs-gap-8'>
+						<h5 class='zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-ellipsis zcs-m-0'> <%=riskDet.Risk_Title%> </h5>
+						<div class='zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-xl zcs-px-10 zcs-py-0 zcs-box-border' style='border:1px solid <%=colorCode%>;color:<%=colorCode%>;background:<%=backgroundColor%>'>
+							<span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'> \u2022  <%=riskDet.Risk_Level.Label%> </span>
+						</div>
+					</div>
+					<p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0 zcs-ellipsis'>
+					#<%=riskDet.Risk_ID%> \u2022 <%=riskDet.Department.Department_Name.getall()%>
+					</p>
+				</div>
+			</div>
+			<div class='zcs-flex zcs-align-items-center zcs-gap-12'>
+<%
+		if(thisapp.permission.app_access("risk_register_edit_Button") == true)
+		{
+			if(thisapp.permissions.profileForUser(zoho.loginuserid) == "Risk Owner")
+			{
+				userDet = User[Email == zoho.loginuserid].ID;
+				if(userDet != null && riskDet.Risk_Owner == userDet)
+				{
+					app_access = true;
+				}
+				else
+				{
+					app_access = false;
+				}
+			}
+			else
+			{
+				app_access = true;
+			}
+			if(app_access == true)
+			{
+				%>
+<a href='#Page:<%=page_link_name%>?page_action=add&recid=<%=riskDet.ID%>&action_field=<%=encodeUrl("Risk Info")%>' class='zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body zcs-risk-button'>
+					<i class='zcs-button-icon zc-li-outline ui-1-edit-72'></i>
+					<span class='zcs-button-text'> <%=language.get("grc.edit.text")%> </span>
+				</a>
+<%
+			}
+		}
+		%>
+<!--	<a href='' class='zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body zcs-risk-button'>
+					<i class='zcs-button-icon zc-li-outline users-add-29'></i>
+					<span class='zcs-button-text'> <%=language.get("grc.button.assign")%> </span>
+				</a>
+				<a href='' class='zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body zcs-risk-button' >
+					<i class='zcs-button-icon zc-li-outline media-1-edit-contrast-43'></i>
+					<span class='zcs-button-text'> <%=language.get("grc.button.escalate")%> </span>
+				</a>
+				<a href='' class='zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body'>
+					<i class='zcs-button-icon zc-li-outline ui-1-edit-72'></i>
+					<span class='zcs-button-text'> <%=language.get("grc.button.closeRequest")%> </span>
+				</a> -->
+			</div>
+		</div>
+        <div class='zcs-page-content zcs-col-common zcs-overflow-auto zcs-px-20 zcs-pb-20 zcs-box-border'>
+		     <div class='zcs-row zcs-gap-20 zcs-wh-full'>
+			     <div class='zcs-left-content zcs-h-full zcs-overflow-auto zcs-col-8 zcs-col-sm-12 zcs-flex zcs-direction-column zcs-gap-20'>
+				    <div class="zcs-card zcs-flex zcs-direction-column zcs-gap-12 zcs-p-16 zcs-box-border">
+						<h6 class="zcs-font-16 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0"> <%=language.get("grc.riskEntry.riskSummary")%> </h6>
+						<div class="zcs-divider zcs-divider-horizontal"></div>
+						<div class="zcs-labelvalue-wrapper zcs-labelvalue-with-bg zcs-rounded-xl zcs-px-15 zcs-py-10 zcs-box-border">
+					<ul class="zcs-row zcs-p-0 zcs-m-0">
+						<li class="zcs-flex zcs-direction-column zcs-gap-8 zcs-col-4 zcs-col-sm-6 zcs-col-xs-12 zcs-px-15 zcs-py-10 zcs-box-border">
+							<label class="zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary"> <%=language.get("grc.riskEntry.businessUnitEntity")%> </label>
+							<p class="zcs-font-14 zcs-font-normal zcs-lh-heading zcs-color-primary zcs-m-0"><%=riskDet.Business_Unit_Entity.Entity_Name.getall()%> </p>
+						</li>
+						<li class="zcs-flex zcs-direction-column zcs-gap-8 zcs-col-4 zcs-col-sm-6 zcs-col-xs-12 zcs-px-15 zcs-py-10 zcs-box-border">
+							<label class="zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary"> <%=language.get("grc.riskEntry.department")%> </label>
+							<p class="zcs-font-14 zcs-font-normal zcs-lh-heading zcs-color-primary zcs-m-0"> <%=riskDet.Department.Department_Name.getall()%> </p>
+						</li>
+						<li class="zcs-flex zcs-direction-column zcs-gap-8 zcs-col-4 zcs-col-sm-6 zcs-col-xs-12 zcs-px-15 zcs-py-10 zcs-box-border">
+							<label class="zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary"> <%=language.get("grc.riskEntry.objective")%> </label>
+							<p class="zcs-font-14 zcs-font-normal zcs-lh-heading zcs-color-primary zcs-m-0"> <%=riskDet.Objective.Objective_Title.getall()%> </p>
+						</li>
+						<li class="zcs-flex zcs-direction-column zcs-gap-8 zcs-col-4 zcs-col-sm-6 zcs-col-xs-12 zcs-px-15 zcs-py-10 zcs-box-border">
+							<label class="zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary"> <%=language.get("grc.riskEntry.process")%> </label>
+							<p class="zcs-font-14 zcs-font-normal zcs-lh-heading zcs-color-primary zcs-m-0"> <%=riskDet.Process.Process_Name.getall()%> </p>
+						</li>
+						
+					</ul>
+				</div>
+						
+					</div>
+					
+					<div class="zcs-card zcs-flex zcs-direction-column zcs-gap-12 zcs-p-16 zcs-box-border">
+						<h6 class="zcs-font-16 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0"> <%=language.get("grc.riskEntry.basicInformation")%> </h6>
+						<div class="zcs-divider zcs-divider-horizontal"></div>
+						<div class="zcs-labelvalue-wrapper zcs-labelvalue-with-bg zcs-rounded-xl zcs-px-15 zcs-py-10 zcs-box-border">
+					<ul class="zcs-row zcs-p-0 zcs-m-0">
+						<li class="zcs-flex zcs-direction-column zcs-gap-8 zcs-col-6 zcs-col-sm-6 zcs-col-xs-12 zcs-px-15 zcs-py-10 zcs-box-border">
+							<label class="zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary"> <%=language.get("grc.riskEntry.title")%> </label>
+							<p class="zcs-font-14 zcs-font-normal zcs-lh-heading zcs-color-primary zcs-m-0"><%=riskDet.Risk_Title%> </p>
+						</li>
+						<li class="zcs-flex zcs-direction-column zcs-gap-8 zcs-col-6 zcs-col-sm-6 zcs-col-xs-12 zcs-px-15 zcs-py-10 zcs-box-border">
+							<label class="zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary"> <%=language.get("grc.riskEntry.description")%> </label>
+							<p class="zcs-font-14 zcs-font-normal zcs-lh-heading zcs-color-primary zcs-m-0"> <%=riskDet.Risk_Description1%> </p>
+						</li>
+						
+						
+						<li class="zcs-flex zcs-direction-column zcs-gap-8 zcs-col-6 zcs-col-sm-6 zcs-col-xs-12 zcs-px-15 zcs-py-10 zcs-box-border">
+							<label class="zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary"> <%=language.get("grc.riskEntry.impact")%> </label>
+							<p class="zcs-font-14 zcs-font-normal zcs-lh-heading zcs-color-primary zcs-m-0"> <%=riskDet.Risk_Impact%> </p>
+						</li>
+						
+						<li class="zcs-flex zcs-direction-column zcs-gap-8 zcs-col-6 zcs-col-sm-6 zcs-col-xs-12 zcs-px-15 zcs-py-10 zcs-box-border">
+							<label class="zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary"> <%=language.get("grc.riskEntry.additionalNotes")%> </label>
+							<p class="zcs-font-14 zcs-font-normal zcs-lh-heading zcs-color-primary zcs-m-0"> <%=riskDet.Additional_Notes%> </p>
+						</li>
+						
+						<li class="zcs-flex zcs-direction-column zcs-gap-8 zcs-col-6 zcs-col-sm-6 zcs-col-xs-12 zcs-px-15 zcs-py-10 zcs-box-border">
+							<label class="zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary"> <%=language.get("grc.riskEntry.attachments")%> </label>
+							<div class="zcs-font-14 zcs-font-normal zcs-lh-heading zcs-color-primary zcs-m-0 zcs-flex zcs-direction-column zcs-gap-4">
+<%
+		for each  attachment in riskDet.Attachments
+		{
+			%>
+<a href="https://creatorapp.zoho.com/file<%=zoho.appuri%>Risk_Entries/<%=riskDet.ID%>/Attachments/download?filepath=/<%=attachment%>"><%=attachment%></a>
+<%
+		}
+		%>
+</div>
+						</li>
+						
+					</ul>
+				</div>
+						
+					</div>
+					
+					<div class="zcs-card zcs-flex zcs-direction-column zcs-gap-12 zcs-p-16 zcs-box-border">
+						<h6 class="zcs-font-16 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0"> <%=language.get("grc.riskEntry.riskCategory")%> </h6>
+						<div class="zcs-divider zcs-divider-horizontal"></div>
+						<div class="zcs-labelvalue-wrapper zcs-labelvalue-with-bg zcs-rounded-xl zcs-px-15 zcs-py-10 zcs-box-border">
+					<ul class="zcs-row zcs-p-0 zcs-m-0">
+						<li class="zcs-flex zcs-direction-column zcs-gap-8 zcs-col-4 zcs-col-sm-6 zcs-col-xs-12 zcs-px-15 zcs-py-10 zcs-box-border">
+							<label class="zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary"> <%=language.get("grc.riskEntry.category")%> </label>
+							<p class="zcs-font-14 zcs-font-normal zcs-lh-heading zcs-color-primary zcs-m-0"><%=riskDet.Risk_Category1.Category_Name%> </p>
+						</li>
+						<li class="zcs-flex zcs-direction-column zcs-gap-8 zcs-col-4 zcs-col-sm-6 zcs-col-xs-12 zcs-px-15 zcs-py-10 zcs-box-border">
+							<label class="zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary"> <%=language.get("grc.riskEntry.owner")%> </label>
+							<p class="zcs-font-14 zcs-font-normal zcs-lh-heading zcs-color-primary zcs-m-0"> <%=riskDet.Risk_Owner.Name%> </p>
+						</li>
+						<li class="zcs-flex zcs-direction-column zcs-gap-8 zcs-col-4 zcs-col-sm-6 zcs-col-xs-12 zcs-px-15 zcs-py-10 zcs-box-border">
+							<label class="zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary"> <%=language.get("grc.process.riskLevel")%> </label>
+							 <div class='zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-xl zcs-px-10 zcs-py-0 zcs-box-border' style='border:none !important;color:<%=colorCode%>;background:<%=backgroundColor%>;'>
+				 <span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'> <i value='location-flag-diagonal-33' html='location-flag-diagonal-33' class='location-flag-diagonal-33 zc-li-solid'></i>  <%=riskDet.Risk_Level.Label%> </span>
+				 </div> 
+						</li>
+						<li class="zcs-flex zcs-direction-column zcs-gap-8 zcs-col-4 zcs-col-sm-6 zcs-col-xs-12 zcs-px-15 zcs-py-10 zcs-box-border">
+							<label class="zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary"> <%=language.get("grc.riskEntry.tags")%> </label>
+							<p class="zcs-font-14 zcs-font-normal zcs-lh-heading zcs-color-primary zcs-m-0"> <%=riskDet.Risk_Tags.Risk_Tag%> </p>
+						</li>
+						
+					</ul>
+				</div>
+						
+					</div>
+					
+					<div class="zcs-card zcs-flex zcs-direction-column zcs-gap-12 zcs-p-16 zcs-box-border">
+						<h6 class="zcs-font-16 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0"> <%=language.get("grc.riskEntry.riskAssessment")%> </h6>
+						<div class="zcs-divider zcs-divider-horizontal"></div>
+						
+						<div class="zcs-row zcs-gap-20">
+								<div class="zcs-col-6 zcs-col-sm-12 zcs-bg-grey zcs-rounded-md zcs-p-16 zcs-box-border" style='background: #f8fafc;'>
+									<div class="zcs-flex zcs-direction-column zcs-gap-4">
+										<p class="zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-secondary zcs-m-0"><%=language.get("grc.assessment.impact")%> </p>
+										<h6 class="zcs-font-32 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0" style='font-size: 32px !important;'> <%=riskDet.Impact.Value%>/5  </h6>
+										<div class='zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-xl zcs-px-10 zcs-py-0 zcs-box-border <%=impactBadge%>' style='border:none !important;'>
+				 <span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'> <i value='location-flag-diagonal-33' html='location-flag-diagonal-33' class='location-flag-diagonal-33 zc-li-solid'></i>  <%=riskDet.Impact.Label%> </span>
+                           </div> 
+									</div>
+								</div>
+								<div class="zcs-col-6 zcs-col-sm-12 zcs-bg-grey zcs-rounded-md zcs-p-16 zcs-box-border" style='background: #f8fafc;'>
+									<div class="zcs-flex zcs-direction-column zcs-gap-4">
+										<p class="zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-secondary zcs-m-0"> <%=language.get("grc.assessment.likelihood")%> </p>
+										<h6 class="zcs-font-32 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0" style='font-size: 32px !important;'><%=riskDet.Likelihood.Value%>/5  </h6>
+										<div class='zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-xl zcs-px-10 zcs-py-0 zcs-box-border <%=likelihoodBadge%>' style='border:none !important;'>
+				 <span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'> <i value='location-flag-diagonal-33' html='location-flag-diagonal-33' class='location-flag-diagonal-33 zc-li-solid'></i>  <%=riskDet.Likelihood.Label%> </span>
+                           </div> 
+									</div>
+								</div>
+								
+							</div>
+						
+						
+						<div class="zcs-labelvalue-wrapper zcs-labelvalue-with-bg zcs-rounded-xl zcs-px-15 zcs-py-10 zcs-box-border">
+					<ul class="zcs-row zcs-p-0 zcs-m-0">
+						<li class="zcs-flex zcs-direction-column zcs-gap-8 zcs-col-12 zcs-col-sm-6 zcs-col-xs-12 zcs-px-15 zcs-py-10 zcs-box-border">
+							<label class="zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary"> <%=language.get("grc.riskEntry.inherentRiskScore")%> </label>
+							<p class="zcs-font-32 zcs-font-normal zcs-lh-heading zcs-color-primary zcs-m-0" style='font-size: 32px !important;'><%=riskDet.Inherent_Score%> </p>
+						</li>		
+					</ul>
+				</div>
+						
+					</div>
+				 
+				 </div>
+				 <div class='zcs-right-content zcs-h-full zcs-overflow-auto zcs-col-4 zcs-col-sm-12 zcs-flex zcs-direction-column zcs-gap-20'>
+				     <div class="zcs-card zcs-flex zcs-direction-column zcs-gap-12 zcs-p-16 zcs-box-border">
+						<h6 class="zcs-font-16 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0"> <%=language.get("grc.riskEntry.assignmentOwnership")%> </h6>
+						<div class="zcs-divider zcs-divider-horizontal"></div>
+						<div class="zcs-labelvalue-wrapper">
+							<ul class="zcs-row zcs-gap-20 zcs-p-0 zcs-m-0">
+								
+								<li class="zcs-flex zcs-direction-column zcs-gap-8 zcs-col-12">
+									<label class="zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary"><%=language.get("grc.riskEntry.riskOwner")%>  </label>
+									<span class="zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary"> <%=riskDet.Risk_Owner.Name%> </span>
+								</li>
+								
+							</ul>
+						</div>
+					</div>
+				      
+					<div class="zcs-card zcs-flex zcs-direction-column zcs-gap-12 zcs-p-16 zcs-box-border" style='height: calc(100% - 129px);'>
+						<h6 class="zcs-font-16 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0"> <%=language.get("grc.riskEntry.timelineActivity")%> </h6>
+						<div class="zcs-divider zcs-divider-horizontal"></div>
+<%
+		getLogs = Audit_Log[Form_Link_Name == "Risk_Entry" && Record_ID == riskDet.ID] sort by Added_Time desc;
+		if(getLogs.count() > 0)
+		{
+			%>
+<ul class='zcs-flex zcs-direction-column zcs-gap-20 zcs-p-0 zcs-m-0 zcs-overflow-auto'>
+<%
+			for each  log in getLogs
+			{
+				%>
+<li class='zcs-flex zcs-gap-16 zcs-bg-blue zcs-rounded-md zcs-p-16'>
+								<div style='--zcs-avatar-size: 32px; --zcs-avatar-radius: 50%' class='zcs-avatar zcs-flex zcs-align-items-center zcs-justify-center'>
+<%
+				if(log.Performed_By.Photo != null && log.Performed_By.Photo != "")
+				{
+					ownerImage = zoho.appuri + "report/User_Report/" + log.Performed_By + "/Photo/download-file?filepath=/" + log.Performed_By.Photo.getSuffix("image/").getPrefix("\\"") + "&mediaType=1";
+					%>
+<img class='zcs-avatar-img zcs-wh-full' src=<%=ownerImage%> alt="John Smith profile photo"
+											height="100%" width="100%">
+<%
+				}
+				else
+				{
+					%>
+<span class="zcs-font-18 zcs-font-normal zcs-text-white zcs-flex zcs-justify-center zcs-align-items-center zcs-fh zcs-lh-body" aria-hidden="true"><%=thisapp.Content.letterGenerate(log.Performed_By.Name)%></span>
+<%
+				}
+				%>
+</div>
+								<div class='zcs-flex zcs-direction-column zcs-gap-4'>
+									<h6 class='zcs-font-16 zcs-font-normal zcs-lh-heading zcs-color-primary zcs-m-0'> <%=thisapp.Log.Log_Translation(log.Form_Link_Name,riskDet.ID,log.Action_Type,log.Performed_By,log.Title)%> </h6>
+									<p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'> <%=log.Performed_Time%> </p>
+								</div>
+							</li>
+<%
+			}
+			%>
+</ul>
+<%
+		}
+		else
+		{
+			%>
+<%=thisapp.Page.noData()%>
+<%
+		}
+		%>
+</div>
+				 
+				 </div>
+				 
+			 
+			 </div>
+		
+			
+		</div>
+    </div>
+</div>
+<%
+	}
+	else
+	{
+		departmentList = Process[ID != 0].distinct(Linked_Departments);
+		controlList = Process[ID != 0].distinct(Associate_Controls);
+		riskList = Process[ID != 0].distinct(Associate_Risks);
+		%>
+<style>
+		.zc-container-wrapper .zc-main-content-wrapper .zc-main-content .inner .page_content_wrapper.zc-page-content-wrapper .elemContainment{
+	padding:0px !important;
+}
+</style>
+<div class='zcs-page-container zcs-commonview zcs-wh-full'>
+	<div class='zcs-page-container-inner zcs-wh-full zcs-flex zcs-direction-column zcs-gap-20 zcs-px-30 zcs-py-24 zcs-box-border'>
+		<div class='zcs-page-header zcs-w-full zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-8 zcs-ellipsis'>
+            
+			<div class='zcs-flex zcs-direction-column zcs-gap-8'>
+           <h5 class='zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-ellipsis zcs-m-0'> <%=language.get("grc.riskEntry.formHeader")%> </h5>
+			</div>
+<%
+		if(thisapp.permission.app_access("risk_register_add_Button") == true)
+		{
+			%>
+<a class='zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body'
+                href='#Page:<%=page_link_name%>?page_action=add'>
+                <i class='zcs-button-icon zc-li-outline ui-1-simple-add'></i>
+                <span class='zcs-button-text'> <%=language.get("grc.riskEntry.newRisk")%> </span>
+            </a>
+<%
+		}
+		%>
+</div>
+        <div class='zcs-panel-wrapper'>
+            <ul class='zcs-row zcs-justify-space-between zcs-gap-20 zcs-p-0 zcs-m-0'>
+                <li class='zcs-col-3 zcs-col-sm-6 zcs-col-xs-12 zcs-relative '>
+                    <div class='zcs-panel zcs-panel-red zcs-wh-full zcs-flex  zcs-gap-8 zcs-rounded-lg zcs-p-16 zcs-box-border zcs-justify-space-between'>
+					<div class='zcs-flex zcs-justify-center zcs-gap-10 zcs-direction-column'>
+					 <p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'> <%=language.get("grc.riskEntry.allRisks")%> </p>
+                        <h4 class='zcs-font-20 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'> <%=Risk_Entry[ID != 0].count()%> </h4>
+                        </div>
+                            <div class='zcs-panel-icon-wrapper zcs-flex zcs-align-items-center zcs-justify-center zcs-no-shrink zcs-rounded-lg'>
+                                <i class='zcs-panel-icon zcs-font-24 zc-li-outline tech-disk-reader'></i>
+                            </div>
+                            
+                       
+                    </div>
+                    <a class='zcs-overlay zcs-wh-full zcs-absolute' ></a>
+                </li>
+				<li class='zcs-col-3 zcs-col-sm-6 zcs-col-xs-12 zcs-relative '>
+                    <div class='zcs-panel zcs-panel-red zcs-wh-full zcs-flex zcs-gap-8 zcs-rounded-lg zcs-p-16 zcs-box-border zcs-justify-space-between'>
+					<div class='zcs-flex zcs-justify-center zcs-gap-10 zcs-direction-column'>
+					 <p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'>  <%=language.get("grc.riskEntry.critical")%> </p>
+                        <h4 class='zcs-font-20 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'> <%=Risk_Entry[Risk_Level.Label == "Critical"].count()%> </h4>
+                        </div>
+                            <div class='zcs-panel-icon-wrapper zcs-flex zcs-align-items-center zcs-justify-center zcs-no-shrink zcs-rounded-lg'>
+                                <i class='zcs-panel-icon zcs-font-24 zc-li-outline business-briefcase-25'></i>
+                            </div>
+                            
+                       
+                    </div>
+                    <a class='zcs-overlay zcs-wh-full zcs-absolute' ></a>
+                </li>
+                <li class='zcs-col-3 zcs-col-sm-6 zcs-col-xs-12 zcs-relative '>
+                    <div class='zcs-panel zcs-panel-red zcs-wh-full zcs-flex  zcs-gap-8 zcs-rounded-lg zcs-p-16 zcs-box-border zcs-justify-space-between'>
+					<div class='zcs-flex zcs-justify-center zcs-gap-10 zcs-direction-column'>
+					 <p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'>  <%=language.get("grc.riskEntry.high")%> </p>
+                        <h4 class='zcs-font-20 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'> <%=Risk_Entry[Risk_Level.Label == "High"].count()%> </h4>
+                        </div>
+                            <div class='zcs-panel-icon-wrapper zcs-flex zcs-align-items-center zcs-justify-center zcs-no-shrink zcs-rounded-lg'>
+                                <i class='zcs-panel-icon zcs-font-24 zc-li-outline location-position-pin'></i>
+                            </div>
+                            
+                       
+                    </div>
+                    <a class='zcs-overlay zcs-wh-full zcs-absolute' ></a>
+                </li>
+               <li class='zcs-col-3 zcs-col-sm-6 zcs-col-xs-12 zcs-relative '>
+                    <div class='zcs-panel zcs-panel-red zcs-wh-full zcs-flex  zcs-gap-8 zcs-rounded-lg zcs-p-16 zcs-box-border zcs-justify-space-between'>
+					<div class='zcs-flex zcs-justify-center zcs-gap-10 zcs-direction-column'>
+					 <p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'>  <%=language.get("grc.riskEntry.medium")%> </p>
+                        <h4 class='zcs-font-20 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'> <%=Risk_Entry[Risk_Level.Label == "Medium"].count()%> </h4>
+                        </div>
+                            <div class='zcs-panel-icon-wrapper zcs-flex zcs-align-items-center zcs-justify-center zcs-no-shrink zcs-rounded-lg'>
+                                <i class='zcs-panel-icon zcs-font-24 zc-li-outline users-parent'></i>
+                            </div>
+                            
+                       
+                    </div>
+                    <a class='zcs-overlay zcs-wh-full zcs-absolute' ></a>
+                </li>
+               
+            </ul>
+        </div>
+		<div class='zcs-page-content zcs-card zcs-col-common zcs-overflow-auto zcs-flex zcs-direction-column'>
+          
+                    <div class='zcs-filter' zc_MobileView='inline' elName='zc-component' formLinkName='Filter_Form' params='zc_Header=false&zc_Footer=false&zc_Focus=false&Action_field=overView&Page=<%=page_link_name%>&Report=Risk_Entries'></div>
+					<div class='zcs-report zcs-col-common' name='embedDiv' elName='zc-component' viewLinkName='Risk_Report_Page' params='zc_Header=false&zc_AddRec=false&zc_ColMenu=false&zc_Footer=false'></div>
+               
+		</div>
+	</div>
+</div>
+<%
+	}
+%>

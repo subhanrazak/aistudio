@@ -1,0 +1,23 @@
+on_delete40 as "on delete"
+{
+
+				type =  form
+				form = Regulatory_Reporting_Requirements
+
+				record event = on delete
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											org_name = Organization[ID == input.Organization].Organization_Name;
+										report_name = Regulatory_Report[ID == input.Regulatory_Report].Report_Name;
+										thisapp.Log.Audit_Log("Regulatory_Reporting_Requirements",input.ID,"Delete",User[Email == zoho.loginuserid].ID,org_name + " - " + report_name);
+						)
+					}
+				}
+
+			
+}

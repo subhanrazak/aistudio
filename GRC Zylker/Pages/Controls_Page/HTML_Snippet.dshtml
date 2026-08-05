@@ -1,0 +1,1092 @@
+<%
+	page_link_name = "Controls_Page";
+	language = thisapp.Content.translation();
+	%>
+<style>
+<%=thisapp.Styles.App_CSS()%>
+<%=thisapp.Styles.Button()%>
+<%=thisapp.Styles.Panel()%>
+<%=thisapp.Styles.Horizontal_Tab()%>
+<%=thisapp.Styles_Creator.Filter()%>
+<%=thisapp.Styles_Creator.Report_Card()%>
+<%=thisapp.Styles_Page.Common_View()%>
+.zcs-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+}
+.zcs-list-container{
+	max-height: 200px;
+    overflow: auto;
+}
+</style>
+<%
+	if(input.page_action == "add")
+	{
+		actionList = {"Control Information","Risk Process Links","Effectiveness Testing"};
+		current_stepper = if(input.recid != null,Control[ID == input.recid].Stepper_Stage,"Control Information");
+		input.action_field = if(input.action_field.isEmpty() || input.action_field == "" || input.action_field == null || input.action_field == "null",current_stepper,input.action_field);
+		actionParam = if(input.action_field.isEmpty(),"","&Action_Field=" + input.action_field);
+		formParam = if(input.recid != null,"&recLinkID=" + input.recid + "&viewLinkName=Controls" + actionParam,actionParam);
+		previoushrefLink = if(input.action_field != "Control Information",'#Page:' + page_link_name + '?page_action=add&recid=' + input.recid + '&action_field=' + encodeUrl(actionList.get(actionList.indexOf(input.action_field) - 1)),"");
+		previoushrefAction = if(input.action_field != "Control Information","href=" + previoushrefLink,"");
+		buttonName = if(input.action_field == "Effectiveness Testing","Submit","Continue");
+		backurl = if(input.recid != null,"#Page:" + page_link_name + "?page_action=detailView&recid=" + input.recid,"#Page:" + page_link_name);
+		%>
+<style>
+.form-action-container {
+    position: relative;
+}
+.zc-form-footer .form-action-container .form-action.formbutton .form-label {
+    display: flex;
+    width: auto;
+    padding: 0px;
+} 
+.form-action-container label:before {
+    content: '<%=buttonName%>';
+    min-width: 75px;
+    height: 36px;
+    display: inline-block;
+    vertical-align: middle;
+    background-color: var(--theme_brand_color);
+    border-radius: var(--input_radius);
+    padding: 8px 15px;
+    font-size: 14px;
+    line-height: 17px;
+    font-weight: 400;
+    text-align: center;
+    color: var(--primary_btn_fClr);
+    cursor: pointer;
+    position: absolute;
+    top: 14px;
+    right: 30px;
+}
+.form-action-container .zc-live-primary-btn {
+    background-color: transparent;
+    color: transparent;
+    margin: 0px;
+    position: relative;
+    z-index: 1;
+}
+  .choice-table-row .choice-table-cell > span > label.choice-label-text::before {
+      position:absolute;
+  }
+    /* Visited Styles */
+    .zcs-stepper-status {
+        width: 32px;
+        height: 32px;
+        background-color: var(--zcs_brand_color);
+        
+    }
+
+    .zcs-stepper-count {
+        border: 1px solid var(--zcs_tertiary_border_color);
+        display: none;
+    }
+
+    .zcs-stepper-icon.zcs-stepper-failed {
+        display: none;
+    }
+
+    .zcs-stepper-level {
+        display: none;
+        background-color: var(--zcs_brand_color);
+    }
+
+    .zcs-stepper:not(:last-child):before {
+        content: '';
+        width: 100%;
+        height: 1px;
+        border-top: 1px solid var(--zcs_brand_color);
+        box-sizing: border-box;
+        position: absolute;
+        top: calc((32px - 1px) / 2);
+        left: 50%;
+    }
+
+    /* Active Styles */
+    .zcs-stepper-active .zcs-stepper-status {
+        border: 1px solid var(--zcs_brand_color);
+        
+        background-color: var(--zcs-white-color);
+    }
+
+    .zcs-stepper-active .zcs-stepper-count {
+        display: flex;
+        border-width: 0px;
+        color: var(--zcs_brand_color);
+    }
+
+    .zcs-stepper-active .zcs-stepper-icon {
+        display: none;
+    }
+
+    .zcs-stepper-active .zcs-stepper-text {
+        font-weight: 500;
+        color: var(--zcs_brand_color);
+    }
+
+    .zcs-stepper.zcs-stepper-active:before,
+    .zcs-stepper.zcs-stepper-active~.zcs-stepper:before {
+        border-color: var(--zcs_tertiary_border_color);
+    }
+
+    /* Stepper Failed */
+    .zcs-stepper-active.zcs-stepper-failed .zcs-stepper-status {
+        background-color: #FE455D;
+        border-color: #FE455D;
+    }
+
+    .zcs-stepper-active.zcs-stepper-failed .zcs-stepper-count {
+        display: none;
+    }
+
+    .zcs-stepper-active.zcs-stepper-failed .zcs-stepper-icon.zcs-stepper-failed {
+        display: flex;
+    }
+
+    .zcs-stepper-active.zcs-stepper-failed .zcs-stepper-text {
+        font-weight: 500;
+        color: var(--zcs_primary_text_color);
+    }
+
+    /* Level Styles */
+    .zcs-stepper-active.zcs-stepper-level-active .zcs-stepper-count,
+    .zcs-stepper-active.zcs-stepper-level-active .zcs-stepper-icon {
+        display: none;
+    }
+
+    .zcs-stepper-active.zcs-stepper-level-active .zcs-stepper-level {
+        display: flex;
+    }
+
+    /* Unvisited Styles */
+    .zcs-stepper-active~.zcs-stepper .zcs-stepper-status {
+        background-color: var(--zcs-white-color);
+    }
+
+    .zcs-stepper-active~.zcs-stepper .zcs-stepper-count {
+        display: flex;
+    }
+
+    .zcs-stepper-active~.zcs-stepper .zcs-stepper-icon {
+        display: none;
+    }
+
+    .zcs-stepper-active~.zcs-stepper .zcs-stepper-text {
+        color: var(--zcs_tertiary_text_color);
+    }
+
+    @media (max-width: 575px) {
+        .zcs-stepper-wrapper ul {
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .zcs-stepper-wrapper ul .zcs-stepper {
+            flex-direction: row;
+            gap: 16px;
+        }
+
+        .zcs-stepper:not(:last-child):before {
+            width: 1px;
+            height: 100%;
+            border-left: 1px solid var(--zcs_brand_color);
+            left: calc((32px - 1px) / 2);
+        }
+    }
+
+    .zc-rtl-wrapper .zcs-stepper:not(:last-child):before {
+        left: auto;
+        right: 50%;
+    }
+
+    @media (max-width: 575px) {
+        .zc-rtl-wrapper .zcs-stepper:not(:last-child):before {
+            border-left: 1px solid var(--zcs_brand_color);
+            left: auto;
+            right: calc((32px - 1px) / 2);
+        }
+    }
+    
+    .zcs-icon-stepper-wrapper .zcs-stepper-status {
+        width: 48px;
+        height: 48px;
+    }
+
+    .zcs-icon-stepper-wrapper .zcs-stepper:not(:last-child):before {
+        top: calc((48px - 1px) / 2);
+    }
+
+    .zcs-icon-stepper-wrapper .zcs-stepper-active .zcs-stepper-status {
+        background-color: #FFE5E6;
+    }
+
+    .zcs-icon-stepper-wrapper .zcs-stepper-active .zcs-stepper-icon {
+        display: flex;
+        color: var(--zcs_brand_color);
+    }
+
+    .zcs-icon-stepper-wrapper .zcs-stepper-active~.zcs-stepper .zcs-stepper-status {
+        background-color: #E5E7EB;
+    }
+
+    .zcs-icon-stepper-wrapper .zcs-stepper-active~.zcs-stepper .zcs-stepper-icon {
+        display: flex;
+        color: #62748E;
+    }
+
+    @media (max-width: 575px) {
+        .zcs-icon-stepper-wrapper .zcs-stepper:not(:last-child):before {
+            left: calc((48px - 1px) / 2);
+        }
+    }
+
+    @media (max-width: 575px) {
+        .zc-rtl-wrapper .zcs-icon-stepper-wrapper .zcs-stepper:not(:last-child):before {
+            right: calc((48px - 1px) / 2);
+        }
+    }
+
+
+.zcs-page-container { background-color: #F5F6FA; } .zcs-back:hover { color: #131635; }
+.zcs-card {
+    box-shadow: 0px 0px 6px 0px #E6E6E6;
+}
+/* .zcs-stepper-wrapper {
+    border-bottom: 1px solid #e7e7ee;
+} */
+.zcs-wizard-page .zcs-form .zc-form-fullheight, .zcs-wizard-page .zcs-form .row, .zcs-wizard-page .zcs-form .form-outer-wrapper form.form-table { width: 100%; height: 100%; background-color: transparent; } .zcs-wizard-page .zcs-form .zc-form-fullheight .form-outer-wrapper { height: 100% !important; border-width: 0px; background-color: transparent; } .zcs-wizard-page .zcs-form .form-outer-wrapper form.form-table { display: flex; flex-direction: column; } .zcs-wizard-page .zcs-form .form-outer-wrapper .zc-mobile-scroll-ctr { display: flex; flex-direction: column; height: 100%; padding: 0px; } .zcs-wizard-page .zcs-form form .zc-form-scroll-wrapper { background-color: var(--zcs-white-color); border: 1px solid #e7e7ee; border-radius: 12px; box-shadow: 0px 0px 6px 0px #E6E6E6; padding: 20px; box-sizing: border-box; } .zcs-page-container.zcs-wizard-page .zcs-form .zc-form-fullheight .form-outer-wrapper .form-table .formContainer { flex: 1; padding: 20px 10%; box-sizing: border-box; overflow: auto; background-color: transparent; } .zcs-wizard-page .zcs-form form .zc-footer-wrapper .zc-form-footer .formbutton { display: flex; align-items: center; padding: 20px 30px; box-sizing: border-box; justify-content: end; }
+
+@media (max-width: 768px) {
+    body:not(.zc-mobile) .zcs-page-container, body:not(.zc-mobile) .zcs-page-container-inner { height: auto; }
+    .zcs-wizard-page .zcs-page-header,
+    .zc-mobile .zcs-page-container.zcs-wizard-page .zcs-form .zc-form-fullheight .form-outer-wrapper .form-table .formContainer,
+    .zc-mobile .zcs-wizard-page .zcs-form form .zc-footer-wrapper .zc-form-footer .formbutton {
+        padding: 16px 20px;
+    }
+/*  .zcs-page-content {
+        padding: 0px 20px 20px;
+    } */
+    body:not(.zc-mobile) .zcs-card {
+        background-color: transparent;
+        border-color: transparent;
+    }
+    body:not(.zc-mobile) .zcs-stepper-wrapper {
+        border-bottom-width: 0px;
+    }
+}
+@media (max-width: 575px) {
+    .zcs-stepper-wrapper ul {
+        flex-direction: row;
+    }
+    .zcs-stepper-wrapper ul .zcs-stepper {
+        flex-direction: column;
+    }
+    .zcs-stepper-text {
+        display: none;
+    }
+    .zcs-stepper:not(:last-child):before {
+        width: 100%;
+        height: 1px;
+        top: calc((32px - 1px) / 2);
+        left: 50%;
+    }
+}
+.zcs-form .zc-footer-wrapper{
+     background-color: var(--zcs-white-color);
+       
+}
+.zcs-button-disable
+{
+    color:#99A1AF !important;
+}
+</style>
+<div class='zcs-page-container zcs-wizard-page zcs-wh-full'>
+    <div class='zcs-page-container-inner zcs-wh-full zcs-flex zcs-direction-column'>
+
+<div class='zcs-page-header zcs-w-full zcs-flex  zcs-gap-8 zcs-px-30 zcs-py-24 zcs-box-border'>
+
+            <a href="<%=backurl%>" class="zcs-back">
+					<i class="zcs-back-icon zcs-font-22 zcs-color-tertiary fa fa-angle-left"></i>
+				</a>
+			<div class='zcs-flex zcs-direction-column zcs-gap-6'>
+			<h5 class='zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-ellipsis zcs-m-0'> <%=language.get("grc.control.addControl")%> </h5>
+			<p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-ellipsis zcs-m-0'> <%=language.get("grc.assessment.processIdentificationSubHeader")%> </p>
+			</div>
+        </div>
+        <div class='zcs-page-content zcs-col-common zcs-overflow-auto'>
+            <div class='zcs-wh-full zcs-flex zcs-direction-column zcs-box-border zcs-overflow-hidden zcs-relative'>
+			
+			<div class='zcs-stepper-wrapper zcs-icon-stepper-wrapper'>
+    <ul class='zcs-flex zcs-gap-8 zcs-p-0 zcs-m-0'>
+<%
+		stepCount = 1;
+		iconList = {"travel-hotel","users-multiple-19","location-pin"};
+		for each  step in actionList
+		{
+			currentStage = if(input.recid != null,Control[ID == input.recid].Stepper_Stage,"Control Information");
+			getIndex = actionList.indexOf(currentStage) + 1;
+			ahrefAction = "";
+			if(stepCount <= getIndex)
+			{
+				ahrefLink = '#Page:' + page_link_name + '?page_action=add&recid=' + input.recid + '&action_field=' + encodeUrl(step);
+				ahrefAction = "href=" + ahrefLink;
+			}
+			%>
+<a class='zcs-stepper zcs-col-common zcs-flex zcs-direction-column zcs-align-items-center zcs-gap-4 zcs-text-center zcs-relative <%=if(step == input.action_field,"zcs-stepper-active","")%>' <%=ahrefAction%> >
+							<div class='zcs-stepper-status zcs-flex zcs-direction-column zcs-align-items-center zcs-justify-center zcs-rounded-half zcs-text-center zcs-relative zcs-box-border zcs-relative'>
+                <i class='zcs-stepper-icon zcs-font-18 zcs-font-semibold zcs-color-white zc-li-outline <%=iconList.get(stepCount - 1)%>'></i>
+            </div>
+            <span class='zcs-stepper-text zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'>
+<%
+			if(step == "Risk Process Links")
+			{
+				%>
+Risk & Process Links
+<%
+			}
+			else if(step == "Effectiveness Testing")
+			{
+				%>
+Effectiveness & Testing
+<%
+			}
+			else
+			{
+				%>
+<%=step%>
+<%
+			}
+			%>
+</span>
+						
+						
+							</a>
+<%
+			stepCount = stepCount + 1;
+		}
+		%>
+</ul>
+</div>
+			
+
+				<div class='zcs-col-common zcs-overflow-auto'>
+					<div class='zcs-form' zc_MobileView='inline' elName='zc-component' formLinkName='Control' params='zc_Header=false&zc_Focus=false<%=formParam%>'></div>
+				</div>
+				<a class='zcs-button zcs-secondary-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body'
+    <%=previoushrefAction%> style='position: absolute;bottom: 14px;left: 40px;'>
+	<span class='zcs-button-text <%=if(input.action_field == "Control Information","zcs-button-disable","")%>'> <%=language.get("grc.button.previous")%> </span>
+</a>
+            </div>
+        </div>
+
+</div>
+</div>
+<%
+	}
+	else if(input.page_action == "detailView")
+	{
+		controlDet = Control[ID == input.recid];
+		if(controlDet.Control_Status == "Active")
+		{
+			badgeClass = "zcs-badge-green";
+		}
+		else if(controlDet.Control_Status == "Under Review")
+		{
+			badgeClass = "zcs-badge-orange";
+		}
+		else if(controlDet.Control_Status == "Inactive")
+		{
+			badgeClass = "zcs-badge-red";
+		}
+		%>
+<style>
+<%=thisapp.Styles.Badge()%>
+<%=thisapp.Styles.Progress_Bar()%>
+<%=thisapp.Styles.Divider()%>
+<%=thisapp.Styles.Label_Value()%>
+<%=thisapp.Styles.Avatar()%>
+		.zcs-page-container {
+	background-color: var(--zcs-page-bg-color);
+}
+.zcs-bg-grey {
+	background-color: #F9FAFC;
+}
+.zcs-bg-blue {
+	background-color: #F9FAFC;
+}
+.zcs-green-box {
+    border: 1px solid #D0FAE5;
+    color: #008000;
+}
+.zcs-blue-box {
+    border: 1px solid #DBEAFE;
+	background-color: #EFF6FF;
+    color: #1C398E;
+}
+.zcs-grey-box {
+    border: 1px solid #E2E8F0;
+	background-color: #F8FAFC;
+    color: #155DFC;
+}
+.zcs-red-box {
+    border: 1px solid #FFE4E6;
+    color: #EC003F;
+}
+@media (max-width: 768px) {
+	.zcs-page-container .zcs-button {
+		min-width: 36px;
+	}
+	.zcs-page-container .zcs-button .zcs-button-text {
+		 display: none;
+	}
+	.zcs-page-fleet_driver .zcs-left-content,
+	.zcs-page-fleet_driver .zcs-right-content {
+		height: auto;
+		overflow: initial;
+	}
+}
+.zcs-icon-wrapper {
+    width: 32px;
+    height: 32px;
+    background-color: #FEE2E2;
+    color: #FB2C36;
+}
+		</style>
+	<div class='zcs-page-container zcs-page-fleet_driver zcs-wh-full'>
+          <div class='zcs-page-container-inner zcs-wh-full zcs-flex zcs-direction-column'>
+              <div class='zcs-page-header zcs-w-full zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-8 zcs-px-30 zcs-py-24 zcs-box-border'>
+			         <div class='zcs-flex zcs-gap-16 zcs-ellipsis'>
+							<a class='zcs-back' href='#Page:<%=page_link_name%>'>
+								<i class='zcs-back-icon zcs-font-22 zcs-color-tertiary fa fa-angle-left'></i>
+							</a>
+							<div class='zcs-flex zcs-direction-column zcs-gap-6 zcs-ellipsis'>
+								<div class='zcs-row zcs-align-items-center zcs-gap-8'>
+									<h5 class='zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-ellipsis zcs-m-0'> <%=controlDet.Control_Name_Title%> </h5>
+									
+	
+		
+									<div class='zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-xl zcs-px-10 zcs-py-0 zcs-box-border <%=badgeClass%>'>
+							<span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'> \u2022  <%=controlDet.Control_Status%> </span>
+						</div>
+
+								</div>
+								
+								<p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'>
+									 ID: <%=controlDet.Control_ID_Code%> 
+								</p>
+								
+							</div>
+						</div>
+						<div class='zcs-flex zcs-align-items-center zcs-gap-12'>
+<%
+		if(thisapp.permission.app_access("contol_Library_Button") == true)
+		{
+			%>
+<a href='#Page:<%=page_link_name%>?page_action=add&recid=<%=controlDet.ID%>&action_field=<%=encodeUrl("Control Information")%>' class='zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body'>
+								<i class='zcs-button-icon zc-li-outline ui-1-edit-72'></i>
+								<span class='zcs-button-text'> <%=language.get("grc.edit.text")%> </span>
+							</a>
+<%
+		}
+		%>
+</div>
+			  </div>
+			   <div class='zcs-page-content zcs-col-common zcs-overflow-auto zcs-px-20 zcs-pb-20 zcs-box-border'>
+			         <div class='zcs-grid zcs-gap-20 zcs-w-full zcs-mt-15' style='grid-template-columns: 2fr 1fr !important;'>
+					        <div class='zcs-left-content zcs-h-full zcs-overflow-auto  zcs-col-sm-12 zcs-flex zcs-direction-column zcs-gap-20 zcs-card'>
+							   <div class="zcs-flex zcs-direction-column zcs-gap-12 zcs-p-16 zcs-box-border">
+										<h6 class="zcs-font-16 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0"> <%=language.get("grc.process.basicDetails")%> </h6>
+										<div class="zcs-divider zcs-divider-horizontal"></div>
+											<div class="zcs-flex zcs-direction-column zcs-gap-20">
+											  <div class="zcs-row">
+											         <div class='zcs-left-content zcs-h-full zcs-overflow-auto zcs-col-12 zcs-col-sm-12 zcs-flex zcs-direction-column zcs-gap-8'>
+													     <label class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary'><%=language.get("grc.control.description")%></label>
+														 <span class='zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-tertiary'><%=controlDet.Control_Description%></span>
+													 </div>
+													
+											  </div>
+											  <div class="zcs-row">
+											  <div class='zcs-left-content zcs-h-full zcs-overflow-auto zcs-col-4 zcs-col-sm-12 zcs-flex zcs-direction-column zcs-gap-8'>
+													     <label class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary'><%=language.get("grc.objective.status")%></label>
+														 <div class='zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-xl zcs-px-10 zcs-py-0 zcs-box-border <%=badgeClass%>' style='border:none !important;'>
+							<span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'>   <%=controlDet.Control_Status%> </span>
+						</div>
+														  
+													 </div>
+													 <div class='zcs-right-content zcs-h-full zcs-overflow-auto zcs-col-4 zcs-col-sm-12 zcs-flex zcs-direction-column zcs-gap-8'>
+													     <label class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary'><%=language.get("grc.control.createdBy")%></label>
+														  <span class='zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'><%=controlDet.Added_User%>/<%=controlDet.Added_Time.toDate()%></span>
+													 </div>
+													  <div class='zcs-right-content zcs-h-full zcs-overflow-auto zcs-col-4 zcs-col-sm-12 zcs-flex zcs-direction-column zcs-gap-8'>
+													     <label class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary'><%=language.get("grc.control.lastTestedOn")%></label>
+														  <span class='zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'><%=controlDet.Last_Tested_On%></span>
+													 </div>
+											  </div>
+											  
+											  <div class="zcs-row">
+											  <div class='zcs-left-content zcs-h-full zcs-overflow-auto zcs-col-4 zcs-col-sm-12 zcs-flex zcs-direction-column zcs-gap-8'>
+													     <label class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary'><%=language.get("grc.control.nextReviewDue")%></label>
+														  <span class='zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'><%=controlDet.Next_Review_Due%></span>
+													 </div>
+													 <div class='zcs-right-content zcs-h-full zcs-overflow-auto zcs-col-4 zcs-col-sm-12 zcs-flex zcs-direction-column zcs-gap-8'>
+													     <label class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary'><%=language.get("grc.control.reviewCycle")%></label>
+														  <span class='zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'><%=controlDet.Review_Cycle%></span>
+													 </div>
+													 
+											  </div>
+											  
+											  
+											  
+											</div>
+								</div>
+							
+							</div>
+							<div class='zcs-card  zcs-right-content zcs-h-full zcs-overflow-auto  zcs-col-sm-12 zcs-flex zcs-direction-column zcs-gap-20'>
+										<div class="zcs-flex zcs-direction-column zcs-gap-12 zcs-p-16 zcs-box-border">
+										<h6 class="zcs-font-16 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0"> <%=language.get("grc.control.classification")%> </h6>
+										<div class="zcs-divider zcs-divider-horizontal"></div>
+										<div class="zcs-flex zcs-direction-column zcs-gap-20">
+										     <div class="zcs-flex zcs-direction-column zcs-gap-4">
+											<h6 class="zcs-font-14 zcs-font-normal zcs-lh-heading zcs-color-tertiary zcs-m-0"> <%=language.get("grc.control.controlType")%> </h6>
+										    <span class="zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body"> <%=controlDet.Control_Type%> </span>
+											</div>
+											
+											<div class="zcs-flex zcs-direction-column zcs-gap-4">
+											<h6 class="zcs-font-14 zcs-font-normal zcs-lh-heading zcs-color-tertiary zcs-m-0"> <%=language.get("grc.control.category")%> </h6>
+										    <span class="zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body"> <%=controlDet.Category.Category_Name%> </span>
+											</div>
+											
+											
+											<div class="zcs-flex zcs-direction-column zcs-gap-4">
+											<h6 class="zcs-font-14 zcs-font-normal zcs-lh-heading zcs-color-tertiary zcs-m-0"> <%=language.get("grc.control.department")%> </h6>
+											
+										    <span class="zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body"> <%=controlDet.Department.Department_Name%> </span>
+											</div>
+											
+									      
+											
+										</div>
+									</div>
+							</div>
+					 </div>
+			          <div class='zcs-row zcs-gap-20 zcs-w-full zcs-mt-15' style='height:307px;'>
+					        <div class='zcs-card zcs-left-content zcs-h-full zcs-overflow-auto zcs-col-4 zcs-col-sm-12 zcs-flex zcs-direction-column zcs-gap-20'>
+							     <div class="zcs-flex zcs-direction-column zcs-gap-12 zcs-p-16 zcs-box-border">
+										<h6 class="zcs-font-16 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0"> <%=language.get("grc.control.ownership")%> </h6>
+										<div class="zcs-divider zcs-divider-horizontal"></div>
+										
+										<div class="zcs-flex zcs-gap-16  zcs-rounded-md zcs-p-16 zcs-align-items-center">
+								
+								<div class="zcs-avatar zcs-flex zcs-align-items-center zcs-justify-center" style="--zcs-avatar-size: 32px; --zcs-avatar-radius: 50%">
+<%
+		if(controlDet.Control_Owner.Photo != null && controlDet.Control_Owner.Photo != "")
+		{
+			ownerImage = zoho.appuri + "report/User_Report/" + controlDet.Control_Owner + "/Photo/download-file?filepath=/" + controlDet.Control_Owner.Photo.getSuffix("image/").getPrefix("\\"") + "&mediaType=1";
+			%>
+<img class='zcs-avatar-img zcs-wh-full' src=<%=ownerImage%> alt="John Smith profile photo"
+											height="100%" width="100%">
+<%
+		}
+		else
+		{
+			%>
+<span class="zcs-font-18 zcs-font-normal zcs-text-white zcs-flex zcs-justify-center zcs-align-items-center zcs-fh zcs-lh-body" aria-hidden="true"><%=thisapp.Content.letterGenerate(controlDet.Control_Owner.Name)%></span>
+<%
+		}
+		%>
+</div>
+								<div class="zcs-flex zcs-direction-column zcs-gap-4">
+								    <p class="zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0"> <%=language.get("grc.control.controlOwner")%> </p>
+									<h6 class="zcs-font-14 zcs-font-normal zcs-lh-heading zcs-color-primary zcs-m-0"> <%=controlDet.Control_Owner.Name%></h6>
+									<p class="zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0"> <%=controlDet.Control_Owner.Role.Role_Name%> </p>
+								</div>
+							</div>
+							
+							<div class="zcs-flex zcs-gap-16  zcs-rounded-md zcs-p-16 zcs-align-items-center">
+								<div class="zcs-avatar zcs-flex zcs-align-items-center zcs-justify-center" style="--zcs-avatar-size: 32px; --zcs-avatar-radius: 50%">
+<%
+		if(controlDet.Control_Reviewer_Approver.Photo != null && controlDet.Control_Reviewer_Approver.Photo != "")
+		{
+			reviewerImage = zoho.appuri + "report/User_Report/" + controlDet.Control_Reviewer_Approver + "/Photo/download-file?filepath=/" + controlDet.Control_Reviewer_Approver.Photo.getSuffix("image/").getPrefix("\\"") + "&mediaType=1";
+			%>
+<img class='zcs-avatar-img zcs-wh-full' src=<%=reviewerImage%> alt="John Smith profile photo"
+											height="100%" width="100%">
+<%
+		}
+		else
+		{
+			%>
+<span class="zcs-font-18 zcs-font-normal zcs-text-white zcs-flex zcs-justify-center zcs-align-items-center zcs-fh zcs-lh-body" aria-hidden="true"><%=thisapp.Content.letterGenerate(controlDet.Control_Reviewer_Approver.Name)%></span>
+<%
+		}
+		%>
+</div>
+								<div class="zcs-flex zcs-direction-column zcs-gap-4">
+								    <p class="zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0"> <%=language.get("grc.control.reviewer")%> </p>
+									<h6 class="zcs-font-14 zcs-font-normal zcs-lh-heading zcs-color-primary zcs-m-0"> <%=controlDet.Control_Reviewer_Approver.Name%></h6>
+									<p class="zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0"> <%=controlDet.Control_Reviewer_Approver.Role.Role_Name%> </p>
+								</div>
+							</div>
+							
+							
+									</div>	
+							</div>
+							
+							<div class='zcs-right-content zcs-h-full zcs-overflow-auto zcs-col-4 zcs-col-sm-12 zcs-flex zcs-direction-column zcs-gap-20 zcs-card'>
+							<div class="zcs-flex zcs-direction-column zcs-gap-12 zcs-p-16 zcs-box-border">
+							<h6 class="zcs-font-16 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0"> <%=language.get("grc.control.effectiveness")%> </h6>
+										<div class="zcs-divider zcs-divider-horizontal"></div>
+										
+										<div class='zcs-card zcs-border-box zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-8 zcs-rounded-xl zcs-p-16 zcs-box-border ' style='background: #F8FAFC;'>
+                            <div class='zcs-flex zcs-gap-12 '>
+							<div class='zcs-flex zcs-align-items-center  zcs-no-shrink zcs-rounded-lg'>
+                               <i value="files-single-folded-content" html="files-single-folded-content" class="files-single-folded-content zc-li-outline" style='color:#90A1B9;font-weight: 600;'></i>
+                            </div>
+							<div class='zcs-flex zcs-gap-4  zcs-direction-column'>
+							 <label class="zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary"><%=language.get("grc.control.designEffectiveness")%></label>
+														 <span class="zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary"><%=controlDet.Design_Effectiveness%></span>
+							</div>							 
+							</div>
+							
+						</div>
+						<div class='zcs-card zcs-border-box zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-8 zcs-rounded-xl zcs-p-16 zcs-box-border ' style='background: #F8FAFC;'>
+                            <div class='zcs-flex zcs-gap-12 '>
+							<div class='zcs-flex zcs-align-items-center  zcs-no-shrink zcs-rounded-lg'>
+                               <i value="ui-2-layers" html="ui-2-layers" class="ui-2-layers zc-li-outline" style='color:#90A1B9;font-weight: 600;'></i>
+                            </div>
+							<div class='zcs-flex zcs-gap-4  zcs-direction-column'>
+							 <label class="zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary"><%=language.get("grc.control.operatingEffectiveness")%></label>
+														 <span class="zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary"><%=controlDet.Operating_Effectiveness%></span>
+							</div>							 
+							</div>
+							
+						</div>
+						
+						
+										
+										
+							</div>
+							
+							</div>
+							<div class='zcs-right-content zcs-h-full zcs-overflow-auto zcs-col-4 zcs-col-sm-12 zcs-flex zcs-direction-column zcs-gap-20 zcs-card'>
+							<div class="zcs-flex zcs-direction-column zcs-gap-12 zcs-p-16 zcs-box-border">
+										<h6 class="zcs-font-16 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0"> <%=language.get("grc.control.testingSchedule")%> </h6>
+										<div class="zcs-divider zcs-divider-horizontal"></div>
+										<div class="zcs-flex zcs-direction-column zcs-gap-16  zcs-rounded-md zcs-p-16 ">
+										    <div class="zcs-row">
+											  <div class="zcs-left-content zcs-h-full zcs-overflow-auto zcs-col-6 zcs-col-sm-12 zcs-flex zcs-direction-column zcs-gap-2">
+													     <label class="zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary"><%=language.get("grc.control.testingFrequency")%></label>
+														 <span class="zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">
+														 <%=if(controlDet.Testing_Frequency != null && controlDet.Testing_Frequency != "",controlDet.Testing_Frequency,"-")%>
+														 </span>
+													 </div>
+													 <div class="zcs-right-content zcs-h-full zcs-overflow-auto zcs-col-6 zcs-col-sm-12 zcs-flex zcs-direction-column zcs-gap-2">
+													     <label class="zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary"><%=language.get("grc.control.testingMethod")%></label>
+														  <span class="zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary"><%=if(controlDet.Testing_Method != null && controlDet.Testing_Method != "",controlDet.Testing_Method,"-")%></span>
+													 </div>
+													  
+											  </div>
+											  
+											  <div class="zcs-divider zcs-divider-horizontal"></div>
+											   <div class="zcs-row">
+											  <div class="zcs-left-content zcs-h-full zcs-overflow-auto zcs-col-6 zcs-col-sm-12 zcs-flex zcs-direction-column zcs-gap-2">
+													     <label class="zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary"><%=language.get("grc.control.sampleSize")%></label>
+														 <span class="zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary"><%=if(controlDet.Sample_Size != null,controlDet.Sample_Size,"-")%></span>
+													 </div>
+													 <div class="zcs-right-content zcs-h-full zcs-overflow-auto zcs-col-6 zcs-col-sm-12 zcs-flex zcs-direction-column zcs-gap-2">
+													     <label class="zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary"><%=language.get("grc.control.testingPeriod")%></label>
+														  <span class="zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary"><%=if(controlDet.Testing_Period != null && controlDet.Testing_Period != "",controlDet.Testing_Period,"-")%></span>
+													 </div>
+													  
+											  </div>
+											  <div class="zcs-divider zcs-divider-horizontal"></div>
+											  
+											   <div class="zcs-row">
+											  <div class="zcs-left-content zcs-h-full zcs-overflow-auto zcs-col-6 zcs-col-sm-12 zcs-flex zcs-direction-column zcs-gap-2">
+													     <label class="zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary"><%=language.get("grc.control.tester")%></label>
+														 <span class="zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary"><%=if(controlDet.Tester_Reviewer != null,controlDet.Tester_Reviewer.Name,"-")%></span>
+													 </div>
+													 <div class="zcs-right-content zcs-h-full zcs-overflow-auto zcs-col-6 zcs-col-sm-12 zcs-flex zcs-direction-column zcs-gap-2">
+													     <label class="zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary"><%=language.get("grc.control.lastTested")%></label>
+														  <span class="zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary"><%=if(controlDet.Last_Tested_On != null,controlDet.Last_Tested_On,"-")%></span>
+													 </div>
+													  
+											  </div>
+											  
+											  
+										</div>
+									</div>	
+							        
+							
+							
+							</div>
+							</div>
+						<div class="zcs-grid zcs-gap-20 zcs-w-full zcs-mt-15">
+						
+						     <div class='zcs-left-content zcs-h-full zcs-overflow-auto zcs-col-sm-12 zcs-flex zcs-direction-column zcs-gap-20'>
+					<div class="zcs-card zcs-flex zcs-direction-column zcs-gap-12 zcs-p-16 zcs-box-border zcs-h-full">
+								<h6 class="zcs-font-14 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0"> <%=language.get("grc.control.riskCategory")%>   </h6>
+<%
+		if(controlDet.Risk_Category.size() > 0)
+		{
+			%>
+<div class='zcs-list-container zcs-row zcs-gap-12'>
+<%
+			for each  riskCat in controlDet.Risk_Category
+			{
+				catDet = Risk_Category[ID == riskCat];
+				%>
+<div class='zcs-card zcs-border-box zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-8 zcs-rounded-xl zcs-px-8 zcs-py-12 zcs-box-border'>
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+		<path d="M0 8C0 3.58172 3.58172 0 8 0H16C20.4183 0 24 3.58172 24 8V16C24 20.4183 20.4183 24 16 24H8C3.58172 24 0 20.4183 0 16V8Z" fill="#F3E8FF"/>
+		<g clip-path="url(#clip0_335_11838)">
+		<path d="M12.0001 17.8337C15.2217 17.8337 17.8334 15.222 17.8334 12.0003C17.8334 8.77866 15.2217 6.16699 12.0001 6.16699C8.77842 6.16699 6.16675 8.77866 6.16675 12.0003C6.16675 15.222 8.77842 17.8337 12.0001 17.8337Z" stroke="#7C3AED" stroke-width="1.16667" stroke-linecap="round" stroke-linejoin="round"/>
+		<path d="M12 15.5C13.933 15.5 15.5 13.933 15.5 12C15.5 10.067 13.933 8.5 12 8.5C10.067 8.5 8.5 10.067 8.5 12C8.5 13.933 10.067 15.5 12 15.5Z" stroke="#7C3AED" stroke-width="1.16667" stroke-linecap="round" stroke-linejoin="round"/>
+		<path d="M11.9999 13.1663C12.6443 13.1663 13.1666 12.644 13.1666 11.9997C13.1666 11.3553 12.6443 10.833 11.9999 10.833C11.3556 10.833 10.8333 11.3553 10.8333 11.9997C10.8333 12.644 11.3556 13.1663 11.9999 13.1663Z" stroke="#7C3AED" stroke-width="1.16667" stroke-linecap="round" stroke-linejoin="round"/>
+		</g>
+		<defs>
+		<clipPath id="clip0_335_11838">
+		<rect width="14" height="14" fill="white" transform="translate(5 5)"/>
+		</clipPath>
+		</defs>
+		</svg>
+							<p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-m-0' style='color:#364153;'> <%=catDet.Category_Name%> </p>
+						</div>
+<%
+			}
+			%>
+</div>
+<%
+		}
+		else
+		{
+			%>
+<%=thisapp.Page.noData()%>
+<%
+		}
+		%>
+</div>
+                     
+					</div>
+						
+						
+							 <div class='zcs-left-content zcs-h-full zcs-overflow-auto  zcs-col-sm-12 zcs-flex zcs-direction-column zcs-gap-20'>
+							      <div class="zcs-card zcs-flex zcs-direction-column zcs-gap-12 zcs-p-16 zcs-box-border" style='height:263.5px;'>
+										<h6 class="zcs-font-16 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0"> <%=language.get("grc.control.evidenceAttachments")%> </h6>
+										<div class="zcs-divider zcs-divider-horizontal"></div>
+<%
+		if(controlDet.Upload_Testing_Evidence.size() > 0)
+		{
+			%>
+<div class='zcs-flex zcs-direction-column zcs-gap-12 zcs-overflow-auto' style='height:calc(100% - 21px);'>
+<%
+			for each  attachment in controlDet.Upload_Testing_Evidence
+			{
+				%>
+<div class='zcs-panel zcs-panel-red zcs-card zcs-border-box zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-8 zcs-rounded-xl zcs-p-16 zcs-box-border zcs-labelvalue-wrapper zcs-labelvalue-with-bg'>
+                            <div class='zcs-flex zcs-gap-16 zcs-align-items-center'>
+							<div class='zcs-panel-icon-wrapper zcs-flex zcs-align-items-center zcs-justify-center zcs-no-shrink zcs-rounded-lg'>
+                               <i value="files-single-folded-content" html="files-single-folded-content" class="files-single-folded-content zc-li-outline"></i>
+                            </div>
+							<p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-m-0'> <%=attachment%> </p>
+							</div>
+							<a href="https://creatorapp.zoho.com/file<%=zoho.appuri%>Controls/<%=controlDet.ID%>/Upload_Testing_Evidence/download?filepath=/<%=attachment%>"><i class="zc-li-outline arrows-2-square-download zcs-pr-4" value="arrows-2-square-download" html="arrows-2-square-download"></i></a>
+						</div>
+<%
+			}
+			%>
+</div>
+<%
+		}
+		else
+		{
+			%>
+<%=thisapp.Page.noData()%>
+<%
+		}
+		%>
+</div>	
+							
+							</div>
+						</div>
+                        <div class="zcs-grid zcs-gap-20 zcs-w-full zcs-mt-15">
+						
+						<div class='zcs-left-content zcs-h-full zcs-overflow-auto zcs-col-sm-12 zcs-flex zcs-direction-column zcs-gap-20'>
+					<div class="zcs-card zcs-flex zcs-direction-column zcs-gap-12 zcs-p-16 zcs-box-border zcs-h-full">
+								<h6 class="zcs-font-14 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0"> <%=language.get("grc.control.linkedObjectives")%>   </h6>
+<%
+		if(controlDet.Linked_Objectives.size() > 0)
+		{
+			%>
+<div class='zcs-list-container zcs-row zcs-gap-12'>
+<%
+			for each  objective in controlDet.Linked_Objectives
+			{
+				objectiveDet = Objective[ID == objective];
+				%>
+<a class='zcs-card zcs-border-box zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-8 zcs-rounded-xl zcs-px-8 zcs-py-12 zcs-box-border' href='#Page:Objective_Page?page_action=detailView&recid=<%=objectiveDet.ID%>' target='_blank'>
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M0 8C0 3.58172 3.58172 0 8 0H16C20.4183 0 24 3.58172 24 8V16C24 20.4183 20.4183 24 16 24H8C3.58172 24 0 20.4183 0 16V8Z" fill="#E2EDFF"/>
+<path d="M6.21667 8.49892L12.5 11.9993M12.5 11.9993L18.7833 8.49892M12.5 11.9993V19M19 9.19899C18.9997 8.95346 18.9329 8.71231 18.8061 8.49974C18.6793 8.28716 18.4971 8.11064 18.2778 7.98787L13.2222 5.18758C13.0026 5.0647 12.7536 5 12.5 5C12.2464 5 11.9974 5.0647 11.7778 5.18758L6.72222 7.98787C6.50286 8.11064 6.32065 8.28716 6.19389 8.49974C6.06713 8.71231 6.00026 8.95346 6 9.19899V14.7996C6.00026 15.0451 6.06713 15.2863 6.19389 15.4988C6.32065 15.7114 6.50286 15.8879 6.72222 16.0107L11.7778 18.811C11.9974 18.9339 12.2464 18.9986 12.5 18.9986C12.7536 18.9986 13.0026 18.9339 13.2222 18.811L18.2778 16.0107C18.4971 15.8879 18.6793 15.7114 18.8061 15.4988C18.9329 15.2863 18.9997 15.0451 19 14.7996V9.19899Z" stroke="#04204B" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
+
+							<p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-m-0' style='color:#364153;'> <%=objectiveDet.Objective_Title%> </p>
+						</a>
+<%
+			}
+			%>
+</div>
+<%
+		}
+		else
+		{
+			%>
+<%=thisapp.Page.noData()%>
+<%
+		}
+		%>
+</div>
+                     
+					</div>
+						
+					<div class='zcs-left-content zcs-h-full zcs-overflow-auto zcs-col-sm-12 zcs-flex zcs-direction-column zcs-gap-20'>
+					<div class="zcs-card zcs-flex zcs-direction-column zcs-gap-12 zcs-p-16 zcs-box-border zcs-h-full">
+								<h6 class="zcs-font-14 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0"> <%=language.get("grc.objective.linkedRisks")%>   </h6>
+<%
+		if(controlDet.Link_Risks.size() > 0)
+		{
+			%>
+<div class='zcs-list-container zcs-row zcs-gap-12'>
+<%
+			for each  risk in controlDet.Link_Risks
+			{
+				riskDet = Risk_Entry[ID == risk];
+				%>
+<a class='zcs-card zcs-border-box zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-8 zcs-rounded-xl zcs-px-8 zcs-py-12 zcs-box-border'  href='#Page:Risk_Entries_Page?page_action=detailView&recid=<%=riskDet.ID%>' target='_blank'>
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M0 8C0 3.58172 3.58172 0 8 0H16C20.4183 0 24 3.58172 24 8V16C24 20.4183 20.4183 24 16 24H8C3.58172 24 0 20.4183 0 16V8Z" fill="#FED7AA"/>
+<path d="M17.6759 15.5003L13.0092 7.33363C12.9075 7.15408 12.7599 7.00474 12.5816 6.90083C12.4033 6.79693 12.2006 6.74219 11.9942 6.74219C11.7879 6.74219 11.5852 6.79693 11.4069 6.90083C11.2286 7.00474 11.081 7.15408 10.9792 7.33363L6.31258 15.5003C6.20973 15.6784 6.1558 15.8806 6.15625 16.0863C6.15671 16.2919 6.21153 16.4939 6.31517 16.6715C6.41881 16.8492 6.56758 16.9963 6.7464 17.0979C6.92522 17.1996 7.12774 17.2521 7.33341 17.2503H16.6667C16.8714 17.2501 17.0725 17.196 17.2497 17.0935C17.4269 16.9911 17.574 16.8438 17.6762 16.6664C17.7785 16.4891 17.8323 16.288 17.8322 16.0833C17.8322 15.8786 17.7783 15.6776 17.6759 15.5003Z" stroke="#EA580C" stroke-width="1.16667" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M12 10.25V12.5833" stroke="#EA580C" stroke-width="1.16667" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M12 14.917H12.0058" stroke="#EA580C" stroke-width="1.16667" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
+
+
+							<p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-m-0' style='color:#364153;'> <%=riskDet.Risk_Title%> </p>
+						</a>
+<%
+			}
+			%>
+</div>
+<%
+		}
+		else
+		{
+			%>
+<%=thisapp.Page.noData()%>
+<%
+		}
+		%>
+</div>
+                     
+					</div>
+						
+						
+						
+						</div>
+						<div class="zcs-grid zcs-gap-20 zcs-w-full zcs-mt-15">
+						<div class='zcs-left-content zcs-h-full zcs-overflow-auto zcs-col-sm-12 zcs-flex zcs-direction-column zcs-gap-20'>
+					<div class="zcs-card zcs-flex zcs-direction-column zcs-gap-12 zcs-p-16 zcs-box-border zcs-h-full">
+								<h6 class="zcs-font-14 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0"> <%=language.get("grc.objective.linkedProcesses")%>   </h6>
+<%
+		if(controlDet.Associated_Process_Activity.size() > 0)
+		{
+			%>
+<div class='zcs-list-container zcs-row zcs-gap-12'>
+<%
+			for each  process in controlDet.Associated_Process_Activity
+			{
+				processDet = Process[ID == process];
+				%>
+<a class='zcs-card zcs-border-box zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-8 zcs-rounded-xl zcs-px-8 zcs-py-12 zcs-box-border' href='#Page:Process_Page?page_action=detailView&recid=<%=processDet.ID%>' target='_blank'>
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M0 8C0 3.58172 3.58172 0 8 0H16C20.4183 0 24 3.58172 24 8V16C24 20.4183 20.4183 24 16 24H8C3.58172 24 0 20.4183 0 16V8Z" fill="#D1FAE5"/>
+<path d="M17.8334 9.08301L12.8751 14.0413L9.95841 11.1247L6.16675 14.9163" stroke="#059669" stroke-width="1.16667" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M14.3333 9.08301H17.8333V12.583" stroke="#059669" stroke-width="1.16667" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
+
+							<p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-m-0' style='color:#364153;'> <%=processDet.Process_Name%> </p>
+						</a>
+<%
+			}
+			%>
+</div>
+<%
+		}
+		else
+		{
+			%>
+<%=thisapp.Page.noData()%>
+<%
+		}
+		%>
+</div>
+                     
+					</div>
+						
+					<div class='zcs-left-content zcs-h-full zcs-overflow-auto zcs-col-sm-12 zcs-flex zcs-direction-column zcs-gap-20'>
+					<div class="zcs-card zcs-flex zcs-direction-column zcs-gap-12 zcs-p-16 zcs-box-border zcs-h-full">
+								<h6 class="zcs-font-14 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0"> <%=language.get("grc.control.linkedAssessments")%>   </h6>
+<%
+		if(controlDet.Link_Assessments.size() > 0)
+		{
+			%>
+<div class='zcs-list-container zcs-row zcs-gap-12'>
+<%
+			for each  assessment in controlDet.Link_Assessments
+			{
+				assessmentDet = Risk_Assessment[ID == assessment];
+				%>
+<div class='zcs-card zcs-border-box zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-8 zcs-rounded-xl zcs-px-8 zcs-py-12 zcs-box-border'>
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M0 8C0 3.58172 3.58172 0 8 0H16C20.4183 0 24 3.58172 24 8V16C24 20.4183 20.4183 24 16 24H8C3.58172 24 0 20.4183 0 16V8Z" fill="#E2F6FF"/>
+<g clip-path="url(#clip0_4857_71464)">
+<path d="M7.5 7.5V15.5C7.5 15.7652 7.60536 16.0196 7.79289 16.2071C7.98043 16.3946 8.23478 16.5 8.5 16.5H16.5M15.5 10.5L13 13L11 11L9.5 12.5" stroke="#0EA5E9" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+<defs>
+<clipPath id="clip0_4857_71464">
+<rect width="12" height="12" fill="white" transform="translate(6 6)"/>
+</clipPath>
+</defs>
+</svg>
+
+							<p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-m-0' style='color:#364153;'> <%=assessmentDet.Assessment_Title%> </p>
+						</div>
+<%
+			}
+			%>
+</div>
+<%
+		}
+		else
+		{
+			%>
+<%=thisapp.Page.noData()%>
+<%
+		}
+		%>
+</div>
+                     
+					</div>
+						
+						</div>
+
+
+					 </div>
+			   
+			   </div>
+	      </div>
+	</div>
+<%
+	}
+	else
+	{
+		%>
+<style>
+		.zc-container-wrapper .zc-main-content-wrapper .zc-main-content .inner .page_content_wrapper.zc-page-content-wrapper .elemContainment{
+	padding:0px !important;
+}
+</style>
+<div class='zcs-page-container zcs-commonview zcs-wh-full'>
+	<div class='zcs-page-container-inner zcs-wh-full zcs-flex zcs-direction-column zcs-gap-20 zcs-px-30 zcs-py-24 zcs-box-border'>
+		<div class='zcs-page-header zcs-w-full zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-8 zcs-ellipsis'>
+            
+			<div class='zcs-flex zcs-direction-column zcs-gap-8'>
+           <h5 class='zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-ellipsis zcs-m-0'> <%=language.get("grc.control.Header")%> </h5>
+			<p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'><%=language.get("grc.control.subHeader")%></p>
+			</div>
+<%
+		if(thisapp.permission.app_access("contol_Library_Button") == true)
+		{
+			%>
+<a class='zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body'
+                href='#Page:<%=page_link_name%>?page_action=add'>
+                <i class='zcs-button-icon zc-li-outline ui-1-simple-add'></i>
+                <span class='zcs-button-text'> <%=language.get("grc.control.addControl")%> </span>
+            </a>
+<%
+		}
+		%>
+</div>
+        <div class='zcs-panel-wrapper'>
+            <ul class='zcs-row zcs-justify-space-between zcs-gap-20 zcs-p-0 zcs-m-0'>
+                <li class='zcs-col-3 zcs-col-sm-6 zcs-col-xs-12 zcs-relative '>
+                    <div class='zcs-panel zcs-panel-red zcs-wh-full zcs-flex  zcs-gap-8 zcs-rounded-lg zcs-p-16 zcs-box-border zcs-justify-space-between'>
+					<div class='zcs-flex zcs-justify-center zcs-gap-10 zcs-direction-column'>
+					 <p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'> <%=language.get("grc.control.totalControls")%> </p>
+                        <h4 class='zcs-font-20 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'> <%=Control[ID != 0].count()%> </h4>
+                        </div>
+                            <div class='zcs-panel-icon-wrapper zcs-flex zcs-align-items-center zcs-justify-center zcs-no-shrink zcs-rounded-lg'>
+                                <i class='zcs-panel-icon zcs-font-24 zc-li-outline tech-disk-reader'></i>
+                            </div>
+                            
+                       
+                    </div>
+                    <a class='zcs-overlay zcs-wh-full zcs-absolute' ></a>
+                </li>
+				
+                <li class='zcs-col-3 zcs-col-sm-6 zcs-col-xs-12 zcs-relative '>
+                    <div class='zcs-panel zcs-panel-red zcs-wh-full zcs-flex  zcs-gap-8 zcs-rounded-lg zcs-p-16 zcs-box-border zcs-justify-space-between'>
+					<div class='zcs-flex zcs-justify-center zcs-gap-10 zcs-direction-column'>
+					 <p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'> <%=language.get("grc.control.activeControls")%> </p>
+                        <h4 class='zcs-font-20 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'> <%=Control[Control_Status == "Active"].count()%> </h4>
+                        </div>
+                            <div class='zcs-panel-icon-wrapper zcs-flex zcs-align-items-center zcs-justify-center zcs-no-shrink zcs-rounded-lg'>
+                                <i class='zcs-panel-icon zcs-font-24 zc-li-outline location-position-pin'></i>
+                            </div>
+                            
+                       
+                    </div>
+                    <a class='zcs-overlay zcs-wh-full zcs-absolute' ></a>
+                </li>
+               <li class='zcs-col-3 zcs-col-sm-6 zcs-col-xs-12 zcs-relative '>
+                    <div class='zcs-panel zcs-panel-red zcs-wh-full zcs-flex  zcs-gap-8 zcs-rounded-lg zcs-p-16 zcs-box-border zcs-justify-space-between'>
+					<div class='zcs-flex zcs-justify-center zcs-gap-10 zcs-direction-column'>
+					 <p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'> <%=language.get("grc.control.underReview")%> </p>
+                        <h4 class='zcs-font-20 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'> <%=Control[Control_Status == "Under Review"].count()%> </h4>
+                        </div>
+                            <div class='zcs-panel-icon-wrapper zcs-flex zcs-align-items-center zcs-justify-center zcs-no-shrink zcs-rounded-lg'>
+                                <i class='zcs-panel-icon zcs-font-24 zc-li-outline users-parent'></i>
+                            </div>
+                            
+                       
+                    </div>
+                    <a class='zcs-overlay zcs-wh-full zcs-absolute' ></a>
+                </li>
+               <li class='zcs-col-3 zcs-col-sm-6 zcs-col-xs-12 zcs-relative '>
+                    <div class='zcs-panel zcs-panel-red zcs-wh-full zcs-flex  zcs-gap-8 zcs-rounded-lg zcs-p-16 zcs-box-border zcs-justify-space-between'>
+					<div class='zcs-flex zcs-justify-center zcs-gap-10 zcs-direction-column'>
+					 <p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'> <%=language.get("grc.control.reviewsDue")%> </p>
+                        <h4 class='zcs-font-20 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'> <%=Control[Next_Review_Due > zoho.currentdate].count()%> </h4>
+                        </div>
+                            <div class='zcs-panel-icon-wrapper zcs-flex zcs-align-items-center zcs-justify-center zcs-no-shrink zcs-rounded-lg'>
+                                <i class='zcs-panel-icon zcs-font-24 zc-li-outline business-briefcase-25'></i>
+                            </div>
+                            
+                       
+                    </div>
+                    <a class='zcs-overlay zcs-wh-full zcs-absolute' ></a>
+                </li>
+            </ul>
+        </div>
+		<div class='zcs-page-content zcs-card zcs-col-common zcs-overflow-auto zcs-flex zcs-direction-column'>
+          
+                    <div class='zcs-filter' zc_MobileView='inline' elName='zc-component' formLinkName='Filter_Form' params='zc_Header=false&zc_Footer=false&zc_Focus=false&Action_field=overView&Page=<%=page_link_name%>&Report=Controls'></div>
+					<div class='zcs-report zcs-col-common' name='embedDiv' elName='zc-component' viewLinkName='Control_Report_Page' params='zc_Header=false&zc_AddRec=false&zc_ColMenu=false&zc_Footer=false'></div>
+               
+		</div>
+	</div>
+</div>
+<%
+	}
+%>

@@ -1,0 +1,27 @@
+on_success17 as "on success"
+{
+
+				type =  form
+				form = Risk_Assessment_Libraries
+
+				record event = on add
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											riskAss = Risk_Assessment[ID == input.Risk_Assessment];
+										riskAss.Work_Sheet_Status="Risk Identify";
+										riskAss.Status="In Progress";
+										riskAss.Send_for_Approval=false;
+										riskDet = Risk_Entry[ID == input.Risks];
+										riskDet.Next_Review_Date=Risk_Assessment_Libraries[Scope_Type == "Risk" && Start_Date > zoho.currentdate && Risks == input.Risks].minimum(Start_Date);
+										thisapp.Log.Audit_Log("Risk_Assessment_Libraries",input.ID,"Create",User[Email == zoho.loginuserid].ID,"");
+						)
+					}
+				}
+
+			
+}

@@ -1,0 +1,36 @@
+get_Category_Details as "get Category Details"
+{
+
+				type =  form
+				form = Assessment_Plan
+
+				record event = on add or edit
+
+				on user input of Risk_Category_Coverage.Risk_Category
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(row.Risk_Category != null)
+										{
+											row.Overall_Risk_Score=Risk_Entry[Risk_Category1 == row.Risk_Category].sum(Inherent_Score);
+											row.Affected_Departments=Risk_Entry[Risk_Category1 == row.Risk_Category].Department;
+											getRisk = Risk_Assessment_Libraries[Risks.Risk_Category1 == row.Risk_Category && Status == "Completed"] sort by End_Date desc;
+											if(getRisk.count() > 0)
+											{
+												row.Last_Assessed=getRisk.End_Date;
+											}
+										}
+										else
+										{
+											row.Overall_Risk_Score=null;
+											row.Affected_Departments=null;
+											row.Last_Assessed="";
+										}
+						)
+					}
+				}
+
+			
+}

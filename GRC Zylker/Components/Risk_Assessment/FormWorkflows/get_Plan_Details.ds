@@ -1,0 +1,146 @@
+get_Plan_Details as "get Plan Details"
+{
+
+				type =  form
+				form = Risk_Assessment
+
+				record event = on add
+
+				on user input of Assessment_Plan
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Assessment_Plan != null)
+										{
+											planDet = Assessment_Plan[ID == input.Assessment_Plan];
+											input.Assessment_Title = planDet.Plan_Name;
+											input.Assessment_Description = planDet.Description;
+											input.Assessment_Owner = planDet.Plan_Owner;
+											if(Resource_Allocation[Assessment_Plan == input.Assessment_Plan && Resource_Type == "Internal Resource"].count() > 0)
+											{
+												internalResourceList = Collection();
+												for each  internal in Resource_Allocation[Assessment_Plan == input.Assessment_Plan && Resource_Type == "Internal Resource"]
+												{
+													internalResource = Risk_Assessment.Internal_Resources();
+													internalResource.Resource_Type="Internal Resource";
+													internalResource.User=internal.User;
+													internalResource.Name=internal.Name;
+													internalResource.Department=internal.Department;
+													internalResource.Designation=internal.Designation;
+													internalResource.Planned_Hours=internal.Planned_Hours;
+													internalResource.Hourly_Rate=internal.Hourly_Rate;
+													internalResource.Occupancy=internal.Occupancy;
+													internalResource.Availability=internal.Availability;
+													internalResourceList.insert(internalResource);
+												}
+												clear Internal_Resources;
+												input.Internal_Resources.insert(internalResourceList);
+											}
+											if(Resource_Allocation[Assessment_Plan == input.Assessment_Plan && Resource_Type == "External Resource"].count() > 0)
+											{
+												externalResourceList = Collection();
+												for each  external in Resource_Allocation[Assessment_Plan == input.Assessment_Plan && Resource_Type == "External Resource"]
+												{
+													externalResource = Risk_Assessment.Internal_Resources();
+													externalResource.Resource_Type="External Resource";
+													externalResource.Name=external.Name;
+													externalResource.Department=external.Department;
+													externalResource.Designation=external.Designation;
+													externalResource.Planned_Hours=external.Planned_Hours;
+													externalResource.Hourly_Rate=external.Hourly_Rate;
+													externalResource.Occupancy=external.Occupancy;
+													externalResource.Availability=external.Availability;
+													externalResourceList.insert(externalResource);
+												}
+												clear External_Resources;
+												input.External_Resources.insert(externalResourceList);
+											}
+											if(Budget_Categories[Assessment_Plan == input.Assessment_Plan].count() > 0)
+											{
+												budgetList = Collection();
+												for each  budget in Budget_Categories[Assessment_Plan == input.Assessment_Plan]
+												{
+													budgetDet = Risk_Assessment.Budget_Categories();
+													budgetDet.Category=budget.Category;
+													budgetDet.Percentage=budget.Percentage;
+													budgetDet.Description=budget.Description;
+													budgetDet.Allocation=budget.Allocation;
+													budgetList.insert(budgetDet);
+												}
+												clear Budget_Categories;
+												input.Budget_Categories.insert(budgetList);
+											}
+											if(Department_Coverage[Assessment_Plan == input.Assessment_Plan].count() > 0)
+											{
+												departmentList = Collection();
+												for each  department in Department_Coverage[Assessment_Plan == input.Assessment_Plan]
+												{
+													departmentDet = Risk_Assessment.Departments();
+													departmentDet.Departments=department.Department;
+													departmentList.insert(departmentDet);
+												}
+												clear Departments;
+												input.Departments.insert(departmentList);
+											}
+											if(planDet.Link_Objectives.size() > 0)
+											{
+												objectiveList = Collection();
+												for each  objective in planDet.Link_Objectives
+												{
+													objectiveDet = Risk_Assessment.Objectives();
+													objectiveDet.Objectives=objective;
+													objectiveList.insert(objectiveDet);
+												}
+												clear Objectives;
+												input.Objectives.insert(objectiveList);
+											}
+											if(Process_Selection[process == input.Assessment_Plan].count() > 0)
+											{
+												processList = Collection();
+												for each  process in Process_Selection[process == input.Assessment_Plan]
+												{
+													processDet = Risk_Assessment.Processes();
+													processDet.Processes=process.Process_Name;
+													processList.insert(processDet);
+												}
+												clear Processes;
+												input.Processes.insert(processList);
+											}
+											planDepartment = Department_Coverage[Assessment_Plan == input.Assessment_Plan].Department.getAll();
+											planObjective = planDet.Link_Objectives;
+											planProcess = Process_Selection[process == input.Assessment_Plan].Process_Name.getAll();
+											planRisk = Risk_Entry[Department == planDepartment && Objective == planObjective && Process == planProcess].ID.getAll();
+											if(planRisk.size() > 0)
+											{
+												clear Risks;
+												riskRow = Collection();
+												for each  risk in planRisk
+												{
+													row1 = Risk_Assessment.Risks();
+													row1.Risks=risk;
+													riskRow.insert(row1);
+												}
+												input.Risks.insert(riskRow);
+											}
+										}
+										else
+										{
+											input.Assessment_Title = "";
+											input.Assessment_Description = "";
+											input.Assessment_Owner = null;
+											clear Internal_Resources;
+											clear External_Resources;
+											clear Budget_Categories;
+											clear Departments;
+											clear Objectives;
+											clear Processes;
+											clear Risks;
+										}
+						)
+					}
+				}
+
+			
+}

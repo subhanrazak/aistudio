@@ -1,0 +1,129 @@
+on_success11 as "on success"
+{
+
+				type =  form
+				form = Risk_Assessment
+
+				record event = on add or edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											/* for each  objective in input.Objectives
+										{
+											objective.Risk_Assessment=input.ID;
+										}
+										for each  depatment in input.Departments
+										{
+											depatment.Risk_Assessment=input.ID;
+										}
+										for each  risk in input.Risks
+										{
+											risk.Risk_Assessment=input.ID;
+										}
+										for each  process in input.Processes
+										{
+											process.Risk_Assessment=input.ID;
+										}
+										for each  internal in input.Internal_Resources
+										{
+											internal.Risk_Assessment=input.ID;
+										}
+										for each  external in input.External_Resources
+										{
+											external.Risk_Assessment=input.ID;
+										}
+										 */
+										for each  department in input.Departments
+										{
+											/* 	processList = List();
+											departmentApproval = Department_Approvals[Risk_Assessment == input.ID && Department == department.Departments && Type_field == "Process"];
+											for each  process in input.Processes
+											{
+												linkedDepartment = Process[ID == process.Processes].Linked_Departments;
+												if(department.Departments == linkedDepartment)
+												{
+													processList.add(process.Processes);
+												}
+											}
+											if(processList.size() > 0)
+											{
+												if(departmentApproval.count() > 0)
+												{
+													for each  rec in processList
+													{
+														checkProcess = Department_Process_Approvals[Process == rec && Department_Approvals == departmentApproval.ID].count();
+														if(checkProcess == 0)
+														{
+															process_details = insert into Department_Process_Approvals
+															[
+																Added_User=zoho.loginuser
+																Process=rec
+																Department_Approvals=departmentApproval.ID
+																Status="Pending"
+															];
+														}
+													}
+													departmentApproval.Total_Count=processList.size();
+													departmentApproval.Pending_Approval=Department_Process_Approvals[Status == "Pending" && Department_Approvals == departmentApproval.ID].count();
+													departmentApproval.Approved=Department_Process_Approvals[Status == "Approved" && Department_Approvals == departmentApproval.ID].count();
+													departmentApproval.Rejected=Department_Process_Approvals[Status == "Rejected" && Department_Approvals == departmentApproval.ID].count();
+													if(departmentApproval.Approved > 0 || departmentApproval.Rejected > 0)
+													{
+														departmentApproval.Status="Partial";
+													}
+												}
+												else
+												{
+													approval = insert into Department_Approvals
+													[
+														Department=department.Departments
+														Risk_Assessment=input.ID
+														Total_Count=processList.size()
+														Pending_Approval=processList.size()
+														Rejected=0
+														Approved=0
+														Status="Pending"
+														Type_field="Process"
+														Added_User=zoho.loginuser
+													];
+													for each  rec in processList
+													{
+														process_details = insert into Department_Process_Approvals
+														[
+															Added_User=zoho.loginuser
+															Process=rec
+															Department_Approvals=approval
+															Status="Pending"
+														];
+													}
+												}
+											} */
+											department.Risks_Identified=Risk_Assessment_Libraries[Risks.Department == department.Departments && Risk_Assessment == input.ID].count();
+										}
+										for each  objective in input.Objectives
+										{
+											objective.Risks_Identified=Risk_Assessment_Libraries[Risks.Objective == objective.Objectives && Risk_Assessment == input.ID].count();
+											objectiveDet = Objective[ID == objective.Objectives];
+											objectiveDet.Next_Review_Date=Risk_Assessment_Libraries[Scope_Type == "Objective" && Start_Date > zoho.currentdate && Objectives == objective.Objectives].minimum(Start_Date);
+										}
+										for each  process in input.Processes
+										{
+											process.Risks_Identified=Risk_Assessment_Libraries[Risks.Process == process.Processes && Risk_Assessment == input.ID].count();
+											processDet = Process[ID == process.Processes];
+											processDet.Next_Review_Date=Risk_Assessment_Libraries[Scope_Type == "Process" && Start_Date > zoho.currentdate && Processes == process.Processes].minimum(Start_Date);
+										}
+										for each  risk in input.Risks
+										{
+											riskDet = Risk_Entry[ID == risk.Risks];
+											riskDet.Next_Review_Date=Risk_Assessment_Libraries[Scope_Type == "Risk" && Start_Date > zoho.currentdate && Risks == risk.Risks].minimum(Start_Date);
+										}
+						)
+					}
+				}
+
+			
+}

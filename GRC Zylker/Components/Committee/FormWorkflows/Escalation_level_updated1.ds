@@ -1,0 +1,40 @@
+Escalation_level_updated1 as "Escalation level updated"
+{
+
+				type =  form
+				form = Committee
+
+				record event = on add or edit
+
+				on user input of Escalation_Template
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Escalation_Template != null)
+										{
+											selectedTemplateId = input.Escalation_Template.ID;
+											input.Committee_Escalation.clear();
+											templateRec = Escalation_Levels[Escalation_Template.ID == input.Escalation_Template];
+											escalation_rows = Collection();
+											for each  row1 in templateRec
+											{
+												rw = Committee.Committee_Escalation();
+												rw.Level=row1.ID;
+												rw.Role=row1.Role;
+												rw.Hours_Next_Escalation=row1.Hours_Next_Escalation;
+												escalation_rows.insert(rw);
+											}
+											input.Committee_Escalation.insert(escalation_rows);
+										}
+										else
+										{
+											input.Committee_Escalation.clear();
+										}
+						)
+					}
+				}
+
+			
+}

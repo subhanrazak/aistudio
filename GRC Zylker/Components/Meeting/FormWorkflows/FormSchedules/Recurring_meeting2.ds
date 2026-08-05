@@ -1,0 +1,270 @@
+Recurring_meeting2 as "Recurring meeting"
+{
+
+				type =  schedule
+				form = Meeting[Meeting_Series == "Recurring meeting" && Recurrence_Ends_On < zoho.currentdate]
+				start = End_Date_Time
+				time zone = "Asia/Kolkata"
+				on start
+				{
+					actions 
+					{
+					on load
+					(
+						nextMeetingDate = null;
+										if(input.Start_Date_Time != null)
+										{
+											rpStr = input.Recurring_pattern + "";
+											if(rpStr != "null" && !rpStr.isEmpty())
+											{
+												if(rpStr.equalsIgnoreCase("Weekly"))
+												{
+													nextMeetingDate = input.Start_Date_Time.addDay(7);
+												}
+												else if(rpStr.equalsIgnoreCase("Two Weeks") || rpStr.equalsIgnoreCase("Bi-Weekly"))
+												{
+													nextMeetingDate = input.Start_Date_Time.addDay(14);
+												}
+												else if(rpStr.equalsIgnoreCase("Monthly"))
+												{
+													nextMeetingDate = input.Start_Date_Time.addDay(30);
+												}
+												else if(rpStr.equalsIgnoreCase("Yearly"))
+												{
+													nextMeetingDate = input.Start_Date_Time.addDay(365);
+												}
+											}
+										}
+										canInsert = true;
+										skipReason = "";
+										if(nextMeetingDate == null)
+										{
+											canInsert = false;
+											skipReason = "No valid recurring pattern or Meeting_Date";
+										}
+										if(canInsert && input.Meeting_Title == null)
+										{
+											canInsert = false;
+											skipReason = "Meeting_Title is empty";
+										}
+										if(canInsert)
+										{
+											titleCheck = input.Meeting_Title + "";
+											if(titleCheck == "null" || titleCheck.isEmpty())
+											{
+												canInsert = false;
+												skipReason = "Meeting_Title is empty";
+											}
+										}
+										if(canInsert)
+										{
+											mTitle = "";
+											if(input.Meeting_Title != null)
+											{
+												vStr = input.Meeting_Title + "";
+												if(vStr != "null" && !vStr.isEmpty())
+												{
+													mTitle = vStr;
+												}
+											}
+											mType = "";
+											if(input.Meeting_Type != null)
+											{
+												vStr = input.Meeting_Type + "";
+												if(vStr != "null" && !vStr.isEmpty())
+												{
+													mType = vStr;
+												}
+											}
+											mPriority = "";
+											if(input.Priority != null)
+											{
+												vStr = input.Priority + "";
+												if(vStr != "null" && !vStr.isEmpty())
+												{
+													mPriority = vStr;
+												}
+											}
+											mPurpose = "";
+											if(input.Purpose != null)
+											{
+												vStr = input.Purpose + "";
+												if(vStr != "null" && !vStr.isEmpty())
+												{
+													mPurpose = vStr;
+												}
+											}
+											mSeries = "";
+											if(input.Meeting_Series != null)
+											{
+												vStr = input.Meeting_Series + "";
+												if(vStr != "null" && !vStr.isEmpty())
+												{
+													mSeries = vStr;
+												}
+											}
+											mMode = "";
+											if(input.Meeting_Mode != null)
+											{
+												vStr = input.Meeting_Mode + "";
+												if(vStr != "null" && !vStr.isEmpty())
+												{
+													mMode = vStr;
+												}
+											}
+											mRoom = "";
+											if(input.Room_Hall != null)
+											{
+												vStr = input.Room_Hall + "";
+												if(vStr != "null" && !vStr.isEmpty())
+												{
+													mRoom = vStr;
+												}
+											}
+											mInteg = "";
+											if(input.Integeration != null)
+											{
+												vStr = input.Integeration + "";
+												if(vStr != "null" && !vStr.isEmpty())
+												{
+													mInteg = vStr;
+												}
+											}
+											mLink = "";
+											if(input.Meeting_Link != null)
+											{
+												vStr = input.Meeting_Link + "";
+												if(vStr != "null" && !vStr.isEmpty())
+												{
+													mLink = vStr;
+												}
+											}
+											mAuto = false;
+											if(input.Automated_Reminders != null)
+											{
+												mAuto = input.Automated_Reminders;
+											}
+											mSendInvite = false;
+											if(input.Send_calendar_invite_immediately_on_publish != null)
+											{
+												mSendInvite = input.Send_calendar_invite_immediately_on_publish;
+											}
+											mDigitalVote = false;
+											if(input.Enable_digital_voting_e_resolutions != null)
+											{
+												mDigitalVote = input.Enable_digital_voting_e_resolutions;
+											}
+											mRecord = false;
+											if(input.Record_virtual_meeting != null)
+											{
+												mRecord = input.Record_virtual_meeting;
+											}
+											if(input.Quorum != null)
+											{
+												mQuorumReq = input.Quorum + "";
+											}
+											newMeeting = insert into Meeting
+											[
+												Added_User=zoho.loginuser
+												Meeting_Title=mTitle
+												Meeting_Type=mType
+												Committee1=input.Committee1
+												Priority=mPriority
+												Purpose=mPurpose
+												Meeting_Series=mSeries
+												Recurring_pattern=input.Recurring_pattern
+												Start_Date_Time=input.Start_Date_Time
+												End_Date_Time=input.End_Date_Time
+												Meeting_Mode=mMode
+												Venue_Building=input.Venue_Building
+												Room_Hall=mRoom
+												Integeration=mInteg
+												Meeting_Link=mLink
+												Invite_Members=input.Invite_Members
+												Agenda=input.Agenda
+												Quorum=mQuorumReq
+												Pre_Meeting_Pack_Send_Date=input.Pre_Meeting_Pack_Send_Date
+												Automated_Reminders=mAuto
+												Send_calendar_invite_immediately_on_publish=mSendInvite
+												Enable_digital_voting_e_resolutions=mDigitalVote
+												Record_virtual_meeting=mRecord
+												Status="Sheduled"
+												MeetingID=input.MeetingID
+												Completed_Stage="Complete"
+											];
+											agendaCounter = 0;
+											for each  agItem in input.Agenda_Items
+											{
+												if(agItem.Item_Title != null)
+												{
+													agTitle = agItem.Item_Title + "";
+													if(agTitle != "null" && !agTitle.isEmpty())
+													{
+														agType = "";
+														if(agItem.Type_field != null)
+														{
+															tfStr = agItem.Type_field + "";
+															if(tfStr != "null" && !tfStr.isEmpty())
+															{
+																agType = tfStr;
+															}
+														}
+														agDuration = 0;
+														if(agItem.Duration_minutes != null)
+														{
+															agDuration = agItem.Duration_minutes;
+														}
+														agPurpose = "";
+														if(agItem.Purpose_Summary != null)
+														{
+															psStr = agItem.Purpose_Summary + "";
+															if(psStr != "null" && !psStr.isEmpty())
+															{
+																agPurpose = psStr;
+															}
+														}
+														agStatus = "";
+														if(agItem.Status != null)
+														{
+															stStr = agItem.Status + "";
+															if(stStr != "null" && !stStr.isEmpty())
+															{
+																agStatus = stStr;
+															}
+														}
+														newAgendaRec = insert into Agenda_Item
+														[
+															Added_User=zoho.loginuser
+															Meeting=newMeeting
+															Item_Title=agTitle
+															Type_field=agType
+															Presenter=agItem.Presenter
+															Duration_minutes=agDuration
+															Purpose_Summary=agPurpose
+															Status=agStatus
+														];
+														agendaCounter = agendaCounter + 1;
+													}
+												}
+											}
+											attCounter = 0;
+											for each  attItem in input.Meeting_Attendance
+											{
+												if(attItem.Member != null)
+												{
+													newAttRec = insert into Meeting_Attendance
+													[
+														Added_User=zoho.loginuser
+														Meetings=newMeeting
+														Member=attItem.Member
+														Status="Maybe"
+													];
+													attCounter = attCounter + 1;
+												}
+											}
+										}
+					)
+					}
+				}
+			
+}

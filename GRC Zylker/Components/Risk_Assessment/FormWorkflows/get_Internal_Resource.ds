@@ -1,0 +1,25 @@
+get_Internal_Resource as "get Internal Resource"
+{
+
+				type =  form
+				form = Risk_Assessment
+
+				record event = on add or edit
+
+				on add row of Internal_Resources
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											row.Resource_Type="Internal Resource";
+										roleList = Role[Role_Name == "Action Owner" || Role_Name == "Risk Owner" || Role_Name == "Control Owner"].ID.getAll();
+										internalList = Resource[Resource_Type == "Internal Resource" && Internal_Resource.Role == roleList].ID.getAll();
+										internalList.removeAll(input.Internal_Resources.Name.getall());
+										row.Name:ui.add(internalList);
+						)
+					}
+				}
+
+			
+}

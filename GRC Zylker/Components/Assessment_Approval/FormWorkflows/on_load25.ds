@@ -1,0 +1,72 @@
+on_load25 as "on load"
+{
+
+				type =  form
+				form = Assessment_Approval
+
+				record event = on add
+
+				on load
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Action_Field != "Approval")
+										{
+											input.style = '<style>form[name="Assessment_Approval"] .zc-live-primary-btn:nth-of-type(1),form[name="Assessment_Approval"] .zc-live-primary-btn:nth-of-type(3),form[name="Assessment_Approval"] .zc-live-primary-btn:nth-of-type(4),form[name="Assessment_Approval"] .zc-live-primary-btn:nth-of-type(5),form[name="Assessment_Approval"] .zc-live-primary-btn:nth-of-type(6){  display: none; }</style>';
+										}
+										else
+										{
+											style_txt = 'form[name="Assessment_Approval"] .zc-live-primary-btn:nth-of-type(2){  display: none; }';
+											userDet = User[Email == zoho.loginuserid].ID;
+											if(userDet != null)
+											{
+												approver = Risk_Assessment[Approvers == userDet && ID == input.Risk_Assessment].count();
+												if(approver > 0)
+												{
+													style_txt = (style_txt + 'form[name="Assessment_Approval"] .zc-live-primary-btn:nth-of-type(4),form[name="Assessment_Approval"] .zc-live-primary-btn:nth-of-type(5){  display: none; }');
+												}
+												else
+												{
+													resource = Resource[Internal_Resource == userDet].ID;
+													assessor = Risk_Assessment[Assessors == resource && ID == input.Risk_Assessment].count();
+													if(assessor > 0)
+													{
+														style_txt = (style_txt + 'form[name="Assessment_Approval"] .zc-live-primary-btn:nth-of-type(1),form[name="Assessment_Approval"] .zc-live-primary-btn:nth-of-type(3),form[name="Assessment_Approval"] .zc-live-primary-btn:nth-of-type(6){  display: none; }');
+														if(input.Risk_Assessment.Send_for_Approval == true)
+														{
+															style_txt = (style_txt + 'form[name="Assessment_Approval"] .zc-live-primary-btn:nth-of-type(1),form[name="Assessment_Approval"] .zc-live-primary-btn:nth-of-type(4){  display: none; }');
+														}
+														else
+														{
+															style_txt = (style_txt + 'form[name="Assessment_Approval"] .zc-live-primary-btn:nth-of-type(1),form[name="Assessment_Approval"] .zc-live-primary-btn:nth-of-type(5){  display: none; }');
+														}
+													}
+												}
+											}
+											else
+											{
+												resource = Resource[Email == zoho.loginuserid].ID;
+												assessor = Risk_Assessment[Assessors == resource && ID == input.Risk_Assessment].count();
+												if(assessor > 0)
+												{
+													style_txt = (style_txt + 'form[name="Assessment_Approval"] .zc-live-primary-btn:nth-of-type(1),form[name="Assessment_Approval"] .zc-live-primary-btn:nth-of-type(3),form[name="Assessment_Approval"] .zc-live-primary-btn:nth-of-type(6){  display: none; }');
+													if(input.Risk_Assessment.Send_for_Approval == true)
+													{
+														style_txt = (style_txt + 'form[name="Assessment_Approval"] .zc-live-primary-btn:nth-of-type(1),form[name="Assessment_Approval"] .zc-live-primary-btn:nth-of-type(4){  display: none; }');
+													}
+													else
+													{
+														style_txt = (style_txt + 'form[name="Assessment_Approval"] .zc-live-primary-btn:nth-of-type(1),form[name="Assessment_Approval"] .zc-live-primary-btn:nth-of-type(5){  display: none; }');
+													}
+												}
+											}
+											input.style = (('<style>' + style_txt) + '</style>');
+										}
+						)
+					}
+				}
+
+			
+}

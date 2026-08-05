@@ -1,0 +1,591 @@
+<%
+	page_link_name = "Meeting_Stepper";
+	main_page = "Meeting_Page";
+	%>
+<style>
+<%=thisapp.Styles.App_CSS()%>
+<%=thisapp.Styles.Button()%>
+<%=thisapp.Styles_Page.Common_View()%>
+</style>
+<style>
+	/* \u2500\u2500 Meeting Series Cards \u2500\u2500 */
+	.zc-Meeting_Series.tempContDiv .choice-table-row { display: flex !important; flex-direction: row !important; gap: 12px !important; width: 100% !important; }
+	.zc-Meeting_Series.tempContDiv .choice-table-cell { flex: 1 !important; border: 1.5px solid #E5E7EB !important; border-radius: 12px !important; background: #FAFAFA !important; padding: 0 !important; box-sizing: border-box !important; overflow: hidden !important; cursor: pointer !important; }
+	.zc-Meeting_Series.tempContDiv .choice-table-cell span { display: flex !important; flex-direction: row !important; align-items: center !important; gap: 14px !important; padding: 18px 20px !important; box-sizing: border-box !important; width: 100% !important; }
+	.zc-Meeting_Series.tempContDiv .choice-table-cell:has(input:checked) { border: 2px solid #e8453c !important; background: #fff5f5 !important; }
+	input[name='Meeting_Series'] { display: none !important; }
+	.zc-Meeting_Series.tempContDiv .choice-table-cell span label:not(.choice-label-text) { display: none !important; }
+	.zc-Meeting_Series.tempContDiv .choice-table-cell span label.choice-label-text { float: none !important; display: flex !important; flex-direction: column !important; font-size: 15px !important; font-weight: 600 !important; color: #111827 !important; margin: 0 !important; cursor: pointer !important; flex: 1 !important; }
+	.zc-Meeting_Series.tempContDiv .choice-table-cell:has(input:checked) label.choice-label-text { color: #e8453c !important; }
+	.zc-Meeting_Series.tempContDiv .choice-table-cell span::before { content: '' !important; width: 36px !important; height: 36px !important; min-width: 36px !important; border-radius: 8px !important; background: #fff0f0 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23e8453c' stroke-width='1.8' stroke-linecap='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2'/%3E%3Cpath d='M16 2v4M8 2v4M3 10h18'/%3E%3C/svg%3E") center/18px no-repeat !important; display: block !important; flex-shrink: 0 !important; }
+	label.choice-label-text[for*='Meeting_Series_1_0']::after { content: 'Single occurence' !important; font-size: 13px !important; font-weight: 400 !important; color: #6B7280 !important; display: block !important; margin-top: 3px !important; float: none !important; }
+	label.choice-label-text[for*='Meeting_Series_1_1']::after { content: 'Set recurring schedule' !important; font-size: 13px !important; font-weight: 400 !important; color: #6B7280 !important; display: block !important; margin-top: 3px !important; float: none !important; }
+</style>
+<%
+	prefillParams = "";
+	if(input.Action_Tracker != null && input.Action_Tracker > 0)
+	{
+		trackerRec = Action_Tracker[ID == input.Action_Tracker];
+		if(trackerRec.count() > 0)
+		{
+			/* --- Values from Action_Tracker itself --- */
+			mPriority = "";
+			if(trackerRec.Priority != null)
+			{
+				pv = trackerRec.Priority + "";
+				if(pv != "null" && !pv.isEmpty())
+				{
+					mPriority = pv;
+				}
+			}
+			mPurpose = "";
+			if(trackerRec.Description != null)
+			{
+				dv = trackerRec.Description + "";
+				if(dv != "null" && !dv.isEmpty())
+				{
+					mPurpose = dv;
+				}
+			}
+			/* --- Get source Meeting reference from Action_Tracker --- */
+			srcMeetingId = 0;
+			if(trackerRec.Meeting != null)
+			{
+				srcMeetingId = trackerRec.Meeting.toLong();
+			}
+			/* --- Get source Agenda_Item reference from Action_Tracker --- */
+			srcAgendaItemId = 0;
+			if(trackerRec.Agenda_Item != null)
+			{
+				srcAgendaItemId = trackerRec.Agenda_Item.toLong();
+			}
+			/* --- Fetch source Meeting record for prefilling --- */
+			hasSrcMeeting = false;
+			srcRec = Meeting[ID == 0];
+			if(srcMeetingId > 0)
+			{
+				srcRec = Meeting[ID == srcMeetingId];
+				if(srcRec.count() > 0)
+				{
+					hasSrcMeeting = true;
+				}
+			}
+			todayStr = zoho.currentdate.toString("dd-MMM-yyyy");
+			prefillParams = prefillParams + "&Status=Sheduled";
+			prefillParams = prefillParams + "&Meeting_Date=" + encodeUrl(todayStr);
+			if(mPriority != "")
+			{
+				prefillParams = prefillParams + "&Priority=" + encodeUrl(mPriority);
+			}
+			if(mPurpose != "")
+			{
+				prefillParams = prefillParams + "&Purpose=" + encodeUrl(mPurpose);
+			}
+			/* --- Prefill from source Meeting --- */
+			if(hasSrcMeeting == true)
+			{
+				if(srcRec.Meeting_Title != null)
+				{
+					v = srcRec.Meeting_Title + "";
+					if(v != "null" && !v.isEmpty())
+					{
+						prefillParams = prefillParams + "&Meeting_Title=" + encodeUrl(v);
+					}
+				}
+				if(srcRec.Meeting_Type != null)
+				{
+					v = srcRec.Meeting_Type + "";
+					if(v != "null" && !v.isEmpty())
+					{
+						prefillParams = prefillParams + "&Meeting_Type=" + encodeUrl(v);
+					}
+				}
+				if(srcRec.Committee1 != null)
+				{
+					prefillParams = prefillParams + "&Committee1=" + srcRec.Committee1;
+				}
+				if(srcRec.Meeting_Series != null)
+				{
+					v = srcRec.Meeting_Series + "";
+					if(v != "null" && !v.isEmpty())
+					{
+						prefillParams = prefillParams + "&Meeting_Series=" + encodeUrl(v);
+					}
+				}
+				if(srcRec.Recurring_pattern != null)
+				{
+					v = srcRec.Recurring_pattern + "";
+					if(v != "null" && !v.isEmpty())
+					{
+						prefillParams = prefillParams + "&Recurring_pattern=" + encodeUrl(v);
+					}
+				}
+				if(srcRec.Start_Date_Time != null)
+				{
+					prefillParams = prefillParams + "&Start_Date_Time=" + encodeUrl(srcRec.Start_Date_Time.toString("dd-MMM-yyyy HH:mm:ss"));
+				}
+				if(srcRec.End_Date_Time != null)
+				{
+					prefillParams = prefillParams + "&End_Date_Time=" + encodeUrl(srcRec.End_Date_Time.toString("dd-MMM-yyyy HH:mm:ss"));
+				}
+				if(srcRec.Meeting_Mode != null)
+				{
+					v = srcRec.Meeting_Mode + "";
+					if(v != "null" && !v.isEmpty())
+					{
+						prefillParams = prefillParams + "&Meeting_Mode=" + encodeUrl(v);
+					}
+				}
+				if(srcRec.Venue_Building != null)
+				{
+					prefillParams = prefillParams + "&Venue_Building=" + srcRec.Venue_Building;
+				}
+				if(srcRec.Room_Hall != null)
+				{
+					v = srcRec.Room_Hall + "";
+					if(v != "null" && !v.isEmpty())
+					{
+						prefillParams = prefillParams + "&Room_Hall=" + encodeUrl(v);
+					}
+				}
+				if(srcRec.Integeration != null)
+				{
+					v = srcRec.Integeration + "";
+					if(v != "null" && !v.isEmpty())
+					{
+						prefillParams = prefillParams + "&Integeration=" + encodeUrl(v);
+					}
+				}
+				if(srcRec.Meeting_Link != null)
+				{
+					v = srcRec.Meeting_Link + "";
+					if(v != "null" && !v.isEmpty())
+					{
+						prefillParams = prefillParams + "&Meeting_Link=" + encodeUrl(v);
+					}
+				}
+				if(srcRec.Invite_Members != null)
+				{
+					v = srcRec.Invite_Members + "";
+					if(v != "null" && !v.isEmpty())
+					{
+						prefillParams = prefillParams + "&Invite_Members=" + encodeUrl(v);
+					}
+				}
+				if(srcRec.Agenda != null)
+				{
+					prefillParams = prefillParams + "&Agenda=" + srcRec.Agenda;
+				}
+				if(srcRec.Quorum != null)
+				{
+					v = srcRec.Quorum + "";
+					if(v != "null" && !v.isEmpty())
+					{
+						prefillParams = prefillParams + "&Quorum=" + encodeUrl(v);
+					}
+				}
+				if(srcRec.Pre_Meeting_Pack_Send_Date != null)
+				{
+					prefillParams = prefillParams + "&Pre_Meeting_Pack_Send_Date=" + encodeUrl(srcRec.Pre_Meeting_Pack_Send_Date.toString("dd-MMM-yyyy"));
+				}
+				if(srcRec.Automated_Reminders != null)
+				{
+					v = srcRec.Automated_Reminders + "";
+					if(v != "null" && !v.isEmpty())
+					{
+						prefillParams = prefillParams + "&Automated_Reminders=" + encodeUrl(v);
+					}
+				}
+				if(srcRec.Send_calendar_invite_immediately_on_publish != null)
+				{
+					prefillParams = prefillParams + "&Send_calendar_invite_immediately_on_publish=" + srcRec.Send_calendar_invite_immediately_on_publish;
+				}
+				if(srcRec.Enable_digital_voting_e_resolutions != null)
+				{
+					prefillParams = prefillParams + "&Enable_digital_voting_e_resolutions=" + srcRec.Enable_digital_voting_e_resolutions;
+				}
+				if(srcRec.Record_virtual_meeting != null)
+				{
+					prefillParams = prefillParams + "&Record_virtual_meeting=" + srcRec.Record_virtual_meeting;
+				}
+			}
+			if(srcAgendaItemId > 0)
+			{
+				agItem = Agenda_Item[ID == srcAgendaItemId];
+				if(agItem.count() > 0)
+				{
+					if(agItem.Item_Title != null)
+					{
+						v = agItem.Item_Title + "";
+						if(v != "null" && !v.isEmpty())
+						{
+							prefillParams = prefillParams + "&Agenda_Items.Item_Title=" + encodeUrl(v);
+						}
+					}
+					if(agItem.Duration_minutes != null)
+					{
+						prefillParams = prefillParams + "&Agenda_Items.Duration_minutes=" + agItem.Duration_minutes;
+					}
+					if(agItem.Presenter != null)
+					{
+						prefillParams = prefillParams + "&Agenda_Items.Presenter=" + agItem.Presenter;
+					}
+					if(agItem.Type_field != null)
+					{
+						v = agItem.Type_field + "";
+						if(v != "null" && !v.isEmpty())
+						{
+							prefillParams = prefillParams + "&Agenda_Items.Type_field=" + encodeUrl(v);
+						}
+					}
+					if(agItem.Priority != null)
+					{
+						v = agItem.Priority + "";
+						if(v != "null" && !v.isEmpty())
+						{
+							prefillParams = prefillParams + "&Agenda_Items.Priority=" + encodeUrl(v);
+						}
+					}
+					if(agItem.Purpose_Summary != null)
+					{
+						v = agItem.Purpose_Summary + "";
+						if(v != "null" && !v.isEmpty())
+						{
+							prefillParams = prefillParams + "&Agenda_Items.Purpose_Summary=" + encodeUrl(v);
+						}
+					}
+				}
+			}
+			prefillParams = prefillParams + "&Action_Field=tracker";
+		}
+	}
+	autoRecid = null;
+	stage = "YetToStart";
+	if(input.recid != null)
+	{
+		meetingRec = Meeting[ID == input.recid];
+		autoRecid = meetingRec.ID;
+		stage = meetingRec.Completed_Stage;
+		if(stage == null || stage == "")
+		{
+			stage = "YetToStart";
+		}
+	}
+	showStepper = true;
+	if(stage == "Complete")
+	{
+		showStepper = false;
+		activeField = "";
+	}
+	else
+	{
+		activeField = input.action_field;
+		if(activeField == null || activeField == "")
+		{
+			if(stage == "YetToStart")
+			{
+				activeField = "Meeting_Details";
+			}
+			else if(stage == "Meeting_Details")
+			{
+				activeField = "Agenda";
+			}
+			else if(stage == "Agenda")
+			{
+				activeField = "Settings";
+			}
+			else
+			{
+				activeField = "Meeting_Details";
+			}
+		}
+	}
+	formParam = "";
+	actionFieldValue = activeField;
+	if(input.Action_Tracker != null && input.Action_Tracker > 0 && autoRecid == null)
+	{
+		actionFieldValue = "tracker";
+	}
+	if(autoRecid != null)
+	{
+		formParam = "&recLinkID=" + autoRecid + "&viewLinkName=Meetings&Action_Field=" + actionFieldValue;
+	}
+	else
+	{
+		formParam = "&Action_Field=" + actionFieldValue;
+	}
+	/* --- Pass Action_Tracker ID to Meeting form for on-load prefill --- */
+	if(input.Action_Tracker != null && input.Action_Tracker > 0)
+	{
+		formParam = formParam + "&Action_Tracker=" + input.Action_Tracker;
+	}
+	prevField = "";
+	isPrevDisabled = "zcs-button-disable";
+	previoushrefAction = "";
+	if(activeField == "Agenda")
+	{
+		prevField = "Meeting_Details";
+	}
+	else if(activeField == "Settings")
+	{
+		prevField = "Agenda";
+	}
+	if(prevField != "")
+	{
+		isPrevDisabled = "";
+		previoushrefAction = "href='#Page:" + page_link_name + "?recid=" + autoRecid + "&action_field=" + prevField + "'";
+	}
+	s1Done = if(stage == "Meeting_Details",true,if(stage == "Agenda",true,if(stage == "Settings",true,if(stage == "Complete",true,false))));
+	s2Done = if(stage == "Agenda",true,if(stage == "Settings",true,if(stage == "Complete",true,false)));
+	s3Done = if(stage == "Settings",true,if(stage == "Complete",true,false));
+	safeActiveField = if(activeField != null,activeField,"Meeting_Details");
+	c1 = if(safeActiveField == "Meeting_Details","zcs-stepper-active","");
+	c2 = if(safeActiveField == "Agenda","zcs-stepper-active","");
+	c3 = if(safeActiveField == "Settings","zcs-stepper-active","");
+	stageReachedAgenda = if(stage == "Meeting_Details",true,if(stage == "Agenda",true,if(stage == "Settings",true,if(stage == "Complete",true,false))));
+	stageReachedSettings = if(stage == "Agenda",true,if(stage == "Settings",true,if(stage == "Complete",true,false)));
+	s1href = "#Page:" + page_link_name + "?action_field=Meeting_Details";
+	s2href = "#Page:" + page_link_name + "?action_field=Agenda";
+	s3href = "#Page:" + page_link_name + "?action_field=Settings";
+	if(autoRecid != null)
+	{
+		s1href = "#Page:" + page_link_name + "?recid=" + autoRecid + "&action_field=Meeting_Details";
+		s2href = "#Page:" + page_link_name + "?recid=" + autoRecid + "&action_field=Agenda";
+		s3href = "#Page:" + page_link_name + "?recid=" + autoRecid + "&action_field=Settings";
+	}
+	s1action = "href='" + s1href + "'";
+	s2action = if(stageReachedAgenda == true,"href='" + s2href + "'","");
+	s3action = if(stageReachedSettings == true,"href='" + s3href + "'","");
+	%>
+<style>
+    .zcs-page-container { background-color: #F5F6FA; }
+    .zcs-button-disable { color: #99A1AF !important; pointer-events: none !important; }
+    .zcs-wizard-page .zcs-form .zc-form-fullheight,
+    .zcs-wizard-page .zcs-form .row,
+    .zcs-wizard-page .zcs-form .form-outer-wrapper form.form-table { width: 100%; height: 100%; background-color: transparent; }
+    .zcs-wizard-page .zcs-form .zc-form-fullheight .form-outer-wrapper { height: 100% !important; border-width: 0px; background-color: transparent; }
+    .zcs-wizard-page .zcs-form .form-outer-wrapper form.form-table { display: flex; flex-direction: column; }
+    .zcs-wizard-page .zcs-form .form-outer-wrapper .zc-mobile-scroll-ctr { display: flex; flex-direction: column; height: 100%; padding: 0px; }
+    .zcs-wizard-page .zcs-form form .zc-form-scroll-wrapper { background-color: var(--zcs-white-color); border: 1px solid #e7e7ee; border-radius: 12px; box-shadow: 0px 0px 6px 0px #E6E6E6; padding: 20px; box-sizing: border-box; }
+    .zcs-page-container.zcs-wizard-page .zcs-form .zc-form-fullheight .form-outer-wrapper .form-table .formContainer { flex: 1; padding: 20px 2%; box-sizing: border-box; overflow: auto; background-color: transparent; }
+    .zcs-wizard-page .zcs-form form .zc-footer-wrapper .zc-form-footer .formbutton { display: flex; align-items: center; padding: 20px 30px; box-sizing: border-box; justify-content: end; }
+    .zcs-form .zc-footer-wrapper { background-color: var(--zcs-white-color); }
+
+    .zcs-stepper-wrapper { padding: 28px 60px; background: var(--zcs-white-color); border-bottom: 1px solid var(--zcs_tertiary_border_color); box-sizing: border-box; }
+    .zcs-stepper-wrapper ul { display: flex; list-style: none; padding: 0; margin: 0; gap: 0; }
+    .zcs-stepper { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 10px; position: relative; max-width: 240px; margin: 0 auto; }
+    .zcs-stepper-link { display: flex; flex-direction: column; align-items: center; gap: 10px; text-decoration: none; width: 100%; }
+    .zcs-stepper-status { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; position: relative; z-index: 1; box-sizing: border-box; flex-shrink: 0; background-color: var(--zcs_brand_color); border: 4px solid var(--zcs-white-color); }
+    .zcs-stepper-status svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; color: var(--zcs_brand_foreground_color); }
+    .zcs-stepper-text { font-size: 13px; color: var(--zcs_primary_text_color); text-align: center; }
+    .zcs-stepper:not(:last-child):before { content: ''; width: 100%; height: 1px; border-top: 1px solid var(--zcs_brand_color); box-sizing: border-box; position: absolute; top: calc((32px - 1px) / 2); left: 50%; }
+    /* Active */
+    .zcs-stepper-active .zcs-stepper-status { background-color: var(--zcs-white-color); border: 1px solid var(--zcs_brand_color); outline: 4px solid var(--zcs-white-color); }
+    .zcs-stepper-active .zcs-stepper-status svg { color: var(--zcs_brand_color); }
+    .zcs-stepper-active .zcs-stepper-text { font-weight: 600; color: var(--zcs_brand_color); }
+    .zcs-stepper.zcs-stepper-active:before,
+    .zcs-stepper.zcs-stepper-active~.zcs-stepper:before { border-color: var(--zcs_tertiary_border_color); }
+    /* Unvisited (after active) */
+    .zcs-stepper-active~.zcs-stepper .zcs-stepper-status { background-color: var(--zcs-white-color); border: 1px solid var(--zcs_tertiary_border_color); }
+    .zcs-stepper-active~.zcs-stepper .zcs-stepper-status svg { color: var(--zcs_tertiary_text_color); }
+    .zcs-stepper-active~.zcs-stepper .zcs-stepper-text { color: var(--zcs_tertiary_text_color); }
+    @media (max-width: 575px) {
+        .zcs-stepper-wrapper ul { flex-direction: column; gap: 24px; }
+        .zcs-stepper { flex-direction: row; gap: 16px; max-width: none; align-items: center; justify-content: flex-start; }
+        .zcs-stepper-link { flex-direction: row; gap: 16px; }
+        .zcs-stepper:not(:last-child):before { width: 1px; height: 100%; border-left: 1px solid var(--zcs_brand_color); border-top: none; left: calc((32px - 1px) / 2); top: 50%; }
+    }
+	.zc-Meeting_Series.tempContDiv .choice-table-row { display: flex !important; flex-direction: row !important; gap: 12px !important; width: 100% !important; margin-bottom: 0 !important; }
+	.zc-Meeting_Series.tempContDiv .choice-table-row .choice-table-cell { border: 1.5px solid #E5E7EB !important; border-radius: 12px !important; background: #FAFAFA !important; padding: 0px !important; margin: 0 !important; box-shadow: none !important; cursor: pointer !important; flex: 1 !important; box-sizing: border-box !important; overflow: hidden !important; }
+	.zc-Meeting_Series.tempContDiv .choice-table-row:has(input:checked) .choice-table-cell { border: 2px solid #e8453c !important; background: #fff5f5 !important; }
+	.zc-Meeting_Series.tempContDiv .choice-table-row:has(input:checked) .choice-label-text { color: #e8453c !important; }
+	.zc-Meeting_Series.tempContDiv .choice-table-row .choice-table-cell span { display: flex !important; flex-direction: row !important; align-items: center !important; justify-content: space-between !important; gap: 16px !important; width: 100% !important; padding: 20px 24px !important; background: transparent !important; border: none !important; box-shadow: none !important; border-radius: 12px !important; min-height: unset !important; box-sizing: border-box !important; cursor: pointer !important; }
+	.zc-Meeting_Series.tempContDiv .choice-table-row .choice-table-cell .choice-label-text { display: flex !important; flex-direction: column !important; flex: 1 !important; float: none !important; gap: 4px !important; cursor: pointer !important; font-size: 15px !important; font-weight: 600 !important; color: #111827 !important; margin: 0px !important; padding: 0px !important; order: 1 !important; min-width: 0 !important; }
+	.choice-label-text[for*='Meeting_Series_1_0']::after { content: 'Single occurence' !important; font-size: 13px !important; font-weight: 400 !important; color: #6B7280 !important; line-height: 1.5 !important; display: block !important; margin-top: 3px !important; }
+	.choice-label-text[for*='Meeting_Series_1_1']::after { content: 'Set recurring schedule' !important; font-size: 13px !important; font-weight: 400 !important; color: #6B7280 !important; line-height: 1.5 !important; display: block !important; margin-top: 3px !important; }
+	.zc-Meeting_Series.tempContDiv .choice-table-row .choice-table-cell input.customRadio { float: none !important; display: flex !important; order: 2 !important; flex-shrink: 0 !important; align-self: center !important; width: 20px !important; height: 20px !important; min-width: 20px !important; margin: 0px !important; padding: 0px !important; cursor: pointer !important; appearance: auto !important; -webkit-appearance: auto !important; accent-color: #e8453c !important; position: static !important; opacity: 1 !important; }
+	.zc-Meeting_Series.tempContDiv .choice-table-row .choice-table-cell input.customRadio + label:not(.choice-label-text) { display: none !important; }
+</style>
+<%
+	if(stage == "Complete")
+	{
+		mRec = Meeting[ID == input.recid];
+		mTitle = "\u2014";
+		if(mRec.Meeting_Title != null)
+		{
+			mTitle = mRec.Meeting_Title + "";
+			if(mTitle == "null")
+			{
+				mTitle = "\u2014";
+			}
+		}
+		mCommittee = "\u2014";
+		if(mRec.Committee1 != null)
+		{
+			mCommittee = mRec.Committee1.Committee_Name + "";
+			if(mCommittee == "null")
+			{
+				mCommittee = "\u2014";
+			}
+		}
+		mAttendees = "";
+		if(mRec.Invite_Members != null)
+		{
+			mAttendees = mRec.Invite_Members + "";
+			if(mAttendees == "null")
+			{
+				mAttendees = "";
+			}
+		}
+		attendeeCount = 0;
+		if(mAttendees != "")
+		{
+			attendeeCount = mAttendees.replaceAll("[^,]","").length() + 1;
+		}
+		mMode = "\u2014";
+		if(mRec.Meeting_Mode != null)
+		{
+			mMode = mRec.Meeting_Mode + "";
+			if(mMode == "null")
+			{
+				mMode = "\u2014";
+			}
+		}
+		mQuorum = "\u2014";
+		if(mRec.Quorum != null)
+		{
+			mQuorum = mRec.Quorum + "";
+			if(mQuorum == "null")
+			{
+				mQuorum = "\u2014";
+			}
+		}
+		mSeries = "\u2014";
+		if(mRec.Meeting_Series != null)
+		{
+			mSeries = mRec.Meeting_Series + "";
+			if(mSeries == "null")
+			{
+				mSeries = "\u2014";
+			}
+		}
+		mType = "\u2014";
+		if(mRec.Meeting_Type != null)
+		{
+			mType = mRec.Meeting_Type + "";
+			if(mType == "null")
+			{
+				mType = "\u2014";
+			}
+		}
+		mStartDate = "\u2014";
+		mEndDate = "\u2014";
+		if(mRec.Start_Date_Time != null)
+		{
+			mStartDate = mRec.Start_Date_Time.toString("dd-MMM-yyyy HH:mm");
+		}
+		if(mRec.End_Date_Time != null)
+		{
+			mEndDate = mRec.End_Date_Time.toString("dd-MMM-yyyy HH:mm");
+		}
+		agendaText = "\u2014";
+		agendaItems = Agenda_Item[Meeting.ID == input.recid];
+		agendaDuration = agendaItems.sum(Duration_minutes);
+		agendaText = "Items (" + agendaDuration + " mins)";
+		%>
+<div style='position:fixed;inset:0;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px;box-sizing:border-box;'>
+<div style='background:#fff;border-radius:20px;padding:32px 36px;max-width:520px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.25);font-family:Inter,sans-serif;'>
+    <div style='text-align:center;margin-bottom:20px;'>
+        <div style='width:56px;height:56px;border-radius:50%;background:#fff0f0;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;'>
+            <svg viewBox='0 0 36 36' fill='none' width='30' height='30'>
+                <circle cx='18' cy='18' r='16' stroke='#e8453c' stroke-width='1.8'/>
+                <path d='M11 18.5l5 5 9-10' stroke='#e8453c' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/>
+            </svg>
+        </div>
+        <h3 style='font-size:22px;font-weight:700;color:#111827;margin:0 0 8px;'>Meeting Published!</h3>
+        <p style='font-size:13px;color:#6B7280;margin:0;'><strong><%=mTitle%></strong> - has been created and invites have been sent to <%=attendeeCount%> attendees.</p>
+    </div>
+    <div style='background:#f9fafb;border-radius:12px;padding:4px 16px;margin-bottom:24px;'>
+        <div style='display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid #f0f0f0;font-size:13px;'><span style='color:#9ca3af;'>Title</span><span style='font-weight:600;color:#111827;'><%=mTitle%></span></div>
+        <div style='display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid #f0f0f0;font-size:13px;'><span style='color:#9ca3af;'>Committee</span><span style='font-weight:600;color:#111827;'><%=mCommittee%></span></div>
+        <div style='display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid #f0f0f0;font-size:13px;'><span style='color:#9ca3af;'>Start Date</span><span style='font-weight:600;color:#111827;'><%=mStartDate%></span></div>
+        <div style='display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid #f0f0f0;font-size:13px;'><span style='color:#9ca3af;'>End Date</span><span style='font-weight:600;color:#111827;'><%=mEndDate%></span></div>
+        <div style='display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid #f0f0f0;font-size:13px;'><span style='color:#9ca3af;'>Mode</span><span style='font-weight:600;color:#111827;'><%=mMode%></span></div>
+        <div style='display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid #f0f0f0;font-size:13px;'><span style='color:#9ca3af;'>Attendees</span><span style='font-weight:600;color:#111827;'><%=attendeeCount%></span></div>
+        <div style='display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid #f0f0f0;font-size:13px;'><span style='color:#9ca3af;'>Agenda Items</span><span style='font-weight:600;color:#111827;'><%=agendaText%></span></div>
+        <div style='display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid #f0f0f0;font-size:13px;'><span style='color:#9ca3af;'>Quorum</span><span style='font-weight:600;color:#111827;'><%=mQuorum%></span></div>
+        <div style='display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid #f0f0f0;font-size:13px;'><span style='color:#9ca3af;'>Series</span><span style='font-weight:600;color:#111827;'><%=mSeries%></span></div>
+        <div style='display:flex;justify-content:space-between;align-items:center;padding:11px 0;font-size:13px;'><span style='color:#9ca3af;'>Type</span><span style='font-weight:600;color:#111827;'><%=mType%></span></div>
+    </div>
+    <a href='#Page:<%=main_page%>' style='display:block;width:100%;padding:15px;background:#e8453c;color:#fff;border-radius:12px;text-decoration:none;font-size:15px;font-weight:600;text-align:center;box-sizing:border-box;'>Go to Meeting</a>
+</div>
+</div>
+<%
+	}
+	if(showStepper == true)
+	{
+		%>
+<div class='zcs-page-container zcs-wizard-page zcs-wh-full'>
+    <div class='zcs-page-container-inner zcs-wh-full zcs-flex zcs-direction-column'>
+        <div class='zcs-page-header zcs-w-full zcs-px-30 zcs-py-24 zcs-box-border'>
+    <div style='display:flex; align-items:center; gap:16px;'>
+        <a href='#Page:<%=main_page%>' class='zcs-stepper-back-btn' title='Back to meetings'>
+            <svg width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>
+                <line x1='19' y1='12' x2='5' y2='12'/>
+                <polyline points='12 19 5 12 12 5'/>
+            </svg>
+        </a>
+        <div style='display:flex; flex-direction:column; gap:4px; flex:1; min-width:0;'>
+            <h5 class='zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-ellipsis zcs-m-0'>Create New Meeting</h5>
+            <p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-ellipsis zcs-m-0'>Configure and schedule your meeting settings.</p>
+        </div>
+    </div>
+</div>
+        <div class='zcs-page-content zcs-col-common zcs-overflow-auto'>
+            <div class='zcs-wh-full zcs-flex zcs-direction-column zcs-box-border zcs-overflow-hidden zcs-relative'>
+                <!-- Zoho standard stepper (same as Agenda + Board pages) -->
+                <div class='zcs-stepper-wrapper'>
+                    <ul>
+                        <li class='zcs-stepper <%=c1%>'>
+                            <a class='zcs-stepper-link' <%=s1action%>>
+                                <div class='zcs-stepper-status'>
+                                    <svg viewBox='0 0 24 24'><rect x='3' y='4' width='18' height='16' rx='2'/><path d='M3 9h18'/><path d='M8 2v4M16 2v4'/></svg>
+                                </div>
+                                <span class='zcs-stepper-text'>Meeting Details</span>
+                            </a>
+                        </li>
+                        <li class='zcs-stepper <%=c2%>'>
+                            <a class='zcs-stepper-link' <%=s2action%>>
+                                <div class='zcs-stepper-status'>
+                                    <svg viewBox='0 0 24 24'><path d='M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2'/><rect x='9' y='3' width='6' height='4' rx='1'/><path d='M9 12h6M9 16h4'/></svg>
+                                </div>
+                                <span class='zcs-stepper-text'>Agenda</span>
+                            </a>
+                        </li>
+                        <li class='zcs-stepper <%=c3%>'>
+                            <a class='zcs-stepper-link' <%=s3action%>>
+                                <div class='zcs-stepper-status'>
+                                    <svg viewBox='0 0 24 24'><circle cx='12' cy='12' r='3'/><path d='M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z'/></svg>
+                                </div>
+                                <span class='zcs-stepper-text'>Settings</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                <div class='zcs-col-common zcs-overflow-auto'>
+                   <div class='zcs-form' zc_MobileView='inline' elName='zc-component' formLinkName='Meeting'
+     params='zc_Header=false&zc_SubmitVal=Next<%=formParam%>'></div>
+                </div>
+                <a class='zcs-button zcs-secondary-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body'
+                   <%=previoushrefAction%> style='position:absolute;bottom:14px;left:40px;'>
+                    <span class='zcs-button-text <%=isPrevDisabled%>'>Previous</span>
+                </a>
+
+            </div>
+        </div>
+    </div>
+</div>
+<%
+	}
+	// end showStepper
+%>

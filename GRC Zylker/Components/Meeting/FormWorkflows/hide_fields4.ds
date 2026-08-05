@@ -1,0 +1,164 @@
+hide_fields4 as "hide fields"
+{
+
+				type =  form
+				form = Meeting
+
+				record event = on add or edit
+
+				on load
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.ID == null && input.Action_Tracker != null && input.Action_Tracker > 0)
+										{
+											trackerRec = Action_Tracker[ID == input.Action_Tracker];
+											if(trackerRec.count() > 0)
+											{
+												if(trackerRec.Priority != null)
+												{
+													input.Priority = trackerRec.Priority;
+												}
+												if(trackerRec.Description != null)
+												{
+													input.Purpose = trackerRec.Description;
+												}
+												/* --- Default values for new meeting --- */
+												input.Status = "Sheduled";
+												// 		input.Meeting_Date = zoho.currentdate;
+												/* --- Fetch source Meeting (if tracker is linked to one) --- */
+												if(trackerRec.Meeting != null)
+												{
+													srcMeetingId = trackerRec.Meeting.toLong();
+													if(srcMeetingId > 0)
+													{
+														srcRec = Meeting[ID == srcMeetingId];
+														if(srcRec.count() > 0)
+														{
+															input.Meeting_Title = srcRec.Meeting_Title;
+															input.Meeting_Type = srcRec.Meeting_Type;
+															input.Committee1 = srcRec.Committee1;
+															input.Meeting_Series = srcRec.Meeting_Series;
+															input.Recurring_pattern = srcRec.Recurring_pattern;
+															input.Start_Date_Time = srcRec.Start_Date_Time;
+															input.End_Date_Time = srcRec.End_Date_Time;
+															input.Meeting_Mode = srcRec.Meeting_Mode;
+															input.Venue_Building = srcRec.Venue_Building;
+															input.Room_Hall = srcRec.Room_Hall;
+															input.Integeration = srcRec.Integeration;
+															input.Meeting_Link = srcRec.Meeting_Link;
+															input.Invite_Members = srcRec.Invite_Members;
+															input.Agenda = srcRec.Agenda;
+															input.Pre_Meeting_Pack_Send_Date = srcRec.Pre_Meeting_Pack_Send_Date;
+															input.Automated_Reminders = srcRec.Automated_Reminders;
+															input.Send_calendar_invite_immediately_on_publish = srcRec.Send_calendar_invite_immediately_on_publish;
+															input.Enable_digital_voting_e_resolutions = srcRec.Enable_digital_voting_e_resolutions;
+															input.Record_virtual_meeting = srcRec.Record_virtual_meeting;
+														}
+													}
+												}
+												if(trackerRec.Agenda_Item != null)
+												{
+													agItemId = trackerRec.Agenda_Item.toLong();
+													if(agItemId > 0)
+													{
+														agItem = Agenda_Item[ID == agItemId];
+														if(agItem.count() > 0)
+														{
+															newRow = Meeting.Agenda_Items();
+															newRow.Item_Title=agItem.Item_Title;
+															newRow.Duration_minutes=agItem.Duration_minutes;
+															newRow.Presenter=agItem.Presenter;
+															newRow.Type_field=agItem.Type_field;
+															newRow.Priority=agItem.Priority;
+															newRow.Purpose_Summary=agItem.Purpose_Summary;
+															input.Agenda_Items.insert(newRow);
+														}
+													}
+												}
+												/* --- Force Action_Field=tracker so wizard shows Meeting_Details step --- */
+												input.Action_Field = "tracker";
+											}
+										}
+										hide Hidden;
+										hide Meeting_Attendance;
+										hide Meeting_Details;
+										hide Metting_Series;
+										hide Date_Time;
+										hide Attendees;
+										hide Agenda_setup;
+										hide Agenda_Items;
+										hide Quorum_Governance;
+										hide Notifications_Reminders;
+										hide Completed_Stage;
+										hide Action_Field;
+										hide Action_Tracker;
+										hide Agenda_Items.Status;
+										hide Quorum;
+										hide Venue_Section;
+										// hide Agenda_Items.File_upload;
+										hide Agenda_Items.Uploader;
+										disable Agenda_Items.Item_Title;
+										disable Agenda_Items.Purpose_Summary;
+										disable Agenda_Items.Presenter;
+										disable Agenda_Items.Duration_minutes;
+										disable Agenda_Items.Type_field;
+										disable Agenda_Items.Priority;
+										if(Action_Field == "Meeting_Details")
+										{
+											show Meeting_Details;
+											show Metting_Series;
+											show Date_Time;
+											show Attendees;
+											show Venue_Section;
+										}
+										else if(Action_Field == "Agenda")
+										{
+											show Agenda_setup;
+											show Agenda_Items;
+										}
+										else if(Action_Field == "Settings")
+										{
+											show Quorum_Governance;
+											show Quorum;
+											show Notifications_Reminders;
+										}
+										else if(Action_Field == "Action")
+										{
+											show Agenda_Items;
+											hide Agenda_Items.Type_field;
+											disable Agenda_Items.Item_Title;
+											disable Agenda_Items.Presenter;
+											disable Agenda_Items.Duration_minutes;
+											disable Agenda_Items.Purpose_Summary;
+											disable Agenda_Items.Priority;
+										}
+										else if(Action_Field == "Edit")
+										{
+											show Meeting_Details;
+											show Metting_Series;
+											show Date_Time;
+											show Attendees;
+											show Venue_Section;
+											show Agenda_setup;
+											show Agenda_Items;
+											show Quorum_Governance;
+											show Quorum;
+											show Notifications_Reminders;
+										}
+										else if(Action_Field == "tracker")
+										{
+											show Meeting_Details;
+											show Metting_Series;
+											show Date_Time;
+											show Attendees;
+											show Venue_Section;
+										}
+						)
+					}
+				}
+
+			
+}

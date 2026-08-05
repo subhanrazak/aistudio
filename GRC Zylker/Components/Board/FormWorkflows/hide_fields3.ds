@@ -1,0 +1,60 @@
+hide_fields3 as "hide fields"
+{
+
+				type =  form
+				form = Board
+
+				record event = on add or edit
+					status = inactive
+
+				on load
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Action_Field == "Board")
+										{
+											// Editing just the Board step — go back to overview
+											input.Action_Field = "";
+											openUrl("#Page:Board_Page?recid=" + input.ID + "&page_action=detailView","same window");
+										}
+										else if(input.Action_Field == "Details")
+										{
+											// Editing just the Details step — go back to overview
+											input.Action_Field = "";
+											openUrl("#Page:Board_Page?recid=" + input.ID + "&page_action=detailView","same window");
+										}
+										else if(input.Completed_Stage == "Board")
+										{
+											if(input.Board_Type_Board != null && input.Board_Type_Board != "")
+											{
+												input.Completed_Stage = "Details";
+											}
+											input.Action_Field = "";
+											openUrl("#Page:Board_Page?recid=" + input.ID,"same window");
+										}
+										else if(input.Completed_Stage == "Details")
+										{
+											input.Completed_Stage = "Review";
+											input.Action_Field = "";
+											openUrl("#Page:Board_Page?recid=" + input.ID,"same window");
+										}
+										else if(input.Completed_Stage == "Review")
+										{
+											input.Completed_Stage = "Complete";
+											input.Action_Field = "";
+											openUrl("#Page:Board_Page?recid=" + input.ID + "&stage=Review","same window");
+										}
+										else
+										{
+											input.Completed_Stage = "Board";
+											input.Action_Field = "";
+											openUrl("#Page:Board_Page?recid=" + input.ID,"same window");
+										}
+						)
+					}
+				}
+
+			
+}

@@ -1,0 +1,106 @@
+Process_Approve as "Process Approve"
+{
+
+				type =  functions
+				form = Department_Process_Approvals
+				execution type = for each record	
+				on start
+				{
+					actions 
+					{
+					on click
+					(
+						input.Status = "Approved";
+										input.Approved_By = User[Email == zoho.loginuserid].ID;
+										approvalDet = Department_Approvals[ID == input.Department_Approvals];
+										totalCount = Department_Process_Approvals[Department_Approvals == input.Department_Approvals].count();
+										approvedCount = Department_Process_Approvals[Department_Approvals == input.Department_Approvals && Status == "Approved"].count();
+										if(totalCount == approvedCount)
+										{
+											approvalDet.Status="Approved";
+										}
+										else if(approvedCount > 0)
+										{
+											approvalDet.Status="Partial";
+										}
+										else
+										{
+											rejectedCount = Department_Process_Approvals[Department_Approvals == input.Department_Approvals && Status == "Rejected"].count();
+											if(totalCount == rejectedCount)
+											{
+												approvalDet.Status="Rejected";
+											}
+										}
+										approvalDet.Approved=Department_Process_Approvals[Department_Approvals == input.Department_Approvals && Status == "Approved"].count();
+										approvalDet.Rejected=Department_Process_Approvals[Department_Approvals == input.Department_Approvals && Status == "Rejected"].count();
+										approvalDet.Pending_Approval=Department_Process_Approvals[Department_Approvals == input.Department_Approvals && Status == "Pending"].count();
+										departmentApproval = Department_Approvals[Risk_Assessment == input.Department_Approvals.Risk_Assessment && Department == input.Department_Approvals.Department && Type_field == "Risk"];
+										riskList = List();
+										for each  risk in Risk_Assessment_Libraries[Risk_Assessment == input.Department_Approvals.Risk_Assessment && Scope_Type == "Risk"]
+										{
+											linkedDepartment = Risk_Entry[ID == risk.Risks].Department;
+											linkedProcess = Risk_Entry[ID == risk.Risks].Process;
+											if(input.Process == linkedProcess)
+											{
+												riskList.add(risk.Risks);
+											}
+										}
+										if(riskList.size() > 0)
+										{
+											if(departmentApproval.count() > 0)
+											{
+												for each  rec in riskList
+												{
+													checkRisk = Department_Process_Approvals[Risk == rec && Department_Approvals == departmentApproval.ID].count();
+													if(checkRisk == 0)
+													{
+														risk_details = insert into Department_Process_Approvals
+														[
+															Added_User=zoho.loginuser
+															Risk=rec
+															Department_Approvals=departmentApproval.ID
+															Status="Pending"
+														];
+													}
+												}
+												departmentApproval.Total_Count=riskList.size();
+												departmentApproval.Pending_Approval=Department_Process_Approvals[Status == "Pending" && Department_Approvals == departmentApproval.ID].count();
+												departmentApproval.Approved=Department_Process_Approvals[Status == "Approved" && Department_Approvals == departmentApproval.ID].count();
+												departmentApproval.Rejected=Department_Process_Approvals[Status == "Rejected" && Department_Approvals == departmentApproval.ID].count();
+												if(departmentApproval.Approved > 0 || departmentApproval.Rejected > 0)
+												{
+													departmentApproval.Status="Partial";
+												}
+											}
+											else
+											{
+												approval = insert into Department_Approvals
+												[
+													Department=input.Department_Approvals.Department
+													Risk_Assessment=input.Department_Approvals.Risk_Assessment
+													Total_Count=riskList.size()
+													Pending_Approval=riskList.size()
+													Rejected=0
+													Approved=0
+													Status="Pending"
+													Type_field="Risk"
+													Added_User=zoho.loginuser
+												];
+												for each  rec in riskList
+												{
+													risk_details = insert into Department_Process_Approvals
+													[
+														Added_User=zoho.loginuser
+														Risk=rec
+														Department_Approvals=approval
+														Status="Pending"
+													];
+												}
+											}
+										}
+										thisapp.Log.Audit_Log("Department_Process_Approvals",input.ID,"Approved",User[Email == zoho.loginuserid].ID,input.Department_Approvals.Risk_Assessment.Assessment_Title + " - " + input.Process.Process_Name);
+					)
+					}
+				}
+			
+}

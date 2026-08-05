@@ -1,0 +1,32 @@
+Get_Process3 as "Get Process"
+{
+
+				type =  form
+				form = Assessment_Plan
+
+				record event = on add or edit
+
+				on add row of Process_Selection
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											departmentList = input.Department_Coverage.Department.getall();
+										if(departmentList.size() > 0)
+										{
+											processList = Process[Linked_Departments == departmentList].ID.getAll();
+											currentProcess = input.Process_Selection.Process_Name.getall();
+											processList.removeAll(currentProcess);
+											row.Process_Name:ui.add(processList);
+										}
+										else
+										{
+											clear row.Process_Name;
+										}
+						)
+					}
+				}
+
+			
+}

@@ -1,0 +1,818 @@
+<%
+	page_link_name = "Agenda_Page";
+	totalAgenda = Meeting[ID != 0].count();
+	publishedAgenda = Agenda[Stepper_Status == "Completed"].count();
+	upcoming = Meeting[End_Date_Time <= zoho.currentdate].count();
+	completed = Meeting[End_Date_Time >= zoho.currentdate].count();
+	%>
+<style>
+<%=thisapp.Styles.App_CSS()%>
+<%=thisapp.Styles.Button()%>
+<%=thisapp.Styles.Panel()%>
+<%=thisapp.Styles.Horizontal_Tab()%>
+<%=thisapp.Styles_Creator.Filter()%>
+<%=thisapp.Styles_Page.Common_View()%>
+</style>
+<style>
+   * { box-sizing: border-box; }
+
+   .zcs-success-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 9999; }
+   .zcs-success-card { background: #fff; border-radius: 24px; padding: 44px 52px; text-align: center; max-width: 480px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+   .zcs-success-icon-ring { width: 68px; height: 68px; border-radius: 50%; background: #fff0f0; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; }
+   .zcs-success-icon-ring svg { width: 36px; height: 36px; }
+   .zcs-success-card h3 { font-size: 22px; font-weight: 700; color: var(--zcs_primary_text_color); margin: 0 0 10px; }
+   .zcs-success-card p { font-size: 14px; color: var(--zcs_tertiary_text_color); margin: 0 0 28px; line-height: 1.65; }
+   .zcs-success-btn { display: inline-block; padding: 13px 36px; background: var(--zcs_brand_color); color: var(--zcs_brand_foreground_color); border-radius: 12px; text-decoration: none; font-size: 15px; font-weight: 600; }
+
+   /* \u2500\u2500 Wizard wrapper \u2500\u2500 */
+   .zcs-page-container { background-color: var(--zcs-page-bg-color); }
+   .zcs-button-disable { color: #99A1AF !important; pointer-events: none !important; }
+   .zcs-wizard-page .zcs-form .zc-form-fullheight,
+   .zcs-wizard-page .zcs-form .row,
+   .zcs-wizard-page .zcs-form .form-outer-wrapper form.form-table { width: 100%; height: 100%; background-color: transparent; }
+   .zcs-wizard-page .zcs-form .zc-form-fullheight .form-outer-wrapper { height: 100% !important; border-width: 0px; background-color: transparent; }
+   .zcs-wizard-page .zcs-form .form-outer-wrapper form.form-table { display: flex; flex-direction: column; }
+   .zcs-wizard-page .zcs-form .form-outer-wrapper .zc-mobile-scroll-ctr { display: flex; flex-direction: column; height: 100%; padding: 0px; }
+   .zcs-wizard-page .zcs-form form .zc-form-scroll-wrapper { background-color: var(--zcs-white-color); border: 1px solid var(--zcs_tertiary_border_color); border-radius: 12px; box-shadow: 0px 0px 6px 0px #E6E6E6; padding: 20px; box-sizing: border-box; }
+   .zcs-page-container.zcs-wizard-page .zcs-form .zc-form-fullheight .form-outer-wrapper .form-table .formContainer { flex: 1; padding: 20px 10%; box-sizing: border-box; overflow: auto; background-color: transparent; }
+   .zcs-wizard-page .zcs-form form .zc-footer-wrapper .zc-form-footer .formbutton { display: flex; align-items: center; padding: 20px 30px; box-sizing: border-box; justify-content: end; }
+   .zcs-form .zc-footer-wrapper { background-color: var(--zcs-white-color); }
+
+   .zcs-stepper-status { width: 32px; height: 32px; background-color: var(--zcs_brand_color); border: 4px solid var(--zcs-white-color); }
+   .zcs-stepper-count { border: 1px solid var(--zcs_tertiary_border_color); display: none; }
+   .zcs-stepper-icon.zcs-stepper-failed { display: none; }
+   .zcs-stepper-level { display: none; background-color: var(--zcs_brand_color); }
+   .zcs-stepper:not(:last-child):before { content: ''; width: 100%; height: 1px; border-top: 1px solid var(--zcs_brand_color); box-sizing: border-box; position: absolute; top: calc((32px - 1px) / 2); left: 50%; }
+
+   /* Active Styles */
+   .zcs-stepper-active .zcs-stepper-status { border: 1px solid var(--zcs_brand_color); outline: 4px solid var(--zcs-white-color); background-color: var(--zcs-white-color); }
+   .zcs-stepper-active .zcs-stepper-count { display: flex; border-width: 0px; color: var(--zcs_brand_color); }
+   .zcs-stepper-active .zcs-stepper-icon { display: none; }
+   .zcs-stepper-active .zcs-stepper-text { font-weight: 500; color: var(--zcs_brand_color); }
+   .zcs-stepper.zcs-stepper-active:before,
+   .zcs-stepper.zcs-stepper-active~.zcs-stepper:before { border-color: var(--zcs_tertiary_border_color); }
+
+   /* Unvisited Styles */
+   .zcs-stepper-active~.zcs-stepper .zcs-stepper-status { background-color: var(--zcs-white-color); }
+   .zcs-stepper-active~.zcs-stepper .zcs-stepper-count { display: flex; }
+   .zcs-stepper-active~.zcs-stepper .zcs-stepper-icon { display: none; }
+   .zcs-stepper-active~.zcs-stepper .zcs-stepper-text { color: var(--zcs_tertiary_text_color); }
+
+   /* SVG icon styling inside status circles */
+   .zcs-stepper-icon svg { width: 16px; height: 16px; fill: none; stroke: var(--zcs-white-color); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+   .zcs-stepper-count svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+   .zcs-stepper-active .zcs-stepper-count { background-color: var(--zcs-white-color); }
+   .zcs-stepper-active~.zcs-stepper .zcs-stepper-count { background-color: var(--zcs-white-color); color: var(--zcs_tertiary_text_color); }
+
+   @media (max-width: 575px) {
+      .zcs-stepper-wrapper ul { flex-direction: column; gap: 24px; }
+      .zcs-stepper-wrapper ul .zcs-stepper { flex-direction: row; gap: 16px; }
+      .zcs-stepper:not(:last-child):before { width: 1px; height: 100%; border-left: 1px solid var(--zcs_brand_color); left: calc((32px - 1px) / 2); }
+   }
+   .zc-rtl-wrapper .zcs-stepper:not(:last-child):before { left: auto; right: 50%; }
+   @media (max-width: 575px) {
+      .zc-rtl-wrapper .zcs-stepper:not(:last-child):before { border-left: 1px solid var(--zcs_brand_color); left: auto; right: calc((32px - 1px) / 2); }
+   }
+
+
+   .zc-Publish_option.tempContDiv .choice-table-row { display: flex !important; flex-direction: row !important; gap: 12px !important; width: 100% !important; }
+   .zc-Publish_option.tempContDiv .choice-table-cell { flex: 1 !important; border: 1.5px solid var(--zcs_tertiary_border_color) !important; border-radius: 12px !important; background: #FAFAFA !important; padding: 0 !important; box-sizing: border-box !important; overflow: hidden !important; cursor: pointer !important; }
+   .zc-Publish_option.tempContDiv .choice-table-cell span { display: flex !important; flex-direction: column !important; padding: 16px 20px !important; box-sizing: border-box !important; width: 100% !important; }
+   .zc-Publish_option.tempContDiv .choice-table-cell:has(input:checked) { border: 2px solid var(--zcs_brand_color) !important; background: #fff5f5 !important; }
+   input[name='Publish_option'] { display: none !important; }
+   .zc-Publish_option.tempContDiv .choice-table-cell span label:not(.choice-label-text) { display: none !important; }
+   .zc-Publish_option.tempContDiv .choice-table-cell span label.choice-label-text { float: none !important; display: block !important; font-size: 15px !important; font-weight: 600 !important; color: var(--zcs_primary_text_color) !important; margin: 0 !important; cursor: pointer !important; }
+   .zc-Publish_option.tempContDiv .choice-table-cell:has(input:checked) label.choice-label-text { color: var(--zcs_brand_color) !important; }
+   .zc-Publish_option.tempContDiv .choice-table-cell:has(input[value='Save as draft']) label.choice-label-text::after { content: 'Not visible to members'; font-size: 13px !important; font-weight: 400 !important; color: var(--zcs_tertiary_text_color) !important; display: block !important; margin-top: 4px !important; float: none !important; }
+   .zc-Publish_option.tempContDiv .choice-table-cell:has(input[value='Send for review']) label.choice-label-text::after { content: 'Chair reviews first'; font-size: 13px !important; font-weight: 400 !important; color: var(--zcs_tertiary_text_color) !important; display: block !important; margin-top: 4px !important; float: none !important; }
+   .zc-Publish_option.tempContDiv .choice-table-cell:has(input[value='Publish now']) label.choice-label-text::after { content: 'Immediately visible'; font-size: 13px !important; font-weight: 400 !important; color: var(--zcs_tertiary_text_color) !important; display: block !important; margin-top: 4px !important; float: none !important; }
+   #zc-Publish_option-arialabel .zc-label-text { color: var(--zcs_brand_color) !important; font-weight: 700 !important; }
+
+   /* \u2500\u2500 Agenda Detail Page \u2500\u2500 */
+   .zcs-ad-wrap { padding: 24px 28px; background: var(--zcs-page-bg-color); min-height: 100vh; }
+   .zcs-ad-back { display: inline-flex; align-items: center; gap: 6px; text-decoration: none; color: var(--zcs_primary_text_color); font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+   .zcs-ad-sub { font-size: 13px; color: var(--zcs_tertiary_text_color); margin: 0 0 18px; }
+   .zcs-ad-card { background: #fff; border: 1px solid var(--zcs_tertiary_border_color); border-radius: 12px; padding: 22px 26px; margin-bottom: 16px; }
+   .zcs-ad-meeting-title { font-size: 19px; font-weight: 700; color: var(--zcs_primary_text_color); margin: 0 0 18px; }
+   .zcs-ad-meta-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; padding-top: 14px; border-top: 1px solid #f0f0f0; }
+   .zcs-ad-meta-val { font-size: 15px; font-weight: 600; color: var(--zcs_primary_text_color); line-height: 1.2; }
+   .zcs-ad-meta-lbl { font-size: 12px; color: #8a9ab5; margin-top: 4px; }
+   .zcs-ad-section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+   .zcs-ad-section-title { font-size: 16px; font-weight: 700; color: var(--zcs_primary_text_color); margin: 0; }
+   .zcs-ad-section-meta { font-size: 13px; color: #8a9ab5; }
+   .zcs-ad-item { border: 1px solid var(--zcs_tertiary_border_color); border-radius: 10px; margin-bottom: 12px; overflow: hidden; background: #fff; }
+   .zcs-ad-item[open] { border-color: #d1d5db; }
+   .zcs-ad-item summary { list-style: none; cursor: pointer; padding: 14px 18px; display: flex; align-items: center; gap: 14px; }
+   .zcs-ad-item summary::-webkit-details-marker { display: none; }
+   .zcs-ad-prio { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+   .zcs-ad-prio svg { width: 18px; height: 18px; stroke: #fff; fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+   .zcs-ad-prio-high { background: #179E6C; }
+   .zcs-ad-prio-medium { background: #2A6FFC; }
+   .zcs-ad-prio-low { background: #B8770D; }
+   .zcs-ad-prio-default { background: #8a9ab5; }
+   .zcs-ad-item-main { flex: 1; min-width: 0; }
+   .zcs-ad-item-title { font-size: 14px; font-weight: 600; color: var(--zcs_primary_text_color); margin: 0 0 6px; }
+   .zcs-ad-item-meta { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+   .zcs-ad-item-dur { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: var(--zcs_tertiary_text_color); }
+   .zcs-ad-item-dur svg { width: 12px; height: 12px; }
+   .zcs-ad-item-dot { width: 4px; height: 4px; border-radius: 50%; background: #c0cadc; }
+   .zcs-ad-item-presenter { font-size: 12px; color: var(--zcs_tertiary_text_color); }
+   .zcs-ad-item-role { display: inline-flex; padding: 2px 8px; border-radius: 4px; background: #f3f4f6; color: var(--zcs_secondary_text_color); font-size: 11px; font-weight: 500; }
+   .zcs-ad-status-pill { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; flex-shrink: 0; }
+   .zcs-ad-status-pill::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+   .zcs-ad-status-completed { background: #E4FCF3; color: #179E6C; }
+   .zcs-ad-status-pending { background: #FCF4E6; color: #B8770D; }
+   .zcs-ad-status-inprogress { background: #EAF2FF; color: #1652BB; }
+   .zcs-ad-chev { color: #8a9ab5; margin-left: 4px; transition: transform 0.2s; flex-shrink: 0; }
+   .zcs-ad-chev svg { width: 16px; height: 16px; }
+   .zcs-ad-item[open] .zcs-ad-chev { transform: rotate(180deg); }
+   .zcs-ad-item-body { padding: 0 18px 18px; }
+   .zcs-ad-desc-box { border-left: 3px solid var(--zcs_brand_color); padding: 4px 14px; }
+   .zcs-ad-desc-label { font-size: 12px; font-weight: 600; color: var(--zcs_primary_text_color); margin: 0 0 8px; }
+   .zcs-ad-desc-content { font-size: 13px; color: var(--zcs_secondary_text_color); line-height: 1.7; }
+   .zcs-ad-desc-content p { margin: 0 0 10px; }
+   .zcs-ad-table { width: 100%; border-collapse: collapse; }
+   .zcs-ad-table th { text-align: left; padding: 12px 16px; background: transparent; color: var(--zcs_tertiary_text_color); font-size: 12px; font-weight: 600; border-bottom: 1px solid var(--zcs_tertiary_border_color); }
+   .zcs-ad-table td { padding: 14px 16px; border-bottom: 1px solid #f3f4f6; font-size: 13px; color: var(--zcs_primary_text_color); }
+   .zcs-ad-table tr:last-child td { border-bottom: none; }
+   .zcs-ad-assignee-name { color: #2A6FFC; font-size: 13px; }
+   .zcs-ad-tl { padding-left: 4px; }
+   .zcs-ad-tl-item { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; }
+   .zcs-ad-tl-dot { width: 10px; height: 10px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+   .zcs-ad-tl-dot-green { background: #179E6C; }
+   .zcs-ad-tl-dot-blue { background: #2A6FFC; }
+   .zcs-ad-tl-dot-gray { background: #9ca3af; }
+   .zcs-ad-tl-text { font-size: 13px; color: var(--zcs_primary_text_color); margin: 0 0 2px; }
+   .zcs-ad-tl-date { font-size: 12px; color: #8a9ab5; }
+   .zcs-ad-empty { padding: 28px; text-align: center; color: #8a9ab5; font-size: 13px; }
+</style>
+<%
+	if(input.show_popup == "1")
+	{
+		%>
+<div class='zcs-success-overlay'>
+   <div class='zcs-success-card'>
+      <div class='zcs-success-icon-ring'>
+         <svg viewBox='0 0 36 36' fill='none'>
+            <circle cx='18' cy='18' r='16' stroke='#e8453c' stroke-width='1.8'/>
+            <path d='M11 18.5l5 5 9-10' stroke='#e8453c' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/>
+         </svg>
+      </div>
+      <h3>Agenda Published!</h3>
+      <p>Your agenda has been successfully created<br>and is ready for review.</p>
+      <a class='zcs-success-btn' href='#Page:<%=page_link_name%>'>Go to Agenda</a>
+   </div>
+</div>
+<%
+	}
+	if(input.page_action == "agenda_detail" || input.page_action == "template_detail")
+	{
+		isTemplate = false;
+		if(input.page_action == "template_detail")
+		{
+			isTemplate = true;
+		}
+		recidLong = input.recid;
+		hdrTitle = "\u2014";
+		hdrDate = "\u2014";
+		hdrItemCount = 0;
+		hdrTimeUsed = 0;
+		hdrTimeAlloc = 0;
+		hdrCompletionPct = 0;
+		recordFound = false;
+		if(isTemplate)
+		{
+			currentAgenda = Agenda[ID == recidLong];
+			if(currentAgenda.count() > 0)
+			{
+				recordFound = true;
+				if(currentAgenda.Agenda_Title != null)
+				{
+					tv = currentAgenda.Agenda_Title + "";
+					if(tv != "null" && !tv.isEmpty())
+					{
+						hdrTitle = tv;
+					}
+				}
+				agendaItemRecords = Agenda_Item_Details[Agenda == recidLong];
+				activities = Meeting_Activity[ID == 0];
+			}
+			else
+			{
+				agendaItemRecords = Agenda_Item_Details[ID == 0];
+				activities = Meeting_Activity[ID == 0];
+			}
+		}
+		else
+		{
+			currentMeeting = Meeting[ID == recidLong];
+			if(currentMeeting.count() > 0)
+			{
+				recordFound = true;
+				if(currentMeeting.Meeting_Title != null)
+				{
+					tv = currentMeeting.Meeting_Title + "";
+					if(tv != "null" && !tv.isEmpty())
+					{
+						hdrTitle = tv;
+					}
+				}
+				if(currentMeeting.Start_Date_Time != null)
+				{
+					hdrDate = currentMeeting.Start_Date_Time.toString("MMM dd, yyyy");
+				}
+				agendaIdFromMeeting = currentMeeting.Agenda.ID;
+				agendaItemRecords = Agenda_Item_Details[Agenda == agendaIdFromMeeting];
+				activities = Meeting_Activity[Meeting == recidLong] sort by Date_Time desc;
+			}
+			else
+			{
+				agendaItemRecords = Agenda_Item_Details[ID == 0];
+				activities = Meeting_Activity[ID == 0];
+			}
+		}
+		if(recordFound == false)
+		{
+			%>
+<div class='zcs-ad-wrap'>
+   <a class='zcs-ad-back' href='#Page:<%=page_link_name%>'>\u2190 Agenda Detail</a>
+   <p class='zcs-ad-sub'>Record not found for ID: <%=input.recid%></p>
+</div>
+<%
+		}
+		else
+		{
+			completedCount = 0;
+			for each  ai in agendaItemRecords
+			{
+				hdrItemCount = hdrItemCount + 1;
+				if(ai.Duration_minutes != null)
+				{
+					hdrTimeAlloc = hdrTimeAlloc + ai.Duration_minutes.toLong();
+				}
+				if(ai.Priority != null && (ai.Priority + "").equalsIgnoreCase("High"))
+				{
+					completedCount = completedCount + 1;
+					if(ai.Duration_minutes != null)
+					{
+						hdrTimeUsed = hdrTimeUsed + ai.Duration_minutes.toLong();
+					}
+				}
+			}
+			if(hdrItemCount > 0)
+			{
+				hdrCompletionPct = ((completedCount * 100) / hdrItemCount).round(0);
+			}
+			%>
+<div class='zcs-ad-wrap'>
+   <a class='zcs-ad-back' href='#Page:<%=page_link_name%>'>\u2190 Agenda Detail</a>
+   <p class='zcs-ad-sub'>Comprehensive governance agenda planning and tracking platform</p>
+<%
+			if(!isTemplate)
+			{
+				%>
+<div class='zcs-ad-card'>
+      <h2 class='zcs-ad-meeting-title'><%=hdrTitle%></h2>
+      <div class='zcs-ad-meta-row'>
+         <div>
+            <div class='zcs-ad-meta-val'><%=hdrDate%></div>
+            <div class='zcs-ad-meta-lbl'>Date</div>
+         </div>
+         <div>
+            <div class='zcs-ad-meta-val'><%=hdrItemCount%></div>
+            <div class='zcs-ad-meta-lbl'>Items</div>
+         </div>
+         <div>
+            <div class='zcs-ad-meta-val'><%=hdrTimeUsed%> / <%=hdrTimeAlloc%> min</div>
+            <div class='zcs-ad-meta-lbl'>Time Allocation</div>
+         </div>
+         <div>
+            <div class='zcs-ad-meta-val'><%=hdrCompletionPct%>%</div>
+            <div class='zcs-ad-meta-lbl'>Completion</div>
+         </div>
+      </div>
+   </div>
+<%
+			}
+			%>
+<div class='zcs-ad-card'>
+      <div class='zcs-ad-section-head'>
+         <h3 class='zcs-ad-section-title'>Agenda Items</h3>
+         <span class='zcs-ad-section-meta'><%=hdrItemCount%> items \u00B7 <%=hdrTimeAlloc%> minutes</span>
+      </div>
+<%
+			if(hdrItemCount == 0)
+			{
+				%>
+<div class='zcs-ad-empty'>No agenda items.</div>
+<%
+			}
+			else
+			{
+				for each  ai in agendaItemRecords
+				{
+					itemTitle = "\u2014";
+					if(ai.Item_Title != null)
+					{
+						tv = ai.Item_Title + "";
+						if(tv != "null" && !tv.isEmpty())
+						{
+							itemTitle = tv;
+						}
+					}
+					itemDuration = 0;
+					if(ai.Duration_minutes != null)
+					{
+						itemDuration = ai.Duration_minutes;
+					}
+					presenterName = "";
+					if(ai.Presenter != null)
+					{
+						pn = ai.Presenter.Name + "";
+						if(pn != "null" && !pn.isEmpty())
+						{
+							presenterName = pn;
+						}
+					}
+					itemRole = "";
+					if(ai.Type_field != null)
+					{
+						rv = ai.Type_field + "";
+						if(rv != "null" && !rv.isEmpty())
+						{
+							itemRole = rv;
+						}
+					}
+					// Priority block first
+					itemPriority = "";
+					if(ai.Priority != null)
+					{
+						pv = ai.Priority + "";
+						if(pv != "null" && !pv.isEmpty())
+						{
+							itemPriority = pv;
+						}
+					}
+					prioClass = "zcs-ad-prio-default";
+					if(itemPriority.equalsIgnoreCase("High"))
+					{
+						prioClass = "zcs-ad-prio-high";
+					}
+					else if(itemPriority.equalsIgnoreCase("Medium"))
+					{
+						prioClass = "zcs-ad-prio-medium";
+					}
+					else if(itemPriority.equalsIgnoreCase("Low"))
+					{
+						prioClass = "zcs-ad-prio-low";
+					}
+					// Status pill derived from Priority
+					itemStatus = "";
+					statusClass = "zcs-ad-status-pending";
+					if(itemPriority.equalsIgnoreCase("High"))
+					{
+						itemStatus = "High";
+						statusClass = "zcs-ad-status-inprogress";
+					}
+					else if(itemPriority.equalsIgnoreCase("Medium"))
+					{
+						itemStatus = "Medium";
+						statusClass = "zcs-ad-status-pending";
+					}
+					else if(itemPriority.equalsIgnoreCase("Low"))
+					{
+						itemStatus = "Low";
+						statusClass = "zcs-ad-status-completed";
+					}
+					itemDesc = "";
+					if(ai.Description != null)
+					{
+						dv = ai.Description + "";
+						if(dv != "null" && !dv.isEmpty())
+						{
+							itemDesc = dv;
+						}
+					}
+					%>
+<details class='zcs-ad-item'>
+         <summary>
+            <div class='zcs-ad-prio <%=prioClass%>'>
+               <svg viewBox='0 0 24 24'><path d='M5 12.5l4.5 4.5L19 7'/></svg>
+            </div>
+            <div class='zcs-ad-item-main'>
+               <p class='zcs-ad-item-title'><%=itemTitle%></p>
+               <div class='zcs-ad-item-meta'>
+                  <span class='zcs-ad-item-dur'>
+                     <svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><circle cx='12' cy='12' r='9'/><path d='M12 7v5l3 2'/></svg>
+                     <%=itemDuration%> min
+                  </span>
+<%
+					if(!presenterName.isEmpty())
+					{
+						%>
+<span class='zcs-ad-item-dot'></span>
+                  <span class='zcs-ad-item-presenter'><%=presenterName%></span>
+<%
+					}
+					if(!itemRole.isEmpty())
+					{
+						%>
+<span class='zcs-ad-item-role'><%=itemRole%></span>
+<%
+					}
+					%>
+</div>
+            </div>
+            <span class='zcs-ad-status-pill <%=statusClass%>'><%=itemStatus%></span>
+            <span class='zcs-ad-chev'>
+               <svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M6 9l6 6 6-6'/></svg>
+            </span>
+         </summary>
+         <div class='zcs-ad-item-body'>
+            <div class='zcs-ad-desc-box'>
+               <p class='zcs-ad-desc-label'>Description</p>
+               <div class='zcs-ad-desc-content'><%=itemDesc%></div>
+            </div>
+         </div>
+      </details>
+<%
+				}
+			}
+			%>
+</div>
+<%
+			if(!isTemplate)
+			{
+				actionItems = Action_Tracker[Meeting == recidLong];
+				%>
+<div class='zcs-ad-card'>
+      <div class='zcs-ad-section-head'>
+         <h3 class='zcs-ad-section-title'>Action Items</h3>
+      </div>
+<%
+				if(actionItems.count() == 0)
+				{
+					%>
+<div class='zcs-ad-empty'>No action items.</div>
+<%
+				}
+				else
+				{
+					%>
+<table class='zcs-ad-table'>
+         <thead>
+            <tr>
+               <th>Task</th>
+               <th>Assignee</th>
+               <th>Due Date</th>
+               <th>Status</th>
+            </tr>
+         </thead>
+         <tbody>
+<%
+					for each  act in actionItems
+					{
+						actTask = "\u2014";
+						if(act.Description != null)
+						{
+							tv = act.Description + "";
+							if(tv != "null" && !tv.isEmpty())
+							{
+								actTask = tv;
+							}
+						}
+						actAssignee = "\u2014";
+						if(act.Assign_To != null)
+						{
+							an = act.Assign_To.Name + "";
+							if(an != "null" && !an.isEmpty())
+							{
+								actAssignee = an;
+							}
+						}
+						actDue = "\u2014";
+						if(act.Due_Date != null)
+						{
+							actDue = act.Due_Date.toString("MMM dd, yyyy");
+						}
+						actStatus = "";
+						if(act.Status != null)
+						{
+							sv = act.Status + "";
+							if(sv != "null" && !sv.isEmpty())
+							{
+								actStatus = sv;
+							}
+						}
+						actStatusClass = "zcs-ad-status-pending";
+						if(actStatus.equalsIgnoreCase("Completed") || actStatus.equalsIgnoreCase("Complete") || actStatus.equalsIgnoreCase("Done"))
+						{
+							actStatusClass = "zcs-ad-status-completed";
+						}
+						else if(actStatus.equalsIgnoreCase("In Progress"))
+						{
+							actStatusClass = "zcs-ad-status-inprogress";
+						}
+						%>
+<tr>
+               <td><%=actTask%></td>
+               <td class='zcs-ad-assignee-name'><%=actAssignee%></td>
+               <td><%=actDue%></td>
+               <td><span class='zcs-ad-status-pill <%=actStatusClass%>'><%=actStatus%></span></td>
+            </tr>
+<%
+					}
+					%>
+</tbody>
+      </table>
+<%
+				}
+				%>
+</div>
+
+   <div class='zcs-ad-card'>
+      <div class='zcs-ad-section-head'>
+         <h3 class='zcs-ad-section-title'>Activity Timeline</h3>
+      </div>
+<%
+				if(activities.count() == 0)
+				{
+					%>
+<div class='zcs-ad-empty'>No activity recorded.</div>
+<%
+				}
+				else
+				{
+					%>
+<div class='zcs-ad-tl'>
+<%
+					actCounter = 0;
+					for each  actv in activities
+					{
+						dotClass = "zcs-ad-tl-dot-gray";
+						if(actCounter == 0)
+						{
+							dotClass = "zcs-ad-tl-dot-green";
+						}
+						else if(actCounter == 1)
+						{
+							dotClass = "zcs-ad-tl-dot-blue";
+						}
+						actCounter = actCounter + 1;
+						actText = "Activity";
+						if(actv.Activity != null)
+						{
+							at = actv.Activity + "";
+							if(at != "null" && !at.isEmpty())
+							{
+								actText = at;
+							}
+						}
+						userName = "";
+						if(actv.User != null)
+						{
+							un = actv.User.Name + "";
+							if(un != "null" && !un.isEmpty())
+							{
+								userName = un;
+							}
+						}
+						actLine = actText;
+						if(!userName.isEmpty())
+						{
+							actLine = actText + " by " + userName;
+						}
+						actDateStr = "\u2014";
+						if(actv.Date_Time != null)
+						{
+							actDateStr = actv.Date_Time.toString("MMM dd, yyyy 'at' h:mm a");
+						}
+						%>
+<div class='zcs-ad-tl-item'>
+            <div class='zcs-ad-tl-dot <%=dotClass%>'></div>
+            <div>
+               <p class='zcs-ad-tl-text'><%=actLine%></p>
+               <p class='zcs-ad-tl-date'><%=actDateStr%></p>
+            </div>
+         </div>
+<%
+					}
+					%>
+</div>
+<%
+				}
+				%>
+</div>
+<%
+			}
+			%>
+</div>
+<%
+		}
+	}
+	else if(input.action_field == "Basic_Items" || input.action_field == "Items" || input.action_field == "Review")
+	{
+		activeField = input.action_field;
+		autoRecid = null;
+		if(input.recid != null)
+		{
+			agendaRec = Agenda[ID == input.recid];
+			autoRecid = agendaRec.ID;
+		}
+		input.recid = 0;
+		if(autoRecid != null)
+		{
+			input.recid = autoRecid;
+		}
+		s1Done = if(activeField == "Items",true,if(activeField == "Review",true,false));
+		s2Done = if(activeField == "Review",true,false);
+		s3Done = false;
+		c1 = if(activeField == "Basic_Items","zcs-stepper-active","");
+		c2 = if(activeField == "Items","zcs-stepper-active","");
+		c3 = if(activeField == "Review","zcs-stepper-active","");
+		stageReachedItems = if(s1Done == true,true,false);
+		stageReachedReview = if(s2Done == true,true,false);
+		submitLabel = "Next";
+		if(activeField == "Review")
+		{
+			submitLabel = "Submit";
+		}
+		s1action = "href='#Page:" + page_link_name + "?action_field=Basic_Items'";
+		s2action = if(stageReachedItems == true,"href='#Page:" + page_link_name + "?action_field=Items&recid=" + autoRecid + "'","");
+		s3action = if(stageReachedReview == true,"href='#Page:" + page_link_name + "?action_field=Review&recid=" + autoRecid + "'","");
+		isPrevDisabled = "zcs-button-disable";
+		previoushrefAction = "";
+		if(activeField == "Items")
+		{
+			isPrevDisabled = "";
+			previoushrefAction = "href='#Page:" + page_link_name + "?action_field=Basic_Items&recid=" + autoRecid + "'";
+		}
+		else if(activeField == "Review")
+		{
+			isPrevDisabled = "";
+			previoushrefAction = "href='#Page:" + page_link_name + "?action_field=Items&recid=" + autoRecid + "'";
+		}
+		formParam = "";
+		if(autoRecid != null)
+		{
+			formParam = "&recLinkID=" + autoRecid + "&viewLinkName=Agenda_Report&Action_Field=" + activeField;
+		}
+		else
+		{
+			formParam = "&Action_Field=" + activeField;
+		}
+		%>
+<div class='zcs-page-container zcs-wizard-page zcs-wh-full'>
+   <div class='zcs-page-container-inner zcs-wh-full zcs-flex zcs-direction-column'>
+      <div class='zcs-page-header zcs-w-full zcs-flex zcs-direction-column zcs-gap-8 zcs-px-30 zcs-py-24 zcs-box-border'>
+         <h5 class='zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-ellipsis zcs-m-0'>New Agenda</h5>
+         <p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-ellipsis zcs-m-0'>Plan and configure your governance agenda.</p>
+      </div>
+      <div class='zcs-page-content zcs-col-common zcs-overflow-auto'>
+         <div class='zcs-wh-full zcs-flex zcs-direction-column zcs-box-border zcs-overflow-hidden zcs-relative'>
+            <!-- Zoho standard stepper with SVG icons -->
+            <div class='zcs-stepper-wrapper zcs-p-24 zcs-box-border'>
+               <ul class='zcs-flex zcs-gap-8 zcs-p-0 zcs-m-0'>
+                  <a class='zcs-stepper zcs-col-common zcs-flex zcs-direction-column zcs-align-items-center zcs-gap-4 zcs-text-center zcs-relative <%=c1%>' <%=s1action%>>
+                     <div class='zcs-stepper-status zcs-flex zcs-direction-column zcs-align-items-center zcs-justify-center zcs-rounded-half zcs-text-center zcs-relative zcs-box-border'>
+                        <h6 class='zcs-stepper-count zcs-col-common zcs-w-full zcs-flex zcs-align-items-center zcs-justify-center zcs-rounded-half zcs-m-0 zcs-box-border'>
+                           <svg viewBox='0 0 24 24'><path d='M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2'/><rect x='9' y='3' width='6' height='4' rx='1'/><path d='M9 12h6M9 16h4'/></svg>
+                        </h6>
+                        <i class='zcs-stepper-icon zcs-stepper-passed zcs-flex zcs-align-items-center zcs-justify-center'>
+                           <svg viewBox='0 0 24 24'><path d='M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2'/><rect x='9' y='3' width='6' height='4' rx='1'/><path d='M9 12h6M9 16h4'/></svg>
+                        </i>
+                     </div>
+                     <span class='zcs-stepper-text zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'>Basic Items</span>
+                  </a>
+                  <a class='zcs-stepper zcs-col-common zcs-flex zcs-direction-column zcs-align-items-center zcs-gap-4 zcs-text-center zcs-relative <%=c2%>' <%=s2action%>>
+                     <div class='zcs-stepper-status zcs-flex zcs-direction-column zcs-align-items-center zcs-justify-center zcs-rounded-half zcs-text-center zcs-relative zcs-box-border'>
+                        <h6 class='zcs-stepper-count zcs-col-common zcs-w-full zcs-flex zcs-align-items-center zcs-justify-center zcs-rounded-half zcs-m-0 zcs-box-border'>
+                           <svg viewBox='0 0 24 24'><rect x='3' y='3' width='18' height='18' rx='2'/><path d='M7 8h10M7 12h10M7 16h6'/></svg>
+                        </h6>
+                        <i class='zcs-stepper-icon zcs-stepper-passed zcs-flex zcs-align-items-center zcs-justify-center'>
+                           <svg viewBox='0 0 24 24'><rect x='3' y='3' width='18' height='18' rx='2'/><path d='M7 8h10M7 12h10M7 16h6'/></svg>
+                        </i>
+                     </div>
+                     <span class='zcs-stepper-text zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'>Items</span>
+                  </a>
+                  <a class='zcs-stepper zcs-col-common zcs-flex zcs-direction-column zcs-align-items-center zcs-gap-4 zcs-text-center zcs-relative <%=c3%>' <%=s3action%>>
+                     <div class='zcs-stepper-status zcs-flex zcs-direction-column zcs-align-items-center zcs-justify-center zcs-rounded-half zcs-text-center zcs-relative zcs-box-border'>
+                        <h6 class='zcs-stepper-count zcs-col-common zcs-w-full zcs-flex zcs-align-items-center zcs-justify-center zcs-rounded-half zcs-m-0 zcs-box-border'>
+                           <svg viewBox='0 0 24 24'><path d='M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2'/><rect x='9' y='3' width='6' height='4' rx='1'/><path d='M9 12l2 2 4-4'/></svg>
+                        </h6>
+                        <i class='zcs-stepper-icon zcs-stepper-passed zcs-flex zcs-align-items-center zcs-justify-center'>
+                           <svg viewBox='0 0 24 24'><path d='M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2'/><rect x='9' y='3' width='6' height='4' rx='1'/><path d='M9 12l2 2 4-4'/></svg>
+                        </i>
+                     </div>
+                     <span class='zcs-stepper-text zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'>Review</span>
+                  </a>
+               </ul>
+            </div>
+            <div class='zcs-col-common zcs-overflow-auto'>
+               <div class='zcs-form' zc_MobileView='inline' elName='zc-component' formLinkName='Agenda'
+                  params='zc_Header=false&zc_SubmitVal=<%=submitLabel%><%=formParam%>'></div>
+            </div>
+            <a class='zcs-button zcs-secondary-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body'
+               <%=previoushrefAction%> style='position:absolute;bottom:14px;left:40px;'>
+               <span class='zcs-button-text <%=isPrevDisabled%>'>Previous</span>
+            </a>
+         </div>
+      </div>
+   </div>
+</div>
+<%
+	}
+	else
+	{
+		%>
+<div class='zcs-page-container zcs-commonview zcs-wh-full'>
+   <div class='zcs-page-container-inner zcs-wh-full zcs-flex zcs-direction-column zcs-gap-16 zcs-px-20 zcs-py-16 zcs-box-border'>
+      <!-- Header -->
+      <div class='zcs-page-header zcs-flex zcs-justify-space-between zcs-align-items-center zcs-gap-12'>
+         <div class='zcs-flex zcs-direction-column zcs-gap-4'>
+            <h5 class='zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'>Agenda Management System</h5>
+            <p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'>Comprehensive governance agenda planning and tracking platform</p>
+         </div>
+         <a class='zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-medium zcs-lh-body' href='#Page:<%=page_link_name%>?action_field=Basic_Items'>
+            <svg width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round'><path d='M12 5v14M5 12h14'/></svg>
+            <span class='zcs-button-text'>New Agenda</span>
+         </a>
+      </div>
+      <!-- Stat panels -->
+      <div class='zcs-panel-wrapper'>
+         <ul class='zcs-row zcs-justify-space-between zcs-gap-20 zcs-p-0 zcs-m-0'>
+            <li class='zcs-col-4 zcs-col-sm-6 zcs-col-xs-12 zcs-relative'>
+               <div class='zcs-panel zcs-panel-yellow zcs-wh-full zcs-flex zcs-align-items-center zcs-gap-16 zcs-rounded-lg zcs-p-16 zcs-box-border'>
+                  <div class='zcs-panel-icon-wrapper zcs-flex zcs-align-items-center zcs-justify-center zcs-no-shrink zcs-rounded-lg'>
+                     <svg class='zcs-panel-icon' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>
+                        <rect x='2' y='4' width='20' height='16' rx='2'/>
+                        <polyline points='2,8 12,13 22,8'/>
+                     </svg>
+                  </div>
+                  <div class='zcs-flex zcs-direction-column zcs-gap-4'>
+                     <h4 class='zcs-font-20 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'><%=totalAgenda%></h4>
+                     <p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'>Total Agenda</p>
+                  </div>
+               </div>
+            </li>
+            <li class='zcs-col-4 zcs-col-sm-6 zcs-col-xs-12 zcs-relative'>
+               <div class='zcs-panel zcs-panel-green zcs-wh-full zcs-flex zcs-align-items-center zcs-gap-16 zcs-rounded-lg zcs-p-16 zcs-box-border'>
+                  <div class='zcs-panel-icon-wrapper zcs-flex zcs-align-items-center zcs-justify-center zcs-no-shrink zcs-rounded-lg'>
+                     <svg class='zcs-panel-icon' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>
+                        <path d='M6 2h12a2 2 0 012 2v16a2 2 0 01-2 2H6a2 2 0 01-2-2V4a2 2 0 012-2z'/>
+                        <polyline points='9,12 11,14 15,10'/>
+                     </svg>
+                  </div>
+                  <div class='zcs-flex zcs-direction-column zcs-gap-4'>
+                     <h4 class='zcs-font-20 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'><%=upcoming%></h4>
+                     <p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'>Upcoming</p>
+                  </div>
+               </div>
+            </li>
+            <li class='zcs-col-4 zcs-col-sm-6 zcs-col-xs-12 zcs-relative'>
+               <div class='zcs-panel zcs-panel-d_blue zcs-wh-full zcs-flex zcs-align-items-center zcs-gap-16 zcs-rounded-lg zcs-p-16 zcs-box-border'>
+                  <div class='zcs-panel-icon-wrapper zcs-flex zcs-align-items-center zcs-justify-center zcs-no-shrink zcs-rounded-lg'>
+                     <svg class='zcs-panel-icon' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>
+                        <circle cx='12' cy='12' r='10'/>
+                        <circle cx='12' cy='12' r='3'/>
+                     </svg>
+                  </div>
+                  <div class='zcs-flex zcs-direction-column zcs-gap-4'>
+                     <h4 class='zcs-font-20 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'><%=completed%></h4>
+                     <p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'>Completed</p>
+                  </div>
+               </div>
+            </li>
+         </ul>
+      </div>
+<%
+		tab_map = thisapp.Page.Get_Tabs(page_link_name);
+		tab_keys = tab_map.keys();
+		input.tab = if(input.tab != "" && input.tab != "null" && input.tab != null,input.tab,tab_keys.get(0));
+		%>
+<!-- Tabs -->
+      <ul class='zcs-horizontal-tabhead zcs-flex zcs-gap-12 zcs-px-10 zcs-py-0 zcs-m-0 zcs-box-border'>
+<%
+		for each  tab_id in tab_keys
+		{
+			class_name = if(input.tab == tab_id,"zcs-horizontal-tabitem zcs-horizontal-tabactive","zcs-horizontal-tabitem");
+			%>
+<li class='<%=class_name%>'>
+            <a class='zcs-horizontal-tablink zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-10 zcs-py-12 zcs-box-border zcs-font-medium zcs-lh-body zcs-color-secondary' href='#Page:<%=page_link_name%>?tab=<%=tab_id%>'>
+               <span class='zcs-horizontal-tab-text'><%=tab_map.get(tab_id).get("Display")%></span>
+            </a>
+         </li>
+<%
+		}
+		%>
+</ul>
+      <!-- Filter + Report -->
+	  <div style='backround:#fff'class="zcs-col-common zcs-overflow-auto">
+    <div class="zcs-filter" elName="zc-component" formLinkName="Filter_Form" params='zc_Header=false&zc_Footer=false&zc_Focus=false&Page=Agenda_Page&Report=<%=tab_map.get(input.tab).get("Link")%>&Agenda_Status=<%=input.Agenda_Status%>&Search_Key=<%=input.Search_Key%>'></div>
+    <div class='zcs-report zcs-col-common' name='embedDiv' elName='zc-component' viewLinkName='<%=tab_map.get(input.tab).get("Link")%>' params='zc_Header=false&tab=<%=input.tab%><%=tab_map.get(input.tab).get("Param")%>'></div>
+</div>
+   </div>
+</div>
+<%
+	}
+%>

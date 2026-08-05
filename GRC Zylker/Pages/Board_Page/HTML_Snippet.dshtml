@@ -1,0 +1,2138 @@
+<%
+	page_link_name = "Board_Page";
+	pageParam = "";
+	language = thisapp.Content.translation();
+	loginUser = User[Email == zoho.loginuserid];
+	canEditBoard = false;
+	canCreateBoard = false;
+	userRoleName = "";
+	if(loginUser.count() > 0 && loginUser.Role != null)
+	{
+		roleRec = Role[ID == loginUser.Role];
+		if(roleRec.count() > 0)
+		{
+			userRoleName = roleRec.Role_Name + "";
+		}
+	}
+	role1List = {"Chair Person","Committee Chair","Supervisory Chairperson","Advisory Chairperson"};
+	role3List = {"Company Secretary","Advisory Secretary","Supervisory Secretary"};
+	if(userRoleName in role1List || userRoleName in role3List)
+	{
+		canEditBoard = true;
+		canCreateBoard = true;
+	}
+	%>
+<style>
+<%=thisapp.Styles.App_CSS()%>
+<%=thisapp.Styles.Button()%>
+<%=thisapp.Styles.Panel()%>
+<%=thisapp.Styles.Horizontal_Tab()%>
+<%=thisapp.Styles.Badge()%>
+<%=thisapp.Styles.Table()%>
+<%=thisapp.Styles_Creator.Filter()%>
+<%=thisapp.Styles_Creator.Report_Card()%>
+<%=thisapp.Styles_Page.Common_View()%>
+<%=thisapp.Styles.Quick_Meeting_Card()%>
+<%=thisapp.Styles.Pagination()%>
+.zcs-pagination {
+    height: 32px;
+    padding: 10px;
+    box-sizing: content-box;
+	background :var(--zcs-white-color);
+}
+</style>
+<%
+	if(input.page_action == "committee_detail")
+	{
+		cRec = Committee[ID == input.recid];
+		cBackUrl = "#Page:" + page_link_name + "?tab=committee";
+		commMeetings = Meeting[Committee1 == cRec.ID];
+		totalCommMeetings = commMeetings.count();
+		totalMeetingsHeld = 0;
+		for each  m in commMeetings
+		{
+			if(m.Status == "Completed")
+			{
+				totalMeetingsHeld = totalMeetingsHeld + 1;
+			}
+		}
+		/* ===== Next upcoming meeting date ===== */
+		todayDate = zoho.currentdate;
+		nextMeetingStr = "\u2014";
+		foundNext = false;
+		earliestFutureDt = todayDate;
+		for each  m in commMeetings
+		{
+			if(m.Start_Date_Time != null)
+			{
+				mDt = m.Start_Date_Time.toDate();
+				if(mDt >= todayDate)
+				{
+					if(foundNext == false || mDt < earliestFutureDt)
+					{
+						earliestFutureDt = mDt;
+						nextMeetingStr = m.Start_Date_Time.toString("MMM dd, yyyy");
+						foundNext = true;
+					}
+				}
+			}
+		}
+		totalCommMembers = Committee_Members[Committee == cRec.ID].count();
+		independentMemCount = Committee_Members[Committee == cRec.ID && Position == "Independent"].count();
+		totalCommMembers = if(cRec.Preferred_Count != null,cRec.Preferred_Count,0);
+		independentMemCount = if(cRec.Minimum_Count_Independent != null,cRec.Minimum_Count_Independent,0);
+		/* ===== Format field values for display ===== */
+		estDateStr = "\u2014";
+		if(cRec.Establishment_Date != null)
+		{
+			estDateStr = cRec.Establishment_Date.toString("dd MMM yyyy");
+		}
+		effDateStr = "\u2014";
+		if(cRec.Effective_Date != null)
+		{
+			effDateStr = cRec.Effective_Date.toString("dd MMM yyyy");
+		}
+		cTypeStr = if(cRec.Committee_Type.Committee_Type != null,cRec.Committee_Type + "","\u2014");
+		mFreqStr = if(cRec.Meeting_Frequency != null,cRec.Meeting_Frequency + "","\u2014");
+		quorumStr = "\u2014";
+		if(cRec.Quorum_Requirement != null)
+		{
+			quorumStr = cRec.Quorum_Requirement + "%";
+		}
+		votingThreshStr = if(cRec.Voting_Threshold != null,cRec.Voting_Threshold + "","\u2014");
+		purposeText = if(cRec.Purpose_Objective != null,cRec.Purpose_Objective + "","");
+		charterNotesText = if(cRec.Additional_Charter_Notes != null,cRec.Additional_Charter_Notes + "",purposeText);
+		minCountStr = if(cRec.Minimum_Count != null,cRec.Minimum_Count + "","\u2014");
+		maxCountStr = if(cRec.Maximum_Count != null,cRec.Maximum_Count + "","\u2014");
+		prefCountStr = if(cRec.Preferred_Count != null,cRec.Preferred_Count + "","\u2014");
+		minIndepStr = if(cRec.Minimum_Count_Independent != null,cRec.Minimum_Count_Independent + "","\u2014");
+		indepCritStr = if(cRec.Independence_Criteria != null,cRec.Independence_Criteria + "","\u2014");
+		allowedStr = if(cRec.Allowed != null,cRec.Allowed + "","\u2014");
+		maxNonExecStr = if(cRec.Maximum_Count_Non_Executive != null,cRec.Maximum_Count_Non_Executive + "","\u2014");
+		nonVotingAdvStr = if(cRec.Non_Voting_Advisors != null,cRec.Non_Voting_Advisors + "","\u2014");
+		obsAllowedStr = if(cRec.Observers_Allowed != null,cRec.Observers_Allowed + "","\u2014");
+		%>
+<style>
+    .zcs-cd-wrap { background: #f5f6fa; min-height: 100vh; padding: 20px; box-sizing: border-box; font-family: Inter, sans-serif; }
+    .zcs-cd-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+    .zcs-cd-header-left { display: flex; align-items: flex-start; gap: 10px; }
+    .zcs-cd-back { width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; border-radius: 6px; color: #111827; text-decoration: none; font-size: 18px; flex-shrink: 0; margin-top: 2px; }
+	
+    .zcs-cd-back:hover { background: #f3f4f6; }
+    .zcs-cd-header h2 { font-size: 20px; font-weight: 700; color: #111827; margin: 0 0 3px 0; }
+    .zcs-cd-header p { font-size: 13px; color: #6B7280; margin: 0; }
+    .zcs-cd-edit { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border: 1px solid #E5E7EB; border-radius: 8px; background: #fff; font-size: 13px; font-weight: 500; color: #374151; text-decoration: none; }
+
+    /* Identity card */
+    .zcs-cd-card { background: #fff; border-radius: 12px; padding: 18px 20px; box-shadow: 0 0 6px rgba(0,0,0,0.06); margin-bottom: 16px; }
+    .zcs-cd-identity { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+    .zcs-cd-icon { width: 40px; height: 40px; background: #fff1f1; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .zcs-cd-identity h3 { font-size: 16px; font-weight: 700; color: #111827; margin: 0 0 2px 0; }
+    .zcs-cd-identity p { font-size: 12px; color: #6B7280; margin: 0; }
+    .zcs-cd-badge { background: #ecfdf5; color: #059669; font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 20px; display: inline-flex; align-items: center; gap: 4px; }
+    .zcs-cd-purpose-label { font-size: 12px; color: #6B7280; margin: 0 0 4px 0; }
+    .zcs-cd-mandate { font-size: 13px; color: #374151; line-height: 1.7; margin: 0 0 16px 0; }
+
+    .zcs-cd-meta-row { display: flex; padding-top: 14px; border-top: 1px solid #f0f0f0; flex-wrap: wrap; gap: 0; }
+    .zcs-cd-meta-item { display: flex; flex-direction: column; gap: 2px; padding-right: 32px; margin-right: 32px; border-right: 1px solid #f0f0f0; }
+    .zcs-cd-meta-item:last-child { border-right: none; padding-right: 0; margin-right: 0; }
+    .zcs-cd-meta-val { font-size: 14px; font-weight: 600; color: #111827; }
+    .zcs-cd-meta-label { font-size: 12px; color: #6B7280; }
+
+    /* Stats grid (matches Board stats) */
+    .zcs-cd-stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 16px; }
+    .zcs-cd-stat-card { display: flex; justify-content: space-between; align-items: flex-end; background: #fff; border: 1px solid #e5e7eb; border-radius: 14px; padding: 18px 20px; position: relative; overflow: hidden; }
+    .zcs-cd-stat-card::before { content: ''; position: absolute; top: -20px; right: -20px; width: 90px; height: 90px; border-radius: 50%; background: radial-gradient(circle, rgba(251,202,204,0.4) 0%, transparent 70%); pointer-events: none; }
+    .zcs-cd-stat-info { display: flex; flex-direction: column; gap: 6px; }
+    .zcs-cd-stat-info label { font-size: 13px; color: #6b7280; }
+    .zcs-cd-stat-info h3 { font-size: 24px; font-weight: 700; color: #111827; margin: 0; }
+    .zcs-cd-stat-icon { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; opacity: 0.8; }
+    .zcs-cd-stat-icon svg { width: 36px; height: 36px; }
+
+    /* Section card */
+    .zcs-cd-section { background: #fff; border-radius: 12px; padding: 18px 20px; box-shadow: 0 0 6px rgba(0,0,0,0.06); margin-bottom: 16px; }
+    .zcs-cd-section-h { font-size: 15px; font-weight: 700; color: #111827; margin: 0 0 14px 0; }
+
+    /* Charter row + membership config rows */
+    .zcs-cd-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 24px; margin-bottom: 16px; }
+    .zcs-cd-row.cols-2 { grid-template-columns: repeat(2,1fr); }
+    .zcs-cd-row.cols-3 { grid-template-columns: repeat(3,1fr); }
+    .zcs-cd-row .zcs-cd-meta-item { padding-right: 0; margin-right: 0; border-right: none; }
+    .zcs-cd-row .zcs-cd-meta-val { font-size: 14px; font-weight: 600; color: #111827; }
+    .zcs-cd-row .zcs-cd-meta-label { font-size: 12px; color: #6B7280; }
+    .zcs-cd-sub-h { font-size: 13px; font-weight: 600; color: #111827; margin: 16px 0 10px 0; }
+    .zcs-cd-sub-h:first-child { margin-top: 0; }
+    .zcs-cd-divider { height: 1px; background: #f0f0f0; margin: 16px 0; border: none; }
+    .zcs-cd-file-link { color: #e8453c; font-size: 13px; font-weight: 500; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; }
+
+    .zcs-no-passed-msg { background: #fff; border: 1px dashed #e5e7eb; border-radius: 12px; padding: 40px; text-align: center; color: #8a9ab5; font-size: 14px; }
+    .zcs-no-passed-msg strong { display: block; color: #1a2540; font-size: 16px; margin-bottom: 8px; }
+
+    @media(max-width:768px) {
+        .zcs-cd-stats-grid { grid-template-columns: repeat(2,1fr); }
+        .zcs-cd-row { grid-template-columns: 1fr 1fr; }
+    }
+
+   .formColumn .form-group.section-group h2 label.section-label,
+   .form-section h2 label.section-label,
+   label.section-label {
+      color: #FB2C36 !important;
+   }
+/* Tooltip on hover only */
+.zcs-meta-plus-wrap { position: relative; display: inline-flex; align-items: center; cursor: pointer; }
+.zcs-meta-tooltip { display: none !important; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: #1a1a2e; color: #fff; padding: 8px 12px; border-radius: 8px; font-size: 12px; white-space: nowrap; z-index: 10; margin-bottom: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+.zcs-meta-tooltip span { display: block; padding: 2px 0; }
+.zcs-meta-tooltip::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border: 5px solid transparent; border-top-color: #1a1a2e; }
+.zcs-meta-plus-wrap:hover .zcs-meta-tooltip { display: block !important; }
+
+</style>
+<div class='zcs-cd-wrap'>
+    <!-- Header -->
+    <div class='zcs-cd-header'>
+        <div class='zcs-cd-header-left'>
+            <a class='zcs-cd-back' href='<%=cBackUrl%>'>&larr;</a>
+            <div>
+                <h2><%=language.get("board.title.committeeOverview")%></h2>
+                <p><%=language.get("board.title.committeeOverviewDesc")%></p>
+            </div>
+        </div>
+<%
+		if(canEditBoard == true)
+		{
+			%>
+<a class='zcs-cd-edit' href='#Form:Committee?recLinkID=<%=cRec.ID%>&zc_Header=true&zc_LoadIn=dialog&zc_NextUrl=#Script:page.reload&viewLinkName=Committee_Report'>\u270F\uFE0F <%=language.get("board.button.editCommittee")%></a>
+<%
+		}
+		%>
+</div>
+
+    <!-- Identity Card -->
+    <div class='zcs-cd-card'>
+        <div class='zcs-cd-identity'>
+            <div class='zcs-cd-icon'>
+                <svg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='#e8453c' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'>
+                    <rect x='3' y='4' width='18' height='16' rx='2'/><path d='M3 9h18'/><path d='M9 4v5M15 4v5'/>
+                </svg>
+            </div>
+            <div style='flex:1;'>
+                <h3><%=cRec.Committee_Name%></h3>
+                <p><%=cRec.Committee_Type.Committee_Type%></p>
+            </div>
+            <span class='zcs-cd-badge'>\u25CF <%=language.get("board.meta.active")%></span>
+        </div>
+
+        <p class='zcs-cd-purpose-label'><%=language.get("board.section.purposeMandate")%></p>
+        <p class='zcs-cd-mandate'><%=purposeText%></p>
+
+        <div class='zcs-cd-meta-row'>
+            <div class='zcs-cd-meta-item'><span class='zcs-cd-meta-val'><%=cRec.Committee_Type.Committee_Type%></span><span class='zcs-cd-meta-label'><%=language.get("board.meta.boardType")%></span></div>
+            <div class='zcs-cd-meta-item'><span class='zcs-cd-meta-val'><%=language.get("board.meta.parentEntityVal")%></span><span class='zcs-cd-meta-label'><%=language.get("board.meta.parentEntity")%></span></div>
+            <div class='zcs-cd-meta-item'><span class='zcs-cd-meta-val'><%=estDateStr%></span><span class='zcs-cd-meta-label'><%=language.get("board.meta.establishedDate")%></span></div>
+            <div class='zcs-cd-meta-item'><span class='zcs-cd-meta-val'><%=effDateStr%></span><span class='zcs-cd-meta-label'><%=language.get("board.meta.effectiveDate")%></span></div>
+            <div class='zcs-cd-meta-item'><span class='zcs-cd-meta-val'><%=mFreqStr%></span><span class='zcs-cd-meta-label'><%=language.get("board.meta.reviewCycle")%></span></div>
+        </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class='zcs-cd-stats-grid'>
+        <div class='zcs-cd-stat-card'>
+            <div class='zcs-cd-stat-info'><label><%=language.get("board.stat.totalMembers")%></label><h3><%=totalCommMembers%></h3></div>
+            <div class='zcs-cd-stat-icon'><svg viewBox='0 0 40 40' fill='none'><circle cx='20' cy='14' r='6' stroke='#e8b4b8' stroke-width='2'/><path d='M8 34c0-6.627 5.373-12 12-12s12 5.373 12 12' stroke='#e8b4b8' stroke-width='2' stroke-linecap='round'/></svg></div>
+        </div>
+        <div class='zcs-cd-stat-card'>
+            <div class='zcs-cd-stat-info'><label><%=language.get("board.stat.totalMeetingsHeld")%></label><h3><%=totalMeetingsHeld%></h3></div>
+            <div class='zcs-cd-stat-icon'><svg viewBox='0 0 40 40' fill='none'><rect x='6' y='10' width='28' height='24' rx='3' stroke='#e8b4b8' stroke-width='2'/><path d='M6 18h28' stroke='#e8b4b8' stroke-width='2'/><path d='M14 6v6M26 6v6' stroke='#e8b4b8' stroke-width='2' stroke-linecap='round'/></svg></div>
+        </div>
+        <div class='zcs-cd-stat-card'>
+            <div class='zcs-cd-stat-info'><label><%=language.get("board.stat.independentMembers")%></label><h3><%=independentMemCount%></h3></div>
+            <div class='zcs-cd-stat-icon'><svg viewBox='0 0 40 40' fill='none'><circle cx='14' cy='14' r='5' stroke='#e8b4b8' stroke-width='2'/><circle cx='26' cy='14' r='5' stroke='#e8b4b8' stroke-width='2'/><path d='M4 34c0-5.523 4.477-10 10-10' stroke='#e8b4b8' stroke-width='2' stroke-linecap='round'/><path d='M36 34c0-5.523-4.477-10-10-10' stroke='#e8b4b8' stroke-width='2' stroke-linecap='round'/></svg></div>
+        </div>
+        <div class='zcs-cd-stat-card'>
+            <div class='zcs-cd-stat-info'><label><%=language.get("board.stat.nextMeeting")%></label><h3 style='font-size:18px;'><%=nextMeetingStr%></h3></div>
+            <div class='zcs-cd-stat-icon'><svg viewBox='0 0 40 40' fill='none'><circle cx='20' cy='20' r='14' stroke='#e8b4b8' stroke-width='2'/><path d='M20 12v8l6 3' stroke='#e8b4b8' stroke-width='2' stroke-linecap='round'/></svg></div>
+        </div>
+    </div>
+
+    <div class='zcs-cd-section'>
+        <h3 class='zcs-cd-section-h'><%=language.get("board.section.meetingDetail")%></h3>
+        <div class='zcs-qmc-grid'>
+<%
+		mCount = 0;
+		for each  meet in commMeetings
+		{
+			if(mCount < 4)
+			{
+				/* === Date badge === */
+				mMonth = "\u2014";
+				mDay = "\u2014";
+				mDateTime = "\u2014";
+				if(meet.Start_Date_Time != null)
+				{
+					mMonth = meet.Start_Date_Time.toString("MMM");
+					mDay = meet.Start_Date_Time.toString("dd");
+					mStart = meet.Start_Date_Time.toString("h:mm a");
+					mEnd = "\u2014";
+					if(meet.End_Date_Time != null)
+					{
+						mEnd = meet.End_Date_Time.toString("h:mm a");
+					}
+					mDateTime = meet.Start_Date_Time.toString("dd MMM") + " \u2022 " + mStart + " \u2013 " + mEnd;
+				}
+				/* === Tags + title === */
+				mSeries = if(meet.Meeting_Series != null,meet.Meeting_Series + "","");
+				mType = if(meet.Meeting_Type != null,meet.Meeting_Type + "","");
+				mTitle = if(meet.Meeting_Title != null,meet.Meeting_Title + "",cRec.Committee_Name + "");
+				/* === Quorum description === */
+				mDesc = "";
+				if(meet.Quorum != null)
+				{
+					mDesc = meet.Quorum.Rule_Name + "";
+					if(mDesc == "null")
+					{
+						mDesc = "";
+					}
+				}
+				/* === Organizer + initial === */
+				mOrg = "";
+				mOrgInitial = "";
+				if(meet.Organized_By != null)
+				{
+					oN = meet.Organized_By.Name + "";
+					if(oN != "null" && !oN.isEmpty())
+					{
+						mOrg = oN;
+						mOrgInitial = oN.subString(0,1).toUpperCase();
+					}
+				}
+				/* === Attendance === */
+				totalMembersVal = 0;
+				presentVal = 0;
+				if(meet.Total_Members != null)
+				{
+					tmStr = meet.Total_Members + "";
+					if(tmStr != "null" && !tmStr.isEmpty())
+					{
+						totalMembersVal = meet.Total_Members.toLong();
+					}
+				}
+				if(meet.Present != null)
+				{
+					prStr = meet.Present + "";
+					if(prStr != "null" && !prStr.isEmpty())
+					{
+						presentVal = meet.Present.toLong();
+					}
+				}
+				/* === Status === */
+				mStatus = if(meet.Status != null,meet.Status + "","Sheduled");
+				statusClass = "zcs-qmc-status-warning";
+				statusSvg = "<svg viewBox='0 0 16 16'><circle cx='8' cy='8' r='7' fill='currentColor'/><line x1='8' y1='4.5' x2='8' y2='9' stroke='#fff' stroke-width='1.7' stroke-linecap='round'/><circle cx='8' cy='11.3' r='0.85' fill='#fff'/></svg>";
+				if(mStatus == "Completed")
+				{
+					statusClass = "zcs-qmc-status-success";
+					statusSvg = "<svg viewBox='0 0 16 16'><circle cx='8' cy='8' r='7' fill='currentColor'/><path d='M5 8L7.2 10.2L11 6.3' stroke='#fff' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round' fill='none'/></svg>";
+				}
+				else if(mStatus == "Sheduled" || mStatus == "Scheduled")
+				{
+					statusClass = "zcs-qmc-status-info";
+					statusSvg = "<svg viewBox='0 0 16 16' fill='none'><rect x='2.5' y='3.5' width='11' height='10' rx='1.5' fill='currentColor'/><line x1='2.5' y1='6.5' x2='13.5' y2='6.5' stroke='#fff' stroke-width='0.9'/><rect x='4.8' y='1.6' width='1.4' height='3' rx='0.5' fill='currentColor'/><rect x='9.8' y='1.6' width='1.4' height='3' rx='0.5' fill='currentColor'/></svg>";
+				}
+				else if(mStatus == "Cancelled")
+				{
+					statusClass = "zcs-qmc-status-danger";
+					statusSvg = "<svg viewBox='0 0 16 16'><circle cx='8' cy='8' r='7' fill='currentColor'/><path d='M5.5 5.5L10.5 10.5M10.5 5.5L5.5 10.5' stroke='#fff' stroke-width='1.7' stroke-linecap='round'/></svg>";
+				}
+				%>
+<a href='#Page:Meeting_Page?page_action=detailview&record_id=<%=meet.ID%>' class='zcs-qmc-card-link'>
+    <div class='zcs-qmc-card'>
+        <div class='zcs-qmc-date'>
+            <span class='zcs-qmc-date-m'><%=mMonth%></span>
+            <span class='zcs-qmc-date-d'><%=mDay%></span>
+        </div>
+        <div class='zcs-qmc-main'>
+            <div class='zcs-qmc-top'>
+                <div class='zcs-qmc-top-left'>
+                    <div class='zcs-qmc-tags'>
+<%
+				if(mSeries != "")
+				{
+					%>
+<span class='zcs-qmc-tag'><%=mSeries%></span>
+<%
+				}
+				if(mType != "")
+				{
+					%>
+<span class='zcs-qmc-tag'><%=mType%></span>
+<%
+				}
+				%>
+</div>
+                    <h2 class='zcs-qmc-name'><%=mTitle%></h2>
+                    <p class='zcs-qmc-note'>
+                        <svg viewBox='0 0 20 20' fill='none'>
+                            <rect x='4.16669' y='5.41667' width='11.6667' height='10.4167' rx='1.8' stroke='currentColor' stroke-width='1.6'/>
+                            <path d='M6.66669 4.16667V6.66667M13.3334 4.16667V6.66667' stroke='currentColor' stroke-width='1.6' stroke-linecap='round'/>
+                        </svg>
+                        <%=mDateTime%>
+                    </p>
+<%
+				if(mDesc != "")
+				{
+					%>
+<p class='zcs-qmc-desc'><%=mDesc%></p>
+<%
+				}
+				%>
+</div>
+                <span class='zcs-qmc-status <%=statusClass%>'>
+                    <%=statusSvg%>
+                    <%=mStatus%>
+                </span>
+            </div>
+            <div class='zcs-qmc-meta'>
+                <div class='zcs-qmc-meta-group'>
+                    <span class='zcs-qmc-meta-item'>
+                        <svg viewBox='0 0 20 20' fill='none'>
+                            <rect x='4.16669' y='5.41667' width='11.6667' height='10.4167' rx='1.8' stroke='currentColor' stroke-width='1.6'/>
+                            <path d='M6.66669 4.16667V6.66667M13.3334 4.16667V6.66667' stroke='currentColor' stroke-width='1.6' stroke-linecap='round'/>
+                        </svg>
+                        <%=cRec.Committee_Name%>
+                    </span>
+<%
+				if(mOrg != "")
+				{
+					%>
+<span class='zcs-qmc-meta-item'>
+                        <span class='zcs-qmc-meta-avatar'><%=mOrgInitial%></span>
+                        <%=mOrg%>
+                    </span>
+<%
+				}
+				%>
+</div>
+                <span class='zcs-qmc-meta-item zcs-qmc-attendance'>
+                    <svg viewBox='0 0 20 20' fill='none'>
+                        <circle cx='7.08' cy='7.08' r='2.08' stroke='currentColor' stroke-width='1.6'/>
+                        <circle cx='12.92' cy='7.92' r='1.67' stroke='currentColor' stroke-width='1.6'/>
+                        <path d='M3.75 14.58C4.20 12.99 5.57 12.08 7.5 12.08C9.43 12.08 10.80 12.99 11.25 14.58' stroke='currentColor' stroke-width='1.6' stroke-linecap='round'/>
+                        <path d='M11.67 14.17C11.97 13.11 12.87 12.5 14.17 12.5C15.47 12.5 16.37 13.11 16.67 14.17' stroke='currentColor' stroke-width='1.6' stroke-linecap='round'/>
+                    </svg>
+                    <%=presentVal%>/<%=totalMembersVal%> <%=language.get("board.table.attended")%>
+                </span>
+            </div>
+        </div>
+    </div>
+</a>
+<%
+				mCount = mCount + 1;
+			}
+		}
+		if(mCount == 0)
+		{
+			%>
+<div class='zcs-qmc-empty'><%=language.get("board.committee.noMeetings")%></div>
+<%
+		}
+		%>
+</div>
+    </div>
+
+    <!-- Charter & Governance Configuration -->
+    <div class='zcs-cd-section'>
+        <h3 class='zcs-cd-section-h'><%=language.get("board.section.charterGovernance")%></h3>
+        <div class='zcs-cd-row'>
+            <div class='zcs-cd-meta-item'><span class='zcs-cd-meta-val'><%=mFreqStr%></span><span class='zcs-cd-meta-label'><%=language.get("board.charter.meetingFrequency")%></span></div>
+            <div class='zcs-cd-meta-item'><span class='zcs-cd-meta-val'><%=quorumStr%></span><span class='zcs-cd-meta-label'><%=language.get("board.charter.quorumRequirement")%></span></div>
+            <div class='zcs-cd-meta-item'><span class='zcs-cd-meta-val'><%=votingThreshStr%></span><span class='zcs-cd-meta-label'><%=language.get("board.charter.votingThreshold")%></span></div>
+          <div class='zcs-cd-meta-item'>
+    <span class='zcs-cd-meta-val'>
+<%
+		if(cRec.Upload_Charter_Document != null && cRec.Upload_Charter_Document + "" != "" && cRec.Upload_Charter_Document + "" != "null")
+		{
+			fileUrl = cRec.Upload_Charter_Document + "";
+			fileName = fileUrl.getSuffix("/");
+			if(fileName == null || fileName == "" || fileName == "null")
+			{
+				fileName = language.get("board.charter.charterDocument");
+			}
+			%>
+<a href='<%=fileUrl%>' target='_blank' download style='color:#e8453c;font-size:13px;font-weight:500;text-decoration:none;display:inline-flex;align-items:center;gap:4px;'>
+            <svg width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='#e8453c' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4'/><polyline points='7 10 12 15 17 10'/><line x1='12' y1='15' x2='12' y2='3'/></svg>
+            <%=fileName%>
+        </a>
+<%
+		}
+		else
+		{
+			%>
+\u2014
+<%
+		}
+		%>
+</span>
+    <span class='zcs-cd-meta-label'><%=language.get("board.charter.uploadCharter")%></span>
+</div>
+        </div>
+        <hr class='zcs-cd-divider'/>
+        <p class='zcs-cd-purpose-label'><%=language.get("board.section.purposeMandate")%></p>
+        <p class='zcs-cd-mandate'><%=charterNotesText%></p>
+    </div>
+
+    <!-- Committee Membership Configuration -->
+    <div class='zcs-cd-section'>
+        <h3 class='zcs-cd-section-h'><%=language.get("board.section.membershipConfig")%></h3>
+
+        <p class='zcs-cd-sub-h'><%=language.get("board.membership.votingMembers")%></p>
+        <div class='zcs-cd-row cols-3'>
+            <div class='zcs-cd-meta-item'><span class='zcs-cd-meta-val'><%=minCountStr%></span><span class='zcs-cd-meta-label'><%=language.get("board.membership.minCount")%></span></div>
+            <div class='zcs-cd-meta-item'><span class='zcs-cd-meta-val'><%=maxCountStr%></span><span class='zcs-cd-meta-label'><%=language.get("board.membership.maxCount")%></span></div>
+            <div class='zcs-cd-meta-item'><span class='zcs-cd-meta-val'><%=prefCountStr%></span><span class='zcs-cd-meta-label'><%=language.get("board.membership.prefCount")%></span></div>
+        </div>
+
+        <hr class='zcs-cd-divider'/>
+
+        <div class='zcs-cd-row cols-2'>
+            <div>
+                <p class='zcs-cd-sub-h'><%=language.get("board.membership.nonExecutive")%></p>
+                <div class='zcs-cd-row cols-2'>
+                    <div class='zcs-cd-meta-item'><span class='zcs-cd-meta-val'><%=allowedStr%></span><span class='zcs-cd-meta-label'><%=language.get("board.membership.allowed")%></span></div>
+                    <div class='zcs-cd-meta-item'><span class='zcs-cd-meta-val'><%=maxNonExecStr%></span><span class='zcs-cd-meta-label'><%=language.get("board.membership.maxCount")%></span></div>
+                </div>
+            </div>
+            <div>
+                <p class='zcs-cd-sub-h'><%=language.get("board.membership.advisorsObservers")%></p>
+                <div class='zcs-cd-row cols-2'>
+                    <div class='zcs-cd-meta-item'><span class='zcs-cd-meta-val'><%=nonVotingAdvStr%></span><span class='zcs-cd-meta-label'><%=language.get("board.membership.nonVotingAdvisors")%></span></div>
+                    <div class='zcs-cd-meta-item'><span class='zcs-cd-meta-val'><%=obsAllowedStr%></span><span class='zcs-cd-meta-label'><%=language.get("board.membership.observersAllowed")%></span></div>
+                </div>
+            </div>
+        </div>
+
+        <hr class='zcs-cd-divider'/>
+
+        <p class='zcs-cd-sub-h'><%=language.get("board.membership.independentDirectors")%></p>
+        <div class='zcs-cd-row cols-2'>
+            <div class='zcs-cd-meta-item'><span class='zcs-cd-meta-val'><%=minIndepStr%></span><span class='zcs-cd-meta-label'><%=language.get("board.membership.minCount")%></span></div>
+            <div class='zcs-cd-meta-item'><span class='zcs-cd-meta-val' style='font-weight:400;color:#374151;font-size:13px;line-height:1.7;'><%=indepCritStr%></span><span class='zcs-cd-meta-label'><%=language.get("board.membership.independenceCriteria")%></span></div>
+        </div>
+    </div>
+
+    <!-- Members detail -->
+    <div class='zcs-cd-section'>
+        <h3 class='zcs-cd-section-h'><%=language.get("board.section.membersDetail")%></h3>
+        <div class='zcs-report zcs-col-common' name='embedDiv' elName='zc-component' viewLinkName='Committee_Member_details' params='zc_Header=false&zc_AddRec=false&zc_ColMenu=false&zc_Footer=false&Committee=<%=cRec.ID%>'></div>
+    </div>
+</div>
+<%
+	}
+	else
+	{
+		boardRec = Board[ID != 0];
+		autoRecid = boardRec.ID;
+		stage = boardRec.Completed_Stage;
+		boardType = boardRec.Board_Type_Board;
+		if(stage == null || stage == "")
+		{
+			stage = "Yet to Start";
+		}
+		showDetailView = false;
+		showWizard = false;
+		showSuccessPopup = false;
+		if(input.show_popup == "1")
+		{
+			showSuccessPopup = true;
+			showDetailView = true;
+		}
+		else if(stage == "Complete" || stage == "Popup")
+		{
+			showDetailView = true;
+		}
+		else
+		{
+			showWizard = true;
+		}
+		activeField = input.action_field;
+		if(activeField == null || activeField == "")
+		{
+			if(stage == "Yet to Start")
+			{
+				activeField = "Details";
+			}
+			else if(stage == "Details")
+			{
+				activeField = "Composition";
+			}
+			else if(stage == "Composition")
+			{
+				activeField = "Rules";
+			}
+			else if(stage == "Rules")
+			{
+				activeField = "Review";
+			}
+			else
+			{
+				activeField = "Details";
+			}
+		}
+		formParam = "";
+		if(autoRecid != null)
+		{
+			formParam = "&recLinkID=" + autoRecid + "&viewLinkName=Boards&Action_Field=" + activeField;
+		}
+		else
+		{
+			formParam = "&Completed_Stage=Yet+to+Start&Action_Field=Details";
+		}
+		editFormParam = "";
+		if(autoRecid != null)
+		{
+			editFormParam = "recLinkID=" + autoRecid + "&viewLinkName=Boards&Action_Field=Edit";
+		}
+		prevField = "";
+		isPrevDisabled = "zcs-button-disable";
+		previoushrefAction = "";
+		if(activeField == "Composition")
+		{
+			prevField = "Details";
+		}
+		else if(activeField == "Rules")
+		{
+			prevField = "Composition";
+		}
+		else if(activeField == "Review")
+		{
+			prevField = "Rules";
+		}
+		if(prevField != "")
+		{
+			isPrevDisabled = "";
+			previoushrefAction = "href='#Page:" + page_link_name + "?action_field=" + prevField + "'";
+		}
+		s1Done = stage == "Details" || stage == "Composition" || stage == "Rules" || stage == "Review" || stage == "Complete";
+		s2Done = stage == "Composition" || stage == "Rules" || stage == "Review" || stage == "Complete";
+		s3Done = stage == "Rules" || stage == "Review" || stage == "Complete";
+		s4Done = stage == "Review" || stage == "Complete";
+		c1 = if(activeField == "Details","zcs-stepper-active","");
+		c2 = if(activeField == "Composition","zcs-stepper-active","");
+		c3 = if(activeField == "Rules","zcs-stepper-active","");
+		c4 = if(activeField == "Review","zcs-stepper-active","");
+		stageReachedComposition = stage == "Details" || stage == "Composition" || stage == "Rules" || stage == "Review" || stage == "Complete";
+		stageReachedRules = stage == "Composition" || stage == "Rules" || stage == "Review" || stage == "Complete";
+		stageReachedReview = stage == "Rules" || stage == "Review" || stage == "Complete";
+		s1href = "#Page:" + page_link_name + "?action_field=Details";
+		s2href = "#Page:" + page_link_name + "?action_field=Composition";
+		s3href = "#Page:" + page_link_name + "?action_field=Rules";
+		s4href = "#Page:" + page_link_name + "?action_field=Review";
+		s1action = "href='" + s1href + "'";
+		s2action = if(stageReachedComposition,"href='" + s2href + "'","");
+		s3action = if(stageReachedRules,"href='" + s3href + "'","");
+		s4action = if(stageReachedReview,"href='" + s4href + "'","");
+		%>
+<style>
+    .zcs-success-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 9999; }
+    .zcs-success-card { background: #fff; border-radius: 24px; padding: 44px 52px; text-align: center; max-width: 500px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+    .zcs-success-icon-ring { width: 68px; height: 68px; border-radius: 50%; background: #fff0f0; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; }
+    .zcs-success-icon-ring svg { width: 36px; height: 36px; }
+    .zcs-success-card h3 { font-size: 22px; font-weight: 700; color: #111827; margin: 0 0 10px; font-family: Inter, sans-serif; }
+    .zcs-success-card p { font-size: 14px; color: #6B7280; margin: 0 0 28px; line-height: 1.65; font-family: Inter, sans-serif; }
+    .zcs-success-btn { display: inline-block; padding: 13px 36px; background: #e8453c; color: #fff; border-radius: 12px; text-decoration: none; font-size: 15px; font-weight: 600; font-family: Inter, sans-serif; }
+
+    .zcs-board-overview { background: #f5f6fa; padding: 20px; box-sizing: border-box; font-family: Inter, sans-serif; }
+    .zcs-board-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+    .zcs-board-header h2 { font-size: 20px; font-weight: 700; color: #111827; margin: 0 0 4px 0; }
+    .zcs-board-header p { font-size: 13px; color: #6B7280; margin: 0; }
+    .zcs-board-header-btns { display: flex; gap: 10px; align-items: center; }
+    .zcs-btn-outline { padding: 8px 16px; border: 1px solid #E5E7EB; border-radius: 8px; background: #fff; font-size: 13px; font-weight: 500; color: #374151; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; font-family: Inter, sans-serif; text-decoration: none; }
+    .zcs-btn-primary { padding: 8px 16px; border-radius: 8px; background: #e8453c; font-size: 13px; font-weight: 500; color: #fff; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; border: none; cursor: pointer; }
+
+    .zcs-board-identity { background: #fff; border-radius: 12px; padding: 16px 20px; margin-bottom: 0; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 0 6px rgba(0,0,0,0.06); border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+    .zcs-board-identity-left { display: flex; align-items: center; gap: 14px; }
+    .zcs-board-identity h3 { font-size: 16px; font-weight: 700; color: #111827; margin: 0 0 4px 0; }
+    .zcs-board-identity p { font-size: 12px; color: #6B7280; margin: 0; }
+    .zcs-badge-active { background: #ecfdf5; color: #059669; font-size: 12px; font-weight: 500; padding: 4px 10px; border-radius: 20px; display: flex; align-items: center; gap: 4px; }
+
+    .zcs-board-meta { display: flex; gap: 0; padding: 16px 20px; background: #fff; border: 1px solid #e5e7eb; border-top: 1px solid #f0f0f0; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+    .zcs-board-meta-item { display: flex; flex-direction: column; gap: 2px; padding: 0 28px 0 0; margin-right: 28px; border-right: 1px solid #e5e7eb; min-width: 0; }
+    .zcs-board-meta-item:last-child { border-right: none; padding-right: 0; margin-right: 0; }
+    .zcs-board-meta-item span.zcs-meta-val { font-size: 14px; font-weight: 600; color: #111827; display: inline-flex; align-items: center; gap: 6px; }
+    .zcs-board-meta-item label { font-size: 12px; font-weight: 400; color: #6b7280; }
+    .zcs-meta-plus { background: #fdecec; color: #e8453c; font-size: 11px; font-weight: 600; padding: 1px 6px; border-radius: 6px; }
+
+    .zcs-stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 16px; }
+    .zcs-stat-card { display: flex; justify-content: space-between; align-items: flex-end; background: #fff; border: 1px solid #e5e7eb; border-radius: 14px; padding: 18px 20px; position: relative; overflow: hidden; }
+    .zcs-stat-card::before { content: ''; position: absolute; top: -20px; right: -20px; width: 90px; height: 90px; border-radius: 50%; background: radial-gradient(circle, rgba(251,202,204,0.4) 0%, transparent 70%); pointer-events: none; }
+    .zcs-stat-info { display: flex; flex-direction: column; gap: 6px; }
+    .zcs-stat-info label { font-size: 13px; color: #6b7280; }
+    .zcs-stat-info h3 { font-size: 28px; font-weight: 700; color: #111827; margin: 0; }
+    .zcs-stat-sub { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; color: #6b7280; margin-top: 4px; }
+    .zcs-stat-sub .zcs-sub-pill { background: #fdecec; color: #e8453c; font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 12px; }
+    .zcs-stat-icon { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; opacity: 0.8; }
+    .zcs-stat-icon svg { width: 40px; height: 40px; }
+    @media(max-width:768px) { .zcs-stats-grid { grid-template-columns: repeat(2,1fr); } .zcs-board-header { flex-direction: column; gap: 12px; } }
+
+    .zcs-page-container { background-color: #F5F6FA; }
+    .zcs-button-disable { color: #99A1AF !important; pointer-events: none !important; }
+    .zcs-wizard-page .zcs-form .zc-form-fullheight, .zcs-wizard-page .zcs-form .row, .zcs-wizard-page .zcs-form .form-outer-wrapper form.form-table { width: 100%; height: 100%; background-color: transparent; }
+    .zcs-wizard-page .zcs-form .zc-form-fullheight .form-outer-wrapper { height: 100% !important; border-width: 0px; background-color: transparent; }
+    .zcs-wizard-page .zcs-form .form-outer-wrapper form.form-table { display: flex; flex-direction: column; }
+    .zcs-wizard-page .zcs-form .form-outer-wrapper .zc-mobile-scroll-ctr { display: flex; flex-direction: column; height: 100%; padding: 0px; }
+    .zcs-wizard-page .zcs-form form .zc-form-scroll-wrapper { background-color: var(--zcs-white-color); border: 1px solid #e7e7ee; border-radius: 12px; box-shadow: 0px 0px 6px 0px #E6E6E6; padding: 20px; box-sizing: border-box; }
+    .zcs-page-container.zcs-wizard-page .zcs-form .zc-form-fullheight .form-outer-wrapper .form-table .formContainer { flex: 1; padding: 20px 10%; box-sizing: border-box; overflow: auto; background-color: transparent; }
+    .zcs-wizard-page .zcs-form form .zc-footer-wrapper .zc-form-footer .formbutton { display: flex; align-items: center; padding: 20px 30px; box-sizing: border-box; justify-content: end; }
+    .zcs-form .zc-footer-wrapper { background-color: var(--zcs-white-color); }
+
+    .zcs-stepper-wrapper { padding: 28px 60px; background: var(--zcs-white-color); border-bottom: 1px solid var(--zcs_tertiary_border_color); box-sizing: border-box; }
+    .zcs-stepper-wrapper ul { display: flex; list-style: none; padding: 0; margin: 0; gap: 0; }
+    .zcs-stepper { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 10px; position: relative; max-width: 240px; margin: 0 auto; }
+    .zcs-stepper-link { display: flex; flex-direction: column; align-items: center; gap: 10px; text-decoration: none; width: 100%; }
+    .zcs-stepper-status { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; position: relative; z-index: 1; box-sizing: border-box; flex-shrink: 0; background-color: var(--zcs_brand_color); border: 4px solid var(--zcs-white-color); }
+    .zcs-stepper-status svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; color: var(--zcs_brand_foreground_color); }
+    .zcs-stepper-text { font-size: 13px; color: var(--zcs_primary_text_color); text-align: center; }
+    .zcs-stepper:not(:last-child):before { content: ''; width: 100%; height: 1px; border-top: 1px solid var(--zcs_brand_color); box-sizing: border-box; position: absolute; top: calc((32px - 1px) / 2); left: 50%; }
+    .zcs-stepper-active .zcs-stepper-status { background-color: var(--zcs-white-color); border: 1px solid var(--zcs_brand_color); outline: 4px solid var(--zcs-white-color); }
+    .zcs-stepper-active .zcs-stepper-status svg { color: var(--zcs_brand_color); }
+    .zcs-stepper-active .zcs-stepper-text { font-weight: 600; color: var(--zcs_brand_color); }
+    .zcs-stepper.zcs-stepper-active:before,
+    .zcs-stepper.zcs-stepper-active~.zcs-stepper:before { border-color: var(--zcs_tertiary_border_color); }
+    .zcs-stepper-active~.zcs-stepper .zcs-stepper-status { background-color: var(--zcs-white-color); border: 1px solid var(--zcs_tertiary_border_color); }
+    .zcs-stepper-active~.zcs-stepper .zcs-stepper-status svg { color: var(--zcs_tertiary_text_color); }
+    .zcs-stepper-active~.zcs-stepper .zcs-stepper-text { color: var(--zcs_tertiary_text_color); }
+    @media (max-width: 575px) {
+        .zcs-stepper-wrapper ul { flex-direction: column; gap: 24px; }
+        .zcs-stepper { flex-direction: row; gap: 16px; max-width: none; align-items: center; justify-content: flex-start; }
+        .zcs-stepper-link { flex-direction: row; gap: 16px; }
+        .zcs-stepper:not(:last-child):before { width: 1px; height: 100%; border-left: 1px solid var(--zcs_brand_color); border-top: none; left: calc((32px - 1px) / 2); top: 50%; }
+    }
+
+    .zcs-mode-physical { color: #1094c5; font-weight: 500; }
+    .zcs-mode-virtual { color: #179e6c; font-weight: 500; }
+    .zcs-mode-hybrid { color: #b8770d; font-weight: 500; }
+</style>
+<%
+		if(showSuccessPopup == true)
+		{
+			boardTypeLabel = if(boardType != null && boardType != "",boardType,"Board");
+			%>
+<div class='zcs-success-overlay'>
+    <div class='zcs-success-card'>
+        <div class='zcs-success-icon-ring'>
+            <svg viewBox='0 0 36 36' fill='none'>
+                <circle cx='18' cy='18' r='16' stroke='#e8453c' stroke-width='1.8'/>
+                <path d='M11 18.5l5 5 9-10' stroke='#e8453c' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/>
+            </svg>
+        </div>
+        <h3><%=language.get("board.success.title")%></h3>
+        <p><%=language.get("board.success.desc")%></p>
+        <a class='zcs-success-btn' href='#Page:<%=page_link_name%>'><%=language.get("board.button.goToBoard")%></a>
+    </div>
+</div>
+<%
+		}
+		if(showDetailView == true)
+		{
+			dRec = Board[ID != 0];
+			totalMembers = 0;
+			indCount = 0;
+			isMajorityIndep = false;
+			if(boardType == "Single-Tier")
+			{
+				for each  cRow in dRec.Member_Assignment_Single
+				{
+					totalMembers = totalMembers + 1;
+					if(cRow.Member_Type == "Independent")
+					{
+						indCount = indCount + 1;
+					}
+				}
+			}
+			else if(boardType == "Two-Tier")
+			{
+				for each  cRow in dRec.Board_Member_Assigment_Management_Two
+				{
+					totalMembers = totalMembers + 1;
+					if(cRow.Member_Type == "Independent")
+					{
+						indCount = indCount + 1;
+					}
+				}
+				for each  cRow in dRec.Board_Member_Assigment_Supervisory_Two
+				{
+					totalMembers = totalMembers + 1;
+					if(cRow.Member_Type == "Independent")
+					{
+						indCount = indCount + 1;
+					}
+				}
+			}
+			else
+			{
+				for each  cRow in dRec.Board_Members_Assignment_Advisory
+				{
+					totalMembers = totalMembers + 1;
+					if(cRow.Member_Type == "Independent")
+					{
+						indCount = indCount + 1;
+					}
+				}
+			}
+			if(totalMembers > 0 && indCount * 2 > totalMembers)
+			{
+				isMajorityIndep = true;
+			}
+			boardDisplayName = "";
+			identitySubText = "";
+			if(boardType == "Single-Tier")
+			{
+				boardDisplayName = dRec.Board_Name;
+				identitySubText = "Board Size (" + totalMembers + " Seats)";
+			}
+			else if(boardType == "Two-Tier")
+			{
+				boardDisplayName = dRec.Board_Name;
+				identitySubText = "Board Size (" + totalMembers + " Seats)";
+			}
+			else if(boardType == "Advisory")
+			{
+				boardDisplayName = dRec.Board_Name;
+				identitySubText = "Board Size (" + totalMembers + " Seats)";
+			}
+			if(boardDisplayName == null || boardDisplayName == "")
+			{
+				boardDisplayName = "\u2014";
+				identitySubText = "Board Size (" + totalMembers + " Seats)";
+			}
+			activeSinceYear = dRec.Added_Time.toDate().toString("yyyy");
+			committeeCount = Committee[ID != 0].count();
+			%>
+<div class='zcs-board-overview'>
+    <div class='zcs-board-header'>
+        <div>
+            <h2><%=language.get("board.title.overview")%></h2>
+            <p><%=language.get("board.title.overviewDesc")%></p>
+        </div>
+        <div class='zcs-board-header-btns'>
+<%
+			if(canEditBoard == true)
+			{
+				%>
+<a class='zcs-button zcs-primary-outline-button zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body'
+    href='#Form:Board?<%=editFormParam%>&zc_LoadIn=dialog'>
+    <span class='zcs-button-text'> \u270F\uFE0F <%=language.get("board.button.editBoard")%> </span>
+</a>
+<a class='zcs-button zcs-primary-button zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body'
+    href='#Form:Committee?zc_LoadIn=dialog'>
+    <span class='zcs-button-text'> \u2295 <%=language.get("board.button.addCommittee")%></span>
+</a>
+<%
+			}
+			%>
+</div>
+    </div>
+
+    <div class='zcs-board-identity'>
+        <div class='zcs-board-identity-left'>
+            <div style='width:48px;height:48px;background-color:#EAD6D6;border-radius:12px;display:flex;align-items:center;justify-content:center;'>
+                <svg width='24' height='24' viewBox='0 0 24 24' fill='none'>
+                    <rect x='4' y='7' width='16' height='13' rx='2' stroke='#e8453c' stroke-width='1.6'/>
+                    <path d='M8 7V5a2 2 0 014 0v2' stroke='#e8453c' stroke-width='1.6' stroke-linecap='round'/>
+                    <path d='M8 12h8M8 15h5' stroke='#e8453c' stroke-width='1.6' stroke-linecap='round'/>
+                </svg>
+            </div>
+            <div>
+                <h3><%=boardDisplayName%></h3>
+                <p><%=identitySubText%></p>
+            </div>
+        </div>
+        <div class='zcs-badge-active'>\u25CF <%=language.get("board.meta.activeBoard")%></div>
+    </div>
+<%
+			if(boardType == "Single-Tier")
+			{
+				bType = if(dRec.Board_Type_Board != null,dRec.Board_Type_Board + "","\u2014");
+				jur = if(dRec.Jurisdiction != null,dRec.Jurisdiction + "","\u2014");
+				ind = if(dRec.Industry != null,dRec.Industry + "","\u2014");
+				vMethod = if(dRec.Voting_Methods_Single != null,dRec.Voting_Methods_Single + "","\u2014");
+				gender = "\u2014";
+				if(dRec.Gender_Diversity_Single != null)
+				{
+					gender = dRec.Gender_Diversity_Single.round(0) + "";
+				}
+				ethnic = "\u2014";
+				if(dRec.Ethnic_Diversity_Single != null)
+				{
+					ethnic = dRec.Ethnic_Diversity_Single.round(0) + "";
+				}
+				comp = "\u2014";
+				compPlus = 0;
+				compTooltip = "";
+				compList = List();
+				if(dRec.Required_Board_Competencies_Single != null)
+				{
+					for each  subRec in dRec.Required_Board_Competencies_Single
+					{
+						cVal = subRec.Required_Board_Competencies + "";
+						if(cVal != "" && cVal != "null")
+						{
+							compList.add(cVal.trim());
+						}
+					}
+					if(compList.size() > 0)
+					{
+						comp = compList.get(0);
+						if(compList.size() > 1)
+						{
+							compPlus = compList.size() - 1;
+							compTooltip = "";
+							for each  tVal in compList.subList(1,compList.size())
+							{
+								compTooltip = compTooltip + "<span>" + tVal + "</span>";
+							}
+						}
+					}
+				}
+				indRule = "\u2014";
+				indRulePlus = 0;
+				indRuleTooltip = "";
+				if(dRec.Independence_Rules_Single != null)
+				{
+					indRuleStr = dRec.Independence_Rules_Single + "";
+					if(indRuleStr != "" && indRuleStr != "null")
+					{
+						indRuleParts = indRuleStr.toList(",");
+						indRule = indRuleParts.get(0).trim();
+						if(indRuleParts.size() > 1)
+						{
+							indRulePlus = indRuleParts.size() - 1;
+							indRuleTooltip = "";
+							for each  tVal in indRuleParts.subList(1,indRuleParts.size())
+							{
+								indRuleTooltip = indRuleTooltip + "<span>" + tVal.trim() + "</span>";
+							}
+						}
+					}
+				}
+				%>
+<div class='zcs-board-meta'>
+    <div class='zcs-board-meta-item'>
+        <span class='zcs-meta-val'><%=bType%></span>
+        <label><%=language.get("board.meta.boardType")%></label>
+    </div>
+    <div class='zcs-board-meta-item'>
+        <span class='zcs-meta-val'><%=jur%></span>
+        <label><%=language.get("board.meta.jurisdiction")%></label>
+    </div>
+    <div class='zcs-board-meta-item'>
+        <span class='zcs-meta-val'><%=ind%></span>
+        <label><%=language.get("board.meta.industry")%></label>
+    </div>
+<div class='zcs-board-meta-item'>
+        <span class='zcs-meta-val'><%=comp%>
+<%
+				if(compPlus > 0)
+				{
+					compTitleText = "";
+					for each  tVal in compList.subList(1,compList.size())
+					{
+						if(compTitleText != "")
+						{
+							compTitleText = compTitleText + ", ";
+						}
+						compTitleText = compTitleText + tVal;
+					}
+					%>
+<span class='zcs-meta-plus' title='<%=compTitleText%>'>+<%=compPlus%></span>
+<%
+				}
+				%>
+</span>
+<label><%=language.get("board.meta.competencies")%></label>
+    </div>
+    <div class='zcs-board-meta-item'>
+        <span class='zcs-meta-val'><%=indRule%></span>
+<%
+				if(indRulePlus > 0)
+				{
+					%>
+<span class='zcs-meta-plus-wrap'>
+    <span class='zcs-meta-plus'>+<%=indRulePlus%></span>
+    <span class='zcs-meta-tooltip'><%=indRuleTooltip%></span>
+</span>
+<%
+				}
+				%>
+<label><%=language.get("board.meta.independenceRules")%></label>
+    </div>
+    <div class='zcs-board-meta-item'>
+        <span class='zcs-meta-val'><%=vMethod%></span>
+<label><%=language.get("board.meta.votingMethod")%></label>
+    </div>
+
+<div class='zcs-board-meta-item'>
+        <span class='zcs-meta-val'><%=gender%>%</span>
+        <label><%=language.get("board.meta.genderDiversity")%></label>
+    </div>
+    <div class='zcs-board-meta-item'>
+        <span class='zcs-meta-val'><%=ethnic%>%</span>
+        <label><%=language.get("board.meta.ethnicDiversity")%></label>
+    </div>
+</div>
+<%
+			}
+			else if(boardType == "Two-Tier")
+			{
+				bType = if(dRec.Board_Type_Board != null,dRec.Board_Type_Board + "","\u2014");
+				jur = if(dRec.Jurisdiction != null,dRec.Jurisdiction + "","\u2014");
+				ind = if(dRec.Industry != null,dRec.Industry + "","\u2014");
+				gender = "\u2014";
+				if(dRec.Gender_Diversity_Two != null)
+				{
+					gender = dRec.Gender_Diversity_Two.round(0) + "";
+				}
+				ethnic = "\u2014";
+				if(dRec.Ethnic_Diversity_Two != null)
+				{
+					ethnic = dRec.Ethnic_Diversity_Two.round(0) + "";
+				}
+				vMethod = "\u2014";
+				vMethodPlus = 0;
+				vMethodTooltip = "";
+				if(dRec.Voting_Method_Two != null)
+				{
+					vStr = dRec.Voting_Method_Two + "";
+					if(vStr != "" && vStr != "null")
+					{
+						vParts = vStr.toList(",");
+						vMethod = vParts.get(0).trim();
+						if(vParts.size() > 1)
+						{
+							vMethodPlus = vParts.size() - 1;
+							vMethodTooltip = "";
+							for each  tVal in vParts.subList(1,vParts.size())
+							{
+								vMethodTooltip = vMethodTooltip + "<span>" + tVal.trim() + "</span>";
+							}
+						}
+					}
+				}
+				comp = "\u2014";
+				compPlus = 0;
+				compTooltip = "";
+				compList = List();
+				if(dRec.Required_Board_Competencies_Two != null)
+				{
+					for each  subRec in dRec.Required_Board_Competencies_Two
+					{
+						cVal = subRec.Required_Board_Competencies + "";
+						if(cVal != "" && cVal != "null")
+						{
+							compList.add(cVal.trim());
+						}
+					}
+					if(compList.size() > 0)
+					{
+						comp = compList.get(0);
+						if(compList.size() > 1)
+						{
+							compPlus = compList.size() - 1;
+							compTooltip = "";
+							for each  tVal in compList.subList(1,compList.size())
+							{
+								compTooltip = compTooltip + "<span>" + tVal + "</span>";
+							}
+						}
+					}
+				}
+				indRule = "\u2014";
+				indRulePlus = 0;
+				indRuleTooltip = "";
+				if(dRec.Independence_Rules_Two != null)
+				{
+					indRuleStr = dRec.Independence_Rules_Two + "";
+					if(indRuleStr != "" && indRuleStr != "null")
+					{
+						indRuleParts = indRuleStr.toList(",");
+						indRule = indRuleParts.get(0).trim();
+						if(indRuleParts.size() > 1)
+						{
+							indRulePlus = indRuleParts.size() - 1;
+							indRuleTooltip = "";
+							for each  tVal in indRuleParts.subList(1,indRuleParts.size())
+							{
+								indRuleTooltip = indRuleTooltip + "<span>" + tVal.trim() + "</span>";
+							}
+						}
+					}
+				}
+				%>
+<div class='zcs-board-meta'>
+    <div class='zcs-board-meta-item'>
+        <span class='zcs-meta-val'><%=bType%></span>
+        <label><%=language.get("board.meta.boardType")%></label>
+    </div>
+    <div class='zcs-board-meta-item'>
+        <span class='zcs-meta-val'><%=jur%></span>
+        <label><%=language.get("board.meta.jurisdiction")%></label>
+    </div>
+    <div class='zcs-board-meta-item'>
+        <span class='zcs-meta-val'><%=ind%></span>
+        <label><%=language.get("board.meta.industry")%></label>
+    </div>
+<div class='zcs-board-meta-item'>
+        <span class='zcs-meta-val'><%=comp%>
+<%
+				if(compPlus > 0)
+				{
+					compTitleText = "";
+					for each  tVal in compList.subList(1,compList.size())
+					{
+						if(compTitleText != "")
+						{
+							compTitleText = compTitleText + ", ";
+						}
+						compTitleText = compTitleText + tVal;
+					}
+					%>
+<span class='zcs-meta-plus' title='<%=compTitleText%>'>+<%=compPlus%></span>
+<%
+				}
+				%>
+</span>
+<label><%=language.get("board.meta.competencies")%></label>
+    </div>
+    <div class='zcs-board-meta-item'>
+        <span class='zcs-meta-val'><%=indRule%></span>
+<%
+				if(indRulePlus > 0)
+				{
+					%>
+<span class='zcs-meta-plus-wrap'>
+    <span class='zcs-meta-plus'>+<%=indRulePlus%></span>
+    <span class='zcs-meta-tooltip'><%=indRuleTooltip%></span>
+</span>
+<%
+				}
+				%>
+<label><%=language.get("board.meta.independenceRules")%></label>
+    </div>
+    <div class='zcs-board-meta-item'>
+        <span class='zcs-meta-val'><%=vMethod%></span>
+<%
+				if(vMethodPlus > 0)
+				{
+					%>
+<span class='zcs-meta-plus-wrap'>
+    <span class='zcs-meta-plus'>+<%=vMethodPlus%></span>
+    <span class='zcs-meta-tooltip'><%=vMethodTooltip%></span>
+</span>
+<%
+				}
+				%>
+<label><%=language.get("board.meta.votingMethod")%></label>
+    </div>
+	   <div class='zcs-board-meta-item'>
+        <span class='zcs-meta-val'><%=gender%>%</span>
+<span class='zcs-meta-plus-wrap'>
+</span>
+
+<label><%=language.get("board.meta.genderDiversity")%></label>
+    </div>
+	<div class='zcs-board-meta-item'>
+        <span class='zcs-meta-val'><%=ethnic%>%</span>
+<span class='zcs-meta-plus-wrap'>
+</span>
+
+<label><%=language.get("board.meta.ethnicDiversity")%></label>
+    </div>
+</div>
+<%
+			}
+			else
+			{
+				bType = if(dRec.Board_Type_Board != null,dRec.Board_Type_Board + "","\u2014");
+				jurisdiction = if(dRec.Jurisdiction != null,dRec.Jurisdiction + "","\u2014");
+				industry = if(dRec.Industry != null,dRec.Industry + "","\u2014");
+				genderDiv = "\u2014";
+				if(dRec.Gender_Diversity_Advisory != null)
+				{
+					genderDiv = dRec.Gender_Diversity_Advisory.round(0) + "";
+				}
+				ethnicDiv = "\u2014";
+				if(dRec.Ethnic_Diversity_Advisory != null)
+				{
+					ethnicDiv = dRec.Ethnic_Diversity_Advisory.round(0) + "";
+				}
+				compVal = "\u2014";
+				compPlus = 0;
+				compTooltip = "";
+				if(dRec.Required_Board_Competencies_Advisory != null)
+				{
+					compStr = dRec.Required_Board_Competencies_Advisory.Required_Board_Competencies + "";
+					if(compStr != "null" && !compStr.isEmpty())
+					{
+						compParts = compStr.toList(",");
+						compVal = compParts.get(0).trim();
+						if(compParts.size() > 1)
+						{
+							compPlus = compParts.size() - 1;
+							compTooltip = "";
+							for each  tVal in compParts.subList(1,compParts.size())
+							{
+								compTooltip = compTooltip + "<span>" + tVal.trim() + "</span>";
+							}
+						}
+					}
+				}
+				voteVal = "\u2014";
+				votePlus = 0;
+				voteTooltip = "";
+				if(dRec.Voting_Methods_Advisory != null)
+				{
+					voteStr = dRec.Voting_Methods_Advisory + "";
+					if(voteStr != "null" && !voteStr.isEmpty())
+					{
+						voteParts = voteStr.toList(",");
+						voteVal = voteParts.get(0).trim();
+						if(voteParts.size() > 1)
+						{
+							votePlus = voteParts.size() - 1;
+							voteTooltip = "";
+							for each  tVal in voteParts.subList(1,voteParts.size())
+							{
+								voteTooltip = voteTooltip + "<span>" + tVal.trim() + "</span>";
+							}
+						}
+					}
+				}
+				%>
+<div class='zcs-board-meta'>
+	<div class='zcs-board-meta-item'>
+		<span class='zcs-meta-val'><%=bType%></span>
+		<label><%=language.get("board.meta.boardType")%></label>
+	</div>
+	<div class='zcs-board-meta-item'>
+		<span class='zcs-meta-val'><%=jurisdiction%></span>
+		<label><%=language.get("board.meta.jurisdiction")%></label>
+	</div>
+	<div class='zcs-board-meta-item'>
+		<span class='zcs-meta-val'><%=industry%></span>
+		<label><%=language.get("board.meta.industry")%></label>
+	</div>
+<div class='zcs-board-meta-item'>
+		<span class='zcs-meta-val'><%=compVal%>
+<%
+				if(compPlus > 0)
+				{
+					compTitleText = "";
+					for each  tVal in compParts.subList(1,compParts.size())
+					{
+						if(compTitleText != "")
+						{
+							compTitleText = compTitleText + ", ";
+						}
+						compTitleText = compTitleText + tVal.trim();
+					}
+					%>
+<span class='zcs-meta-plus' title='<%=compTitleText%>'>+<%=compPlus%></span>
+<%
+				}
+				%>
+</span>
+<label><%=language.get("board.meta.competencies")%></label>
+	</div>
+	<div class='zcs-board-meta-item'>
+		<span class='zcs-meta-val'><%=genderDiv%>%</span>
+		<label><%=language.get("board.meta.genderDiversity")%></label>
+	</div>
+	<div class='zcs-board-meta-item'>
+		<span class='zcs-meta-val'><%=ethnicDiv%>%</span>
+		<label><%=language.get("board.meta.ethnicDiversity")%></label>
+	</div>
+	<div class='zcs-board-meta-item'>
+		<span class='zcs-meta-val'><%=voteVal%></span>
+<%
+				if(votePlus > 0)
+				{
+					%>
+<span class='zcs-meta-plus-wrap'>
+		<span class='zcs-meta-plus'>+<%=votePlus%></span>
+		<span class='zcs-meta-tooltip'><%=voteTooltip%></span>
+	</span>
+<%
+				}
+				%>
+<label><%=language.get("board.meta.votingMethods")%></label>
+	</div>
+</div>
+<%
+			}
+			%>
+<div class='zcs-stats-grid'>
+    <div class='zcs-stat-card'>
+        <div class='zcs-stat-info'><label><%=language.get("board.stat.totalMembers")%></label><h3><%=totalMembers%></h3></div>
+        <div class='zcs-stat-icon'><svg viewBox='0 0 40 40' fill='none'><circle cx='20' cy='14' r='6' stroke='#e8b4b8' stroke-width='2'/><path d='M8 34c0-6.627 5.373-12 12-12s12 5.373 12 12' stroke='#e8b4b8' stroke-width='2' stroke-linecap='round'/></svg></div>
+    </div>
+    <div class='zcs-stat-card'>
+        <div class='zcs-stat-info'>
+            <label><%=language.get("board.stat.independentDirectors")%></label>
+            <h3><%=indCount%></h3>
+<%
+			if(boardType == "Single-Tier" || boardType == "Two-Tier" && isMajorityIndep == true)
+			{
+				%>
+<span class='zcs-stat-sub'><span class='zcs-sub-pill'><%=language.get("board.stat.majorityIndependent")%></span></span>
+<%
+			}
+			%>
+</div>
+        <div class='zcs-stat-icon'><svg viewBox='0 0 40 40' fill='none'><circle cx='14' cy='14' r='5' stroke='#e8b4b8' stroke-width='2'/><circle cx='26' cy='14' r='5' stroke='#e8b4b8' stroke-width='2'/><path d='M4 34c0-5.523 4.477-10 10-10' stroke='#e8b4b8' stroke-width='2' stroke-linecap='round'/><path d='M36 34c0-5.523-4.477-10-10-10' stroke='#e8b4b8' stroke-width='2' stroke-linecap='round'/></svg></div>
+    </div>
+    <div class='zcs-stat-card'>
+        <div class='zcs-stat-info'><label><%=language.get("board.stat.committees")%></label><h3><%=committeeCount%></h3></div>
+        <div class='zcs-stat-icon'><svg viewBox='0 0 40 40' fill='none'><rect x='8' y='8' width='10' height='10' rx='2' stroke='#e8b4b8' stroke-width='2'/><rect x='22' y='8' width='10' height='10' rx='2' stroke='#e8b4b8' stroke-width='2'/><rect x='8' y='22' width='10' height='10' rx='2' stroke='#e8b4b8' stroke-width='2'/><rect x='22' y='22' width='10' height='10' rx='2' stroke='#e8b4b8' stroke-width='2'/></svg></div>
+    </div>
+<%
+			startDate = (zoho.currentdate.getYear() + "-01-01").toDate();
+			endDate = ((zoho.currentdate.getYear() + 1) + "-01-01").toDate();
+			meeting = Meeting[Start_Date_Time >= startDate && Start_Date_Time < endDate].count();
+			%>
+<div class='zcs-stat-card'>
+        <div class='zcs-stat-info'><label><%=language.get("board.stat.meetingsThisYear")%></label><h3><%=meeting%></h3></div>
+        <div class='zcs-stat-icon'><svg viewBox='0 0 40 40' fill='none'><rect x='6' y='10' width='28' height='24' rx='3' stroke='#e8b4b8' stroke-width='2'/><path d='M6 18h28' stroke='#e8b4b8' stroke-width='2'/><path d='M14 6v6M26 6v6' stroke='#e8b4b8' stroke-width='2' stroke-linecap='round'/></svg></div>
+    </div>
+</div>
+<%
+		}
+		if(showWizard == true)
+		{
+			if(canCreateBoard == false)
+			{
+				%>
+<div style='display:flex;align-items:center;justify-content:center;height:80vh;'>
+    <div style='text-align:center;max-width:400px;'>
+        <div style='width:64px;height:64px;border-radius:50%;background:#fff0f0;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;'>
+            <svg width='32' height='32' viewBox='0 0 24 24' fill='none' stroke='#e8453c' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'>
+                <rect x='3' y='11' width='18' height='11' rx='2' ry='2'/>
+                <path d='M7 11V7a5 5 0 0110 0v4'/>
+            </svg>
+        </div>
+        <h3 style='font-size:20px;font-weight:700;color:#111827;margin:0 0 8px;font-family:Inter,sans-serif;'><%=language.get("board.access.denied")%></h3>
+        <p style='font-size:14px;color:#6B7280;margin:0;line-height:1.6;font-family:Inter,sans-serif;'><%=language.get("board.access.deniedDesc")%></p>
+    </div>
+</div>
+<%
+			}
+			else
+			{
+				%>
+<div class='zcs-page-container zcs-wizard-page zcs-wh-full'>
+    <div class='zcs-page-container-inner zcs-wh-full zcs-flex zcs-direction-column'>
+        <div class='zcs-page-header zcs-w-full zcs-flex zcs-direction-column zcs-gap-8 zcs-px-30 zcs-py-24 zcs-box-border'>
+            <h5 class='zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-ellipsis zcs-m-0'><%=language.get("board.title.setup")%></h5>
+            <p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-ellipsis zcs-m-0'><%=language.get("board.title.setupDesc")%></p>
+        </div>
+        <div class='zcs-page-content zcs-col-common zcs-overflow-auto'>
+            <div class='zcs-wh-full zcs-flex zcs-direction-column zcs-box-border zcs-overflow-hidden zcs-relative'>
+                <div class='zcs-stepper-wrapper'>
+                    <ul>
+                        <li class='zcs-stepper <%=c1%>'>
+                            <a class='zcs-stepper-link' <%=s1action%>>
+                                <div class='zcs-stepper-status'>
+                                    <svg viewBox='0 0 24 24'><rect x='3' y='3' width='18' height='18' rx='2'/><path d='M7 8h10M7 12h10M7 16h6'/></svg>
+                                </div>
+                                <span class='zcs-stepper-text'><%=language.get("board.stepper.details")%></span>
+                            </a>
+                        </li>
+                        <li class='zcs-stepper <%=c2%>'>
+                            <a class='zcs-stepper-link' <%=s2action%>>
+                                <div class='zcs-stepper-status'>
+                                    <svg viewBox='0 0 24 24'><circle cx='9' cy='8' r='3'/><circle cx='15' cy='8' r='3'/><path d='M3 19c0-3.314 2.686-6 6-6'/><path d='M21 19c0-3.314-2.686-6-6-6'/></svg>
+                                </div>
+                                <span class='zcs-stepper-text'><%=language.get("board.stepper.composition")%></span>
+                            </a>
+                        </li>
+                        <li class='zcs-stepper <%=c3%>'>
+                            <a class='zcs-stepper-link' <%=s3action%>>
+                                <div class='zcs-stepper-status'>
+                                    <svg viewBox='0 0 24 24'><path d='M12 2L4 6v6c0 5 3.5 9.4 8 10 4.5-.6 8-5 8-10V6l-8-4z'/><path d='M9 12l2 2 4-4'/></svg>
+                                </div>
+                                <span class='zcs-stepper-text'><%=language.get("board.stepper.rules")%></span>
+                            </a>
+                        </li>
+                        <li class='zcs-stepper <%=c4%>'>
+                            <a class='zcs-stepper-link' <%=s4action%>>
+                                <div class='zcs-stepper-status'>
+                                    <svg viewBox='0 0 24 24'><path d='M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2'/><rect x='9' y='3' width='6' height='4' rx='1'/><path d='M9 12l2 2 4-4'/></svg>
+                                </div>
+                                <span class='zcs-stepper-text'><%=language.get("board.stepper.review")%></span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                <div class='zcs-col-common zcs-overflow-auto'>
+                    <div class='zcs-form' zc_MobileView='inline' elName='zc-component' formLinkName='Board'
+                         params='zc_Header=false&zc_SubmitVal=Next<%=formParam%>'></div>
+                </div>
+                <a class='zcs-button zcs-secondary-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body'
+                   <%=previoushrefAction%> style='position:absolute;bottom:14px;left:40px;'>
+                    <span class='zcs-button-text <%=isPrevDisabled%>'><%=language.get("board.button.previous")%></span>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+<%
+			}
+		}
+		if(showDetailView == true)
+		{
+			tab_map = thisapp.Page.Get_Tabs(page_link_name);
+			tab_keys = tab_map.keys();
+			input.tab = if(input.tab != "" && input.tab != "null" && input.tab != null,input.tab,tab_keys.get(0));
+			addedTime = dRec.Added_Time.toString("MMM dd, yyyy, hh:mm a");
+			modifiedTime = dRec.Modified_Time.toString("MMM dd, yyyy, hh:mm a");
+			%>
+</div>
+<ul class='zcs-horizontal-tabhead zcs-flex zcs-gap-12 zcs-px-10 zcs-py-0 zcs-m-0 zcs-box-border'>
+<%
+			for each  tab_id in tab_keys
+			{
+				class_name = if(input.tab == tab_id,"zcs-horizontal-tabitem zcs-horizontal-tabactive","zcs-horizontal-tabitem");
+				%>
+<li class='<%=class_name%>'><a class='zcs-horizontal-tablink zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-10 zcs-py-12 zcs-box-border zcs-font-medium zcs-lh-body zcs-color-secondary' href='#Page:<%=page_link_name%>?page_action=detailview&record_id=<%=input.recid%>&tab=<%=tab_id%>'><span class='zcs-horizontal-tab-text'><%=tab_map.get(tab_id).get("Display")%></span></a></li>
+<%
+			}
+			%>
+</ul>
+<%
+			if(input.tab == "overview" || input.tab.isEmpty())
+			{
+				%>
+<style>
+    .zcs-ov-container { padding: 0 20px 20px 20px; }
+    .zcs-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+    .zcs-ov-card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 0 6px rgba(0,0,0,0.06); font-family: Inter, sans-serif; }
+    .zcs-ov-card h4 { font-size: 16px; font-weight: 700; color: #111827; margin: 0 0 4px 0; }
+    .zcs-ov-card > p { font-size: 12px; color: #6B7280; margin: 0 0 16px 0; }
+
+    .zcs-tier-radio { position: absolute; left: -9999px; opacity: 0; }
+    .zcs-tier-tabs { display: flex; gap: 0; border-bottom: 1px solid #f0f0f0; margin-bottom: 16px; }
+    .zcs-tier-tab { flex: 1; text-align: center; padding: 10px 0; font-size: 13px; font-weight: 600; color: #6B7280; cursor: pointer; border-bottom: 2px solid transparent; user-select: none; }
+    .zcs-tier-pane { display: none; }
+    #zcs-tier-mgmt-r:checked ~ .zcs-tier-pane-mgmt { display: block; }
+    #zcs-tier-mgmt-r:checked ~ .zcs-tier-tabs label[for="zcs-tier-mgmt-r"] { color: #e8453c; border-bottom-color: #e8453c; }
+    #zcs-tier-supv-r:checked ~ .zcs-tier-pane-supv { display: block; }
+    #zcs-tier-supv-r:checked ~ .zcs-tier-tabs label[for="zcs-tier-supv-r"] { color: #e8453c; border-bottom-color: #e8453c; }
+
+    .zcs-member-group-label { font-size: 13px; font-weight: 600; color: #e8453c; margin: 0 0 10px 0; }
+    .zcs-member-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 18px; }
+    .zcs-member-chip { display: inline-flex; align-items: center; gap: 8px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 20px; padding: 5px 12px 5px 5px; }
+    .zcs-member-avatar { width: 28px; height: 28px; border-radius: 50%; background: #e8453c; color: #fff; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .zcs-member-name { font-size: 13px; font-weight: 500; color: #111827; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .zcs-chair-crown { color: #e8453c; margin-left: 4px; }
+
+    .zcs-compliance-card { margin-bottom: 16px; }
+    .zcs-compliance-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 16px; }
+    .zcs-compliance-item { display: flex; align-items: center; gap: 16px; padding: 16px 20px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; }
+    .zcs-compliance-ring { position: relative; width: 56px; height: 56px; flex-shrink: 0; }
+    .zcs-compliance-ring-svg { width: 56px; height: 56px; display: block; }
+    .zcs-compliance-pct { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 12px; font-weight: 700; color: #111827; }
+    .zcs-compliance-title { font-size: 14px; font-weight: 600; color: #111827; margin: 0 0 2px 0; }
+    .zcs-compliance-sub { font-size: 12px; color: #6B7280; margin: 0; }
+
+    @media(max-width:768px) { .zcs-two-col { grid-template-columns: 1fr; } .zcs-member-grid { grid-template-columns: 1fr; } .zcs-compliance-grid { grid-template-columns: 1fr; } }
+</style>
+<div class='zcs-ov-container'>
+    <div class='zcs-two-col'>
+        <div class='zcs-ov-card'>
+<%
+				if(boardType == "Advisory")
+				{
+					%>
+<h4><%=language.get("board.section.boardMembers")%></h4>
+<p>&nbsp;</p>
+<%
+				}
+				else
+				{
+					%>
+<h4><%=language.get("board.section.boardComposition")%></h4>
+<p>&nbsp;</p>
+<%
+				}
+				if(boardType == "Two-Tier")
+				{
+					mgmtChairChips = "";
+					mgmtSecChips = "";
+					mgmtExecChips = "";
+					supvChairChips = "";
+					supvSecChips = "";
+					supvExecChips = "";
+					for each  mRow in dRec.Board_Member_Assigment_Management_Two
+					{
+						mName = "";
+						if(mRow.Member != null)
+						{
+							mName = mRow.Member.Name + "";
+						}
+						mName = mName.trim();
+						firstLetter = "";
+						secondLetter = "";
+						if(mName.length() > 0)
+						{
+							firstLetter = mName.subString(0,1);
+						}
+						if(mName.contains(" "))
+						{
+							remainName = mName.getSuffix(" ").trim();
+							if(remainName.length() > 0)
+							{
+								secondLetter = remainName.subString(0,1);
+							}
+						}
+						initials = (firstLetter + secondLetter).toUpperCase();
+						crown = "";
+						mTypeRaw = mRow.Member_Type + "";
+						if(mTypeRaw == "Chairperson")
+						{
+							crown = "<span class='zcs-chair-crown'>\u2655</span>";
+						}
+						chipHTML = "<div class='zcs-member-chip'><div class='zcs-member-avatar'>" + initials + "</div><span class='zcs-member-name'>" + mName + "</span>" + crown + "</div>";
+						if(mTypeRaw == "Executive")
+						{
+							mgmtChairChips = mgmtChairChips + chipHTML;
+						}
+						else if(mTypeRaw == "Non-Executive")
+						{
+							mgmtSecChips = mgmtSecChips + chipHTML;
+						}
+						else if(mTypeRaw == "Independent")
+						{
+							mgmtExecChips = mgmtExecChips + chipHTML;
+						}
+					}
+					for each  sRow in dRec.Board_Member_Assigment_Supervisory_Two
+					{
+						mName = "";
+						if(sRow.Member != null)
+						{
+							mName = sRow.Member.Name + "";
+						}
+						mName = mName.trim();
+						firstLetter = "";
+						secondLetter = "";
+						if(mName.length() > 0)
+						{
+							firstLetter = mName.subString(0,1);
+						}
+						if(mName.contains(" "))
+						{
+							remainName = mName.getSuffix(" ").trim();
+							if(remainName.length() > 0)
+							{
+								secondLetter = remainName.subString(0,1);
+							}
+						}
+						initials = (firstLetter + secondLetter).toUpperCase();
+						crown = "";
+						mTypeRaw = sRow.Member_Type + "";
+						chipHTML = "<div class='zcs-member-chip'><div class='zcs-member-avatar'>" + initials + "</div><span class='zcs-member-name'>" + mName + "</span>" + crown + "</div>";
+						if(mTypeRaw == "Executive")
+						{
+							supvChairChips = supvChairChips + chipHTML;
+						}
+						else if(mTypeRaw == "Non-Executive")
+						{
+							supvSecChips = supvSecChips + chipHTML;
+						}
+						else if(mTypeRaw == "Independent")
+						{
+							supvExecChips = supvExecChips + chipHTML;
+						}
+					}
+					%>
+<input type="radio" id="zcs-tier-mgmt-r" name="zcs-tier-toggle" class="zcs-tier-radio" checked>
+<input type="radio" id="zcs-tier-supv-r" name="zcs-tier-toggle" class="zcs-tier-radio">
+
+<div class="zcs-tier-tabs">
+    <label for="zcs-tier-mgmt-r" class="zcs-tier-tab"><%=language.get("board.memberType.managementBoard")%></label>
+    <label for="zcs-tier-supv-r" class="zcs-tier-tab"><%=language.get("board.memberType.supervisoryBoard")%></label>
+</div>
+
+<div class="zcs-tier-pane zcs-tier-pane-mgmt">
+<%
+					if(mgmtChairChips != "")
+					{
+						%>
+<div class='zcs-member-group-label'><%=language.get("board.memberType.executive")%></div>
+    <div class='zcs-member-grid'><%=mgmtChairChips%></div>
+<%
+					}
+					if(mgmtSecChips != "")
+					{
+						%>
+<div class='zcs-member-group-label'><%=language.get("board.memberType.secretary")%></div>
+    <div class='zcs-member-grid'><%=mgmtSecChips%></div>
+<%
+					}
+					if(mgmtExecChips != "")
+					{
+						%>
+<div class='zcs-member-group-label'><%=language.get("board.memberType.independent")%></div>
+    <div class='zcs-member-grid'><%=mgmtExecChips%></div>
+<%
+					}
+					%>
+</div>
+
+<div class="zcs-tier-pane zcs-tier-pane-supv">
+<%
+					if(supvChairChips != "")
+					{
+						%>
+<div class='zcs-member-group-label'><%=language.get("board.memberType.executive")%></div>
+    <div class='zcs-member-grid'><%=supvChairChips%></div>
+<%
+					}
+					if(supvSecChips != "")
+					{
+						%>
+<div class='zcs-member-group-label'><%=language.get("board.memberType.secretary")%></div>
+    <div class='zcs-member-grid'><%=supvSecChips%></div>
+<%
+					}
+					if(supvExecChips != "")
+					{
+						%>
+<div class='zcs-member-group-label'><%=language.get("board.memberType.independent")%></div>
+    <div class='zcs-member-grid'><%=supvExecChips%></div>
+<%
+					}
+					%>
+</div>
+<%
+				}
+				else
+				{
+					chairChips = "";
+					execChips = "";
+					nonExecChips = "";
+					indChips = "";
+					subformRows = list();
+					if(boardType == "Single-Tier")
+					{
+						subformRows = dRec.Member_Assignment_Single;
+					}
+					else
+					{
+						subformRows = dRec.Board_Members_Assignment_Advisory;
+					}
+					for each  mRow in subformRows
+					{
+						mName = "";
+						if(mRow.Member != null)
+						{
+							mName = mRow.Member.Name + "";
+						}
+						mName = mName.trim();
+						firstLetter = "";
+						secondLetter = "";
+						if(mName.length() > 0)
+						{
+							firstLetter = mName.subString(0,1);
+						}
+						if(mName.contains(" "))
+						{
+							remainName = mName.getSuffix(" ").trim();
+							if(remainName.length() > 0)
+							{
+								secondLetter = remainName.subString(0,1);
+							}
+						}
+						initials = (firstLetter + secondLetter).toUpperCase();
+						crown = "";
+						mTypeRaw = mRow.Member_Type + "";
+						if(mTypeRaw == "Chairperson")
+						{
+							crown = "<span class='zcs-chair-crown'>\u2655</span>";
+						}
+						chipHTML = "<div class='zcs-member-chip'><div class='zcs-member-avatar'>" + initials + "</div><span class='zcs-member-name'>" + mName + "</span>" + crown + "</div>";
+						if(mTypeRaw == "Chairperson")
+						{
+							chairChips = chairChips + chipHTML;
+						}
+						else if(mTypeRaw == "Executive")
+						{
+							execChips = execChips + chipHTML;
+						}
+						else if(mTypeRaw == "Non-Executive")
+						{
+							nonExecChips = nonExecChips + chipHTML;
+						}
+						else if(mTypeRaw == "Independent")
+						{
+							indChips = indChips + chipHTML;
+						}
+					}
+					if(chairChips != "")
+					{
+						%>
+<div class='zcs-member-group-label'><%=language.get("board.memberType.executive")%></div>
+<div class='zcs-member-grid'><%=chairChips%></div>
+<%
+					}
+					if(nonExecChips != "")
+					{
+						%>
+<div class='zcs-member-group-label'><%=language.get("board.memberType.nonExecutive")%></div>
+<div class='zcs-member-grid'><%=nonExecChips%></div>
+<%
+					}
+					if(execChips != "")
+					{
+						%>
+<div class='zcs-member-group-label'><%=language.get("board.memberType.executive")%></div>
+<div class='zcs-member-grid'><%=execChips%></div>
+<%
+					}
+					if(indChips != "")
+					{
+						%>
+<div class='zcs-member-group-label'><%=language.get("board.memberType.independent")%></div>
+<div class='zcs-member-grid'><%=indChips%></div>
+<%
+					}
+				}
+				%>
+</div>
+<%
+				todayDate = zoho.currentdate;
+				firstOfMonth = zoho.currentdate.toStartOfMonth();
+				lastOfMonth = firstOfMonth.addMonth(1).subDay(1);
+				upcomingMeetings = Meeting[Start_Date_Time > todayDate] sort by Start_Date_Time;
+				recentMeetings = Meeting[Start_Date_Time >= firstOfMonth && Start_Date_Time <= lastOfMonth] sort by Start_Date_Time desc;
+				upRecordsPerPage = 5;
+				upTotalCount = upcomingMeetings.count();
+				upStartIndex = 1;
+				if(!input.up_start.isEmpty())
+				{
+					upStartIndex = input.up_start.toLong();
+				}
+				upDiff = upTotalCount - upStartIndex;
+				upEndIndex = if(upStartIndex + upRecordsPerPage - 1 > upTotalCount,upStartIndex + upDiff,upStartIndex + upRecordsPerPage - 1);
+				upPrevAction = if(upStartIndex == 1,"disable","");
+				upNextAction = if(upEndIndex >= upTotalCount,"disable","");
+				upPageLink = "#Page:Board_Page?zc_Header=false&page_action=detailview&record_id=" + input.rc_start + "&tab=overview";
+				upPrevLink = if(upStartIndex > 1,"href='" + upPageLink + "&up_start=" + (upStartIndex - upRecordsPerPage) + "&zc_LoadIn=embed-embedDiv'","");
+				upNextLink = if(upEndIndex < upTotalCount,"href='" + upPageLink + "&up_start=" + (upEndIndex + 1) + "&zc_LoadIn=embed-embedDiv'","");
+				rcRecordsPerPage = 5;
+				rcTotalCount = recentMeetings.count();
+				rcStartIndex = 1;
+				if(!input.rc_start.isEmpty())
+				{
+					rcStartIndex = input.rc_start.toLong();
+				}
+				rcDiff = rcTotalCount - rcStartIndex;
+				rcEndIndex = if(rcStartIndex + rcRecordsPerPage - 1 > rcTotalCount,rcStartIndex + rcDiff,rcStartIndex + rcRecordsPerPage - 1);
+				rcPrevAction = if(rcStartIndex == 1,"disable","");
+				rcNextAction = if(rcEndIndex >= rcTotalCount,"disable","");
+				rcPageLink = "#Page:Board_Page?zc_Header=false&page_action=detailview&record_id=" + input.recid + "&tab=overview";
+				rcPrevLink = if(rcStartIndex > 1,"href='" + rcPageLink + "&rc_start=" + (rcStartIndex - rcRecordsPerPage) + "&zc_LoadIn=embed-embedDiv'","");
+				rcNextLink = if(rcEndIndex < rcTotalCount,"href='" + rcPageLink + "&rc_start=" + (rcEndIndex + 1) + "&zc_LoadIn=embed-embedDiv'","");
+				%>
+<div class='zcs-ov-card'>
+    <h4><%=language.get("board.section.upcomingMeetings")%></h4>
+    <p>&nbsp;</p>
+    <div class='zcs-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative'>
+        <table class='zcs-w-full'>
+            <thead class='zcs-sticky'>
+                <tr>
+                    <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'><%=language.get("board.table.meetingName")%></th>
+                    <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'><%=language.get("board.table.date")%></th>
+                    <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'><%=language.get("board.table.agenda")%></th>
+                    <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'><%=language.get("board.table.meetingMode")%></th>
+                </tr>
+                <tr class='zcs-tspace'>
+                    <th class='zcs-p-2 zcs-box-border' colspan='4'></th>
+                </tr>
+            </thead>
+            <tbody>
+<%
+				upIdx = 0;
+				upDisplayedCount = 0;
+				for each  um in upcomingMeetings
+				{
+					upIdx = upIdx + 1;
+					if(upIdx >= upStartIndex && upIdx <= upEndIndex)
+					{
+						umDateStr = "\u2014";
+						if(um.Start_Date_Time != null)
+						{
+							umDateStr = um.Start_Date_Time.toString("MMM dd, yyyy");
+						}
+						umAgenda = Agenda_Item[Meeting.ID == um.ID].count();
+						umDetailUrl = "#Page:Meeting_Page?page_action=detailview&record_id=" + um.ID;
+						umMode = if(um.Meeting_Mode != null,um.Meeting_Mode + "","\u2014");
+						umModeCls = "zcs-color-primary";
+						if(umMode == "Physical Location")
+						{
+							umModeCls = "zcs-mode-physical";
+						}
+						else if(umMode == "Virtual Meeting")
+						{
+							umModeCls = "zcs-mode-virtual";
+						}
+						else if(umMode == "Hybrid Meeting")
+						{
+							umModeCls = "zcs-mode-hybrid";
+						}
+						upDisplayedCount = upDisplayedCount + 1;
+						%>
+<tr>
+                    <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'>
+                        <a href='<%=umDetailUrl%>' target='_blank' style='color:inherit;text-decoration:none;font-weight:500;'
+                            onmouseover='this.style.textDecoration="underline"'
+                            onmouseout='this.style.textDecoration="none"'><%=um.Meeting_Title%></a>
+                    </td>
+                    <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=umDateStr%></td>
+                    <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=umAgenda%></td>
+                    <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body <%=umModeCls%>'><%=umMode%></td>
+                </tr>
+<%
+					}
+				}
+				if(upDisplayedCount == 0)
+				{
+					%>
+<%=thisapp.Page.noData()%>
+<%
+				}
+				%>
+</tbody>
+        </table>
+    </div>
+<%
+				if(upTotalCount > 0)
+				{
+					%>
+<div class='zcs-pagination'>
+        <ul class='zcs-flex zcs-align-items-center zcs-justify-end zcs-gap-12 zcs-p-0 zcs-m-0'>
+            <li class='zcs-pagination-item'>
+                <span class='zcs-pagination-text zcs-flex zcs-align-items-center zcs-justify-center zcs-rounded-sm zcs-box-border zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>
+                    <%=upStartIndex%>-<%=upEndIndex%> of <%=upTotalCount%>
+                </span>
+            </li>
+            <li class='zcs-pagination-item'>
+                <a class='zcs-pagination-action zcs-flex zcs-align-items-center zcs-justify-center zcs-rounded-sm zcs-px-8 zcs-box-border zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary zcs-cursor-pointer <%=if(upPrevAction == "disable","zcs-button-disable","")%>' <%=upPrevLink%>>
+                    <i class='zcs-pagination-icon zc-li-outline arrows-1-minimal-left'></i>
+                </a>
+            </li>
+            <li class='zcs-pagination-item'>
+                <a class='zcs-pagination-action zcs-flex zcs-align-items-center zcs-justify-center zcs-rounded-sm zcs-px-8 zcs-box-border zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary zcs-cursor-pointer <%=if(upNextAction == "disable","zcs-button-disable","")%>' <%=upNextLink%>>
+                    <i class='zcs-pagination-icon zc-li-outline arrows-1-minimal-right'></i>
+                </a>
+            </li>
+        </ul>
+    </div>
+<%
+				}
+				%>
+</div>
+</div>
+
+<div class='zcs-two-col'>
+    <div class='zcs-ov-card'>
+        <h4><%=language.get("board.section.recentMeetings")%></h4>
+        <p>&nbsp;</p>
+        <div class='zcs-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative'>
+            <table class='zcs-w-full'>
+                <thead class='zcs-sticky'>
+                    <tr>
+                        <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'><%=language.get("board.table.meetingName")%></th>
+                        <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'><%=language.get("board.table.date")%></th>
+                        <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'><%=language.get("board.table.agenda")%></th>
+                        <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'><%=language.get("board.table.meetingMode")%></th>
+                    </tr>
+                    <tr class='zcs-tspace'>
+                        <th class='zcs-p-2 zcs-box-border' colspan='4'></th>
+                    </tr>
+                </thead>
+                <tbody>
+<%
+				rcIdx = 0;
+				rcDisplayedCount = 0;
+				for each  rm in recentMeetings
+				{
+					rcIdx = rcIdx + 1;
+					if(rcIdx >= rcStartIndex && rcIdx <= rcEndIndex)
+					{
+						rmDateStr = "\u2014";
+						if(rm.Start_Date_Time != null)
+						{
+							rmDateStr = rm.Start_Date_Time.toString("MMM dd, yyyy");
+						}
+						rmAgenda = Agenda_Item[Meeting.ID == rm.ID].count();
+						rmDetailUrl = "#Page:Meeting_Page?page_action=detailview&record_id=" + rm.ID;
+						rmMode = if(rm.Meeting_Mode != null,rm.Meeting_Mode + "","\u2014");
+						rmModeCls = "zcs-color-primary";
+						if(rmMode == "Physical Location")
+						{
+							rmModeCls = "zcs-mode-physical";
+						}
+						else if(rmMode == "Virtual Meeting")
+						{
+							rmModeCls = "zcs-mode-virtual";
+						}
+						else if(rmMode == "Hybrid Meeting")
+						{
+							rmModeCls = "zcs-mode-hybrid";
+						}
+						rcDisplayedCount = rcDisplayedCount + 1;
+						%>
+<tr>
+                        <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'>
+                            <a href='<%=rmDetailUrl%>' target='_blank' style='color:inherit;text-decoration:none;font-weight:500;'
+                                onmouseover='this.style.textDecoration="underline"'
+                                onmouseout='this.style.textDecoration="none"'><%=rm.Meeting_Title%></a>
+                        </td>
+                        <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=rmDateStr%></td>
+                        <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=rmAgenda%></td>
+                        <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body <%=rmModeCls%>'><%=rmMode%></td>
+                    </tr>
+<%
+					}
+				}
+				if(rcDisplayedCount == 0)
+				{
+					%>
+<%=thisapp.Page.noData()%>
+<%
+				}
+				%>
+</tbody>
+            </table>
+        </div>
+<%
+				if(rcTotalCount > 0)
+				{
+					%>
+<div class='zcs-pagination'>
+        <ul class='zcs-flex zcs-align-items-center zcs-justify-end zcs-gap-12 zcs-p-0 zcs-m-0'>
+            <li class='zcs-pagination-item'>
+                <span class='zcs-pagination-text zcs-flex zcs-align-items-center zcs-justify-center zcs-rounded-sm zcs-box-border zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>
+                    <%=rcStartIndex%>-<%=rcEndIndex%> of <%=rcTotalCount%>
+                </span>
+            </li>
+            <li class='zcs-pagination-item'>
+                <a class='zcs-pagination-action zcs-flex zcs-align-items-center zcs-justify-center zcs-rounded-sm zcs-px-8 zcs-box-border zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary zcs-cursor-pointer <%=if(rcPrevAction == "disable","zcs-button-disable","")%>' <%=rcPrevLink%>>
+                    <i class='zcs-pagination-icon zc-li-outline arrows-1-minimal-left'></i>
+                </a>
+            </li>
+            <li class='zcs-pagination-item'>
+                <a class='zcs-pagination-action zcs-flex zcs-align-items-center zcs-justify-center zcs-rounded-sm zcs-px-8 zcs-box-border zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary zcs-cursor-pointer <%=if(rcNextAction == "disable","zcs-button-disable","")%>' <%=rcNextLink%>>
+                    <i class='zcs-pagination-icon zc-li-outline arrows-1-minimal-right'></i>
+                </a>
+            </li>
+        </ul>
+    </div>
+<%
+				}
+				%>
+</div>
+<div class='zcs-ov-card'>
+            <h4><%=language.get("board.section.activityTimeline")%></h4>
+            <p>&nbsp;</p>
+            <div style='display:flex;gap:12px;margin-bottom:16px;'>
+                <div style='width:40px;height:40px;background:#f3f4f6;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;'>
+                    <svg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='#6B7280' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'><path d='M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2'/><rect x='9' y='3' width='6' height='4' rx='1'/><path d='M9 12l2 2 4-4'/></svg>
+                </div>
+                <div>
+                    <p style='font-size:13px;color:#374151;font-weight:500;margin:0 0 2px 0;'><%=language.get("board.timeline.setupCompleted")%> \u2014 <%=dRec.Board_Type_Board%></p>
+                    <p style='font-size:12px;color:#e8453c;margin:0;'><%=addedTime%></p>
+                </div>
+            </div>
+            <div style='display:flex;gap:12px;'>
+                <div style='width:40px;height:40px;background:#f3f4f6;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;'>
+                    <svg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='#6B7280' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'><path d='M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2'/><rect x='9' y='3' width='6' height='4' rx='1'/><path d='M9 12h6M9 16h4'/></svg>
+                </div>
+                <div>
+                    <p style='font-size:13px;color:#374151;font-weight:500;margin:0 0 2px 0;'><%=language.get("board.timeline.lastModified")%></p>
+                    <p style='font-size:12px;color:#e8453c;margin:0;'><%=modifiedTime%></p>
+                </div>
+            </div>
+        </div>
+    </div>
+<%
+			}
+			else if(input.tab == "committee")
+			{
+				committeeIDList = Committee[ID != 0].ID.getAll();
+				cmtTypeFilter = 0;
+				if(input.Committee_Type != null)
+				{
+					ctStr = input.Committee_Type + "";
+					if(ctStr != "null" && !ctStr.isEmpty() && ctStr != "0")
+					{
+						cmtTypeFilter = input.Committee_Type.toLong();
+					}
+				}
+				if(cmtTypeFilter > 0)
+				{
+					committeeIDList = Committee[ID == committeeIDList && Committee_Type == cmtTypeFilter].ID.getAll();
+				}
+				searchKeyVal = "";
+				if(input.Search_Key != null)
+				{
+					skStr = input.Search_Key + "";
+					if(skStr != "null" && !skStr.isEmpty())
+					{
+						searchKeyVal = skStr;
+					}
+				}
+				if(searchKeyVal != "")
+				{
+					committeeIDList = Committee[ID == committeeIDList && Committee_Name.contains(searchKeyVal) || Commitee_Code.contains(searchKeyVal)].ID.getAll();
+				}
+				committees = Committee[ID == committeeIDList];
+				cmtRecordsPerPage = 6;
+				cmtTotalCount = committeeIDList.size();
+				cmtStartIndex = 1;
+				if(!input.cmt_start.isEmpty())
+				{
+					cmtStartIndex = input.cmt_start.toLong();
+				}
+				cmtDiff = cmtTotalCount - cmtStartIndex;
+				cmtEndIndex = if(cmtStartIndex + cmtRecordsPerPage - 1 > cmtTotalCount,cmtStartIndex + cmtDiff,cmtStartIndex + cmtRecordsPerPage - 1);
+				cmtPrevAction = if(cmtStartIndex == 1,"disable","");
+				cmtNextAction = if(cmtEndIndex >= cmtTotalCount,"disable","");
+				cmtPageLink = "#Page:Board_Page?zc_Header=false&page_action=detailview&record_id=" + input.recid + "&tab=committee" + pageParam;
+				cmtPrevLink = if(cmtStartIndex > 1,"href='" + cmtPageLink + "&cmt_start=" + (cmtStartIndex - cmtRecordsPerPage) + "&zc_LoadIn=embed-cmtEmbedDiv'","");
+				cmtNextLink = if(cmtEndIndex < cmtTotalCount,"href='" + cmtPageLink + "&cmt_start=" + (cmtEndIndex + 1) + "&zc_LoadIn=embed-cmtEmbedDiv'","");
+				committees = Committee[ID == committeeIDList];
+				%>
+<style>
+    .zcs-committee-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; padding: 0 20px; align-items: stretch; }
+    .zcs-committee-grid > a { display: flex; }
+    .zcs-committee-card { background: #fff; border-radius: 12px; padding: 16px 20px; box-shadow: 0 0 6px rgba(0,0,0,0.06); border: 1px solid #f0f0f0; transition: box-shadow 0.15s, border-color 0.15s; cursor: pointer; display: flex; flex-direction: column; width: 100%; }
+    .zcs-committee-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.1); border-color: #e8453c; }
+    .zcs-committee-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; flex: 1; }
+    .zcs-committee-card-left { display: flex; align-items: flex-start; gap: 12px; flex: 1; min-width: 0; }
+    .zcs-committee-icon { width: 36px; height: 36px; background: #fff1f1; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .zcs-committee-icon svg { width: 18px; height: 18px; }
+    .zcs-committee-title { font-size: 14px; font-weight: 700; color: #111827; margin: 0 0 2px 0; font-family: Inter, sans-serif; }
+    .zcs-committee-desc { font-size: 12px; color: #6B7280; margin: 0; font-family: Inter, sans-serif; line-height: 1.5; }
+    .zcs-committee-type { font-size: 11px; font-weight: 500; color: #6B7280; background: #F3F4F6; padding: 4px 10px; border-radius: 20px; white-space: nowrap; flex-shrink: 0; }
+    .zcs-committee-meta { display: flex; gap: 20px; margin-top: 14px; padding-top: 12px; border-top: 1px solid #F3F4F6; flex-wrap: wrap; }
+    .zcs-committee-meta-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #6B7280; font-family: Inter, sans-serif; }
+    .zcs-committee-meta-item svg { width: 14px; height: 14px; flex-shrink: 0; }
+    @media(max-width:768px) { .zcs-committee-grid { grid-template-columns: 1fr; } }
+    .zcs-filter.divEmbedContainer { display: block !important; }
+</style>
+<div class="zcs-filter" elName="zc-component" formLinkName="Filter_Form" params='zc_Header=false&zc_Footer=false&zc_Focus=false&Page=Board_Page&Tab=committee&Committee_Type=<%=input.Committee_Type%>&Search_Key=<%=input.Search_Key%>'></div>
+</div>
+<div name='cmtEmbedDiv'>
+<%
+				if(cmtTotalCount == 0)
+				{
+					%>
+<%=thisapp.Page.noData()%>
+<%
+				}
+				else
+				{
+					%>
+<div class='zcs-committee-grid'>
+<%
+					cmtIdx = 0;
+					for each  c in committees
+					{
+						cmtIdx = cmtIdx + 1;
+						if(cmtIdx >= cmtStartIndex && cmtIdx <= cmtEndIndex)
+						{
+							chairName = "";
+							if(c.Chairperson_Name != null)
+							{
+								chairName = c.Chairperson_Name.Name + "";
+							}
+							%>
+<a href='#Page:<%=page_link_name%>?page_action=committee_detail&recid=<%=c.ID%>' style='text-decoration:none;'>
+    <div class='zcs-committee-card'>
+        <div class='zcs-committee-card-header'>
+            <div class='zcs-committee-card-left'>
+                <div class='zcs-committee-icon'>
+                    <svg viewBox='0 0 24 24' fill='none' stroke='#e8453c' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'>
+                        <rect x='3' y='4' width='18' height='16' rx='2'/><path d='M3 9h18'/><path d='M9 4v5M15 4v5'/>
+                    </svg>
+                </div>
+                <div>
+                    <p class='zcs-committee-title'><%=c.Committee_Name%></p>
+                    <p class='zcs-committee-desc'><%=c.Purpose_Objective%></p>
+                </div>
+            </div>
+            <span class='zcs-committee-type'><%=c.Committee_Type.Committee_Type%></span>
+        </div>
+        <div class='zcs-committee-meta'>
+            <div class='zcs-committee-meta-item'>
+                <svg viewBox='0 0 24 24' fill='none' stroke='#e8453c' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'><rect x='3' y='4' width='18' height='16' rx='2'/><path d='M3 9h18'/><path d='M9 4v5M15 4v5'/></svg>
+                <span><%=c.Commitee_Code%></span>
+            </div>
+            <div class='zcs-committee-meta-item'>
+                <svg viewBox='0 0 24 24' fill='none' stroke='#e8453c' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='8' r='4'/><path d='M4 20c0-4 3.6-7 8-7s8 3 8 7'/></svg>
+                <span><%=chairName%></span>
+            </div>
+            <div class='zcs-committee-meta-item'>
+                <svg viewBox='0 0 24 24' fill='none' stroke='#e8453c' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'><circle cx='9' cy='8' r='3'/><circle cx='15' cy='8' r='3'/><path d='M3 20c0-3.3 2.7-6 6-6h6c3.3 0 6 2.7 6 6'/></svg>
+                <span><%=c.Minimum_Count%>/<%=c.Preferred_Count%> Members</span>
+            </div>
+        </div>
+    </div>
+</a>
+<%
+						}
+					}
+					%>
+</div>
+<div class='zcs-pagination'>
+    <ul class='zcs-flex zcs-align-items-center zcs-justify-end zcs-gap-12 zcs-p-0 zcs-m-0'>
+        <li class='zcs-pagination-item'>
+            <span class='zcs-pagination-text zcs-flex zcs-align-items-center zcs-justify-center zcs-rounded-sm zcs-box-border zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>
+                <%=cmtStartIndex%>-<%=cmtEndIndex%> of <%=cmtTotalCount%>
+            </span>
+        </li>
+        <li class='zcs-pagination-item'>
+            <a class='zcs-pagination-action zcs-flex zcs-align-items-center zcs-justify-center zcs-rounded-sm zcs-px-8 zcs-box-border zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary zcs-cursor-pointer <%=if(cmtPrevAction == "disable","zcs-button-disable","")%>' <%=cmtPrevLink%>>
+                <i class='zcs-pagination-icon zc-li-outline arrows-1-minimal-left'></i>
+            </a>
+        </li>
+        <li class='zcs-pagination-item'>
+            <a class='zcs-pagination-action zcs-flex zcs-align-items-center zcs-justify-center zcs-rounded-sm zcs-px-8 zcs-box-border zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary zcs-cursor-pointer <%=if(cmtNextAction == "disable","zcs-button-disable","")%>' <%=cmtNextLink%>>
+                <i class='zcs-pagination-icon zc-li-outline arrows-1-minimal-right'></i>
+            </a>
+        </li>
+    </ul>
+</div>
+<%
+				}
+				%>
+</div>
+<%
+			}
+			else if(input.tab == "member")
+			{
+				%>
+<style>
+					.zcs-filter.divEmbedContainer {
+    display: block !important;}
+				</style>
+<div class='zcs-filter' zc_MobileView='inline' elName='zc-component' formLinkName='Filter_Form' params='zc_Header=false&zc_Footer=false&zc_Focus=false&Page=Board_Page&Tab=member&Status=<%=input.Status%>&Search_Key=<%=input.Search_Key%>'></div>
+<div class='zcs-report zcs-col-common' name='embedDiv' elName='zc-component' viewLinkName='Board_Members' params='zc_Header=false&zc_AddRec=false&zc_ColMenu=false&zc_Footer=false&Status=<%=input.Status%>&Name=<%=input.Search_Key%>&Name_op=26'></div>
+<%
+			}
+		}
+	}
+	%>
+<style>
+<%=thisapp.Styles_Page.Board_Page()%>
+<%=thisapp.Styles_Page.Committee_Detailview()%>
+</style>

@@ -1,0 +1,33 @@
+on_success3 as "on success"
+{
+
+				type =  form
+				form = Objective
+
+				record event = on add
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											input.Objective_ID = thisapp.Get_ID("Objective",input.ID);
+										thisapp.Log.Audit_Log("Objective",input.ID,"Create",User[Email == zoho.loginuserid].ID,input.Objective_ID + " - " + input.Objective_Title);
+										/* log = insert into Audit_Log
+										[
+											Record_ID=input.ID
+											Log=input.Objective_Title + " objective added to the Objective form by " + User[Email == zoho.loginuserid].Name + "."
+											Form_Link_Name="Objective"
+											Added_User=zoho.loginuser
+											Performed_By=User[Email == zoho.loginuserid].ID
+											Action_Type="Create"
+											Performed_Time=zoho.currenttime
+										]; */
+										openUrl("#Page:Objective_Page?tab=" + input.tab,"same window");
+						)
+					}
+				}
+
+			
+}

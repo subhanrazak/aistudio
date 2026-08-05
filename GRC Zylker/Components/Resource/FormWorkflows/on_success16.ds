@@ -1,0 +1,45 @@
+on_success16 as "on success"
+{
+
+				type =  form
+				form = Resource
+
+				record event = on edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											thisapp.Log.Audit_Log("Resource",input.ID,"Update",User[Email == zoho.loginuserid].ID,input.Resource);
+										actionList = {"Basic Information","Skill Experience","Cost Availability"};
+										getIndex = if(input.Action_Field != "Cost Availability",actionList.indexOf(input.Action_Field) + 1,null);
+										if(input.Stepper_Stage == "Basic Information")
+										{
+											input.Stepper_Stage = "Skill Experience";
+										}
+										else if(input.Stepper_Stage == "Skill Experience")
+										{
+											input.Stepper_Stage = "Cost Availability";
+										}
+										else if(input.Stepper_Stage == "Cost Availability")
+										{
+										}
+										currentAction = input.Action_Field;
+										success message input.Action_Field + " information submitted successfully.";
+										input.Action_Field = "";
+										if(currentAction != "Cost Availability")
+										{
+											openUrl("#Page:Resources_Page?page_action=add&recid=" + input.ID + "&action_field=" + encodeUrl(actionList.get(getIndex)) + "&tab=" + input.tab,"same window");
+										}
+										else
+										{
+											openUrl("#Page:Resources_Page?page_action=detailView&recid=" + input.ID + "&tab=" + input.tab,"same window");
+										}
+						)
+					}
+				}
+
+			
+}

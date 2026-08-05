@@ -1,0 +1,156 @@
+click_Next as "click Next"
+{
+
+				type =  form
+				form = Assessment_Approval
+				button = Next
+				on click
+				{
+					actions 
+					{
+					on click
+					(
+						assessment = Risk_Assessment[ID == input.Risk_Assessment];
+										userDet = User[Email == zoho.loginuserid].ID;
+										if(userDet != null)
+										{
+											resource = Resource[Internal_Resource == userDet].ID;
+										}
+										else
+										{
+											resource = Resource[Email == zoho.loginuserid].ID;
+										}
+										if(assessment.Current_Work_Sheet_User == null || assessment.Current_Work_Sheet_User == resource)
+										{
+											if(input.Action_Field == "Assessment Initiate")
+											{
+												if(assessment.Work_Sheet_Status == "Assessment Initiate")
+												{
+													assessment.Work_Sheet_Status="Risk Identify";
+													assessment.Status="In Progress";
+													assessment.Overall_progress=12.5;
+													userDet = User[Email == zoho.loginuserid].ID;
+													if(userDet != null)
+													{
+														resource = Resource[Internal_Resource == userDet].ID;
+													}
+													else
+													{
+														resource = Resource[Email == zoho.loginuserid].ID;
+													}
+													assessment.Current_Work_Sheet_User=resource;
+												}
+												openUrl("#Page:Risk_Assessment_Page?page_action=openWorkSheet&recid=" + input.Risk_Assessment + "&action_field=" + encodeUrl("Risk Identify"),"same window");
+											}
+											else if(input.Action_Field == "Risk Identify")
+											{
+												getRiskList = Risk_Assessment_Libraries[Risk_Assessment == input.Risk_Assessment && Scope_Type == "Risk"].count();
+												if(getRiskList == 0)
+												{
+													openUrl("#Form:Alert?Action_field=noRisk&Risk_Assessment=" + input.Risk_Assessment,"popup window","height=auto,width=auto");
+												}
+												else
+												{
+													/* 			pendingApproval = Risk_Assessment_Libraries[Risk_Assessment == input.Risk_Assessment && Scope_Type == "Risk" && Approval_Status == "Pending"].count();
+													if(pendingApproval > 0)
+													{
+														openUrl("#Form:Alert?Action_field=pendingRisk&Risk_Assessment=" + input.Risk_Assessment,"popup window","height=auto,width=auto");
+													}
+													else
+													{ */
+													if(assessment.Work_Sheet_Status == "Risk Identify")
+													{
+														assessment.Work_Sheet_Status="Inherent Risk";
+														assessment.Overall_progress=25;
+													}
+													openUrl("#Page:Risk_Assessment_Page?page_action=openWorkSheet&recid=" + input.Risk_Assessment + "&action_field=" + encodeUrl("Inherent Risk"),"same window");
+													//}
+												}
+											}
+											else if(input.Action_Field == "Inherent Risk")
+											{
+												if(assessment.Work_Sheet_Status == "Inherent Risk")
+												{
+													assessment.Work_Sheet_Status="Control Mapping";
+													assessment.Overall_progress=37.5;
+												}
+												openUrl("#Page:Risk_Assessment_Page?page_action=openWorkSheet&recid=" + input.Risk_Assessment + "&action_field=" + encodeUrl("Control Mapping"),"same window");
+											}
+											else if(input.Action_Field == "Control Mapping")
+											{
+												/* 		noControlRisk = 0;
+												for each  risk in Risk_Assessment_Libraries[Risk_Assessment == input.Risk_Assessment && Scope_Type == "Risk"]
+												{
+													getControls = Risk_Entry[ID == risk.Risks].Link_Controls;
+													if(getControls.size() == 0)
+													{
+														noControlRisk = noControlRisk + 1;
+													}
+												}
+												if(noControlRisk > 0)
+												{
+													openUrl("#Form:Alert?Action_field=noControl&Risk_Assessment=" + input.Risk_Assessment,"popup window","height=auto,width=auto");
+												}
+												else
+												{ */
+												if(assessment.Work_Sheet_Status == "Control Mapping")
+												{
+													assessment.Work_Sheet_Status="Control Effectiveness";
+													assessment.Overall_progress=50;
+												}
+												openUrl("#Page:Risk_Assessment_Page?page_action=openWorkSheet&recid=" + input.Risk_Assessment + "&action_field=" + encodeUrl("Control Effectiveness"),"same window");
+												//}
+											}
+											else if(input.Action_Field == "Control Effectiveness")
+											{
+												if(assessment.Work_Sheet_Status == "Control Effectiveness")
+												{
+													assessment.Work_Sheet_Status="Residual Risk";
+													assessment.Overall_progress=62.5;
+												}
+												openUrl("#Page:Risk_Assessment_Page?page_action=openWorkSheet&recid=" + input.Risk_Assessment + "&action_field=" + encodeUrl("Residual Risk"),"same window");
+											}
+											else if(input.Action_Field == "Residual Risk")
+											{
+												if(assessment.Work_Sheet_Status == "Residual Risk")
+												{
+													assessment.Work_Sheet_Status="Risk Treatment";
+													assessment.Overall_progress=75;
+												}
+												openUrl("#Page:Risk_Assessment_Page?page_action=openWorkSheet&recid=" + input.Risk_Assessment + "&action_field=" + encodeUrl("Risk Treatment"),"same window");
+											}
+											else if(input.Action_Field == "Risk Treatment")
+											{
+												if(assessment.Treatment_Option == "" || assessment.Treatment_Option == null)
+												{
+													openUrl("#Form:Alert?Action_field=riskTreatment&Risk_Assessment=" + input.Risk_Assessment,"popup window","height=auto,width=auto");
+												}
+												else if(assessment.Risk_Appetite == "" || assessment.Risk_Appetite == null)
+												{
+													openUrl("#Form:Alert?Action_field=riskAppetite&Risk_Assessment=" + input.Risk_Assessment,"popup window","height=auto,width=auto");
+												}
+												else
+												{
+													if(assessment.Work_Sheet_Status == "Risk Treatment")
+													{
+														assessment.Work_Sheet_Status="Approval";
+														assessment.Overall_progress=87.5;
+													}
+													openUrl("#Page:Risk_Assessment_Page?page_action=openWorkSheet&recid=" + input.Risk_Assessment + "&action_field=" + encodeUrl("Approval"),"same window");
+												}
+											}
+											else if(input.Action_Field == "Approval")
+											{
+												assessment.Overall_progress=100;
+												assessment.Status="Completed";
+											}
+										}
+										else
+										{
+											openUrl("#Form:Alert?Action_field=currentUser&Risk_Assessment=" + input.Risk_Assessment,"popup window","height=auto,width=auto");
+										}
+					)
+					}
+				}
+			
+}

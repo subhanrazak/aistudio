@@ -1,0 +1,36 @@
+Quorum_Status as "Quorum Status"
+{
+
+				type =  form
+				form = Filter_Form
+
+				record event = on add
+
+				on user input of Quorum_Status
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Page == "Quorum_Rule_Page")
+										{
+											reportURL = "#Report:" + input.Report + "?zc_Header=false&zc_AddRec=false&zc_ColMenu=false&zc_Footer=false";
+											parm = "";
+											if(!input.Status.isempty())
+											{
+												parm = parm + "&Status=" + input.Status;
+											}
+											if(!input.Search_Key.isempty())
+											{
+												search_result = Quorum_Rule[Rule_Name.containsIgnoreCase(input.Search_Key)].ID.getAll();
+												search_result = if(search_result.size() == 0,1234,search_result);
+												parm = parm + "&ID=" + encodeUrl("[" + search_result + "]") + "&ID_op=18";
+											}
+											openUrl(reportURL + parm + "&zc_LoadIn=embed-embedDiv","same window");
+										}
+						)
+					}
+				}
+
+			
+}

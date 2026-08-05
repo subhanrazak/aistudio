@@ -1,0 +1,35 @@
+Status_Update3 as "Status Update"
+{
+
+				type =  form
+				form = Action_Tracker
+
+				record event = on add
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											input.Status = "Ongoing";
+										meetingId = input.Meeting.ID;
+										agenda = Agenda_Item[ID == input.Agenda_Item];
+										agenda.Status="Completed";
+										openUrl("#Page:Meeting_Page?page_action=detailview&record_id=" + meetingId + "&tab=action_item","same window");
+										user = User[Email == zoho.loginuserid];
+										met = insert into Meeting_Activity
+										[
+											Added_User=zoho.loginuser
+											Activity="Action Item Created"
+											User=user.ID
+											Date_Time=zoho.currenttime
+											Meeting=input.Meeting
+											Action_Tracker=input.ID
+										];
+						)
+					}
+				}
+
+			
+}

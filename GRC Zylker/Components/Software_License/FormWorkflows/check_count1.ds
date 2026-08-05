@@ -1,0 +1,33 @@
+check_count1 as "check count"
+{
+
+				type =  form
+				form = Software_License
+
+				record event = on add or edit
+
+				on user input of Allocated_Users
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											language = thisapp.Content.translation();
+										if(input.Total_Licenses != null && input.Allocated_Users != null)
+										{
+											if(input.Total_Licenses < input.Allocated_Users)
+											{
+												alert language.get("grc.software.allocatedUserAlert");
+												input.Allocated_Users = null;
+											}
+											else
+											{
+												input.Utilization = if(input.Total_Licenses > 0,(input.Allocated_Users / input.Total_Licenses * 100).toNumber(),0);
+											}
+										}
+						)
+					}
+				}
+
+			
+}

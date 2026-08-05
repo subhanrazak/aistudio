@@ -1,0 +1,39 @@
+Get_Process as "Get Process"
+{
+
+				type =  form
+				form = Risk_Entry
+
+				record event = on add or edit
+
+				on user input of Objective
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Objective.size() > 0)
+										{
+											currentProcess = input.Process;
+											if(input.Risk_Assessment1 != null)
+											{
+												assessmentProcess = Risk_Assessment_Libraries[Risk_Assessment == input.Risk_Assessment1].Processes.getAll();
+												processList = Process[Linked_Objectives == input.Objective && ID == assessmentProcess].ID.getAll();
+											}
+											else
+											{
+												processList = Process[Linked_Objectives == input.Objective].ID.getAll();
+											}
+											input.Process:ui.add(processList);
+											input.Process = currentProcess;
+										}
+										else
+										{
+											clear Process;
+										}
+						)
+					}
+				}
+
+			
+}

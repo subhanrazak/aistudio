@@ -1,0 +1,270 @@
+<%
+	language = thisapp.Content.translation();
+	pageParam = "";
+	processIDList = Add_Regulation[ID != 0].ID.getAll();
+	if(input.Department != null)
+	{
+		processIDList = Process[ID == processIDList && Linked_Departments == input.Department].ID.getAll();
+		pageParam = pageParam + "&Department=" + input.Department;
+	}
+	if(input.Risk_Level != null && input.Risk_Level != "" && input.Risk_Level != "null")
+	{
+		processIDList = Process[ID == processIDList && Complexity_Level == input.Risk_Level].ID.getAll();
+		pageParam = pageParam + "&Risk_Level=" + input.Risk_Level;
+	}
+	if(input.Search != null && input.Search != "" && input.Search != "null")
+	{
+		processIDList = Process[ID == processIDList && Process_Name.contains(input.Search) || Process_ID.contains(input.Search)].ID.getAll();
+		pageParam = pageParam + "&Search=" + input.Search;
+	}
+	%>
+<style>
+<%=thisapp.Styles.App_CSS()%>
+<%=thisapp.Styles.Table()%>
+<%=thisapp.Styles.Badge()%>
+<%=thisapp.Styles.Progress_Bar()%>
+<%=thisapp.Styles.Pagination()%>
+
+.zc-container-wrapper .zc-main-content-wrapper .zc-main-content .inner .page_content_wrapper.zc-page-content-wrapper .elemContainment{
+	box-sizing: border-box;
+}
+
+.zcs-page-table-view {
+    height: 100%;
+	background :var(--zcs-white-color);
+}
+.zcs-pagination {
+    height: 32px;
+    padding: 10px;
+    box-sizing: content-box;
+	background :var(--zcs-white-color);
+}
+.zcs-table-wrapper {
+	height: calc(100% - 52px);
+}
+/* .zcs-table-wrapper table {
+    height: 100%;
+    table-layout: auto;
+	overflow: auto;
+} */
+
+.zcs-table-wrapper table thead {
+    z-index: 1;
+}
+
+.zcs-table-wrapper table tbody tr {
+   position:relative;
+}
+.zcs-detail-view-td{
+	position:absolute;
+	border: none !important;
+    inset: 0;
+    background: transparent !important;
+	
+}
+.zcs-detail-view-td a{
+	height: 100%;
+    display: block;
+    width: 100%;
+	
+}
+.zcs-table-wrapper table tbody tr td:first-child{
+min-width:250px;
+}
+</style>
+<div class='zcs-page-container zcs-page-table-view'>
+<%
+	if(processIDList.size() > 0)
+	{
+		recordCount_per_page = 20;
+		total_process_count = processIDList.size();
+		no_of_pages = ceil(total_process_count / recordCount_per_page);
+		input.start_index = if(input.start_index.isEmpty(),1,input.start_index);
+		diff = total_process_count - input.start_index;
+		end_index = if(input.start_index + recordCount_per_page - 1 > total_process_count,input.start_index + diff,input.start_index + recordCount_per_page - 1);
+		previousAction = if(input.start_index == 1,"disable","");
+		nextAction = if(end_index == total_process_count,"disable","");
+		pageLink = '#Page:Process_Report_Page?zc_Header=false' + pageParam;
+		previousLink = if(input.start_index > 1,"href=" + pageLink + "&start_index=" + (input.start_index - recordCount_per_page) + "&zc_LoadIn=embed-embedDiv","");
+		nextLink = if(end_index < total_process_count,"href=" + pageLink + "&start_index=" + (end_index + 1) + "&zc_LoadIn=embed-embedDiv","");
+		%>
+<div class='zcs-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative'>
+    <table class='zcs-w-full'>
+        <thead class='zcs-sticky'>
+            <tr>
+                <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'> <%=language.get("grc.regulatory.regulationDetails")%>  </th>
+                <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'> <%=language.get("grc.regulatory.regulator")%> </th>
+                <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>  <%=language.get("grc.regulatory.jurisdiction")%> </th>
+                <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'> <%=language.get("grc.regulatory.category")%> </th>
+				<th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'> <%=language.get("grc.regulatory.effectiveFrom")%> </th>
+				<th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'> <%=language.get("grc.regulatory.status")%></th>
+				<th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'> <%=language.get("grc.regulatory.link")%> </th>
+            </tr>
+            
+        </thead>
+        <tbody>
+<%
+		for each  process in Add_Regulation[ID == processIDList] sort by Added_Time desc range from input.start_index to end_index
+		{
+			%>
+<tr>
+                <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'> 
+							<div>
+							   <div style='display:flex;'>
+							   <span style='font-size:13px;color:#4A5565'><%=process.Regulation_ID%></span>
+							   </div>
+							   <div style='color:#04204B;font-size:17px;margin-bottom:10px;'><%=process.Regulation_Name%></div>
+							 
+			                </div>
+				
+				</td>
+				                <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'> <%=process.Regulator.Regulator_Name%> </td>
+                <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'> 
+				        <div>
+<%
+			jurisdiction_count = 0;
+			for each  juris in process.Jurisdiction
+			{
+				jurisdiction_count = jurisdiction_count + 1;
+				sizeStr = "";
+				if(jurisdiction_count == 2)
+				{
+					objectiveSize = process.Jurisdiction.size();
+					objectiveSize = objectiveSize - 2;
+					if(objectiveSize > 0)
+					{
+						sizeStr = "<span style='border:1px solid #E6E6E6;padding:5px 8px;border-radius:6px;margin-bottom:7px;width: max-content !important;margin-left:6px;'> +" + objectiveSize + "</span></div>";
+					}
+				}
+				if(jurisdiction_count == 2 && objectiveSize > 0)
+				{
+					%>
+<div style='display:flex;'>
+<%
+				}
+				%>
+<div style='border:1px solid #E6E6E6;padding:5px 8px;border-radius:6px;margin-bottom:7px;width: max-content !important;'><%=juris.Jurisdiction_Name%></div> <%=sizeStr%>
+<%
+				if(jurisdiction_count == 2)
+				{
+					break;
+				}
+			}
+			%>
+</td>
+
+ <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'> 
+				        <div>
+<%
+			category_count = 0;
+			for each  cat in process.Category
+			{
+				category_count = category_count + 1;
+				sizeStr = "";
+				if(category_count == 2)
+				{
+					catSize = process.Category.size();
+					catSize = catSize - 2;
+					if(catSize > 0)
+					{
+						sizeStr = "<span style='border:1px solid #E6E6E6;padding:5px 8px;border-radius:6px;margin-bottom:7px;width: max-content !important;margin-left:6px;'> +" + catSize + "</span></div>";
+					}
+				}
+				if(category_count == 2 && catSize > 0)
+				{
+					%>
+<div style='display:flex;'>
+<%
+				}
+				%>
+<div style='border:1px solid #E6E6E6;padding:5px 8px;border-radius:6px;margin-bottom:7px;width: max-content !important;'><%=cat.Jurisdiction_Name%></div> <%=sizeStr%>
+<%
+				if(category_count == 2)
+				{
+					break;
+				}
+			}
+			%>
+</td>
+
+
+<td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'> <%=process.Original_Effective_Date%> </td>
+               
+                
+               
+                
+                <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'>
+<%
+			if(process.Regulation_Status == "Draft")
+			{
+				badgeClass = "zcs-badge-orange";
+			}
+			else if(process.Regulation_Status == "Under Review")
+			{
+				badgeClass = "zcs-badge-yellow";
+			}
+			else if(process.Regulation_Status == "Superseded")
+			{
+				badgeClass = "zcs-badge-red";
+			}
+			else if(process.Regulation_Status == "Active")
+			{
+				badgeClass = "zcs-badge-green";
+			}
+			else if(process.Regulation_Status == "Archived")
+			{
+				badgeClass = "zcs-badge-green";
+			}
+			else if(process.Regulation_Status == "Retired")
+			{
+				badgeClass = "zcs-badge-green";
+			}
+			%>
+<div class='zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-xl zcs-px-10 zcs-py-0 zcs-box-border <%=badgeClass%>' style='border-radius: 0.75rem;padding:0 10px ; width:max-content;border:none !important;'>
+				<span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'> <%=process.Regulation_Status%> </span>
+				</div>
+				</td>
+		<td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'>  </td>
+		<td class='zcs-detail-view-td'>
+				<a href='#Page:Regulatory_Inventory?page_action=detailView&recid=<%=process.ID%>'></a>
+				</td>
+            </tr>
+<%
+		}
+		%>
+</tbody>
+    </table>
+</div>
+	<div class='zcs-pagination'>
+    <ul class='zcs-flex zcs-align-items-center zcs-justify-end zcs-gap-12 zcs-p-0 zcs-m-0'>
+        <li class='zcs-pagination-item'>
+            <span
+                class='zcs-pagination-text zcs-flex zcs-align-items-center zcs-justify-center zcs-rounded-sm zcs-box-border zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'
+               >
+                <%=input.start_index%>-<%=end_index%> of <%=total_process_count%>
+            </span>
+        </li>
+        <li class='zcs-pagination-item '>
+            <a class='zcs-pagination-action zcs-flex zcs-align-items-center zcs-justify-center zcs-rounded-sm zcs-px-8 zcs-box-border zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary zcs-cursor-pointer <%=if(previousAction == "disable","zcs-button-disable","")%>'
+                <%=previousLink%>>
+                <i class='zcs-pagination-icon zc-li-outline arrows-1-minimal-left'></i>
+            </a>
+        </li>
+        <li class='zcs-pagination-item '>
+            <a class='zcs-pagination-action zcs-flex zcs-align-items-center zcs-justify-center zcs-rounded-sm zcs-px-8 zcs-box-border zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary zcs-cursor-pointer <%=if(nextAction == "disable","zcs-button-disable","")%>'
+                <%=nextLink%>>
+                <i class='zcs-pagination-icon zc-li-outline arrows-1-minimal-right'></i>
+            </a>
+        </li>
+    </ul>
+</div>
+<%
+	}
+	else
+	{
+		%>
+<%=thisapp.Page.noData()%>
+<%
+	}
+	%>
+</div>

@@ -1,0 +1,24 @@
+getExternal_Resources as "getExternal Resources"
+{
+
+				type =  form
+				form = Assessment_Plan
+
+				record event = on add or edit
+
+				on add row of External_Resources
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											row.Resource_Type="External Resource";
+										externalList = Resource[Resource_Type == "External Resource" && Role.Role_Name == "Action Owner" || Role.Role_Name == "Risk Owner" || Role.Role_Name == "Control Owner"].ID.getAll();
+										externalList.removeAll(input.External_Resources.Name.getall());
+										row.Name:ui.add(externalList);
+						)
+					}
+				}
+
+			
+}

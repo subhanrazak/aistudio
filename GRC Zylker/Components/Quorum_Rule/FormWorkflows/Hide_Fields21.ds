@@ -1,0 +1,189 @@
+Hide_Fields21 as "Hide Fields"
+{
+
+				type =  form
+				form = Quorum_Rule
+
+				record event = on add
+
+				on load
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											// ============================================================
+										// ON LOAD - Build Committee_Status table for create + edit
+										// ============================================================
+										// === User input values (empty on create, populated on edit) ===
+										userVoting = 0;
+										if(input.Minimum_Voting_Members != null)
+										{
+											uv = input.Minimum_Voting_Members + "";
+											if(uv != "null" && !uv.isEmpty())
+											{
+												userVoting = input.Minimum_Voting_Members.toLong();
+											}
+										}
+										userTotal = 0;
+										if(input.Minimum_Total_Members != null)
+										{
+											ut = input.Minimum_Total_Members + "";
+											if(ut != "null" && !ut.isEmpty())
+											{
+												userTotal = input.Minimum_Total_Members.toLong();
+											}
+										}
+										userIndependent = 0;
+										if(input.Minimum_Independent_Members != null)
+										{
+											ui = input.Minimum_Independent_Members + "";
+											if(ui != "null" && !ui.isEmpty())
+											{
+												userIndependent = input.Minimum_Independent_Members.toLong();
+											}
+										}
+										userNonExec = 0;
+										if(input.Minimum_Non_Executive_Members != null)
+										{
+											un = input.Minimum_Non_Executive_Members + "";
+											if(un != "null" && !un.isEmpty())
+											{
+												userNonExec = input.Minimum_Non_Executive_Members.toLong();
+											}
+										}
+										// === Required values from Committee lookup ===
+										reqVoting = 0;
+										reqIndependent = 0;
+										reqNonExec = 0;
+										reqTotal = 0;
+										if(input.Committee != null)
+										{
+											committeeRec = Committee[ID == input.Committee];
+											if(committeeRec.count() > 0)
+											{
+												if(committeeRec.Minimum_Count != null)
+												{
+													reqVoting = committeeRec.Minimum_Count.toLong();
+												}
+												if(committeeRec.Minimum_Count_Independent != null)
+												{
+													reqIndependent = committeeRec.Minimum_Count_Independent.toLong();
+												}
+												if(committeeRec.Maximum_Count_Non_Executive != null)
+												{
+													reqNonExec = committeeRec.Maximum_Count_Non_Executive.toLong();
+												}
+												reqTotal = reqVoting + reqIndependent + reqNonExec;
+											}
+										}
+										// === Status helper - calculate per row ===
+										statusVoting = "<span style='display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:600;background:#eceff4;color:#506079;'>—</span>";
+										if(reqVoting > 0)
+										{
+											pct = (userVoting * 100) / reqVoting;
+											if(userVoting >= reqVoting)
+											{
+												statusVoting = "<span style='display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:600;background:#e8fbef;color:#2a9a5f;'>● Valid</span>";
+											}
+											else if(pct >= 80)
+											{
+												statusVoting = "<span style='display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:600;background:#fff3e3;color:#c98318;'>● Near Breached</span>";
+											}
+											else
+											{
+												statusVoting = "<span style='display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:600;background:#fde8e8;color:#c44545;'>● Breached</span>";
+											}
+										}
+										statusTotal = "<span style='display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:600;background:#eceff4;color:#506079;'>—</span>";
+										if(reqTotal > 0)
+										{
+											pct = (userTotal * 100) / reqTotal;
+											if(userTotal >= reqTotal)
+											{
+												statusTotal = "<span style='display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:600;background:#e8fbef;color:#2a9a5f;'>● Valid</span>";
+											}
+											else if(pct >= 80)
+											{
+												statusTotal = "<span style='display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:600;background:#fff3e3;color:#c98318;'>● Near Breached</span>";
+											}
+											else
+											{
+												statusTotal = "<span style='display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:600;background:#fde8e8;color:#c44545;'>● Breached</span>";
+											}
+										}
+										statusIndep = "<span style='display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:600;background:#eceff4;color:#506079;'>—</span>";
+										if(reqIndependent > 0)
+										{
+											pct = (userIndependent * 100) / reqIndependent;
+											if(userIndependent >= reqIndependent)
+											{
+												statusIndep = "<span style='display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:600;background:#e8fbef;color:#2a9a5f;'>● Valid</span>";
+											}
+											else if(pct >= 80)
+											{
+												statusIndep = "<span style='display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:600;background:#fff3e3;color:#c98318;'>● Near Breached</span>";
+											}
+											else
+											{
+												statusIndep = "<span style='display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:600;background:#fde8e8;color:#c44545;'>● Breached</span>";
+											}
+										}
+										statusNonExec = "<span style='display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:600;background:#eceff4;color:#506079;'>—</span>";
+										if(reqNonExec > 0)
+										{
+											pct = (userNonExec * 100) / reqNonExec;
+											if(userNonExec >= reqNonExec)
+											{
+												statusNonExec = "<span style='display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:600;background:#e8fbef;color:#2a9a5f;'>● Valid</span>";
+											}
+											else if(pct >= 80)
+											{
+												statusNonExec = "<span style='display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:600;background:#fff3e3;color:#c98318;'>● Near Breached</span>";
+											}
+											else
+											{
+												statusNonExec = "<span style='display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:600;background:#fde8e8;color:#c44545;'>● Breached</span>";
+											}
+										}
+										// === Build HTML table ===
+										htmlTable = "<div style='border:1px solid #e5e7eb;border-radius:10px;overflow:hidden;background:#fff;font-family:Inter,sans-serif;'>";
+										htmlTable = htmlTable + "<table style='width:100%;border-collapse:collapse;'>";
+										htmlTable = htmlTable + "<thead><tr style='background:#f7f9fd;border-bottom:1px solid #e5e7eb;'>";
+										htmlTable = htmlTable + "<th style='text-align:left;padding:12px 16px;color:#5f708a;font-size:13px;font-weight:600;'>Committee Name</th>";
+										htmlTable = htmlTable + "<th style='text-align:left;padding:12px 16px;color:#5f708a;font-size:13px;font-weight:600;'>Required</th>";
+										htmlTable = htmlTable + "<th style='text-align:left;padding:12px 16px;color:#5f708a;font-size:13px;font-weight:600;'>Current</th>";
+										htmlTable = htmlTable + "<th style='text-align:left;padding:12px 16px;color:#5f708a;font-size:13px;font-weight:600;'>Status</th>";
+										htmlTable = htmlTable + "</tr></thead><tbody>";
+										htmlTable = htmlTable + "<tr style='border-bottom:1px solid #f3f4f6;'>";
+										htmlTable = htmlTable + "<td style='padding:14px 16px;color:#e8453c;font-size:13px;'>Minimum Voting Members</td>";
+										htmlTable = htmlTable + "<td style='padding:14px 16px;color:#1f2937;font-size:13px;'>" + reqVoting + "</td>";
+										htmlTable = htmlTable + "<td style='padding:14px 16px;color:#1f2937;font-size:13px;'>" + userVoting + "</td>";
+										htmlTable = htmlTable + "<td style='padding:14px 16px;'>" + statusVoting + "</td>";
+										htmlTable = htmlTable + "</tr>";
+										htmlTable = htmlTable + "<tr style='border-bottom:1px solid #f3f4f6;'>";
+										htmlTable = htmlTable + "<td style='padding:14px 16px;color:#e8453c;font-size:13px;'>Minimum Total Members</td>";
+										htmlTable = htmlTable + "<td style='padding:14px 16px;color:#1f2937;font-size:13px;'>" + reqTotal + "</td>";
+										htmlTable = htmlTable + "<td style='padding:14px 16px;color:#1f2937;font-size:13px;'>" + userTotal + "</td>";
+										htmlTable = htmlTable + "<td style='padding:14px 16px;'>" + statusTotal + "</td>";
+										htmlTable = htmlTable + "</tr>";
+										htmlTable = htmlTable + "<tr style='border-bottom:1px solid #f3f4f6;'>";
+										htmlTable = htmlTable + "<td style='padding:14px 16px;color:#e8453c;font-size:13px;'>Minimum Independent Members</td>";
+										htmlTable = htmlTable + "<td style='padding:14px 16px;color:#1f2937;font-size:13px;'>" + reqIndependent + "</td>";
+										htmlTable = htmlTable + "<td style='padding:14px 16px;color:#1f2937;font-size:13px;'>" + userIndependent + "</td>";
+										htmlTable = htmlTable + "<td style='padding:14px 16px;'>" + statusIndep + "</td>";
+										htmlTable = htmlTable + "</tr>";
+										htmlTable = htmlTable + "<tr>";
+										htmlTable = htmlTable + "<td style='padding:14px 16px;color:#e8453c;font-size:13px;'>Minimum Non-Executive Members</td>";
+										htmlTable = htmlTable + "<td style='padding:14px 16px;color:#1f2937;font-size:13px;'>" + reqNonExec + "</td>";
+										htmlTable = htmlTable + "<td style='padding:14px 16px;color:#1f2937;font-size:13px;'>" + userNonExec + "</td>";
+										htmlTable = htmlTable + "<td style='padding:14px 16px;'>" + statusNonExec + "</td>";
+										htmlTable = htmlTable + "</tr>";
+										htmlTable = htmlTable + "</tbody></table></div>";
+										input.Committee_Status = htmlTable;
+						)
+					}
+				}
+
+			
+}

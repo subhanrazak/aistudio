@@ -1,0 +1,35 @@
+get_Auditors as "get Auditors"
+{
+
+				type =  form
+				form = Risk_Assessment
+
+				record event = on add or edit
+
+				on user input of Assessment_Type
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Assessment_Type == "Risk & Control Self-Assessment")
+										{
+											getRole = Role[Role_Name == "Internal Auditor"].ID;
+											internalAuditors = Resource[Resource_Type == "Internal Resource" && Internal_Resource.Role == getRole].ID.getAll();
+											input.Auditors:ui.add(internalAuditors);
+										}
+										else if(input.Assessment_Type == "Independent Risk Assessment")
+										{
+											externalAuditors = Resource[Resource_Type == "External Resource" && Role.Role_Name == "External Auditor"].ID.getAll();
+											input.Auditors:ui.add(externalAuditors);
+										}
+										else
+										{
+											clear Auditors;
+										}
+						)
+					}
+				}
+
+			
+}

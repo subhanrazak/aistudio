@@ -1,0 +1,79 @@
+on_validation1 as "on validation"
+{
+
+				type =  form
+				form = Assessment_Plan
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											language = thisapp.Content.translation();
+										if(input.Action_Field == "Coverage")
+										{
+											if(input.Department_Coverage.count() == 0)
+											{
+												alert language.get("grc.plan.depCoverageAlert");
+												cancel submit;
+											}
+											else
+											{
+												if(input.Risk_Category_Coverage.count() == 0)
+												{
+													alert language.get("grc.plan.riskcatCoverageAlert");
+													cancel submit;
+												}
+												else
+												{
+													if(input.Process_Selection.count() == 0)
+													{
+														alert language.get("grc.plan.processSelectionAlert");
+														cancel submit;
+													}
+												}
+											}
+										}
+										else if(input.Action_Field == "Compliance")
+										{
+											if(input.Regulatory_Compliance_Reviews.count() == 0)
+											{
+												alert language.get("grc.plan.regulatoryComplianceAlert");
+												cancel submit;
+											}
+										}
+										else if(input.Action_Field == "Resource")
+										{
+											if(input.Internal_Resources.count() == 0 && input.External_Resources.count() == 0)
+											{
+												alert language.get("grc.plan.resourceAlert");
+												cancel submit;
+											}
+										}
+										else if(input.Action_Field == "Budget")
+										{
+											if(input.Budget_Required == null)
+											{
+												alert language.get("grc.plan.budgetRequiredAlert");
+												cancel submit;
+											}
+											else if(input.Budget_Categories.count() == 0)
+											{
+												alert language.get("grc.plan.budgetCategoryAlert");
+												cancel submit;
+											}
+											else if(input.Milestone_Planning.count() == 0)
+											{
+												alert language.get("grc.plan.milestoneAlert");
+												cancel submit;
+											}
+										}
+						)
+					}
+				}
+
+			
+}

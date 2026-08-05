@@ -1,0 +1,101 @@
+hide_fields6 as "hide fields"
+{
+
+				type =  form
+				form = Agenda
+
+				record event = on add or edit
+
+				on load
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											hide Hidden;
+										hide Agenda_Details;
+										hide Agenda_Items;
+										hide Basic_Agenda_Items_Notes;
+										hide Stepper_Status;
+										hide Action_Field;
+										hide Agenda_Items.Uploader;
+										hide Agenda_Items.File_upload;
+										activeField = input.Action_Field;
+										if(activeField == "Basic_Items")
+										{
+											show Agenda_Details;
+										}
+										else if(activeField == "Items")
+										{
+											show Agenda_Items;
+										}
+										else if(activeField == "Review")
+										{
+											agendaRec = Agenda[ID == input.ID];
+											agTitle = "—";
+											agTitleVal = input.Agenda_Title + "";
+											if(agTitleVal != "null" && agTitleVal != "")
+											{
+												agTitle = agTitleVal;
+											}
+											agType = "—";
+											agTypeVal = input.Agenda_Type.Agenda_Type + "";
+											if(agTypeVal != "null" && agTypeVal != "")
+											{
+												agType = agTypeVal;
+											}
+											agOwner = "—";
+											if(agendaRec.Agenda_Owner != null)
+											{
+												agOwnerVal = agendaRec.Agenda_Owner.Name + "";
+												if(agOwnerVal != "null" && agOwnerVal != "")
+												{
+													agOwner = agOwnerVal;
+												}
+											}
+											agItemRecs = Agenda_Item_Details[Agenda.ID == input.ID];
+											itemCount = agItemRecs.count();
+											totalDuration = 0;
+											itemRowsHTML = "";
+											for each  agItem in agItemRecs
+											{
+												itemTitle = "—";
+												if(agItem.Item_Title != null)
+												{
+													itemTitleVal = agItem.Item_Title + "";
+													if(itemTitleVal != "null" && itemTitleVal != "")
+													{
+														itemTitle = itemTitleVal;
+													}
+												}
+												itemDur = 0;
+												if(agItem.Duration_minutes != null)
+												{
+													itemDur = agItem.Duration_minutes;
+												}
+												totalDuration = totalDuration + itemDur;
+												itemRowsHTML = itemRowsHTML + "<tr>" + "<td style=\"padding:12px 0;border-bottom:1px solid #f3f4f6;font-size:14px;color:#374151;\">" + itemTitle + "</td>" + "<td style=\"padding:12px 0;border-bottom:1px solid #f3f4f6;font-size:13px;color:#6b7280;font-weight:500;text-align:right;\">" + itemDur + " min</td>" + "</tr>";
+											}
+											if(itemCount == 0)
+											{
+												itemRowsHTML = "<tr><td colspan=\"2\" style=\"font-size:13px;color:#9ca3af;padding:12px 0;\">No items added.</td></tr>";
+											}
+											reviewHTML = "<style>.zc-Basic_Agenda_Items_Notes-group,.zc-Basic_Agenda_Items_Notes-group .form-field,.zc-Basic_Agenda_Items_Notes-group .zc-addnote-fld,.zc-Basic_Agenda_Items_Notes-group .zc-note-display,.zc-Basic_Agenda_Items_Notes-group .zc-note-display>div{width:100%!important;max-width:100%!important;}</style>" + "<div style=\"font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;width:100%;box-sizing:border-box;display:block;\">" + "<div style=\"background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:20px 24px;margin-bottom:16px;width:100%;max-width:100%;box-sizing:border-box;display:block;\">" + "<p style=\"font-size:13px;font-weight:700;color:#e8453c;margin:0 0 16px 0;\">Basic Details</p>" + "<table style=\"width:100%;border-collapse:collapse;table-layout:fixed;\">" + "<colgroup><col style=\"width:50%\"><col style=\"width:50%\"></colgroup>" + "<tr><td style=\"padding:10px 0;border-bottom:1px solid #f3f4f6;font-size:13px;color:#6b7280;\">Agenda Title</td><td style=\"padding:10px 0;border-bottom:1px solid #f3f4f6;font-size:13px;font-weight:600;color:#111827;text-align:right;\">" + agTitle + "</td></tr>" + "<tr><td style=\"padding:10px 0;border-bottom:1px solid #f3f4f6;font-size:13px;color:#6b7280;\">Type</td><td style=\"padding:10px 0;border-bottom:1px solid #f3f4f6;font-size:13px;font-weight:600;color:#111827;text-align:right;\">" + agType + "</td></tr>" + "<tr><td style=\"padding:10px 0;border-bottom:1px solid #f3f4f6;font-size:13px;color:#6b7280;\">Owner</td><td style=\"padding:10px 0;border-bottom:1px solid #f3f4f6;font-size:13px;font-weight:600;color:#111827;text-align:right;\">" + agOwner + "</td></tr>" + "<tr><td style=\"padding:10px 0;border-bottom:1px solid #f3f4f6;font-size:13px;color:#6b7280;\">Items</td><td style=\"padding:10px 0;border-bottom:1px solid #f3f4f6;font-size:13px;font-weight:600;color:#111827;text-align:right;\">" + itemCount + "</td></tr>" + "<tr><td style=\"padding:10px 0;font-size:13px;color:#6b7280;\">Total Duration</td><td style=\"padding:10px 0;font-size:13px;font-weight:600;color:#111827;text-align:right;\">" + totalDuration + " min</td></tr>" + "</table>" + "</div>" + "<div style=\"background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:20px 24px;margin-bottom:16px;width:100%;max-width:100%;box-sizing:border-box;display:block;\">" + "<p style=\"font-size:13px;font-weight:700;color:#e8453c;margin:0 0 16px 0;\">Agenda items</p>" + "<table style=\"width:100%;border-collapse:collapse;table-layout:fixed;\">" + "<colgroup><col style=\"width:70%\"><col style=\"width:30%\"></colgroup>" + itemRowsHTML + "</table>" + "</div>" + "</div>";
+											input.Basic_Agenda_Items_Notes = reviewHTML;
+										}
+										else if(activeField == "Review")
+										{
+											show Agenda_Items;
+										}
+										else if(activeField == "Edit")
+										{
+											show Agenda_Details;
+											show Agenda_Items;
+											show Basic_Agenda_Items_Notes;
+										}
+						)
+					}
+				}
+
+			
+}

@@ -1,0 +1,104 @@
+approve1 as "approve"
+{
+
+				type =  form
+				form = Approve
+				button = Approve
+				on click
+				{
+					actions 
+					{
+					on click
+					(
+						currentUser = User[Email == zoho.loginuserid].ID;
+										if(input.Controls.size() > 0)
+										{
+											for each  control in input.Controls
+											{
+												control_Det = Control[ID == control];
+												control_Det.Approval_Status="Approved";
+												control_Det.Comments=input.Comments;
+												if(currentUser != null)
+												{
+													control_Det.Control_Reviewer_Approver=currentUser;
+												}
+											}
+										}
+										if(input.Risk_Entries.size() > 0)
+										{
+											for each  risk in input.Risk_Entries
+											{
+												risk_Det = Risk_Entry[ID == risk];
+												risk_Det.Approval_Status="Approved";
+												risk_Det.Comments=input.Comments;
+												if(currentUser != null)
+												{
+													risk_Det.Approved_By=currentUser;
+												}
+												for each  riskAssessment in Risk_Assessment_Libraries[Risks == risk_Det.ID]
+												{
+													riskAssessment.Approval_Status="Approved";
+												}
+											}
+										}
+										if(input.Processes.size() > 0)
+										{
+											for each  process in input.Processes
+											{
+												process_Det = Process[ID == process];
+												process_Det.Approval_Status="Approved";
+												process_Det.Comments=input.Comments;
+												if(currentUser != null)
+												{
+													process_Det.Approved_By=currentUser;
+												}
+											}
+										}
+										/* if(input.Risk_Assessment_Libraries.size() > 0)
+										{
+											for each  riskLib in input.Risk_Assessment_Libraries
+											{
+												riskLib_Det = Risk_Assessment_Libraries[ID == riskLib];
+												riskLib_Det.Approval_Status="Approved";
+												riskLib_Det.Comments=input.Comments;
+												if(currentUser != null)
+												{
+													riskLib_Det.Approved_By=currentUser;
+												}
+											}
+										} */
+										if(input.Risk_Assessment != null)
+										{
+											assessmentDet = Risk_Assessment[ID == input.Risk_Assessment];
+											if(input.Action_Field == "Auditor")
+											{
+												assessmentDet.Status="Completed";
+												for each  objective in Risk_Assessment_Libraries[Scope_Type == "Objective" && Risk_Assessment == assessmentDet.ID]
+												{
+													objectiveDet = Objective[ID == objective.Objectives];
+													objectiveDet.Last_Review_Date=Risk_Assessment_Libraries[Scope_Type == "Objective" && Risk_Assessment.Status == "Completed" && Objectives == objective.Objectives].maximum(End_Date);
+												}
+												for each  processLibrary in Risk_Assessment_Libraries[Scope_Type == "Process" && Risk_Assessment == assessmentDet.ID]
+												{
+													processLibDet = Process[ID == processLibrary.Processes];
+													processLibDet.Last_Review_Date=Risk_Assessment_Libraries[Scope_Type == "Process" && Risk_Assessment.Status == "Completed" && Processes == processLibrary.Processes].maximum(End_Date);
+												}
+												for each  riskLibrary in Risk_Assessment_Libraries[Scope_Type == "Risk" && Risk_Assessment == assessmentDet.ID]
+												{
+													riskLibDet = Risk_Entry[ID == riskLibrary.Risks];
+													riskLibDet.Last_Review_Date=Risk_Assessment_Libraries[Scope_Type == "Risk" && Risk_Assessment.Status == "Completed" && Risks == riskLibrary.Risks].maximum(End_Date);
+												}
+											}
+											else
+											{
+												assessmentDet.Status="Approved";
+												assessmentDet.Overall_progress=100;
+											}
+											assessmentDet.Comments=input.Comments;
+										}
+										openUrl("#Script:page.refresh","same window");
+					)
+					}
+				}
+			
+}

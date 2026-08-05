@@ -1,0 +1,71 @@
+get_Residual_Score as "get Residual Score"
+{
+
+				type =  form
+				form = Risk_Entry
+
+				record event = on add or edit
+
+				on user input of Link_Controls
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											overallControlValue = 0;
+										for each  control in input.Link_Controls
+										{
+											totalValue = 0;
+											designValue = 0;
+											operationValue = 0;
+											if(control.Design_Effectiveness == "Highly Effective")
+											{
+												designValue = 1;
+											}
+											else if(control.Design_Effectiveness == "Effective")
+											{
+												designValue = 0.75;
+											}
+											else if(control.Design_Effectiveness == "Moderately Effective")
+											{
+												designValue = 0.5;
+											}
+											else if(control.Design_Effectiveness == "Weak")
+											{
+												designValue = 0.25;
+											}
+											else if(control.Design_Effectiveness == "Ineffective")
+											{
+												designValue = 0;
+											}
+											if(control.Operating_Effectiveness == "Highly Effective")
+											{
+												operationValue = 1;
+											}
+											else if(control.Operating_Effectiveness == "Effective")
+											{
+												operationValue = 0.75;
+											}
+											else if(control.Operating_Effectiveness == "Moderately Effective")
+											{
+												operationValue = 0.5;
+											}
+											else if(control.Operating_Effectiveness == "Weak")
+											{
+												operationValue = 0.25;
+											}
+											else if(control.Operating_Effectiveness == "Ineffective")
+											{
+												operationValue = 0;
+											}
+											totalValue = (operationValue + designValue) / 2;
+											overallControlValue = overallControlValue + totalValue;
+										}
+										avgControl = if(input.Link_Controls.size() > 0,overallControlValue / input.Link_Controls.size(),0);
+										input.Residual_Risk_Score = if(overallControlValue > 0,(input.Inherent_Score * (1 - avgControl)).toNumber(),null);
+						)
+					}
+				}
+
+			
+}

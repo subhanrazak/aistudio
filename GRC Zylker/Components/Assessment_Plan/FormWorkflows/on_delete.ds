@@ -1,0 +1,29 @@
+on_delete as "on delete"
+{
+
+				type =  form
+				form = Assessment_Plan
+
+				record event = on add or edit
+
+				on delete row of Budget_Categories
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											input.Total_Budget_Allocated = input.Total_Budget_Allocated - row.Allocation;
+										if(input.Total_Budget_Allocated < input.Budget_Required)
+										{
+											input.Budget_Shortfall = input.Budget_Required - input.Total_Budget_Allocated;
+										}
+										else
+										{
+											input.Budget_Shortfall = 0;
+										}
+						)
+					}
+				}
+
+			
+}

@@ -1,0 +1,140 @@
+Success_Submit as "Success Submit"
+{
+
+				type =  form
+				form = Meeting_Attendance
+
+				record event = on add or edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Meetings != null)
+										{
+											mtgId = input.Meetings.toLong();
+											mtgRec = Meeting[ID == mtgId];
+											if(mtgRec.count() > 0)
+											{
+												chairRoleName = "Chair Person";
+												totalAttendance = 0;
+												presentCount = 0;
+												absentCount = 0;
+												independentPresentCount = 0;
+												nonExecutivePresentCount = 0;
+												chairPresentCount = 0;
+												for each  attRow in mtgRec.Meeting_Attendance
+												{
+													totalAttendance = totalAttendance + 1;
+													if(attRow.Status == "Present")
+													{
+														presentCount = presentCount + 1;
+														if(attRow.Member != null)
+														{
+															memberRecord = User[ID == attRow.Member];
+															if(memberRecord != null)
+															{
+																memberType = memberRecord.Member_Type;
+																if(memberType == "Independent")
+																{
+																	independentPresentCount = independentPresentCount + 1;
+																}
+																else if(memberType == "Non-Executive")
+																{
+																	nonExecutivePresentCount = nonExecutivePresentCount + 1;
+																}
+																if(memberRecord.Role != null)
+																{
+																	roleRecord = Role[ID == memberRecord.Role];
+																	if(roleRecord != null && roleRecord.Role_Name == chairRoleName)
+																	{
+																		chairPresentCount = chairPresentCount + 1;
+																	}
+																}
+															}
+														}
+													}
+													else if(attRow.Status == "Absent")
+													{
+														absentCount = absentCount + 1;
+													}
+												}
+												/* --- Thresholds from linked Quorum_Rule --- */
+												minTotalMembers = 0;
+												minIndependentMembers = 0;
+												minNonExecutiveMembers = 0;
+												chairMandatory = false;
+												if(mtgRec.Quorum != null)
+												{
+													qrRec = Quorum_Rule[ID == mtgRec.Quorum];
+													if(qrRec.count() > 0)
+													{
+														if(qrRec.Minimum_Total_Members != null)
+														{
+															minTotalMembers = qrRec.Minimum_Total_Members.toLong();
+														}
+														if(qrRec.Minimum_Independent_Members != null)
+														{
+															minIndependentMembers = qrRec.Minimum_Independent_Members.toLong();
+														}
+														if(qrRec.Minimum_Non_Executive_Members != null)
+														{
+															minNonExecutiveMembers = qrRec.Minimum_Non_Executive_Members.toLong();
+														}
+														if(qrRec.Chair_is_mandatory_for_meetings != null)
+														{
+															chairMandatory = qrRec.Chair_is_mandatory_for_meetings;
+														}
+													}
+												}
+												/* --- Evaluate each rule --- */
+												totalMet = presentCount >= minTotalMembers;
+												independentMet = independentPresentCount >= minIndependentMembers;
+												nonExecutiveMet = nonExecutivePresentCount >= minNonExecutiveMembers;
+												chairMet = true;
+												if(chairMandatory)
+												{
+													chairMet = chairPresentCount == 1;
+												}
+												quorumMet = totalMet && independentMet && nonExecutiveMet && chairMet;
+												/* --- Update the Meeting record --- */
+												if(quorumMet)
+												{
+													mtgRec.Quorum_Status="Met";
+													mtgRec.Status="Completed";
+												}
+												else
+												{
+													mtgRec.Quorum_Status="Not Met";
+													mtgRec.Status="Cancelled";
+												}
+												mtgRec.Present=presentCount;
+												mtgRec.Total_Members=totalAttendance;
+												if(totalAttendance > 0)
+												{
+													absentPct = ((absentCount * 100) / totalAttendance).round(0);
+													mtgRec.Avergage_Attenance=absentPct;
+												}
+												else
+												{
+													mtgRec.Avergage_Attenance=0;
+												}
+												if(mtgRec.Agenda != null)
+												{
+													mtgRec.Agenda_Items_Material="Met";
+												}
+												else
+												{
+													mtgRec.Agenda_Items_Material="Not Met";
+												}
+											}
+										}
+										openUrl("#Script:page.reload","same window");
+						)
+					}
+				}
+
+			
+}

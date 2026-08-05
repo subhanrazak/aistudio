@@ -1,0 +1,3017 @@
+<%
+	page_link_name = "Operational_Page";
+	language = thisapp.Content.translation();
+	tab_map = thisapp.Page.Get_Tabs(page_link_name);
+	tab_keys = tab_map.keys();
+	input.tab = if(input.tab != "" && input.tab != "null" && input.tab != null,input.tab,tab_keys.get(0));
+	%>
+<style>
+<%=thisapp.Styles.App_CSS()%>
+<%=thisapp.Styles.Button()%>
+<%=thisapp.Styles.Panel()%>
+<%=thisapp.Styles.Horizontal_Tab()%>
+<%=thisapp.Styles_Creator.Filter()%>
+<%=thisapp.Styles_Page.Common_View()%>
+<%=thisapp.Styles.Pagination()%>
+</style>
+<style>
+    .zcs-page-container { background-color: var(--zcs-page-bg-color); }
+    .zcs-lg-panel-wrapper .zcs-panel,
+    .zcs-panel-wrapper.zcs-lg-panel-wrapper li:hover .zcs-panel {
+        background-image: radial-gradient(circle at 100% 0, var(--component_hover_color) 0%, #ffffff 52%);
+    }
+    .zcs-lg-panel-wrapper .zcs-panel-icon-wrapper { height: 100%; }
+    .zcs-lg-panel-wrapper .zcs-panel-icon { color: var(--theme_brand_color); opacity: 50%; }
+    .zcs-report { max-height: 350px; }
+    .zcs-card.zcs-report .reportfullwidth { border-top-width: 0px; }
+    @media (max-width: 768px) {
+        .zcs-page-container, .zcs-page-container-inner { height: auto; }
+        .zcs-report-card { border-width: 0px; background-color: transparent; height: auto; }
+        .zcs-report-header { padding: 0px 0px 16px; }
+        body:not(.zc-mobile) .zcs-report-header { padding: 0px; }
+    }
+    .zcs-chart ul li { list-style-type: none; }
+    .zcs-chart-y-axis-text { width: 100px; line-height: 1.5; color: #131635; }
+    .zcs-chart-x-axis-text { line-height: 1.5; color: #131635; max-width: 150px; }
+    .zcs-columnchart-wrapper .zcs-chart-x-axis-text { max-width: 100%; }
+    .zcs-column { height: 25px; }
+    .zcs-column-value { border-radius: 0px 6px 6px 0px; background-color: #10B981; }
+    .zcs-chart-y-axis:before, .zcs-chart-y-axis > li:last-child:before { content: ''; position: absolute; background-color: var(--zcs_tertiary_border_color); left: 104px; }
+    .zcs-chart-y-axis:before { width: 1px; height: calc(100% - 40px); left: 104px; }
+    .zcs-chart-y-axis > li:last-child:before { width: calc(100% - 104px); height: 1px; bottom: 40px; left: 105px; }
+    .zcs-progress-bar { height: 14px; background-color: #EEF3FB; }
+    .zcs-progress-bar-list .zcs-progress-bar-wrapper:nth-child(1) .zcs-progress-bar-indicator { background-color: #FB2C36; }
+    .zcs-progress-bar-list .zcs-progress-bar-wrapper:nth-child(2) .zcs-progress-bar-indicator { background-color: #6F51FF; }
+    .zcs-progress-bar-list .zcs-progress-bar-wrapper:nth-child(3) .zcs-progress-bar-indicator { background-color: #FC8F01; }
+    .zcs-progress-bar-list .zcs-progress-bar-wrapper:nth-child(4) .zcs-progress-bar-indicator { background-color: #16A34A; }
+    .zcs-list li, .zcs-custom-tabhead .zcs-custom-tab { list-style-type: none; }
+    .zcs-custom-tabhead .zcs-card { border-radius: 20px; }
+    .zcs-custom-tabactive .zcs-card { background-color: var(--component_hover_color); border-color: var(--theme_brand_color); }
+    .zcs-custom-tabactive i, .zcs-custom-tabactive span { color: var(--theme_brand_color); }
+    :root {
+        --zcs-thead-color: #F9FAFE; --zcs-tr-h-color: #F9FAFE;
+        --zcs-tgroup-color: #F1F2F8; --zcs-tgroup-h-color: #F1F2F8;
+    }
+    .zcs-table-wrapper { border: 1px solid var(--zcs_tertiary_border_color); background-color: var(--zcs-white-color, #fff); overflow: auto; }
+    .zcs-table-wrapper table { line-height: normal; border-collapse: collapse; }
+    .zcs-table-wrapper table thead { top: 0px; }
+    .zcs-table-wrapper table thead tr th { background-color: var(--zcs-thead-color, #F9FAFE); box-shadow: 0px -1px 0px 0px var(--zcs_tertiary_border_color) inset; white-space: nowrap; }
+    .zcs-table-wrapper table thead tr.zcs-tspace th { background-color: #fff; box-shadow: none; }
+    .zcs-table-wrapper table tbody tr td { border-top: 1px solid var(--zcs_tertiary_border_color); }
+    .zcs-table-wrapper table tbody tr:first-child td { border-color: transparent; }
+    .zcs-table-wrapper table tbody tr:hover td { background-color: var(--zcs-tr-h-color, #F9FAFE); }
+    .zcs-table-wrapper table tbody tr:first-child:hover td { border-color: var(--zcs_tertiary_border_color); }
+    .zcs-table-wrapper table thead tr th.zcs-green,
+    .zcs-table-wrapper table tbody tr td.zcs-green,
+    .zcs-table-wrapper table tbody tr td .zcs-green { color: #179e6c; }
+    .zcs-table-wrapper table thead tr th.zcs-red,
+    .zcs-table-wrapper table tbody tr td.zcs-red,
+    .zcs-table-wrapper table tbody tr td .zcs-red { color: #fe455d; }
+    .zcs-table-wrapper table thead tr th.zcs-yellow,
+    .zcs-table-wrapper table tbody tr td.zcs-yellow,
+    .zcs-table-wrapper table tbody tr td .zcs-yellow { color: #b8770d; }
+    .zcs-color-green { color: #179E6C; }
+    .zcs-color-red   { color: #FE455D; }
+    .zcs-color-yellow{ color: #b8770d; }
+    .zcs-font-40     { font-size: 40px; }
+    a { text-decoration: none; }
+	.zcs-year-dropdown { position: relative; display: inline-block; }
+    .zcs-year-trigger {
+        display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px;
+        border: 1px solid var(--zcs_tertiary_border_color); border-radius: 8px;
+        font-size: 14px; font-weight: 500; color: #131635; background: #fff;
+        cursor: pointer; list-style: none;
+    }
+    .zcs-year-trigger::-webkit-details-marker { display: none; }
+    .zcs-year-trigger::marker { display: none; content: ''; }
+    .zcs-year-menu {
+        position: absolute; top: 100%; right: 0; margin-top: 4px;
+        background: #fff; border: 1px solid var(--zcs_tertiary_border_color);
+        border-radius: 10px; box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+        padding: 6px; z-index: 100; min-width: 120px;
+    }
+    .zcs-year-option {
+        display: block; padding: 10px 16px; border-radius: 8px;
+        font-size: 14px; font-weight: 400; color: #131635;
+        text-decoration: none;
+    }
+    .zcs-year-option:hover { background: #f5f6fa; }
+    .zcs-year-active { background: #fde8e8; font-weight: 500; color: #e8453c; }
+
+.zcs-pagination {
+    height: 32px;
+    padding: 10px;
+    box-sizing: content-box;
+	background :var(--zcs-white-color);
+}
+</style>
+<%
+	todayDate = zoho.currentdate;
+	/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\uFFFD\uFFFD\uFFFD\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+	   GLOBAL KPIs (always calculated)
+	\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
+	totalActions = Action_Tracker[ID != 0].count();
+	openActions = Action_Tracker[Status == "Yet to start"].count();
+	overdueActions = Action_Tracker[Status != "Completed" && Due_Date < todayDate].count();
+	inProgress = Action_Tracker[Status == "Ongoing"].count();
+	completed = Action_Tracker[Status == "Completed"].count();
+	/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+	   ACTION TAB DATA
+	\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
+	assigneeMap = Map();
+	maxActive = 1;
+	/* \u2500\u2500 Quick Action: Resolve \u2500\u2500 */
+	if(input.page_action == "resolve" && input.record_id != null)
+	{
+		rRec = Action_Tracker[ID == input.record_id.toLong()];
+		if(rRec != null)
+		{
+			rRec.Status="Completed";
+			for each  etr in rRec.Escalation_Tracker
+			{
+				eSt = etr.Escalation_Status + "";
+				if(eSt == "Pending" || eSt == "Acknowledged")
+				{
+					etr.Escalation_Status="Resolved";
+				}
+			}
+			rRec.Is_Escalated=false;
+			rRec.Next_Escalation_Time=null;
+		}
+		input.page_action = "tracker_detail";
+	}
+	/* \u2500\u2500 Quick Action: Revert \u2500\u2500 */
+	if(input.page_action == "revert" && input.record_id != null)
+	{
+		rvRec = Action_Tracker[ID == input.record_id.toLong()];
+		if(rvRec != null)
+		{
+			rvRec.Status="Revert";
+		}
+		input.page_action = "tracker_detail";
+	}
+	/* \u2500\u2500 Quick Action: Escalate Next \u2500\u2500 */
+	if(input.page_action == "escalate_next" && input.record_id != null)
+	{
+		enRec = Action_Tracker[ID == input.record_id.toLong()];
+		if(enRec != null)
+		{
+			enCurrentLevel = 0;
+			if(enRec.Current_Escalation_Level != null)
+			{
+				enCurrentLevel = enRec.Current_Escalation_Level.toLong();
+			}
+			enNextLevel = enCurrentLevel + 1;
+			enNextLevelName = "Level-" + enNextLevel;
+			for each  enExRow in enRec.Escalation_Tracker
+			{
+				if(enExRow.Escalation_Status + "" == "Pending")
+				{
+					enExRow.Escalation_Status="Escalated";
+				}
+			}
+			enCmId = 0;
+			if(enRec.Meeting != null)
+			{
+				enMtg = Meeting[ID == enRec.Meeting];
+				if(enMtg != null && enMtg.Committee1 != null)
+				{
+					enCmId = enMtg.Committee1.ID;
+				}
+			}
+			if(enCmId != 0)
+			{
+				enCmEsc = Committee_Escalation[Committee == enCmId];
+				enFound = false;
+				for each  enEsc in enCmEsc
+				{
+					if(enEsc.Level != null && !enFound)
+					{
+						enLvlRec = Escalation_Levels[ID == enEsc.Level];
+						if(enLvlRec != null)
+						{
+							enLvlName = enLvlRec.Level + "";
+							if(enLvlName == enNextLevelName)
+							{
+								enHours = 0;
+								if(enEsc.Hours_Next_Escalation != null)
+								{
+									enHours = enEsc.Hours_Next_Escalation.toLong();
+								}
+								enDueBy = zoho.currenttime.addHour(enHours);
+								enMemberId = "";
+								if(enEsc.Member != null)
+								{
+									enMemberId = enEsc.Member.ID + "";
+								}
+								enMap = Map();
+								enMap.put("Escalation_Level",enEsc.Level.ID + "");
+								enMap.put("Role",enEsc.Role.ID + "");
+								if(!enMemberId.isEmpty())
+								{
+									enMap.put("Escalated_To",enMemberId);
+								}
+								enMap.put("Escalation_Status","Pending");
+								enMap.put("Escalated_At",zoho.currenttime);
+								enMap.put("Due_By",enDueBy);
+								enRec.Escalation_Tracker.insert(enMap);
+								enRec.Current_Escalation_Level=enNextLevel;
+								enRec.Next_Escalation_Time=enDueBy;
+								enFound = true;
+							}
+						}
+					}
+				}
+			}
+		}
+		input.page_action = "tracker_detail";
+	}
+	/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+	   TRACKER DETAIL VIEW
+	\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\uFFFD\uFFFD\uFFFD\u2550\u2550\u2550\u2550 */
+	if(input.page_action == "tracker_detail")
+	{
+		%>
+<style>
+    .zcs-td-back { display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:500;color:var(--theme_brand_color);text-decoration:none;cursor:pointer; }
+    .zcs-td-badge { display:inline-flex;align-items:center;gap:5px;padding:3px 12px;border-radius:999px;font-size:12px;font-weight:500; }
+    .zcs-td-id { display:inline-flex;padding:3px 10px;border-radius:6px;font-size:12px;font-weight:500;background:#f3f4f6;color:#6c778a; }
+    .zcs-td-meta { display:flex;flex-direction:column;gap:2px; }
+    .zcs-td-severity { display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:6px;font-size:12px;font-weight:600; }
+    .zcs-td-chain-icon { width:32px;height:32px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;border:2px solid #e2e5ec;background:#fff;color:#8a9ab5;font-size:14px;z-index:1; }
+    .zcs-td-chain-card { flex:1;border:1px solid #e2e5ec;border-radius:10px;padding:14px 18px; }
+    .zcs-td-chain-current { border-color:#e8453c;background:#fff5f5; }
+    .zcs-td-chain-done { border-color:#179E6C;background:#f0fdf8; }
+    .zcs-td-chain-pending { border-color:#e2e5ec;background:#fff; }
+    .zcs-td-qa-btn { display:flex;align-items:center;justify-content:center;gap:8px;padding:16px;border-radius:10px;border:1px solid #e2e5ec;background:#fff;text-decoration:none;color:#131635;font-size:14px;font-weight:500;cursor:pointer; }
+    .zcs-td-qa-primary { background:#fde8e8;border-color:#fde8e8;color:#e8453c; }
+    .zcs-td-qa-icon { font-size:20px; }
+    .zcs-td-ctx-item { border-left:3px solid #e8453c;padding:8px 16px;background:#fafbfd;border-radius:0 8px 8px 0; }
+    .zcs-td-log-dot { width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:4px; }
+    .zcs-td-log-item { display:flex;gap:12px;padding:16px 0;border-bottom:1px solid #f3f4f6; }
+    .zcs-td-log-item:last-child { border-bottom:none; }
+</style>
+<%
+		tdRecId = input.record_id.toLong();
+		tdRec = Action_Tracker[ID == tdRecId];
+		if(tdRec != null)
+		{
+			tdName = if(tdRec.Description != null,tdRec.Description + "","-");
+			tdStatus = if(tdRec.Status != null,tdRec.Status + "","-");
+			tdPriority = if(tdRec.Priority != null,tdRec.Priority + "","-");
+			tdDueDate = if(tdRec.Due_Date != null,tdRec.Due_Date.toString("dd-MMM-yyyy"),"-");
+			tdCreated = if(tdRec.Added_Time != null,tdRec.Added_Time.toString("dd-MMM-yyyy hh:mm a"),"-");
+			tdDescription = if(tdRec.Description != null,tdRec.Description + "","-");
+			tdAssignee = "-";
+			tdAssigneeRole = "";
+			if(tdRec.Assign_To != null)
+			{
+				aRec = User[ID == tdRec.Assign_To];
+				if(aRec != null)
+				{
+					tdAssignee = aRec.Name + "";
+					if(aRec.Role != null)
+					{
+						rRec2 = Role[ID == aRec.Role];
+						if(rRec2 != null)
+						{
+							tdAssigneeRole = rRec2.Role_Name + "";
+						}
+					}
+				}
+			}
+			tdAssigneeDisplay = tdAssignee;
+			if(tdAssigneeRole != "" && tdAssigneeRole != "null")
+			{
+				tdAssigneeDisplay = tdAssignee + " (" + tdAssigneeRole + ")";
+			}
+			tdCommittee = "-";
+			cmIdForEsc = 0;
+			if(tdRec.Meeting != null)
+			{
+				tdMtg = Meeting[ID == tdRec.Meeting];
+				if(tdMtg != null && tdMtg.Committee1 != null)
+				{
+					cmIdForEsc = tdMtg.Committee1.ID;
+					tdCommittee = tdMtg.Committee1.Committee_Name + "";
+					if(tdCommittee == "null")
+					{
+						tdCommittee = "-";
+					}
+				}
+			}
+			tdOverdue = "";
+			if(tdRec.Due_Date != null && tdRec.Status != "Completed")
+			{
+				daysDiff = ((zoho.currentdate.toLong() - tdRec.Due_Date.toLong()) / 86400000).toLong();
+				if(daysDiff > 0)
+				{
+					tdOverdue = "Action overdue by " + daysDiff + " days beyond due date (" + tdRec.Due_Date.toString("MMM d") + ")";
+				}
+				else if(daysDiff <= 0)
+				{
+					daysLeft = (daysDiff * -1).toLong();
+					tdOverdue = "Due in " + daysLeft + " days (" + tdRec.Due_Date.toString("MMM d") + ")";
+				}
+			}
+			tdStatusBg = "#f3f4f6";
+			tdStatusClr = "#6c778a";
+			if(tdStatus == "Completed")
+			{
+				tdStatusBg = "#e4fcf3";
+				tdStatusClr = "#179E6C";
+			}
+			else if(tdStatus == "Ongoing")
+			{
+				tdStatusBg = "#E8EFFF";
+				tdStatusClr = "#2A6FFC";
+			}
+			else if(tdStatus == "Yet to start")
+			{
+				tdStatusBg = "#FCF4E6";
+				tdStatusClr = "#B8770D";
+			}
+			tdPriBg = "#f3f4f6";
+			tdPriClr = "#6c778a";
+			if(tdPriority == "Critical")
+			{
+				tdPriBg = "#FDE3E6";
+				tdPriClr = "#FE455D";
+			}
+			else if(tdPriority == "High")
+			{
+				tdPriBg = "#FCF4E6";
+				tdPriClr = "#B8770D";
+			}
+			else if(tdPriority == "Medium")
+			{
+				tdPriBg = "#E8EFFF";
+				tdPriClr = "#2A6FFC";
+			}
+			/* Escalation Chain */
+			escChainList = List();
+			currentEscLevel = 0;
+			if(tdRec.Current_Escalation_Level != null)
+			{
+				currentEscLevel = tdRec.Current_Escalation_Level.toLong();
+			}
+			if(cmIdForEsc != 0)
+			{
+				cmEscAll = Committee_Escalation[Committee == cmIdForEsc];
+				for each  ce in cmEscAll
+				{
+					ceRow = Map();
+					ceLevelName = "-";
+					ceLevelNum = 0;
+					if(ce.Level != null)
+					{
+						lvlRec = Escalation_Levels[ID == ce.Level];
+						if(lvlRec != null)
+						{
+							ceLevelName = lvlRec.Level + "";
+							ceLevelNum = ceLevelName.replaceAll("[^0-9]","").toLong();
+						}
+					}
+					ceRow.put("levelName",ceLevelName);
+					ceRow.put("levelNum",ceLevelNum);
+					ceRoleName = "-";
+					if(ce.Role != null)
+					{
+						ceRoleRec = Role[ID == ce.Role];
+						if(ceRoleRec != null)
+						{
+							ceRoleName = ceRoleRec.Role_Name + "";
+						}
+					}
+					ceRow.put("roleName",ceRoleName);
+					ceMemberName = "-";
+					if(ce.Member != null)
+					{
+						ceMbrRec = User[ID == ce.Member];
+						if(ceMbrRec != null)
+						{
+							ceMemberName = ceMbrRec.Name + "";
+						}
+					}
+					ceRow.put("memberName",ceMemberName);
+					ceStatus = "pending";
+					if(ceLevelNum < currentEscLevel)
+					{
+						ceStatus = "done";
+					}
+					else if(ceLevelNum == currentEscLevel)
+					{
+						ceStatus = "current";
+					}
+					ceRow.put("status",ceStatus);
+					ceRow.put("committee",tdCommittee);
+					escChainList.add(ceRow);
+				}
+			}
+			/* Acknowledgement Logs */
+			ackLogList = List();
+			for each  etRow in tdRec.Escalation_Tracker
+			{
+				logRow = Map();
+				logUserName = "-";
+				logUserRole = "";
+				if(etRow.Escalated_To != null)
+				{
+					logUsr = User[ID == etRow.Escalated_To];
+					if(logUsr != null)
+					{
+						logUserName = logUsr.Name + "";
+						if(logUsr.Role != null)
+						{
+							logRoleRec = Role[ID == logUsr.Role];
+							if(logRoleRec != null)
+							{
+								logUserRole = logRoleRec.Role_Name + "";
+							}
+						}
+					}
+				}
+				logRow.put("userName",logUserName);
+				logRow.put("userRole",logUserRole);
+				logRow.put("status",if(etRow.Escalation_Status != null,etRow.Escalation_Status + "","-"));
+				logRow.put("escalatedAt",if(etRow.Escalated_At != null,etRow.Escalated_At.toString("dd-MMM-yyyy hh:mm a"),"-"));
+				logDotClr = "#8a9ab5";
+				logSt = logRow.get("status") + "";
+				if(logSt == "Acknowledged")
+				{
+					logDotClr = "#179E6C";
+				}
+				else if(logSt == "Pending")
+				{
+					logDotClr = "#e8453c";
+				}
+				else if(logSt == "Escalated")
+				{
+					logDotClr = "#f59e0b";
+				}
+				logRow.put("dotClr",logDotClr);
+				ackLogList.add(logRow);
+			}
+			/* Next escalation level role name */
+			nextEscRoleName = "";
+			nextEscLevelNum = currentEscLevel + 1;
+			if(cmIdForEsc != 0)
+			{
+				nextEscCheck = Committee_Escalation[Committee == cmIdForEsc];
+				for each  nec in nextEscCheck
+				{
+					if(nec.Level != null && nextEscRoleName.isEmpty())
+					{
+						necLvl = Escalation_Levels[ID == nec.Level];
+						if(necLvl != null)
+						{
+							necLvlName = necLvl.Level + "";
+							necLvlNum = necLvlName.replaceAll("[^0-9]","").toLong();
+							if(necLvlNum == nextEscLevelNum)
+							{
+								if(nec.Role != null)
+								{
+									necRoleRec = Role[ID == nec.Role];
+									if(necRoleRec != null)
+									{
+										nextEscRoleName = necRoleRec.Role_Name + "";
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+			%>
+<div class='zcs-page-container zcs-wh-full'>
+<div class='zcs-page-container-inner zcs-wh-full zcs-flex zcs-direction-column zcs-gap-20 zcs-p-20 zcs-box-border'>
+
+<!-- Header -->
+  <div class='zcs-card zcs-flex zcs-direction-column zcs-gap-12 zcs-p-20 zcs-box-border' style='border-left:4px solid var(--theme_brand_color);'>
+        <div class='zcs-flex zcs-align-items-center zcs-gap-12'>
+            <a href='#Page:<%=page_link_name%>?tab=action' class='zcs-td-back'>&larr;</a>
+            <span class='zcs-td-id'><%=tdRec.Action_ID%></span>
+            <span class='zcs-td-badge' style='background:<%=tdStatusBg%>;color:<%=tdStatusClr%>;'><span style='width:6px;height:6px;border-radius:50%;background:<%=tdStatusClr%>;'></span><%=tdStatus%></span>
+        </div>
+        <h4 class='zcs-font-20 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'><%=tdName%></h4>
+        <div class='zcs-flex zcs-gap-32' style='flex-wrap:wrap;'>
+<%
+			if(!tdOverdue.isEmpty())
+			{
+				tdOverdueClr = if(daysDiff > 0,"#e8453c","#131635");
+				%>
+<div class='zcs-td-meta'><span class='zcs-font-13 zcs-font-normal' style='color:<%=tdOverdueClr%>;'><%=tdOverdue%></span><span class='zcs-font-12 zcs-font-normal zcs-color-tertiary'><%=language.get("ops.detail.triggerEvent")%></span></div>
+<%
+			}
+			%>
+<div class='zcs-td-meta'><span class='zcs-font-13 zcs-font-normal zcs-color-primary'><%=tdCreated%></span><span class='zcs-font-12 zcs-font-normal zcs-color-tertiary'><%=language.get("ops.detail.created")%></span></div>
+            <div class='zcs-td-meta'><span class='zcs-td-severity' style='background:<%=tdPriBg%>;color:<%=tdPriClr%>;'><%=tdPriority%></span><span class='zcs-font-12 zcs-font-normal zcs-color-tertiary'><%=language.get("ops.detail.severity")%></span></div>
+        </div>
+    </div>
+
+<!-- Escalation Chain + Quick Actions -->
+    <div class='zcs-row zcs-gap-20' style='align-items:stretch;'>
+        <div class='zcs-col-6 zcs-col-xs-12'>
+            <div class='zcs-card zcs-flex zcs-direction-column zcs-gap-20 zcs-p-20 zcs-box-border' style='height:100%;'>
+                <h6 class='zcs-font-16 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'><%=language.get("ops.detail.escalationChain")%></h6>
+<%
+			if(escChainList.size() == 0)
+			{
+				%>
+<%=thisapp.Page.noData()%>
+<%
+			}
+			else
+			{
+				%>
+<div class='zcs-flex zcs-direction-column zcs-gap-0' style='position:relative;'>
+<%
+				ecIdx = 0;
+				for each  ecRow in escChainList
+				{
+					ecSt = ecRow.get("status") + "";
+					ecCardCls = if(ecSt == "current","zcs-td-chain-current",if(ecSt == "done","zcs-td-chain-done","zcs-td-chain-pending"));
+					ecIconBorder = if(ecSt == "current","border-color:#e8453c;color:#e8453c;",if(ecSt == "done","border-color:#179E6C;color:#179E6C;","border-color:#e2e5ec;color:#8a9ab5;"));
+					ecLabel = ecRow.get("levelName") + ": " + ecRow.get("roleName");
+					if(ecSt == "current")
+					{
+						ecLabel = ecRow.get("levelName") + ": " + ecRow.get("roleName") + " (CURRENT)";
+					}
+					ecDesc = ecRow.get("memberName") + " - " + ecRow.get("committee") + " " + ecRow.get("roleName");
+					if(ecSt == "pending" && ecRow.get("levelNum").toLong() > currentEscLevel)
+					{
+						ecDesc = ecRow.get("memberName") + " - Awaiting escalation";
+					}
+					%>
+<div class='zcs-flex zcs-gap-12 zcs-align-items-start' style='position:relative;padding-bottom:20px;'>
+<%
+					if(ecIdx < escChainList.size() - 1)
+					{
+						%>
+<div style='position:absolute;left:15px;top:32px;bottom:0;width:2px;background:#e2e5ec;'></div>
+<%
+					}
+					%>
+<span class='zcs-td-chain-icon' style='<%=ecIconBorder%>'>&#10003;</span>
+                        <div class='zcs-td-chain-card <%=ecCardCls%>'>
+                            <p class='zcs-font-14 zcs-font-medium zcs-color-primary zcs-m-0'><%=ecLabel%></p>
+                            <p class='zcs-font-13 zcs-font-normal zcs-color-tertiary zcs-m-0'><%=ecDesc%></p>
+                        </div>
+                    </div>
+<%
+					ecIdx = ecIdx + 1;
+				}
+				%>
+</div>
+<%
+			}
+			%>
+</div>
+        </div>
+
+       <div class='zcs-col-6 zcs-col-xs-12'>
+            <div class='zcs-card zcs-flex zcs-direction-column zcs-gap-16 zcs-p-20 zcs-box-border' style='height:100%;'>
+                <h6 class='zcs-font-16 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'><%=language.get("ops.detail.quickActions")%></h6>
+             <a href='#Page:Meeting_Stepper?action_field=Meeting_Details&Action_Tracker=<%=tdRec.ID%>' class='zcs-td-qa-btn zcs-td-qa-primary'>
+   <span class='zcs-td-qa-icon'>&#128197;</span>New Action Item / Schedule Meeting
+</a>
+                <div class='zcs-row zcs-gap-12'>
+<%
+			if(!nextEscRoleName.isEmpty() && nextEscRoleName != "null")
+			{
+				%>
+<div class='zcs-col-4 zcs-col-xs-12'><a href='#Page:<%=page_link_name%>?page_action=escalate_next&record_id=<%=tdRec.ID%>' class='zcs-td-qa-btn zcs-flex zcs-direction-column zcs-gap-6'><span class='zcs-td-qa-icon'>&#9993;</span><span>Escalate to <%=nextEscRoleName%></span></a></div>
+<%
+			}
+			%>
+<div class='zcs-col-4 zcs-col-xs-12'><a href='#Page:<%=page_link_name%>?page_action=resolve&record_id=<%=tdRec.ID%>' class='zcs-td-qa-btn zcs-flex zcs-direction-column zcs-gap-6'><span class='zcs-td-qa-icon'>&#10003;</span><span><%=language.get("ops.detail.resolve")%></span></a></div>
+                    <div class='zcs-col-4 zcs-col-xs-12'><a href='#Page:<%=page_link_name%>?page_action=revert&record_id=<%=tdRec.ID%>' class='zcs-td-qa-btn zcs-flex zcs-direction-column zcs-gap-6'><span class='zcs-td-qa-icon'>&#8634;</span><span><%=language.get("ops.detail.revert")%></span></a></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<!-- Trigger Item Context + Acknowledgement Logs -->
+    <div class='zcs-row zcs-gap-20' style='align-items:stretch;'>
+        <div class='zcs-col-6 zcs-col-xs-12'>
+            <div class='zcs-card zcs-flex zcs-direction-column zcs-gap-16 zcs-p-20 zcs-box-border' style='height:100%;'>
+                <h6 class='zcs-font-16 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'><%=language.get("ops.detail.triggerContext")%></h6>
+                <div class='zcs-flex zcs-direction-column zcs-gap-12'>
+                    <div class='zcs-td-ctx-item'><span class='zcs-font-12 zcs-font-normal zcs-color-tertiary'><%=language.get("ops.detail.actionItem")%></span><p class='zcs-font-14 zcs-font-medium zcs-color-primary zcs-m-0'><%=tdName%></p></div>
+                    <div class='zcs-td-ctx-item'><span class='zcs-font-12 zcs-font-normal zcs-color-tertiary'><%=language.get("ops.detail.description")%></span><p class='zcs-font-14 zcs-font-normal zcs-color-primary zcs-m-0'><%=tdDescription%></p></div>
+                    <div class='zcs-flex zcs-gap-32'>
+                        <div class='zcs-td-ctx-item' style='flex:1;'><span class='zcs-font-12 zcs-font-normal zcs-color-tertiary'><%=language.get("ops.detail.assignedTo")%></span><p class='zcs-font-14 zcs-font-medium zcs-color-primary zcs-m-0'><%=tdAssigneeDisplay%></p></div>
+                        <div class='zcs-td-ctx-item' style='flex:1;'><span class='zcs-font-12 zcs-font-normal zcs-color-tertiary'><%=language.get("ops.detail.dueDate")%></span><p class='zcs-font-14 zcs-font-medium zcs-color-primary zcs-m-0'><%=tdDueDate%>
+
+</p></div>
+                    </div>
+                    <div class='zcs-td-ctx-item'><span class='zcs-font-12 zcs-font-normal zcs-color-tertiary'><%=language.get("ops.detail.committee")%></span><p class='zcs-font-14 zcs-font-medium zcs-color-primary zcs-m-0'><%=tdCommittee%></p></div>
+                </div>
+            </div>
+        </div>
+
+        <div class='zcs-col-6 zcs-col-xs-12'>
+            <div class='zcs-card zcs-flex zcs-direction-column zcs-gap-16 zcs-p-20 zcs-box-border' style='height:100%;'>
+                <h6 class='zcs-font-16 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'><%=language.get("ops.detail.ackLogs")%></h6>
+<%
+			if(ackLogList.size() == 0)
+			{
+				%>
+<%=thisapp.Page.noData()%>
+<%
+			}
+			else
+			{
+				%>
+<div class='zcs-flex zcs-direction-column'>
+<%
+				for each  logR in ackLogList
+				{
+					logDisplay = logR.get("userName") + "";
+					if(logR.get("userRole") != "" && logR.get("userRole") != "null")
+					{
+						logDisplay = logR.get("userName") + " (" + logR.get("userRole") + ")";
+					}
+					logStText = logR.get("status") + "";
+					logTimeText = logR.get("escalatedAt") + "";
+					logStClr = logR.get("dotClr") + "";
+					isPending = logStText == "Pending";
+					%>
+<div class='zcs-td-log-item'>
+                            <span class='zcs-td-log-dot' style='background:<%=logStClr%>;'></span>
+                            <div class='zcs-flex zcs-direction-column zcs-gap-4' style='flex:1;'>
+                                <div class='zcs-flex zcs-align-items-center zcs-justify-space-between'>
+                                    <span class='zcs-font-14 zcs-font-medium zcs-color-primary'><%=logDisplay%></span>
+<%
+					if(isPending)
+					{
+						%>
+<span class='zcs-font-12 zcs-font-normal' style='color:#e8453c;'><%=language.get("ops.detail.pendingAck")%></span>
+<%
+					}
+					else
+					{
+						%>
+<span class='zcs-font-12 zcs-font-normal zcs-color-tertiary'><%=logTimeText%></span>
+<%
+					}
+					%>
+</div>
+                                <p class='zcs-font-13 zcs-font-normal zcs-color-tertiary zcs-m-0'><%=if(isPending,"Awaiting response...",logStText)%></p>
+                            </div>
+                        </div>
+<%
+				}
+				%>
+</div>
+<%
+			}
+			%>
+</div>
+        </div>
+    </div>
+
+</div>
+</div>
+<%
+		}
+		else
+		{
+			%>
+<div class='zcs-card zcs-flex zcs-align-items-center zcs-justify-center zcs-p-40'><p class='zcs-font-14 zcs-color-tertiary'><%=language.get("ops.detail.notFound")%></p></div>
+<%
+		}
+	}
+	else
+	{
+		if(input.tab == "action")
+		{
+			allActions = Action_Tracker[ID != 0];
+			for each  at in allActions
+			{
+				aName = "";
+				if(at.Assign_To != null)
+				{
+					aName = at.Assign_To.Name + "";
+					if(aName == "null")
+					{
+						aName = "";
+					}
+				}
+				if(!aName.isEmpty())
+				{
+					atStatus = if(at.Status != null,at.Status + "","");
+					isOverdue = at.Due_Date != null && at.Due_Date < todayDate && atStatus != "Completed";
+					if(assigneeMap.contains(aName))
+					{
+						existing = assigneeMap.get(aName);
+						existing.put("total",existing.get("total").toLong() + 1);
+						existing.put("completed",existing.get("completed").toLong() + if(atStatus == "Completed",1,0));
+						existing.put("active",existing.get("active").toLong() + if(atStatus == "Ongoing",1,0));
+						existing.put("overdue",existing.get("overdue").toLong() + if(isOverdue,1,0));
+						assigneeMap.put(aName,existing);
+					}
+					else
+					{
+						ne = Map();
+						ne.put("total",1);
+						ne.put("completed",if(atStatus == "Completed",1,0));
+						ne.put("active",if(atStatus == "Ongoing",1,0));
+						ne.put("overdue",if(isOverdue,1,0));
+						assigneeMap.put(aName,ne);
+					}
+				}
+			}
+			assigneeNames = assigneeMap.keys();
+			for each  aKey in assigneeNames
+			{
+				aData = assigneeMap.get(aKey);
+				if(aData.get("active").toLong() > maxActive)
+				{
+					maxActive = aData.get("active").toLong();
+				}
+			}
+		}
+		/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+	   ESCALATION TAB DATA
+	\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
+		totalEsc = 0;
+		criticalEsc = 0;
+		inProgEsc = 0;
+		resolvedEsc = 0;
+		committeeMap = Map();
+		monthData = Map();
+		if(input.tab == "escalation")
+		{
+			totalEsc = Action_Tracker[Due_Date < todayDate].count();
+			criticalEsc = Action_Tracker[Due_Date < todayDate && Priority == "Critical"].count();
+			inProgEsc = Action_Tracker[Due_Date < todayDate && Status == "Ongoing"].count();
+			resolvedEsc = Action_Tracker[Due_Date < todayDate && Status == "Completed"].count();
+			if(totalEsc > 0)
+			{
+				escAll = Action_Tracker[Due_Date < todayDate];
+				for each  er in escAll
+				{
+					cName = "Others";
+					if(er.Meeting != null)
+					{
+						mtgList = Meeting[ID == er.Meeting];
+						for each  m in mtgList
+						{
+							if(m.Committee1 != null)
+							{
+								committeeNameStr = m.Committee1.Committee_Name;
+								if(committeeNameStr != null)
+								{
+									cn = committeeNameStr + "";
+									if(cn != "null" && !cn.isEmpty())
+									{
+										cName = cn;
+									}
+								}
+							}
+							break;
+						}
+					}
+					if(committeeMap.contains(cName))
+					{
+						committeeMap.put(cName,committeeMap.get(cName).toLong() + 1);
+					}
+					else
+					{
+						committeeMap.put(cName,1);
+					}
+				}
+			}
+			sixMonthsAgo = todayDate.subMonth(6);
+			escTrend = Action_Tracker[Due_Date >= sixMonthsAgo && Due_Date <= todayDate];
+			for each  et in escTrend
+			{
+				if(et.Due_Date != null)
+				{
+					mKey = et.Due_Date.toString("yyyyMM");
+					pVal = "Low";
+					if(et.Priority != null)
+					{
+						priorityStr = et.Priority + "";
+						if(priorityStr != "null" && !priorityStr.isEmpty())
+						{
+							pVal = priorityStr;
+						}
+					}
+					fKey = mKey + "_" + pVal;
+					if(monthData.contains(fKey))
+					{
+						monthData.put(fKey,monthData.get(fKey).toLong() + 1);
+					}
+					else
+					{
+						monthData.put(fKey,1);
+					}
+				}
+			}
+			sortedCommitteeKeys = List();
+			hasOthers = false;
+			allCKeys = committeeMap.keys();
+			for each  ck in allCKeys
+			{
+				if(ck == "Others")
+				{
+					hasOthers = true;
+				}
+				else
+				{
+					sortedCommitteeKeys.add(ck);
+				}
+			}
+			if(hasOthers)
+			{
+				sortedCommitteeKeys.add("Others");
+			}
+			d5 = todayDate.subMonth(5);
+			d4 = todayDate.subMonth(4);
+			d3 = todayDate.subMonth(3);
+			d2 = todayDate.subMonth(2);
+			d1 = todayDate.subMonth(1);
+			d0 = todayDate;
+			k5 = d5.toString("yyyyMM");
+			k4 = d4.toString("yyyyMM");
+			k3 = d3.toString("yyyyMM");
+			k2 = d2.toString("yyyyMM");
+			k1 = d1.toString("yyyyMM");
+			k0 = d0.toString("yyyyMM");
+			lbl5 = d5.toString("MMM");
+			lbl4 = d4.toString("MMM");
+			lbl3 = d3.toString("MMM");
+			lbl2 = d2.toString("MMM");
+			lbl1 = d1.toString("MMM");
+			lbl0 = d0.toString("MMM");
+			cc5 = if(monthData.contains(k5 + "_Critical"),monthData.get(k5 + "_Critical"),0);
+			cc4 = if(monthData.contains(k4 + "_Critical"),monthData.get(k4 + "_Critical"),0);
+			cc3 = if(monthData.contains(k3 + "_Critical"),monthData.get(k3 + "_Critical"),0);
+			cc2 = if(monthData.contains(k2 + "_Critical"),monthData.get(k2 + "_Critical"),0);
+			cc1 = if(monthData.contains(k1 + "_Critical"),monthData.get(k1 + "_Critical"),0);
+			cc0 = if(monthData.contains(k0 + "_Critical"),monthData.get(k0 + "_Critical"),0);
+			hc5 = if(monthData.contains(k5 + "_High"),monthData.get(k5 + "_High"),0);
+			hc4 = if(monthData.contains(k4 + "_High"),monthData.get(k4 + "_High"),0);
+			hc3 = if(monthData.contains(k3 + "_High"),monthData.get(k3 + "_High"),0);
+			hc2 = if(monthData.contains(k2 + "_High"),monthData.get(k2 + "_High"),0);
+			hc1 = if(monthData.contains(k1 + "_High"),monthData.get(k1 + "_High"),0);
+			hc0 = if(monthData.contains(k0 + "_High"),monthData.get(k0 + "_High"),0);
+			mc5 = if(monthData.contains(k5 + "_Medium"),monthData.get(k5 + "_Medium"),0);
+			mc4 = if(monthData.contains(k4 + "_Medium"),monthData.get(k4 + "_Medium"),0);
+			mc3 = if(monthData.contains(k3 + "_Medium"),monthData.get(k3 + "_Medium"),0);
+			mc2 = if(monthData.contains(k2 + "_Medium"),monthData.get(k2 + "_Medium"),0);
+			mc1 = if(monthData.contains(k1 + "_Medium"),monthData.get(k1 + "_Medium"),0);
+			mc0 = if(monthData.contains(k0 + "_Medium"),monthData.get(k0 + "_Medium"),0);
+			lc5 = if(monthData.contains(k5 + "_Low"),monthData.get(k5 + "_Low"),0);
+			lc4 = if(monthData.contains(k4 + "_Low"),monthData.get(k4 + "_Low"),0);
+			lc3 = if(monthData.contains(k3 + "_Low"),monthData.get(k3 + "_Low"),0);
+			lc2 = if(monthData.contains(k2 + "_Low"),monthData.get(k2 + "_Low"),0);
+			lc1 = if(monthData.contains(k1 + "_Low"),monthData.get(k1 + "_Low"),0);
+			lc0 = if(monthData.contains(k0 + "_Low"),monthData.get(k0 + "_Low"),0);
+			maxVal = 1;
+			allNums = List();
+			allNums.add(cc5.toLong());
+			allNums.add(cc4.toLong());
+			allNums.add(cc3.toLong());
+			allNums.add(cc2.toLong());
+			allNums.add(cc1.toLong());
+			allNums.add(cc0.toLong());
+			allNums.add(hc5.toLong());
+			allNums.add(hc4.toLong());
+			allNums.add(hc3.toLong());
+			allNums.add(hc2.toLong());
+			allNums.add(hc1.toLong());
+			allNums.add(hc0.toLong());
+			allNums.add(mc5.toLong());
+			allNums.add(mc4.toLong());
+			allNums.add(mc3.toLong());
+			allNums.add(mc2.toLong());
+			allNums.add(mc1.toLong());
+			allNums.add(mc0.toLong());
+			allNums.add(lc5.toLong());
+			allNums.add(lc4.toLong());
+			allNums.add(lc3.toLong());
+			allNums.add(lc2.toLong());
+			allNums.add(lc1.toLong());
+			allNums.add(lc0.toLong());
+			for each  nv in allNums
+			{
+				if(nv > maxVal)
+				{
+					maxVal = nv;
+				}
+			}
+			maxVal = ((maxVal + 4) / 5 * 5).toLong();
+			if(maxVal < 5)
+			{
+				maxVal = 5;
+			}
+			svgCH = 164;
+			svgBotY = 184;
+			svgX0 = 44;
+			svgX1 = 140;
+			svgX2 = 236;
+			svgX3 = 332;
+			svgX4 = 428;
+			svgX5 = 524;
+			cp01 = 92;
+			cp12 = 188;
+			cp23 = 284;
+			cp34 = 380;
+			cp45 = 476;
+			cY0 = svgBotY - (cc5.toLong() * svgCH) / maxVal;
+			cY1 = svgBotY - (cc4.toLong() * svgCH) / maxVal;
+			cY2 = svgBotY - (cc3.toLong() * svgCH) / maxVal;
+			cY3 = svgBotY - (cc2.toLong() * svgCH) / maxVal;
+			cY4 = svgBotY - (cc1.toLong() * svgCH) / maxVal;
+			cY5 = svgBotY - (cc0.toLong() * svgCH) / maxVal;
+			hY0 = svgBotY - (hc5.toLong() * svgCH) / maxVal;
+			hY1 = svgBotY - (hc4.toLong() * svgCH) / maxVal;
+			hY2 = svgBotY - (hc3.toLong() * svgCH) / maxVal;
+			hY3 = svgBotY - (hc2.toLong() * svgCH) / maxVal;
+			hY4 = svgBotY - (hc1.toLong() * svgCH) / maxVal;
+			hY5 = svgBotY - (hc0.toLong() * svgCH) / maxVal;
+			mY0 = svgBotY - (mc5.toLong() * svgCH) / maxVal;
+			mY1 = svgBotY - (mc4.toLong() * svgCH) / maxVal;
+			mY2 = svgBotY - (mc3.toLong() * svgCH) / maxVal;
+			mY3 = svgBotY - (mc2.toLong() * svgCH) / maxVal;
+			mY4 = svgBotY - (mc1.toLong() * svgCH) / maxVal;
+			mY5 = svgBotY - (mc0.toLong() * svgCH) / maxVal;
+			lY0 = svgBotY - (lc5.toLong() * svgCH) / maxVal;
+			lY1 = svgBotY - (lc4.toLong() * svgCH) / maxVal;
+			lY2 = svgBotY - (lc3.toLong() * svgCH) / maxVal;
+			lY3 = svgBotY - (lc2.toLong() * svgCH) / maxVal;
+			lY4 = svgBotY - (lc1.toLong() * svgCH) / maxVal;
+			lY5 = svgBotY - (lc0.toLong() * svgCH) / maxVal;
+			gY0 = svgBotY;
+			gY1 = svgBotY - svgCH / 4;
+			gY2 = svgBotY - svgCH / 2;
+			gY3 = svgBotY - (svgCH * 3) / 4;
+			gY4 = svgBotY - svgCH;
+			gV1 = (maxVal / 4).toLong();
+			gV2 = (maxVal / 2).toLong();
+			gV3 = ((maxVal * 3) / 4).toLong();
+			gV4 = maxVal;
+		}
+		/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+	   PERFORMANCE SUB-TABS
+	\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
+		perf_tab_map = Map();
+		perf_tab_keys = List();
+		if(input.tab == "performance")
+		{
+			perf_tab_map = thisapp.Page.Get_Tabs("performance_Detail");
+			perf_tab_keys = perf_tab_map.keys();
+			input.perf_tab = if(input.perf_tab != "" && input.perf_tab != "null" && input.perf_tab != null,input.perf_tab,perf_tab_keys.get(0));
+		}
+		/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+	   COMMITTEE + OVERVIEW SHARED DATA
+	   (single fetch block, no duplicates)
+	\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
+		totalCommittees = 0;
+		globalAvgAtt = 0;
+		globalAvgCompletion = 0;
+		metingcomplete = 0;
+		meetingsHeld = 0;
+		committeeTableList = List();
+		totalMembersGlobal = 0;
+		indepMembersGlobal = 0;
+		femaleMembersGlobal = 0;
+		indepRatioGlobal = 0;
+		femaleRatioGlobal = 0;
+		actualCompAvg = 0;
+		sumGovAtt = 0;
+		sumGovQuorum = 0;
+		sumGovAction = 0;
+		sumGovMom = 0;
+		cmCount = 0;
+		if(input.tab == "performance")
+		{
+			totalCommittees = Committee[ID != 0].count();
+			sumAttG = 0;
+			cntAttG = 0;
+			attMtgList = Meeting[Avergage_Attenance != null];
+			for each  ma in attMtgList
+			{
+				sumAttG = sumAttG + ma.Avergage_Attenance.toLong();
+				cntAttG = cntAttG + 1;
+			}
+			globalAvgAtt = if(cntAttG > 0,(sumAttG / cntAttG).toLong(),0);
+			totalATG = Action_Tracker[ID != 0].count();
+			completedATG = Action_Tracker[Status == "Completed"].count();
+			globalAvgCompletion = if(totalATG > 0,((completedATG * 100) / totalATG).toLong(),0);
+			metingcomplete = Meeting[Status == "Completed"].count();
+			meetingsHeld = Meeting[Quorum_Status == "Met"].count();
+			avatarBgs = List();
+			avatarBgs.add("#FDE3E6");
+			avatarBgs.add("#EAF2FF");
+			avatarBgs.add("#fdf5f3");
+			avatarBgs.add("#E4FCF3");
+			avatarBgs.add("#f6f6fb");
+			avatarClrs = List();
+			avatarClrs.add("#FE455D");
+			avatarClrs.add("#1652BB");
+			avatarClrs.add("#ff8b11");
+			avatarClrs.add("#179E6C");
+			avatarClrs.add("#5c66ff");
+			allCommittees = Committee[ID != 0];
+			rowIdx = 0;
+			for each  cmRec in allCommittees
+			{
+				cmRow = Map();
+				cmNameRaw = cmRec.Committee_Name + "";
+				if(cmNameRaw == "null" || cmNameRaw.isEmpty())
+				{
+					cmRow.put("name","-");
+				}
+				else
+				{
+					cmRow.put("name",cmNameRaw);
+				}
+				chairStr = "-";
+				if(cmRec.Chair_Person != null)
+				{
+					chairRaw = cmRec.Chair_Person.Name + "";
+					if(chairRaw != "null" && !chairRaw.isEmpty())
+					{
+						chairStr = chairRaw;
+					}
+				}
+				cmRow.put("chair",chairStr);
+				initChar = "?";
+				if(chairStr != "-" && chairStr.length() > 0)
+				{
+					initChar = chairStr.subString(0,1);
+				}
+				cmRow.put("initial",initChar);
+				colorIdx = (rowIdx - (rowIdx / 5).toLong() * 5).toLong();
+				cmRow.put("avatarBg",avatarBgs.get(colorIdx));
+				cmRow.put("avatarClr",avatarClrs.get(colorIdx));
+				memberCnt = Committee_Members[Committee == cmRec.ID].count();
+				cmRow.put("members",memberCnt);
+				totalMtgCnt = Meeting[Committee1 == cmRec.ID].count();
+				attendedMtgCnt = Meeting[Committee1 == cmRec.ID && Status != "Absent"].count();
+				cmRow.put("meetings",attendedMtgCnt + "/" + totalMtgCnt);
+				sumCmAtt = 0;
+				cntCmAtt = 0;
+				cmMtgList = Meeting[Committee1 == cmRec.ID && Avergage_Attenance != null];
+				for each  cmMtg in cmMtgList
+				{
+					sumCmAtt = sumCmAtt + cmMtg.Avergage_Attenance.toLong();
+					cntCmAtt = cntCmAtt + 1;
+				}
+				cmAttPct = 0;
+				if(cntCmAtt > 0)
+				{
+					cmAttPct = (sumCmAtt / cntCmAtt).toLong();
+				}
+				cmRow.put("attendance",cmAttPct);
+				attClr = "#e8453c";
+				if(cmAttPct >= 90)
+				{
+					attClr = "#179E6C";
+				}
+				else if(cmAttPct >= 75)
+				{
+					attClr = "#f59e0b";
+				}
+				cmRow.put("attBarClr",attClr);
+				/* Meeting loop: action tracker + compliance checks */
+				cmMtgIDs = Meeting[Committee1 == cmRec.ID];
+				totalCmAT = 0;
+				compCmAT = 0;
+				compMtgCount = 0;
+				quorumAchievedCnt = 0;
+				agendaOnTimeCnt = 0;
+				momOnTimeCnt = 0;
+				indepAttendedCnt = 0;
+				for each  cmMtgRec in cmMtgIDs
+				{
+					totalCmAT = totalCmAT + Action_Tracker[Meeting == cmMtgRec.ID].count();
+					compCmAT = compCmAT + Action_Tracker[Meeting == cmMtgRec.ID && Status == "Completed"].count();
+					compMtgCount = compMtgCount + 1;
+					qsCheck = cmMtgRec.Quorum_Status + "";
+					if(qsCheck == "Met")
+					{
+						quorumAchievedCnt = quorumAchievedCnt + 1;
+					}
+					agendaRecs = Agenda_Item[Meeting == cmMtgRec.ID];
+					for each  agRec in agendaRecs
+					{
+						if(agRec.Added_Time != null && cmMtgRec.Added_Time != null)
+						{
+							agDay = agRec.Added_Time.toString("yyyyMMdd");
+							mtgCreateDay = cmMtgRec.Added_Time.toString("yyyyMMdd");
+							if(agDay == mtgCreateDay)
+							{
+								agendaOnTimeCnt = agendaOnTimeCnt + 1;
+							}
+						}
+						break;
+					}
+					momRecs = MOM[Meeting == cmMtgRec.ID];
+					for each  momRec in momRecs
+					{
+						if(momRec.Added_Time != null && cmMtgRec.Start_Date_Time != null)
+						{
+							momDay = momRec.Added_Time.toString("yyyyMMdd");
+							mtgHeldDay = cmMtgRec.Start_Date_Time.toString("yyyyMMdd");
+							if(momDay == mtgHeldDay)
+							{
+								momOnTimeCnt = momOnTimeCnt + 1;
+							}
+						}
+						break;
+					}
+					hasIndep = false;
+					for each  attRow in cmMtgRec.Meeting_Attendance
+					{
+						if(attRow.Status == "Present" && attRow.Member != null && !hasIndep)
+						{
+							indMemberRec = User[ID == attRow.Member];
+							if(indMemberRec != null)
+							{
+								indMemType = indMemberRec.Member_Type + "";
+								if(indMemType == "Independent")
+								{
+									hasIndep = true;
+								}
+							}
+						}
+					}
+					if(hasIndep)
+					{
+						indepAttendedCnt = indepAttendedCnt + 1;
+					}
+				}
+				/* Compliance */
+				quorumPctC = if(compMtgCount > 0,((quorumAchievedCnt * 100) / compMtgCount).toLong(),0);
+				agendaPctC = if(compMtgCount > 0,((agendaOnTimeCnt * 100) / compMtgCount).toLong(),0);
+				momPctC = if(compMtgCount > 0,((momOnTimeCnt * 100) / compMtgCount).toLong(),0);
+				indepPctC = if(compMtgCount > 0,((indepAttendedCnt * 100) / compMtgCount).toLong(),0);
+				cmCompliancePct = ((quorumPctC + agendaPctC + momPctC + indepPctC) / 4).toLong();
+				cmRow.put("compliance",cmCompliancePct);
+				compBarClr = "#e8453c";
+				if(cmCompliancePct >= 90)
+				{
+					compBarClr = "#179E6C";
+				}
+				else if(cmCompliancePct >= 75)
+				{
+					compBarClr = "#f59e0b";
+				}
+				cmRow.put("compBarClr",compBarClr);
+				/* Completion */
+				cmCmpPct = 0;
+				if(totalCmAT > 0)
+				{
+					cmCmpPct = ((compCmAT * 100) / totalCmAT).toLong();
+				}
+				cmRow.put("completion",cmCmpPct);
+				cmpClr = "#e8453c";
+				if(cmCmpPct >= 90)
+				{
+					cmpClr = "#179E6C";
+				}
+				else if(cmCmpPct >= 75)
+				{
+					cmpClr = "#f59e0b";
+				}
+				cmRow.put("cmpBarClr",cmpClr);
+				/* Effectiveness = avg(attendance, quorum, action closure, MOM on time) */
+				cmEffScore = ((cmAttPct + quorumPctC + cmCmpPct + momPctC) / 4).toLong();
+				cmRow.put("effectiveness",cmEffScore);
+				effBarClr = avatarClrs.get(colorIdx);
+				cmRow.put("effBarClr",effBarClr);
+				/* Accumulate for governance health donut */
+				sumGovAtt = sumGovAtt + cmAttPct;
+				sumGovQuorum = sumGovQuorum + quorumPctC;
+				sumGovAction = sumGovAction + cmCmpPct;
+				sumGovMom = sumGovMom + momPctC;
+				cmCount = cmCount + 1;
+				/* Status */
+				cmStatus = "Critical";
+				cmStatusBg = "#FDE3E6";
+				cmStatusClr = "#FE455D";
+				if(cmAttPct > 90)
+				{
+					cmStatus = "Excellent";
+					cmStatusBg = "#e4fcf3";
+					cmStatusClr = "#179E6C";
+				}
+				else if(cmAttPct >= 75)
+				{
+					cmStatus = "Good";
+					cmStatusBg = "#e4fcf3";
+					cmStatusClr = "#179E6C";
+				}
+				else if(cmAttPct >= 50)
+				{
+					cmStatus = "Needs Attention";
+					cmStatusBg = "#FCF4E6";
+					cmStatusClr = "#B8770D";
+				}
+				cmRow.put("status",cmStatus);
+				cmRow.put("statusBg",cmStatusBg);
+				cmRow.put("statusClr",cmStatusClr);
+				committeeTableList.add(cmRow);
+				rowIdx = rowIdx + 1;
+			}
+			/* Global member stats */
+			allMembers = Committee_Members[ID != 0];
+			totalMembersGlobal = allMembers.count();
+			for each  mbr in allMembers
+			{
+				if(mbr.Role != null)
+				{
+					mTypeStr = mbr.Role + "";
+					if(mTypeStr == "Independent")
+					{
+						indepMembersGlobal = indepMembersGlobal + 1;
+					}
+				}
+				if(mbr.Member != null)
+				{
+					genderStr = mbr.Member.Gender + "";
+					if(genderStr == "Female")
+					{
+						femaleMembersGlobal = femaleMembersGlobal + 1;
+					}
+				}
+			}
+			indepRatioGlobal = if(totalMembersGlobal > 0,((indepMembersGlobal * 100) / totalMembersGlobal).toLong(),0);
+			femaleRatioGlobal = if(totalMembersGlobal > 0,((femaleMembersGlobal * 100) / totalMembersGlobal).toLong(),0);
+			actualCompAvg = if(totalCommittees > 0,(totalMembersGlobal / totalCommittees).toLong(),0);
+		}
+		/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\uFFFD\uFFFD\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+	   OVERVIEW-SPECIFIC CALCULATIONS
+	   (governance health + quarterly chart)
+	\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
+		govAttPct = 0;
+		govQuorumPct = 0;
+		govActionPct = 0;
+		govMomPct = 0;
+		govOverall = 0;
+		govDash = 0;
+		q1Pct = 0;
+		q2Pct = 0;
+		q3Pct = 0;
+		q4Pct = 0;
+		q1H = 0;
+		q2H = 0;
+		q3H = 0;
+		q4H = 0;
+		maxBarH = 160;
+		selectedYear = zoho.currentdate.toString("yyyy");
+		yearKeys = List();
+		if(input.tab == "performance" && input.perf_tab == "overview")
+		{
+			/* Read year parameter safely */
+			selectedYear = zoho.currentdate.toString("yyyy");
+			try 
+			{
+				ovYr = input.overview_year + "";
+				if(ovYr != "" && ovYr != "null" && ovYr != null)
+				{
+					selectedYear = ovYr;
+				}
+			}			catch (e)
+			{
+				selectedYear = zoho.currentdate.toString("yyyy");
+			}
+			/* Build year list from actual data */
+			yearSet = Map();
+			allATForYears = Action_Tracker[Due_Date != null];
+			for each  aty in allATForYears
+			{
+				yrKey = aty.Due_Date.toString("yyyy");
+				if(!yearSet.contains(yrKey))
+				{
+					yearSet.put(yrKey,yrKey);
+				}
+			}
+			yearKeys = yearSet.keys();
+			yearKeys.sort(true);
+			/* Governance health = average across all committees */
+			govAttPct = if(cmCount > 0,(sumGovAtt / cmCount).toLong(),0);
+			govQuorumPct = if(cmCount > 0,(sumGovQuorum / cmCount).toLong(),0);
+			govActionPct = if(cmCount > 0,(sumGovAction / cmCount).toLong(),0);
+			govMomPct = if(cmCount > 0,(sumGovMom / cmCount).toLong(),0);
+			govOverall = ((govAttPct + govQuorumPct + govActionPct + govMomPct) / 4).toLong();
+			govDash = ((govOverall * 440) / 100).toLong();
+			/* Quarterly filter by selectedYear using string compare */
+			q1Total = 0;
+			q1Comp = 0;
+			q2Total = 0;
+			q2Comp = 0;
+			q3Total = 0;
+			q3Comp = 0;
+			q4Total = 0;
+			q4Comp = 0;
+			allATQuarter = Action_Tracker[Due_Date != null];
+			for each  atq in allATQuarter
+			{
+				if(atq.Due_Date != null)
+				{
+					atqYearStr = atq.Due_Date.toString("yyyy");
+					if(atqYearStr != selectedYear)
+					{
+						continue;
+					}
+					mNum = atq.Due_Date.toString("MM").toLong();
+					atqStatus = if(atq.Status != null,atq.Status + "","");
+					isComp = atqStatus == "Completed";
+					if(mNum >= 1 && mNum <= 3)
+					{
+						q1Total = q1Total + 1;
+						q1Comp = q1Comp + if(isComp,1,0);
+					}
+					else if(mNum >= 4 && mNum <= 6)
+					{
+						q2Total = q2Total + 1;
+						q2Comp = q2Comp + if(isComp,1,0);
+					}
+					else if(mNum >= 7 && mNum <= 9)
+					{
+						q3Total = q3Total + 1;
+						q3Comp = q3Comp + if(isComp,1,0);
+					}
+					else
+					{
+						q4Total = q4Total + 1;
+						q4Comp = q4Comp + if(isComp,1,0);
+					}
+				}
+			}
+			q1Pct = if(q1Total > 0,((q1Comp * 100) / q1Total).toLong(),0);
+			q2Pct = if(q2Total > 0,((q2Comp * 100) / q2Total).toLong(),0);
+			q3Pct = if(q3Total > 0,((q3Comp * 100) / q3Total).toLong(),0);
+			q4Pct = if(q4Total > 0,((q4Comp * 100) / q4Total).toLong(),0);
+			q1H = (q1Pct * maxBarH) / 100;
+			q2H = (q2Pct * maxBarH) / 100;
+			q3H = (q3Pct * maxBarH) / 100;
+			q4H = (q4Pct * maxBarH) / 100;
+		}
+		%>
+<div class='zcs-page-container zcs-wh-full'>
+<div class='zcs-page-container-inner zcs-wh-full zcs-flex zcs-direction-column'>
+
+    <div class='zcs-page-header zcs-flex zcs-direction-column zcs-gap-4 zcs-pt-20 zcs-px-20 zcs-box-border'>
+        <h5 class='zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'><%=language.get("ops.title")%></h5>
+        <p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'><%=language.get("ops.subtitle")%></p>
+    </div>
+
+    <div class='zcs-horizontal-tabpanel zcs-flex zcs-direction-column zcs-wh-full'>
+        <ul class='zcs-horizontal-tabhead zcs-flex zcs-gap-12 zcs-px-10 zcs-py-0 zcs-m-0 zcs-box-border'>
+<%
+		for each  tab_id in tab_keys
+		{
+			cls = if(input.tab == tab_id,"zcs-horizontal-tabitem zcs-horizontal-tabactive","zcs-horizontal-tabitem");
+			%>
+<li class='<%=cls%>'>
+                <a class='zcs-horizontal-tablink zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-10 zcs-py-12 zcs-box-border zcs-font-medium zcs-lh-body zcs-color-secondary'
+                   href='#Page:<%=page_link_name%>?tab=<%=tab_id%>'>
+                    <span class='zcs-horizontal-tab-text'><%=tab_map.get(tab_id).get("Display")%></span>
+                </a>
+            </li>
+<%
+		}
+		%>
+</ul>
+
+        <div class='zcs-horizontal-tabbody zcs-col-common zcs-flex zcs-direction-column zcs-gap-20 zcs-p-20 zcs-box-border'>
+<%
+		/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+	   ACTION TAB HTML
+	\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
+		if(input.tab == "action")
+		{
+			%>
+<div class='zcs-panel-wrapper zcs-lg-panel-wrapper'>
+                <ul class='zcs-row zcs-justify-space-between zcs-gap-20 zcs-list-none zcs-p-0 zcs-m-0'>
+                    <li class='zcs-col-2 zcs-col-sm-6 zcs-col-xs-12 zcs-relative zcs-cursor-pointer'><div class='zcs-panel zcs-wh-full zcs-flex zcs-justify-space-between zcs-gap-16 zcs-rounded-lg zcs-p-16 zcs-box-border'><div class='zcs-flex zcs-direction-column zcs-gap-4'><p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'><%=language.get("ops.stat.totalActions")%></p><h4 class='zcs-font-20 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'><%=totalActions%></h4></div><div class='zcs-panel-icon-wrapper zcs-flex zcs-align-items-end zcs-justify-center zcs-no-shrink zcs-rounded-lg'><i class='zcs-panel-icon zcs-font-24 zc-li-outline files-archive'></i></div></div></li>
+                    <li class='zcs-col-2 zcs-col-sm-6 zcs-col-xs-12 zcs-relative zcs-cursor-pointer'><div class='zcs-panel zcs-wh-full zcs-flex zcs-justify-space-between zcs-gap-16 zcs-rounded-lg zcs-p-16 zcs-box-border'><div class='zcs-flex zcs-direction-column zcs-gap-4'><p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'><%=language.get("ops.stat.openActions")%></p><h4 class='zcs-font-20 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'><%=openActions%></h4></div><div class='zcs-panel-icon-wrapper zcs-flex zcs-align-items-end zcs-justify-center zcs-no-shrink zcs-rounded-lg'><i class='zcs-panel-icon zcs-font-24 zc-li-outline business-briefcase-24'></i></div></div></li>
+                    <li class='zcs-col-2 zcs-col-sm-6 zcs-col-xs-12 zcs-relative zcs-cursor-pointer'><div class='zcs-panel zcs-wh-full zcs-flex zcs-justify-space-between zcs-gap-16 zcs-rounded-lg zcs-p-16 zcs-box-border'><div class='zcs-flex zcs-direction-column zcs-gap-4'><p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'><%=language.get("ops.stat.overdue")%></p><h4 class='zcs-font-20 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'><%=overdueActions%></h4></div><div class='zcs-panel-icon-wrapper zcs-flex zcs-align-items-end zcs-justify-center zcs-no-shrink zcs-rounded-lg'><i class='zcs-panel-icon zcs-font-24 zc-li-outline location-position-pin'></i></div></div></li>
+                    <li class='zcs-col-2 zcs-col-sm-6 zcs-col-xs-12 zcs-relative zcs-cursor-pointer'><div class='zcs-panel zcs-wh-full zcs-flex zcs-justify-space-between zcs-gap-16 zcs-rounded-lg zcs-p-16 zcs-box-border'><div class='zcs-flex zcs-direction-column zcs-gap-4'><p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'><%=language.get("ops.stat.inProgress")%></p><h4 class='zcs-font-20 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'><%=inProgress%></h4></div><div class='zcs-panel-icon-wrapper zcs-flex zcs-align-items-end zcs-justify-center zcs-no-shrink zcs-rounded-lg'><i class='zcs-panel-icon zcs-font-24 zc-li-outline business-briefcase-24'></i></div></div></li>
+                    <li class='zcs-col-2 zcs-col-sm-6 zcs-col-xs-12 zcs-relative zcs-cursor-pointer'><div class='zcs-panel zcs-wh-full zcs-flex zcs-justify-space-between zcs-gap-16 zcs-rounded-lg zcs-p-16 zcs-box-border'><div class='zcs-flex zcs-direction-column zcs-gap-4'><p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'><%=language.get("ops.stat.completed")%></p><h4 class='zcs-font-20 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'><%=completed%></h4></div><div class='zcs-panel-icon-wrapper zcs-flex zcs-align-items-end zcs-justify-center zcs-no-shrink zcs-rounded-lg'><i class='zcs-panel-icon zcs-font-24 zc-li-outline files-archive'></i></div></div></li>
+                </ul>
+            </div>
+            <div class='zcs-report-card zcs-card zcs-flex zcs-direction-column'>
+                <h6 class='zcs-report-header zcs-font-16 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0 zcs-pt-20 zcs-px-20 zcs-box-border'><%=language.get("ops.stat.allActionItems")%></h6>
+              <div class='zcs-filter' elName='zc-component' formLinkName='Filter_Form' params='zc_Header=false&zc_Footer=false&zc_Focus=false&Page=<%=page_link_name%>&Action_Priority=<%=input.Action_Priority%>&Action_Status=<%=input.Action_Status%>&Search_Key=<%=input.Search_Key%>'></div>
+<div class='zcs-report zcs-col-common' name='embedDiv' elName='zc-component' viewLinkName='Operations_Action_Tracker' params='zc_Header=false&zc_Footer=false&zc_ColMenu=false&zc_AddRec=false'></div>
+            </div>
+<div class='zcs-card zcs-flex zcs-direction-column zcs-box-border'>
+    <h6 class='zcs-font-16 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0 zcs-px-20 zcs-pt-16 zcs-pb-0 zcs-box-border'><%=language.get("ops.action.assigneeWorkload")%></h6>
+<%
+			assigneeNames = assigneeMap.keys();
+			/* ============ Pagination ============ */
+			awRecordsPerPage = 5;
+			awTotalCount = assigneeNames.size();
+			awStartIndex = 1;
+			if(!input.aw_start.isEmpty())
+			{
+				awStartIndex = input.aw_start.toLong();
+			}
+			awDiff = awTotalCount - awStartIndex;
+			awEndIndex = if(awStartIndex + awRecordsPerPage - 1 > awTotalCount,awStartIndex + awDiff,awStartIndex + awRecordsPerPage - 1);
+			awPrevAction = if(awStartIndex == 1,"disable","");
+			awNextAction = if(awEndIndex >= awTotalCount,"disable","");
+			awPageLink = "#Page:Operational_Page?zc_Header=false";
+			awPrevLink = if(awStartIndex > 1,"href='" + awPageLink + "&aw_start=" + (awStartIndex - awRecordsPerPage) + "'","");
+			awNextLink = if(awEndIndex < awTotalCount,"href='" + awPageLink + "&aw_start=" + (awEndIndex + 1) + "'","");
+			if(awTotalCount == 0)
+			{
+				%>
+<%=thisapp.Page.noData()%>
+<%
+			}
+			else
+			{
+				%>
+<div class='zcs-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative'>
+    <table class='zcs-w-full'>
+        <thead class='zcs-sticky'>
+            <tr>
+                <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'><%=language.get("ops.action.assignee")%></th>
+                <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'><%=language.get("ops.action.active")%></th>
+                <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'><%=language.get("ops.action.completed")%></th>
+                <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'><%=language.get("ops.action.overdue")%></th>
+                <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'><%=language.get("ops.action.workload")%></th>
+            </tr>
+            <tr class='zcs-tspace'><th class='zcs-p-2 zcs-box-border' colspan='5'></th></tr>
+        </thead>
+        <tbody>
+<%
+				awIdx = 0;
+				for each  aName in assigneeNames
+				{
+					awIdx = awIdx + 1;
+					if(awIdx >= awStartIndex && awIdx <= awEndIndex)
+					{
+						aData = assigneeMap.get(aName);
+						aActive = aData.get("active").toLong();
+						aCompleted = aData.get("completed").toLong();
+						aOverdue = aData.get("overdue").toLong();
+						aWorkloadPct = ((aActive * 100) / maxActive).toLong();
+						overdueBg = if(aOverdue > 0,"#fde8e8","#f3f4f6");
+						overdueClr = if(aOverdue > 0,"#c44545","#6c778a");
+						%>
+<tr>
+                <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'><%=aName%></td>
+                <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=aActive%></td>
+                <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=aCompleted%></td>
+                <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body'><span style='display:inline-flex;align-items:center;justify-content:center;min-width:28px;padding:3px 8px;border-radius:999px;font-size:12px;font-weight:600;background:<%=overdueBg%>;color:<%=overdueClr%>;'><%=aOverdue%></span></td>
+                <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body'><div style='display:flex;align-items:center;gap:10px;'><div style='flex:1;max-width:120px;height:6px;background:#eef1f6;border-radius:999px;overflow:hidden;'><div style='height:100%;width:<%=aWorkloadPct%>%;background:var(--zcs_brand_color);border-radius:999px;'></div></div><span class='zcs-font-12 zcs-color-tertiary' style='min-width:32px;'><%=aWorkloadPct%>%</span></div></td>
+            </tr>
+<%
+					}
+				}
+				%>
+</tbody>
+    </table>
+</div>
+<div class='zcs-pagination'>
+    <ul class='zcs-flex zcs-align-items-center zcs-justify-end zcs-gap-12 zcs-p-0 zcs-m-0'>
+        <li class='zcs-pagination-item'>
+            <span class='zcs-pagination-text zcs-flex zcs-align-items-center zcs-justify-center zcs-rounded-sm zcs-box-border zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>
+                <%=awStartIndex%>-<%=awEndIndex%> of <%=awTotalCount%>
+            </span>
+        </li>
+        <li class='zcs-pagination-item'>
+            <a class='zcs-pagination-action zcs-flex zcs-align-items-center zcs-justify-center zcs-rounded-sm zcs-px-8 zcs-box-border zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary zcs-cursor-pointer <%=if(awPrevAction == "disable","zcs-button-disable","")%>' <%=awPrevLink%>>
+                <i class='zcs-pagination-icon zc-li-outline arrows-1-minimal-left'></i>
+            </a>
+        </li>
+        <li class='zcs-pagination-item'>
+            <a class='zcs-pagination-action zcs-flex zcs-align-items-center zcs-justify-center zcs-rounded-sm zcs-px-8 zcs-box-border zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary zcs-cursor-pointer <%=if(awNextAction == "disable","zcs-button-disable","")%>' <%=awNextLink%>>
+                <i class='zcs-pagination-icon zc-li-outline arrows-1-minimal-right'></i>
+            </a>
+        </li>
+    </ul>
+</div>
+<%
+			}
+			%>
+</div>
+<%
+		}
+		/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+	   ESCALATION TAB HTML
+	\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
+		else if(input.tab == "escalation")
+		{
+			%>
+<div class='zcs-panel-wrapper zcs-lg-panel-wrapper'>
+                <ul class='zcs-row zcs-justify-space-between zcs-gap-20 zcs-list-none zcs-p-0 zcs-m-0'>
+                    <li class='zcs-col-3 zcs-col-sm-6 zcs-col-xs-12 zcs-relative zcs-cursor-pointer'><div class='zcs-panel zcs-wh-full zcs-flex zcs-justify-space-between zcs-gap-16 zcs-rounded-lg zcs-p-16 zcs-box-border'><div class='zcs-flex zcs-direction-column zcs-gap-4'><p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'><%=language.get("ops.esc.total")%></p><h4 class='zcs-font-20 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'><%=totalEsc%></h4></div><div class='zcs-panel-icon-wrapper zcs-flex zcs-align-items-end zcs-justify-center zcs-no-shrink zcs-rounded-lg'><i class='zcs-panel-icon zcs-font-24 zc-li-outline files-archive'></i></div></div></li>
+                    <li class='zcs-col-3 zcs-col-sm-6 zcs-col-xs-12 zcs-relative zcs-cursor-pointer'><div class='zcs-panel zcs-wh-full zcs-flex zcs-justify-space-between zcs-gap-16 zcs-rounded-lg zcs-p-16 zcs-box-border'><div class='zcs-flex zcs-direction-column zcs-gap-4'><p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'><%=language.get("ops.esc.critical")%></p><h4 class='zcs-font-20 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'><%=criticalEsc%></h4></div><div class='zcs-panel-icon-wrapper zcs-flex zcs-align-items-end zcs-justify-center zcs-no-shrink zcs-rounded-lg'><i class='zcs-panel-icon zcs-font-24 zc-li-outline location-position-pin'></i></div></div></li>
+                    <li class='zcs-col-3 zcs-col-sm-6 zcs-col-xs-12 zcs-relative zcs-cursor-pointer'><div class='zcs-panel zcs-wh-full zcs-flex zcs-justify-space-between zcs-gap-16 zcs-rounded-lg zcs-p-16 zcs-box-border'><div class='zcs-flex zcs-direction-column zcs-gap-4'><p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'><%=language.get("ops.stat.inProgress")%></p><h4 class='zcs-font-20 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'><%=inProgEsc%></h4></div><div class='zcs-panel-icon-wrapper zcs-flex zcs-align-items-end zcs-justify-center zcs-no-shrink zcs-rounded-lg'><i class='zcs-panel-icon zcs-font-24 zc-li-outline business-briefcase-24'></i></div></div></li>
+                    <li class='zcs-col-3 zcs-col-sm-6 zcs-col-xs-12 zcs-relative zcs-cursor-pointer'><div class='zcs-panel zcs-wh-full zcs-flex zcs-justify-space-between zcs-gap-16 zcs-rounded-lg zcs-p-16 zcs-box-border'><div class='zcs-flex zcs-direction-column zcs-gap-4'><p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'><%=language.get("ops.esc.resolved")%></p><h4 class='zcs-font-20 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'><%=resolvedEsc%></h4></div><div class='zcs-panel-icon-wrapper zcs-flex zcs-align-items-end zcs-justify-center zcs-no-shrink zcs-rounded-lg'><i class='zcs-panel-icon zcs-font-24 zc-li-outline files-archive'></i></div></div></li>
+                </ul>
+            </div>
+            <div class='zcs-row zcs-gap-20'>
+                <div class='zcs-col-6 zcs-col-xs-12'>
+                    <div class='zcs-card zcs-flex zcs-direction-column zcs-gap-24 zcs-p-20 zcs-box-border' style='min-height:320px;'>
+                        <h6 class='zcs-font-16 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'>Escalations by Committee</h6>
+<%
+			if(sortedCommitteeKeys.size() == 0)
+			{
+				%>
+<div class='zcs-flex zcs-direction-column zcs-align-items-center zcs-justify-center zcs-col-common zcs-gap-16'><i class='zcs-font-40 zcs-color-tertiary zc-li-outline files-archive' style='opacity:0.3;'></i><p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0 zcs-text-center'>No escalation data available.<br>Overdue action items will appear here.</p></div>
+<%
+			}
+			else
+			{
+				%>
+<div class='zcs-flex zcs-direction-column zcs-gap-20'>
+<%
+				barIdx = 0;
+				for each  ck in sortedCommitteeKeys
+				{
+					cCount = committeeMap.get(ck).toLong();
+					cPct = if(totalEsc > 0,((cCount * 100) / totalEsc).toLong(),0);
+					isOthers = ck == "Others";
+					barIdx = barIdx + 1;
+					barColor = if(isOthers,"#9ca3af",if(barIdx == 1,"#FB2C36",if(barIdx == 2,"#6F51FF",if(barIdx == 3,"#FC8F01",if(barIdx == 4,"#16A34A","var(--zcs_brand_color)")))));
+					trackColor = if(isOthers,"#f3f4f6","#EEF3FB");
+					displayName = if(isOthers,"No Committee",ck);
+					labelCls = if(isOthers,"zcs-color-tertiary","zcs-color-primary");
+					%>
+<div class='zcs-flex zcs-direction-column zcs-gap-6'>
+                                <p class='zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-8 zcs-font-14 zcs-font-medium zcs-lh-body zcs-m-0'><span class='zcs-flex zcs-align-items-center zcs-gap-8'><span style='display:inline-flex;width:10px;height:10px;border-radius:50%;background:<%=barColor%>;flex-shrink:0;'></span><span class='<%=labelCls%>'><%=displayName%></span></span><span class='<%=labelCls%>'><%=cCount%>&nbsp;<span class='zcs-font-12 zcs-font-normal'>(<%=cPct%>%)</span></span></p>
+                                <div style='height:8px;border-radius:999px;background:<%=trackColor%>;overflow:hidden;'><div style='height:100%;width:<%=cPct%>%;background:<%=barColor%>;border-radius:999px;'></div></div>
+                            </div>
+<%
+				}
+				%>
+</div>
+<%
+			}
+			%>
+</div>
+                </div>
+                <div class='zcs-col-6 zcs-col-xs-12'>
+                    <div class='zcs-card zcs-flex zcs-direction-column zcs-gap-16 zcs-p-20 zcs-box-border'>
+                        <h6 class='zcs-font-16 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'>Escalation Trend by Priority</h6>
+                        <div class='zcs-flex zcs-gap-16' style='flex-wrap:wrap;'>
+                            <span class='zcs-flex zcs-align-items-center zcs-gap-6 zcs-font-12 zcs-color-tertiary'><span style='width:10px;height:10px;border-radius:50%;background:#e8453c;flex-shrink:0;display:inline-block;'></span>Critical</span>
+                            <span class='zcs-flex zcs-align-items-center zcs-gap-6 zcs-font-12 zcs-color-tertiary'><span style='width:10px;height:10px;border-radius:50%;background:#f59e0b;flex-shrink:0;display:inline-block;'></span>High</span>
+                            <span class='zcs-flex zcs-align-items-center zcs-gap-6 zcs-font-12 zcs-color-tertiary'><span style='width:10px;height:10px;border-radius:50%;background:#6E3AFC;flex-shrink:0;display:inline-block;'></span>Medium</span>
+                            <span class='zcs-flex zcs-align-items-center zcs-gap-6 zcs-font-12 zcs-color-tertiary'><span style='width:10px;height:10px;border-radius:50%;background:#22c55e;flex-shrink:0;display:inline-block;'></span>Low</span>
+                        </div>
+                        <svg viewBox='0 0 540 220' width='100%' style='display:block;overflow:visible;'>
+                            <line x1='44' y1='<%=gY4%>' x2='524' y2='<%=gY4%>' stroke='#eef1f6' stroke-width='1'/><line x1='44' y1='<%=gY3%>' x2='524' y2='<%=gY3%>' stroke='#eef1f6' stroke-width='1'/><line x1='44' y1='<%=gY2%>' x2='524' y2='<%=gY2%>' stroke='#eef1f6' stroke-width='1'/><line x1='44' y1='<%=gY1%>' x2='524' y2='<%=gY1%>' stroke='#eef1f6' stroke-width='1'/><line x1='44' y1='<%=gY0%>' x2='524' y2='<%=gY0%>' stroke='#eef1f6' stroke-width='1'/>
+                            <text x='38' y='<%=gY4 + 4%>' font-size='10' fill='#8a9ab5' text-anchor='end'><%=gV4%></text><text x='38' y='<%=gY3 + 4%>' font-size='10' fill='#8a9ab5' text-anchor='end'><%=gV3%></text><text x='38' y='<%=gY2 + 4%>' font-size='10' fill='#8a9ab5' text-anchor='end'><%=gV2%></text><text x='38' y='<%=gY1 + 4%>' font-size='10' fill='#8a9ab5' text-anchor='end'><%=gV1%></text><text x='38' y='<%=gY0 + 4%>' font-size='10' fill='#8a9ab5' text-anchor='end'>0</text>
+                            <text x='<%=svgX0%>' y='210' font-size='10' fill='#8a9ab5' text-anchor='middle'><%=lbl5%></text><text x='<%=svgX1%>' y='210' font-size='10' fill='#8a9ab5' text-anchor='middle'><%=lbl4%></text><text x='<%=svgX2%>' y='210' font-size='10' fill='#8a9ab5' text-anchor='middle'><%=lbl3%></text><text x='<%=svgX3%>' y='210' font-size='10' fill='#8a9ab5' text-anchor='middle'><%=lbl2%></text><text x='<%=svgX4%>' y='210' font-size='10' fill='#8a9ab5' text-anchor='middle'><%=lbl1%></text><text x='<%=svgX5%>' y='210' font-size='10' fill='#8a9ab5' text-anchor='middle'><%=lbl0%></text>
+                            <path d='M <%=svgX0%>,<%=cY0%> C <%=cp01%>,<%=cY0%> <%=cp01%>,<%=cY1%> <%=svgX1%>,<%=cY1%> C <%=cp12%>,<%=cY1%> <%=cp12%>,<%=cY2%> <%=svgX2%>,<%=cY2%> C <%=cp23%>,<%=cY2%> <%=cp23%>,<%=cY3%> <%=svgX3%>,<%=cY3%> C <%=cp34%>,<%=cY3%> <%=cp34%>,<%=cY4%> <%=svgX4%>,<%=cY4%> C <%=cp45%>,<%=cY4%> <%=cp45%>,<%=cY5%> <%=svgX5%>,<%=cY5%>' fill='none' stroke='#e8453c' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/><circle cx='<%=svgX0%>' cy='<%=cY0%>' r='3' fill='#e8453c'/><circle cx='<%=svgX1%>' cy='<%=cY1%>' r='3' fill='#e8453c'/><circle cx='<%=svgX2%>' cy='<%=cY2%>' r='3' fill='#e8453c'/><circle cx='<%=svgX3%>' cy='<%=cY3%>' r='3' fill='#e8453c'/><circle cx='<%=svgX4%>' cy='<%=cY4%>' r='3' fill='#e8453c'/><circle cx='<%=svgX5%>' cy='<%=cY5%>' r='3' fill='#e8453c'/>
+                            <path d='M <%=svgX0%>,<%=hY0%> C <%=cp01%>,<%=hY0%> <%=cp01%>,<%=hY1%> <%=svgX1%>,<%=hY1%> C <%=cp12%>,<%=hY1%> <%=cp12%>,<%=hY2%> <%=svgX2%>,<%=hY2%> C <%=cp23%>,<%=hY2%> <%=cp23%>,<%=hY3%> <%=svgX3%>,<%=hY3%> C <%=cp34%>,<%=hY3%> <%=cp34%>,<%=hY4%> <%=svgX4%>,<%=hY4%> C <%=cp45%>,<%=hY4%> <%=cp45%>,<%=hY5%> <%=svgX5%>,<%=hY5%>' fill='none' stroke='#f59e0b' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/><circle cx='<%=svgX0%>' cy='<%=hY0%>' r='3' fill='#f59e0b'/><circle cx='<%=svgX1%>' cy='<%=hY1%>' r='3' fill='#f59e0b'/><circle cx='<%=svgX2%>' cy='<%=hY2%>' r='3' fill='#f59e0b'/><circle cx='<%=svgX3%>' cy='<%=hY3%>' r='3' fill='#f59e0b'/><circle cx='<%=svgX4%>' cy='<%=hY4%>' r='3' fill='#f59e0b'/><circle cx='<%=svgX5%>' cy='<%=hY5%>' r='3' fill='#f59e0b'/>
+                            <path d='M <%=svgX0%>,<%=mY0%> C <%=cp01%>,<%=mY0%> <%=cp01%>,<%=mY1%> <%=svgX1%>,<%=mY1%> C <%=cp12%>,<%=mY1%> <%=cp12%>,<%=mY2%> <%=svgX2%>,<%=mY2%> C <%=cp23%>,<%=mY2%> <%=cp23%>,<%=mY3%> <%=svgX3%>,<%=mY3%> C <%=cp34%>,<%=mY3%> <%=cp34%>,<%=mY4%> <%=svgX4%>,<%=mY4%> C <%=cp45%>,<%=mY4%> <%=cp45%>,<%=mY5%> <%=svgX5%>,<%=mY5%>' fill='none' stroke='#6E3AFC' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/><circle cx='<%=svgX0%>' cy='<%=mY0%>' r='3' fill='#6E3AFC'/><circle cx='<%=svgX1%>' cy='<%=mY1%>' r='3' fill='#6E3AFC'/><circle cx='<%=svgX2%>' cy='<%=mY2%>' r='3' fill='#6E3AFC'/><circle cx='<%=svgX3%>' cy='<%=mY3%>' r='3' fill='#6E3AFC'/><circle cx='<%=svgX4%>' cy='<%=mY4%>' r='3' fill='#6E3AFC'/><circle cx='<%=svgX5%>' cy='<%=mY5%>' r='3' fill='#6E3AFC'/>
+                            <path d='M <%=svgX0%>,<%=lY0%> C <%=cp01%>,<%=lY0%> <%=cp01%>,<%=lY1%> <%=svgX1%>,<%=lY1%> C <%=cp12%>,<%=lY1%> <%=cp12%>,<%=lY2%> <%=svgX2%>,<%=lY2%> C <%=cp23%>,<%=lY2%> <%=cp23%>,<%=lY3%> <%=svgX3%>,<%=lY3%> C <%=cp34%>,<%=lY3%> <%=cp34%>,<%=lY4%> <%=svgX4%>,<%=lY4%> C <%=cp45%>,<%=lY4%> <%=cp45%>,<%=lY5%> <%=svgX5%>,<%=lY5%>' fill='none' stroke='#22c55e' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/><circle cx='<%=svgX0%>' cy='<%=lY0%>' r='3' fill='#22c55e'/><circle cx='<%=svgX1%>' cy='<%=lY1%>' r='3' fill='#22c55e'/><circle cx='<%=svgX2%>' cy='<%=lY2%>' r='3' fill='#22c55e'/><circle cx='<%=svgX3%>' cy='<%=lY3%>' r='3' fill='#22c55e'/><circle cx='<%=svgX4%>' cy='<%=lY4%>' r='3' fill='#22c55e'/><circle cx='<%=svgX5%>' cy='<%=lY5%>' r='3' fill='#22c55e'/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            <div class='zcs-report-card zcs-card zcs-flex zcs-direction-column'>
+                <h6 class='zcs-report-header zcs-font-16 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0 zcs-pt-20 zcs-px-20 zcs-box-border'>Escalation Queue</h6>
+            <div class='zcs-filter' elName='zc-component' formLinkName='Filter_Form' params='zc_Header=false&zc_Footer=false&zc_Focus=false&Page=<%=page_link_name%>&Action_Priority=<%=input.Action_Priority%>&Action_Status=<%=input.Action_Status%>&Search_Key=<%=input.Search_Key%>'></div>
+<div class='zcs-report zcs-col-common' name='embedDiv' elName='zc-component' viewLinkName='Escalation_Tracker' params='zc_Header=false&zc_Footer=false&zc_ColMenu=false&zc_AddRec=false'></div>
+            </div>
+<%
+		}
+		/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+	   PERFORMANCE TAB HTML
+	\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\uFFFD\uFFFD\uFFFD\u2550\u2550\u2550 */
+		else if(input.tab == "performance")
+		{
+			%>
+<div class='zcs-page-header zcs-flex zcs-direction-column zcs-gap-4 zcs-pt-20 zcs-px-20 zcs-box-border'>
+        <h5 class='zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'>Governance Performance</h5>
+        <p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'>View Performance By</p>
+    </div>
+            <ul class='zcs-custom-tabhead zcs-row zcs-gap-12 zcs-list-none zcs-p-0 zcs-m-0 zcs-box-border'>
+<%
+			for each  ptab_id in perf_tab_keys
+			{
+				pCls = if(input.perf_tab == ptab_id,"zcs-custom-tab zcs-custom-tabactive","zcs-custom-tab");
+				%>
+<li class='<%=pCls%>'><a class='zcs-card zcs-flex zcs-align-items-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-box-border' href='#Page:<%=page_link_name%>?tab=performance&perf_tab=<%=ptab_id%>'><i class='zcs-font-14 zcs-color-tertiary zc-li-outline business-briefcase-24'></i><span class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary'><%=perf_tab_map.get(ptab_id).get("Display")%></span></a></li>
+<%
+			}
+			%>
+</ul>
+<%
+			/* \u2500\u2500 OVERVIEW SUB-TAB \u2500\u2500 */
+			if(input.perf_tab == "overview")
+			{
+				%>
+<div class='zcs-panel-wrapper zcs-lg-panel-wrapper'>
+                <ul class='zcs-row zcs-justify-space-between zcs-gap-20 zcs-list-none zcs-p-0 zcs-m-0'>
+                    <li class='zcs-col-3 zcs-col-sm-6 zcs-col-xs-12 zcs-relative zcs-cursor-pointer'><div class='zcs-panel zcs-wh-full zcs-flex zcs-justify-space-between zcs-gap-16 zcs-rounded-lg zcs-p-16 zcs-box-border'><div class='zcs-flex zcs-direction-column zcs-gap-4'><p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'>Total Committees</p><h4 class='zcs-font-20 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'><%=totalCommittees%></h4></div><div class='zcs-panel-icon-wrapper zcs-flex zcs-align-items-end zcs-justify-center zcs-no-shrink zcs-rounded-lg'><i class='zcs-panel-icon zcs-font-24 zc-li-outline business-briefcase-24'></i></div></div></li>
+                    <li class='zcs-col-3 zcs-col-sm-6 zcs-col-xs-12 zcs-relative zcs-cursor-pointer'><div class='zcs-panel zcs-wh-full zcs-flex zcs-justify-space-between zcs-gap-16 zcs-rounded-lg zcs-p-16 zcs-box-border'><div class='zcs-flex zcs-direction-column zcs-gap-4'><p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'><%=language.get("ops.perf.avgAttendance")%></p><h4 class='zcs-font-20 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'><%=globalAvgAtt%>%</h4></div><div class='zcs-panel-icon-wrapper zcs-flex zcs-align-items-end zcs-justify-center zcs-no-shrink zcs-rounded-lg'><i class='zcs-panel-icon zcs-font-24 zc-li-outline location-position-pin'></i></div></div></li>
+                    <li class='zcs-col-3 zcs-col-sm-6 zcs-col-xs-12 zcs-relative zcs-cursor-pointer'><div class='zcs-panel zcs-wh-full zcs-flex zcs-justify-space-between zcs-gap-16 zcs-rounded-lg zcs-p-16 zcs-box-border'><div class='zcs-flex zcs-direction-column zcs-gap-4'><p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'>Avg Completion</p><h4 class='zcs-font-20 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'><%=globalAvgCompletion%>%</h4></div><div class='zcs-panel-icon-wrapper zcs-flex zcs-align-items-end zcs-justify-center zcs-no-shrink zcs-rounded-lg'><i class='zcs-panel-icon zcs-font-24 zc-li-outline files-archive'></i></div></div></li>
+                    <li class='zcs-col-3 zcs-col-sm-6 zcs-col-xs-12 zcs-relative zcs-cursor-pointer'><div class='zcs-panel zcs-wh-full zcs-flex zcs-justify-space-between zcs-gap-16 zcs-rounded-lg zcs-p-16 zcs-box-border'><div class='zcs-flex zcs-direction-column zcs-gap-4'><p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'><%=language.get("ops.perf.meetingsHeld")%></p><h4 class='zcs-font-20 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'><%=metingcomplete%></h4></div><div class='zcs-panel-icon-wrapper zcs-flex zcs-align-items-end zcs-justify-center zcs-no-shrink zcs-rounded-lg'><i class='zcs-panel-icon zcs-font-24 zc-li-outline business-briefcase-24'></i></div></div></li>
+                </ul>
+            </div>
+<!-- Committee Performance Details Table -->
+<div class='zcs-card zcs-flex zcs-direction-column zcs-box-border'>
+    <h6 class='zcs-font-16 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0 zcs-px-20 zcs-pt-16 zcs-pb-0 zcs-box-border'>Committee Performance Details</h6>
+<%
+				/* ============ Pagination ============ */
+				cpRecordsPerPage = 5;
+				cpTotalCount = committeeTableList.size();
+				cpStartIndex = 1;
+				if(!input.cp_start.isEmpty())
+				{
+					cpStartIndex = input.cp_start.toLong();
+				}
+				cpDiff = cpTotalCount - cpStartIndex;
+				cpEndIndex = if(cpStartIndex + cpRecordsPerPage - 1 > cpTotalCount,cpStartIndex + cpDiff,cpStartIndex + cpRecordsPerPage - 1);
+				cpPrevAction = if(cpStartIndex == 1,"disable","");
+				cpNextAction = if(cpEndIndex >= cpTotalCount,"disable","");
+				cpPageLink = "#Page:Operational_Page?tab=performance&perf_tab=overview";
+				cpPrevLink = if(cpStartIndex > 1,"href='" + cpPageLink + "&cp_start=" + (cpStartIndex - cpRecordsPerPage) + "'","");
+				cpNextLink = if(cpEndIndex < cpTotalCount,"href='" + cpPageLink + "&cp_start=" + (cpEndIndex + 1) + "'","");
+				if(cpTotalCount == 0)
+				{
+					%>
+<%=thisapp.Page.noData()%>
+<%
+				}
+				else
+				{
+					%>
+<div class='zcs-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative'>
+    <table class='zcs-w-full'>
+        <thead class='zcs-sticky'>
+            <tr>
+                <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'><%=language.get("ops.committee.name")%></th>
+                <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Chairperson</th>
+                <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Members</th>
+                <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'><%=language.get("ops.committee.meetings")%></th>
+                <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Attendance</th>
+                <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Completion</th>
+                <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Compliance</th>
+                <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'><%=language.get("ops.committee.status")%></th>
+            </tr>
+            <tr class='zcs-tspace'><th class='zcs-p-2 zcs-box-border' colspan='8'></th></tr>
+        </thead>
+        <tbody>
+<%
+					cpIdx = 0;
+					for each  cmRow in committeeTableList
+					{
+						cpIdx = cpIdx + 1;
+						if(cpIdx >= cpStartIndex && cpIdx <= cpEndIndex)
+						{
+							%>
+<tr>
+                <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=cmRow.get("name")%></td>
+                <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><div style='display:flex;align-items:center;gap:8px;'><span style='width:24px;height:24px;border-radius:50%;background:<%=cmRow.get("avatarBg")%>;color:<%=cmRow.get("avatarClr")%>;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0;'><%=cmRow.get("initial")%></span><%=cmRow.get("chair")%></div></td>
+                <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=cmRow.get("members")%></td>
+                <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=cmRow.get("meetings")%></td>
+                <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body'><div style='display:flex;align-items:center;gap:6px;'><div style='width:70px;height:6px;background:#eef1f6;border-radius:999px;overflow:hidden;'><div style='height:100%;width:<%=cmRow.get("attendance")%>%;background:<%=cmRow.get("attBarClr")%>;border-radius:999px;'></div></div><span class='zcs-font-13 zcs-color-primary'><%=cmRow.get("attendance")%>%</span></div></td>
+                <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body'><div style='display:flex;align-items:center;gap:6px;'><div style='width:70px;height:6px;background:#eef1f6;border-radius:999px;overflow:hidden;'><div style='height:100%;width:<%=cmRow.get("completion")%>%;background:<%=cmRow.get("cmpBarClr")%>;border-radius:999px;'></div></div><span class='zcs-font-13 zcs-color-primary'><%=cmRow.get("completion")%>%</span></div></td>
+                <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body'><div style='display:flex;align-items:center;gap:6px;'><div style='width:70px;height:6px;background:#eef1f6;border-radius:999px;overflow:hidden;'><div style='height:100%;width:<%=cmRow.get("compliance")%>%;background:<%=cmRow.get("compBarClr")%>;border-radius:999px;'></div></div><span class='zcs-font-13 zcs-color-primary'><%=cmRow.get("compliance")%>%</span></div></td>
+                <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body'><span style='display:inline-flex;padding:3px 10px;border-radius:6px;font-size:12px;font-weight:500;background:<%=cmRow.get("statusBg")%>;color:<%=cmRow.get("statusClr")%>;'><%=cmRow.get("status")%></span></td>
+            </tr>
+<%
+						}
+					}
+					%>
+</tbody>
+    </table>
+</div>
+<div class='zcs-pagination'>
+    <ul class='zcs-flex zcs-align-items-center zcs-justify-end zcs-gap-12 zcs-p-0 zcs-m-0'>
+        <li class='zcs-pagination-item'>
+            <span class='zcs-pagination-text zcs-flex zcs-align-items-center zcs-justify-center zcs-rounded-sm zcs-box-border zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>
+                <%=cpStartIndex%>-<%=cpEndIndex%> of <%=cpTotalCount%>
+            </span>
+        </li>
+        <li class='zcs-pagination-item'>
+            <a class='zcs-pagination-action zcs-flex zcs-align-items-center zcs-justify-center zcs-rounded-sm zcs-px-8 zcs-box-border zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary zcs-cursor-pointer <%=if(cpPrevAction == "disable","zcs-button-disable","")%>' <%=cpPrevLink%>>
+                <i class='zcs-pagination-icon zc-li-outline arrows-1-minimal-left'></i>
+            </a>
+        </li>
+        <li class='zcs-pagination-item'>
+            <a class='zcs-pagination-action zcs-flex zcs-align-items-center zcs-justify-center zcs-rounded-sm zcs-px-8 zcs-box-border zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary zcs-cursor-pointer <%=if(cpNextAction == "disable","zcs-button-disable","")%>' <%=cpNextLink%>>
+                <i class='zcs-pagination-icon zc-li-outline arrows-1-minimal-right'></i>
+            </a>
+        </li>
+    </ul>
+</div>
+<%
+				}
+				%>
+</div>
+<!-- Effectiveness Score + Governance Health -->
+            <div class='zcs-row zcs-gap-20'>
+                <div class='zcs-col-6 zcs-col-xs-12'>
+                    <div class='zcs-card zcs-flex zcs-direction-column zcs-gap-16 zcs-p-20 zcs-box-border' style='min-height:320px;'>
+                        <div class='zcs-flex zcs-direction-column zcs-gap-4'>
+                            <h6 class='zcs-font-16 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'><%=language.get("ops.perf.committeeEffectiveness")%></h6>
+                            <p class='zcs-font-12 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'>Composite of attendance, quorum, action closure &amp; MOM on time</p>
+                        </div>
+<%
+				if(committeeTableList.size() == 0)
+				{
+					%>
+<p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'><%=thisapp.Page.noData()%>
+<%
+				}
+				else
+				{
+					%>
+<div class='zcs-flex zcs-direction-column zcs-gap-16'>
+<%
+					for each  cmEff in committeeTableList
+					{
+						effName = cmEff.get("name") + "";
+						effScore = cmEff.get("effectiveness").toLong();
+						effColor = cmEff.get("effBarClr") + "";
+						%>
+<div class='zcs-flex zcs-align-items-center zcs-gap-12'>
+                                    <span class='zcs-font-14 zcs-font-normal zcs-color-primary' style='min-width:120px;max-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'><%=effName%></span>
+                                    <div style='flex:1;height:20px;background:#eef1f6;border-radius:6px;overflow:hidden;'><div style='height:100%;width:<%=effScore%>%;background:<%=effColor%>;border-radius:6px;'></div></div>
+                                    <span class='zcs-font-14 zcs-font-medium zcs-color-primary' style='min-width:32px;text-align:right;'><%=effScore%></span>
+                                </div>
+<%
+					}
+					%>
+</div>
+<%
+				}
+				%>
+</div>
+                </div>
+                <div class='zcs-col-6 zcs-col-xs-12'>
+                    <div class='zcs-card zcs-flex zcs-direction-column zcs-gap-16 zcs-p-20 zcs-box-border' style='min-height:320px;'>
+                        <h6 class='zcs-font-16 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'><%=language.get("ops.perf.overallGovHealth")%></h6>
+                        <div class='zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-32' style='flex:1;'>
+                            <div style='position:relative;width:160px;height:160px;flex-shrink:0;'>
+                                <svg viewBox='0 0 200 200' width='160' height='160'>
+                                    <circle cx='100' cy='100' r='70' fill='none' stroke='#eef1f6' stroke-width='18'/>
+                                    <circle cx='100' cy='100' r='70' fill='none' stroke='#16A34A' stroke-width='18' stroke-dasharray='<%=govDash%> 440' stroke-linecap='round' transform='rotate(-90 100 100)'/>
+                                    <text x='100' y='92' text-anchor='middle' dominant-baseline='central' font-size='36' font-weight='600' fill='#131635'><%=govOverall%></text>
+                                    <text x='100' y='118' text-anchor='middle' dominant-baseline='central' font-size='16' font-weight='400' fill='#131635'>%</text>
+                                </svg>
+                            </div>
+                            <div class='zcs-flex zcs-direction-column zcs-gap-16'>
+<%
+				attLegClr = if(govAttPct >= 80,"#179E6C","#B8770D");
+				qLegClr = if(govQuorumPct >= 80,"#179E6C","#B8770D");
+				acLegClr = if(govActionPct >= 80,"#179E6C","#B8770D");
+				momLegClr = if(govMomPct >= 80,"#179E6C","#B8770D");
+				%>
+<div class='zcs-flex zcs-align-items-center zcs-gap-8'><span style='width:10px;height:10px;border-radius:50%;background:#16A34A;flex-shrink:0;'></span><span class='zcs-font-14 zcs-font-normal zcs-color-primary' style='min-width:110px;'><%=language.get("ops.perf.attendance")%></span><span class='zcs-font-14 zcs-font-medium' style='color:<%=attLegClr%>;'><%=govAttPct%>%</span></div>
+                                <div class='zcs-flex zcs-align-items-center zcs-gap-8'><span style='width:10px;height:10px;border-radius:50%;background:#f59e0b;flex-shrink:0;'></span><span class='zcs-font-14 zcs-font-normal zcs-color-primary' style='min-width:110px;'><%=language.get("ops.perf.quorumAchievement")%></span><span class='zcs-font-14 zcs-font-medium' style='color:<%=qLegClr%>;'><%=govQuorumPct%>%</span></div>
+                                <div class='zcs-flex zcs-align-items-center zcs-gap-8'><span style='width:10px;height:10px;border-radius:50%;background:#6F51FF;flex-shrink:0;'></span><span class='zcs-font-14 zcs-font-normal zcs-color-primary' style='min-width:110px;'><%=language.get("ops.perf.actionCompletion")%></span><span class='zcs-font-14 zcs-font-medium' style='color:<%=acLegClr%>;'><%=govActionPct%>%</span></div>
+                                <div class='zcs-flex zcs-align-items-center zcs-gap-8'><span style='width:10px;height:10px;border-radius:50%;background:#8a9ab5;flex-shrink:0;'></span><span class='zcs-font-14 zcs-font-normal zcs-color-primary' style='min-width:110px;'><%=language.get("ops.perf.momCompliance")%></span><span class='zcs-font-14 zcs-font-medium' style='color:<%=momLegClr%>;'><%=govMomPct%>%</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+<!-- Action Closure Trend + Attendance by Committee -->
+ <div class='zcs-row zcs-gap-20' style='align-items:stretch;'>
+                <div class='zcs-col-6 zcs-col-xs-12'>
+                    <div class='zcs-card zcs-flex zcs-direction-column zcs-gap-16 zcs-p-20 zcs-box-border' style='height:100%;'>
+                        <div class='zcs-flex zcs-align-items-center zcs-justify-space-between'>
+                            <div class='zcs-flex zcs-direction-column zcs-gap-4'>
+                                <h6 class='zcs-font-16 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'><%=language.get("ops.perf.actionClosureTrend")%></h6>
+                                <p class='zcs-font-12 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'>% actions closed on time, by quarter</p>
+                            </div>
+     <details class='zcs-year-dropdown'>
+                                <summary class='zcs-year-trigger'><%=selectedYear%> &#9660;</summary>
+                                <div class='zcs-year-menu'>
+<%
+				for each  yrK in yearKeys
+				{
+					yrCls = if(yrK == selectedYear,"zcs-year-option zcs-year-active","zcs-year-option");
+					%>
+<a href='#Page:<%=page_link_name%>?tab=performance&perf_tab=overview&overview_year=<%=yrK%>' class='<%=yrCls%>'><%=yrK%></a>
+<%
+				}
+				%>
+</div>
+                            </details>
+                        </div>
+                        <svg viewBox='0 0 360 220' width='100%' style='display:block;overflow:visible;'>
+                            <line x1='40' y1='20' x2='340' y2='20' stroke='#eef1f6' stroke-width='1'/><line x1='40' y1='60' x2='340' y2='60' stroke='#eef1f6' stroke-width='1'/><line x1='40' y1='100' x2='340' y2='100' stroke='#eef1f6' stroke-width='1'/><line x1='40' y1='140' x2='340' y2='140' stroke='#eef1f6' stroke-width='1'/><line x1='40' y1='180' x2='340' y2='180' stroke='#eef1f6' stroke-width='1'/>
+                            <text x='34' y='24' font-size='11' fill='#8a9ab5' text-anchor='end'>100</text><text x='34' y='64' font-size='11' fill='#8a9ab5' text-anchor='end'>75</text><text x='34' y='104' font-size='11' fill='#8a9ab5' text-anchor='end'>50</text><text x='34' y='144' font-size='11' fill='#8a9ab5' text-anchor='end'>25</text><text x='34' y='184' font-size='11' fill='#8a9ab5' text-anchor='end'>0</text>
+                            <rect x='65' y='<%=180 - q1H%>' width='40' height='<%=q1H%>' rx='6' fill='#16A34A' opacity='0.85'/><text x='85' y='<%=180 - q1H - 6%>' font-size='11' fill='#131635' text-anchor='middle' font-weight='500'><%=q1Pct%>%</text><text x='85' y='206' font-size='12' fill='#8a9ab5' text-anchor='middle'>Q1</text>
+                            <rect x='140' y='<%=180 - q2H%>' width='40' height='<%=q2H%>' rx='6' fill='#FC8F01' opacity='0.85'/><text x='160' y='<%=180 - q2H - 6%>' font-size='11' fill='#131635' text-anchor='middle' font-weight='500'><%=q2Pct%>%</text><text x='160' y='206' font-size='12' fill='#8a9ab5' text-anchor='middle'>Q2</text>
+                            <rect x='215' y='<%=180 - q3H%>' width='40' height='<%=q3H%>' rx='6' fill='#FB2C36' opacity='0.85'/><text x='235' y='<%=180 - q3H - 6%>' font-size='11' fill='#131635' text-anchor='middle' font-weight='500'><%=q3Pct%>%</text><text x='235' y='206' font-size='12' fill='#8a9ab5' text-anchor='middle'>Q3</text>
+                            <rect x='290' y='<%=180 - q4H%>' width='40' height='<%=q4H%>' rx='6' fill='#1652BB' opacity='0.85'/><text x='310' y='<%=180 - q4H - 6%>' font-size='11' fill='#131635' text-anchor='middle' font-weight='500'><%=q4Pct%>%</text><text x='310' y='206' font-size='12' fill='#8a9ab5' text-anchor='middle'>Q4</text>
+                        </svg>
+                    </div>
+                </div>
+              <div class='zcs-col-6 zcs-col-xs-12'>
+                    <div class='zcs-card zcs-flex zcs-direction-column zcs-gap-16 zcs-p-20 zcs-box-border' style='height:100%;'>
+                        <div class='zcs-flex zcs-direction-column zcs-gap-4'>
+                            <h6 class='zcs-font-16 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'><%=language.get("ops.perf.attendanceByCommittee")%></h6>
+                            <p class='zcs-font-12 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'>Avg. member attendance this period</p>
+                        </div>
+<%
+				if(committeeTableList.size() == 0)
+				{
+					%>
+<p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'><%=thisapp.Page.noData()%>
+<%
+				}
+				else
+				{
+					%>
+<div class='zcs-flex zcs-direction-column zcs-gap-14'>
+<%
+					for each  cmAtt in committeeTableList
+					{
+						cmAttName = cmAtt.get("name") + "";
+						cmAttVal = cmAtt.get("attendance").toLong();
+						cmAttBarC = cmAtt.get("attBarClr") + "";
+						%>
+<div class='zcs-flex zcs-align-items-center zcs-gap-12'>
+                                    <span class='zcs-font-14 zcs-font-normal zcs-color-primary' style='min-width:120px;max-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'><%=cmAttName%></span>
+                                    <div style='flex:1;height:14px;background:#eef1f6;border-radius:999px;overflow:hidden;'><div style='height:100%;width:<%=cmAttVal%>%;background:<%=cmAttBarC%>;border-radius:999px;'></div></div>
+                                    <span class='zcs-font-14 zcs-font-medium zcs-color-primary' style='min-width:36px;text-align:right;'><%=cmAttVal%>%</span>
+                                </div>
+<%
+					}
+					%>
+</div>
+<%
+				}
+				%>
+</div>
+                </div>
+            </div>
+<%
+			}
+			/* \u2500\u2500 COMMITTEE SUB-TAB (static placeholder) \u2500\u2500 */
+			else if(input.perf_tab == "commitee")
+			{
+				selectedCmId = "";
+				if(input.sel_committee != null)
+				{
+					sc = input.sel_committee + "";
+					if(sc != "null" && !sc.isEmpty())
+					{
+						selectedCmId = sc;
+					}
+				}
+				/* Default to first committee if none selected */
+				if(selectedCmId.isEmpty())
+				{
+					firstCmList = Committee[ID != 0];
+					for each  fcm in firstCmList
+					{
+						selectedCmId = fcm.ID + "";
+						break;
+					}
+				}
+				/* \u2500\u2500 Only run if we have a valid committee ID \u2500\u2500 */
+				if(selectedCmId != null && selectedCmId != "null" && !selectedCmId.isEmpty())
+				{
+					cmId = selectedCmId.toLong();
+					/* Committee Record */
+					selCmName = "-";
+					selCmType = "-";
+					selCmChair = "-";
+					selCmInitial = "?";
+					selCmStatus = "Active";
+					selCmRec = Committee[ID == cmId];
+					if(selCmRec != null && selCmRec.count() > 0)
+					{
+						cn = selCmRec.Committee_Name + "";
+						if(cn != "null" && !cn.isEmpty())
+						{
+							selCmName = cn;
+						}
+						if(selCmRec.Committee_Type != null)
+						{
+							ct = selCmRec.Committee_Type.Committee_Type + "";
+							if(ct != "null" && !ct.isEmpty())
+							{
+								selCmType = ct;
+							}
+						}
+						if(selCmRec.Chair_Person != null)
+						{
+							cp = selCmRec.Chair_Person.Name + "";
+							if(cp != "null" && !cp.isEmpty())
+							{
+								selCmChair = cp;
+								selCmInitial = cp.subString(0,1);
+							}
+						}
+					}
+					/* Members */
+					cmMemberCount = 0;
+					cmIndepCount = 0;
+					cmFemaleCount = 0;
+					cmMemberList = List();
+					tenure0to3 = 0;
+					tenure4to7 = 0;
+					tenure8plus = 0;
+					tenureTotal = 0;
+					skillMap = Map();
+					cmMIdx = 0;
+					cmMembers = Committee_Members[Committee == cmId];
+					cmMemberCount = cmMembers.count();
+					for each  cmMbr in cmMembers
+					{
+						mRow = Map();
+						mName = "-";
+						mRole = "-";
+						mType = "-";
+						mGender = "-";
+						if(cmMbr.Member != null)
+						{
+							mbrRec = User[ID == cmMbr.Member];
+							if(mbrRec != null && mbrRec.count() > 0)
+							{
+								mn = mbrRec.Name + "";
+								if(mn != "null" && !mn.isEmpty())
+								{
+									mName = mn;
+								}
+								if(mbrRec.Member_Type != null)
+								{
+									mType = mbrRec.Member_Type + "";
+								}
+								if(mbrRec.Gender != null)
+								{
+									mGender = mbrRec.Gender + "";
+								}
+								if(mbrRec.Role != null)
+								{
+									mRoleRec = Role[ID == mbrRec.Role];
+									if(mRoleRec != null && mRoleRec.count() > 0)
+									{
+										rn = mRoleRec.Role_Name + "";
+										if(rn != "null" && !rn.isEmpty())
+										{
+											mRole = rn;
+										}
+									}
+								}
+								if(mbrRec.Skill_Coverage != null)
+								{
+									skillStr = mbrRec.Skill_Coverage.Skill_Coverage + "";
+									if(skillStr != "null" && !skillStr.isEmpty())
+									{
+										skillParts = skillStr.toList(",");
+										for each  sk in skillParts
+										{
+											skTrim = sk.trim();
+											if(!skTrim.isEmpty())
+											{
+												if(skillMap.contains(skTrim))
+												{
+													skillMap.put(skTrim,skillMap.get(skTrim).toLong() + 1);
+												}
+												else
+												{
+													skillMap.put(skTrim,1);
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+						mRow.put("name",mName);
+						mRow.put("role",mRole);
+						mRow.put("type",mType);
+						mInitial = if(mName != "-" && mName.length() > 0,mName.subString(0,1),"?");
+						mRow.put("initial",mInitial);
+						mColorIdx = (cmMIdx - (cmMIdx / 5).toLong() * 5).toLong();
+						mRow.put("avatarBg",avatarBgs.get(mColorIdx));
+						mRow.put("avatarClr",avatarClrs.get(mColorIdx));
+						if(mType == "Independent")
+						{
+							cmIndepCount = cmIndepCount + 1;
+						}
+						if(mGender == "Female")
+						{
+							cmFemaleCount = cmFemaleCount + 1;
+						}
+						if(cmMbr.Added_Time != null)
+						{
+							addedYr = cmMbr.Added_Time.toString("yyyy").toLong();
+							addedMn = cmMbr.Added_Time.toString("MM").toLong();
+							curYr2 = zoho.currentdate.toString("yyyy").toLong();
+							curMn2 = zoho.currentdate.toString("MM").toLong();
+							tenureMonths = (curYr2 - addedYr) * 12 + curMn2 - addedMn;
+							if(tenureMonths < 0)
+							{
+								tenureMonths = 0;
+							}
+							tenureTotal = tenureTotal + tenureMonths;
+							if(tenureMonths <= 6)
+							{
+								tenure0to3 = tenure0to3 + 1;
+							}
+							else if(tenureMonths <= 12)
+							{
+								tenure4to7 = tenure4to7 + 1;
+							}
+							else
+							{
+								tenure8plus = tenure8plus + 1;
+							}
+						}
+						cmMemberList.add(mRow);
+						cmMIdx = cmMIdx + 1;
+					}
+					/* Ratios */
+					avgTenure = if(cmMemberCount > 0,(tenureTotal / cmMemberCount).toLong(),0);
+					cmIndepRatio = if(cmMemberCount > 0,((cmIndepCount * 100) / cmMemberCount).toLong(),0);
+					cmFemaleRatio = if(cmMemberCount > 0,((cmFemaleCount * 100) / cmMemberCount).toLong(),0);
+					/* Meetings */
+					cmMeetings = Meeting[Committee1 == cmId];
+					cmTotalMtg = cmMeetings.count();
+					cmCompletedMtg = Meeting[Committee1 == cmId && Status == "Completed"].count();
+					cmUpcomingMtg = Meeting[Committee1 == cmId && Status == "Scheduled"].count();
+					cmHeldVsPlanned = cmCompletedMtg + "/" + (cmCompletedMtg + cmUpcomingMtg);
+					hvpPct = if(cmCompletedMtg + cmUpcomingMtg > 0,((cmCompletedMtg * 100) / (cmCompletedMtg + cmUpcomingMtg)).toLong(),0);
+					/* Attendance */
+					cmSumAtt2 = 0;
+					cmCntAtt2 = 0;
+					cmAttMtgs = Meeting[Committee1 == cmId && Avergage_Attenance != null];
+					for each  am in cmAttMtgs
+					{
+						if(am.Avergage_Attenance != null)
+						{
+							cmSumAtt2 = cmSumAtt2 + am.Avergage_Attenance.toLong();
+							cmCntAtt2 = cmCntAtt2 + 1;
+						}
+					}
+					cmAvgAtt2 = if(cmCntAtt2 > 0,(cmSumAtt2 / cmCntAtt2).toLong(),0);
+					/* Action Tracker */
+					cmTotalAT2 = 0;
+					cmCompAT2 = 0;
+					cmOverdueAT2 = 0;
+					for each  cmMtg2 in cmMeetings
+					{
+						if(cmMtg2.ID != null)
+						{
+							cmTotalAT2 = cmTotalAT2 + Action_Tracker[Meeting == cmMtg2.ID].count();
+							cmCompAT2 = cmCompAT2 + Action_Tracker[Meeting == cmMtg2.ID && Status == "Completed"].count();
+							cmOverdueAT2 = cmOverdueAT2 + Action_Tracker[Meeting == cmMtg2.ID && Status != "Completed" && Due_Date < todayDate].count();
+						}
+					}
+					cmActionCompRate = if(cmTotalAT2 > 0,((cmCompAT2 * 100) / cmTotalAT2).toLong(),0);
+					cmAgendaCompRate = if(cmTotalMtg > 0,((cmCompletedMtg * 100) / cmTotalMtg).toLong(),0);
+					cmEscalated = cmOverdueAT2 + "/" + cmTotalAT2;
+					cmEscPct = if(cmTotalAT2 > 0,((cmOverdueAT2 * 100) / cmTotalAT2).toLong(),0);
+					/* Material */
+					cmMatMetCount = 0;
+					cmMatTotalCount = 0;
+					cmMatMtgs2 = Meeting[Committee1 == cmId];
+					for each  matMtg in cmMatMtgs2
+					{
+						if(matMtg.Agenda_Items_Material != null)
+						{
+							matVal = matMtg.Agenda_Items_Material + "";
+							if(matVal != "null" && !matVal.isEmpty())
+							{
+								cmMatTotalCount = cmMatTotalCount + 1;
+								if(matVal == "Met")
+								{
+									cmMatMetCount = cmMatMetCount + 1;
+								}
+							}
+						}
+					}
+					cmMatPct = if(cmMatTotalCount > 0,((cmMatMetCount * 100) / cmMatTotalCount).toLong(),0);
+					/* Per-member stats */
+					for each  mRow2 in cmMemberList
+					{
+						mName2 = mRow2.get("name") + "";
+						mAttTotal = 0;
+						mAttPresent = 0;
+						for each  cmMtg3 in cmMeetings
+						{
+							if(cmMtg3 != null)
+							{
+								for each  attR3 in cmMtg3.Meeting_Attendance
+								{
+									if(attR3.Member != null)
+									{
+										attMbrRec = User[ID == attR3.Member];
+										if(attMbrRec != null && attMbrRec.count() > 0)
+										{
+											attMbrName = attMbrRec.Name + "";
+											if(attMbrName != "null" && !attMbrName.isEmpty() && attMbrName == mName2)
+											{
+												mAttTotal = mAttTotal + 1;
+												if(attR3.Status != null && attR3.Status + "" == "Present")
+												{
+													mAttPresent = mAttPresent + 1;
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+						mAttPct2 = if(mAttTotal > 0,((mAttPresent * 100) / mAttTotal).toLong(),0);
+						mRow2.put("attendance",mAttPct2);
+						mTotalAct = 0;
+						mCompAct = 0;
+						mOnTimeAct = 0;
+						for each  cmMtg4 in cmMeetings
+						{
+							if(cmMtg4.ID != null)
+							{
+								mActRecs = Action_Tracker[Meeting == cmMtg4.ID];
+								for each  mAct in mActRecs
+								{
+									if(mAct.Assign_To != null)
+									{
+										actAssignName = mAct.Assign_To.Name + "";
+										if(actAssignName != "null" && !actAssignName.isEmpty() && actAssignName == mName2)
+										{
+											mTotalAct = mTotalAct + 1;
+											actSt2 = mAct.Status + "";
+											if(actSt2 == "Completed")
+											{
+												mCompAct = mCompAct + 1;
+												if(mAct.Completed_Date != null && mAct.Due_Date != null)
+												{
+													if(mAct.Completed_Date <= mAct.Due_Date)
+													{
+														mOnTimeAct = mOnTimeAct + 1;
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+						mRow2.put("totalActions",mTotalAct);
+						mRow2.put("onTimeClosure",mOnTimeAct + "/" + mTotalAct);
+						mCompPct2 = if(mTotalAct > 0,((mCompAct * 100) / mTotalAct).toLong(),0);
+						mOnTimePct = if(mTotalAct > 0,((mOnTimeAct * 100) / mTotalAct).toLong(),0);
+						mContribScore = ((mAttPct2 + mOnTimePct + mCompPct2) / 3).toLong();
+						mRow2.put("score",mContribScore);
+					}
+					/* Last meeting date */
+					lastMtgDate = "-";
+					for each  lm in cmMeetings
+					{
+						if(lm.Start_Date_Time != null)
+						{
+							lastMtgDate = lm.Start_Date_Time.toString("dd-MMM-yyyy");
+						}
+					}
+					/* Overall score */
+					cmOverallScore = 0;
+					scoreCount = 0;
+					for each  scRow in cmMemberList
+					{
+						scScore = scRow.get("score");
+						if(scScore != null)
+						{
+							cmOverallScore = cmOverallScore + scScore.toLong();
+							scoreCount = scoreCount + 1;
+						}
+					}
+					cmOverallScore = if(scoreCount > 0,(cmOverallScore / scoreCount).toLong(),0);
+					cmScoreClr = if(cmOverallScore >= 75,"#179E6C",if(cmOverallScore >= 50,"#B8770D","#FE455D"));
+					%>
+<style>
+    .zcs-cm-header { display:flex;align-items:center;justify-content:space-between; }
+    .zcs-cm-avatar { width:48px;height:48px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;flex-shrink:0; }
+    .zcs-cm-badge { display:inline-flex;padding:2px 10px;border-radius:999px;font-size:11px;font-weight:500; }
+    .zcs-cm-score { font-size:32px;font-weight:700;margin:0; }
+    .zcs-cm-divider { height:1px;background:var(--zcs_tertiary_border_color); }
+    .zcs-cm-meta { display:flex;flex-direction:column;gap:2px; }
+    .zcs-cm-bar-wrap { display:flex;align-items:center;gap:6px; }
+    .zcs-cm-bar-track { height:8px;background:#eef1f6;border-radius:999px;overflow:hidden; }
+    .zcs-cm-bar-fill { height:100%;border-radius:999px; }
+    .zcs-cm-bar-sm { width:70px;height:6px;background:#eef1f6;border-radius:999px;overflow:hidden; }
+    .zcs-cm-bar-sm-fill { height:100%;border-radius:999px; }
+    .zcs-cm-metric { display:flex;flex-direction:column;gap:6px; }
+    .zcs-cm-metric-row { display:flex;align-items:center;justify-content:space-between; }
+    .zcs-cm-dropdown { position:relative;display:inline-block;width:auto; }
+    .zcs-cm-dropdown-trigger {
+        display:inline-flex;align-items:center;gap:10px;padding:10px 18px;
+        border:1px solid var(--zcs_tertiary_border_color);border-radius:10px;
+        font-size:15px;font-weight:500;color:#131635;background:#fff;
+        cursor:pointer;list-style:none;min-width:180px;
+    }
+    .zcs-cm-dropdown-trigger::-webkit-details-marker { display:none; }
+    .zcs-cm-dropdown-trigger::marker { display:none;content:''; }
+    .zcs-cm-dropdown-arrow { font-size:10px;color:#8a9ab5;margin-left:auto; }
+    .zcs-cm-dropdown-menu {
+        position:absolute;top:100%;left:0;margin-top:4px;
+        background:#fff;border:1px solid var(--zcs_tertiary_border_color);
+        border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,0.1);
+        padding:6px;z-index:100;min-width:240px;
+        display:flex;flex-direction:column;gap:2px;
+    }
+    .zcs-cm-dropdown-item {
+        display:block;padding:10px 16px;border-radius:8px;
+        font-size:14px;font-weight:400;color:#131635;text-decoration:none;
+    }
+    .zcs-cm-dropdown-item:hover { background:#f5f6fa; }
+    .zcs-cm-dropdown-active { background:#fde8e8;font-weight:500;color:#e8453c; }
+    .zcs-cm-skill-bar { width:100px;height:6px;background:#eef1f6;border-radius:999px;overflow:hidden; }
+    .zcs-cm-skill-fill { height:100%;border-radius:999px; }
+    .zcs-cm-tbl-avatar { width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0; }
+	.zcs-cm-bar-track-lg { height:12px;background:#eef1f6;border-radius:999px;overflow:hidden; }
+</style>
+
+<!-- Committee Header Card with Dropdown -->
+            <div class='zcs-card zcs-flex zcs-direction-column zcs-gap-16 zcs-p-20 zcs-box-border'>
+                <details class='zcs-cm-dropdown'>
+                    <summary class='zcs-cm-dropdown-trigger'><%=selCmName%> <span class='zcs-cm-dropdown-arrow'>&#9660;</span></summary>
+                    <div class='zcs-cm-dropdown-menu'>
+<%
+					allCmForFilter = Committee[ID != 0];
+					for each  cmF in allCmForFilter
+					{
+						cfId = cmF.ID + "";
+						cfName = cmF.Committee_Name + "";
+						cfCls = if(cfId == selectedCmId,"zcs-cm-dropdown-item zcs-cm-dropdown-active","zcs-cm-dropdown-item");
+						%>
+<a href='#Page:<%=page_link_name%>?tab=performance&perf_tab=commitee&sel_committee=<%=cfId%>' class='<%=cfCls%>'><%=cfName%></a>
+<%
+					}
+					%>
+</div>
+                </details>
+                <div class='zcs-cm-header'>
+                    <div class='zcs-flex zcs-align-items-center zcs-gap-12'>
+                        <span class='zcs-cm-avatar' style='background:#EAF2FF;color:#1652BB;'><%=selCmInitial%></span>
+                        <div class='zcs-flex zcs-direction-column zcs-gap-2'>
+                            <div class='zcs-flex zcs-align-items-center zcs-gap-8'>
+                                <h5 class='zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'><%=selCmName%></h5>
+                                <span class='zcs-cm-badge' style='background:#e4fcf3;color:#179E6C;'><%=selCmStatus%></span>
+                            </div>
+                            <p class='zcs-font-13 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'><%=selCmType%></p>
+                        </div>
+                    </div>
+                    <div class='zcs-flex zcs-direction-column zcs-align-items-end zcs-gap-2'>
+                        <h3 class='zcs-cm-score' style='color:<%=cmScoreClr%>;'><%=cmOverallScore%>%</h3>
+                        <span class='zcs-font-12 zcs-font-normal zcs-color-tertiary'><%=language.get("ops.perf.overallScore")%></span>
+                    </div>
+                </div>
+                <div class='zcs-cm-divider'></div>
+                <div class='zcs-flex zcs-gap-32' style='flex-wrap:wrap;'>
+                    <div class='zcs-cm-meta'><span class='zcs-font-13 zcs-font-normal zcs-color-tertiary'><%=selCmChair%></span><span class='zcs-font-12 zcs-font-normal zcs-color-tertiary'>Chairperson</span></div>
+                    <div class='zcs-cm-meta'><span class='zcs-font-13 zcs-font-medium zcs-color-primary'><%=cmMemberCount%></span><span class='zcs-font-12 zcs-font-normal zcs-color-tertiary'>Members</span></div>
+                    <div class='zcs-cm-meta'><span class='zcs-font-13 zcs-font-medium zcs-color-primary'><%=cmTotalMtg%></span><span class='zcs-font-12 zcs-font-normal zcs-color-tertiary'>Meetings (YTD)</span></div>
+                    <div class='zcs-cm-meta'><span class='zcs-font-13 zcs-font-medium zcs-color-primary'><%=lastMtgDate%></span><span class='zcs-font-12 zcs-font-normal zcs-color-tertiary'>Last met</span></div>
+                </div>
+            </div>
+
+<!-- Executive KPI Summary -->
+            <div class='zcs-card zcs-flex zcs-direction-column zcs-gap-16 zcs-p-20 zcs-box-border'>
+                <h6 class='zcs-font-16 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'>Executive KPI Summary</h6>
+                <div class='zcs-panel-wrapper zcs-lg-panel-wrapper'>
+                    <ul class='zcs-row zcs-justify-space-between zcs-gap-16 zcs-list-none zcs-p-0 zcs-m-0'>
+                        <li class='zcs-col-2 zcs-col-sm-6 zcs-col-xs-12'><div class='zcs-panel zcs-wh-full zcs-flex zcs-direction-column zcs-gap-4 zcs-rounded-lg zcs-p-16 zcs-box-border'><p class='zcs-font-13 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'><%=language.get("ops.perf.overallScore")%></p><h4 class='zcs-font-20 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'><%=cmOverallScore%>%</h4></div></li>
+                        <li class='zcs-col-2 zcs-col-sm-6 zcs-col-xs-12'><div class='zcs-panel zcs-wh-full zcs-flex zcs-direction-column zcs-gap-4 zcs-rounded-lg zcs-p-16 zcs-box-border'><p class='zcs-font-13 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'>Compliance &amp; Structure</p><h4 class='zcs-font-20 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'>-</h4></div></li>
+                        <li class='zcs-col-2 zcs-col-sm-6 zcs-col-xs-12'><div class='zcs-panel zcs-wh-full zcs-flex zcs-direction-column zcs-gap-4 zcs-rounded-lg zcs-p-16 zcs-box-border'><p class='zcs-font-13 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'>Operational Effectiveness</p><h4 class='zcs-font-20 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'><%=cmActionCompRate%>%</h4></div></li>
+                        <li class='zcs-col-2 zcs-col-sm-6 zcs-col-xs-12'><div class='zcs-panel zcs-wh-full zcs-flex zcs-direction-column zcs-gap-4 zcs-rounded-lg zcs-p-16 zcs-box-border'><p class='zcs-font-13 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'>Oversight Quality</p><h4 class='zcs-font-20 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'><%=cmAvgAtt2%>%</h4></div></li>
+                        <li class='zcs-col-2 zcs-col-sm-6 zcs-col-xs-12'><div class='zcs-panel zcs-wh-full zcs-flex zcs-direction-column zcs-gap-4 zcs-rounded-lg zcs-p-16 zcs-box-border'><p class='zcs-font-13 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'>Strategic Contribution</p><h4 class='zcs-font-20 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'>-</h4></div></li>
+                    </ul>
+                </div>
+            </div>
+
+<!-- Member Contribution Table -->
+<div class='zcs-card zcs-flex zcs-direction-column zcs-box-border'>
+    <h6 class='zcs-font-16 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0 zcs-px-20 zcs-pt-16 zcs-pb-0 zcs-box-border'>Member Contribution within this Committee</h6>
+<%
+					/* ============ Pagination ============ */
+					mcRecordsPerPage = 5;
+					mcTotalCount = cmMemberList.size();
+					mcStartIndex = 1;
+					if(!input.mc_start.isEmpty())
+					{
+						mcStartIndex = input.mc_start.toLong();
+					}
+					mcDiff = mcTotalCount - mcStartIndex;
+					mcEndIndex = if(mcStartIndex + mcRecordsPerPage - 1 > mcTotalCount,mcStartIndex + mcDiff,mcStartIndex + mcRecordsPerPage - 1);
+					mcPrevAction = if(mcStartIndex == 1,"disable","");
+					mcNextAction = if(mcEndIndex >= mcTotalCount,"disable","");
+					mcPageLink = "#Page:Operational_Page?tab=performance&perf_tab=commitee";
+					mcPrevLink = if(mcStartIndex > 1,"href='" + mcPageLink + "&mc_start=" + (mcStartIndex - mcRecordsPerPage) + "'","");
+					mcNextLink = if(mcEndIndex < mcTotalCount,"href='" + mcPageLink + "&mc_start=" + (mcEndIndex + 1) + "'","");
+					if(mcTotalCount == 0)
+					{
+						%>
+<%=thisapp.Page.noData()%>
+<%
+					}
+					else
+					{
+						%>
+<div class='zcs-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative'>
+    <table class='zcs-w-full'>
+        <thead class='zcs-sticky'>
+            <tr>
+                <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Name</th>
+                <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'><%=language.get("ops.individual.role")%></th>
+                <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Actions Owned</th>
+                <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>On-time Closure</th>
+                <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Attendance</th>
+                <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Score</th>
+            </tr>
+            <tr class='zcs-tspace'><th class='zcs-p-2 zcs-box-border' colspan='6'></th></tr>
+        </thead>
+        <tbody>
+<%
+						mcIdx = 0;
+						for each  mRow3 in cmMemberList
+						{
+							mcIdx = mcIdx + 1;
+							if(mcIdx >= mcStartIndex && mcIdx <= mcEndIndex)
+							{
+								mAttClr3 = if(mRow3.get("attendance").toLong() >= 90,"#179E6C",if(mRow3.get("attendance").toLong() >= 75,"#f59e0b","#e8453c"));
+								%>
+<tr>
+                <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body'>
+                    <div class='zcs-flex zcs-align-items-center zcs-gap-8'>
+                        <span class='zcs-cm-tbl-avatar' style='background:<%=mRow3.get("avatarBg")%>;color:<%=mRow3.get("avatarClr")%>;'><%=mRow3.get("initial")%></span>
+                        <span class='zcs-font-14 zcs-font-medium zcs-color-primary'><%=mRow3.get("name")%></span>
+                    </div>
+                </td>
+                <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=mRow3.get("role")%></td>
+                <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=mRow3.get("totalActions")%></td>
+                <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=mRow3.get("onTimeClosure")%></td>
+                <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body'>
+                    <div class='zcs-cm-bar-wrap'><div class='zcs-cm-bar-sm'><div class='zcs-cm-bar-sm-fill' style='width:<%=mRow3.get("attendance")%>%;background:<%=mAttClr3%>;'></div></div><span class='zcs-font-13 zcs-color-primary'><%=mRow3.get("attendance")%>%</span></div>
+                </td>
+                <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'><%=mRow3.get("score")%></td>
+            </tr>
+<%
+							}
+						}
+						%>
+</tbody>
+    </table>
+</div>
+<div class='zcs-pagination'>
+    <ul class='zcs-flex zcs-align-items-center zcs-justify-end zcs-gap-12 zcs-p-0 zcs-m-0'>
+        <li class='zcs-pagination-item'>
+            <span class='zcs-pagination-text zcs-flex zcs-align-items-center zcs-justify-center zcs-rounded-sm zcs-box-border zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>
+                <%=mcStartIndex%>-<%=mcEndIndex%> of <%=mcTotalCount%>
+            </span>
+        </li>
+        <li class='zcs-pagination-item'>
+            <a class='zcs-pagination-action zcs-flex zcs-align-items-center zcs-justify-center zcs-rounded-sm zcs-px-8 zcs-box-border zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary zcs-cursor-pointer <%=if(mcPrevAction == "disable","zcs-button-disable","")%>' <%=mcPrevLink%>>
+                <i class='zcs-pagination-icon zc-li-outline arrows-1-minimal-left'></i>
+            </a>
+        </li>
+        <li class='zcs-pagination-item'>
+            <a class='zcs-pagination-action zcs-flex zcs-align-items-center zcs-justify-center zcs-rounded-sm zcs-px-8 zcs-box-border zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary zcs-cursor-pointer <%=if(mcNextAction == "disable","zcs-button-disable","")%>' <%=mcNextLink%>>
+                <i class='zcs-pagination-icon zc-li-outline arrows-1-minimal-right'></i>
+            </a>
+        </li>
+    </ul>
+</div>
+<%
+					}
+					%>
+</div>
+<!-- Structure & Compliance Analysis -->
+            <div class='zcs-card zcs-flex zcs-direction-column zcs-gap-16 zcs-p-20 zcs-box-border'>
+                <h6 class='zcs-font-16 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'>Structure &amp; Compliance Analysis</h6>
+                <ul class='zcs-list zcs-row zcs-justify-space-between zcs-gap-20 zcs-p-0 zcs-m-0'>
+                    <li class='zcs-col-4 zcs-col-sm-6 zcs-col-xs-12'>
+                        <div class='zcs-card zcs-flex zcs-direction-column zcs-gap-8 zcs-rounded-lg zcs-p-16 zcs-box-border'>
+                            <span class='zcs-font-13 zcs-font-normal zcs-lh-body zcs-color-tertiary'>Total Members</span>
+                            <h4 class='zcs-font-20 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'><%=cmMemberCount%></h4>
+                        </div>
+                    </li>
+                    <li class='zcs-col-4 zcs-col-sm-6 zcs-col-xs-12'>
+                        <div class='zcs-card zcs-flex zcs-direction-column zcs-gap-8 zcs-rounded-lg zcs-p-16 zcs-box-border'>
+                            <span class='zcs-font-13 zcs-font-normal zcs-lh-body zcs-color-tertiary'>Independence Ratio</span>
+                            <h4 class='zcs-font-20 zcs-font-medium zcs-lh-heading zcs-color-green zcs-m-0'><%=cmIndepRatio%>% (<%=cmIndepCount%>/<%=cmMemberCount%>)</h4>
+                            <span class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'>Benchmark: &ge;75%</span>
+                        </div>
+                    </li>
+                    <li class='zcs-col-4 zcs-col-sm-6 zcs-col-xs-12'>
+                        <div class='zcs-card zcs-flex zcs-direction-column zcs-gap-8 zcs-rounded-lg zcs-p-16 zcs-box-border'>
+                            <span class='zcs-font-13 zcs-font-normal zcs-lh-body zcs-color-tertiary'>Female Representation</span>
+                            <h4 class='zcs-font-20 zcs-font-medium zcs-lh-heading zcs-color-green zcs-m-0'><%=cmFemaleRatio%>% (<%=cmFemaleCount%>/<%=cmMemberCount%>)</h4>
+                            <span class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'>Target: &ge;30%</span>
+                        </div>
+                    </li>
+                </ul>
+
+                <h6 class='zcs-font-16 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0 zcs-mt-8'>Tenure Distribution</h6>
+                <ul class='zcs-list zcs-row zcs-justify-space-between zcs-gap-20 zcs-p-0 zcs-m-0'>
+                    <li class='zcs-col-3 zcs-col-sm-6 zcs-col-xs-12'><div class='zcs-card zcs-flex zcs-direction-column zcs-gap-8 zcs-rounded-lg zcs-p-16 zcs-box-border'><span class='zcs-font-13 zcs-font-normal zcs-lh-body zcs-color-tertiary'>0-6 months</span><h6 class='zcs-font-16 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0'><%=tenure0to3%> Members</h6></div></li>
+                    <li class='zcs-col-3 zcs-col-sm-6 zcs-col-xs-12'><div class='zcs-card zcs-flex zcs-direction-column zcs-gap-8 zcs-rounded-lg zcs-p-16 zcs-box-border'><span class='zcs-font-13 zcs-font-normal zcs-lh-body zcs-color-tertiary'>7-12 months</span><h6 class='zcs-font-16 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0'><%=tenure4to7%> Members</h6></div></li>
+                    <li class='zcs-col-3 zcs-col-sm-6 zcs-col-xs-12'><div class='zcs-card zcs-flex zcs-direction-column zcs-gap-8 zcs-rounded-lg zcs-p-16 zcs-box-border'><span class='zcs-font-13 zcs-font-normal zcs-lh-body zcs-color-tertiary'>12+ months</span><h6 class='zcs-font-16 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0'><%=tenure8plus%> Members</h6></div></li>
+                    <li class='zcs-col-3 zcs-col-sm-6 zcs-col-xs-12'><div class='zcs-card zcs-flex zcs-direction-column zcs-gap-8 zcs-rounded-lg zcs-p-16 zcs-box-border'><span class='zcs-font-13 zcs-font-normal zcs-lh-body zcs-color-tertiary'>Average Tenure</span><h6 class='zcs-font-16 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0'><%=avgTenure%> months</h6></div></li>
+                </ul>
+
+<h6 class='zcs-font-16 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0 zcs-mt-8'>Skill Coverage Matrix</h6>
+<%
+					skillKeys = skillMap.keys();
+					/* ============ Pagination ============ */
+					skRecordsPerPage = 5;
+					skTotalCount = skillKeys.size();
+					skStartIndex = 1;
+					if(!input.sk_start.isEmpty())
+					{
+						skStartIndex = input.sk_start.toLong();
+					}
+					skDiff = skTotalCount - skStartIndex;
+					skEndIndex = if(skStartIndex + skRecordsPerPage - 1 > skTotalCount,skStartIndex + skDiff,skStartIndex + skRecordsPerPage - 1);
+					skPrevAction = if(skStartIndex == 1,"disable","");
+					skNextAction = if(skEndIndex >= skTotalCount,"disable","");
+					skPageLink = "#Page:Operational_Page?tab=performance&perf_tab=commitee";
+					skPrevLink = if(skStartIndex > 1,"href='" + skPageLink + "&sk_start=" + (skStartIndex - skRecordsPerPage) + "'","");
+					skNextLink = if(skEndIndex < skTotalCount,"href='" + skPageLink + "&sk_start=" + (skEndIndex + 1) + "'","");
+					if(skTotalCount == 0)
+					{
+						%>
+<%=thisapp.Page.noData()%>
+<%
+					}
+					else
+					{
+						%>
+<div class='zcs-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative'>
+    <table class='zcs-w-full'>
+        <thead class='zcs-sticky'>
+            <tr>
+                <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Skill Category</th>
+                <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Coverage</th>
+                <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'><%=language.get("ops.committee.status")%></th>
+            </tr>
+            <tr class='zcs-tspace'><th class='zcs-p-2 zcs-box-border' colspan='3'></th></tr>
+        </thead>
+        <tbody>
+<%
+						skIdx = 0;
+						for each  skKey in skillKeys
+						{
+							skIdx = skIdx + 1;
+							if(skIdx >= skStartIndex && skIdx <= skEndIndex)
+							{
+								skCount = skillMap.get(skKey).toLong();
+								skPct = if(cmMemberCount > 0,((skCount * 100) / cmMemberCount).toLong(),0);
+								skClr = if(skPct >= 80,"#179E6C",if(skPct >= 50,"#f59e0b","#e8453c"));
+								skStatus = if(skPct >= 80,"Strong",if(skPct >= 50,"Partial","Weak"));
+								skStatusBg = if(skPct >= 80,"#e4fcf3",if(skPct >= 50,"#FCF4E6","#FDE3E6"));
+								skStatusClr = if(skPct >= 80,"#179E6C",if(skPct >= 50,"#B8770D","#FE455D"));
+								%>
+<tr>
+                <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=skKey%></td>
+                <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body'>
+                    <div class='zcs-flex zcs-align-items-center zcs-gap-8'><div class='zcs-cm-skill-bar'><div class='zcs-cm-skill-fill' style='width:<%=skPct%>%;background:<%=skClr%>;'></div></div><span class='zcs-font-13 zcs-color-primary'><%=skCount%>/<%=cmMemberCount%> Members</span></div>
+                </td>
+                <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body'>
+                    <span class='zcs-cm-badge' style='background:<%=skStatusBg%>;color:<%=skStatusClr%>;'><%=skStatus%></span>
+                </td>
+            </tr>
+<%
+							}
+						}
+						%>
+</tbody>
+    </table>
+</div>
+<div class='zcs-pagination'>
+    <ul class='zcs-flex zcs-align-items-center zcs-justify-end zcs-gap-12 zcs-p-0 zcs-m-0'>
+        <li class='zcs-pagination-item'>
+            <span class='zcs-pagination-text zcs-flex zcs-align-items-center zcs-justify-center zcs-rounded-sm zcs-box-border zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>
+                <%=skStartIndex%>-<%=skEndIndex%> of <%=skTotalCount%>
+            </span>
+        </li>
+        <li class='zcs-pagination-item'>
+            <a class='zcs-pagination-action zcs-flex zcs-align-items-center zcs-justify-center zcs-rounded-sm zcs-px-8 zcs-box-border zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary zcs-cursor-pointer <%=if(skPrevAction == "disable","zcs-button-disable","")%>' <%=skPrevLink%>>
+                <i class='zcs-pagination-icon zc-li-outline arrows-1-minimal-left'></i>
+            </a>
+        </li>
+        <li class='zcs-pagination-item'>
+            <a class='zcs-pagination-action zcs-flex zcs-align-items-center zcs-justify-center zcs-rounded-sm zcs-px-8 zcs-box-border zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary zcs-cursor-pointer <%=if(skNextAction == "disable","zcs-button-disable","")%>' <%=skNextLink%>>
+                <i class='zcs-pagination-icon zc-li-outline arrows-1-minimal-right'></i>
+            </a>
+        </li>
+    </ul>
+</div>
+<%
+					}
+					%>
+</div>
+
+<!-- Meeting Effectiveness + Oversight Quality -->
+            <div class='zcs-row zcs-gap-20' style='align-items:stretch;'>
+                <div class='zcs-col-6 zcs-col-xs-12'>
+                    <div class='zcs-card zcs-flex zcs-direction-column zcs-gap-16 zcs-p-20 zcs-box-border' style='height:100%;'>
+                 <h6 class='zcs-font-16 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'>Meeting Effectiveness</h6>
+                        <div class='zcs-flex zcs-direction-column zcs-gap-20'>
+<%
+					hvpClr = if(hvpPct >= 90,"#179E6C",if(hvpPct >= 75,"#f59e0b","#e8453c"));
+					attClr2 = if(cmAvgAtt2 >= 90,"#179E6C",if(cmAvgAtt2 >= 75,"#f59e0b","#e8453c"));
+					acClr2 = if(cmActionCompRate >= 90,"#179E6C",if(cmActionCompRate >= 75,"#f59e0b","#e8453c"));
+					agcClr = if(cmAgendaCompRate >= 90,"#179E6C",if(cmAgendaCompRate >= 75,"#f59e0b","#e8453c"));
+					matClr = if(cmMatPct >= 90,"#179E6C",if(cmMatPct >= 75,"#f59e0b","#e8453c"));
+					%>
+<div class='zcs-cm-metric'>
+                                <div class='zcs-cm-metric-row'><span class='zcs-font-16 zcs-font-medium zcs-color-primary'>Meetings Held vs Planned</span><span class='zcs-font-16 zcs-font-medium zcs-color-primary'><%=cmHeldVsPlanned%></span></div>
+                                <div class='zcs-cm-bar-track-lg'><div class='zcs-cm-bar-fill' style='width:<%=hvpPct%>%;background:<%=hvpClr%>;'></div></div>
+                                <p class='zcs-font-12 zcs-font-normal zcs-color-tertiary zcs-m-0'>Target 100%</p>
+                            </div>
+                            <div class='zcs-cm-metric'>
+                                <div class='zcs-cm-metric-row'><span class='zcs-font-16 zcs-font-medium zcs-color-primary'>Average Attendance</span><span class='zcs-font-16 zcs-font-medium zcs-color-primary'><%=cmAvgAtt2%>%</span></div>
+                                <div class='zcs-cm-bar-track-lg'><div class='zcs-cm-bar-fill' style='width:<%=cmAvgAtt2%>%;background:<%=attClr2%>;'></div></div>
+                                <p class='zcs-font-12 zcs-font-normal zcs-color-tertiary zcs-m-0'>Target &ge;90%</p>
+                            </div>
+                            <div class='zcs-cm-metric'>
+                                <div class='zcs-cm-metric-row'><span class='zcs-font-16 zcs-font-medium zcs-color-primary'>Agenda Completion Rate</span><span class='zcs-font-16 zcs-font-medium zcs-color-primary'><%=cmAgendaCompRate%>%</span></div>
+                                <div class='zcs-cm-bar-track-lg'><div class='zcs-cm-bar-fill' style='width:<%=cmAgendaCompRate%>%;background:<%=agcClr%>;'></div></div>
+                                <p class='zcs-font-12 zcs-font-normal zcs-color-tertiary zcs-m-0'>Per meeting</p>
+                            </div>
+                            <div class='zcs-cm-metric'>
+                                <div class='zcs-cm-metric-row'><span class='zcs-font-16 zcs-font-medium zcs-color-primary'>Advance Material Distribution</span><span class='zcs-font-16 zcs-font-medium zcs-color-primary'><%=cmMatPct%>%</span></div>
+                                <div class='zcs-cm-bar-track-lg'><div class='zcs-cm-bar-fill' style='width:<%=cmMatPct%>%;background:<%=matClr%>;'></div></div>
+                                <p class='zcs-font-12 zcs-font-normal zcs-color-tertiary zcs-m-0'>Target 5+ days before meeting</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class='zcs-col-6 zcs-col-xs-12'>
+                    <div class='zcs-card zcs-flex zcs-direction-column zcs-gap-16 zcs-p-20 zcs-box-border' style='height:100%;'>
+                  <h6 class='zcs-font-16 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'>Oversight Quality &amp; Risk Control</h6>
+                        <div class='zcs-flex zcs-direction-column zcs-gap-20'>
+<%
+					escClr = if(cmEscPct <= 10,"#179E6C",if(cmEscPct <= 25,"#f59e0b","#e8453c"));
+					%>
+<div class='zcs-cm-metric'>
+                                <div class='zcs-cm-metric-row'><span class='zcs-font-16 zcs-font-medium zcs-color-primary'>Action Item Closure Rate</span><span class='zcs-font-16 zcs-font-medium zcs-color-primary'><%=cmActionCompRate%>%</span></div>
+                                <div class='zcs-cm-bar-track-lg'><div class='zcs-cm-bar-fill' style='width:<%=cmActionCompRate%>%;background:<%=acClr2%>;'></div></div>
+                                <p class='zcs-font-12 zcs-font-normal zcs-color-tertiary zcs-m-0'>% closed within SLA</p>
+                            </div>
+                            <div class='zcs-cm-metric'>
+                                <div class='zcs-cm-metric-row'><span class='zcs-font-16 zcs-font-medium zcs-color-primary'>Overdue Actions</span><span class='zcs-font-16 zcs-font-medium zcs-color-primary'><%=cmOverdueAT2%></span></div>
+                                <div class='zcs-cm-bar-track-lg'><div class='zcs-cm-bar-fill' style='width:<%=cmEscPct%>%;background:<%=escClr%>;'></div></div>
+                                <p class='zcs-font-12 zcs-font-normal zcs-color-tertiary zcs-m-0'>Lower is better</p>
+                            </div>
+                            <div class='zcs-cm-metric'>
+                                <div class='zcs-cm-metric-row'><span class='zcs-font-16 zcs-font-medium zcs-color-primary'>Risk Issues Escalated</span><span class='zcs-font-16 zcs-font-medium zcs-color-primary'><%=cmEscalated%></span></div>
+                                <div class='zcs-cm-bar-track-lg'><div class='zcs-cm-bar-fill' style='width:<%=cmEscPct%>%;background:<%=escClr%>;'></div></div>
+                                <p class='zcs-font-12 zcs-font-normal zcs-color-tertiary zcs-m-0'>Overdue vs total actions</p>
+                            </div>
+                            <div class='zcs-cm-metric'>
+                                <div class='zcs-cm-metric-row'><span class='zcs-font-16 zcs-font-medium zcs-color-primary'>Escalations to Board</span><span class='zcs-font-16 zcs-font-medium zcs-color-tertiary'>-</span></div>
+                                <div class='zcs-cm-bar-track-lg'><div class='zcs-cm-bar-fill' style='width:0%;'></div></div>
+                                <p class='zcs-font-12 zcs-font-normal zcs-color-tertiary zcs-m-0'>-</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+<%
+				}
+				else
+				{
+					%>
+<div class='zcs-card zcs-p-20 zcs-box-border zcs-text-center'>
+			<p class='zcs-font-14 zcs-color-tertiary'>No committee found. Please add a committee first.</p>
+		</div>
+<%
+				}
+			}
+			/* \u2500\u2500 INDIVIDUAL SUB-TAB (static placeholder) \u2500\u2500 */
+			else if(input.perf_tab == "individual")
+			{
+				%>
+<style>
+			.zcs-ind-avatar { width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0; }
+    .zcs-ind-bar-wrap { display:flex;align-items:center;gap:6px; }
+    .zcs-ind-bar-track { width:60px;height:6px;background:#eef1f6;border-radius:999px;overflow:hidden; }
+    .zcs-ind-bar-fill { height:100%;border-radius:999px; }
+    .zcs-ind-status { display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:6px;font-size:12px;font-weight:500; }
+    .zcs-ind-dot { width:7px;height:7px;border-radius:50%;flex-shrink:0; }
+    .zcs-ind-score-bar { height:100%;border-radius:0 6px 6px 0; }
+			</style>
+<%
+				/* \u2500\u2500 Individual tab data fetch \u2500\u2500 */
+				indUserList = List();
+				indTotalUsers = 0;
+				indSumAtt = 0;
+				indSumComp = 0;
+				indSumContrib = 0;
+				indUserCount = 0;
+				allUsers = User[ID != 0];
+				indTotalUsers = allUsers.count();
+				uIdx = 0;
+				for each  usr in allUsers
+				{
+					uRow = Map();
+					uName = usr.Name + "";
+					if(uName == "null" || uName.isEmpty())
+					{
+						uName = "-";
+					}
+					uRow.put("name",uName);
+					uInitial = if(uName != "-" && uName.length() > 0,uName.subString(0,1),"?");
+					uRow.put("initial",uInitial);
+					uRole = "-";
+					if(usr.Role != null)
+					{
+						roleRec = Role[ID == usr.Role];
+						if(roleRec != null)
+						{
+							rName = roleRec.Role_Name + "";
+							if(rName != "null" && !rName.isEmpty())
+							{
+								uRole = rName;
+							}
+						}
+					}
+					uRow.put("role",uRole);
+					uColorIdx = (uIdx - (uIdx / 5).toLong() * 5).toLong();
+					uRow.put("avatarBg",avatarBgs.get(uColorIdx));
+					uRow.put("avatarClr",avatarClrs.get(uColorIdx));
+					/* Attendance */
+					/* Attendance \u2014 loop meetings, check subform for this user */
+					uTotalMtg = 0;
+					uPresentMtg = 0;
+					allMtgsForAtt = Meeting[ID != 0];
+					for each  mtgA in allMtgsForAtt
+					{
+						for each  attR in mtgA.Meeting_Attendance
+						{
+							if(attR.Member != null)
+							{
+								attMemberId = attR.Member + "";
+								usrIdStr = usr.ID + "";
+								if(attMemberId == usrIdStr)
+								{
+									uTotalMtg = uTotalMtg + 1;
+									attSt = attR.Status + "";
+									if(attSt == "Present")
+									{
+										uPresentMtg = uPresentMtg + 1;
+									}
+								}
+							}
+						}
+					}
+					uAttPct = if(uTotalMtg > 0,((uPresentMtg * 100) / uTotalMtg).toLong(),0);
+					uRow.put("attendance",uAttPct);
+					/* Completion */
+					uTotalAT = Action_Tracker[Assign_To == usr.ID].count();
+					uCompAT = Action_Tracker[Assign_To == usr.ID && Status == "Completed"].count();
+					uCompPct = if(uTotalAT > 0,((uCompAT * 100) / uTotalAT).toLong(),0);
+					uRow.put("completion",uCompPct);
+					uRow.put("totalActions",uTotalAT);
+					uRow.put("completedActions",uCompAT);
+					/* Vote \u2014 participation rate via loop */
+					uTotalExpected = 0;
+					uActualVotes = 0;
+					allMtgs = Meeting[ID != 0];
+					for each  im in allMtgs
+					{
+						isInvited = false;
+						if(im.Invite_Members != null)
+						{
+							for each  inv in im.Invite_Members
+							{
+								if(inv == usr.ID)
+								{
+									isInvited = true;
+								}
+							}
+						}
+						if(isInvited == true)
+						{
+							mtgResos = Add_Resolution[Meeting.ID == im.ID];
+							uTotalExpected = uTotalExpected + mtgResos.count();
+						}
+					}
+					uActualVotes = Vote[Voter == usr.ID].count();
+					uVotePct = if(uTotalExpected > 0,((uActualVotes * 100) / uTotalExpected).toLong(),0);
+					if(uVotePct > 100)
+					{
+						uVotePct = 100;
+					}
+					uRow.put("vote",uVotePct);
+					uRow.put("totalExpectedVotes",uTotalExpected);
+					uRow.put("actualVotes",uActualVotes);
+					/* Score */
+					uScore = ((uAttPct + uCompPct + uVotePct) / 3).toLong();
+					uRow.put("score",uScore);
+					/* Status */
+					uStatus = "Poor";
+					uStatusBg = "#FDE3E6";
+					uStatusClr = "#FE455D";
+					if(uScore >= 90)
+					{
+						uStatus = "Excellent";
+						uStatusBg = "#e4fcf3";
+						uStatusClr = "#179E6C";
+					}
+					else if(uScore >= 75)
+					{
+						uStatus = "Good";
+						uStatusBg = "#E8EFFF";
+						uStatusClr = "#2A6FFC";
+					}
+					else if(uScore >= 50)
+					{
+						uStatus = "Needs Attention";
+						uStatusBg = "#FCF4E6";
+						uStatusClr = "#B8770D";
+					}
+					uRow.put("status",uStatus);
+					uRow.put("statusBg",uStatusBg);
+					uRow.put("statusClr",uStatusClr);
+					indSumAtt = indSumAtt + uAttPct;
+					indSumComp = indSumComp + uCompPct;
+					indSumContrib = indSumContrib + uScore;
+					indUserCount = indUserCount + 1;
+					indUserList.add(uRow);
+					uIdx = uIdx + 1;
+				}
+				indAvgAtt = if(indUserCount > 0,(indSumAtt / indUserCount).toLong(),0);
+				indAvgComp = if(indUserCount > 0,(indSumComp / indUserCount).toLong(),0);
+				indAvgContrib = if(indUserCount > 0,(indSumContrib / indUserCount).toLong(),0);
+				/* Top 5 by score \u2014 pick highest, add to sorted list, remove from source */
+				top5List = List();
+				top5Source = List();
+				for each  tu in indUserList
+				{
+					top5Source.add(tu);
+				}
+				for each  round in {1,2,3,4,5}
+				{
+					if(top5Source.size() > 0)
+					{
+						maxScore = -1;
+						maxIdx = 0;
+						sIdx = 0;
+						for each  ts in top5Source
+						{
+							if(ts.get("score").toLong() > maxScore)
+							{
+								maxScore = ts.get("score").toLong();
+								maxIdx = sIdx;
+							}
+							sIdx = sIdx + 1;
+						}
+						top5List.add(top5Source.get(maxIdx));
+						top5Source.remove(maxIdx);
+					}
+				}
+				/* Action completion \u2014 pick highest completed, add to sorted list */
+				actCompList = List();
+				actSource = List();
+				for each  au in indUserList
+				{
+					if(au.get("totalActions").toLong() > 0)
+					{
+						actSource.add(au);
+					}
+				}
+				for each  round2 in {1,2,3,4,5}
+				{
+					if(actSource.size() > 0)
+					{
+						maxComp = -1;
+						maxIdx2 = 0;
+						sIdx2 = 0;
+						for each  as2 in actSource
+						{
+							if(as2.get("completedActions").toLong() > maxComp)
+							{
+								maxComp = as2.get("completedActions").toLong();
+								maxIdx2 = sIdx2;
+							}
+							sIdx2 = sIdx2 + 1;
+						}
+						actCompList.add(actSource.get(maxIdx2));
+						actSource.remove(maxIdx2);
+					}
+				}
+				maxCompActions = 1;
+				for each  mc in actCompList
+				{
+					if(mc.get("completedActions").toLong() > maxCompActions)
+					{
+						maxCompActions = mc.get("completedActions").toLong();
+					}
+				}
+				%>
+<!-- Individual KPI Panels -->
+            <div class='zcs-panel-wrapper zcs-lg-panel-wrapper'>
+                <ul class='zcs-row zcs-justify-space-between zcs-gap-20 zcs-list-none zcs-p-0 zcs-m-0'>
+                    <li class='zcs-col-3 zcs-col-sm-6 zcs-col-xs-12 zcs-relative zcs-cursor-pointer'><div class='zcs-panel zcs-wh-full zcs-flex zcs-justify-space-between zcs-gap-16 zcs-rounded-lg zcs-p-16 zcs-box-border'><div class='zcs-flex zcs-direction-column zcs-gap-4'><p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'>Total Users</p><h4 class='zcs-font-20 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'><%=indTotalUsers%></h4></div><div class='zcs-panel-icon-wrapper zcs-flex zcs-align-items-end zcs-justify-center zcs-no-shrink zcs-rounded-lg'><i class='zcs-panel-icon zcs-font-24 zc-li-outline business-briefcase-24'></i></div></div></li>
+                    <li class='zcs-col-3 zcs-col-sm-6 zcs-col-xs-12 zcs-relative zcs-cursor-pointer'><div class='zcs-panel zcs-wh-full zcs-flex zcs-justify-space-between zcs-gap-16 zcs-rounded-lg zcs-p-16 zcs-box-border'><div class='zcs-flex zcs-direction-column zcs-gap-4'><p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'><%=language.get("ops.perf.avgAttendance")%></p><h4 class='zcs-font-20 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'><%=indAvgAtt%>%</h4></div><div class='zcs-panel-icon-wrapper zcs-flex zcs-align-items-end zcs-justify-center zcs-no-shrink zcs-rounded-lg'><i class='zcs-panel-icon zcs-font-24 zc-li-outline location-position-pin'></i></div></div></li>
+                    <li class='zcs-col-3 zcs-col-sm-6 zcs-col-xs-12 zcs-relative zcs-cursor-pointer'><div class='zcs-panel zcs-wh-full zcs-flex zcs-justify-space-between zcs-gap-16 zcs-rounded-lg zcs-p-16 zcs-box-border'><div class='zcs-flex zcs-direction-column zcs-gap-4'><p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'>Avg Completion</p><h4 class='zcs-font-20 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'><%=indAvgComp%>%</h4></div><div class='zcs-panel-icon-wrapper zcs-flex zcs-align-items-end zcs-justify-center zcs-no-shrink zcs-rounded-lg'><i class='zcs-panel-icon zcs-font-24 zc-li-outline files-archive'></i></div></div></li>
+                    <li class='zcs-col-3 zcs-col-sm-6 zcs-col-xs-12 zcs-relative zcs-cursor-pointer'><div class='zcs-panel zcs-wh-full zcs-flex zcs-justify-space-between zcs-gap-16 zcs-rounded-lg zcs-p-16 zcs-box-border'><div class='zcs-flex zcs-direction-column zcs-gap-4'><p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'>Avg Contribution</p><h4 class='zcs-font-20 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'><%=indAvgContrib%>%</h4></div><div class='zcs-panel-icon-wrapper zcs-flex zcs-align-items-end zcs-justify-center zcs-no-shrink zcs-rounded-lg'><i class='zcs-panel-icon zcs-font-24 zc-li-outline business-briefcase-24'></i></div></div></li>
+                </ul>
+            </div>
+
+<!-- Individual Performance Details Table -->
+<div class='zcs-card zcs-flex zcs-direction-column zcs-box-border'>
+    <h6 class='zcs-font-16 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0 zcs-px-20 zcs-pt-16 zcs-pb-0 zcs-box-border'>Individual Performance Details</h6>
+<%
+				/* ============ Pagination ============ */
+				ipRecordsPerPage = 5;
+				ipTotalCount = indUserList.size();
+				ipStartIndex = 1;
+				if(!input.ip_start.isEmpty())
+				{
+					ipStartIndex = input.ip_start.toLong();
+				}
+				ipDiff = ipTotalCount - ipStartIndex;
+				ipEndIndex = if(ipStartIndex + ipRecordsPerPage - 1 > ipTotalCount,ipStartIndex + ipDiff,ipStartIndex + ipRecordsPerPage - 1);
+				ipPrevAction = if(ipStartIndex == 1,"disable","");
+				ipNextAction = if(ipEndIndex >= ipTotalCount,"disable","");
+				ipPageLink = "#Page:Operational_Page?tab=performance&perf_tab=individual";
+				ipPrevLink = if(ipStartIndex > 1,"href='" + ipPageLink + "&ip_start=" + (ipStartIndex - ipRecordsPerPage) + "'","");
+				ipNextLink = if(ipEndIndex < ipTotalCount,"href='" + ipPageLink + "&ip_start=" + (ipEndIndex + 1) + "'","");
+				if(ipTotalCount == 0)
+				{
+					%>
+<%=thisapp.Page.noData()%>
+<%
+				}
+				else
+				{
+					%>
+<div class='zcs-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative'>
+    <table class='zcs-w-full'>
+        <thead class='zcs-sticky'>
+            <tr>
+                <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>User</th>
+                <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'><%=language.get("ops.individual.role")%></th>
+                <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Attendance</th>
+                <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Completion</th>
+                <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Voting</th>
+                <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Score</th>
+                <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'><%=language.get("ops.committee.status")%></th>
+            </tr>
+            <tr class='zcs-tspace'><th class='zcs-p-2 zcs-box-border' colspan='7'></th></tr>
+        </thead>
+        <tbody>
+<%
+					ipIdx = 0;
+					for each  uRow in indUserList
+					{
+						ipIdx = ipIdx + 1;
+						if(ipIdx >= ipStartIndex && ipIdx <= ipEndIndex)
+						{
+							uAttBarClr = if(uRow.get("attendance").toLong() >= 90,"#179E6C",if(uRow.get("attendance").toLong() >= 75,"#f59e0b","#e8453c"));
+							uCompBarClr = if(uRow.get("completion").toLong() >= 90,"#179E6C",if(uRow.get("completion").toLong() >= 75,"#f59e0b","#e8453c"));
+							%>
+<tr>
+                <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body'>
+                    <div style='display:flex;align-items:center;gap:8px;'>
+                        <span class='zcs-ind-avatar' style='background:<%=uRow.get("avatarBg")%>;color:<%=uRow.get("avatarClr")%>;'><%=uRow.get("initial")%></span>
+                        <span class='zcs-font-14 zcs-font-medium zcs-color-primary'><%=uRow.get("name")%></span>
+                    </div>
+                </td>
+                <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=uRow.get("role")%></td>
+                <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body'>
+                    <div class='zcs-ind-bar-wrap'><div class='zcs-ind-bar-track'><div class='zcs-ind-bar-fill' style='width:<%=uRow.get("attendance")%>%;background:<%=uAttBarClr%>;'></div></div><span class='zcs-font-13 zcs-color-primary'><%=uRow.get("attendance")%>%</span></div>
+                </td>
+                <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body'>
+                    <div class='zcs-ind-bar-wrap'><div class='zcs-ind-bar-track'><div class='zcs-ind-bar-fill' style='width:<%=uRow.get("completion")%>%;background:<%=uCompBarClr%>;'></div></div><span class='zcs-font-13 zcs-color-primary'><%=uRow.get("completion")%>%</span></div>
+                </td>
+                <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=uRow.get("vote")%>%</td>
+                <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'><%=uRow.get("score")%>%</td>
+                <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body'>
+                    <span class='zcs-ind-status' style='background:<%=uRow.get("statusBg")%>;color:<%=uRow.get("statusClr")%>;'><span class='zcs-ind-dot' style='background:<%=uRow.get("statusClr")%>;'></span><%=uRow.get("status")%></span>
+                </td>
+            </tr>
+<%
+						}
+					}
+					%>
+</tbody>
+    </table>
+</div>
+<div class='zcs-pagination'>
+    <ul class='zcs-flex zcs-align-items-center zcs-justify-end zcs-gap-12 zcs-p-0 zcs-m-0'>
+        <li class='zcs-pagination-item'>
+            <span class='zcs-pagination-text zcs-flex zcs-align-items-center zcs-justify-center zcs-rounded-sm zcs-box-border zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>
+                <%=ipStartIndex%>-<%=ipEndIndex%> of <%=ipTotalCount%>
+            </span>
+        </li>
+        <li class='zcs-pagination-item'>
+            <a class='zcs-pagination-action zcs-flex zcs-align-items-center zcs-justify-center zcs-rounded-sm zcs-px-8 zcs-box-border zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary zcs-cursor-pointer <%=if(ipPrevAction == "disable","zcs-button-disable","")%>' <%=ipPrevLink%>>
+                <i class='zcs-pagination-icon zc-li-outline arrows-1-minimal-left'></i>
+            </a>
+        </li>
+        <li class='zcs-pagination-item'>
+            <a class='zcs-pagination-action zcs-flex zcs-align-items-center zcs-justify-center zcs-rounded-sm zcs-px-8 zcs-box-border zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary zcs-cursor-pointer <%=if(ipNextAction == "disable","zcs-button-disable","")%>' <%=ipNextLink%>>
+                <i class='zcs-pagination-icon zc-li-outline arrows-1-minimal-right'></i>
+            </a>
+        </li>
+    </ul>
+</div>
+<%
+				}
+				%>
+</div>
+<!-- Top 5 Performers + Action Completion -->
+            <div class='zcs-row zcs-gap-20' style='align-items:stretch;'>
+                <div class='zcs-col-6 zcs-col-xs-12'>
+                    <div class='zcs-card zcs-flex zcs-direction-column zcs-gap-24 zcs-p-20 zcs-box-border' style='height:100%;'>
+                        <h6 class='zcs-font-16 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'><%=language.get("ops.individual.top5")%></h6>
+                        <div class='zcs-chart zcs-columnchart-wrapper zcs-relative'>
+                            <ul class='zcs-chart-y-axis zcs-flex zcs-direction-column zcs-gap-32 zcs-m-0 zcs-p-0'>
+<%
+				topCount = 0;
+				for each  tp in top5List
+				{
+					if(topCount < 5)
+					{
+						tpName = tp.get("name") + "";
+						tpScore = tp.get("score").toLong();
+						tpColor = tp.get("avatarClr") + "";
+						%>
+<li class='zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-4'>
+                                    <span class='zcs-chart-y-axis-text zcs-font-14 zcs-font-normal'><%=tpName%></span>
+                                    <div class='zcs-column zcs-col-common zcs-flex zcs-pl-20 zcs-box-border zcs-overflow-hidden'>
+                                        <a class='zcs-ind-score-bar zcs-h-full' style='width:<%=tpScore%>%;background-color:<%=tpColor%>;'></a>
+                                    </div>
+                                </li>
+<%
+						topCount = topCount + 1;
+					}
+				}
+				%>
+<li class='zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-4'><span class='zcs-chart-y-axis-text zcs-font-14 zcs-font-normal'></span><div class='zcs-column zcs-col-common zcs-flex zcs-pl-20 zcs-box-border zcs-overflow-hidden zcs-align-items-center'><a class='zcs-col-common zcs-chart-x-axis-text zcs-font-14 zcs-font-normal zcs-text-center zcs-ellipsis'>0</a><a class='zcs-col-common zcs-chart-x-axis-text zcs-font-14 zcs-font-normal zcs-text-center zcs-ellipsis'>25</a><a class='zcs-col-common zcs-chart-x-axis-text zcs-font-14 zcs-font-normal zcs-text-center zcs-ellipsis'>50</a><a class='zcs-col-common zcs-chart-x-axis-text zcs-font-14 zcs-font-normal zcs-text-center zcs-ellipsis'>75</a><a class='zcs-col-common zcs-chart-x-axis-text zcs-font-14 zcs-font-normal zcs-text-center zcs-ellipsis'>100</a></div></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class='zcs-col-6 zcs-col-xs-12'>
+                    <div class='zcs-card zcs-flex zcs-direction-column zcs-gap-24 zcs-p-20 zcs-box-border' style='height:100%;'>
+<h6 class='zcs-font-16 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'><%=language.get("ops.individual.completionByUser")%></h6>
+                        <div class='zcs-chart zcs-columnchart-wrapper zcs-relative'>
+                            <ul class='zcs-chart-y-axis zcs-flex zcs-direction-column zcs-gap-32 zcs-m-0 zcs-p-0'>
+<%
+				actCount = 0;
+				for each  ac in actCompList
+				{
+					if(actCount < 5)
+					{
+						acName = ac.get("name") + "";
+						acComp = ac.get("completedActions").toLong();
+						acBarPct = if(maxCompActions > 0,((acComp * 100) / maxCompActions).toLong(),0);
+						%>
+<li class='zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-4'>
+                                    <span class='zcs-chart-y-axis-text zcs-font-14 zcs-font-normal'><%=acName%></span>
+                                    <div class='zcs-column zcs-col-common zcs-flex zcs-pl-20 zcs-box-border zcs-overflow-hidden'>
+                                        <a class='zcs-column-value zcs-h-full' style='width:<%=acBarPct%>%;'></a>
+                                    </div>
+                                </li>
+<%
+						actCount = actCount + 1;
+					}
+				}
+				/* X-axis labels: 0 to maxCompActions in 4 steps */
+				xStep = if(maxCompActions > 4,(maxCompActions / 4).toLong(),1);
+				x0 = 0;
+				x1 = xStep;
+				x2 = xStep * 2;
+				x3 = xStep * 3;
+				x4 = maxCompActions;
+				%>
+<li class='zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-4'>
+                                    <span class='zcs-chart-y-axis-text zcs-font-14 zcs-font-normal'></span>
+                                    <div class='zcs-column zcs-col-common zcs-flex zcs-pl-20 zcs-box-border zcs-overflow-hidden zcs-align-items-center'>
+                                        <a class='zcs-col-common zcs-chart-x-axis-text zcs-font-14 zcs-font-normal zcs-text-center zcs-ellipsis'><%=x0%></a>
+                                        <a class='zcs-col-common zcs-chart-x-axis-text zcs-font-14 zcs-font-normal zcs-text-center zcs-ellipsis'><%=x1%></a>
+                                        <a class='zcs-col-common zcs-chart-x-axis-text zcs-font-14 zcs-font-normal zcs-text-center zcs-ellipsis'><%=x2%></a>
+                                        <a class='zcs-col-common zcs-chart-x-axis-text zcs-font-14 zcs-font-normal zcs-text-center zcs-ellipsis'><%=x3%></a>
+                                        <a class='zcs-col-common zcs-chart-x-axis-text zcs-font-14 zcs-font-normal zcs-text-center zcs-ellipsis'><%=x4%></a>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+<%
+			}
+		}
+		%>
+</div>
+    </div>
+</div>
+</div>
+<%
+	}
+%>

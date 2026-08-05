@@ -1,0 +1,619 @@
+<%
+	page_link_name = "Organization_Page";
+	language = thisapp.Content.translation();
+	%>
+<style>
+<%=thisapp.Styles.App_CSS()%>
+<%=thisapp.Styles.Button()%>
+<%=thisapp.Styles.Panel()%>
+<%=thisapp.Styles.Horizontal_Tab()%>
+<%=thisapp.Styles.Badge()%>
+<%=thisapp.Styles_Creator.Filter()%>
+<%=thisapp.Styles_Creator.Report_Card()%>
+<%=thisapp.Styles_Page.Common_View()%>
+</style>
+<%
+	if(input.page_action == "detailView")
+	{
+		input.recid = 4793790000003523027;
+		orgDet = Organization[ID == input.recid];
+		tab_map = thisapp.Page.Get_Tabs(page_link_name);
+		tab_keys = tab_map.keys();
+		input.tab = if(input.tab != "" && input.tab != "null" && input.tab != null,input.tab,tab_keys.get(0));
+		%>
+<style>
+	.zcs-scom-page-container 
+	{ 
+		background: #f3f4f8;
+	}
+	.zcs-divider-horizontal { border-top: 1px solid #E5E7EB; } 
+	
+	
+	</style>
+	<div class='zcs-scom-page-container zcs-p-20 zcs-box-border'>
+	<div class="zc-scom-staff-info-wrapper zcs-common-card zcs-card zcs-box-border zcs-flex zcs-align-items-top zcs-p-20 zcs-mb-20 zcs-gap-20">
+			  <div aria-label="Avatar Image" tabindex="0" style="--zcs-avatar-size: 75px; --zcs-avatar-radius: 50%; flex-shrink:0" class="zcs-avatar zcs-flex zcs-align-items-center zcs-justify-center zcs-relative">
+<%
+		if(orgDet.Logo != "" && orgDet.Logo != null)
+		{
+			src = zoho.appuri + "report/Organizations/" + orgDet.ID + "/Logo/download-file?filepath=/" + orgDet.Logo.getSuffix("image/").getPrefix("\\"") + "&mediaType=1";
+			%>
+<img src=<%=src%> alt="John Smith profile photo"
+						height="100%" width="100%" class="zcs-avatar-img zcs-wh-full">
+<%
+		}
+		else
+		{
+			%>
+<span class="zcs-font-24 zcs-font-normal zcs-text-white zcs-lh-body" aria-hidden="true">
+	<%=thisapp.Content.letterGenerate(orgDet.Organization_Name)%>
+</span>
+<%
+		}
+		%>
+</div>
+			<div class="zc-scom-student-info-details zcs-fw">
+				<h5 class="zcs-m-0 zcs-h5 zcs-mb-5">
+					<%=orgDet.Organization_Name%>
+				</h5>
+				<div class="zcs-keyvalue-wrapper">
+					<ul class="zcs-flex zcs-row-wrap zcs-p-0 zcs-m-0 zcs-gap-5">
+						<li class="zcs-flex zcs-direction-column zcs-gap-5 zcs-col-3 zcs-col-sm-12 zcs-col-lg-6 zcs-col-xl-6">
+							
+							<span class="zcs-keyvalue-span zcs-font-16 zcs-font-normal"><%=orgDet.Contact_Phone%>  </span>
+						</li>
+						<li class="zcs-flex zcs-direction-column zcs-gap-5 zcs-col-3 zcs-col-sm-12 zcs-col-lg-6 zcs-col-xl-6">
+							
+							<span class="zcs-keyvalue-span zcs-font-16 zcs-font-medium"><%=orgDet.Contact_Email%></span>
+						</li>
+						<li class="zcs-flex zcs-direction-column zcs-gap-5 zcs-col-3 zcs-col-sm-12 zcs-col-lg-6 zcs-col-xl-6">
+							
+							<span class="zcs-keyvalue-span zcs-font-16 zcs-font-normal">
+							<%=orgDet.Website%>
+							</span>
+						</li>
+						
+					</ul>
+				</div>
+			</div>
+		</div>
+		<div class="zcs-horizontal-tabpanel zcs-flex zcs-direction-column zcs-mt-20 zcs-gap-20">
+			<ul class="zcs-horizontal-tabhead zcs-flex zcs-gap-12 zcs-p-0 zcs-m-0" style='flex-shrink: 0;'>
+<%
+		for each  tab_id in tab_keys
+		{
+			class_name = if(input.tab == tab_id,"zcs-horizontal-tabitem zcs-horizontal-tabactive'","zcs-horizontal-tabitem");
+			%>
+<li class='<%=class_name%>'> <a class='zcs-horizontal-tablink zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-10 zcs-py-12 zcs-box-border zcs-font-medium zcs-lh-body zcs-color-secondary' href='#Page:<%=page_link_name%>?tab=<%=tab_id%>&recid=<%=orgDet.ID%>&page_action=detailView'><span class="zcs-horizontal-tab-text"> <%=tab_map.get(tab_id).get("Display")%></span> </a> </li>
+<%
+		}
+		%>
+</ul>
+<%
+		if(input.tab == "organization")
+		{
+			%>
+<div class='zcs-panel-wrapper'>
+            <ul class='zcs-row zcs-justify-space-between zcs-gap-20 zcs-p-0 zcs-m-0'>
+                <li class='zcs-col-3 zcs-col-sm-6 zcs-col-xs-12 zcs-relative zcs-cursor-pointer'>
+                    <div class='zcs-panel zcs-panel-yellow zcs-wh-full zcs-flex  zcs-gap-8 zcs-rounded-lg zcs-p-16 zcs-box-border zcs-justify-space-between'>
+					<div class='zcs-flex zcs-justify-center zcs-gap-10 zcs-direction-column'>
+					 <p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'><%=language.get("grc.organization.entities")%> </p>
+                        <h4 class='zcs-font-20 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'> <%=User[ID != 0].count()%> </h4>
+                        </div>
+                            <div class='zcs-panel-icon-wrapper zcs-flex zcs-align-items-center zcs-justify-center zcs-no-shrink zcs-rounded-lg'>
+                                <i class='zcs-panel-icon zcs-font-24 zc-li-outline arrows-4-restore'></i>
+                            </div>
+                            
+                       
+                    </div>
+                    <a class='zcs-overlay zcs-wh-full zcs-absolute' href=''></a>
+                </li>
+                <li class='zcs-col-3 zcs-col-sm-6 zcs-col-xs-12 zcs-relative zcs-cursor-pointer'>
+                    <div class='zcs-panel zcs-panel-yellow zcs-wh-full zcs-flex  zcs-gap-8 zcs-rounded-lg zcs-p-16 zcs-box-border zcs-justify-space-between'>
+					<div class='zcs-flex zcs-justify-center zcs-gap-10 zcs-direction-column'>
+					 <p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'> <%=language.get("grc.organization.departments")%> </p>
+                        <h4 class='zcs-font-20 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'> <%=Role[ID != 0].count()%> </h4>
+                        </div>
+                            <div class='zcs-panel-icon-wrapper zcs-flex zcs-align-items-center zcs-justify-center zcs-no-shrink zcs-rounded-lg'>
+                                <i class='zcs-panel-icon zcs-font-24 zc-li-outline arrows-4-restore'></i>
+                            </div>
+                            
+                       
+                    </div>
+                    <a class='zcs-overlay zcs-wh-full zcs-absolute' href=''></a>
+                </li>
+               <li class='zcs-col-3 zcs-col-sm-6 zcs-col-xs-12 zcs-relative zcs-cursor-pointer'>
+                    <div class='zcs-panel zcs-panel-yellow zcs-wh-full zcs-flex  zcs-gap-8 zcs-rounded-lg zcs-p-16 zcs-box-border zcs-justify-space-between'>
+					<div class='zcs-flex zcs-justify-center zcs-gap-10 zcs-direction-column'>
+					 <p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'> <%=language.get("grc.organization.locations")%> </p>
+                        <h4 class='zcs-font-20 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'> <%=Department[ID != 0].count()%> </h4>
+                        </div>
+                            <div class='zcs-panel-icon-wrapper zcs-flex zcs-align-items-center zcs-justify-center zcs-no-shrink zcs-rounded-lg'>
+                                <i class='zcs-panel-icon zcs-font-24 zc-li-outline arrows-4-restore'></i>
+                            </div>
+                            
+                       
+                    </div>
+                    <a class='zcs-overlay zcs-wh-full zcs-absolute' href=''></a>
+                </li>
+               <li class='zcs-col-3 zcs-col-sm-6 zcs-col-xs-12 zcs-relative zcs-cursor-pointer'>
+                    <div class='zcs-panel zcs-panel-yellow zcs-wh-full zcs-flex  zcs-gap-8 zcs-rounded-lg zcs-p-16 zcs-box-border zcs-justify-space-between'>
+					<div class='zcs-flex zcs-justify-center zcs-gap-10 zcs-direction-column'>
+					 <p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'> <%=language.get("grc.organization.employees")%> </p>
+                        <h4 class='zcs-font-20 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'> 0 </h4>
+                        </div>
+                            <div class='zcs-panel-icon-wrapper zcs-flex zcs-align-items-center zcs-justify-center zcs-no-shrink zcs-rounded-lg'>
+                                <i class='zcs-panel-icon zcs-font-24 zc-li-outline arrows-4-restore'></i>
+                            </div>
+                            
+                       
+                    </div>
+                    <a class='zcs-overlay zcs-wh-full zcs-absolute' href=''></a>
+                </li>
+            </ul>
+        </div>
+		<div class='zcs-flex zcs-justify-space-between zcs-gap-20 zcs-p-0 zcs-m-0'>
+		<p class='zcs-font-20 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-ellipsis zcs-m-0'><%=language.get("grc.organization.officeLocations")%></p>
+		<span><%=language.get("grc.organization.viewAll")%></span>
+		</div>
+		<div class='zcs-panel-wrapper zcs-flex zcs-gap-20 '>
+<%
+			for each  location in Organization_Address[Organization == orgDet.ID]
+			{
+				%>
+<div class='zcs-asset-card zcs-card zcs-flex  zcs-gap-12 zcs-p-12 zcs-box-border zcs-relative zcs-panel zcs-panel-yellow' style ='box-shadow: 0px 2px 4px 0px #0000000D;border:none !important'>
+			<div class='zcs-panel-icon-wrapper zcs-flex zcs-align-items-center zcs-justify-center zcs-no-shrink zcs-rounded-lg'>
+										<i class='zcs-panel-icon zcs-font-24 zc-li-outline location-pin'></i>
+			</div>
+			<div class='zcs-flex zcs-direction-column zcs-gap-8 zcs-ellipsis'>
+
+				  <span class='zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>
+				  <%=location.Address.address_line_1%>,<%=location.Address.address_line_2%>
+				</span>
+
+					<span class='zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'> <%=location.Address.district_city%>,<%=location.Address.state_province%>  <%=location.Address.postal_Code%></span>
+
+				<span class='zcs-font-14 zcs-font-semibold zcs-lh-body zcs-color-primary zcs-ellipsis'>
+					<%=location.Address.country%>
+				</span>
+			</div>
+</div>
+<%
+			}
+			%>
+</div>
+<div class='zcs-card zcs-row zcs-gap-24 zcs-p-16 zcs-box-border zcs-flex zcs-direction-column'>
+<div class='zcs-row zcs-gap-16 zcs-justify-space-between'>
+     <div class=''>
+	   <h5 class='zcs-font-16 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-ellipsis zcs-m-0'>Risk & Compliance Frameworks</h5>
+	   <span class='zcs-font-13 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-ellipsis'>Configure frameworks your organization implements.</span>
+	 </div>
+	 <a> + Add Custom Framework</a>
+</div>
+<div class='zcs-panel-wrapper zcs-flex zcs-gap-20'>
+<%
+			for each  framework in Risk_Compliance_Frameworks[Organization == orgDet.ID]
+			{
+				%>
+<div class='zcs-card zcs-row zcs-gap-24 zcs-p-16 zcs-box-border zcs-flex zcs-direction-column' style='width:351px;background: #F9FAFB;'>
+<div class='zcs-info-wrapper zcs-row zcs-gap-16 zcs-justify-space-between'>
+							<div class='zcs-info-item zcs-col-common zcs-flex zcs-align-items-center zcs-gap-16'>
+								
+								<div class='zcs-flex zcs-direction-column zcs-gap-4'>
+									
+									<span class='zcs-font-15 zcs-font-medium zcs-lh-heading zcs-color-primary'> <%=framework.Framework.Framework_Name%> </span>
+									<label class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary'> <%=framework.Status%> </label>
+								</div>
+							</div>
+							<div class='zcs-info-item zcs-col-3 zcs-col-md-4 zcs-col-sm-6 zcs-col-xs-12 zcs-flex zcs-align-items-center zcs-gap-16'>
+								
+								<div class='zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-green'>
+									
+									<span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'>  \u2022 Active </span>
+								</div>
+							</div>
+							
+						</div>
+						<div class='zcs-divider zcs-divider-horizontal'></div>
+						<div class='zcs-info-wrapper zcs-row zcs-gap-16'>
+							<div class='zcs-info-item zcs-col-common zcs-flex zcs-align-items-center zcs-gap-8'>
+								
+								<div class='zcs-flex zcs-direction-column zcs-col-common zcs-ellipsis'>
+									
+									<label class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary'> Target Date </label>
+									<span class='zcs-font-15 zcs-font-medium zcs-lh-heading zcs-color-primary'> <%=framework.Target_Date%> </span>
+								</div>
+							</div>
+							<div class='zcs-info-item zcs-col-common  zcs-flex zcs-align-items-center zcs-gap-16'>
+								
+								<div class='zcs-flex zcs-direction-column zcs-gap-4'>
+									<label class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary'> Review Date </label>
+									<span class='zcs-font-15 zcs-font-medium zcs-lh-heading zcs-color-primary'> <%=framework.Review_Date%> </span>
+								</div>
+							</div>
+						</div>
+						</div>
+<%
+			}
+			%>
+</div>
+</div>
+<%
+		}
+		else if(input.tab == "structure")
+		{
+		}
+		else if(input.tab == "entity")
+		{
+			%>
+<div class='zcs-filter' zc_MobileView='inline' elName='zc-component' formLinkName='Filter_Form' params='zc_Header=false&zc_Footer=false&zc_Focus=false'></div>
+					<div class='zcs-report zcs-col-common' name='embedDiv' elName='zc-component' viewLinkName='Entities_Card_View' params='zc_Header=false&zc_AddRec=false&zc_ColMenu=false&zc_Footer=false'></div>
+<%
+		}
+		else if(input.tab == "department")
+		{
+		}
+		%>
+</div>
+	</div>
+<%
+	}
+	else
+	{
+		actionList = {"Basic_Details","Scale","Address","Entity","Regulatory"};
+		stage = "Yet to Start";
+		actionParam = if(input.action_field.isEmpty(),"","&Action_Field=" + input.action_field);
+		formParam = if(input.recid != null,"&recLinkID=" + input.recid + "&viewLinkName=Organizations" + actionParam,"&Completed_Stage=Yet to Start");
+		if(input.recid != null)
+		{
+			stage = Organization[ID == input.recid].Stepper_Stage;
+		}
+		currentIndex = if(!input.action_field.isEmpty(),actionList.indexOf(input.action_field),null);
+		actionVal = "";
+		if(!input.action_field.isEmpty())
+		{
+			actionVal = if(input.action_field == "Basic_Details","Yet to Start",actionList.get(currentIndex - 1));
+		}
+		previousAction = if(input.action_field.isEmpty(),stage,actionVal);
+		previoushrefLink = '#Page:' + page_link_name + '?recid=' + input.recid + '&action_field=' + previousAction;
+		previoushrefAction = if(previousAction == "Yet to Start","","href=" + previoushrefLink);
+		%>
+<style>
+    /* Visited Styles */
+    .zcs-stepper-status {
+        width: 32px;
+        height: 32px;
+        background-color: var(--zcs_brand_color);
+        border: 4px solid var(--zcs-white-color);
+    }
+
+    .zcs-stepper-count {
+        border: 1px solid var(--zcs_tertiary_border_color);
+        display: none;
+    }
+
+    .zcs-stepper-icon.zcs-stepper-failed {
+        display: none;
+    }
+
+    .zcs-stepper-level {
+        display: none;
+        background-color: var(--zcs_brand_color);
+    }
+
+    .zcs-stepper:not(:last-child):before {
+        content: '';
+        width: 100%;
+        height: 1px;
+        border-top: 1px solid var(--zcs_brand_color);
+        box-sizing: border-box;
+        position: absolute;
+        top: calc((32px - 1px) / 2);
+        left: 50%;
+    }
+
+    /* Active Styles */
+    .zcs-stepper-active .zcs-stepper-status {
+        border: 1px solid var(--zcs_brand_color);
+        outline: 4px solid var(--zcs-white-color);
+        background-color: var(--zcs-white-color);
+    }
+
+    .zcs-stepper-active .zcs-stepper-count {
+        display: flex;
+        border-width: 0px;
+        color: var(--zcs_brand_color);
+    }
+
+    .zcs-stepper-active .zcs-stepper-icon {
+        display: none;
+    }
+
+    .zcs-stepper-active .zcs-stepper-text {
+        font-weight: 500;
+        color: var(--zcs_brand_color);
+    }
+
+    .zcs-stepper.zcs-stepper-active:before,
+    .zcs-stepper.zcs-stepper-active~.zcs-stepper:before {
+        border-color: var(--zcs_tertiary_border_color);
+    }
+
+    /* Stepper Failed */
+    .zcs-stepper-active.zcs-stepper-failed .zcs-stepper-status {
+        background-color: #FE455D;
+        border-color: #FE455D;
+    }
+
+    .zcs-stepper-active.zcs-stepper-failed .zcs-stepper-count {
+        display: none;
+    }
+
+    .zcs-stepper-active.zcs-stepper-failed .zcs-stepper-icon.zcs-stepper-failed {
+        display: flex;
+    }
+
+    .zcs-stepper-active.zcs-stepper-failed .zcs-stepper-text {
+        font-weight: 500;
+        color: var(--zcs_primary_text_color);
+    }
+
+    /* Level Styles */
+    .zcs-stepper-active.zcs-stepper-level-active .zcs-stepper-count,
+    .zcs-stepper-active.zcs-stepper-level-active .zcs-stepper-icon {
+        display: none;
+    }
+
+    .zcs-stepper-active.zcs-stepper-level-active .zcs-stepper-level {
+        display: flex;
+    }
+
+    /* Unvisited Styles */
+    .zcs-stepper-active~.zcs-stepper .zcs-stepper-status {
+        background-color: var(--zcs-white-color);
+    }
+
+    .zcs-stepper-active~.zcs-stepper .zcs-stepper-count {
+        display: flex;
+    }
+
+    .zcs-stepper-active~.zcs-stepper .zcs-stepper-icon {
+        display: none;
+    }
+
+    .zcs-stepper-active~.zcs-stepper .zcs-stepper-text {
+        color: var(--zcs_tertiary_text_color);
+    }
+
+    @media (max-width: 575px) {
+        .zcs-stepper-wrapper ul {
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .zcs-stepper-wrapper ul .zcs-stepper {
+            flex-direction: row;
+            gap: 16px;
+        }
+
+        .zcs-stepper:not(:last-child):before {
+            width: 1px;
+            height: 100%;
+            border-left: 1px solid var(--zcs_brand_color);
+            left: calc((32px - 1px) / 2);
+        }
+    }
+
+    .zc-rtl-wrapper .zcs-stepper:not(:last-child):before {
+        left: auto;
+        right: 50%;
+    }
+
+    @media (max-width: 575px) {
+        .zc-rtl-wrapper .zcs-stepper:not(:last-child):before {
+            border-left: 1px solid var(--zcs_brand_color);
+            left: auto;
+            right: calc((32px - 1px) / 2);
+        }
+    }
+
+
+.zcs-page-container { background-color: #F5F6FA; } .zcs-back:hover { color: #131635; }
+.zcs-card {
+	box-shadow: 0px 0px 6px 0px #E6E6E6;
+}
+/* .zcs-stepper-wrapper {
+	border-bottom: 1px solid #e7e7ee;
+} */
+.zcs-wizard-page .zcs-form .zc-form-fullheight, .zcs-wizard-page .zcs-form .row, .zcs-wizard-page .zcs-form .form-outer-wrapper form.form-table { width: 100%; height: 100%; background-color: transparent; } .zcs-wizard-page .zcs-form .zc-form-fullheight .form-outer-wrapper { height: 100% !important; border-width: 0px; background-color: transparent; } .zcs-wizard-page .zcs-form .form-outer-wrapper form.form-table { display: flex; flex-direction: column; } .zcs-wizard-page .zcs-form .form-outer-wrapper .zc-mobile-scroll-ctr { display: flex; flex-direction: column; height: 100%; padding: 0px; } .zcs-wizard-page .zcs-form form .zc-form-scroll-wrapper { background-color: var(--zcs-white-color); border: 1px solid #e7e7ee; border-radius: 12px; box-shadow: 0px 0px 6px 0px #E6E6E6; padding: 20px; box-sizing: border-box; } .zcs-page-container.zcs-wizard-page .zcs-form .zc-form-fullheight .form-outer-wrapper .form-table .formContainer { flex: 1; padding: 20px 10%; box-sizing: border-box; overflow: auto; background-color: transparent; } .zcs-wizard-page .zcs-form form .zc-footer-wrapper .zc-form-footer .formbutton { display: flex; align-items: center; padding: 20px 30px; box-sizing: border-box; justify-content: end; }
+
+@media (max-width: 768px) {
+	body:not(.zc-mobile) .zcs-page-container, body:not(.zc-mobile) .zcs-page-container-inner { height: auto; }
+    .zcs-wizard-page .zcs-page-header,
+    .zc-mobile .zcs-page-container.zcs-wizard-page .zcs-form .zc-form-fullheight .form-outer-wrapper .form-table .formContainer,
+    .zc-mobile .zcs-wizard-page .zcs-form form .zc-footer-wrapper .zc-form-footer .formbutton {
+        padding: 16px 20px;
+    }
+/* 	.zcs-page-content {
+		padding: 0px 20px 20px;
+	} */
+    body:not(.zc-mobile) .zcs-card {
+        background-color: transparent;
+        border-color: transparent;
+    }
+	body:not(.zc-mobile) .zcs-stepper-wrapper {
+		border-bottom-width: 0px;
+	}
+}
+@media (max-width: 575px) {
+    .zcs-stepper-wrapper ul {
+        flex-direction: row;
+    }
+    .zcs-stepper-wrapper ul .zcs-stepper {
+        flex-direction: column;
+    }
+    .zcs-stepper-text {
+        display: none;
+    }
+    .zcs-stepper:not(:last-child):before {
+        width: 100%;
+        height: 1px;
+        top: calc((32px - 1px) / 2);
+        left: 50%;
+    }
+}
+.zcs-form .zc-footer-wrapper{
+	 background-color: var(--zcs-white-color);
+       
+}
+.zcs-button-disable
+{
+	color:#99A1AF !important;
+}
+</style>
+
+<div class='zcs-page-container zcs-wizard-page zcs-wh-full'>
+    <div class='zcs-page-container-inner zcs-wh-full zcs-flex zcs-direction-column'>
+<%
+		if(input.stage == "Regulatory")
+		{
+			%>
+<style>
+		.zcs-nodata-content .zc-vms-icon-wrapper {
+			width: 48px; 
+			height: 48px; 
+			border-radius: 50%; 
+			text-align: center;
+			display: inline-block; 
+			vertical-align: top;
+		}
+		.zcs-nodata-content .zc-vms-icon-wrapper i
+		{ 
+			font-size: 24px;
+		line-height: 48px;
+		font-style: normal;
+		vertical-align: top; 
+		} 
+		.zcs-nodata-content .zc-vms-icon-wrapper 
+		{
+			background-color: rgb(228, 252, 243);
+			color: rgb(23, 158, 108);
+			text-align: center;
+		}
+		</style>
+<div class='zcs-nodata-wrapper zcs-wh-full zcs-flex zcs-align-items-center zcs-justify-center zcs-text-center'>
+    <div class='zcs-nodata-content zcs-p-20 zcs-box-border zcs-rounded-xl' style='background:var(--zcs-white-color)'>
+	   <div class='zc-vms-icon-wrapper'>
+	    <i class='zc-li-outline ui-1-check-circle-08'></i>
+       </div> 
+            
+        <h4 class='zcs-nodata-header zcs-font-20 zcs-font-medium zcs-mt-15 zcs-mx-0 zcs-mb-0'> 
+			Organization Setup Successful
+        </h4>
+        <p class='zcs-nodata-desc zcs-font-16 zcs-font-normal zcs-mt-12 zcs-mx-0 zcs-mb-0'> 
+		
+			You can now start configuring and managing <br> your organization.
+           </p>
+        <div class='zcs-nodata-btn-wrapper zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-16 zcs-mt-20'>
+            <a class='zcs-button zcs-primary-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-box-border zcs-rounded-md'
+                type='button' aria-label='Add new record'  href='#Report:Organizations'>
+             
+                <span class='zcs-button-text zcs-font-14 zcs-font-normal'>Let's Start</span>
+            </a>
+        </div>
+    </div>
+</div>
+<%
+		}
+		else
+		{
+			%>
+<div class='zcs-page-header zcs-w-full zcs-flex zcs-direction-column zcs-gap-8 zcs-px-30 zcs-py-24 zcs-box-border'>
+			<h5 class='zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-ellipsis zcs-m-0'> Organization </h5>
+			<p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-ellipsis zcs-m-0'> Monitor risk posture and drive governance actions. </p>
+        </div>
+        <div class='zcs-page-content zcs-col-common zcs-overflow-auto'>
+            <div class='zcs-wh-full zcs-flex zcs-direction-column zcs-box-border zcs-overflow-hidden zcs-relative'>
+                <div class='zcs-stepper-wrapper zcs-p-24 zcs-box-border'>
+					<ul class='zcs-flex zcs-gap-8 zcs-p-0 zcs-m-0'>
+<%
+			ahrefLink = '#Page:' + page_link_name + '?recid=' + input.recid + '&action_field=' + actionList.get(0);
+			ahrefAction = if(stage == "Yet to Start","","href=" + ahrefLink);
+			%>
+<a class='zcs-stepper zcs-col-common zcs-flex zcs-direction-column zcs-align-items-center zcs-gap-4 zcs-text-center zcs-relative <%=if(stage == "Yet to Start","zcs-stepper-active","")%>' <%=ahrefAction%>>
+							<div class='zcs-stepper-status zcs-flex zcs-direction-column zcs-align-items-center zcs-justify-center zcs-rounded-half zcs-text-center zcs-relative zcs-box-border zcs-relative'>
+								<h6 class='zcs-stepper-count zcs-col-common zcs-w-full zcs-flex zcs-align-items-center zcs-justify-center zcs-rounded-half zcs-font-12 zcs-font-semibold zcs-lh-body zcs-color-tertiary zcs-m-0 zcs-box-border'> 1 </h6>
+								<i class='zcs-stepper-icon zcs-stepper-passed zcs-font-18 zcs-font-bold zcs-color-white zc-li-outline ui-1-check-small'></i>
+							</div>
+							<span class='zcs-stepper-text zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'> <%=language.get("grc.organization.organizationDetails")%> </span>
+							
+						
+						
+							</a>
+<%
+			ahrefLink = '#Page:' + page_link_name + '?recid=' + input.recid + '&action_field=' + actionList.get(1);
+			ahrefAction = if(stage != "Yet to Start","href=" + ahrefLink,"");
+			%>
+<a class='zcs-stepper zcs-col-common zcs-flex zcs-direction-column zcs-align-items-center zcs-gap-4 zcs-text-center zcs-relative <%=if(stage == "Basic_Details","zcs-stepper-active","")%>' <%=ahrefAction%>>
+							<div class='zcs-stepper-status zcs-flex zcs-direction-column zcs-align-items-center zcs-justify-center zcs-rounded-half zcs-text-center zcs-relative zcs-box-border zcs-relative'>
+								<h6 class='zcs-stepper-count zcs-col-common zcs-w-full zcs-flex zcs-align-items-center zcs-justify-center zcs-rounded-half zcs-font-12 zcs-font-semibold zcs-lh-body zcs-color-tertiary zcs-m-0 zcs-box-border'> 2 </h6>
+								<i class='zcs-stepper-icon zcs-stepper-passed zcs-font-18 zcs-font-bold zcs-color-white zc-li-outline ui-1-check-small'></i>
+							</div>
+							<span class='zcs-stepper-text zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'> <%=language.get("grc.organization.scale")%> </span>
+						
+						</a>
+<%
+			ahrefLink = '#Page:' + page_link_name + '?recid=' + input.recid + '&action_field=' + actionList.get(2);
+			ahrefAction = if(stage != "Yet to Start" && stage != "Basic_Details","href=" + ahrefLink,"");
+			%>
+<a class='zcs-stepper zcs-col-common zcs-flex zcs-direction-column zcs-align-items-center zcs-gap-4 zcs-text-center zcs-relative <%=if(stage == "Scale","zcs-stepper-active","")%>' <%=ahrefAction%>>
+							<div class='zcs-stepper-status zcs-flex zcs-direction-column zcs-align-items-center zcs-justify-center zcs-rounded-half zcs-text-center zcs-relative zcs-box-border zcs-relative'>
+								<h6 class='zcs-stepper-count zcs-col-common zcs-w-full zcs-flex zcs-align-items-center zcs-justify-center zcs-rounded-half zcs-font-12 zcs-font-semibold zcs-lh-body zcs-color-tertiary zcs-m-0 zcs-box-border'> 3 </h6>
+								<i class='zcs-stepper-icon zcs-stepper-passed zcs-font-18 zcs-font-bold zcs-color-white zc-li-outline ui-1-check-small'></i>
+							</div>
+							<span class='zcs-stepper-text zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'> <%=language.get("grc.organization.address")%> </span>
+						
+						</a>
+<%
+			ahrefLink = '#Page:' + page_link_name + '?recid=' + input.recid + '&action_field=' + actionList.get(3);
+			ahrefAction = if(stage == "Address" || stage == "Entity" || stage == "Regulatory","href=" + ahrefLink,"");
+			%>
+<a class='zcs-stepper zcs-col-common zcs-flex zcs-direction-column zcs-align-items-center zcs-gap-4 zcs-text-center zcs-relative <%=if(stage == "Address","zcs-stepper-active","")%>' <%=ahrefAction%>>
+							<div class='zcs-stepper-status zcs-flex zcs-direction-column zcs-align-items-center zcs-justify-center zcs-rounded-half zcs-text-center zcs-relative zcs-box-border zcs-relative'>
+								<h6 class='zcs-stepper-count zcs-col-common zcs-w-full zcs-flex zcs-align-items-center zcs-justify-center zcs-rounded-half zcs-font-12 zcs-font-semibold zcs-lh-body zcs-color-tertiary zcs-m-0 zcs-box-border'> 4 </h6>
+								<i class='zcs-stepper-icon zcs-stepper-passed zcs-font-18 zcs-font-bold zcs-color-white zc-li-outline ui-1-check-small'></i>
+							</div>
+							<span class='zcs-stepper-text zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'> <%=language.get("grc.organization.entityDetails")%> </span>
+						
+						</a>
+<%
+			ahrefLink = '#Page:' + page_link_name + '?recid=' + input.recid + '&action_field=' + actionList.get(4);
+			ahrefAction = if(stage == "Entity" || stage == "Regulatory","href=" + ahrefLink,"");
+			%>
+<a class='zcs-stepper zcs-col-common zcs-flex zcs-direction-column zcs-align-items-center zcs-gap-4 zcs-text-center zcs-relative <%=if(stage == "Entity","zcs-stepper-active","")%>' <%=ahrefAction%>>
+							<div class='zcs-stepper-status zcs-flex zcs-direction-column zcs-align-items-center zcs-justify-center zcs-rounded-half zcs-text-center zcs-relative zcs-box-border zcs-relative'>
+								<h6 class='zcs-stepper-count zcs-col-common zcs-w-full zcs-flex zcs-align-items-center zcs-justify-center zcs-rounded-half zcs-font-12 zcs-font-semibold zcs-lh-body zcs-color-tertiary zcs-m-0 zcs-box-border'> 5 </h6>
+								<i class='zcs-stepper-icon zcs-stepper-passed zcs-font-18 zcs-font-bold zcs-color-white zc-li-outline ui-1-check-small'></i>
+							</div>
+							<span class='zcs-stepper-text zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'> <%=language.get("grc.organization.regulatoryContext")%> </span>
+						</a>
+					</ul>
+				</div>
+				<div class='zcs-col-common zcs-overflow-auto'>
+					<div class='zcs-form' zc_MobileView='inline' elName='zc-component' formLinkName='Organization' params='zc_Header=false&zc_SubmitVal=Next<%=formParam%>'></div>
+				</div>
+				<a class='zcs-button zcs-secondary-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body'
+    <%=previoushrefAction%> style='position: absolute;bottom: 14px;left: 40px;'>
+	<span class='zcs-button-text <%=if(previousAction == "Yet to Start","zcs-button-disable","")%>'> Previous </span>
+</a>
+            </div>
+        </div>
+<%
+		}
+		%>
+</div>
+</div>
+<%
+	}
+%>

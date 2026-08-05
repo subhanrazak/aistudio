@@ -1,0 +1,848 @@
+<%
+	page_link_name = "Strategy_Page";
+	language = thisapp.Content.translation();
+	tab_map = thisapp.Page.Get_Tabs(page_link_name);
+	tab_keys = tab_map.keys();
+	input.tab = if(input.tab != "" && input.tab != "null" && input.tab != null,input.tab,tab_keys.get(0));
+	%>
+<style>
+<%=thisapp.Styles.App_CSS()%>
+<%=thisapp.Styles.Button()%>
+<%=thisapp.Styles.Panel()%>
+<%=thisapp.Styles.Horizontal_Tab()%>
+<%=thisapp.Styles_Creator.Filter()%>
+<%=thisapp.Styles_Creator.Report_Card()%>
+
+<%=thisapp.Styles_Page.Common_View()%>
+.zcs-list-container{
+	max-height: 200px;
+    overflow: auto;
+}
+.zcs-list-container a{
+	height:fit-content;
+}
+</style>
+<%
+	if(input.page_action == "add")
+	{
+		if(input.recid != null)
+		{
+			%>
+<%=thisapp.Components.Add_Record("Strategies","#Page:" + page_link_name + "?page_action=detailView&tab=" + input.tab + "&recid=" + input.recid,"Strategy","zc_Header=false&zc_SubmitVal=Create&recLinkID=" + input.recid + "&viewLinkName=Strategies&tab=" + input.tab)%>;
+<%
+		}
+		else
+		{
+			%>
+<%=thisapp.Components.Add_Record("Strategies","#Page:" + page_link_name + "?tab=" + input.tab,"Strategy","zc_Header=false&zc_SubmitVal=Create&tab=" + input.tab)%>;
+<%
+		}
+	}
+	else if(input.page_action == "detailView")
+	{
+		strategyDet = Strategy[ID == input.recid];
+		%>
+<style>
+<%=thisapp.Styles.Badge()%>
+<%=thisapp.Styles.Progress_Bar()%>
+<%=thisapp.Styles.Divider()%>
+<%=thisapp.Styles.Label_Value()%>
+<%=thisapp.Styles.Avatar()%>
+		.zcs-page-container {
+	background-color: var(--zcs-page-bg-color);
+}
+.zcs-bg-grey {
+	background-color: #F9FAFC;
+}
+.zcs-bg-blue {
+	background-color: #F9FAFC;
+}
+.zcs-green-box {
+    border: 1px solid #D0FAE5;
+    color: #008000;
+}
+.zcs-blue-box {
+    border: 1px solid #DBEAFE;
+	background-color: #EFF6FF;
+    color: #1C398E;
+}
+.zcs-grey-box {
+    border: 1px solid #E2E8F0;
+	background-color: #F8FAFC;
+    color: #155DFC;
+}
+.zcs-red-box {
+    border: 1px solid #FFE4E6;
+    color: #EC003F;
+}
+.zcs-grid {
+	display: grid !important;
+	grid-template-columns: 1fr 1fr;
+}
+@media (max-width: 768px) {
+	.zcs-page-container .zcs-button {
+		min-width: 36px;
+	}
+	.zcs-page-container .zcs-button .zcs-button-text {
+		 display: none;
+	}
+	.zcs-page-fleet_driver .zcs-left-content,
+	.zcs-page-fleet_driver .zcs-right-content {
+		height: auto;
+		overflow: initial;
+	}
+}
+.zcs-icon-wrapper {
+    width: 32px;
+    height: 32px;
+    background-color: #FEE2E2;
+    color: #FB2C36;
+}
+.zcs-owner-card {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 5px;
+    background: #ffffff;
+    border: 1px solid #E2E8F0;
+    border-radius: 14px;
+    min-width: 170px;
+    width: fit-content;
+}
+
+.zcs-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.zcs-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.zcs-avatar span{
+	color:#fff !important;
+}
+
+.zcs-owner-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.zcs-owner-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: #0a1929;
+}
+
+.zcs-owner-role {
+    font-size: 12px;
+    font-weight: 400;
+    color: #8896a6;
+}
+.zcs-stakeholder-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.zcs-stakeholder-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding:5px;
+    background: #ffffff;
+    border: 1px solid #E2E8F0;
+    border-radius: 16px;
+    min-width: 170px;
+}
+
+.zcs-stakeholder-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.zcs-stakeholder-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: #0a1929;
+}
+
+.zcs-stakeholder-role {
+    font-size: 12px;
+    font-weight: 400;
+    color: #8896a6;
+}
+
+		</style>
+<div class='zcs-page-container zcs-page-fleet_driver zcs-wh-full'>
+    <div class='zcs-page-container-inner zcs-wh-full zcs-flex zcs-direction-column'>
+        <div class='zcs-page-header zcs-w-full zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-8 zcs-px-30 zcs-py-24 zcs-box-border'>
+			<div class='zcs-flex zcs-gap-16 zcs-ellipsis'>
+				<a class='zcs-back' href='#Page:<%=page_link_name%>?tab=<%=input.tab%>'>
+					<i class='zcs-back-icon zcs-font-22 zcs-color-tertiary fa fa-angle-left'></i>
+				</a>
+				<div class='zcs-flex zcs-direction-column zcs-gap-6 zcs-ellipsis'>
+					<div class='zcs-row zcs-align-items-center zcs-gap-8'>
+						<h5 class='zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-ellipsis zcs-m-0'> <%=strategyDet.Strategy_Title%> </h5>
+						
+					</div>
+					<div class='zcs-row zcs-align-items-center zcs-gap-8'>
+					<p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary zcs-m-0 zcs-py-6 zcs-px-12 zcs-rounded-lg' style='background: #e3e3e3;'>
+						Strategy ID: <%=strategyDet.Strategy_ID%> 
+					</p>
+<%
+		if(strategyDet.Priority_Weightage == "Critical")
+		{
+			priority_badgeClass = "zcs-badge-red";
+		}
+		else if(strategyDet.Priority_Weightage == "High")
+		{
+			priority_badgeClass = "zcs-badge-green";
+		}
+		else if(strategyDet.Priority_Weightage == "Medium")
+		{
+			priority_badgeClass = "zcs-badge-blue";
+		}
+		else if(strategyDet.Priority_Weightage == "Low")
+		{
+			priority_badgeClass = "zcs-badge-yellow";
+		}
+		%>
+<p class='zcs-badge zcs-badge-filled-outline zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary zcs-m-0 zcs-py-5 zcs-px-6 zcs-rounded-2xl <%=priority_badgeClass%>' style='border: none !important;'>
+					<span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'> <i value='location-flag-diagonal-33' html='location-flag-diagonal-33' class='location-flag-diagonal-33 zc-li-solid'></i> <%=strategyDet.Priority_Weightage%> </span>
+					</p>
+<%
+		if(strategyDet.Status == "In Progress")
+		{
+			badgeClass = "zcs-badge-blue";
+		}
+		else if(strategyDet.Status == "Not Started")
+		{
+			badgeClass = "zcs-badge-orange";
+		}
+		else if(strategyDet.Status == "On Hold")
+		{
+			badgeClass = "zcs-badge-red";
+		}
+		else if(strategyDet.Status == "Completed")
+		{
+			badgeClass = "zcs-badge-green";
+		}
+		%>
+<p class='zcs-badge zcs-badge-filled-outline zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary zcs-m-0 zcs-py-5 zcs-px-6 zcs-rounded-md <%=badgeClass%>' style='border-color: #E6E6E6 !important; background: white !important;'>
+					<span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'> \u2022  <%=strategyDet.Status%>  </span>
+					</p>
+					</div>
+				</div>
+			</div>
+			<div class='zcs-flex zcs-align-items-center zcs-gap-12'>
+<%
+		if(thisapp.permission.app_access("risk_Management_Library_Button") == true)
+		{
+			%>
+<a href='#Page:<%=page_link_name%>?page_action=add&recid=<%=strategyDet.ID%>&tab=<%=input.tab%>' class='zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body'>
+					<i class='zcs-button-icon zc-li-outline ui-1-edit-72'></i>
+					<span class='zcs-button-text'> <%=language.get("grc.edit.text")%> </span>
+				</a>
+<%
+		}
+		%>
+</div>
+		</div>
+          <div class='zcs-page-content zcs-col-common zcs-overflow-auto zcs-px-20 zcs-pb-20 zcs-box-border'>
+		   <div class='zcs-panel-wrapper zcs-mb-15'>
+            <ul class='zcs-row zcs-justify-space-between zcs-gap-20 zcs-p-0 zcs-m-0'>
+                <li class='zcs-col-3 zcs-col-sm-6 zcs-col-xs-12 zcs-relative '>
+                    <div class='zcs-panel zcs-panel-red zcs-wh-full zcs-flex  zcs-gap-8 zcs-rounded-lg zcs-p-16 zcs-box-border zcs-justify-space-between'>
+					<div class='zcs-flex zcs-justify-center zcs-gap-10 zcs-direction-column'>
+					 <p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'> <%=language.get("grc.strategy.linkedObjectives")%> </p>
+                        <h4 class='zcs-font-20 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'> <%=strategyDet.Linked_Objectives.size()%> </h4>
+                        </div>
+                            <div class='zcs-panel-icon-wrapper zcs-flex zcs-align-items-center zcs-justify-center zcs-no-shrink zcs-rounded-lg'>
+                                <i class='zcs-panel-icon zcs-font-24 zc-li-outline tech-disk-reader'></i>
+                            </div>
+                            
+                       
+                    </div>
+                   
+                </li>
+				 <li class='zcs-col-3 zcs-col-sm-6 zcs-col-xs-12 zcs-relative '>
+                    <div class='zcs-panel zcs-panel-red zcs-wh-full zcs-flex  zcs-gap-8 zcs-rounded-lg zcs-p-16 zcs-box-border zcs-justify-space-between'>
+					<div class='zcs-flex zcs-justify-center zcs-gap-10 zcs-direction-column'>
+					 <p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'> <%=language.get("grc.objective.linkedKPIs")%> </p>
+                        <h4 class='zcs-font-20 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'> <%=strategyDet.KPI_s_Link.size()%> </h4>
+                        </div>
+                            <div class='zcs-panel-icon-wrapper zcs-flex zcs-align-items-center zcs-justify-center zcs-no-shrink zcs-rounded-lg'>
+                                <i class='zcs-panel-icon zcs-font-24 zc-li-outline business-briefcase-25'></i>
+                            </div>
+                            
+                       
+                    </div>
+                    
+                </li>
+				<li class='zcs-col-3 zcs-col-sm-6 zcs-col-xs-12 zcs-relative '>
+                    <div class='zcs-panel zcs-panel-red zcs-wh-full zcs-flex  zcs-gap-8 zcs-rounded-lg zcs-p-16 zcs-box-border zcs-justify-space-between'>
+					<div class='zcs-flex zcs-justify-center zcs-gap-10 zcs-direction-column'>
+					 <p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'> <%=language.get("grc.objective.linkedRisks")%> </p>
+                        <h4 class='zcs-font-20 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'> <%=strategyDet.Risk_s_Linkage.size()%> </h4>
+                        </div>
+                            <div class='zcs-panel-icon-wrapper zcs-flex zcs-align-items-center zcs-justify-center zcs-no-shrink zcs-rounded-lg'>
+                                <i class='zcs-panel-icon zcs-font-24 zc-li-outline location-position-pin'></i>
+                            </div>
+                            
+                       
+                    </div>
+                    
+                </li>
+               
+               <li class='zcs-col-3 zcs-col-sm-6 zcs-col-xs-12 zcs-relative '>
+                    <div class='zcs-panel zcs-panel-red zcs-wh-full zcs-flex  zcs-gap-8 zcs-rounded-lg zcs-p-16 zcs-box-border zcs-justify-space-between'>
+					<div class='zcs-flex zcs-justify-center zcs-gap-10 zcs-direction-column'>
+					 <p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'> <%=language.get("grc.objective.linkedControls")%> </p>
+                        <h4 class='zcs-font-20 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'> <%=strategyDet.Control_s_Linkage.size()%> </h4>
+                        </div>
+                            <div class='zcs-panel-icon-wrapper zcs-flex zcs-align-items-center zcs-justify-center zcs-no-shrink zcs-rounded-lg'>
+                                <i class='zcs-panel-icon zcs-font-24 zc-li-outline users-parent'></i>
+                            </div>
+                            
+                       
+                    </div>
+                    
+                </li>
+            </ul>
+        </div>
+		     <div class='zcs-row zcs-gap-20 zcs-w-full zcs-mb-15'>
+			     <div class='zcs-card zcs-left-content zcs-h-full zcs-overflow-auto zcs-col-12 zcs-col-sm-12 zcs-flex zcs-direction-column zcs-gap-20'>
+				     <div class='zcs-flex zcs-direction-column zcs-gap-12 zcs-p-23 zcs-box-border'>
+					      <h6 class='zcs-font-16 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0'><%=language.get("grc.strategy.basicInformation")%> </h6>
+						  <div class="zcs-divider zcs-divider-horizontal"></div>
+						  <div class='zcs-flex'>
+						         <div class="zcs-flex zcs-direction-column zcs-gap-20" style='flex: 1;flex-shrink: 0;'>
+										     <div class="zcs-flex zcs-direction-column zcs-gap-4">
+											<h6 class="zcs-font-14 zcs-font-normal zcs-lh-heading zcs-color-tertiary zcs-m-0"> <%=language.get("grc.strategy.strategyTitle")%> </h6>
+										    <span class="zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body"> <%=strategyDet.Strategy_Title%> </span>
+											</div>
+											
+											<div class="zcs-flex zcs-direction-column zcs-gap-4">
+											<h6 class="zcs-font-14 zcs-font-normal zcs-lh-heading zcs-color-tertiary zcs-m-0"> <%=language.get("grc.strategy.category")%> </h6>
+										    <span class="zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body"> <%=strategyDet.Category.Category_Name%> </span>
+											</div>
+											
+											
+											<div class="zcs-flex zcs-direction-column zcs-gap-4">
+											<h6 class="zcs-font-14 zcs-font-normal zcs-lh-heading zcs-color-tertiary zcs-m-0"> <%=language.get("grc.strategy.priority")%> </h6>
+											
+										    <p class='zcs-badge zcs-badge-filled-outline zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary zcs-m-0 zcs-py-5 zcs-px-6 zcs-rounded-2xl <%=priority_badgeClass%>' style='border-radius: 8px !important;'>
+					<span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'><%=strategyDet.Priority_Weightage%> </span>
+					</p>
+											</div>	
+									</div>
+									<div class='zcs-flex zcs-direction-column zcs-gap-4' style='flex: 1;flex-shrink: 0;'>
+									  <h6 class="zcs-font-14 zcs-font-normal zcs-lh-heading zcs-color-tertiary zcs-m-0"> <%=language.get("grc.strategy.description")%> </h6>
+									  <span class="zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body"> <%=strategyDet.Strategy_Description%> </span>
+									</div>
+						  </div>
+						  
+					 </div>
+				 </div>
+			 </div>
+		        
+	
+				
+				
+				 <h5 class="zcs-font-16 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-ellipsis zcs-m-0"><%=language.get("grc.strategy.strategicLinkages")%></h5>
+				  <div class='zcs-gap-20 zcs-w-full zcs-mt-15 zcs-grid'>
+					
+					<div class='zcs-right-content zcs-h-full zcs-overflow-auto zcs-col-sm-12 zcs-flex zcs-direction-column zcs-gap-20'>
+                             <div class="zcs-card zcs-flex zcs-direction-column zcs-gap-12 zcs-p-16 zcs-box-border zcs-h-full">
+								<h6 class="zcs-font-14 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0"> <%=language.get("grc.objective.linkedKPIs")%>  (<%=(strategyDet.KPI_s_Link.ID.getall()).size()%>)</h6>
+<%
+		if(strategyDet.KPI_s_Link.size() > 0)
+		{
+			%>
+<div class='zcs-list-container zcs-row zcs-gap-12'>
+<%
+			for each  kpi in strategyDet.KPI_s_Link
+			{
+				kpiDet = KPI[ID == kpi];
+				%>
+<div class='zcs-card zcs-border-box zcs-flex zcs-align-items-center zcs-gap-8 zcs-rounded-xl zcs-px-8 zcs-py-12 zcs-box-border'>
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+		<path d="M0 8C0 3.58172 3.58172 0 8 0H16C20.4183 0 24 3.58172 24 8V16C24 20.4183 20.4183 24 16 24H8C3.58172 24 0 20.4183 0 16V8Z" fill="#F3E8FF"/>
+		<g clip-path="url(#clip0_335_11838)">
+		<path d="M12.0001 17.8337C15.2217 17.8337 17.8334 15.222 17.8334 12.0003C17.8334 8.77866 15.2217 6.16699 12.0001 6.16699C8.77842 6.16699 6.16675 8.77866 6.16675 12.0003C6.16675 15.222 8.77842 17.8337 12.0001 17.8337Z" stroke="#7C3AED" stroke-width="1.16667" stroke-linecap="round" stroke-linejoin="round"/>
+		<path d="M12 15.5C13.933 15.5 15.5 13.933 15.5 12C15.5 10.067 13.933 8.5 12 8.5C10.067 8.5 8.5 10.067 8.5 12C8.5 13.933 10.067 15.5 12 15.5Z" stroke="#7C3AED" stroke-width="1.16667" stroke-linecap="round" stroke-linejoin="round"/>
+		<path d="M11.9999 13.1663C12.6443 13.1663 13.1666 12.644 13.1666 11.9997C13.1666 11.3553 12.6443 10.833 11.9999 10.833C11.3556 10.833 10.8333 11.3553 10.8333 11.9997C10.8333 12.644 11.3556 13.1663 11.9999 13.1663Z" stroke="#7C3AED" stroke-width="1.16667" stroke-linecap="round" stroke-linejoin="round"/>
+		</g>
+		<defs>
+		<clipPath id="clip0_335_11838">
+		<rect width="14" height="14" fill="white" transform="translate(5 5)"/>
+		</clipPath>
+		</defs>
+		</svg>
+
+
+							<p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-m-0'> <%=kpiDet.KPI_Name%> </p>
+						</div>
+<%
+			}
+			%>
+</div>
+<%
+		}
+		else
+		{
+			%>
+<%=thisapp.Page.noData()%>
+<%
+		}
+		%>
+</div>
+					</div>
+					
+					<div class='zcs-left-content zcs-h-full zcs-overflow-auto zcs-col-sm-12 zcs-flex zcs-direction-column zcs-gap-20'>
+					<div class="zcs-card zcs-flex zcs-direction-column zcs-gap-12 zcs-p-16 zcs-box-border zcs-h-full">
+								<h6 class="zcs-font-14 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0"> <%=language.get("grc.objective.linkedKRI")%>   (<%=(strategyDet.KRI_s_Link.ID.getall()).size()%>)</h6>
+<%
+		if(strategyDet.KRI_s_Link.size() > 0)
+		{
+			%>
+<div class='zcs-list-container zcs-row zcs-gap-12'>
+<%
+			for each  kri in strategyDet.KRI_s_Link
+			{
+				kriDet = KRI[ID == kri];
+				%>
+<div class='zcs-card zcs-border-box zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-8 zcs-rounded-xl zcs-px-8 zcs-py-12 zcs-box-border'>
+
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M0 8C0 3.58172 3.58172 0 8 0H16C20.4183 0 24 3.58172 24 8V16C24 20.4183 20.4183 24 16 24H8C3.58172 24 0 20.4183 0 16V8Z" fill="#D1FAE5"/>
+<path d="M17.8332 9.08301L12.8748 14.0413L9.95817 11.1247L6.1665 14.9163" stroke="#059669" stroke-width="1.16667" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M14.3335 9.08301H17.8335V12.583" stroke="#059669" stroke-width="1.16667" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
+
+							<p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-m-0'> <%=kriDet.KRI_Name%> </p>
+						</div>
+<%
+			}
+			%>
+</div>
+<%
+		}
+		else
+		{
+			%>
+<%=thisapp.Page.noData()%>
+<%
+		}
+		%>
+</div>
+                     
+					</div>
+					
+				</div>
+				<div class='zcs-gap-20 zcs-w-full zcs-mt-15 zcs-grid'>
+					
+					<div class='zcs-left-content zcs-h-full zcs-overflow-auto zcs-col-sm-12 zcs-flex zcs-direction-column zcs-gap-20'>
+                             <div class="zcs-card zcs-flex zcs-direction-column zcs-gap-12 zcs-p-16 zcs-box-border zcs-h-full">
+								<h6 class="zcs-font-14 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0"> <%=language.get("grc.objective.linkedRisks")%>  (<%=(strategyDet.Risk_s_Linkage.ID.getall()).size()%>)</h6>
+<%
+		if(strategyDet.Risk_s_Linkage.size() > 0)
+		{
+			%>
+<div class='zcs-list-container zcs-row zcs-gap-12'>
+<%
+			for each  risk in strategyDet.Risk_s_Linkage
+			{
+				riskDet = Risk_Entry[ID == risk];
+				%>
+<a class='zcs-card zcs-border-box zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-8 zcs-rounded-xl zcs-px-8 zcs-py-12 zcs-box-border' href='#Page:Risk_Entries_Page?page_action=detailView&recid=<%=riskDet.ID%>' target='_blank'>
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M0 8C0 3.58172 3.58172 0 8 0H16C20.4183 0 24 3.58172 24 8V16C24 20.4183 20.4183 24 16 24H8C3.58172 24 0 20.4183 0 16V8Z" fill="#FEE2E2"/>
+<path d="M17.6759 15.5003L13.0092 7.33363C12.9075 7.15408 12.7599 7.00474 12.5816 6.90083C12.4033 6.79693 12.2006 6.74219 11.9942 6.74219C11.7879 6.74219 11.5852 6.79693 11.4069 6.90083C11.2286 7.00474 11.081 7.15408 10.9792 7.33363L6.31258 15.5003C6.20973 15.6784 6.1558 15.8806 6.15625 16.0863C6.15671 16.2919 6.21153 16.4939 6.31517 16.6715C6.41881 16.8492 6.56758 16.9963 6.7464 17.0979C6.92522 17.1996 7.12774 17.2521 7.33341 17.2503H16.6667C16.8714 17.2501 17.0725 17.196 17.2497 17.0935C17.4269 16.9911 17.574 16.8438 17.6762 16.6664C17.7785 16.4891 17.8323 16.288 17.8322 16.0833C17.8322 15.8786 17.7783 15.6776 17.6759 15.5003Z" stroke="#DC2626" stroke-width="1.16667" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M12 10.25V12.5833" stroke="#DC2626" stroke-width="1.16667" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M12 14.917H12.0058" stroke="#DC2626" stroke-width="1.16667" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
+
+							<p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-m-0' style='color:#364153;'> <%=riskDet.Risk_Title%> </p>
+						</a>
+<%
+			}
+			%>
+</div>
+<%
+		}
+		else
+		{
+			%>
+<%=thisapp.Page.noData()%>
+<%
+		}
+		%>
+</div>
+					</div>
+					
+					<div class='zcs-right-content zcs-h-full zcs-overflow-auto zcs-col-sm-12 zcs-flex zcs-direction-column zcs-gap-20'>
+                             <div class="zcs-card zcs-flex zcs-direction-column zcs-gap-12 zcs-p-16 zcs-box-border zcs-h-full">
+								<h6 class="zcs-font-14 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0"> <%=language.get("grc.objective.linkedControls")%>  (<%=(strategyDet.Control_s_Linkage.ID.getall()).size()%>)</h6>
+<%
+		if(strategyDet.Control_s_Linkage.size() > 0)
+		{
+			%>
+<div class='zcs-list-container zcs-row zcs-gap-12'>
+<%
+			for each  control in strategyDet.Control_s_Linkage
+			{
+				controlDet = Control[ID == control];
+				%>
+<a class='zcs-card zcs-border-box zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-8 zcs-rounded-xl zcs-px-8 zcs-py-12 zcs-box-border' href='#Page:Controls_Page?page_action=detailView&recid=<%=controlDet.ID%>' target='_blank'>
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M0 8C0 3.58172 3.58172 0 8 0H16C20.4183 0 24 3.58172 24 8V16C24 20.4183 20.4183 24 16 24H8C3.58172 24 0 20.4183 0 16V8Z" fill="#FED7AA"/>
+<path d="M17.6759 15.5003L13.0092 7.33363C12.9075 7.15408 12.7599 7.00474 12.5816 6.90083C12.4033 6.79693 12.2006 6.74219 11.9942 6.74219C11.7879 6.74219 11.5852 6.79693 11.4069 6.90083C11.2286 7.00474 11.081 7.15408 10.9792 7.33363L6.31258 15.5003C6.20973 15.6784 6.1558 15.8806 6.15625 16.0863C6.15671 16.2919 6.21153 16.4939 6.31517 16.6715C6.41881 16.8492 6.56758 16.9963 6.7464 17.0979C6.92522 17.1996 7.12774 17.2521 7.33341 17.2503H16.6667C16.8714 17.2501 17.0725 17.196 17.2497 17.0935C17.4269 16.9911 17.574 16.8438 17.6762 16.6664C17.7785 16.4891 17.8323 16.288 17.8322 16.0833C17.8322 15.8786 17.7783 15.6776 17.6759 15.5003Z" stroke="#EA580C" stroke-width="1.16667" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M12 10.25V12.5833" stroke="#EA580C" stroke-width="1.16667" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M12 14.917H12.0058" stroke="#EA580C" stroke-width="1.16667" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
+
+							<p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-m-0' style='color:#364153;'> <%=controlDet.Control_Name_Title%> </p>
+						</a>
+<%
+			}
+			%>
+</div>
+<%
+		}
+		else
+		{
+			%>
+<%=thisapp.Page.noData()%>
+<%
+		}
+		%>
+</div>
+					</div>
+					
+				</div>
+				
+				<div class='zcs-gap-20 zcs-w-full zcs-mt-15 zcs-grid'>
+				<div class='zcs-left-content zcs-h-full zcs-overflow-auto zcs-col-sm-12 zcs-flex zcs-direction-column zcs-gap-20'>
+					<div class="zcs-card zcs-flex zcs-direction-column zcs-gap-12 zcs-p-16 zcs-box-border zcs-h-full">
+								<h6 class="zcs-font-14 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0"> <%=language.get("grc.strategy.linkedObjectives")%> (<%=(strategyDet.Linked_Objectives.ID.getall()).size()%>)</h6>
+<%
+		if(strategyDet.Linked_Objectives.size() > 0)
+		{
+			%>
+<div class='zcs-list-container zcs-row zcs-gap-12'>
+<%
+			for each  obejctive in strategyDet.Linked_Objectives
+			{
+				obejctiveDet = Objective[ID == obejctive];
+				%>
+<a class='zcs-card zcs-border-box zcs-flex zcs-align-items-center zcs-gap-8 zcs-rounded-xl zcs-px-8 zcs-py-12 zcs-box-border' href='#Page:Objective_Page?page_action=detailView&recid=<%=obejctiveDet.ID%>' target='_blank'>
+		<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M0 8C0 3.58172 3.58172 0 8 0H16C20.4183 0 24 3.58172 24 8V16C24 20.4183 20.4183 24 16 24H8C3.58172 24 0 20.4183 0 16V8Z" fill="#E2EDFF"/>
+<path d="M6.21667 8.49892L12.5 11.9993M12.5 11.9993L18.7833 8.49892M12.5 11.9993V19M19 9.19899C18.9997 8.95346 18.9329 8.71231 18.8061 8.49974C18.6793 8.28716 18.4971 8.11064 18.2778 7.98787L13.2222 5.18758C13.0026 5.0647 12.7536 5 12.5 5C12.2464 5 11.9974 5.0647 11.7778 5.18758L6.72222 7.98787C6.50286 8.11064 6.32065 8.28716 6.19389 8.49974C6.06713 8.71231 6.00026 8.95346 6 9.19899V14.7996C6.00026 15.0451 6.06713 15.2863 6.19389 15.4988C6.32065 15.7114 6.50286 15.8879 6.72222 16.0107L11.7778 18.811C11.9974 18.9339 12.2464 18.9986 12.5 18.9986C12.7536 18.9986 13.0026 18.9339 13.2222 18.811L18.2778 16.0107C18.4971 15.8879 18.6793 15.7114 18.8061 15.4988C18.9329 15.2863 18.9997 15.0451 19 14.7996V9.19899Z" stroke="#04204B" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
+
+							<p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-m-0' style='color:#364153;'> <%=obejctiveDet.Objective_Title%> </p>
+						</a>
+<%
+			}
+			%>
+</div>
+<%
+		}
+		else
+		{
+			%>
+<%=thisapp.Page.noData()%>
+<%
+		}
+		%>
+</div>
+                     
+					</div>
+				</div>
+				 <div class='zcs-row zcs-gap-20 zcs-w-full zcs-my-15'>
+			     <div class='zcs-card zcs-left-content zcs-h-full zcs-overflow-auto zcs-col-12 zcs-col-sm-12 zcs-flex zcs-direction-column zcs-gap-20'>
+				     <div class='zcs-flex zcs-direction-column zcs-gap-12 zcs-p-23 zcs-box-border'>
+					      <h6 class='zcs-font-16 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0'><%=language.get("grc.strategy.ownershipTimeline")%> </h6>
+						  <div class="zcs-divider zcs-divider-horizontal"></div>
+						  <div class='zcs-flex zcs-direction-column zcs-gap-12'>
+						      <span style='font-weight: 400;color: #6A7282;' class='zcs-mt-10'> <%=language.get("grc.strategy.ownerResponsiblePerson")%></span>
+							  <div class="zcs-owner-card">
+                 <div class="zcs-avatar zcs-flex zcs-align-items-center zcs-justify-center">
+<%
+		if(strategyDet.Owner_Responsible_Person.Photo != null && strategyDet.Owner_Responsible_Person.Photo != "")
+		{
+			ownerImage = zoho.appuri + "report/User_Report/" + strategyDet.Owner_Responsible_Person + "/Photo/download-file?filepath=/" + strategyDet.Owner_Responsible_Person.Photo.getSuffix("image/").getPrefix("\\"") + "&mediaType=1";
+			%>
+<img src=<%=ownerImage%> alt="Amy Jones">
+<%
+		}
+		else
+		{
+			%>
+<span class="zcs-font-18 zcs-font-normal zcs-text-white zcs-flex zcs-justify-center zcs-align-items-center zcs-fh zcs-lh-body"  aria-hidden="true"><%=thisapp.Content.letterGenerate(strategyDet.Owner_Responsible_Person.Name)%></span>
+<%
+		}
+		%>
+</div>
+                <div class="zcs-owner-info">
+                    <span class="zcs-owner-name"><%=strategyDet.Owner_Responsible_Person.Name%></span>
+                    <span class="zcs-owner-role"><%=strategyDet.Owner_Responsible_Person.Designation.Designation_Name%></span>
+                </div>
+            </div>
+						  </div>
+						    <div class='zcs-flex zcs-direction-column zcs-gap-12'>
+						      <span style='font-weight: 400;color: #6A7282;' class='zcs-mt-10'> <%=language.get("grc.strategy.businessUnitDepartment")%></span>
+							  
+							  <div class="zcs-stakeholder-grid">
+<%
+		for each  department in strategyDet.Department
+		{
+			%>
+<div class="zcs-stakeholder-card">
+                    <div class="zcs-avatar zcs-flex zcs-align-items-center zcs-justify-center">
+					<span class="zcs-font-18 zcs-font-normal zcs-text-white zcs-flex zcs-justify-center zcs-align-items-center zcs-fh zcs-lh-body" aria-hidden="true"><%=thisapp.Content.letterGenerate(department.Department_Name)%></span>
+					</div>
+					<div class="zcs-stakeholder-info">
+                        <span class="zcs-stakeholder-name"><%=department.Department_Name%></span>
+                        <span class="zcs-stakeholder-role"><%=department.Employee_Count%> Employees</span>
+                    </div>
+                </div>
+<%
+		}
+		%>
+</div>
+						  </div>
+						  <div class='zcs-flex zcs-direction-column zcs-gap-12'>
+						      <span style='font-weight: 400;color: #6A7282;' class='zcs-mt-10'> <%=language.get("grc.strategy.executionTimeline")%></span>
+							   <div class='zcs-flex' style='gap:100px;'>
+							    <div class="zcs-flex zcs-direction-column zcs-gap-4">
+								<label class="zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-tertiary" style='color:#6A7282 !important;'> <%=language.get("grc.strategy.startDate")%> </label>
+									<span class="zcs-font-15 zcs-font-medium zcs-lh-heading zcs-color-primary"> <%=strategyDet.Start_Date%>  </span>
+								</div>
+								<div class="zcs-flex zcs-direction-column zcs-gap-4">
+									<label class="zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-tertiary" style='color:#6A7282 !important;'> <%=language.get("grc.strategy.targetCompletionDate")%> </label>
+									<span class="zcs-font-15 zcs-font-medium zcs-lh-heading zcs-color-primary"> <%=strategyDet.End_Date%>  </span>
+								</div>
+								<div class="zcs-flex zcs-direction-column zcs-gap-4">
+									<label class="zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-tertiary" style='color:#6A7282 !important;'> <%=language.get("grc.strategy.duration")%> </label>
+									<span class="zcs-font-15 zcs-font-medium zcs-lh-heading zcs-color-primary"> <%=if(strategyDet.Start_Date != null && strategyDet.End_Date != null,strategyDet.Start_Date.daysBetween(strategyDet.End_Date),"-")%> days  </span>
+								</div>
+								</div>
+								
+								
+						  </div>
+						  
+				      </div>
+				</div>
+				</div>
+				 <div class='zcs-row zcs-gap-20 zcs-w-full zcs-m-0'>
+			     <div class='zcs-card zcs-left-content zcs-h-full zcs-overflow-auto zcs-col-12 zcs-col-sm-12 zcs-flex zcs-direction-column zcs-gap-20'>
+				     <div class='zcs-flex zcs-direction-column zcs-gap-12 zcs-p-23 zcs-box-border'>
+					      <h6 class='zcs-font-16 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0'><%=language.get("grc.strategy.additionalInformation")%> </h6>
+						  <div class="zcs-divider zcs-divider-horizontal"></div>
+						   <span style='font-weight: 400;color: #6A7282;'> <%=language.get("grc.strategy.attachments")%></span>
+<%
+		if(strategyDet.Attachments_Supporting_Documents.size() > 0)
+		{
+			%>
+<div class="zcs-list-container zcs-row zcs-gap-12" style='height:fit-content;'>
+<%
+			for each  attachment in strategyDet.Attachments_Supporting_Documents
+			{
+				%>
+<div class='zcs-panel zcs-panel-red zcs-card zcs-border-box  zcs-gap-8 zcs-rounded-xl zcs-p-16 zcs-box-border  zcs-flex zcs-direction-column zcs-gap-12' style='width:320px;box-shadow:none !important;'>
+                           <div class='zcs-flex zcs-align-items-center zcs-justify-space-between'>
+                            <div class='zcs-flex zcs-gap-16 zcs-align-items-center'>
+							<div class='zcs-panel-icon-wrapper zcs-flex zcs-align-items-center zcs-justify-center zcs-no-shrink zcs-rounded-lg'>
+                               <i value="files-single-folded-content" html="files-single-folded-content" class="files-single-folded-content zc-li-outline"></i>
+                            </div>
+							
+							</div>
+							<a href="https://creatorapp.zoho.com/file<%=zoho.appuri%>Strategies/<%=strategyDet.ID%>/Attachments_Supporting_Documents/download?filepath=/<%=attachment%>"><i class="zc-li-outline arrows-2-square-download zcs-pr-4" value="arrows-2-square-download" html="arrows-2-square-download" style='color:#99A1AF;'></i></a>
+							</div>
+							<p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-m-0'> <%=attachment%> </p>
+							
+						</div>
+<%
+			}
+			%>
+</div>
+<%
+		}
+		else
+		{
+			%>
+<%=thisapp.Page.noData()%>
+<%
+		}
+		%>
+<span style='font-weight: 400;color: #6A7282;' class='zcs-mt-10'> <%=language.get("grc.strategy.remarksComments")%></span>
+<%
+		if(strategyDet.Remarks_Comments != "" && strategyDet.Remarks_Comments != null)
+		{
+			%>
+<span class="zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body" style='border: 1px solid #D1D5DC; border-radius: 12px;padding: 17px;width:50%;'> <%=strategyDet.Remarks_Comments%> </span>
+<%
+		}
+		else
+		{
+			%>
+<%=thisapp.Page.noData()%>
+<%
+		}
+		%>
+</div>
+				</div>
+				</div>
+				
+				
+				
+				
+				
+			</div>
+		</div>
+    </div>
+</div>
+<%
+	}
+	else
+	{
+		totalCount = Strategy[ID != 0].count();
+		%>
+<style>
+<%=thisapp.Styles.Progress_Bar()%>
+.zc-container-wrapper .zc-main-content-wrapper .zc-main-content .inner .page_content_wrapper.zc-page-content-wrapper .elemContainment{
+	padding:0px !important;
+}
+.zcs-page-container {
+	background-color: var(--zcs-page-bg-color);
+}
+</style>
+<div class='zcs-page-container zcs-commonview zcs-wh-full'>
+	<div class='zcs-page-container-inner zcs-wh-full zcs-flex zcs-direction-column zcs-gap-20 zcs-px-30 zcs-py-24 zcs-box-border'>
+		<div class='zcs-page-header zcs-w-full zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-8 zcs-ellipsis'>
+		    <div class='zcs-flex zcs-direction-column zcs-gap-8'>
+            <h5 class='zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-ellipsis zcs-m-0'> <%=language.get("grc.strategy.strategyManagement")%> </h5>
+			<p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'><%=language.get("grc.strategy.subHeader")%></p>
+			</div>
+<%
+		if(thisapp.permission.app_access("risk_Management_Library_Button") == true)
+		{
+			%>
+<a class='zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body'
+                href='#Page:<%=page_link_name%>?page_action=add&tab=<%=input.tab%>'>
+                <i class='zcs-button-icon zc-li-outline ui-1-simple-add'></i>
+                <span class='zcs-button-text'> <%=language.get("grc.strategy.addStratergy")%> </span>
+            </a>
+<%
+		}
+		%>
+</div>
+        <div class='zcs-panel-wrapper'>
+            <ul class='zcs-row zcs-justify-space-between zcs-gap-20 zcs-p-0 zcs-m-0'>
+                <li class='zcs-col-3 zcs-col-sm-6 zcs-col-xs-12 zcs-relative '>
+                    <div class='zcs-panel zcs-panel-red zcs-wh-full  zcs-rounded-lg zcs-p-16 zcs-box-border '>
+					<div class='zcs-flex  zcs-gap-8 zcs-justify-space-between zcs-mb-20'>
+					<div class='zcs-flex zcs-justify-center zcs-gap-10 zcs-direction-column'>
+					 <p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'> <%=language.get("grc.strategy.totalStrategies")%> </p>
+                        <h4 class='zcs-font-20 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'> <%=Strategy[ID != 0].count()%> </h4>
+                        </div>
+                            <div class='zcs-panel-icon-wrapper zcs-flex zcs-align-items-center zcs-justify-center zcs-no-shrink zcs-rounded-lg'>
+                                <i class='zcs-panel-icon zcs-font-24 zc-li-outline tech-disk-reader'></i>
+                            </div>
+                        </div>    
+                       <div class="zcs-progress-bar zcs-rounded-sm">
+					   <div class="zcs-progress-bar-indicator" style='width: <%=if(totalCount > 0,Strategy[ID != 0].count() / totalCount * 100,0)%>%'></div>
+					</div>
+                    </div>
+					<a class='zcs-overlay zcs-wh-full zcs-absolute' ></a>
+                   
+                </li>
+				<li class='zcs-col-3 zcs-col-sm-6 zcs-col-xs-12 zcs-relative '>
+					<div class='zcs-panel zcs-panel-red zcs-wh-full  zcs-rounded-lg zcs-p-16 zcs-box-border '>
+					<div class='zcs-flex  zcs-gap-8 zcs-justify-space-between zcs-mb-20'>
+					<div class='zcs-flex zcs-justify-center zcs-gap-10 zcs-direction-column'>
+					 <p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'> <%=language.get("grc.strategy.inProgress")%> </p>
+                        <h4 class='zcs-font-20 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'> <%=Strategy[Status == "In Progress"].count()%> </h4>
+                        </div>
+                            <div class='zcs-panel-icon-wrapper zcs-flex zcs-align-items-center zcs-justify-center zcs-no-shrink zcs-rounded-lg'>
+                                 <i class='zcs-panel-icon zcs-font-24 zc-li-outline business-briefcase-25'></i>
+                            </div>
+                        </div>    
+                       <div class="zcs-progress-bar zcs-rounded-sm">
+									<div class="zcs-progress-bar-indicator" style='width:<%=if(totalCount > 0,Strategy[Status == "In Progress"].count() / totalCount * 100,0)%>%;'></div>
+					</div>
+                    </div>
+					<a class='zcs-overlay zcs-wh-full zcs-absolute' ></a>
+                </li>
+                <li class='zcs-col-3 zcs-col-sm-6 zcs-col-xs-12 zcs-relative '>
+                    
+					<div class='zcs-panel zcs-panel-red zcs-wh-full  zcs-rounded-lg zcs-p-16 zcs-box-border '>
+					<div class='zcs-flex  zcs-gap-8 zcs-justify-space-between zcs-mb-20'>
+					<div class='zcs-flex zcs-justify-center zcs-gap-10 zcs-direction-column'>
+					 <p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'> <%=language.get("grc.objective.onHold")%> </p>
+                        <h4 class='zcs-font-20 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'> <%=Strategy[Status == "On Hold"].count()%> </h4>
+                        </div>
+                            <div class='zcs-panel-icon-wrapper zcs-flex zcs-align-items-center zcs-justify-center zcs-no-shrink zcs-rounded-lg'>
+                                <i class='zcs-panel-icon zcs-font-24 zc-li-outline location-position-pin'></i>
+                            </div>
+                        </div>    
+                       <div class="zcs-progress-bar zcs-rounded-sm">
+									<div class="zcs-progress-bar-indicator" style='width: <%=if(totalCount > 0,Strategy[Status == "On Hold"].count() / totalCount * 100,0)%>%;'></div>
+					</div>
+                    </div>
+					<a class='zcs-overlay zcs-wh-full zcs-absolute' ></a>
+                </li>
+               <li class='zcs-col-3 zcs-col-sm-6 zcs-col-xs-12 zcs-relative '>
+                 
+					<div class='zcs-panel zcs-panel-red zcs-wh-full  zcs-rounded-lg zcs-p-16 zcs-box-border '>
+					<div class='zcs-flex  zcs-gap-8 zcs-justify-space-between zcs-mb-20'>
+					<div class='zcs-flex zcs-justify-center zcs-gap-10 zcs-direction-column'>
+					 <p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'> <%=language.get("grc.objective.completed")%> </p>
+                        <h4 class='zcs-font-20 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'> <%=Strategy[Status == "Completed"].count()%> </h4>
+                        </div>
+                            <div class='zcs-panel-icon-wrapper zcs-flex zcs-align-items-center zcs-justify-center zcs-no-shrink zcs-rounded-lg'>
+                               <i class='zcs-panel-icon zcs-font-24 zc-li-outline users-parent'></i>
+                            </div>
+                        </div>    
+                       <div class="zcs-progress-bar zcs-rounded-sm">
+									<div class="zcs-progress-bar-indicator" style='width:<%=if(totalCount > 0,Strategy[Status == "Completed"].count() / totalCount * 100,0)%>%;'></div>
+					</div>
+                    </div>
+					 <a class='zcs-overlay zcs-wh-full zcs-absolute' ></a>
+                </li>
+            </ul>
+        </div>
+		<div class='zcs-page-content zcs-card zcs-col-common zcs-overflow-auto'>
+            <div class='zcs-horizontal-tabpanel zcs-flex zcs-direction-column zcs-wh-full'>
+                <ul class='zcs-horizontal-tabhead zcs-flex zcs-gap-12 zcs-px-10 zcs-py-0 zcs-m-0 zcs-box-border'>
+<%
+		for each  tab_id in tab_keys
+		{
+			class_name = if(input.tab == tab_id,"zcs-horizontal-tabitem zcs-horizontal-tabactive'","zcs-horizontal-tabitem");
+			%>
+<li class='<%=class_name%>'> <a class='zcs-horizontal-tablink zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-10 zcs-py-12 zcs-box-border zcs-font-medium zcs-lh-body zcs-color-secondary' href='#Page:<%=page_link_name%>?tab=<%=tab_id%>'><span class="zcs-horizontal-tab-text"> <%=tab_map.get(tab_id).get("Display")%></span> </a> </li>
+<%
+		}
+		%>
+</ul>
+                <div class='zcs-horizontal-tabbody zcs-col-common zcs-flex zcs-direction-column'>
+                     <div class='zcs-filter' zc_MobileView='inline' elName='zc-component' formLinkName='Filter_Form' params='zc_Header=false&zc_Footer=false&zc_Focus=false&Action_field=overView&Page=<%=page_link_name%>&Report=Strategies<%=tab_map.get(input.tab).get("Param")%>'></div>
+					<div class='zcs-report zcs-col-common' name='embedDiv' elName='zc-component' viewLinkName='Strategy_Report_Page' params='zc_Header=false&tab=<%=input.tab%><%=tab_map.get(input.tab).get("Param")%>'></div>
+                </div>
+            </div>
+		</div>
+	</div>
+</div>
+<%
+	}
+%>

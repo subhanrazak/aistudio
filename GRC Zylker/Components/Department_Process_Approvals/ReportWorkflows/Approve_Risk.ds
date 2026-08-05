@@ -1,0 +1,42 @@
+Approve_Risk as "Approve Risk"
+{
+
+				type =  functions
+				form = Department_Process_Approvals
+				execution type = for each record	
+				on start
+				{
+					actions 
+					{
+					on click
+					(
+						input.Status = "Approved";
+										input.Approved_By = User[Email == zoho.loginuserid].ID;
+										approvalDet = Department_Approvals[ID == input.Department_Approvals];
+										totalCount = Department_Process_Approvals[Department_Approvals == input.Department_Approvals].count();
+										approvedCount = Department_Process_Approvals[Department_Approvals == input.Department_Approvals && Status == "Approved"].count();
+										if(totalCount == approvedCount)
+										{
+											approvalDet.Status="Approved";
+										}
+										else if(approvedCount > 0)
+										{
+											approvalDet.Status="Partial";
+										}
+										else
+										{
+											rejectedCount = Department_Process_Approvals[Department_Approvals == input.Department_Approvals && Status == "Rejected"].count();
+											if(totalCount == rejectedCount)
+											{
+												approvalDet.Status="Rejected";
+											}
+										}
+										approvalDet.Approved=Department_Process_Approvals[Department_Approvals == input.Department_Approvals && Status == "Approved"].count();
+										approvalDet.Rejected=Department_Process_Approvals[Department_Approvals == input.Department_Approvals && Status == "Rejected"].count();
+										approvalDet.Pending_Approval=Department_Process_Approvals[Department_Approvals == input.Department_Approvals && Status == "Pending"].count();
+										thisapp.Log.Audit_Log("Department_Process_Approvals",input.ID,"Approved",User[Email == zoho.loginuserid].ID,input.Department_Approvals.Risk_Assessment.Assessment_Title + " - " + input.Risk.Risk_Title);
+					)
+					}
+				}
+			
+}

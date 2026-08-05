@@ -1,0 +1,39 @@
+list Resolution_Report
+{
+
+			displayName = "Resolution Report"
+			show all rows from Add_Resolution    
+			(
+				Resolution_Description as "Resolution Description"
+				Vote_Start_Date as "Vote Start Date"
+				Vote_End_Date as "Vote End Date"
+				Status
+				Resolution
+				Meeting as "Meetings"
+				Agenda_Item as "Agenda Item"
+				custom action "Vote"
+				(
+	  			workflow = Vote
+				show action in edit record menu = true
+				column header = "Vote"
+				condition = (Vote_Start_Date < tomorrow && Vote_End_Date > yesterday)
+				)
+				custom action "Add Action"
+				(
+	  			workflow = Add_Action2
+				show action in edit record menu = true
+				column header = "Add Action"
+				condition = (Resolution == "Pass" && Action_Tracker.Status != "Ongoing" || Action_Tracker.Status != "Completed")
+				)
+				Agenda_Item.Item_Title as "Agenda Item"
+			)
+			custom actions
+			(
+				"Vote-Detailview"
+				(
+	  			workflow = Vote_Detailview
+				show action in edit record menu = true
+				)
+			)
+		
+}

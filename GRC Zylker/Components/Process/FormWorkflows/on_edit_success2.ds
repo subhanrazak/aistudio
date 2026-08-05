@@ -1,0 +1,41 @@
+on_edit_success2 as "on edit success"
+{
+
+				type =  form
+				form = Process
+
+				record event = on edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											thisapp.Log.Audit_Log("Process",input.ID,"Update",User[Email == zoho.loginuserid].ID,input.Process_ID + " - " + input.Process_Name);
+										actionList = {"Process Information","Risk Control Association"};
+										getIndex = if(input.Action_Field != "Risk Control Association",actionList.indexOf(input.Action_Field) + 1,null);
+										if(input.Stepper_Stage == "Process Information")
+										{
+											input.Stepper_Stage = "Risk Control Association";
+										}
+										else if(input.Stepper_Stage == "Risk Control Association")
+										{
+										}
+										success message input.Action_Field + " information submitted successfully.";
+										currentAction = input.Action_Field;
+										input.Action_Field = "";
+										if(currentAction != "Risk Control Association")
+										{
+											openUrl("#Page:Process_Page?page_action=add&recid=" + input.ID + "&action_field=" + encodeUrl(actionList.get(getIndex)),"same window");
+										}
+										else
+										{
+											openUrl("#Page:Process_Page?page_action=detailView&recid=" + input.ID,"same window");
+										}
+						)
+					}
+				}
+
+			
+}

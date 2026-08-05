@@ -1,0 +1,23 @@
+on_delete41 as "on delete"
+{
+
+				type =  form
+				form = Resource_Allocation
+
+				record event = on delete
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											title = if(input.Assessment_Plan != null,Assessment_Plan[ID == input.Assessment_Plan].Plan_Name,Risk_Assessment[ID == input.Risk_Assessment].Assessment_Title);
+										name = Resource[ID == input.Name].Resource;
+										thisapp.Log.Audit_Log("Resource_Allocation",input.ID,"Create",User[Email == zoho.loginuserid].ID,title + " - " + name);
+						)
+					}
+				}
+
+			
+}

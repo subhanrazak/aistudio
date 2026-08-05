@@ -1,0 +1,89 @@
+Agenda_Items as "Agenda Items"
+{
+
+				type =  form
+				form = Meeting
+
+				record event = on add or edit
+
+				on user input of Agenda
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											selectedAgendaId = input.Agenda.ID;
+										if(selectedAgendaId != null)
+										{
+											skipLoad = false;
+											if(input.Action_Tracker != null && input.Action_Tracker > 0)
+											{
+												trackerRec = Action_Tracker[ID == input.Action_Tracker];
+												if(trackerRec.count() > 0 && trackerRec.Agenda_Item != null)
+												{
+													skipLoad = true;
+												}
+											}
+											if(skipLoad == false)
+											{
+												input.Agenda_Items.clear();
+												agendaItems = Agenda_Item_Details[Agenda.ID == selectedAgendaId];
+												agenda_rows = Collection();
+												for each  agItem in agendaItems
+												{
+													rw = Meeting.Agenda_Items();
+													v_Item_Title = "";
+													if(agItem.Item_Title != null)
+													{
+														v_Item_Title = agItem.Item_Title + "";
+													}
+													v_Type_field = "";
+													if(agItem.Type_field != null)
+													{
+														v_Type_field = agItem.Type_field + "";
+													}
+													v_Presenter = "";
+													if(agItem.Presenter != null)
+													{
+														v_Presenter = agItem.Presenter + "";
+													}
+													v_Duration = 0;
+													if(agItem.Duration_minutes != null)
+													{
+														v_Duration = agItem.Duration_minutes;
+													}
+													v_Purpose = "";
+													if(agItem.Description != null)
+													{
+														v_Purpose = agItem.Description + "";
+													}
+													if(agItem.File_upload != null)
+													{
+														V_Fileupload = agItem.File_upload;
+													}
+													if(agItem.Uploader != null)
+													{
+														v_uploader = agItem.Uploader;
+													}
+													V_Priority = "";
+													if(agItem.Priority != null)
+													{
+														V_Priority = agItem.Priority;
+													}
+													rw.Item_Title=v_Item_Title;
+													rw.Type_field=v_Type_field;
+													rw.Presenter=v_Presenter;
+													rw.Duration_minutes=v_Duration;
+													rw.Purpose_Summary=v_Purpose;
+													rw.Priority=V_Priority;
+													agenda_rows.insert(rw);
+												}
+												input.Agenda_Items.insert(agenda_rows);
+											}
+										}
+						)
+					}
+				}
+
+			
+}

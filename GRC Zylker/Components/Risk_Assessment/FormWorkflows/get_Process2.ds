@@ -1,0 +1,32 @@
+get_Process2 as "get Process"
+{
+
+				type =  form
+				form = Risk_Assessment
+
+				record event = on add or edit
+
+				on add row of Processes
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											objectiveList = input.Objectives.Objectives.getall();
+										if(objectiveList.size() > 0)
+										{
+											processList = Process[Linked_Objectives == objectiveList].ID.getAll();
+											currentProcess = input.Processes.Processes.getall();
+											processList.removeAll(currentProcess);
+											row.Processes:ui.add(processList);
+										}
+										else
+										{
+											clear row.Processes;
+										}
+						)
+					}
+				}
+
+			
+}

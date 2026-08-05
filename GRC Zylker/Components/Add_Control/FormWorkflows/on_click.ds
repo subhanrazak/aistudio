@@ -1,0 +1,76 @@
+on_click as "on click"
+{
+
+				type =  form
+				form = Add_Control
+				button = Add
+				on click
+				{
+					actions 
+					{
+					on click
+					(
+						for each  risk in input.Risk
+										{
+											riskDet = Risk_Entry[ID == risk];
+											linkedControls = riskDet.Link_Controls;
+											linkedControls.addAll(input.Control);
+											riskDet.Link_Controls=linkedControls;
+											overallControlValue = 0;
+											for each  control in riskDet.Link_Controls
+											{
+												totalValue = 0;
+												designValue = 0;
+												operationValue = 0;
+												if(control.Design_Effectiveness == "Highly Effective")
+												{
+													designValue = 1;
+												}
+												else if(control.Design_Effectiveness == "Effective")
+												{
+													designValue = 0.75;
+												}
+												else if(control.Design_Effectiveness == "Moderately Effective")
+												{
+													designValue = 0.5;
+												}
+												else if(control.Design_Effectiveness == "Weak")
+												{
+													designValue = 0.25;
+												}
+												else if(control.Design_Effectiveness == "Ineffective")
+												{
+													designValue = 0;
+												}
+												if(control.Operating_Effectiveness == "Highly Effective")
+												{
+													operationValue = 1;
+												}
+												else if(control.Operating_Effectiveness == "Effective")
+												{
+													operationValue = 0.75;
+												}
+												else if(control.Operating_Effectiveness == "Moderately Effective")
+												{
+													operationValue = 0.5;
+												}
+												else if(control.Operating_Effectiveness == "Weak")
+												{
+													operationValue = 0.25;
+												}
+												else if(control.Operating_Effectiveness == "Ineffective")
+												{
+													operationValue = 0;
+												}
+												totalValue = (operationValue + designValue) / 2;
+												overallControlValue = overallControlValue + totalValue;
+											}
+											avgControl = if(riskDet.Link_Controls.size() > 0,overallControlValue / riskDet.Link_Controls.size(),0);
+											riskDet.Residual_Risk_Score=riskDet.Inherent_Score * (1 - avgControl).toNumber();
+										}
+										openUrl("#Script:page.refresh","same window");
+					)
+					}
+				}
+			
+}

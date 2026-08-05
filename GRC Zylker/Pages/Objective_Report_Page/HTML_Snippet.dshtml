@@ -1,0 +1,233 @@
+<%
+	language = thisapp.Content.translation();
+	pageParam = "";
+	objectiveIDList = Objective[ID != 0].ID.getAll();
+	if(input.Status != null && input.Status != "" && input.Status != "null")
+	{
+		objectiveIDList = Objective[ID == objectiveIDList && Status == input.Status].ID.getAll();
+		pageParam = pageParam + "&Status=" + input.Status;
+	}
+	if(input.Department != null)
+	{
+		objectiveIDList = Objective[ID == objectiveIDList && Linked_Departments == input.Department].ID.getAll();
+		pageParam = pageParam + "&Department=" + input.Department;
+	}
+	if(input.Objective_Type != null && input.Objective_Type != "" && input.Objective_Type != "null")
+	{
+		objectiveIDList = Objective[ID == objectiveIDList && Objective_Type == input.Objective_Type].ID.getAll();
+		pageParam = pageParam + "&Objective_Type=" + input.Objective_Type;
+	}
+	if(input.Search != null && input.Search != "" && input.Search != "null")
+	{
+		objectiveIDList = Objective[ID == objectiveIDList && Objective_Title.contains(input.Search) || Objective_ID.contains(input.Search)].ID.getAll();
+		pageParam = pageParam + "&Search=" + input.Search;
+	}
+	%>
+<style>
+<%=thisapp.Styles.App_CSS()%>
+<%=thisapp.Styles.Table()%>
+<%=thisapp.Styles.Badge()%>
+<%=thisapp.Styles.Progress_Bar()%>
+<%=thisapp.Styles.Pagination()%>
+
+.zc-container-wrapper .zc-main-content-wrapper .zc-main-content .inner .page_content_wrapper.zc-page-content-wrapper .elemContainment{
+	box-sizing: border-box;
+}
+
+.zcs-page-table-view {
+    height: 100%;
+	background :var(--zcs-white-color);
+}
+.zcs-pagination {
+    height: 32px;
+    padding: 10px;
+    box-sizing: content-box;
+	background :var(--zcs-white-color);
+}
+.zcs-table-wrapper {
+	height: calc(100% - 52px);
+}
+/* .zcs-table-wrapper table {
+    height: 100%;
+    table-layout: auto;
+	overflow: auto;
+} */
+
+.zcs-table-wrapper table thead {
+    z-index: 1;
+}
+
+.zcs-table-wrapper table tbody tr {
+   position:relative;
+}
+.zcs-detail-view-td{
+	position:absolute;
+	border: none !important;
+    inset: 0;
+    background: transparent !important;
+	
+}
+.zcs-detail-view-td a{
+	height: 100%;
+    display: block;
+    width: 100%;
+	
+}
+.zcs-table-wrapper table tbody tr td:first-child{
+min-width:250px;
+}
+</style>
+<div class='zcs-page-container zcs-page-table-view'>
+<%
+	if(objectiveIDList.size() > 0)
+	{
+		recordCount_per_page = 20;
+		total_objectives_count = objectiveIDList.size();
+		no_of_pages = ceil(total_objectives_count / recordCount_per_page);
+		input.start_index = if(input.start_index.isEmpty(),1,input.start_index);
+		diff = total_objectives_count - input.start_index;
+		end_index = if(input.start_index + recordCount_per_page - 1 > total_objectives_count,input.start_index + diff,input.start_index + recordCount_per_page - 1);
+		previousAction = if(input.start_index == 1,"disable","");
+		nextAction = if(end_index == total_objectives_count,"disable","");
+		pageLink = '#Page:Objective_Report_Page?zc_Header=false' + pageParam;
+		previousLink = if(input.start_index > 1,"href=" + pageLink + "&start_index=" + (input.start_index - recordCount_per_page) + "&zc_LoadIn=embed-embedDiv","");
+		nextLink = if(end_index < total_objectives_count,"href=" + pageLink + "&start_index=" + (end_index + 1) + "&zc_LoadIn=embed-embedDiv","");
+		%>
+<div class='zcs-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative'>
+    <table class='zcs-w-full'>
+        <thead class='zcs-sticky'>
+            <tr>
+                <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'> <%=language.get("grc.objective.objectiveDetails")%> </th>
+                <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'> <%=language.get("grc.objective.type")%> </th>
+                <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'> <%=language.get("grc.objective.owner")%> </th>
+                <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'> <%=language.get("grc.objective.timeHorizon")%> </th>
+				<th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'> <%=language.get("grc.objective.status")%>  </th>
+				<th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'> <%=language.get("grc.objective.progress")%>  </th>
+				<th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'> <%=language.get("grc.objective.linkedRisks")%> </th>
+				<th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'> <%=language.get("grc.objective.lastUpdated")%> </th>
+            </tr>
+            
+        </thead>
+        <tbody>
+<%
+		for each  objective in Objective[ID == objectiveIDList] sort by Added_Time desc range from input.start_index to end_index
+		{
+			%>
+<tr>
+                <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'> 
+				    <div>
+					   <div style='display:flex;'>
+					       <span style='font-size:13px;color:#4A5565'>#<%=objective.Objective_ID%></span>
+						   <div style='display:flex;'>
+<%
+			for each  department in objective.Linked_Departments
+			{
+				%>
+<div style='color:#4A5565;font-size:12px;margin-left: 6px;'><span style='color:#9EA0A799'>\u2022 </span><%=department.Department_Name%>                                       </div>
+<%
+			}
+			%>
+</div>
+						</div>
+					<div style='color:#04204B;font-size:17px;margin-bottom:10px;'><%=objective.Objective_Title%></div>
+					<div style='display:flex;'>
+<%
+			for each  strategy in objective.Link_Strategies
+			{
+				%>
+<div style='border:1px solid #E6E6E6;padding:5px 8px;border-radius:6px;margin-right:7px;'><%=strategy.Strategy_Title%></div>
+<%
+			}
+			%>
+</div></div>
+				
+				</td>
+                <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'> 
+				 <div style='border:1px solid #E6E6E6;padding:5px 8px;border-radius:6px;width:max-content'><%=objective.Objective_Type%></div>
+				</td>
+                <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'> <%=objective.Owner.Name%> </td>
+                <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'> <%=objective.Time_Horizon_Summary%> </td>
+				 <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'>
+<%
+			if(objective.Status == "Active")
+			{
+				badgeClass = "zcs-badge-blue";
+			}
+			else if(objective.Status == "Planning")
+			{
+				badgeClass = "zcs-badge-orange";
+			}
+			else if(objective.Status == "On Hold")
+			{
+				badgeClass = "zcs-badge-red";
+			}
+			else if(objective.Status == "Completed")
+			{
+				badgeClass = "zcs-badge-green";
+			}
+			%>
+<div class='zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-xl zcs-px-10 zcs-py-0 zcs-box-border <%=badgeClass%>' style='border-radius: 0.75rem;padding:0 10px ; width:max-content;'><span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'> \u2022  <%=objective.Status%> </span></div>
+				 </td>
+                <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'>  
+				<div class='zcs-progress-bar-wrapper zcs-flex zcs-direction-column zcs-gap-6' style='width:75px;'>
+				<p class='zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-font-14 zcs-font-medium zcs-lh-body zcs-m-0' style='display: flex;align-items: center;justify-content: center;font-size: 14px;'><span class='zcs-color-primary'><%=if(objective.Progress != null,objective.Progress.toNumber() + "%","")%></span></p>
+				<div class='zcs-progress-bar zcs-rounded-sm' style='border-radius: 0.25rem;'><div class='zcs-progress-bar-indicator' style='width:<%=if(objective.Progress != null,objective.Progress,0)%>%;'></div></div></div>
+				
+				</td>
+                <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'> 
+				  <div>
+<%
+			for each  risk in objective.Linked_Risks
+			{
+				%>
+<div style='border:1px solid #E6E6E6;padding:5px 8px;border-radius:6px;margin-bottom:7px;width:max-content;'><%=risk.Risk_ID%></div>
+<%
+			}
+			%>
+</div>
+				
+				</td>
+                <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'> <%=objective.Modified_Time.toDate()%> </td>
+				<td class='zcs-detail-view-td'>
+				<a href='#Page:Objective_Page?page_action=detailView&recid=<%=objective.ID%>&tab=<%=input.tab%>'></a>
+				</td>
+            </tr>
+<%
+		}
+		%>
+</tbody>
+    </table>
+</div>
+	<div class='zcs-pagination'>
+    <ul class='zcs-flex zcs-align-items-center zcs-justify-end zcs-gap-12 zcs-p-0 zcs-m-0'>
+        <li class='zcs-pagination-item'>
+            <span
+                class='zcs-pagination-text zcs-flex zcs-align-items-center zcs-justify-center zcs-rounded-sm zcs-box-border zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'
+               >
+                <%=input.start_index%>-<%=end_index%> of <%=total_objectives_count%>
+            </span>
+        </li>
+        <li class='zcs-pagination-item '>
+            <a class='zcs-pagination-action zcs-flex zcs-align-items-center zcs-justify-center zcs-rounded-sm zcs-px-8 zcs-box-border zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary zcs-cursor-pointer <%=if(previousAction == "disable","zcs-button-disable","")%>'
+                <%=previousLink%>>
+                <i class='zcs-pagination-icon zc-li-outline arrows-1-minimal-left'></i>
+            </a>
+        </li>
+        <li class='zcs-pagination-item '>
+            <a class='zcs-pagination-action zcs-flex zcs-align-items-center zcs-justify-center zcs-rounded-sm zcs-px-8 zcs-box-border zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary zcs-cursor-pointer <%=if(nextAction == "disable","zcs-button-disable","")%>'
+                <%=nextLink%>>
+                <i class='zcs-pagination-icon zc-li-outline arrows-1-minimal-right'></i>
+            </a>
+        </li>
+    </ul>
+</div>
+<%
+	}
+	else
+	{
+		%>
+<%=thisapp.Page.noData()%>
+<%
+	}
+	%>
+</div>

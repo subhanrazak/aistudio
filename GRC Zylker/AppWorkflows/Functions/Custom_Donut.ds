@@ -1,0 +1,65 @@
+string Components.Custom_Donut(string chart_name, map chart_Inputs, list colors, bool show_legend)
+{
+
+                 	// 	language = thisapp.Content.Common();
+                 	// 	no_data_text = language.get("zcp.dashboards.chart.nodata");
+                 	chartValues = chart_Inputs.get(chart_name);
+                 	total_chart_value = 0;
+                 	no_of_valid_legends = 0;
+                 	for each  value in chart_Inputs
+                 	{
+                 		total_chart_value = total_chart_value + value;
+                 		no_of_valid_legends = no_of_valid_legends + if(value != 0,1,0);
+                 	}
+                 	donut_chart = "";
+                 	if(total_chart_value != 0)
+                 	{
+                 		stroke_width = 20;
+                 		cx = 100;
+                 		cy = 100;
+                 		size_of_svg = cx + cy;
+                 		radius = 80;
+                 		pi = 3.14;
+                 		inputKeys = chart_Inputs.keys();
+                 		style_txt = "<style>.zc-pra-donut-chart-" + chart_name + " { display: flex; flex-direction: row; justify-content: center; align-items: center; } .zc-pra-chart-diagram-" + chart_name + " { position: relative; } .zc-pra-donut-chart-" + chart_name + " .zc-pra-chart-name { font-size: 16px; font-weight: 400; line-height: " + size_of_svg + "px; color: #131635; text-align: center; position: absolute; top: 0px; left: 0px; right: 0px; } .zc-pra-donut-chart-" + chart_name + " ul.zc-pra-legend-info li { list-style-type: none; padding: 10px 20px; } .zc-pra-donut-chart-" + chart_name + " ul.zc-pra-legend-info li span { display: inline-block; vertical-align: top; font-size: 14px; font-weight: 400; line-height: 1.5; letter-spacing: 0.1px; color: #131635; } .zc-pra-donut-chart-" + chart_name + " ul.zc-pra-legend-info li span:first-child { width: 120px; } .zc-pra-donut-chart-" + chart_name + " ul.zc-pra-legend-info li span:first-child:before { content: ''; display: inline-block; vertical-align: top; width: 11px; height: 11px; border-radius: 50%; margin: 5px 12px 5px 0px; } /* RTL */ .zc-rtl-wrapper .zc-pra-donut-chart-" + chart_name + " ul.zc-pra-legend-info li span:first-child:before { margin: 5px 0px 5px 12px; }";
+                 		html_txt = "<div class='zc-pra-donut-chart-" + chart_name + " zc-pra-fwh'><div class='zc-pra-chart-diagram-" + chart_name + "'><svg>";
+                 		style_txt = style_txt + " .zc-pra-chart-diagram-" + chart_name + " svg { width: " + size_of_svg + "px; height: " + size_of_svg + "px; }";
+                 		child = 1;
+                 		previouscircleValue = 0;
+                 		dashoffset = 0;
+                 		legentCont = "";
+                 		legentContColor = "";
+                 		for each  inputKey in inputKeys
+                 		{
+                 			legendValue = chart_Inputs.get(inputKey);
+                 			if(legendValue != 0)
+                 			{
+                 				baseCircleStart = if(no_of_valid_legends == 1,0,1);
+                 				arc = legendValue / total_chart_value * 100;
+                 				dashoffset = (2 * pi * radius) / 4 - previouscircleValue;
+                 				white_space = 2 * 0;
+                 				whitespace_arclength = 2 * pi * radius * white_space / 100;
+                 				style_txt = style_txt + ".zc-pra-chart-diagram-" + chart_name + " svg .zc-pra-legend-" + child + " { stroke-dasharray: calc(2px * " + pi + " * " + radius + " * " + arc + " / 100) calc(2px * " + pi + " * " + radius + " * calc(" + baseCircleStart + " - " + arc + " / 100)); stroke-dashoffset: " + dashoffset + "; }";
+                 				html_txt = html_txt + "<circle class = 'zc-pra-legend-" + child + "' cx=" + cx + " cy=" + cy + " r=" + radius + " fill='transparent' stroke='" + colors.get(child - 1) + "' stroke-width=" + stroke_width + "></circle>";
+                 				//previouscircleValue = previouscircleValue + 2 * pi * radius * arc / 100 + 10;
+                 				previouscircleValue = previouscircleValue + 2 * pi * radius * arc / 100 + whitespace_arclength;
+                 			}
+                 			if(show_legend == true)
+                 			{
+                 				legentCont = legentCont + "<li><span>" + inputKey + " </span><span> " + chart_Inputs.get(inputKey) + " </span></li>";
+                 				legentContColor = legentContColor + " .zc-pra-donut-chart-" + chart_name + " ul.zc-pra-legend-info li:nth-child(" + child + ") span:first-child:before { background-color: " + colors.get(child - 1) + "; }";
+                 			}
+                 			child = child + 1;
+                 		}
+                 		style_txt = style_txt + legentContColor + "</style>";
+                 		html_txt = html_txt + "</svg><span class='zc-pra-chart-name'>" + chart_name + " </span></div>" + if(show_legend == true,"<ul class='zc-pra-legend-info'>" + legentCont + "</ul>","") + "</div>";
+                 		donut_chart = style_txt + html_txt;
+                 	}
+                 	else
+                 	{
+                 		nodata = thisapp.Page.noData();
+                 		donut_chart = donut_chart + nodata;
+                 	}
+                 	return donut_chart;
+                 
+}

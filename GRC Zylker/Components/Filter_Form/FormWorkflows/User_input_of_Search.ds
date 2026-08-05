@@ -1,0 +1,183 @@
+User_input_of_Search as "User input of Search"
+{
+
+				type =  form
+				form = Filter_Form
+
+				record event = on add
+
+				on user input of Search_Key
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Search_Key != "")
+										{
+											input.Clear = false;
+											show Clear;
+										}
+										else
+										{
+											hide Clear;
+										}
+										parm = "";
+										if(input.Page == "Objective_Page" && input.Action_field == "overView")
+										{
+											parm_map = {"Status":input.Status,"Type_field":input.Type_field,"Department":input.Department,"Search_Key":input.Search_Key};
+											returnURL = thisapp.Page_Filter.Objective_Page(parm_map);
+										}
+										else if(input.Page == "Strategy_Page" && input.Action_field == "overView")
+										{
+											parm_map = {"Status":input.Status,"Strategic_Category":input.Strategic_Category,"Department":input.Department,"Search_Key":input.Search_Key};
+											returnURL = thisapp.Page_Filter.Strategic_Page(parm_map);
+										}
+										else if(input.Page == "Process_Page" && input.Action_field == "overView")
+										{
+											parm_map = {"Risk_Level":input.Risk_Level,"Department":input.Department,"Search_Key":input.Search_Key,"Page_Link_Name":"Process_Report_Page","action":""};
+											returnURL = thisapp.Page_Filter.Process_Page(parm_map);
+										}
+										else if(input.Page == "Controls_Page" && input.Action_field == "overView")
+										{
+											parm_map = {"Status":input.Status,"Type_field":input.Type_field,"Department":input.Department,"Search_Key":input.Search_Key};
+											returnURL = thisapp.Page_Filter.Controls_Page(parm_map);
+										}
+										else if(input.Page == "Risk_Entries_Page" && input.Action_field == "overView")
+										{
+											parm_map = {"Risk_Level":input.Risk_Level,"Search_Key":input.Search_Key};
+											returnURL = thisapp.Page_Filter.Risk_Entries_Page(parm_map);
+										}
+										else if(input.Page == "Risk_Assessment_Page" && input.Action_field == "overView")
+										{
+											parm_map = {"Status":input.Status,"Risk_Template":input.Risk_Template,"Period":input.Period,"Search_Key":input.Search_Key};
+											returnURL = thisapp.Page_Filter.Risk_Assessment_Page(parm_map);
+										}
+										else if(input.Page == "Risk_Assessment_Page" && input.Action_field == "riskView")
+										{
+											parm_map = {"Status":input.Status,"Department":input.Department,"Search_Key":input.Search_Key,"rec_ID":input.rec_ID};
+											returnURL = thisapp.Page_Filter.Risk_Assessment_Risk(parm_map);
+										}
+										else if(input.Page == "Resources_Page" && input.Action_field == "overView")
+										{
+											parm_map = {"Skill":input.Skill,"Resource_Type":input.Resource_Type,"Department":input.Department,"Search_Key":input.Search_Key};
+											returnURL = thisapp.Page_Filter.Resources_Page(parm_map);
+										}
+										else if(input.Page == "Software_License_Resources" && input.Action_field == "overView")
+										{
+											parm_map = {"Status":input.Status,"Type_field":input.Type_field,"Search_Key":input.Search_Key};
+											returnURL = thisapp.Page_Filter.Software_License_Resources(parm_map);
+										}
+										else if(input.Page == "Incident_Management_Page" && input.Action_field == "overView")
+										{
+											parm_map = {"Status":input.Status,"Type_field":input.Type_field,"Search_Key":input.Search_Key,"Risk_Level":input.Risk_Level,"Department":input.Department};
+											returnURL = thisapp.Page_Filter.Incident_Management_Page(parm_map);
+										}
+										else if(input.Page == "Assessment_Plan_Page" && input.Action_field == "overView")
+										{
+											parm_map = {"Status":input.Status,"Type_field":input.Type_field,"Search_Key":input.Search_Key};
+											returnURL = thisapp.Page_Filter.Assessment_Plan_Page(parm_map);
+										}
+										else if(input.Page == "User_Management" && input.Action_field == "overView")
+										{
+											parm = "";
+											reportURL = "#Report:" + input.Report;
+											reportURL = reportURL + "?zc_Header=false&zc_AddRec=false&zc_ColMenu=false&zc_Footer=false";
+											parm = parm + if(input.Status != "","&Status=" + input.Status,"");
+											parm = parm + if(input.Role != null,"&Role=" + input.Role.Role_Name,"");
+											parm = parm + if(input.Department != null,"&Department=" + input.Department.Department_Name,"");
+											parm = parm + if(input.Search_Key != "","&Name=" + input.Search_Key + "&Name_op=26","");
+											returnURL = reportURL + parm + "&zc_LoadIn=embed-embedDiv";
+										}
+										if(input.Page == "Board_Page" && input.Tab == "committee")
+										{
+											parm = "";
+											parm_map = {"Committee_Type":input.Committee_Type,"Search_Key":input.Search_Key};
+											returnURL = thisapp.Page_Filter.Committee_Page(parm_map);
+										}
+										if(input.Page == "Board_Page" && input.Tab == "member")
+										{
+											reportURL = "#Report:Board_Members?zc_Header=false&zc_AddRec=false&zc_ColMenu=false&zc_Footer=false";
+											parm = "";
+											if(input.Status != null && input.Status != "" && input.Status != "null")
+											{
+												parm = parm + "&Status=" + input.Status;
+											}
+											if(!input.Search_Key.isempty())
+											{
+												search_result = User[User_Display.containsIgnoreCase(input.Search_Key) || User_Display.containsIgnoreCase(input.Search_Key)].ID.getAll();
+												search_result = if(search_result.size() == 0,1234,search_result);
+												parm = parm + "&Member.ID=" + encodeUrl("[" + search_result + "]") + "&Member.ID_op=18";
+											}
+											// 	alert reportURL + parm + "&zc_LoadIn=embed-embedDiv";
+											openUrl(reportURL + parm + "&zc_LoadIn=embed-embedDiv","same window");
+										}
+										if(input.Page == "Quorum_Rule_Page")
+										{
+											reportURL = "#Report:" + input.Report + "?zc_Header=false&zc_AddRec=false&zc_ColMenu=false&zc_Footer=false";
+											parm = "";
+											/* --- Status filter --- */
+											if(input.Status != null && input.Status != "" && input.Status != "null")
+											{
+												parm = parm + "&Status=" + input.Status;
+											}
+											/* --- Search_Key via ID list --- */
+											if(input.Search_Key != null && input.Search_Key != "" && input.Search_Key != "null")
+											{
+												search_result = Quorum_Rule[Rule_Name.containsIgnoreCase(input.Search_Key)].ID.getAll();
+												search_result = if(search_result.size() == 0,1234,search_result);
+												parm = parm + "&ID=" + encodeUrl("[" + search_result + "]") + "&ID_op=18";
+											}
+											alert reportURL + parm + "&zc_LoadIn=embed-embedDiv";
+											openUrl(reportURL + parm + "&zc_LoadIn=embed-embedDiv","same window");
+										}
+										if(input.Page == "Meeting_Page")
+										{
+											parm_map = Map();
+											parm_map.put("Meeting_Series",ifnull(input.Meeting_Series,""));
+											parm_map.put("Meeting_For",ifnull(input.Meeting_For,""));
+											parm_map.put("Meeting_Priority",ifnull(input.Meeting_Priority,""));
+											parm_map.put("Meeting_Status",ifnull(input.Meeting_Status,""));
+											parm_map.put("Search_Key",ifnull(input.Search_Key,""));
+											returnURL = thisapp.Page_Filter.Meeting_Page(parm_map);
+											openUrl(returnURL,"same window");
+										}
+										if(input.Page == "Operational_Page")
+										{
+											/* --- Determine which report based on current tab --- */
+											reportName = "Operations_Action_Tracker";
+											if(input.Tab == "escalation")
+											{
+												reportName = "Escalation_Tracker";
+											}
+											reportURL = "#Report:" + reportName + "?zc_Header=false&zc_AddRec=false&zc_ColMenu=false&zc_Footer=false";
+											parm = "";
+											if(!input.Action_Priority.isempty())
+											{
+												parm = parm + "&Priority=" + input.Action_Priority;
+											}
+											if(!input.Action_Status.isempty())
+											{
+												parm = parm + "&Status=" + input.Action_Status;
+											}
+											if(!input.Search_Key.isempty())
+											{
+												if(input.Tab == "escalation")
+												{
+													search_result = Action_Tracker[Description.containsIgnoreCase(input.Search_Key) || Action_ID.containsIgnoreCase(input.Search_Key)].ID.getAll();
+												}
+												else
+												{
+													search_result = Action_Tracker[Description.containsIgnoreCase(input.Search_Key) || Action_ID.containsIgnoreCase(input.Search_Key)].ID.getAll();
+												}
+												search_result = if(search_result.size() == 0,1234,search_result);
+												parm = parm + "&ID=" + encodeUrl("[" + search_result + "]") + "&ID_op=18";
+											}
+											openUrl(reportURL + parm + "&zc_LoadIn=embed-embedDiv","same window");
+										}
+										// openUrl(returnURL,"same window");
+						)
+					}
+				}
+
+			
+}

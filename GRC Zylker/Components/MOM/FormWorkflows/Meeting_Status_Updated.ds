@@ -1,0 +1,118 @@
+Meeting_Status_Updated as "Meeting Status Updated"
+{
+
+				type =  form
+				form = MOM
+
+				record event = on add
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											meeting = Meeting[ID == input.Meeting];
+										meeting.Status="Completed";
+										chairRoleName = "Chair Person";
+										totalAttendance = 0;
+										presentCount = 0;
+										absentCount = 0;
+										independentPresentCount = 0;
+										nonExecutivePresentCount = 0;
+										chairPresentCount = 0;
+										for each  attRow in meeting.Meeting_Attendance
+										{
+											totalAttendance = totalAttendance + 1;
+											if(attRow.Status == "Present")
+											{
+												presentCount = presentCount + 1;
+												if(attRow.Member != null)
+												{
+													memberRecord = User[ID == attRow.Member];
+													if(memberRecord != null)
+													{
+														memberType = memberRecord.Member_Type;
+														if(memberType == "Independent")
+														{
+															independentPresentCount = independentPresentCount + 1;
+														}
+														else if(memberType == "Non-Executive")
+														{
+															nonExecutivePresentCount = nonExecutivePresentCount + 1;
+														}
+														if(memberRecord.Role != null)
+														{
+															roleRecord = Role[ID == memberRecord.Role];
+															if(roleRecord != null && roleRecord.Role_Name == chairRoleName)
+															{
+																chairPresentCount = chairPresentCount + 1;
+															}
+														}
+													}
+												}
+											}
+											else if(attRow.Status == "Absent")
+											{
+												absentCount = absentCount + 1;
+											}
+										}
+										minTotalMembers = 0;
+										minIndependentMembers = 0;
+										minNonExecutiveMembers = 0;
+										chairMandatory = false;
+										if(meeting.Quorum != null)
+										{
+											if(meeting.Quorum.Minimum_Total_Members != null)
+											{
+												minTotalMembers = meeting.Quorum.Minimum_Total_Members.toLong();
+											}
+											if(meeting.Quorum.Minimum_Independent_Members != null)
+											{
+												minIndependentMembers = meeting.Quorum.Minimum_Independent_Members.toLong();
+											}
+											if(meeting.Quorum.Minimum_Non_Executive_Members != null)
+											{
+												minNonExecutiveMembers = meeting.Quorum.Minimum_Non_Executive_Members.toLong();
+											}
+											if(meeting.Quorum.Chair_is_mandatory_for_meetings != null)
+											{
+												chairMandatory = meeting.Quorum.Chair_is_mandatory_for_meetings;
+											}
+										}
+										totalMet = presentCount >= minTotalMembers;
+										independentMet = independentPresentCount >= minIndependentMembers;
+										nonExecutiveMet = nonExecutivePresentCount >= minNonExecutiveMembers;
+										chairMet = true;
+										if(chairMandatory)
+										{
+											chairMet = chairPresentCount == 1;
+										}
+										quorumMet = totalMet && independentMet && nonExecutiveMet && chairMet;
+										if(quorumMet)
+										{
+											meeting.Quorum_Status="Met";
+											meeting.Status="Completed";
+										}
+										else
+										{
+											meeting.Quorum_Status="Not Met";
+											meeting.Status="Cancelled";
+										}
+										meeting.Present=presentCount;
+										meeting.Total_Members=totalAttendance;
+										if(totalAttendance > 0)
+										{
+											meeting.Avergage_Attenance=((absentCount * 100) / totalAttendance).round(0);
+										}
+										else
+										{
+											meeting.Avergage_Attenance=0;
+										}
+										// Update the linked Meeting record
+						)
+					}
+				}
+
+			
+}

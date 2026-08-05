@@ -1,0 +1,90 @@
+form Regulatory_Jurisdictions
+{
+
+			displayname = "Regulatory Jurisdictions"
+			success message = "Regulatory Jurisdiction Added Successfully"
+			Section
+			(
+				type = section
+	 			row = 1
+	 			column = 0   
+				width = medium
+			)
+			Organization
+			(
+				type = picklist	
+				values  = Organization.ID
+    			bidirectional = Regulatory_Jurisdictions
+    			displayformat = [Organization_Name]
+				sortorder = ascending
+	 			row = 1
+	 			column = 1   
+				width = medium
+			)
+			must have Jurisdiction
+			(
+				type = picklist	
+				values  = Jurisdiction.ID
+    			displayformat = [Jurisdiction_Name]
+				allow new entries
+				[
+					displayname = "Add Jurisdiction"
+				]
+				sortorder = ascending
+	 			row = 1
+	 			column = 1   
+				width = medium
+			)
+			must have Regulators
+			(
+				type = list	
+				values  = Regulator[Jurisdiction.ID == input.Jurisdiction].ID
+    			displayformat = [Regulator_Name]
+				allow new entries
+				[
+					displayname = "Add Regulator"
+				]
+				sortorder = ascending
+				height = 60px
+	 			row = 1
+	 			column = 1   
+				width = medium
+			)
+			must have Key_Regulations
+			(
+				type = list	
+				displayname = "Key Regulations"
+				values  = Regulation[Jurisdiction.ID == input.Jurisdiction].ID
+    			displayformat = [Regulation_Name]
+				allow new entries
+				[
+					displayname = "Add Regulation"
+				]
+				sortorder = ascending
+				height = 60px
+	 			row = 1
+	 			column = 1   
+				width = medium
+			)
+	
+			actions
+			{
+				on add
+				{
+					Create
+					(
+   						type = submit
+   						displayname = "Create"
+					)
+				}
+				on edit
+				{
+					update
+					(
+   						type = submit
+   						displayname = "Update"
+					)
+				}
+			}
+		
+}

@@ -1,0 +1,67 @@
+get_Internal_Resource3 as "get Internal Resource"
+{
+
+				type =  form
+				form = Risk_Assessment
+
+				record event = on add or edit
+
+				on user input of Internal_Resources.Name
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(row.Name != null)
+										{
+											resource = Resource[ID == row.Name];
+											row.Department=resource.Internal_Resource.Department;
+											row.Hourly_Rate=resource.Hourly_Rate;
+											row.Designation=resource.Internal_Resource.Designation;
+											if(input.Start_Date != null && input.End_Date != null)
+											{
+												hoursPerWeek = resource.Hours_per_Week;
+												totalDays = input.Start_Date.daysBetween(input.End_Date) + 1;
+												totalWeeks = totalDays / 7;
+												totalHours = totalWeeks * hoursPerWeek;
+												allocatedHours = 0;
+												for each  rec in Assessment_Plan[ID != input.ID]
+												{
+													if(rec.Start_Date <= input.End_Date && rec.End_Date >= input.Start_Date)
+													{
+														for each  res in rec.Internal_Resources
+														{
+															if(res.Name == row.Name)
+															{
+																allocatedHours = allocatedHours + res.Planned_Hours;
+															}
+														}
+													}
+												}
+												availability = totalHours - allocatedHours;
+												if(totalHours > 0)
+												{
+													occupancy = (allocatedHours / totalHours * 100).toNumber();
+												}
+												else
+												{
+													occupancy = 0;
+												}
+												row.Availability=100 - occupancy;
+												row.Occupancy=occupancy;
+											}
+										}
+										else
+										{
+											row.Department=null;
+											row.Hourly_Rate=null;
+											row.Designation=null;
+											row.Availability=null;
+											row.Occupancy=null;
+										}
+						)
+					}
+				}
+
+			
+}

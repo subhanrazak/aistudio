@@ -1,0 +1,37 @@
+on_success4 as "on success"
+{
+
+				type =  form
+				form = Process
+
+				record event = on add
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											input.Process_ID = thisapp.Get_ID("Process",input.ID);
+										input.Stepper_Stage = "Risk Control Association";
+										thisapp.Log.Audit_Log("Process",input.ID,"Create",User[Email == zoho.loginuserid].ID,input.Process_ID + " - " + input.Process_Name);
+										language = thisapp.Content.translation();
+										success message language.get("grc.success.processInformation");
+										riskManagerEmail = User[Role.Role_Name == "Risk Manager"].Email.getAll();
+										if(riskManagerEmail.size() > 0 && input.Process_Owner != null)
+										{
+											sendmail
+											[
+												from :input.Process_Owner.Email
+												to :input.Process_Owner.Manager.Email
+												subject :"Process Approval Required"
+												message :"<p data-end=\"58\" data-start=\"45\">Dear Manager,<br></p><p data-end=\"151\" data-start=\"60\">A process has been submitted by the Process Owner and is awaiting your review and approval.<br></p><p data-end=\"173\" data-start=\"153\"><b>Process Details:</b><br></p><ul data-end=\"306\" data-start=\"174\"><li data-end=\"200\" data-start=\"174\" data-section-id=\"llgr10\">Process ID: " + input.Process_ID + "<br></li><li data-end=\"231\" data-start=\"201\" data-section-id=\"8tzzis\">Process Name: " + input.Process_Name + "<br></li><li data-end=\"269\" data-start=\"232\" data-section-id=\"1sjy58z\">Process Owner: " + input.Process_Owner.Name + "<br></li><li data-end=\"306\" data-start=\"270\" data-section-id=\"1lc6ovo\">Submission Date: " + zoho.currentdate + "<br></li></ul><p data-end=\"376\" data-start=\"308\">Please review the submitted process and take the appropriate action.<br></p><p data-end=\"388\" data-start=\"378\">Thank you.<br></p><p data-end=\"424\" data-start=\"390\"></p><div>Regards,<br></div><div> Process Management Team<br></div><p></p><div><br></div>"
+											]
+										}
+										openUrl("#Page:Process_Page?page_action=add&recid=" + input.ID,"same window");
+						)
+					}
+				}
+
+			
+}

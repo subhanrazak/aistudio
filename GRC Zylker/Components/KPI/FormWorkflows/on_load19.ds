@@ -1,0 +1,47 @@
+on_load19 as "on load"
+{
+
+				type =  form
+				form = KPI
+
+				record event = on edit
+
+				on load
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(Department.size() > 0)
+										{
+											currentObjectives = input.Linked_Objective_s;
+											objectiveList = Objective[Linked_Departments == input.Department].ID.getAll();
+											input.Linked_Objective_s:ui.add(objectiveList);
+											input.Linked_Objective_s = currentObjectives;
+										}
+										else
+										{
+											clear Linked_Objective_s;
+										}
+										if(input.Linked_Objective_s.size() > 0)
+										{
+											currentStrategies = input.Linked_Strategy;
+											strategyList = Strategy[Linked_Objectives == input.Linked_Objective_s].ID.getAll();
+											input.Linked_Strategy:ui.add(strategyList);
+											input.Linked_Strategy = currentStrategies;
+											currentRisk = input.Linked_Risks;
+											riskList = Risk_Entry[Objective == input.Linked_Objective_s].ID.getAll();
+											input.Linked_Risks:ui.add(riskList);
+											input.Linked_Risks = currentRisk;
+										}
+										else
+										{
+											clear Linked_Strategy;
+											clear Linked_Risks;
+										}
+						)
+					}
+				}
+
+			
+}

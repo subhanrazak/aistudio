@@ -1,0 +1,34 @@
+get_Details as "get Details"
+{
+
+				type =  form
+				form = Assessment_Plan
+
+				record event = on add or edit
+
+				on user input of Process_Selection.Process_Name
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(row.Process_Name != null)
+										{
+											row.Departments=row.Process_Name.Linked_Departments;
+											getProcess = Risk_Assessment_Libraries[Processes == row.Process_Name && Status == "Completed"] sort by End_Date desc;
+											if(getProcess.count() > 0)
+											{
+												row.Last_Assessed=getProcess.End_Date;
+											}
+										}
+										else
+										{
+											row.Departments=null;
+											row.Last_Assessed="";
+										}
+						)
+					}
+				}
+
+			
+}

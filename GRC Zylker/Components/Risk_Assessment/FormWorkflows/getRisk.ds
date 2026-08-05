@@ -1,0 +1,38 @@
+getRisk as "getRisk"
+{
+
+				type =  form
+				form = Risk_Assessment
+
+				record event = on add or edit
+
+				on user input of Processes.Processes
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											departmentList = input.Departments.Departments.getall();
+										objectiveList = input.Objectives.Objectives.getall();
+										processList = input.Processes.Processes.getall();
+										riskList = Risk_Entry[Department == departmentList && Objective == objectiveList && Process == processList];
+										if(riskList.count() > 0)
+										{
+											clear Risks;
+											riskRow = Collection();
+											for each  risk in riskList
+											{
+												row1 = Risk_Assessment.Risks();
+												row1.Risks=risk.ID;
+												row1.Scope_Type="Risk";
+												row1.Approval_Status=risk.Approval_Status;
+												riskRow.insert(row1);
+											}
+											input.Risks.insert(riskRow);
+										}
+						)
+					}
+				}
+
+			
+}

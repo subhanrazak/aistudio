@@ -1,0 +1,150 @@
+Escalation_level as "Escalation level"
+{
+
+				type =  schedule
+				form = Escalation_Tracker1[Escalation_Status == "Pending"]
+				start = Due_By
+				time zone = "Asia/Kolkata"
+				on start
+				{
+					actions 
+					{
+					on load
+					(
+						/* Scheduled Workflow: Escalate_Next_Level */
+										todayNow = zoho.currenttime;
+										pendingActions = Action_Tracker[Status != "Completed" && Is_Escalated == true && Next_Escalation_Time != null && Next_Escalation_Time < todayNow];
+										for each  act in pendingActions
+										{
+											currentLevel = 0;
+											if(act.Current_Escalation_Level != null)
+											{
+												currentLevel = act.Current_Escalation_Level.toLong();
+											}
+											nextLevel = currentLevel + 1;
+											nextLevelName = "Level-" + nextLevel;
+											for each  existingRow in act.Escalation_Tracker
+											{
+												existSt = existingRow.Escalation_Status + "";
+												if(existSt == "Pending")
+												{
+													existingRow.Escalation_Status="Escalated";
+												}
+											}
+											cmId = 0;
+											mtgIdForActivity = 0;
+											if(act.Meeting != null)
+											{
+												mtgIdForActivity = act.Meeting.toLong();
+												mtgRec = Meeting[ID == act.Meeting];
+												if(mtgRec != null && mtgRec.Committee1 != null)
+												{
+													cmId = mtgRec.Committee1.ID;
+												}
+											}
+											if(cmId != 0)
+											{
+												cmEscRows = Committee_Escalation[Committee == cmId];
+												foundNext = false;
+												for each  escRow in cmEscRows
+												{
+													if(escRow.Level != null && !foundNext)
+													{
+														levelName = escRow.Level.Level + "";
+														if(levelName == nextLevelName)
+														{
+															hoursNext = 0;
+															if(escRow.Hours_Next_Escalation != null)
+															{
+																hoursNext = escRow.Hours_Next_Escalation.toLong();
+															}
+															dueByTime = todayNow.addHour(hoursNext);
+															memberId = "";
+															memberName = "";
+															memberEmail = "";
+															if(escRow.Member != null)
+															{
+																memberId = escRow.Member.ID + "";
+																mbrRec = User[ID == escRow.Member];
+																if(mbrRec != null)
+																{
+																	memberName = mbrRec.Name + "";
+																	memberEmail = mbrRec.Email + "";
+																}
+															}
+															escMap = Map();
+															escMap.put("Escalation_Level",escRow.Level.ID + "");
+															escMap.put("Role",escRow.Role.ID + "");
+															if(!memberId.isEmpty())
+															{
+																escMap.put("Escalated_To",memberId);
+															}
+															escMap.put("Escalation_Status","Pending");
+															escMap.put("Escalated_At",todayNow);
+															escMap.put("Due_By",dueByTime);
+															act.Escalation_Tracker.insert(escMap);
+															act.Current_Escalation_Level=nextLevel;
+															act.Next_Escalation_Time=dueByTime;
+															/* --- Insert Meeting_Activity log --- */
+															if(mtgIdForActivity > 0)
+															{
+																if(!memberId.isEmpty())
+																{
+																	insert into Meeting_Activity
+																	[
+																		Added_User=zoho.adminuser
+																		Activity="Action Item Escalated to " + nextLevelName
+																		Date_Time=todayNow
+																		Meeting=mtgIdForActivity
+																		Action_Tracker=act.ID
+																		User=escRow.Member
+																	]
+																}
+																else
+																{
+																	insert into Meeting_Activity
+																	[
+																		Added_User=zoho.adminuser
+																		Activity="Action Item Escalated to " + nextLevelName
+																		Date_Time=todayNow
+																		Meeting=mtgIdForActivity
+																		Action_Tracker=act.ID
+																	]
+																}
+															}
+															if(memberEmail != "" && memberEmail != "null")
+															{
+																sendmail
+																[
+																	from :zoho.adminuserid
+																	to :memberEmail
+																	subject :"Escalation Alert (Level-" + nextLevel + "): " + act.Description
+																	message :"<p>Dear " + memberName + ",</p><p>Action item <b>" + act.Description + "</b> has been escalated to <b>Level-" + nextLevel + "</b>.</p><p>Previous level did not respond within allotted time.</p><p>Please acknowledge and take immediate action.</p>"
+																]
+															}
+															foundNext = true;
+														}
+													}
+												}
+												if(!foundNext)
+												{
+													act.Next_Escalation_Time=null;
+													if(mtgIdForActivity > 0)
+													{
+														insert into Meeting_Activity
+														[
+															Added_User=zoho.adminuser
+															Activity="Action Item Fully Escalated (No Further Levels)"
+															Date_Time=todayNow
+															Meeting=mtgIdForActivity
+															Action_Tracker=act.ID
+														]
+													}
+												}
+											}
+										}
+					)
+					}
+				}
+			
+}

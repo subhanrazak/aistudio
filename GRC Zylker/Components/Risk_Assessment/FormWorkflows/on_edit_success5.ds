@@ -1,0 +1,96 @@
+on_edit_success5 as "on edit success"
+{
+
+				type =  form
+				form = Risk_Assessment
+
+				record event = on edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											for each  objective in input.Objectives
+										{
+											objective.Risk_Assessment=input.ID;
+										}
+										for each  depatment in input.Departments
+										{
+											depatment.Risk_Assessment=input.ID;
+										}
+										for each  risk in input.Risks
+										{
+											riskDet = Risk_Entry[ID == risk.Risks];
+											risk.Risk_Assessment=input.ID;
+											risk.Approval_Status=riskDet.Approval_Status;
+											//risk.Approval_Status="Pending";
+										}
+										for each  process in input.Processes
+										{
+											process.Risk_Assessment=input.ID;
+										}
+										for each  internal in input.Internal_Resources
+										{
+											internal.Risk_Assessment=input.ID;
+											internal.User=internal.Name.Internal_Resource;
+										}
+										for each  external in input.External_Resources
+										{
+											external.Risk_Assessment=input.ID;
+										}
+										actionList = {"Basic Info","Scope","Resources","Budget","Templates"};
+										getIndex = if(input.Action_Field != "Templates",actionList.indexOf(input.Action_Field) + 1,null);
+										if(input.Stepper_Stage == "Basic Info")
+										{
+											scopeCount = Risk_Assessment_Libraries[Risk_Assessment == input.ID].count();
+											if(scopeCount > 0)
+											{
+												input.Stepper_Stage = "Scope";
+											}
+										}
+										else if(input.Stepper_Stage == "Scope")
+										{
+											resourceCount = Resource_Allocation[Risk_Assessment == input.ID].count();
+											if(resourceCount > 0)
+											{
+												input.Stepper_Stage = "Resources";
+											}
+										}
+										else if(input.Stepper_Stage == "Resources")
+										{
+											budgetCount = Budget_Categories[Risk_Assessment == input.ID].count();
+											if(budgetCount > 0)
+											{
+												input.Stepper_Stage = "Budget";
+											}
+										}
+										else if(input.Stepper_Stage == "Budget")
+										{
+											if(input.Assessment_Template != "" && input.Assessment_Template != null)
+											{
+												input.Stepper_Stage = "Templates";
+											}
+										}
+										else if(input.Stepper_Stage == "Templates")
+										{
+										}
+										success message input.Action_Field + " information submitted successfully.";
+										currentAction = input.Action_Field;
+										input.Action_Field = "";
+										thisapp.Log.Audit_Log("Risk_Assessment",input.ID,"Update",User[Email == zoho.loginuserid].ID,input.Assessment_ID + " - " + input.Assessment_Title);
+										if(currentAction != "Templates")
+										{
+											openUrl("#Page:Risk_Assessment_Page?page_action=add&recid=" + input.ID + "&action_field=" + encodeUrl(actionList.get(getIndex)),"same window");
+										}
+										else
+										{
+											openUrl("#Page:Risk_Assessment_Page","same window");
+										}
+						)
+					}
+				}
+
+			
+}

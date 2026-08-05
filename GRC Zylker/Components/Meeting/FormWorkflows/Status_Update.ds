@@ -1,0 +1,138 @@
+Status_Update as "Status Update"
+{
+
+				type =  form
+				form = Meeting
+
+				record event = on add or edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											user = User[Email == zoho.loginuserid];
+										currStage = input.Completed_Stage;
+										actionFld = input.Action_Field;
+										nextField = "";
+										recID = input.ID;
+										if(actionFld == "Edit")
+										{
+											input.Action_Field = "";
+											openUrl("#Page:Meeting_Page?page_action=detailview&record_id=" + recID,"same window");
+										}
+										else if(actionFld == "tracker")
+										{
+											input.Completed_Stage = "Meeting_Details";
+											input.Action_Field = "";
+											// 	info "TRACKER BRANCH: recID=" + recID + ", redirecting to Agenda";
+											openUrl("#Page:Meeting_Stepper?recid=" + recID + "&action_field=Agenda","same window");
+										}
+										else
+										{
+											if(actionFld == "Meeting_Details")
+											{
+												input.Completed_Stage = "Meeting_Details";
+												nextField = "Agenda";
+											}
+											else if(actionFld == "Agenda")
+											{
+												input.Completed_Stage = "Agenda";
+												nextField = "Settings";
+												agenda = Agenda[ID == input.Agenda];
+												for each  uploader_Manual in input.Agenda_Items
+												{
+													uploader_Manual.Uploader=user.ID;
+												}
+											}
+											else if(actionFld == "Settings")
+											{
+												input.Completed_Stage = "Complete";
+												nextField = "done";
+												input.Status = "Sheduled";
+												selectedAgendaId = input.Agenda.ID;
+												if(selectedAgendaId != null)
+												{
+													for each  agRow in input.Agenda_Items
+													{
+														v_Item_Title = "";
+														if(agRow.Item_Title != null)
+														{
+															v_Item_Title = agRow.Item_Title + "";
+														}
+														v_Type_field = "";
+														if(agRow.Type_field != null)
+														{
+															v_Type_field = agRow.Type_field + "";
+														}
+														v_Presenter = "";
+														if(agRow.Presenter != null)
+														{
+															v_Presenter = agRow.Presenter + "";
+														}
+														v_Duration = 0;
+														if(agRow.Duration_minutes != null)
+														{
+															v_Duration = agRow.Duration_minutes;
+														}
+														v_Purpose = "";
+														if(agRow.Purpose_Summary != null)
+														{
+															v_Purpose = agRow.Purpose_Summary + "";
+														}
+														V_Priority = "";
+														if(agRow.Priority != null)
+														{
+															V_Priority = agRow.Priority;
+														}
+														existingItems = Agenda_Item_Details[Agenda.ID == selectedAgendaId && Item_Title == v_Item_Title];
+														if(existingItems.count() > 0)
+														{
+															for each  ex in existingItems
+															{
+																ex.Item_Title=v_Item_Title;
+																ex.Type_field=v_Type_field;
+																ex.Presenter=v_Presenter;
+																ex.Duration_minutes=v_Duration;
+																ex.Description=v_Purpose;
+																ex.Priority=V_Priority;
+															}
+														}
+														else
+														{
+															newItem = insert into Agenda_Item_Details
+															[
+																Added_User=zoho.loginuser
+																Agenda=input.Agenda
+																Item_Title=v_Item_Title
+																Type_field=v_Type_field
+																Presenter=v_Presenter
+																Duration_minutes=v_Duration
+																Description=v_Purpose
+																Priority=V_Priority
+															];
+														}
+													}
+												}
+											}
+											input.Action_Field = "";
+											if(nextField == "done")
+											{
+												openUrl("#Page:Meeting_Stepper?recid=" + recID,"same window");
+											}
+											else if(nextField != "")
+											{
+												openUrl("#Page:Meeting_Stepper?recid=" + recID + "&action_field=" + nextField,"same window");
+											}
+											else
+											{
+												openUrl("#Page:Meeting_Stepper?recid=" + recID,"same window");
+											}
+										}
+						)
+					}
+				}
+
+			
+}

@@ -1,0 +1,32 @@
+get_Risk1 as "get Risk"
+{
+
+				type =  form
+				form = Risk_Assessment
+
+				record event = on add or edit
+
+				on add row of Risks
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											processList = input.Processes.Processes.getall();
+										if(processList.size() > 0)
+										{
+											riskList = Risk_Entry[Process == processList].ID.getAll();
+											currentRisk = input.Risks.Risks.getall();
+											riskList.removeAll(currentRisk);
+											row.Risks:ui.add(riskList);
+										}
+										else
+										{
+											clear row.Risks;
+										}
+						)
+					}
+				}
+
+			
+}

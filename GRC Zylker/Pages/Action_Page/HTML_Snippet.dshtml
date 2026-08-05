@@ -1,0 +1,498 @@
+<%
+	page_link_name = "Action_Page";
+	input.meeting_id = input.meeting_id;
+	selected_item_num = 0;
+	if(input.item_index != null)
+	{
+		selected_item_num = input.item_index;
+	}
+	/* --- Mode: "resolution" (default), "vote", "action", or "detail" --- */
+	currentMode = "resolution";
+	if(input.mode != null && input.mode != "" && input.mode != "null")
+	{
+		currentMode = input.mode + "";
+	}
+	/* --- If Agenda_Item ID passed directly, find its index --- */
+	if(input.Agenda_Item != null && input.Agenda_Item > 0)
+	{
+		agendaLookupList = Agenda_Item[Meeting.ID == input.meeting_id];
+		tmpCounter = 0;
+		for each  aLoop in agendaLookupList
+		{
+			if(aLoop.ID == input.Agenda_Item)
+			{
+				selected_item_num = tmpCounter;
+			}
+			tmpCounter = tmpCounter + 1;
+		}
+	}
+	meetingRec = Meeting[ID == input.meeting_id];
+	meetingTitle = "\u2014";
+	if(meetingRec.Meeting_Title != null)
+	{
+		meetingTitle = meetingRec.Meeting_Title + "";
+		if(meetingTitle == "null")
+		{
+			meetingTitle = "\u2014";
+		}
+	}
+	/* --- Derive Voting Type from Meeting.Meeting_For --- */
+	votingTypeText = "\u2014";
+	meetingForVal = "";
+	if(meetingRec.Meeting_For != null)
+	{
+		meetingForVal = meetingRec.Meeting_For + "";
+	}
+	if(meetingForVal == "Board")
+	{
+		brdRec2 = Board[ID != 0];
+		if(brdRec2.count() > 0)
+		{
+			bTypeVal = brdRec2.Board_Type_Board + "";
+			if(bTypeVal == "Single-Tier")
+			{
+				votingTypeText = brdRec2.Voting_Methods_Single + "";
+			}
+			else if(bTypeVal == "Two-Tier")
+			{
+				votingTypeText = brdRec2.Voting_Method_Two + "";
+			}
+			else if(bTypeVal == "Advisory")
+			{
+				votingTypeText = brdRec2.Voting_Methods_Advisory + "";
+			}
+		}
+	}
+	else if(meetingForVal == "Commitee")
+	{
+		if(meetingRec.Committee1 != null)
+		{
+			cmtRec2 = Committee[ID == meetingRec.Committee1];
+			if(cmtRec2.count() > 0)
+			{
+				votingTypeText = cmtRec2.Voting_Method + "";
+			}
+		}
+	}
+	if(votingTypeText == "null" || votingTypeText.isEmpty())
+	{
+		votingTypeText = "\u2014";
+	}
+	/* --- Header per mode --- */
+	pageTitle = "Add Resolution";
+	if(currentMode == "vote")
+	{
+		pageTitle = "Resolution";
+	}
+	else if(currentMode == "action")
+	{
+		pageTitle = "Add Action Item";
+	}
+	else if(currentMode == "detail")
+	{
+		pageTitle = "Resolution";
+	}
+	/* --- Advisory user check --- */
+	isAdvisoryUser = false;
+	advUser = User[Email == zoho.loginuserid];
+	if(advUser.count() > 0 && advUser.Member_Type == "Advisory")
+	{
+		isAdvisoryUser = true;
+	}
+	/* --- Filter agenda items for sidebar (only Passed for action mode) --- */
+	noPassedResos = false;
+	if(currentMode == "action")
+	{
+		passedResos = Add_Resolution[Meeting.ID == input.meeting_id && Resolution == "Pass"];
+		if(passedResos.count() == 0)
+		{
+			noPassedResos = true;
+			agendaItems = Agenda_Item[ID == 0];
+		}
+		else
+		{
+			passedAgendaIds = List();
+			for each  pr in passedResos
+			{
+				if(pr.Agenda_Item != null)
+				{
+					passedAgendaIds.add(pr.Agenda_Item);
+				}
+			}
+			agendaItems = Agenda_Item[Meeting.ID == input.meeting_id && ID in passedAgendaIds];
+		}
+	}
+	else
+	{
+		agendaItems = Agenda_Item[Meeting.ID == input.meeting_id];
+	}
+	selectedTitle = "\u2014";
+	selectedAgendaItemId = 0;
+	selectedFormParam = "";
+	itemListHTML = "";
+	counter2 = 0;
+	user = User[Email == zoho.loginuserid];
+	for each  ag2 in agendaItems
+	{
+		itemNum = counter2 + 1;
+		isActive = if(counter2 == selected_item_num,"zcs-ai-item-active","");
+		ag2Title = "Item #" + itemNum;
+		if(ag2.Item_Title != null)
+		{
+			t = ag2.Item_Title + "";
+			if(t != "null" && t != "")
+			{
+				ag2Title = t;
+			}
+		}
+		/* --- Fetch Resolution ID for this Agenda_Item + Meeting --- */
+		resolutionIdForItem = 0;
+		resoLookup = Add_Resolution[Agenda_Item.ID == ag2.ID && Meeting.ID == input.meeting_id];
+		if(resoLookup.count() > 0)
+		{
+			resolutionIdForItem = resoLookup.ID;
+		}
+		/* --- Submission check per mode --- */
+		isSubmitted = false;
+		existingRecId = 0;
+		if(currentMode == "resolution" || currentMode == "detail")
+		{
+			if(resoLookup.count() > 0)
+			{
+				isSubmitted = true;
+				existingRecId = resoLookup.ID;
+			}
+		}
+		else if(currentMode == "vote")
+		{
+			existingVote = Vote[Agenda_Item.ID == ag2.ID && Meeting.ID == input.meeting_id && Voter == user.ID];
+			if(existingVote.count() > 0)
+			{
+				isSubmitted = true;
+				existingRecId = existingVote.ID;
+			}
+		}
+		else if(currentMode == "action")
+		{
+			existingAction = Action_Tracker[Agenda_Item.ID == ag2.ID && Meeting.ID == input.meeting_id];
+			if(existingAction.count() > 0)
+			{
+				isSubmitted = true;
+				existingRecId = existingAction.ID;
+			}
+		}
+		dotClass = "zcs-ai-dot";
+		if(isSubmitted == true)
+		{
+			dotClass = "zcs-ai-dot zcs-ai-dot-done";
+		}
+		statusDot = "<span class='" + dotClass + "'></span>";
+		/* --- Build form param per mode --- */
+		itemFormParam = "";
+		if(currentMode == "resolution")
+		{
+			if(isSubmitted == true)
+			{
+				itemFormParam = "&recLinkID=" + existingRecId + "&viewLinkName=Resolution_Report&Agenda_Item=" + ag2.ID + "&Meeting=" + input.meeting_id;
+			}
+			else
+			{
+				itemFormParam = "&Agenda_Item=" + ag2.ID + "&Meeting=" + input.meeting_id;
+			}
+		}
+		else if(currentMode == "vote")
+		{
+			if(isSubmitted == true)
+			{
+				itemFormParam = "&recLinkID=" + existingRecId + "&viewLinkName=All_Votes&Agenda_Item=" + ag2.ID + "&Meeting=" + input.meeting_id + "&Resolution=" + resolutionIdForItem;
+			}
+			else
+			{
+				itemFormParam = "&Agenda_Item=" + ag2.ID + "&Meeting=" + input.meeting_id + "&Resolution=" + resolutionIdForItem;
+			}
+		}
+		else if(currentMode == "action")
+		{
+			if(isSubmitted == true)
+			{
+				itemFormParam = "&recLinkID=" + existingRecId + "&viewLinkName=Action_Trackers&Agenda_Item=" + ag2.ID + "&Meeting=" + input.meeting_id + "&Resolution=" + resolutionIdForItem;
+			}
+			else
+			{
+				itemFormParam = "&Agenda_Item=" + ag2.ID + "&Meeting=" + input.meeting_id + "&Resolution=" + resolutionIdForItem;
+			}
+		}
+		if(counter2 == selected_item_num)
+		{
+			selectedTitle = ag2Title;
+			selectedAgendaItemId = ag2.ID;
+			selectedFormParam = itemFormParam;
+		}
+		itemHref = "#Page:" + page_link_name + "?meeting_id=" + input.meeting_id + "&item_index=" + counter2 + "&mode=" + currentMode + "&zc_LoadIn=embed-zcs_main_container";
+		itemListHTML = itemListHTML + "<a href='" + itemHref + "' class='zcs-ai-item " + isActive + "'>" + "<div style='display:flex;align-items:center;justify-content:space-between;'>" + "<span class='zcs-ai-item-num'>Item #" + itemNum + "</span>" + statusDot + "</div>" + "<span class='zcs-ai-item-title'>" + ag2Title + "</span>" + "</a>";
+		counter2 = counter2 + 1;
+	}
+	/* --- Which form to embed --- */
+	activeFormLinkName = "Add_Resolution";
+	if(currentMode == "vote")
+	{
+		activeFormLinkName = "Vote";
+	}
+	else if(currentMode == "action")
+	{
+		activeFormLinkName = "Action_Tracker";
+	}
+	/* --- Detail mode: build member table + counts --- */
+	detailTotal = 0;
+	detailApproved = 0;
+	detailRejected = 0;
+	detailPending = 0;
+	memberTableRows = "";
+	if(currentMode == "detail" && selectedAgendaItemId > 0)
+	{
+		detailResoId = 0;
+		detailResoLookup = Add_Resolution[Agenda_Item.ID == selectedAgendaItemId && Meeting.ID == input.meeting_id];
+		if(detailResoLookup.count() > 0)
+		{
+			detailResoId = detailResoLookup.ID;
+		}
+		/* --- Loop through Invite_Members from Meeting to build member table --- */
+		if(meetingRec.Invite_Members != null)
+		{
+			detailTotal = meetingRec.Invite_Members.size();
+			for each  inviteMemId in meetingRec.Invite_Members
+			{
+				memName = "\u2014";
+				memRole = "";
+				memType = "";
+				memRec = User[ID == inviteMemId];
+				if(memRec.count() > 0)
+				{
+					nVal = memRec.Name + "";
+					if(nVal != "null" && !nVal.isEmpty())
+					{
+						memName = nVal;
+					}
+					if(memRec.Role != null)
+					{
+						rVal = memRec.Role.Role_Name + "";
+						if(rVal != "null" && !rVal.isEmpty())
+						{
+							memRole = rVal;
+						}
+					}
+					if(memRec.Member_Type != null)
+					{
+						mtVal = memRec.Member_Type + "";
+						if(mtVal != "null" && !mtVal.isEmpty())
+						{
+							memType = mtVal;
+						}
+					}
+				}
+				/* --- Find this member's vote for this resolution --- */
+				voteStatus = "Pending";
+				votePillClass = "zcs-vote-pill-pending";
+				voteIcon = "&#9203;";
+				voteTime = "\u2014";
+				voteComment = "\u2014";
+				if(detailResoId > 0)
+				{
+					memVote = Vote[Resolution.ID == detailResoId && Voter == inviteMemId];
+					if(memVote.count() > 0)
+					{
+						vc = memVote.Your_Vote + "";
+						if(vc == "Approve")
+						{
+							voteStatus = "Approved";
+							votePillClass = "zcs-vote-pill-approved";
+							voteIcon = "&#10003;";
+							detailApproved = detailApproved + 1;
+						}
+						else if(vc == "Reject")
+						{
+							voteStatus = "Reject";
+							votePillClass = "zcs-vote-pill-reject";
+							voteIcon = "&#10007;";
+							detailRejected = detailRejected + 1;
+						}
+						if(memVote.Added_Time != null)
+						{
+							voteTime = memVote.Added_Time.toString("hh:mm a");
+						}
+						if(memVote.Comments != null)
+						{
+							cVal = memVote.Comments + "";
+							if(cVal != "null" && !cVal.isEmpty())
+							{
+								voteComment = cVal;
+							}
+						}
+					}
+				}
+				roleTypeText = "";
+				if(memRole != "" && memType != "")
+				{
+					roleTypeText = memRole + " - " + memType;
+				}
+				else if(memRole != "")
+				{
+					roleTypeText = memRole;
+				}
+				else if(memType != "")
+				{
+					roleTypeText = memType;
+				}
+				memberTableRows = memberTableRows + "<tr><td class='zcs-member-cell'><div class='zcs-member-name'>" + memName + "</div><div class='zcs-member-role'>" + roleTypeText + "</div></td><td><span class='zcs-vote-pill " + votePillClass + "'>" + voteIcon + " " + voteStatus + "</span></td><td class='zcs-time-cell'>" + voteTime + "</td><td class='zcs-comment-cell'>" + voteComment + "</td></tr>";
+			}
+		}
+		detailPending = detailTotal - detailApproved - detailRejected;
+		if(detailPending < 0)
+		{
+			detailPending = 0;
+		}
+	}
+	%>
+<style>
+<%=thisapp.Styles.App_CSS()%>
+<%=thisapp.Styles.Button()%>
+<%=thisapp.Styles.Panel()%>
+<%=thisapp.Styles_Page.Common_View()%>
+</style>
+<style>
+* { box-sizing: border-box; }
+body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f6fa; }
+.zcs-ai-wrap { display: flex; flex-direction: column; height: 100vh; background: #fff; }
+.zcs-ai-header { padding: 18px 24px 14px; }
+.zcs-ai-header-title { font-size: 20px; font-weight: 700; color: #1a1a2e; margin: 0; letter-spacing: -0.01em; }
+.zcs-ai-section-bar { background: #fff5f5; padding: 14px 24px; border-bottom: 1px solid #fde8e8; }
+.zcs-ai-section-title { font-size: 15px; font-weight: 700; color: #1a1a2e; margin: 0; }
+.zcs-ai-body { display: flex; flex: 1; overflow: hidden; }
+.zcs-ai-sidebar { width: 180px; flex-shrink: 0; border-right: 1px solid #f0f0f0; overflow-y: auto; padding: 12px 8px; background: #fff; }
+.zcs-ai-item { display: flex; flex-direction: column; padding: 10px 14px; border-radius: 8px; text-decoration: none; margin-bottom: 4px; transition: background 0.15s; cursor: pointer; }
+.zcs-ai-item:hover { background: #fff5f5; }
+.zcs-ai-item-active { background: #fff0f0 !important; }
+.zcs-ai-item-num { font-size: 13px; font-weight: 600; color: #9ca3af; }
+.zcs-ai-item-active .zcs-ai-item-num { color: #e8453c; }
+.zcs-ai-item-title { font-size: 12px; color: #6b7280; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.zcs-ai-dot { width: 8px; height: 8px; border-radius: 50%; background: #e5e7eb; display: inline-block; flex-shrink: 0; }
+.zcs-ai-dot-done { background: #16a34a; }
+.zcs-ai-main { flex: 1; overflow-y: auto; padding: 20px 24px; }
+.zcs-ai-included-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px 20px; margin-bottom: 20px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.zcs-ai-included-title { font-size: 14px; font-weight: 700; color: #e8453c; margin: 0; }
+.zcs-ai-item-badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 999px; background: #fff0f0; color: #e8453c; font-size: 12px; font-weight: 600; }
+.zcs-ai-voting-type-inline { margin-left: auto; font-size: 13px; color: #5a6b84; }
+.zcs-ai-voting-type-inline strong { color: #1a2540; font-weight: 600; }
+.zcs-ai-detail-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+.zcs-ai-detail-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px 16px; text-align: center; }
+.zcs-ai-detail-num { font-size: 32px; font-weight: 700; line-height: 1; letter-spacing: -0.04em; color: #1a2540; }
+.zcs-ai-detail-num-approved { color: #16a34a; }
+.zcs-ai-detail-num-rejected { color: #e8453c; }
+.zcs-ai-detail-num-pending { color: #f59e0b; }
+.zcs-ai-detail-label { font-size: 13px; color: #5a6b84; margin-top: 8px; font-weight: 500; }
+.zcs-member-table { width: 100%; background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; border-collapse: collapse; }
+.zcs-member-table thead th { background: #fff5f5; padding: 12px 16px; text-align: left; font-size: 13px; font-weight: 600; color: #5a6b84; border-bottom: 1px solid #fde8e8; }
+.zcs-member-table tbody td { padding: 14px 16px; border-bottom: 1px solid #f0f0f0; font-size: 14px; color: #1a2540; vertical-align: middle; }
+.zcs-member-table tbody tr:last-child td { border-bottom: none; }
+.zcs-member-name { font-weight: 600; color: #1a2540; margin-bottom: 4px; }
+.zcs-member-role { font-size: 12px; color: #8a9ab5; display: inline-block; padding: 2px 8px; border-radius: 4px; background: #f4f7fb; border: 1px solid #e5e7eb; }
+.zcs-vote-pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+.zcs-vote-pill-approved { background: #e8fbef; color: #16a34a; }
+.zcs-vote-pill-reject { background: #fde8e8; color: #e8453c; }
+.zcs-vote-pill-pending { background: #fff3e3; color: #c98318; }
+.zcs-time-cell { color: #5a6b84; font-size: 13px; }
+.zcs-comment-cell { color: #5a6b84; font-size: 13px; max-width: 300px; }
+.zcs-no-passed-msg { background: #fff; border: 1px dashed #e5e7eb; border-radius: 12px; padding: 40px; text-align: center; color: #8a9ab5; font-size: 14px; }
+.zcs-no-passed-msg strong { display: block; color: #1a2540; font-size: 16px; margin-bottom: 8px; }
+</style>
+<div name="zcs_main_container">
+	<div class='zcs-ai-wrap'>
+		<div class='zcs-ai-header'>
+			<h1 class='zcs-ai-header-title'><%=pageTitle%></h1>
+		</div>
+		<div class='zcs-ai-section-bar'>
+			<h2 class='zcs-ai-section-title'><%=meetingTitle%></h2>
+		</div>
+		<div class='zcs-ai-body'>
+			<div class='zcs-ai-sidebar'><%=itemListHTML%></div>
+			<div class='zcs-ai-main'>
+<%
+	if(currentMode == "action" && noPassedResos == true)
+	{
+		%>
+<div class='zcs-no-passed-msg'>
+    <strong>No Passed Resolutions</strong>
+    All resolutions for this meeting have failed. Action items can only be added for passed resolutions.
+</div>
+<%
+	}
+	else
+	{
+		%>
+<div class='zcs-ai-included-card'>
+    <span class='zcs-ai-included-title'><%=selectedTitle%></span>
+    <span class='zcs-ai-item-badge'>#<%=selected_item_num + 1%> Item</span>
+    <span class='zcs-ai-voting-type-inline'>Voting Type: <strong><%=votingTypeText%></strong></span>
+</div>
+<%
+		if(currentMode == "detail")
+		{
+			%>
+<div class='zcs-ai-detail-grid'>
+    <div class='zcs-ai-detail-card'>
+        <div class='zcs-ai-detail-num'><%=detailTotal%></div>
+        <div class='zcs-ai-detail-label'>Total</div>
+    </div>
+    <div class='zcs-ai-detail-card'>
+        <div class='zcs-ai-detail-num zcs-ai-detail-num-approved'><%=detailApproved%></div>
+        <div class='zcs-ai-detail-label'>Approved</div>
+    </div>
+    <div class='zcs-ai-detail-card'>
+        <div class='zcs-ai-detail-num zcs-ai-detail-num-rejected'><%=detailRejected%></div>
+        <div class='zcs-ai-detail-label'>Reject</div>
+    </div>
+    <div class='zcs-ai-detail-card'>
+        <div class='zcs-ai-detail-num zcs-ai-detail-num-pending'><%=detailPending%></div>
+        <div class='zcs-ai-detail-label'>Pending</div>
+    </div>
+</div>
+<table class='zcs-member-table'>
+    <thead>
+        <tr>
+            <th>Member</th>
+            <th>Vote</th>
+            <th>Time</th>
+            <th>Comments</th>
+        </tr>
+    </thead>
+    <tbody>
+        <%=memberTableRows%>
+    </tbody>
+</table>
+<%
+		}
+		else
+		{
+			if(currentMode == "vote" && isAdvisoryUser == true)
+			{
+				%>
+<div class='zcs-no-passed-msg'>
+    <strong>Voting Not Permitted</strong>
+    Advisory members are not eligible to vote. Only Board and Committee members can cast votes on resolutions.
+</div>
+<%
+			}
+			else
+			{
+				%>
+<div class='zcs-form' zc_MobileView='inline' elName='zc-component' formLinkName='<%=activeFormLinkName%>'
+    params='zc_Header=false&zc_SubmitVal=Submit<%=selectedFormParam%>'></div>
+<%
+			}
+		}
+	}
+	%>
+</div>
+		</div>
+	</div>
+</div>

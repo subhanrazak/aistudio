@@ -1,0 +1,23 @@
+on_delete16 as "on delete"
+{
+
+				type =  form
+				form = Department_Coverage
+
+				record event = on delete
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											department_name = Department[ID == input.Department].Department_Name;
+										plan_name = Assessment_Plan[ID == input.Assessment_Plan].Plan_Name;
+										thisapp.Log.Audit_Log("Department_Coverage",input.ID,"Delete",User[Email == zoho.loginuserid].ID,plan_name + " - " + department_name);
+						)
+					}
+				}
+
+			
+}

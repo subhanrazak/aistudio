@@ -1,0 +1,52 @@
+Status_Update1 as "Status Update"
+{
+
+				type =  form
+				form = Agenda
+
+				record event = on add or edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											actionFld = input.Action_Field;
+										if(actionFld == "Basic_Items")
+										{
+											input.Stepper_Status = "Basic_Items";
+											// input.ID is the newly created record ID
+											openUrl("#Page:Agenda_Page?action_field=Items&recid=" + input.ID,"same window");
+										}
+										else if(actionFld == "Items")
+										{
+											input.Stepper_Status = "Items";
+											openUrl("#Page:Agenda_Page?action_field=Review&recid=" + input.ID,"same window");
+										}
+										else if(actionFld == "Review")
+										{
+											input.Stepper_Status = "Completed";
+											input.Action_Field = "";
+											openUrl("#Page:Agenda_Page?show_popup=1","same window");
+										}
+										else if(actionFld == "Edit")
+										{
+											input.Action_Field = "";
+											openUrl("#Page:Agenda_Page","same window");
+										}
+										else
+										{
+											input.Action_Field = "";
+											openUrl("#Page:Agenda_Page","same window");
+										}
+										input.Items = input.Agenda_Items.count();
+										input.Duration_minutes = input.Agenda_Items.sum(Duration_minutes);
+										// 	user = User[Email == zoho.loginuserid];
+										// 	input.User1 = user.ID;
+						)
+					}
+				}
+
+			
+}

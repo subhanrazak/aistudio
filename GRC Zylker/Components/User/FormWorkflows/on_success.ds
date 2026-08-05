@@ -1,0 +1,35 @@
+on_success as "on success"
+{
+
+				type =  form
+				form = User
+
+				record event = on add or edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											user_image = thisapp.CommonFeatures.processImageUrl(input.ID,input.Photo,"User_Report","Image",input.Name);
+										input.User_Display = thisapp.Styles.Rich_Text() + "<div class='zc-ems-rt zc-ems-rt-clearfix'><div class='zc-ems-rt-flt-left zc-ems-rt-img-wrapper'>" + user_image.replaceAll("width=100%","style='width: 30px; height: 30px; border-radius: 50%; object-fit: contain;'") + "</div><div class='zc-ems-rt-flt-left'><span class='zc-ems-rt-primary-text'>" + input.Name + " - " + input.Employee_ID + "</span><span class='zc-ems-rt-secondary-text'>" + input.Email + "</span></div></div>";
+										user_profile = thisapp.permissions.profileForUser(input.Email);
+										if(user_profile != "Administrator" && user_profile != "Developer")
+										{
+											if(input.Enable_App_Access == true)
+											{
+												thisapp.permissions.assignUserInProfile(input.Email,input.Role.Role_Name,true);
+											}
+											else
+											{
+												thisapp.permissions.deleteUser(input.Email);
+											}
+										}
+										openUrl("#Page:Preferences?tab=users","same window");
+						)
+					}
+				}
+
+			
+}

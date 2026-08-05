@@ -1,0 +1,58 @@
+on_success6 as "on success"
+{
+
+				type =  form
+				form = Objective
+
+				record event = on add or edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											input.Progress_Display = "<style>.zcs-progress-bar { height: 8px; background-color: #E2E7EF; } .zcs-progress-bar-indicator { height: inherit; border-radius: inherit; background-color: #ef1617;</style><div class='zcs-progress-bar-wrapper zcs-flex zcs-direction-column zcs-gap-6' style='width:75px;'><p class='zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-font-14 zcs-font-medium zcs-lh-body zcs-m-0' style='display: flex;align-items: center;justify-content: center;font-size: 14px;'><span class='zcs-color-primary'>" + input.Progress + "%</span></p><div class='zcs-progress-bar zcs-rounded-sm' style='border-radius: 0.25rem;'><div class='zcs-progress-bar-indicator' style='width: " + input.Progress + "%;'></div></div></div>";
+										input.Type_Display = "<div style='border:1px solid #E6E6E6;padding:5px 8px;border-radius:6px;'>" + input.Objective_Type + "</div>";
+										if(input.Status == "Active")
+										{
+											badgeClass = "zcs-badge-blue";
+										}
+										else if(input.Status == "Planning")
+										{
+											badgeClass = "zcs-badge-orange";
+										}
+										else if(input.Status == "On Hold")
+										{
+											badgeClass = "zcs-badge-red";
+										}
+										else if(input.Status == "Completed")
+										{
+											badgeClass = "zcs-badge-green";
+										}
+										input.Status_Display = "<style>.zcs-badge-filled-outline.zcs-badge-blue {background-color: #E8EFFF;border:1px solid #2A6FFC;color: #2A6FFC;}.zcs-badge-filled-outline.zcs-badge-green { background-color: #E4FCF3; border:1px solid #179E6C; color: #179E6C; } .zcs-badge-filled-outline.zcs-badge-red { background-color: #FDE3E6; border:1px solid #FE455D; color: #FE455D; }.zcs-badge-filled-outline.zcs-badge-orange { background-color: #F8F0EB; border:1px solid #F4660C; color: #F4660C; }</style><div class='zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-xl zcs-px-10 zcs-py-0 zcs-box-border " + badgeClass + "' style='border-radius: 0.75rem;padding:0 10px ; width:max-content;'><span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'> •  " + input.Status + " </span></div>";
+										riskStr = "<div>";
+										for each  risk in input.Linked_Risks
+										{
+											riskStr = riskStr + "<div style='border:1px solid #E6E6E6;padding:5px 8px;border-radius:6px;margin-bottom:7px;'>" + risk.Risk_ID + "</div>";
+										}
+										riskStr = riskStr + "</div>";
+										input.Linked_Risks_Display = riskStr;
+										details_str = "<div><div style='display:flex;'><span style='font-size:13px;color:#4A5565'>#" + input.Objective_ID + "</span><div style='display:flex;'>";
+										for each  department in input.Linked_Departments
+										{
+											details_str = details_str + "<div style='color:#4A5565;font-size:12px;margin-left: 6px;'><span style='color:#9EA0A799'>• </span>" + department.Department_Name + "</div>";
+										}
+										details_str = details_str + "</div></div><div style='color:#04204B;font-size:17px;margin-bottom:10px;'>" + input.Objective_Title + "</div><div style='display:flex;'>";
+										for each  strategy in input.Link_Strategies
+										{
+											details_str = details_str + "<div style='border:1px solid #E6E6E6;padding:5px 8px;border-radius:6px;margin-right:7px;'>" + strategy.Strategy_Title + "</div>";
+										}
+										details_str = details_str + "</div></div>";
+										input.Objective_Details = details_str;
+						)
+					}
+				}
+
+			
+}

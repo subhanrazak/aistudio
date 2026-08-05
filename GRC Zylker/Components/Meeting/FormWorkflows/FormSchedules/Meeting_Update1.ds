@@ -1,0 +1,139 @@
+Meeting_Update1 as "Meeting Update"
+{
+
+				type =  schedule
+				form = Meeting
+				start = End_Date_Time
+				time zone = "Asia/Kolkata"
+				on start
+				{
+					actions 
+					{
+					on load
+					(
+						chairRoleName = "Chair Person";
+										totalAttendance = 0;
+										presentCount = 0;
+										absentCount = 0;
+										independentPresentCount = 0;
+										nonExecutivePresentCount = 0;
+										chairPresentCount = 0;
+										chairIsNonExecutive = false;
+										for each  attRow in input.Meeting_Attendance
+										{
+											totalAttendance = totalAttendance + 1;
+											if(attRow.Status == "Present")
+											{
+												presentCount = presentCount + 1;
+												if(attRow.Member != null)
+												{
+													memberRecord = User[ID == attRow.Member];
+													if(memberRecord != null)
+													{
+														memberType = memberRecord.Member_Type + "";
+														if(memberType == "Independent")
+														{
+															independentPresentCount = independentPresentCount + 1;
+														}
+														else if(memberType == "Non-Executive")
+														{
+															nonExecutivePresentCount = nonExecutivePresentCount + 1;
+														}
+														if(memberRecord.Role != null)
+														{
+															roleRecord = Role[ID == memberRecord.Role];
+															if(roleRecord != null && roleRecord.Role_Name == chairRoleName)
+															{
+																chairPresentCount = chairPresentCount + 1;
+																if(memberType == "Non-Executive")
+																{
+																	chairIsNonExecutive = true;
+																}
+															}
+														}
+													}
+												}
+											}
+											else if(attRow.Status == "Absent")
+											{
+												absentCount = absentCount + 1;
+											}
+										}
+										// Thresholds from the linked Quorum_Rule record
+										minTotalMembers = 0;
+										minIndependentMembers = 0;
+										minNonExecutiveMembers = 0;
+										chairMandatory = false;
+										chairMustBeNonExecutive = false;
+										if(input.Quorum != null)
+										{
+											if(input.Quorum.Minimum_Total_Members != null)
+											{
+												minTotalMembers = input.Quorum.Minimum_Total_Members.toLong();
+											}
+											if(input.Quorum.Minimum_Independent_Members != null)
+											{
+												minIndependentMembers = input.Quorum.Minimum_Independent_Members.toLong();
+											}
+											if(input.Quorum.Minimum_Non_Executive_Members != null)
+											{
+												minNonExecutiveMembers = input.Quorum.Minimum_Non_Executive_Members.toLong();
+											}
+											if(input.Quorum.Chair_is_mandatory_for_meetings != null)
+											{
+												chairMandatory = input.Quorum.Chair_is_mandatory_for_meetings;
+											}
+											if(input.Quorum.Chair_must_be_non_executive != null)
+											{
+												chairMustBeNonExecutive = input.Quorum.Chair_must_be_non_executive;
+											}
+										}
+										// Each rule is evaluated on its own, then combined below
+										totalMet = presentCount >= minTotalMembers;
+										independentMet = independentPresentCount >= minIndependentMembers;
+										nonExecutiveMet = nonExecutivePresentCount >= minNonExecutiveMembers;
+										// Chair mandatory check
+										chairMet = true;
+										if(chairMandatory)
+										{
+											chairMet = chairPresentCount >= 1;
+										}
+										// Chair must be non-executive check
+										chairNonExecMet = true;
+										if(chairMustBeNonExecutive)
+										{
+											if(chairPresentCount >= 1 && chairIsNonExecutive == true)
+											{
+												chairNonExecMet = true;
+											}
+											else
+											{
+												chairNonExecMet = false;
+											}
+										}
+										quorumMet = totalMet && independentMet && nonExecutiveMet && chairMet && chairNonExecMet;
+										if(quorumMet)
+										{
+											input.Quorum_Status = "Met";
+											input.Status = "Completed";
+										}
+										else
+										{
+											input.Quorum_Status = "Not Met";
+											input.Status = "Cancelled";
+										}
+										input.Present = presentCount;
+										input.Total_Members = totalAttendance;
+										if(totalAttendance > 0)
+										{
+											input.Avergage_Attenance = ((absentCount * 100) / totalAttendance).round(0);
+										}
+										else
+										{
+											input.Avergage_Attenance = 0;
+										}
+					)
+					}
+				}
+			
+}

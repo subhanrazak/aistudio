@@ -1,0 +1,239 @@
+<%
+	language = thisapp.Content.translation();
+	pageParam = "";
+	resourceIDList = Resource[ID != 0].ID.getAll();
+	if(input.Resource_Type != null && input.Resource_Type != "" && input.Resource_Type != "null")
+	{
+		resourceIDList = Resource[ID == resourceIDList && Resource_Type == input.Resource_Type].ID.getAll();
+		pageParam = pageParam + "&Status=" + input.Status;
+	}
+	if(input.Department != null)
+	{
+		resourceIDList = Resource[ID == resourceIDList && Department == input.Department || Internal_Resource.Department == input.Department].ID.getAll();
+		pageParam = pageParam + "&Department=" + input.Department;
+	}
+	if(input.Skill != null)
+	{
+		resourceIDList = Skills_Expertise[Resource == resourceIDList && Skill == input.Skill].Resource.getAll();
+		pageParam = pageParam + "&Skill=" + input.Skill;
+	}
+	if(input.Search != null && input.Search != "" && input.Search != "null")
+	{
+		resourceIDList = Resource[ID == resourceIDList && Name.first_name.contains(input.Search) || Name.last_name.contains(input.Search) || Internal_Resource.Name.first_name.contains(input.Search) || Internal_Resource.Name.last_name.contains(input.Search)].ID.getAll();
+		pageParam = pageParam + "&Search=" + input.Search;
+	}
+	%>
+<style>
+<%=thisapp.Styles.App_CSS()%>
+<%=thisapp.Styles.Table()%>
+<%=thisapp.Styles.Badge()%>
+<%=thisapp.Styles.Progress_Bar()%>
+<%=thisapp.Styles.Pagination()%>
+<%=thisapp.Styles.Avatar()%>
+
+.zc-container-wrapper .zc-main-content-wrapper .zc-main-content .inner .page_content_wrapper.zc-page-content-wrapper .elemContainment{
+	box-sizing: border-box;
+}
+
+.zcs-page-table-view {
+    height: 100%;
+	background :var(--zcs-white-color);
+}
+.zcs-pagination {
+    height: 32px;
+    padding: 10px;
+    box-sizing: content-box;
+	background :var(--zcs-white-color);
+}
+.zcs-table-wrapper {
+	height: calc(100% - 52px);
+}
+/* .zcs-table-wrapper table {
+    height: 100%;
+    table-layout: auto;
+	overflow: auto;
+} */
+
+.zcs-table-wrapper table thead {
+    z-index: 1;
+}
+
+.zcs-table-wrapper table tbody tr {
+   position:relative;
+}
+.zcs-detail-view-td{
+	position:absolute;
+	border: none !important;
+    inset: 0;
+    background: transparent !important;
+	
+}
+.zcs-detail-view-td a{
+	height: 100%;
+    display: block;
+    width: 100%;
+	
+}
+</style>
+<div class='zcs-page-container zcs-page-table-view'>
+<%
+	if(resourceIDList.size() > 0)
+	{
+		recordCount_per_page = 20;
+		total_resources_count = resourceIDList.size();
+		no_of_pages = ceil(total_resources_count / recordCount_per_page);
+		input.start_index = if(input.start_index.isEmpty(),1,input.start_index);
+		diff = total_resources_count - input.start_index;
+		end_index = if(input.start_index + recordCount_per_page - 1 > total_resources_count,input.start_index + diff,input.start_index + recordCount_per_page - 1);
+		previousAction = if(input.start_index == 1,"disable","");
+		nextAction = if(end_index == total_resources_count,"disable","");
+		pageLink = '#Page:Resource_Report_Page?zc_Header=false' + pageParam;
+		previousLink = if(input.start_index > 1,"href=" + pageLink + "&start_index=" + (input.start_index - recordCount_per_page) + "&zc_LoadIn=embed-embedDiv","");
+		nextLink = if(end_index < total_resources_count,"href=" + pageLink + "&start_index=" + (end_index + 1) + "&zc_LoadIn=embed-embedDiv","");
+		%>
+<div class='zcs-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative'>
+    <table class='zcs-w-full'>
+        <thead class='zcs-sticky'>
+            <tr>
+                <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'> <%=language.get("grc.resource.resource")%> </th>
+                <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'> <%=language.get("grc.resource.type")%> </th>
+                <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'> <%=language.get("grc.resource.skills")%> </th>
+                <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'> <%=language.get("grc.resource.assessments")%> </th>
+				<th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'> <%=language.get("grc.resource.costRate")%>  </th>
+				<th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'> <%=language.get("grc.resource.currentProject")%>  </th>
+				
+            </tr>
+            
+        </thead>
+        <tbody>
+<%
+		for each  resource in Resource[ID == resourceIDList] sort by Added_Time desc range from input.start_index to end_index
+		{
+			%>
+<tr>
+    <td> 
+	<div class="zcs-flex zcs-gap-16  zcs-rounded-md zcs-p-16 zcs-align-items-center">
+								
+								<div class="zcs-avatar zcs-flex zcs-align-items-center zcs-justify-center" style="--zcs-avatar-size: 32px; --zcs-avatar-radius: 50%">
+<%
+			if(resource.Resource_Type == "Internal Resource" && resource.Internal_Resource.Photo != null && resource.Internal_Resource.Photo != "")
+			{
+				ownerImage = zoho.appuri + "report/User_Report/" + resource.Internal_Resource + "/Photo/download-file?filepath=/" + resource.Internal_Resource.Photo.getSuffix("image/").getPrefix("\\"") + "&mediaType=1";
+				%>
+<img class='zcs-avatar-img zcs-wh-full' src=<%=ownerImage%> alt="John Smith profile photo"
+											height="100%" width="100%">
+<%
+			}
+			else if(resource.Resource_Type == "External Resource" && resource.Photo != null && resource.Photo != "")
+			{
+				ownerImage = zoho.appuri + "report/Resources/" + resource.ID + "/Photo/download-file?filepath=/" + resource.Photo.getSuffix("image/").getPrefix("\\"") + "&mediaType=1";
+				%>
+<img class='zcs-avatar-img zcs-wh-full' src=<%=ownerImage%> alt="John Smith profile photo"
+											height="100%" width="100%">
+<%
+			}
+			else
+			{
+				%>
+<span class="zcs-font-18 zcs-font-normal zcs-text-white zcs-flex zcs-justify-center zcs-align-items-center zcs-fh zcs-lh-body" aria-hidden="true"><%=thisapp.Content.letterGenerate(if(resource.Resource_Type == "Internal Resource",resource.Internal_Resource.Name,resource.Name))%></span>
+<%
+			}
+			%>
+</div>
+								<div class="zcs-flex zcs-direction-column zcs-gap-4">
+								    
+									<h6 class="zcs-font-14 zcs-font-normal zcs-lh-heading zcs-color-primary zcs-m-0">  <%=if(resource.Resource_Type == "Internal Resource",resource.Internal_Resource.Name,resource.Name)%></h6>
+									<p class="zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0"> <%=if(resource.Resource_Type == "Internal Resource",resource.Internal_Resource.Designation.Designation_Name,resource.Job_Title.Designation_Name)%> </p>
+								</div>
+							</div>
+	</td>
+	
+	<td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"> 
+				 <div style="border:1px solid #E6E6E6;padding:5px 8px;border-radius:6px;width:max-content"><%=resource.Resource_Type%></div>
+				</td>
+	
+	 <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'> 
+				        <div>
+<%
+			skillCount = 0;
+			for each  skill in Skills_Expertise[Resource == resource.ID]
+			{
+				skillCount = skillCount + 1;
+				sizeStr = "";
+				if(skillCount == 2)
+				{
+					skillSize = Skills_Expertise[Resource == resource.ID].count();
+					skillSize = skillSize - 2;
+					if(skillSize > 0)
+					{
+						sizeStr = "<span style='border:1px solid #E6E6E6;padding:5px 8px;border-radius:6px;margin-bottom:7px;width: max-content !important;margin-left:6px;'> +" + skillSize + "</span></div>";
+					}
+				}
+				if(skillCount == 2 && skillSize > 0)
+				{
+					%>
+<div style='display:flex;'>
+<%
+				}
+				%>
+<div style='border:1px solid #E6E6E6;padding:5px 8px;border-radius:6px;margin-bottom:7px;width: max-content !important;'><%=skill.Skill.Skill_Name%></div> <%=sizeStr%>
+<%
+				if(skillCount == 2)
+				{
+					break;
+				}
+			}
+			%>
+</td>
+<td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'><%=Resource_Allocation[Risk_Assessment != null && Name == resource.ID].count()%> Assessments </td>
+
+<td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'><%=resource.Hourly_Rate%> /hr </td>
+<%
+			getAssessment = Resource_Allocation[Risk_Assessment != null && Name == resource.ID && Risk_Assessment.Status == "In Progress"].Risk_Assessment.Assessment_Title;
+			%>
+<td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'><%=if(getAssessment != "" && getAssessment != null,getAssessment,"-")%></td>
+
+
+<td class='zcs-detail-view-td'>
+				<a href='#Page:Resources_Page?page_action=detailView&recid=<%=resource.ID%>&tab=<%=input.tab%>'></a>
+				</td>
+            </tr>
+<%
+		}
+		%>
+</tbody>
+    </table>
+</div>
+	<div class='zcs-pagination'>
+    <ul class='zcs-flex zcs-align-items-center zcs-justify-end zcs-gap-12 zcs-p-0 zcs-m-0'>
+        <li class='zcs-pagination-item'>
+            <span
+                class='zcs-pagination-text zcs-flex zcs-align-items-center zcs-justify-center zcs-rounded-sm zcs-box-border zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'
+               >
+                <%=input.start_index%>-<%=end_index%> of <%=total_resources_count%>
+            </span>
+        </li>
+        <li class='zcs-pagination-item '>
+            <a class='zcs-pagination-action zcs-flex zcs-align-items-center zcs-justify-center zcs-rounded-sm zcs-px-8 zcs-box-border zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary zcs-cursor-pointer <%=if(previousAction == "disable","zcs-button-disable","")%>'
+                <%=previousLink%>>
+                <i class='zcs-pagination-icon zc-li-outline arrows-1-minimal-left'></i>
+            </a>
+        </li>
+        <li class='zcs-pagination-item '>
+            <a class='zcs-pagination-action zcs-flex zcs-align-items-center zcs-justify-center zcs-rounded-sm zcs-px-8 zcs-box-border zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary zcs-cursor-pointer <%=if(nextAction == "disable","zcs-button-disable","")%>'
+                <%=nextLink%>>
+                <i class='zcs-pagination-icon zc-li-outline arrows-1-minimal-right'></i>
+            </a>
+        </li>
+    </ul>
+</div>
+<%
+	}
+	else
+	{
+		%>
+<%=thisapp.Page.noData()%>
+<%
+	}
+	%>
+</div>

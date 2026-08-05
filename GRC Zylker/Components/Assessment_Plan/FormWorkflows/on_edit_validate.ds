@@ -1,0 +1,78 @@
+on_edit_validate as "on edit validate"
+{
+
+				type =  form
+				form = Assessment_Plan
+
+				record event = on edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											language = thisapp.Content.translation();
+										if(input.Action_Field == "")
+										{
+											if(input.Stepper_Stage == "Plan_Details")
+											{
+												if(input.Department_Coverage.count() == 0)
+												{
+													alert language.get("grc.assessmentPlan.departmentAlert").toString();
+													cancel submit;
+												}
+												if(input.Risk_Category_Coverage.count() == 0)
+												{
+													alert language.get("grc.assessmentPlan.riskCategoryAlert").toString();
+													cancel submit;
+												}
+												if(input.Process_Selection.count() == 0)
+												{
+													alert language.get("grc.assessmentPlan.processAlert").toString();
+													cancel submit;
+												}
+											}
+											if(input.Stepper_Stage == "Coverage" && input.Industry_Standards.size() == 0)
+											{
+												alert language.get("grc.assessmentPlan.industryStandardsAlert").toString();
+												cancel submit;
+											}
+											if(input.Stepper_Stage == "Compliance")
+											{
+												if(input.Internal_Resources.count() == 0)
+												{
+													alert language.get("grc.assessmentPlan.interalResourcesAlert").toString();
+													cancel submit;
+												}
+												if(input.External_Resources.count() == 0)
+												{
+													alert language.get("grc.assessmentPlan.externalResourcesAlert").toString();
+													cancel submit;
+												}
+											}
+											if(input.Stepper_Stage == "Resource")
+											{
+												if(input.Budget_Required == null)
+												{
+													alert language.get("grc.assessmentPlan.budgetRequiredAlert").toString();
+													cancel submit;
+												}
+												if(Budget_Categories.count() == 0)
+												{
+													alert language.get("grc.assessmentPlan.budgetCategoryAlert").toString();
+													cancel submit;
+												}
+												if(Milestone_Planning.count() == 0)
+												{
+													alert language.get("grc.assessmentPlan.mileStoneAlert").toString();
+													cancel submit;
+												}
+											}
+										}
+						)
+					}
+				}
+
+			
+}

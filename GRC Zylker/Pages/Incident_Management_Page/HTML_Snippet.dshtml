@@ -1,0 +1,434 @@
+<%
+	page_link_name = "Incident_Management_Page";
+	language = thisapp.Content.translation();
+	tab_map = thisapp.Page.Get_Tabs(page_link_name);
+	tab_keys = tab_map.keys();
+	input.tab = if(input.tab != "" && input.tab != "null" && input.tab != null,input.tab,tab_keys.get(0));
+	%>
+<style>
+<%=thisapp.Styles.App_CSS()%>
+<%=thisapp.Styles.Button()%>
+<%=thisapp.Styles.Panel()%>
+<%=thisapp.Styles.Horizontal_Tab()%>
+<%=thisapp.Styles_Creator.Filter()%>
+<%=thisapp.Styles_Creator.Report_Card()%>
+<%=thisapp.Styles.Avatar()%>
+
+
+<%=thisapp.Styles_Page.Common_View()%>
+
+.zcs-bg-blue {
+	background-color: #F9FAFC;
+}
+.zcs-page-container{
+	overflow:auto;
+}
+
+.zcs-filter .form-group.zc-Risk_Level-group .form-field .select2-container:not(.select2-allowclear) .select2-chosen:before { content: '- Severity Level -' !important;}
+.zcs-filter .form-group.zc-Type_field-group .form-field .select2-container:not(.select2-allowclear) .select2-chosen:before { content: '- Category -' !important;}
+
+/* ===== Severity Heatmap Table ===== */
+.zcs-severity-heatmap {
+    display: flex;
+    flex-direction: column;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #d8dfe8;
+    background: #ffffff;
+}
+
+/* ===== Header Row ===== */
+.zcs-sh-header-row {
+    display: grid;
+    grid-template-columns: 120px repeat(4, 1fr);
+    background: #dce4ef;
+}
+
+.zcs-sh-header-empty {
+    background: #dce4ef;
+    min-height: 48px;
+}
+
+.zcs-sh-header-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 48px;
+    padding: 12px;
+    font-size: 15px;
+    font-weight: 700;
+    color: #1e293b;
+    background: #dce4ef;
+}
+
+/* ===== Data Rows ===== */
+.zcs-sh-data-row {
+    display: grid;
+    grid-template-columns: 120px repeat(4, 1fr);
+    gap: 12px;
+    padding: 8px 12px;
+    background: #ffffff;
+}
+
+/* ===== Row Labels ===== */
+.zcs-sh-row-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    font-size: 15px;
+    font-weight: 500;
+    color: #6b7a8d;
+    font-style: italic;
+    background: #ffffff;
+}
+
+/* ===== Data Cells ===== */
+.zcs-sh-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 70px;
+    border-radius: 8px;
+}
+
+/* ===== Cell Background Colors ===== */
+.zcs-sh-cell-red {
+    background: #fde2e4;
+}
+
+.zcs-sh-cell-peach {
+    background: #fdecd0;
+}
+
+.zcs-sh-cell-lavender {
+    background: #f3e5f5;
+}
+
+.zcs-sh-cell-lightgreen {
+    background: #e8f5e2;
+}
+
+.zcs-sh-cell-yellow {
+    background: #fef9c3;
+}
+
+.zcs-sh-cell-lightblue {
+    background: #e0ecff;
+}
+
+
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+    .zcs-sh-header-row,
+    .zcs-sh-data-row {
+        grid-template-columns: 100px repeat(4, 1fr);
+    }
+
+    .zcs-sh-header-cell {
+        font-size: 12px;
+        padding: 10px 6px;
+    }
+
+    .zcs-sh-row-label {
+        font-size: 13px;
+        padding: 12px 8px;
+    }
+
+    .zcs-sh-value {
+        font-size: 12px;
+    }
+
+    .zcs-sh-cell {
+        min-height: 50px;
+    }
+
+    .zcs-sh-data-row {
+        gap: 8px;
+        padding: 10px 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .zcs-sh-header-row,
+    .zcs-sh-data-row {
+        grid-template-columns: 80px repeat(4, 1fr);
+    }
+
+    .zcs-sh-value {
+        font-size: 12px;
+    }
+
+    .zcs-sh-cell {
+        min-height: 40px;
+    }
+
+    .zcs-sh-data-row {
+        gap: 6px;
+        padding: 8px;
+    }
+}
+
+
+</style>
+<%
+	if(input.page_action == "add")
+	{
+		if(input.recid != null)
+		{
+			%>
+<%=thisapp.Components.Add_Record(language.get("grc.incident.incidentRegisters"),"#Page:" + page_link_name + "?page_action=detailView&recid=" + input.recid,"Incident_Register","zc_Header=false&zc_SubmitVal=Create&recLinkID=" + input.recid + "&viewLinkName=Incident_Registers")%>;
+<%
+		}
+		else
+		{
+			%>
+<%=thisapp.Components.Add_Record(language.get("grc.incident.incidentRegisters"),"#Page:" + page_link_name,"Incident_Register","zc_Header=false&zc_SubmitVal=Create")%>;
+<%
+		}
+	}
+	else
+	{
+		%>
+<style>
+<%=thisapp.Styles.Progress_Bar()%>
+.zc-container-wrapper .zc-main-content-wrapper .zc-main-content .inner .page_content_wrapper.zc-page-content-wrapper .elemContainment{
+	padding:0px !important;
+}
+.zcs-page-container {
+	background-color: var(--zcs-page-bg-color);
+}
+</style>
+
+<div class='zcs-page-container zcs-commonview zcs-wh-full'>
+	<div class='zcs-page-container-inner zcs-wh-full zcs-flex zcs-direction-column zcs-gap-20 zcs-px-30 zcs-py-24 zcs-box-border'>
+		<div class='zcs-page-header zcs-w-full zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-8'>
+            
+			<div class='zcs-flex zcs-direction-column zcs-gap-8'>
+           <h5 class='zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-ellipsis zcs-m-0'> <%=language.get("grc.incident.incidentManagement")%> </h5>
+			<p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'><%=language.get("grc.incident.subHeader")%></p>
+			</div>
+<%
+		if(thisapp.permission.app_access("incident_management") == true)
+		{
+			%>
+<a class='zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body'
+                href='#Page:<%=page_link_name%>?page_action=add'>
+                <i class='zcs-button-icon zc-li-outline ui-1-simple-add'></i>
+                <span class='zcs-button-text'> <%=language.get("grc.incident.reportNewIncident")%> </span>
+            </a>
+<%
+		}
+		%>
+</div>
+		 <div class='zcs-panel-wrapper'>
+            <ul class='zcs-row zcs-justify-space-between zcs-gap-20 zcs-p-0 zcs-m-0'>
+                <li class='zcs-col-3 zcs-col-sm-6 zcs-col-xs-12 zcs-relative '>
+                    <div class='zcs-panel zcs-panel-red zcs-wh-full zcs-flex  zcs-gap-8 zcs-rounded-lg zcs-p-16 zcs-box-border zcs-justify-space-between'>
+					<div class='zcs-flex zcs-justify-center zcs-gap-10 zcs-direction-column'>
+					 <p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'> <%=language.get("grc.incident.totalIncidents")%> </p>
+                        <h4 class='zcs-font-20 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'> <%=Incident_Register[ID != 0].count()%> </h4>
+                        </div>
+                            <div class='zcs-panel-icon-wrapper zcs-flex zcs-align-items-center zcs-justify-center zcs-no-shrink zcs-rounded-lg'>
+                                <i class='zcs-panel-icon zcs-font-24 zc-li-outline tech-disk-reader'></i>
+                            </div>
+                            
+                       
+                    </div>
+                    <a class='zcs-overlay zcs-wh-full zcs-absolute' ></a>
+                </li>
+				<li class='zcs-col-3 zcs-col-sm-6 zcs-col-xs-12 zcs-relative '>
+                    <div class='zcs-panel zcs-panel-red zcs-wh-full zcs-flex  zcs-gap-8 zcs-rounded-lg zcs-p-16 zcs-box-border zcs-justify-space-between'>
+					<div class='zcs-flex zcs-justify-center zcs-gap-10 zcs-direction-column'>
+					 <p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'>  <%=language.get("grc.incident.openUnderInvestigation")%> </p>
+                        <h4 class='zcs-font-20 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'> <%=Incident_Register[Status == "Open" || Status == "Under Investigation"].count()%> </h4>
+                        </div>
+                            <div class='zcs-panel-icon-wrapper zcs-flex zcs-align-items-center zcs-justify-center zcs-no-shrink zcs-rounded-lg'>
+                                <i class='zcs-panel-icon zcs-font-24 zc-li-outline business-briefcase-25'></i>
+                            </div>
+                            
+                       
+                    </div>
+                    <a class='zcs-overlay zcs-wh-full zcs-absolute' ></a>
+                </li>
+                <li class='zcs-col-3 zcs-col-sm-6 zcs-col-xs-12 zcs-relative '>
+                    <div class='zcs-panel zcs-panel-red zcs-wh-full zcs-flex  zcs-gap-8 zcs-rounded-lg zcs-p-16 zcs-box-border zcs-justify-space-between'>
+					<div class='zcs-flex zcs-justify-center zcs-gap-10 zcs-direction-column'>
+					 <p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'>  <%=language.get("grc.incident.criticalMajorIncidents")%> </p>
+                        <h4 class='zcs-font-20 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'> <%=Incident_Register[Severity_Level == "Critical" || Severity_Level == "Major"].count()%> </h4>
+                        </div>
+                            <div class='zcs-panel-icon-wrapper zcs-flex zcs-align-items-center zcs-justify-center zcs-no-shrink zcs-rounded-lg'>
+                                <i class='zcs-panel-icon zcs-font-24 zc-li-outline location-position-pin'></i>
+                            </div>
+                            
+                       
+                    </div>
+                    <a class='zcs-overlay zcs-wh-full zcs-absolute' ></a>
+                </li>
+               <li class='zcs-col-3 zcs-col-sm-6 zcs-col-xs-12 zcs-relative '>
+                    <div class='zcs-panel zcs-panel-red zcs-wh-full zcs-flex  zcs-gap-8 zcs-rounded-lg zcs-p-16 zcs-box-border zcs-justify-space-between'>
+					<div class='zcs-flex zcs-justify-center zcs-gap-10 zcs-direction-column'>
+					 <p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'>  <%=language.get("grc.incident.financialImpact")%> </p>
+                        <h4 class='zcs-font-20 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'> <%=Incident_Register[Date_of_Occurrence in this year].sum(Financial_Impact_Actual)%> </h4>
+                        </div>
+                            <div class='zcs-panel-icon-wrapper zcs-flex zcs-align-items-center zcs-justify-center zcs-no-shrink zcs-rounded-lg'>
+                                <i class='zcs-panel-icon zcs-font-24 zc-li-outline users-parent'></i>
+                            </div>
+                            
+                       
+                    </div>
+                    <a class='zcs-overlay zcs-wh-full zcs-absolute' ></a>
+                </li>
+               
+            </ul>
+        </div>
+		<div class="zcs-row zcs-gap-20 zcs-w-full">
+		
+		<div class="zcs-card zcs-left-content zcs-h-full zcs-overflow-auto zcs-col-4 zcs-col-sm-12 zcs-flex zcs-direction-column zcs-gap-20">
+                             <div class="zcs-flex zcs-direction-column zcs-gap-12 zcs-p-16 zcs-box-border">
+								<h6 class="zcs-font-14 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0"> <%=language.get("grc.incident.incidentsByDepartment")%> </h6>
+								<div elName='zc-component' pageLinkName='Incidents_by_Department' params='zc_Header=false'></div>
+							</div>
+					</div>
+					<div class="zcs-card zcs-left-content zcs-h-full zcs-overflow-auto zcs-col-4 zcs-col-sm-12 zcs-flex zcs-direction-column zcs-gap-20">
+                             <div class="zcs-flex zcs-direction-column zcs-gap-12 zcs-p-16 zcs-box-border">
+								<h6 class="zcs-font-14 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0"> <%=language.get("grc.incident.incidentsByCategory")%> </h6>
+								<div elName='zc-component' pageLinkName='Incidents_by_Category' params='zc_Header=false'></div>
+							</div>
+					</div>
+					<div class="zcs-card zcs-left-content zcs-h-full zcs-overflow-auto zcs-col-4 zcs-col-sm-12 zcs-flex zcs-direction-column zcs-gap-20">
+                             <div class="zcs-flex zcs-direction-column zcs-gap-12 zcs-p-16 zcs-box-border">
+								<h6 class="zcs-font-14 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0"> <%=language.get("grc.incident.incidentTrendOverTime")%> </h6>
+								<div elName='zc-component' pageLinkName='Incident_Trend_Over_Time' params='zc_Header=false'></div>
+							</div>
+					</div>
+		</div>
+		
+		<div class="zcs-row zcs-gap-20 zcs-w-full" style='height:395px;'>
+		<div class="zcs-card zcs-left-content zcs-h-full zcs-overflow-auto zcs-col-6 zcs-col-sm-12 zcs-flex zcs-direction-column zcs-gap-20">
+                             <div class="zcs-flex zcs-direction-column zcs-gap-12 zcs-p-16 zcs-box-border">
+								<h6 class="zcs-font-14 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0"> <%=language.get("grc.incident.heatmapBySeverityStatus")%> </h6>
+								
+								<div class="zcs-severity-heatmap">
+               
+                <div class="zcs-sh-header-row">
+                    <div class="zcs-sh-header-empty"></div>
+<%
+		statusList = {"Open","Under Investigation","On Hold","Closed"};
+		severityList = {"Critical","Major","Minor"};
+		for each  statusVal in statusList
+		{
+			%>
+<div class="zcs-sh-header-cell"><%=statusVal%></div>
+<%
+		}
+		%>
+</div>
+<%
+		for each  severityRec in severityList
+		{
+			%>
+<div class="zcs-sh-data-row">
+                    <div class="zcs-sh-row-label"><%=severityRec%></div>
+<%
+			for each  statusRec in statusList
+			{
+				%>
+<div class="zcs-sh-cell zcs-sh-cell-red">
+					<span class="zcs-sh-value zcs-sh-value-red"><%=Incident_Register[Status == statusRec && Severity_Level == severityRec].count()%></span>
+                    </div>
+<%
+			}
+			%>
+</div>
+<%
+		}
+		%>
+</div>
+								
+							</div>
+					</div>
+					<div class="zcs-card zcs-right-content zcs-h-full zcs-col-6 zcs-col-sm-12 zcs-flex zcs-direction-column zcs-gap-20">
+                             <div class="zcs-flex zcs-direction-column zcs-gap-12 zcs-p-16 zcs-box-border zcs-h-full">
+								<h6 class="zcs-font-14 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0"> <%=language.get("grc.incident.recentActivites")%> </h6>
+<%
+		getLogs = Audit_Log[Form_Link_Name == "Incident_Register"] sort by Added_Time desc;
+		if(getLogs.count() > 0)
+		{
+			%>
+<ul class='zcs-flex zcs-direction-column zcs-gap-20 zcs-p-0 zcs-m-0 zcs-overflow-auto'>
+<%
+			for each  log in getLogs
+			{
+				%>
+<li class='zcs-flex zcs-gap-16 zcs-bg-blue zcs-rounded-md zcs-p-16'>
+								<div style='--zcs-avatar-size: 32px; --zcs-avatar-radius: 50%' class='zcs-avatar zcs-flex zcs-align-items-center zcs-justify-center'>
+<%
+				if(log.Performed_By.Photo != null && log.Performed_By.Photo != "")
+				{
+					ownerImage = zoho.appuri + "report/User_Report/" + log.Performed_By + "/Photo/download-file?filepath=/" + log.Performed_By.Photo.getSuffix("image/").getPrefix("\\"") + "&mediaType=1";
+					%>
+<img class='zcs-avatar-img zcs-wh-full' src=<%=ownerImage%> alt="John Smith profile photo"
+											height="100%" width="100%">
+<%
+				}
+				else
+				{
+					%>
+<span class="zcs-font-18 zcs-font-normal zcs-text-white zcs-flex zcs-justify-center zcs-align-items-center zcs-fh zcs-lh-body" aria-hidden="true"><%=thisapp.Content.letterGenerate(log.Performed_By.Name)%></span>
+<%
+				}
+				%>
+</div>
+<div class='zcs-flex zcs-direction-column zcs-gap-4'>
+									<h6 class='zcs-font-16 zcs-font-normal zcs-lh-heading zcs-color-primary zcs-m-0'> <%=thisapp.Log.Log_Translation(log.Form_Link_Name,log.Record_ID,log.Action_Type,log.Performed_By,log.Title)%> </h6>
+									<p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'> <%=log.Performed_Time%> </p>
+								</div>
+							</li>
+<%
+			}
+			%>
+</ul>
+<%
+		}
+		else
+		{
+			%>
+<%=thisapp.Page.noData()%>
+<%
+		}
+		%>
+</div>
+					</div>
+		</div> 
+		
+		
+		<div class='zcs-page-content zcs-card zcs-col-common' style='height:500px;'>
+            <div class='zcs-horizontal-tabpanel zcs-flex zcs-direction-column zcs-wh-full'>
+                <ul class='zcs-horizontal-tabhead zcs-flex zcs-gap-12 zcs-px-10 zcs-py-0 zcs-m-0 zcs-box-border'>
+<%
+		for each  tab_id in tab_keys
+		{
+			class_name = if(input.tab == tab_id,"zcs-horizontal-tabitem zcs-horizontal-tabactive'","zcs-horizontal-tabitem");
+			%>
+<li class='<%=class_name%>'> <a class='zcs-horizontal-tablink zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-10 zcs-py-12 zcs-box-border zcs-font-medium zcs-lh-body zcs-color-secondary' href='#Page:<%=page_link_name%>?tab=<%=tab_id%>'><span class="zcs-horizontal-tab-text"> <%=tab_map.get(tab_id).get("Display")%></span> </a> </li>
+<%
+		}
+		%>
+</ul>
+
+ <div class='zcs-horizontal-tabbody zcs-col-common zcs-flex zcs-direction-column'>
+                     <div class='zcs-filter' zc_MobileView='inline' elName='zc-component' formLinkName='Filter_Form' params='zc_Header=false&zc_Footer=false&zc_Focus=false&Action_field=overView&Page=<%=page_link_name%>&Report=Incident_Registers<%=tab_map.get(input.tab).get("Param")%>'></div>
+					<div class='zcs-report zcs-col-common' name='embedDiv' elName='zc-component' viewLinkName='Incident_Report_Page' params='zc_Header=false&tab=<%=input.tab%><%=tab_map.get(input.tab).get("Param")%>' ></div>
+                </div>
+            </div>
+		</div>
+		
+		
+		
+   </div>		
+</div>
+<%
+	}
+%>

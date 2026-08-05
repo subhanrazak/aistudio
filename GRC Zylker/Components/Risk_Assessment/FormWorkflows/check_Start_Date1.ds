@@ -1,0 +1,101 @@
+check_Start_Date1 as "check Start Date"
+{
+
+				type =  form
+				form = Risk_Assessment
+
+				record event = on add or edit
+
+				on user input of Start_Date
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											language = thisapp.Content.translation();
+										if(input.Assessment_Period == "Custom Period")
+										{
+											if(input.Start_Date != null && input.End_Date != null)
+											{
+												if(input.Start_Date > input.End_Date)
+												{
+													alert language.get("grc.date.startDateAlert");
+													input.Start_Date = null;
+												}
+												else
+												{
+													for each  internal in input.Internal_Resources
+													{
+														resource = Resource[ID == internal.Name];
+														hoursPerWeek = resource.Hours_per_Week;
+														totalDays = input.Start_Date.daysBetween(input.End_Date) + 1;
+														totalWeeks = totalDays / 7;
+														totalHours = totalWeeks * hoursPerWeek;
+														allocatedHours = 0;
+														for each  rec in Assessment_Plan[ID != input.ID]
+														{
+															if(rec.Start_Date <= input.End_Date && rec.End_Date >= input.Start_Date)
+															{
+																for each  res in rec.Internal_Resources
+																{
+																	if(res.Name == internal.Name)
+																	{
+																		allocatedHours = allocatedHours + res.Planned_Hours;
+																	}
+																}
+															}
+														}
+														availability = totalHours - allocatedHours;
+														if(totalHours > 0)
+														{
+															occupancy = (allocatedHours / totalHours * 100).toNumber();
+														}
+														else
+														{
+															occupancy = 0;
+														}
+														internal.Availability=100 - occupancy;
+														internal.Occupancy=occupancy;
+													}
+													for each  external in input.External_Resources
+													{
+														exResource = Resource[ID == internal.Name];
+														hoursPerWeek = exResource.Hours_per_Week;
+														totalDays = input.Start_Date.daysBetween(input.End_Date) + 1;
+														totalWeeks = totalDays / 7;
+														totalHours = totalWeeks * hoursPerWeek;
+														allocatedHours = 0;
+														for each  rec in Assessment_Plan[ID != input.ID]
+														{
+															if(rec.Start_Date <= input.End_Date && rec.End_Date >= input.Start_Date)
+															{
+																for each  res in rec.Internal_Resources
+																{
+																	if(res.Name == external.Name)
+																	{
+																		allocatedHours = allocatedHours + res.Planned_Hours;
+																	}
+																}
+															}
+														}
+														availability = totalHours - allocatedHours;
+														if(totalHours > 0)
+														{
+															occupancy = (allocatedHours / totalHours * 100).toNumber();
+														}
+														else
+														{
+															occupancy = 0;
+														}
+														external.Availability=100 - occupancy;
+														external.Occupancy=occupancy;
+													}
+												}
+											}
+										}
+						)
+					}
+				}
+
+			
+}

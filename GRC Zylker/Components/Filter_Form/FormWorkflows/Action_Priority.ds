@@ -1,0 +1,52 @@
+Action_Priority as "Action Priority"
+{
+
+				type =  form
+				form = Filter_Form
+
+				record event = on add
+
+				on user input of Action_Priority
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Page == "Operational_Page")
+										{
+											reportName = "Operations_Action_Tracker";
+											if(input.Tab == "escalation")
+											{
+												reportName = "Escalation_Tracker";
+											}
+											reportURL = "#Report:" + reportName + "?zc_Header=false&zc_AddRec=false&zc_ColMenu=false&zc_Footer=false";
+											parm = "";
+											if(!input.Action_Priority.isempty())
+											{
+												parm = parm + "&Priority=" + input.Action_Priority;
+											}
+											if(!input.Action_Status.isempty())
+											{
+												parm = parm + "&Status=" + input.Action_Status;
+											}
+											if(!input.Search_Key.isempty())
+											{
+												if(input.Tab == "escalation")
+												{
+													search_result = Action_Tracker[Description.containsIgnoreCase(input.Search_Key) || Action_ID.containsIgnoreCase(input.Search_Key)].ID.getAll();
+												}
+												else
+												{
+													search_result = Action_Tracker[Description.containsIgnoreCase(input.Search_Key) || Action_ID.containsIgnoreCase(input.Search_Key)].ID.getAll();
+												}
+												search_result = if(search_result.size() == 0,1234,search_result);
+												parm = parm + "&ID=" + encodeUrl("[" + search_result + "]") + "&ID_op=18";
+											}
+											openUrl(reportURL + parm + "&zc_LoadIn=embed-embedDiv","same window");
+										}
+						)
+					}
+				}
+
+			
+}

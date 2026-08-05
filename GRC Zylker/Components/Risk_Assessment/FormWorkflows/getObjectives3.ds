@@ -1,0 +1,32 @@
+getObjectives3 as "getObjectives"
+{
+
+				type =  form
+				form = Risk_Assessment
+
+				record event = on add or edit
+
+				on add row of Objectives
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											departmentList = input.Departments.Departments.getall();
+										if(departmentList.size() > 0)
+										{
+											objectiveList = Objective[Linked_Departments == departmentList].ID.getAll();
+											currentObjective = input.Objectives.Objectives.getall();
+											objectiveList.removeAll(currentObjective);
+											row.Objectives:ui.add(objectiveList);
+										}
+										else
+										{
+											clear row.Objectives;
+										}
+						)
+					}
+				}
+
+			
+}

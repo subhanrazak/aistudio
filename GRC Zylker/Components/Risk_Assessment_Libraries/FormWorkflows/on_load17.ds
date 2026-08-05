@@ -1,0 +1,56 @@
+on_load17 as "on load"
+{
+
+				type =  form
+				form = Risk_Assessment_Libraries
+
+				record event = on add or edit
+
+				on load
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Scope_Type == "Process" && Risk_Assessment != null)
+										{
+											objectiveList = Risk_Assessment_Libraries[Scope_Type == "Objective" && Risk_Assessment == input.Risk_Assessment].Objectives.getAll();
+											if(objectiveList.size() > 0)
+											{
+												processList = Process[Linked_Objectives == objectiveList].ID.getAll();
+												currentProcess = Risk_Assessment_Libraries[Scope_Type == "Process" && Risk_Assessment == input.Risk_Assessment].Processes.getAll();
+												processList.removeAll(currentProcess);
+												input.Processes:ui.add(processList);
+											}
+											else
+											{
+												clear Processes;
+											}
+											hide Objectives;
+											hide Risks;
+											hide Departments;
+										}
+										else if(input.Scope_Type == "Risk" && Risk_Assessment != null)
+										{
+											processList = Risk_Assessment_Libraries[Scope_Type == "Process" && Risk_Assessment == input.Risk_Assessment].Processes.getAll();
+											if(processList.size() > 0)
+											{
+												riskList = Risk_Entry[Process == processList].ID.getAll();
+												currentRisk = Risk_Assessment_Libraries[Scope_Type == "Risk" && Risk_Assessment == input.Risk_Assessment].Risks.getAll();
+												riskList.removeAll(currentRisk);
+												input.Risks:ui.add(riskList);
+											}
+											else
+											{
+												clear Risks;
+											}
+											hide Objectives;
+											hide Processes;
+											hide Departments;
+										}
+						)
+					}
+				}
+
+			
+}

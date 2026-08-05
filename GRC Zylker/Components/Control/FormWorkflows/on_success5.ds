@@ -1,0 +1,45 @@
+on_success5 as "on success"
+{
+
+				type =  form
+				form = Control
+
+				record event = on add
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											input.Control_ID_Code = thisapp.Get_ID("Control",input.ID);
+										thisapp.Log.Audit_Log("Control",input.ID,"Create",User[Email == zoho.loginuserid].ID,input.Control_ID_Code + " - " + input.Control_Name_Title);
+										riskManagerEmail = User[Role.Role_Name == "Risk Manager"].Email.getAll();
+										if(riskManagerEmail.size() > 0 && input.Control_Owner != null)
+										{
+											sendmail
+											[
+												from :input.Control_Owner.Email
+												to :input.Control_Owner.Manager.Email
+												subject :"Control Approval Required"
+												message :"<p data-end=\"58\" data-start=\"45\">Dear Manager,<br></p><p data-end=\"151\" data-start=\"60\">A control has been submitted by the Control Owner and is awaiting your review and approval.<br></p><p data-end=\"173\" data-start=\"153\"><b>Control Details:</b><br></p><ul data-end=\"306\" data-start=\"174\"><li data-end=\"200\" data-start=\"174\" data-section-id=\"qj7fx0\">Control ID: " + input.Control_ID_Code + "<br></li><li data-end=\"231\" data-start=\"201\" data-section-id=\"144jj4k\">Control Name: " + input.Control_Name_Title + "<br></li><li data-end=\"269\" data-start=\"232\" data-section-id=\"g759ub\">Control Owner: " + input.Control_Owner.Name + "<br></li><li data-end=\"306\" data-start=\"270\" data-section-id=\"1lc6ovo\">Submission Date: " + zoho.currentdate + "}<br></li></ul><p data-end=\"376\" data-start=\"308\">Please review the submitted control and take the appropriate action.<br></p><p data-end=\"388\" data-start=\"378\">Thank you.<br></p><p data-end=\"424\" data-start=\"390\"></p><div>Regards,<br></div><div> Control Management Team<br></div><p></p><div><br></div>"
+											]
+										}
+										if(input.Risk_Assessment == true)
+										{
+											input.Risk_Assessment = false;
+											openUrl("#Script:page.refresh","same window");
+										}
+										else
+										{
+											input.Stepper_Stage = "Risk Process Links";
+											language = thisapp.Content.translation();
+											success message language.get("grc.success.controlInformation");
+											openUrl("#Page:Controls_Page?page_action=add&recid=" + input.ID,"same window");
+										}
+						)
+					}
+				}
+
+			
+}

@@ -1,0 +1,40 @@
+get_Department_Details as "get Department Details"
+{
+
+				type =  form
+				form = Assessment_Plan
+
+				record event = on add or edit
+
+				on user input of Department_Coverage.Department
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(row.Department != null)
+										{
+											getDepartment = Risk_Assessment_Libraries[Departments == row.Department && Status == "Completed"] sort by End_Date desc;
+											score = Risk_Entry[Department == row.Department].sum(Inherent_Score);
+											totalCount = Risk_Entry[Department == row.Department].count();
+											if(totalCount > 0)
+											{
+												avgScore = score / totalCount;
+												row.Risk_Level=Risk_Level[From <= avgScore && To >= avgScore].Label;
+											}
+											if(getDepartment.count() > 0)
+											{
+												row.Last_Assessment=getDepartment.End_Date;
+											}
+										}
+										else
+										{
+											row.Last_Assessment="";
+											row.Risk_Level="";
+										}
+						)
+					}
+				}
+
+			
+}

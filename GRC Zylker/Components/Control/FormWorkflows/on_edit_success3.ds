@@ -1,0 +1,45 @@
+on_edit_success3 as "on edit success"
+{
+
+				type =  form
+				form = Control
+
+				record event = on edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											thisapp.Log.Audit_Log("Control",input.ID,"Update",User[Email == zoho.loginuserid].ID,input.Control_ID_Code + " - " + input.Control_Name_Title);
+										actionList = {"Control Information","Risk Process Links","Effectiveness Testing"};
+										getIndex = if(input.Action_Field != "Effectiveness Testing",actionList.indexOf(input.Action_Field) + 1,null);
+										if(input.Stepper_Stage == "Control Information")
+										{
+											input.Stepper_Stage = "Risk Process Links";
+										}
+										else if(input.Stepper_Stage == "Risk Process Links")
+										{
+											input.Stepper_Stage = "Effectiveness Testing";
+										}
+										else if(input.Stepper_Stage == "Effectiveness Testing")
+										{
+										}
+										success message input.Action_Field + " information submitted successfully.";
+										currentAction = input.Action_Field;
+										input.Action_Field = "";
+										if(currentAction != "Effectiveness Testing")
+										{
+											openUrl("#Page:Controls_Page?page_action=add&recid=" + input.ID + "&action_field=" + encodeUrl(actionList.get(getIndex)),"same window");
+										}
+										else
+										{
+											openUrl("#Page:Controls_Page?page_action=detailView&recid=" + input.ID,"same window");
+										}
+						)
+					}
+				}
+
+			
+}

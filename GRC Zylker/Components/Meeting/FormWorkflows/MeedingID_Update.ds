@@ -1,0 +1,55 @@
+MeedingID_Update as "MeedingID Update"
+{
+
+				type =  form
+				form = Meeting
+
+				record event = on add
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											// if(Add_Agenda == "")
+										// {
+										input.MeetingID = input.ID;
+										// }
+										existingMembers = list();
+										for each  attRow in input.Meeting_Attendance
+										{
+											if(attRow.Member != null)
+											{
+												existingMembers.add(attRow.Member.toLong());
+											}
+										}
+										for each  memberId in input.Invite_Members
+										{
+											if(!existingMembers.contains(memberId.toLong()))
+											{
+												insert into Meeting_Attendance
+												[
+													Member=memberId
+													Status="Maybe"
+													Meetings=input.ID
+													Added_User=zoho.loginuser
+												]
+											}
+										}
+										user = User[Email == zoho.loginuserid];
+										met = insert into Meeting_Activity
+										[
+											Added_User=zoho.loginuser
+											Activity="Created"
+											Meeting=input.ID
+											User=user.ID
+											Date_Time=zoho.currenttime
+										];
+										input.Pre_Meeting_Pack_Send_Date = input.Start_Date_Time.subDay(5);
+						)
+					}
+				}
+
+			
+}

@@ -1,0 +1,1131 @@
+<%
+	page_link_name = "Quorum_Rule_Page";
+	/* === Language === */
+	language = thisapp.Content.translation();
+	loginUser = User[Email == zoho.loginuserid];
+	/* === Permission === */
+	/* F = Full (create/edit), V = View only, N = No access */
+	quorumAccess = "N";
+	userRoleName = "";
+	if(loginUser.count() > 0 && loginUser.Role != null)
+	{
+		roleRec = Role[ID == loginUser.Role];
+		if(roleRec.count() > 0)
+		{
+			userRoleName = roleRec.Role_Name + "";
+		}
+	}
+	/* F roles: Board Chairperson, Company Secretary, Supervisory Secretary, Advisory Chairperson, Advisory Secretary */
+	fullAccessRoles = {"Chair Person","Company Secretary","Supervisory Secretary","Advisory Chairperson","Advisory Secretary"};
+	/* V roles: Board Director, Committee Chair, Supervisory Chairperson */
+	viewAccessRoles = {"Director","CEO","CFO","Committee Chair","Supervisory Chairperson","Compliance Manager"};
+	if(userRoleName in fullAccessRoles)
+	{
+		quorumAccess = "F";
+	}
+	else if(userRoleName in viewAccessRoles)
+	{
+		quorumAccess = "V";
+	}
+	totalCommittee = 0;
+	validQuorum = 0;
+	breachQuorum = 0;
+	quorumMetPct = 0;
+	if(input.page_action.isEmpty())
+	{
+		totalCommittee = Committee[ID != 0].count();
+		allRules = Quorum_Rule[ID != 0];
+		for each  qr in allRules
+		{
+			uV = 0;
+			uT = 0;
+			uI = 0;
+			uN = 0;
+			if(qr.Minimum_Voting_Members != null)
+			{
+				vs = qr.Minimum_Voting_Members + "";
+				if(vs != "null" && !vs.isEmpty())
+				{
+					uV = vs.toLong();
+				}
+			}
+			if(qr.Minimum_Total_Members != null)
+			{
+				ts = qr.Minimum_Total_Members + "";
+				if(ts != "null" && !ts.isEmpty())
+				{
+					uT = ts.toLong();
+				}
+			}
+			if(qr.Minimum_Independent_Members != null)
+			{
+				is = qr.Minimum_Independent_Members + "";
+				if(is != "null" && !is.isEmpty())
+				{
+					uI = is.toLong();
+				}
+			}
+			if(qr.Minimum_Non_Executive_Members != null)
+			{
+				ns = qr.Minimum_Non_Executive_Members + "";
+				if(ns != "null" && !ns.isEmpty())
+				{
+					uN = ns.toLong();
+				}
+			}
+			rV = 0;
+			rI = 0;
+			rN = 0;
+			rT = 0;
+			if(qr.Committee != null)
+			{
+				cRec = Committee[ID == qr.Committee];
+				if(cRec.count() > 0)
+				{
+					if(cRec.Minimum_Count != null)
+					{
+						mcs = cRec.Minimum_Count + "";
+						if(mcs != "null" && !mcs.isEmpty())
+						{
+							rV = mcs.toLong();
+						}
+					}
+					if(cRec.Minimum_Count_Independent != null)
+					{
+						mis = cRec.Minimum_Count_Independent + "";
+						if(mis != "null" && !mis.isEmpty())
+						{
+							rI = mis.toLong();
+						}
+					}
+					if(cRec.Maximum_Count_Non_Executive != null)
+					{
+						mns = cRec.Maximum_Count_Non_Executive + "";
+						if(mns != "null" && !mns.isEmpty())
+						{
+							rN = mns.toLong();
+						}
+					}
+					rT = rV + rI + rN;
+				}
+			}
+			allValid = true;
+			anyBreached = false;
+			if(rV > 0)
+			{
+				if(uV < rV)
+				{
+					allValid = false;
+					anyBreached = true;
+				}
+			}
+			if(rT > 0)
+			{
+				if(uT < rT)
+				{
+					allValid = false;
+					anyBreached = true;
+				}
+			}
+			if(rI > 0)
+			{
+				if(uI < rI)
+				{
+					allValid = false;
+					anyBreached = true;
+				}
+			}
+			if(rN > 0)
+			{
+				if(uN < rN)
+				{
+					allValid = false;
+					anyBreached = true;
+				}
+			}
+			if(allValid == true)
+			{
+				validQuorum = validQuorum + 1;
+			}
+			if(anyBreached == true)
+			{
+				breachQuorum = breachQuorum + 1;
+			}
+		}
+		allMeetings = Meeting[ID != 0];
+		totalMt = 0;
+		metMt = 0;
+		for each  m in allMeetings
+		{
+			totalMt = totalMt + 1;
+			if(m.Quorum_Status != null)
+			{
+				qsv = m.Quorum_Status + "";
+				if(qsv.equalsIgnoreCase("Met"))
+				{
+					metMt = metMt + 1;
+				}
+			}
+		}
+		if(totalMt > 0)
+		{
+			quorumMetPct = ((metMt * 100) / totalMt).round(0);
+		}
+	}
+	%>
+<style>
+<%=thisapp.Styles.App_CSS()%>
+<%=thisapp.Styles.Button()%>
+<%=thisapp.Styles.Panel()%>
+<%=thisapp.Styles.Horizontal_Tab()%>
+<%=thisapp.Styles_Creator.Filter()%>
+<%=thisapp.Styles_Creator.Report_Card()%>
+<%=thisapp.Styles_Page.Common_View()%>
+<%=thisapp.Styles.Pagination()%>
+</style>
+<style>
+body { margin: 0; background: var(--zcs-bg); , 'Segoe UI', sans-serif; color: var(--zcs-head); }
+p, h1, h2 { margin: 0; }
+.zcs-quorum-wrap { padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+.zcs-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.zcs-title { font-size: 42px; line-height: 1.05; letter-spacing: -0.03em; font-weight: 700; }
+.zcs-subtitle { font-size: 14px; line-height: 1.4; color: #7890ad; margin-top: 2px; }
+.zcs-new-rule-btn { border: 1px solid var(--zcs-red); border-radius: 8px; background: #fff; color: var(--zcs-red); padding: 10px 16px; font-size: 17px; line-height: 1; font-weight: 500; white-space: nowrap; cursor: pointer; }
+.zcs-stat-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.zcs-stat-card { background: radial-gradient(circle at 100% 0, #fdf0f2, #fff 44%); border: 1px solid var(--zcs-border); border-radius: 16px; padding: 18px 20px; min-height: 120px; }
+.zcs-stat-label { font-size: 16px; color: #58657a; margin-bottom: 8px; }
+.zcs-stat-value { font-size: 44px; letter-spacing: -0.03em; font-weight: 700; line-height: 1; color: #1f2f48; }
+.zcs-main-grid { display: grid; grid-template-columns: 2fr 0.92fr; gap: 12px; }
+.zcs-bottom-grid { display: grid; grid-template-columns: 0.95fr 1.95fr; gap: 12px; }
+.zcs-panel { border: 1px solid var(--zcs-border); border-radius: 16px; background: var(--zcs-panel); padding: 18px; }
+.zcs-panel-title { font-size: 24px; line-height: 1.1; margin-bottom: 18px; }
+.zcs-rules-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 22px; row-gap: 18px; margin-bottom: 18px; }
+.zcs-data-main { font-size: 18px; font-weight: 500; color: #2f3a4a; }
+.zcs-data-sub { font-size: 14px; color: #7b8aa0; margin-top: 4px; }
+.zcs-pagination { height: 32px; padding: 10px; box-sizing: content-box; background: var(--zcs-white-color); }
+.zcs-quorum-shell { background-color: var(--zcs-white-color); border: 1px solid #e6ecf5; border-radius: 16px; box-shadow: 0 8px 24px rgba(20,39,71,0.04); overflow: hidden; }
+.zcs-quorum-body { padding: 14px 14px 18px; }
+.zcs-header-copy { max-width: 760px; }
+.zcs-header-title { letter-spacing: -0.03em; }
+.zcs-kpi-card { position: relative; border: 1px solid #dfe7f2; border-radius: 20px; background: radial-gradient(circle at 88% 18%, rgba(255,211,215,0.55), transparent 22%), #ffffff; min-height: 130px; overflow: hidden; }
+.zcs-kpi-icon { width: 48px; height: 48px; color: #ffc0c8; opacity: 0.95; }
+.zcs-kpi-value { color: #102b61; letter-spacing: -0.03em; }
+.zcs-chart-box { position: relative; height: 248px; border-radius: 12px; overflow: hidden; }
+.zcs-grid-layer { position: absolute; inset: 26px 0 24px; display: flex; flex-direction: column; justify-content: space-between; pointer-events: none; }
+.zcs-grid-line { border-top: 1px dashed #dfe7f3; }
+.zcs-y-axis, .zcs-x-axis { position: absolute; color: #8a96aa; font-size: 12px; line-height: 1; }
+.zcs-y-axis { top: 24px; left: 0; bottom: 38px; width: 30px; display: flex; flex-direction: column; justify-content: space-between; }
+.zcs-x-axis { left: 38px; right: 0; bottom: 10px; display: flex; justify-content: space-between; }
+.zcs-chart-stage { position: absolute; left: 38px; right: 10px; top: 24px; bottom: 38px; }
+.zcs-bar-group { position: absolute; inset: 0; display: flex; justify-content: space-between; align-items: flex-end; }
+.zcs-bar-pair { width: 42px; display: flex; justify-content: space-between; align-items: flex-end; height: 100%; gap: 4px; }
+.zcs-bar { width: 14px; border-radius: 4px 4px 0 0; min-height: 2px; }
+.zcs-bar-green { background-color: #19b77b; }
+.zcs-bar-red { background-color: #ff394d; }
+.zcs-trend-svg { width: 100%; height: 100%; }
+.zcs-trend-svg path { fill: none; stroke: #ff3f55; stroke-width: 3.2; stroke-linecap: round; }
+.zcs-trend-svg circle { fill: #ff3f55; }
+.zcs-upcoming-list { margin-top: 8px; }
+.zcs-upcoming-card { display: grid; grid-template-columns: minmax(220px,1.4fr) 1fr 1fr 1fr 140px; align-items: center; gap: 16px; border: 1px solid #dfe7f2; border-radius: 14px; background-color: #fbfdff; padding: 14px 18px; text-decoration: none; }
+.zcs-uc-meeting { display: flex; align-items: center; gap: 10px; }
+.zcs-uc-col { display: flex; flex-direction: column; align-items: center; text-align: center; }
+.zcs-uc-val { font-size: 14px; font-weight: 600; color: #18213d; }
+.zcs-uc-lbl { font-size: 12px; color: #74839d; margin-top: 2px; }
+.zcs-chip { width: 28px; height: 28px; border-radius: 50%; flex: 0 0 auto; display: flex; align-items: center; justify-content: center; }
+.zcs-chip-success { background-color: #e4fcf3; color: #179e6c; }
+.zcs-chip-warning { background-color: #fcf4e6; color: #faae13; }
+.zcs-dot { width: 8px; height: 8px; border-radius: 50%; background-color: currentColor; }
+.zcs-badge-success { background-color: #e4fcf3; color: #179e6c; }
+.zcs-badge-danger { background-color: #fde3e6; color: #fe455d; }
+.zcs-badge { display: inline-flex; align-items: center; justify-content: center; gap: 6px; border-radius: 999px; padding: 5px 14px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.zcs-access-denied { display: flex; align-items: center; justify-content: center; height: 80vh; }
+.zcs-access-denied-inner { text-align: center; max-width: 400px; }
+.zcs-access-denied-icon { width: 64px; height: 64px; border-radius: 50%; background: #fff0f0; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; }
+@media (max-width: 1120px) { .zcs-title { font-size: 34px; } .zcs-panel-title { font-size: 26px; } .zcs-main-grid, .zcs-bottom-grid { grid-template-columns: 1fr; } .zcs-rules-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .zcs-upcoming-card { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 820px) { .zcs-stat-grid { grid-template-columns: 1fr; } .zcs-header { flex-direction: column; align-items: flex-start; } .zcs-title { font-size: 28px; } .zcs-stat-card { min-height: auto; } .zcs-rules-grid { grid-template-columns: 1fr; } }
+@media (max-width: 768px) { body { padding: 14px; } .zcs-upcoming-card { grid-template-columns: 1fr; } }
+.zcs-table-wrapper table tbody tr { position: relative; }
+.zcs-detail-view-td { position: absolute; border: none !important; inset: 0; background: transparent !important; }
+.zcs-detail-view-td a { height: 100%; display: block; width: 100%; }
+</style>
+<%
+	/* === No Access \u2014 show denied === */
+	if(quorumAccess == "N")
+	{
+		%>
+<div class='zcs-access-denied'>
+    <div class='zcs-access-denied-inner'>
+        <div class='zcs-access-denied-icon'>
+            <svg width='32' height='32' viewBox='0 0 24 24' fill='none' stroke='#e8453c' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'>
+                <rect x='3' y='11' width='18' height='11' rx='2' ry='2'/>
+                <path d='M7 11V7a5 5 0 0110 0v4'/>
+            </svg>
+        </div>
+        <h3 style='font-size:20px;font-weight:700;color:#111827;margin:0 0 8px;font-family:Inter,sans-serif;'><%=language.get("quorum.access.denied")%></h3>
+        <p style='font-size:14px;color:#6B7280;margin:0;line-height:1.6;font-family:Inter,sans-serif;'><%=language.get("quorum.access.deniedDesc")%></p>
+    </div>
+</div>
+<%
+	}
+	else if(input.page_action.isEmpty())
+	{
+		monthLabels = list();
+		metCounts = list();
+		notMetCounts = list();
+		nowDt = zoho.currenttime;
+		monthOffsets = {5,4,3,2,1,0};
+		maxMonthCount = 1;
+		for each  off in monthOffsets
+		{
+			mDate = nowDt.subMonth(off);
+			mLabel = mDate.toString("MMM");
+			monthLabels.add(mLabel);
+			startDt = mDate.toStartOfMonth();
+			endDt = startDt.addMonth(1);
+			mMeetings = Meeting[Start_Date_Time >= startDt && Start_Date_Time < endDt];
+			mMet = 0;
+			mNotMet = 0;
+			for each  meet in mMeetings
+			{
+				if(meet.Quorum_Status != null)
+				{
+					qsv2 = meet.Quorum_Status + "";
+					if(qsv2.equalsIgnoreCase("Met"))
+					{
+						mMet = mMet + 1;
+					}
+					else
+					{
+						mNotMet = mNotMet + 1;
+					}
+				}
+				else
+				{
+					mNotMet = mNotMet + 1;
+				}
+			}
+			metCounts.add(mMet);
+			notMetCounts.add(mNotMet);
+			if(mMet > maxMonthCount)
+			{
+				maxMonthCount = mMet;
+			}
+			if(mNotMet > maxMonthCount)
+			{
+				maxMonthCount = mNotMet;
+			}
+		}
+		trendPcts = list();
+		for each  off in monthOffsets
+		{
+			mDate = nowDt.subMonth(off);
+			startDt = mDate.toStartOfMonth();
+			endDt = startDt.addMonth(1);
+			mMeetings2 = Meeting[Start_Date_Time >= startDt && Start_Date_Time < endDt];
+			tTot = 0;
+			tMet = 0;
+			for each  meet2 in mMeetings2
+			{
+				tTot = tTot + 1;
+				if(meet2.Quorum_Status != null)
+				{
+					qsv3 = meet2.Quorum_Status + "";
+					if(qsv3.equalsIgnoreCase("Met"))
+					{
+						tMet = tMet + 1;
+					}
+				}
+			}
+			mPct = 0;
+			if(tTot > 0)
+			{
+				mPct = ((tMet * 100) / tTot).round(0);
+			}
+			trendPcts.add(mPct);
+		}
+		%>
+<div class='zcs-row'>
+   <div class='zcs-col-12 zcs-p-10 zcs-box-border'>
+      <div class='zcs-quorum-shell'>
+         <div class='zcs-quorum-body zcs-flex zcs-direction-column zcs-gap-16'>
+            <div class='zcs-flex zcs-justify-space-between zcs-align-items-center zcs-toolbar zcs-gap-12'>
+               <div class='zcs-header-copy'>
+                  <h2 class='zcs-header-title zcs-font-24 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0'><%=language.get("quorum.title")%></h2>
+                  <p class='zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'><%=language.get("quorum.subtitle")%></p>
+               </div>
+<%
+		if(quorumAccess == "F")
+		{
+			%>
+<a class='zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-medium zcs-lh-body' href='#Form:Quorum_Rule?zc_LoadIn=dialog'>
+    <svg width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round'><path d='M12 5v14M5 12h14'/></svg>
+    <span class='zcs-button-text'><%=language.get("quorum.button.newRule")%></span>
+</a>
+<%
+		}
+		%>
+</div>
+            <div class='zcs-row zcs-gap-row-12'>
+               <div class='zcs-col-3 zcs-col-md-6 zcs-col-sm-12 zcs-p-6 zcs-box-border'>
+                  <div class='zcs-kpi-card zcs-p-18 zcs-box-border zcs-flex zcs-justify-space-between zcs-align-items-end'>
+                     <div>
+                        <p class='zcs-font-18 zcs-font-normal zcs-lh-body zcs-color-secondary zcs-m-0 zcs-mb-8'><%=language.get("quorum.kpi.totalCommittee")%></p>
+                        <p class='zcs-kpi-value zcs-font-38 zcs-font-semibold zcs-lh-heading zcs-m-0'><%=totalCommittee%></p>
+                     </div>
+                     <svg class='zcs-kpi-icon' viewBox='0 0 24 24' fill='none'>
+                        <rect x='5' y='4' width='14' height='16' rx='2' stroke='currentColor' stroke-width='1.5'/>
+                        <path d='M8 15L11 12L14 14L18 9' stroke='currentColor' stroke-width='1.5'/>
+                     </svg>
+                  </div>
+               </div>
+               <div class='zcs-col-3 zcs-col-md-6 zcs-col-sm-12 zcs-p-6 zcs-box-border'>
+                  <div class='zcs-kpi-card zcs-p-18 zcs-box-border zcs-flex zcs-justify-space-between zcs-align-items-end'>
+                     <div>
+                        <p class='zcs-font-18 zcs-font-normal zcs-lh-body zcs-color-secondary zcs-m-0 zcs-mb-8'><%=language.get("quorum.kpi.validQuorum")%></p>
+                        <p class='zcs-kpi-value zcs-font-38 zcs-font-semibold zcs-lh-heading zcs-m-0'><%=validQuorum%></p>
+                     </div>
+                     <svg class='zcs-kpi-icon' viewBox='0 0 24 24' fill='none'>
+                        <path d='M3 16L12 8L21 16' stroke='currentColor' stroke-width='1.5'/>
+                        <path d='M7 16V12H11V16' stroke='currentColor' stroke-width='1.5'/>
+                        <circle cx='9' cy='20' r='2.5' stroke='currentColor' stroke-width='1.5'/>
+                        <circle cx='17' cy='20' r='2.5' stroke='currentColor' stroke-width='1.5'/>
+                     </svg>
+                  </div>
+               </div>
+               <div class='zcs-col-3 zcs-col-md-6 zcs-col-sm-12 zcs-p-6 zcs-box-border'>
+                  <div class='zcs-kpi-card zcs-p-18 zcs-box-border zcs-flex zcs-justify-space-between zcs-align-items-end'>
+                     <div>
+                        <p class='zcs-font-18 zcs-font-normal zcs-lh-body zcs-color-secondary zcs-m-0 zcs-mb-8'><%=language.get("quorum.kpi.breachQuorum")%></p>
+                        <p class='zcs-kpi-value zcs-font-38 zcs-font-semibold zcs-lh-heading zcs-m-0'><%=breachQuorum%></p>
+                     </div>
+                     <svg class='zcs-kpi-icon' viewBox='0 0 24 24' fill='none'>
+                        <rect x='5' y='4' width='14' height='16' rx='2' stroke='currentColor' stroke-width='1.5'/>
+                        <circle cx='12' cy='10' r='2.7' stroke='currentColor' stroke-width='1.5'/>
+                        <path d='M8.5 18C8.8 15.9 10.1 14.8 12 14.8C13.9 14.8 15.2 15.9 15.5 18' stroke='currentColor' stroke-width='1.5'/>
+                     </svg>
+                  </div>
+               </div>
+               <div class='zcs-col-3 zcs-col-md-6 zcs-col-sm-12 zcs-p-6 zcs-box-border'>
+                  <div class='zcs-kpi-card zcs-p-18 zcs-box-border zcs-flex zcs-justify-space-between zcs-align-items-end'>
+                     <div>
+                        <p class='zcs-font-18 zcs-font-normal zcs-lh-body zcs-color-secondary zcs-m-0 zcs-mb-8'><%=language.get("quorum.kpi.quorumMet")%></p>
+                        <p class='zcs-kpi-value zcs-font-38 zcs-font-semibold zcs-lh-heading zcs-m-0'><%=quorumMetPct%>%</p>
+                     </div>
+                     <svg class='zcs-kpi-icon' viewBox='0 0 24 24' fill='none'>
+                        <circle cx='8' cy='9' r='4' stroke='currentColor' stroke-width='1.5'/>
+                        <circle cx='16' cy='12' r='4' stroke='currentColor' stroke-width='1.5'/>
+                        <path d='M3.5 20C3.5 17.5 5.5 15.5 8 15.5H10' stroke='currentColor' stroke-width='1.5'/>
+                        <path d='M12 20C12 17.8 13.8 16 16 16H17.5C19.4 16 21 17.6 21 19.5V20' stroke='currentColor' stroke-width='1.5'/>
+                     </svg>
+                  </div>
+               </div>
+            </div>
+            <div class='zcs-row zcs-gap-row-12'>
+               <div class='zcs-col-6 zcs-col-md-12 zcs-col-sm-12 zcs-p-6 zcs-box-border'>
+                  <div class='zcs-panel zcs-p-16 zcs-box-border zcs-flex zcs-direction-column zcs-gap-12'>
+                     <h6 class='zcs-panel-title zcs-font-24 zcs-lh-heading zcs-color-primary zcs-m-0'><%=language.get("quorum.chart.achievementHistory")%></h6>
+                     <div class='zcs-chart-box'>
+                        <div class='zcs-grid-layer'>
+                           <div class='zcs-grid-line'></div>
+                           <div class='zcs-grid-line'></div>
+                           <div class='zcs-grid-line'></div>
+                           <div class='zcs-grid-line'></div>
+                        </div>
+                        <div class='zcs-y-axis'>
+                           <span><%=maxMonthCount%></span>
+                           <span><%=((maxMonthCount * 75) / 100).round(0)%></span>
+                           <span><%=((maxMonthCount * 50) / 100).round(0)%></span>
+                           <span><%=((maxMonthCount * 25) / 100).round(0)%></span>
+                           <span>0</span>
+                        </div>
+                        <div class='zcs-chart-stage'>
+                           <div class='zcs-bar-group'>
+<%
+		barIdx = 0;
+		for each  off in monthOffsets
+		{
+			gVal = metCounts.get(barIdx);
+			rVal = notMetCounts.get(barIdx);
+			gPct = 0;
+			rPct = 0;
+			if(maxMonthCount > 0)
+			{
+				gPct = (gVal * 100) / maxMonthCount;
+				rPct = (rVal * 100) / maxMonthCount;
+			}
+			%>
+<div class='zcs-bar-pair'>
+                                 <div class='zcs-bar zcs-bar-green' style='height:<%=gPct%>%;'></div>
+                                 <div class='zcs-bar zcs-bar-red' style='height:<%=rPct%>%;'></div>
+                              </div>
+<%
+			barIdx = barIdx + 1;
+		}
+		%>
+</div>
+                        </div>
+                        <div class='zcs-x-axis'>
+<%
+		for each  lbl in monthLabels
+		{
+			%>
+<span><%=lbl%></span>
+<%
+		}
+		%>
+</div>
+                     </div>
+                     <div class='zcs-flex zcs-align-items-center zcs-gap-16' style='justify-content:center;font-size:12px;color:#74839d;margin-top:8px;'>
+                        <span class='zcs-flex zcs-align-items-center zcs-gap-6'><span style='width:10px;height:10px;background:#19b77b;border-radius:2px;'></span> <%=language.get("quorum.chart.met")%></span>
+                        <span class='zcs-flex zcs-align-items-center zcs-gap-6'><span style='width:10px;height:10px;background:#ff394d;border-radius:2px;'></span> <%=language.get("quorum.chart.notMet")%></span>
+                     </div>
+                  </div>
+               </div>
+               <div class='zcs-col-6 zcs-col-md-12 zcs-col-sm-12 zcs-p-6 zcs-box-border'>
+                  <div class='zcs-panel zcs-p-16 zcs-box-border zcs-flex zcs-direction-column zcs-gap-12'>
+                     <h6 class='zcs-panel-title zcs-font-24 zcs-lh-heading zcs-color-primary zcs-m-0'><%=language.get("quorum.chart.rateTrend")%></h6>
+                     <div class='zcs-chart-box'>
+                        <div class='zcs-grid-layer'>
+                           <div class='zcs-grid-line'></div>
+                           <div class='zcs-grid-line'></div>
+                           <div class='zcs-grid-line'></div>
+                           <div class='zcs-grid-line'></div>
+                        </div>
+                        <div class='zcs-y-axis'>
+                           <span>100</span>
+                           <span>75</span>
+                           <span>50</span>
+                           <span>25</span>
+                           <span>0</span>
+                        </div>
+                        <div class='zcs-chart-stage'>
+                           <svg class='zcs-trend-svg' viewBox='0 0 560 160' preserveAspectRatio='none'>
+<%
+		svgW = 560;
+		svgH = 160;
+		pad = 12;
+		stepX = (svgW - pad * 2) / 5;
+		pathStr = "";
+		circlesStr = "";
+		ptIdx = 0;
+		for each  pct in trendPcts
+		{
+			cx = pad + stepX * ptIdx;
+			cy = svgH - pad - (pct * (svgH - pad * 2)) / 100;
+			if(ptIdx == 0)
+			{
+				pathStr = "M " + cx + " " + cy;
+			}
+			else
+			{
+				pathStr = pathStr + " L " + cx + " " + cy;
+			}
+			circlesStr = circlesStr + "<circle cx='" + cx + "' cy='" + cy + "' r='6'></circle>";
+			ptIdx = ptIdx + 1;
+		}
+		%>
+<path d='<%=pathStr%>'></path>
+                              <%=circlesStr%>
+                           </svg>
+                        </div>
+                        <div class='zcs-x-axis'>
+<%
+		for each  lbl in monthLabels
+		{
+			%>
+<span><%=lbl%></span>
+<%
+		}
+		%>
+</div>
+                     </div>
+                  </div>
+               </div>
+            </div>
+         </div>
+      </div>
+   </div>
+</div>
+<div class="zcs-filter" elName="zc-component" formLinkName="Filter_Form" params='zc_Header=false&zc_Footer=false&zc_Focus=false&Page=Quorum_Rule_Page&Report=Quorum_Rules&Status=<%=input.Status%>&Search_Key=<%=input.Search_Key%>'></div>
+<div name='embedDiv' elName='zc-component' viewLinkName='Quorum_Rules' params='zc_Header=false&zc_Footer=false&zc_ColMenu=false&zc_AddRec=false'></div>
+<div class='zcs-panel zcs-p-16 zcs-box-border zcs-flex zcs-direction-column zcs-gap-12'>
+   <h6 class='zcs-panel-title zcs-font-24 zcs-lh-heading zcs-color-primary zcs-m-0'><%=language.get("quorum.upcoming.title")%></h6>
+<div name='uqEmbedDiv'>
+<%
+		upcomingMeetings = Meeting[Start_Date_Time >= zoho.currentdate] sort by Start_Date_Time;
+		uqRecordsPerPage = 5;
+		uqTotalCount = upcomingMeetings.count();
+		uqStartIndex = 1;
+		if(!input.uq_start.isEmpty())
+		{
+			uqStartIndex = input.uq_start.toLong();
+		}
+		uqDiff = uqTotalCount - uqStartIndex;
+		uqEndIndex = if(uqStartIndex + uqRecordsPerPage - 1 > uqTotalCount,uqStartIndex + uqDiff,uqStartIndex + uqRecordsPerPage - 1);
+		uqPrevAction = if(uqStartIndex == 1,"disable","");
+		uqNextAction = if(uqEndIndex >= uqTotalCount,"disable","");
+		uqPageLink = "#Page:Quorum_Rule_Page?zc_Header=false";
+		uqPrevLink = if(uqStartIndex > 1,"href='" + uqPageLink + "&uq_start=" + (uqStartIndex - uqRecordsPerPage) + "' target='_blank'","");
+		uqNextLink = if(uqEndIndex < uqTotalCount,"href='" + uqPageLink + "&uq_start=" + (uqEndIndex + 1) + "' target='_blank'","");
+		if(uqTotalCount == 0)
+		{
+			%>
+<%=thisapp.Page.noData()%>
+<%
+		}
+		else
+		{
+			%>
+<div class='zcs-upcoming-list zcs-flex zcs-direction-column zcs-gap-10'>
+<%
+			uqIdx = 0;
+			for each  um in upcomingMeetings
+			{
+				uqIdx = uqIdx + 1;
+				if(uqIdx >= uqStartIndex && uqIdx <= uqEndIndex)
+				{
+					detailUrl = "#Page:Meeting_Page?page_action=detailview&record_id=" + um.ID;
+					umTitle = "\u2014";
+					if(um.Meeting_Title != null)
+					{
+						tt = um.Meeting_Title + "";
+						if(tt != "null" && !tt.isEmpty())
+						{
+							umTitle = tt;
+						}
+					}
+					umDate = "\u2014";
+					if(um.Start_Date_Time != null)
+					{
+						umDate = um.Start_Date_Time.toString("MMM dd, yyyy");
+					}
+					umPresent = 0;
+					umTotal = 0;
+					for each  attRow in um.Meeting_Attendance
+					{
+						umTotal = umTotal + 1;
+						if(attRow.Status == "Present")
+						{
+							umPresent = umPresent + 1;
+						}
+					}
+					umRequired = 0;
+					if(um.Quorum != null)
+					{
+						qrRec = Quorum_Rule[ID == um.Quorum];
+						if(qrRec.count() > 0 && qrRec.Minimum_Total_Members != null)
+						{
+							mtm = qrRec.Minimum_Total_Members + "";
+							if(mtm != "null" && !mtm.isEmpty())
+							{
+								umRequired = mtm.toLong();
+							}
+						}
+					}
+					umPct = 0;
+					if(umTotal > 0)
+					{
+						umPct = ((umPresent * 100) / umTotal).round(0);
+					}
+					umBadgeClass = "zcs-badge-danger";
+					umBadgeText = language.get("quorum.chart.notMet");
+					umChipClass = "zcs-chip-warning";
+					umIconSvg = "<svg width='13' height='13' viewBox='0 0 24 24' fill='none'><path d='M12 7V13' stroke='currentColor' stroke-width='2.2' stroke-linecap='round'/><circle cx='12' cy='17' r='1.4' fill='currentColor'/><path d='M12 3L22 21H2L12 3Z' stroke='currentColor' stroke-width='2'/></svg>";
+					if(um.Quorum_Status != null)
+					{
+						qsum = um.Quorum_Status + "";
+						if(qsum.equalsIgnoreCase("Met"))
+						{
+							umBadgeClass = "zcs-badge-success";
+							umBadgeText = language.get("quorum.chart.met");
+							umChipClass = "zcs-chip-success";
+							umIconSvg = "<svg width='13' height='13' viewBox='0 0 24 24' fill='none'><path d='M5 12L10 17L19 7' stroke='currentColor' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/></svg>";
+						}
+					}
+					%>
+<a class='zcs-upcoming-card' href='<%=detailUrl%>' target='_blank'>
+    <div class='zcs-uc-meeting'>
+        <div class='zcs-chip <%=umChipClass%>'><%=umIconSvg%></div>
+        <div>
+            <div>
+                <p style='margin:0;font-size:14px;font-weight:600;color:#18213d;'><%=umTitle%></p>
+                <p style='margin:0;font-size:12px;color:#74839d;'><%=umDate%></p>
+            </div>
+        </div>
+    </div>
+    <div class='zcs-uc-col'>
+        <span class='zcs-uc-val'><%=umPresent%>/<%=umTotal%></span>
+        <span class='zcs-uc-lbl'><%=language.get("quorum.upcoming.confirmed")%></span>
+    </div>
+    <div class='zcs-uc-col'>
+        <span class='zcs-uc-val'><%=umRequired%></span>
+        <span class='zcs-uc-lbl'><%=language.get("quorum.upcoming.required")%></span>
+    </div>
+    <div class='zcs-uc-col'>
+        <span class='zcs-uc-val'><%=umPct%>%</span>
+        <span class='zcs-uc-lbl'><%=language.get("quorum.upcoming.attendance")%></span>
+    </div>
+    <span class='zcs-badge <%=umBadgeClass%>'>
+        <span class='zcs-dot'></span><%=umBadgeText%>
+    </span>
+</a>
+<%
+				}
+			}
+			%>
+</div>
+<div class='zcs-pagination'>
+    <ul class='zcs-flex zcs-align-items-center zcs-justify-end zcs-gap-12 zcs-p-0 zcs-m-0'>
+        <li class='zcs-pagination-item'>
+            <span class='zcs-pagination-text zcs-flex zcs-align-items-center zcs-justify-center zcs-rounded-sm zcs-box-border zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>
+                <%=uqStartIndex%>-<%=uqEndIndex%> of <%=uqTotalCount%>
+            </span>
+        </li>
+        <li class='zcs-pagination-item'>
+            <a class='zcs-pagination-action zcs-flex zcs-align-items-center zcs-justify-center zcs-rounded-sm zcs-px-8 zcs-box-border zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary zcs-cursor-pointer <%=if(uqPrevAction == "disable","zcs-button-disable","")%>' <%=uqPrevLink%>>
+                <i class='zcs-pagination-icon zc-li-outline arrows-1-minimal-left'></i>
+            </a>
+        </li>
+        <li class='zcs-pagination-item'>
+            <a class='zcs-pagination-action zcs-flex zcs-align-items-center zcs-justify-center zcs-rounded-sm zcs-px-8 zcs-box-border zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary zcs-cursor-pointer <%=if(uqNextAction == "disable","zcs-button-disable","")%>' <%=uqNextLink%>>
+                <i class='zcs-pagination-icon zc-li-outline arrows-1-minimal-right'></i>
+            </a>
+        </li>
+    </ul>
+</div>
+<%
+		}
+		%>
+</div>
+</div>
+<%
+	}
+	else if(input.page_action == "quorumDetailview")
+	{
+		recidLong = input.recid.toLong();
+		quorumRec = Quorum_Rule[ID == recidLong];
+		recordFound = false;
+		if(quorumRec.count() > 0)
+		{
+			recordFound = true;
+		}
+		if(recordFound == false)
+		{
+			%>
+<div style='padding:24px;background:#f4f6f8;min-height:100vh;'>
+   <a href='#Page:<%=page_link_name%>' style='display:inline-flex;align-items:center;gap:6px;text-decoration:none;color:#111827;font-size:18px;font-weight:700;'>\u2190 <%=language.get("quorum.detail.back")%></a>
+   <p style='font-size:13px;color:#6b7280;margin-top:8px;'><%=language.get("quorum.detail.notFound")%> <%=input.recid%></p>
+</div>
+<%
+		}
+		else
+		{
+			ruleName = "\u2014";
+			if(quorumRec.Rule_Name != null)
+			{
+				rn = quorumRec.Rule_Name + "";
+				if(rn != "null" && !rn.isEmpty())
+				{
+					ruleName = rn;
+				}
+			}
+			effectiveDate = "\u2014";
+			if(quorumRec.Added_Time != null)
+			{
+				effectiveDate = quorumRec.Added_Time.toString("MMM dd, yyyy");
+			}
+			policyOwner = "\u2014";
+			if(quorumRec.Added_User != null)
+			{
+				po = quorumRec.Added_User.name + "";
+				if(po != "null" && !po.isEmpty())
+				{
+					policyOwner = po;
+				}
+			}
+			committeeName = "\u2014";
+			if(quorumRec.Committee != null)
+			{
+				cn = quorumRec.Committee.Committee_Name + "";
+				if(cn != "null" && !cn.isEmpty())
+				{
+					committeeName = cn;
+				}
+			}
+			ruleDesc = "";
+			if(quorumRec.Rule_Description != null)
+			{
+				rd = quorumRec.Rule_Description + "";
+				if(rd != "null" && !rd.isEmpty())
+				{
+					ruleDesc = rd;
+				}
+			}
+			userVoting = 0;
+			if(quorumRec.Minimum_Voting_Members != null)
+			{
+				uv = quorumRec.Minimum_Voting_Members + "";
+				if(uv != "null" && !uv.isEmpty())
+				{
+					userVoting = uv.toLong();
+				}
+			}
+			userTotal = 0;
+			if(quorumRec.Minimum_Total_Members != null)
+			{
+				ut = quorumRec.Minimum_Total_Members + "";
+				if(ut != "null" && !ut.isEmpty())
+				{
+					userTotal = ut.toLong();
+				}
+			}
+			userIndep = 0;
+			if(quorumRec.Minimum_Independent_Members != null)
+			{
+				ui = quorumRec.Minimum_Independent_Members + "";
+				if(ui != "null" && !ui.isEmpty())
+				{
+					userIndep = ui.toLong();
+				}
+			}
+			userNonExec = 0;
+			if(quorumRec.Minimum_Non_Executive_Members != null)
+			{
+				un = quorumRec.Minimum_Non_Executive_Members + "";
+				if(un != "null" && !un.isEmpty())
+				{
+					userNonExec = un.toLong();
+				}
+			}
+			reqVoting = 0;
+			reqIndep = 0;
+			reqNonExec = 0;
+			reqTotal = 0;
+			if(quorumRec.Committee != null)
+			{
+				committeeRec = Committee[ID == quorumRec.Committee];
+				if(committeeRec.count() > 0)
+				{
+					if(committeeRec.Minimum_Count != null)
+					{
+						mc = committeeRec.Minimum_Count + "";
+						if(mc != "null" && !mc.isEmpty())
+						{
+							reqVoting = mc.toLong();
+						}
+					}
+					if(committeeRec.Minimum_Count_Independent != null)
+					{
+						mci = committeeRec.Minimum_Count_Independent + "";
+						if(mci != "null" && !mci.isEmpty())
+						{
+							reqIndep = mci.toLong();
+						}
+					}
+					if(committeeRec.Maximum_Count_Non_Executive != null)
+					{
+						mne = committeeRec.Maximum_Count_Non_Executive + "";
+						if(mne != "null" && !mne.isEmpty())
+						{
+							reqNonExec = mne.toLong();
+						}
+					}
+					reqTotal = reqVoting + reqIndep + reqNonExec;
+				}
+			}
+			chairMandatory = false;
+			if(quorumRec.Chair_is_mandatory_for_meetings != null)
+			{
+				chairMandatory = quorumRec.Chair_is_mandatory_for_meetings;
+			}
+			chairNonExec = false;
+			if(quorumRec.Chair_must_be_non_executive != null)
+			{
+				chairNonExec = quorumRec.Chair_must_be_non_executive;
+			}
+			proxyVoting = false;
+			if(quorumRec.Allow_proxy_voting != null)
+			{
+				proxyVoting = quorumRec.Allow_proxy_voting;
+			}
+			/* Compliance status text from language */
+			validText = language.get("quorum.compliance.valid");
+			nearBreachedText = language.get("quorum.compliance.nearBreached");
+			breachedText = language.get("quorum.compliance.breached");
+			%>
+<style>
+   * { box-sizing: border-box; }
+   .zcs-qd-wrap { padding: 20px 24px; background: #f4f6f8; min-height: 100vh; }
+   .zcs-qd-back { display: inline-flex; align-items: center; gap: 6px; text-decoration: none; color: #111827; font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+   .zcs-qd-sub { font-size: 13px; color: #6b7280; margin: 0 0 18px; }
+   .zcs-qd-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 22px 26px; margin-bottom: 16px; }
+   .zcs-qd-rule-title { font-size: 20px; font-weight: 700; color: #111827; margin: 0 0 18px; }
+   .zcs-qd-meta-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; padding-top: 14px; border-top: 1px solid #f0f0f0; }
+   .zcs-qd-meta-val { font-size: 15px; font-weight: 600; color: #111827; line-height: 1.2; }
+   .zcs-qd-meta-lbl { font-size: 12px; color: #8a9ab5; margin-top: 4px; }
+   .zcs-qd-section-title { font-size: 17px; font-weight: 700; color: #111827; margin: 0 0 18px; }
+   .zcs-qd-stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+   .zcs-qd-stat-card { background: #fafbfd; border: 1px solid #e5e7eb; border-radius: 10px; padding: 22px 18px; text-align: center; }
+   .zcs-qd-stat-num { font-size: 36px; line-height: 1; font-weight: 700; color: #e8453c; letter-spacing: -0.02em; }
+   .zcs-qd-stat-name { font-size: 13px; color: #1f2937; font-weight: 600; margin-top: 12px; }
+   .zcs-qd-stat-req { font-size: 11px; color: #8a9ab5; margin-top: 3px; }
+   .zcs-qd-rule-label { font-size: 12px; color: #8a9ab5; margin: 22px 0 8px; }
+   .zcs-qd-rule-box { background: #fafbfd; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px 18px; font-size: 13px; color: #1f2937; line-height: 1.6; }
+   .zcs-qd-table { width: 100%; border-collapse: collapse; }
+   .zcs-qd-table th { text-align: left; padding: 12px 16px; background: #f7f9fd; color: #5f708a; font-size: 13px; font-weight: 600; border-bottom: 1px solid #e5e7eb; }
+   .zcs-qd-table td { padding: 16px; border-bottom: 1px solid #f3f4f6; font-size: 14px; color: #1f2937; }
+   .zcs-qd-table tr:last-child td { border-bottom: none; }
+   .zcs-qd-pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+   .zcs-qd-pill::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+   .zcs-qd-pill-valid { background: #e8fbef; color: #2a9a5f; }
+   .zcs-qd-pill-near { background: #fff3e3; color: #c98318; }
+   .zcs-qd-pill-breached { background: #fff3e3; color: #c98318; }
+   .zcs-qd-chair-card { display: flex; align-items: center; gap: 16px; padding: 16px 20px; border: 1px solid #e5e7eb; border-radius: 10px; margin-bottom: 10px; background: #fff; }
+   .zcs-qd-chair-icon { width: 40px; height: 40px; border-radius: 50%; background: #fff0f0; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+   .zcs-qd-chair-icon svg { width: 22px; height: 22px; stroke: #e8453c; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+   .zcs-qd-chair-icon-gray { background: #f3f4f6; }
+   .zcs-qd-chair-icon-gray svg { stroke: #6b7280; }
+   .zcs-qd-chair-text { flex: 1; }
+   .zcs-qd-chair-title { font-size: 15px; font-weight: 600; color: #111827; margin: 0 0 3px; }
+   .zcs-qd-chair-desc { font-size: 13px; color: #6b7280; margin: 0; }
+   .zcs-qd-status-pill { display: inline-flex; align-items: center; gap: 5px; padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 600; flex-shrink: 0; }
+   .zcs-qd-status-enabled { background: #e8fbef; color: #2a9a5f; }
+   .zcs-qd-status-enabled::before { content: '\u25CF'; font-size: 8px; }
+   .zcs-qd-status-disabled { background: #f3f4f6; color: #6b7280; }
+   .zcs-qd-status-disabled::before { content: '\u2715'; font-weight: bold; font-size: 11px; }
+</style>
+<div class='zcs-qd-wrap'>
+   <a class='zcs-qd-back' href='#Page:<%=page_link_name%>'>\u2190 <%=language.get("quorum.detail.back")%></a>
+   <p class='zcs-qd-sub'><%=language.get("quorum.subtitle")%></p>
+   <div class='zcs-qd-card'>
+      <h2 class='zcs-qd-rule-title'><%=ruleName%></h2>
+      <div class='zcs-qd-meta-row'>
+         <div>
+            <div class='zcs-qd-meta-val'><%=effectiveDate%></div>
+            <div class='zcs-qd-meta-lbl'><%=language.get("quorum.detail.effectiveDate")%></div>
+         </div>
+         <div>
+            <div class='zcs-qd-meta-val'><%=policyOwner%></div>
+            <div class='zcs-qd-meta-lbl'><%=language.get("quorum.detail.policyOwner")%></div>
+         </div>
+         <div>
+            <div class='zcs-qd-meta-val'><%=committeeName%></div>
+            <div class='zcs-qd-meta-lbl'><%=language.get("quorum.detail.committee")%></div>
+         </div>
+      </div>
+   </div>
+   <div class='zcs-qd-card'>
+      <h3 class='zcs-qd-section-title'><%=language.get("quorum.membership.title")%></h3>
+      <div class='zcs-qd-stat-grid'>
+         <div class='zcs-qd-stat-card'>
+            <div class='zcs-qd-stat-num'><%=userVoting%></div>
+            <div class='zcs-qd-stat-name'><%=language.get("quorum.membership.minVoting")%></div>
+            <div class='zcs-qd-stat-req'><%=language.get("quorum.membership.required")%></div>
+         </div>
+         <div class='zcs-qd-stat-card'>
+            <div class='zcs-qd-stat-num'><%=userTotal%></div>
+            <div class='zcs-qd-stat-name'><%=language.get("quorum.membership.minTotal")%></div>
+            <div class='zcs-qd-stat-req'><%=language.get("quorum.membership.required")%></div>
+         </div>
+         <div class='zcs-qd-stat-card'>
+            <div class='zcs-qd-stat-num'><%=userIndep%></div>
+            <div class='zcs-qd-stat-name'><%=language.get("quorum.membership.minIndependent")%></div>
+            <div class='zcs-qd-stat-req'><%=language.get("quorum.membership.required")%></div>
+         </div>
+         <div class='zcs-qd-stat-card'>
+            <div class='zcs-qd-stat-num'><%=userNonExec%></div>
+            <div class='zcs-qd-stat-name'><%=language.get("quorum.membership.minNonExecutive")%></div>
+            <div class='zcs-qd-stat-req'><%=language.get("quorum.membership.required")%></div>
+         </div>
+      </div>
+<%
+			if(!ruleDesc.isEmpty())
+			{
+				%>
+<div class='zcs-qd-rule-label'><%=language.get("quorum.membership.ruleDescription")%></div>
+      <div class='zcs-qd-rule-box'><%=ruleDesc%></div>
+<%
+			}
+			%>
+</div>
+   <div class='zcs-qd-card'>
+      <h3 class='zcs-qd-section-title'><%=language.get("quorum.compliance.title")%></h3>
+      <table class='zcs-qd-table'>
+         <thead>
+            <tr>
+               <th><%=language.get("quorum.compliance.requirement")%></th>
+               <th><%=language.get("quorum.compliance.required")%></th>
+               <th><%=language.get("quorum.compliance.current")%></th>
+               <th><%=language.get("quorum.compliance.status")%></th>
+            </tr>
+         </thead>
+         <tbody>
+<%
+			tStatusClass = "zcs-qd-pill-breached";
+			tStatusText = breachedText;
+			if(reqTotal > 0)
+			{
+				tPct = (userTotal * 100) / reqTotal;
+				if(userTotal >= reqTotal)
+				{
+					tStatusClass = "zcs-qd-pill-valid";
+					tStatusText = validText;
+				}
+				else if(tPct >= 80)
+				{
+					tStatusClass = "zcs-qd-pill-near";
+					tStatusText = nearBreachedText;
+				}
+			}
+			vStatusClass = "zcs-qd-pill-breached";
+			vStatusText = breachedText;
+			if(reqVoting > 0)
+			{
+				vPct = (userVoting * 100) / reqVoting;
+				if(userVoting >= reqVoting)
+				{
+					vStatusClass = "zcs-qd-pill-valid";
+					vStatusText = validText;
+				}
+				else if(vPct >= 80)
+				{
+					vStatusClass = "zcs-qd-pill-near";
+					vStatusText = nearBreachedText;
+				}
+			}
+			iStatusClass = "zcs-qd-pill-breached";
+			iStatusText = breachedText;
+			if(reqIndep > 0)
+			{
+				iPct = (userIndep * 100) / reqIndep;
+				if(userIndep >= reqIndep)
+				{
+					iStatusClass = "zcs-qd-pill-valid";
+					iStatusText = validText;
+				}
+				else if(iPct >= 80)
+				{
+					iStatusClass = "zcs-qd-pill-near";
+					iStatusText = nearBreachedText;
+				}
+			}
+			nStatusClass = "zcs-qd-pill-breached";
+			nStatusText = breachedText;
+			if(reqNonExec > 0)
+			{
+				nPct = (userNonExec * 100) / reqNonExec;
+				if(userNonExec >= reqNonExec)
+				{
+					nStatusClass = "zcs-qd-pill-valid";
+					nStatusText = validText;
+				}
+				else if(nPct >= 80)
+				{
+					nStatusClass = "zcs-qd-pill-near";
+					nStatusText = nearBreachedText;
+				}
+			}
+			%>
+<tr>
+               <td><%=language.get("quorum.compliance.totalMembers")%></td>
+               <td><%=reqTotal%></td>
+               <td><%=userTotal%></td>
+               <td><span class='zcs-qd-pill <%=tStatusClass%>'><%=tStatusText%></span></td>
+            </tr>
+            <tr>
+               <td><%=language.get("quorum.compliance.votingMembers")%></td>
+               <td><%=reqVoting%></td>
+               <td><%=userVoting%></td>
+               <td><span class='zcs-qd-pill <%=vStatusClass%>'><%=vStatusText%></span></td>
+            </tr>
+            <tr>
+               <td><%=language.get("quorum.compliance.independentMembers")%></td>
+               <td><%=reqIndep%></td>
+               <td><%=userIndep%></td>
+               <td><span class='zcs-qd-pill <%=iStatusClass%>'><%=iStatusText%></span></td>
+            </tr>
+            <tr>
+               <td><%=language.get("quorum.compliance.nonExecutiveMembers")%></td>
+               <td><%=reqNonExec%></td>
+               <td><%=userNonExec%></td>
+               <td><span class='zcs-qd-pill <%=nStatusClass%>'><%=nStatusText%></span></td>
+            </tr>
+         </tbody>
+      </table>
+   </div>
+   <div class='zcs-qd-card'>
+      <h3 class='zcs-qd-section-title'><%=language.get("quorum.chair.title")%></h3>
+<%
+			chairMandatoryClass = "zcs-qd-status-disabled";
+			chairMandatoryText = language.get("quorum.chair.disabled");
+			if(chairMandatory == true)
+			{
+				chairMandatoryClass = "zcs-qd-status-enabled";
+				chairMandatoryText = language.get("quorum.chair.enabled");
+			}
+			chairNonExecClass = "zcs-qd-status-disabled";
+			chairNonExecText = language.get("quorum.chair.disabled");
+			if(chairNonExec == true)
+			{
+				chairNonExecClass = "zcs-qd-status-enabled";
+				chairNonExecText = language.get("quorum.chair.enabled");
+			}
+			proxyVotingClass = "zcs-qd-status-disabled";
+			proxyVotingText = language.get("quorum.chair.disabled");
+			if(proxyVoting == true)
+			{
+				proxyVotingClass = "zcs-qd-status-enabled";
+				proxyVotingText = language.get("quorum.chair.enabled");
+			}
+			chairMandatoryIcon = "zcs-qd-chair-icon-gray";
+			if(chairMandatory == true)
+			{
+				chairMandatoryIcon = "";
+			}
+			chairNonExecIcon = "zcs-qd-chair-icon-gray";
+			if(chairNonExec == true)
+			{
+				chairNonExecIcon = "";
+			}
+			proxyIconClass = "zcs-qd-chair-icon-gray";
+			if(proxyVoting == true)
+			{
+				proxyIconClass = "";
+			}
+			%>
+<div class='zcs-qd-chair-card'>
+         <div class='zcs-qd-chair-icon <%=chairMandatoryIcon%>'>
+            <svg viewBox='0 0 24 24'><path d='M12 3l8 4v5c0 5-3.5 8.5-8 9-4.5-.5-8-4-8-9V7l8-4z'/><path d='M9 12l2 2 4-4'/></svg>
+         </div>
+         <div class='zcs-qd-chair-text'>
+            <p class='zcs-qd-chair-title'><%=language.get("quorum.chair.mandatory")%></p>
+            <p class='zcs-qd-chair-desc'><%=language.get("quorum.chair.mandatoryDesc")%></p>
+         </div>
+         <span class='zcs-qd-status-pill <%=chairMandatoryClass%>'><%=chairMandatoryText%></span>
+      </div>
+      <div class='zcs-qd-chair-card'>
+         <div class='zcs-qd-chair-icon <%=chairNonExecIcon%>'>
+            <svg viewBox='0 0 24 24'><path d='M12 3l8 4v5c0 5-3.5 8.5-8 9-4.5-.5-8-4-8-9V7l8-4z'/><path d='M9 12l2 2 4-4'/></svg>
+         </div>
+         <div class='zcs-qd-chair-text'>
+            <p class='zcs-qd-chair-title'><%=language.get("quorum.chair.nonExecutive")%></p>
+            <p class='zcs-qd-chair-desc'><%=language.get("quorum.chair.nonExecutiveDesc")%></p>
+         </div>
+         <span class='zcs-qd-status-pill <%=chairNonExecClass%>'><%=chairNonExecText%></span>
+      </div>
+      <div class='zcs-qd-chair-card'>
+         <div class='zcs-qd-chair-icon <%=proxyIconClass%>'>
+            <svg viewBox='0 0 24 24'><path d='M12 3l8 4v5c0 5-3.5 8.5-8 9-4.5-.5-8-4-8-9V7l8-4z'/><path d='M9 12l2 2 4-4'/></svg>
+         </div>
+         <div class='zcs-qd-chair-text'>
+            <p class='zcs-qd-chair-title'><%=language.get("quorum.chair.proxyVoting")%></p>
+            <p class='zcs-qd-chair-desc'><%=language.get("quorum.chair.proxyVotingDesc")%></p>
+         </div>
+         <span class='zcs-qd-status-pill <%=proxyVotingClass%>'><%=proxyVotingText%></span>
+      </div>
+   </div>
+</div>
+<%
+		}
+	}
+%>

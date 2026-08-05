@@ -1,0 +1,35 @@
+on_success72 as "on success"
+{
+
+				type =  form
+				form = Resource
+
+				record event = on add or edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Resource_Type == "External Resource")
+										{
+											user_profile = thisapp.permissions.profileForUser(input.Email);
+											if(user_profile != "Administrator" && user_profile != "Developer")
+											{
+												if(input.Enable_App_Access == true)
+												{
+													thisapp.permissions.assignUserInProfile(input.Email,input.Role.Role_Name,true);
+												}
+												else
+												{
+													thisapp.permissions.deleteUser(input.Email);
+												}
+											}
+										}
+						)
+					}
+				}
+
+			
+}

@@ -1,0 +1,36 @@
+Agenda_Status as "Agenda Status"
+{
+
+				type =  form
+				form = Filter_Form
+
+				record event = on add
+
+				on user input of Agenda_Status
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Page == "Agenda_Page")
+										{
+											reportURL = "#Report:" + input.Report + "?zc_Header=false&zc_AddRec=false&zc_ColMenu=false&zc_Footer=false";
+											parm = "";
+											if(!input.Agenda_Status.isempty())
+											{
+												parm = parm + "&Publish_option=" + input.Agenda_Status;
+											}
+											if(!input.Search_Key.isempty())
+											{
+												search_result = Agenda[Agenda_Title.containsIgnoreCase(input.Search_Key)].ID.getAll();
+												search_result = if(search_result.size() == 0,1234,search_result);
+												parm = parm + "&ID=" + encodeUrl("[" + search_result + "]") + "&ID_op=18";
+											}
+											openUrl(reportURL + parm + "&zc_LoadIn=embed-embedDiv","same window");
+										}
+						)
+					}
+				}
+
+			
+}

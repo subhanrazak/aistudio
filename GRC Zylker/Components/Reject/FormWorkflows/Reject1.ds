@@ -1,0 +1,81 @@
+Reject1 as "Reject"
+{
+
+				type =  form
+				form = Reject
+				button = Reject
+				on click
+				{
+					actions 
+					{
+					on click
+					(
+						currentUser = User[Email == zoho.loginuserid].ID;
+										if(input.Controls.size() > 0)
+										{
+											for each  control in input.Controls
+											{
+												control_Det = Control[ID == control];
+												control_Det.Approval_Status="Rejected";
+												control_Det.Comments=input.Comments;
+												if(currentUser != null)
+												{
+													control_Det.Control_Reviewer_Approver=currentUser;
+												}
+											}
+										}
+										if(input.Risk_Entries.size() > 0)
+										{
+											for each  risk in input.Risk_Entries
+											{
+												risk_Det = Risk_Entry[ID == risk];
+												risk_Det.Approval_Status="Rejected";
+												risk_Det.Comments=input.Comments;
+												if(currentUser != null)
+												{
+													risk_Det.Approved_By=currentUser;
+												}
+												for each  riskAssessment in Risk_Assessment_Libraries[Risks == risk_Det.ID]
+												{
+													riskAssessment.Approval_Status="Rejected";
+												}
+											}
+										}
+										if(input.Processes.size() > 0)
+										{
+											for each  process in input.Processes
+											{
+												process_Det = Process[ID == process];
+												process_Det.Approval_Status="Rejected";
+												process_Det.Comments=input.Comments;
+												if(currentUser != null)
+												{
+													process_Det.Approved_By=currentUser;
+												}
+											}
+										}
+										/* if(input.Risk_Assessment_Libraries.size() > 0)
+										{
+											for each  riskLib in input.Risk_Assessment_Libraries
+											{
+												riskLib_Det = Risk_Assessment_Libraries[ID == riskLib];
+												riskLib_Det.Approval_Status="Rejected";
+												riskLib_Det.Comments=input.Comments;
+												if(currentUser != null)
+												{
+													riskLib_Det.Approved_By=currentUser;
+												}
+											}
+										} */
+										if(input.Risk_Assessment != null)
+										{
+											assessmentDet = Risk_Assessment[ID == input.Risk_Assessment];
+											assessmentDet.Status="Rejected";
+											assessmentDet.Comments=input.Comments;
+										}
+										openUrl("#Script:page.refresh","same window");
+					)
+					}
+				}
+			
+}

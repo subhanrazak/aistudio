@@ -1,0 +1,41 @@
+check_start_date3 as "check start date"
+{
+
+				type =  form
+				form = Risk_Assessment_Libraries
+
+				record event = on add or edit
+
+				on user input of Start_Date
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											language = thisapp.Content.translation();
+										if(input.Scope_Type == "Risk" && input.Start_Date != null)
+										{
+											startDateVal = null;
+											endDateVal = null;
+											getProcess = input.Risks.Process;
+											for each  rec in Risk_Assessment_Libraries[Risk_Assessment == input.Risk_Assessment && Scope_Type == "Process"]
+											{
+												if(rec.Processes == getProcess)
+												{
+													startDateVal = rec.Start_Date;
+													endDateVal = rec.End_Date;
+													break;
+												}
+											}
+											if((input.End_Date != null && input.Start_Date > input.End_Date) || input.Start_Date < startDateVal || input.Start_Date > endDateVal)
+											{
+												alert language.get("grc.date.startDateAlert");
+												input.Start_Date = null;
+											}
+										}
+						)
+					}
+				}
+
+			
+}

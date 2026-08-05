@@ -1,0 +1,101 @@
+on_success8 as "on success"
+{
+
+				type =  form
+				form = Process
+
+				record event = on add or edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											input.Weightage_Display = "<style>.zcs-progress-bar { height: 8px; background-color: #E2E7EF; } .zcs-progress-bar-indicator { height: inherit; border-radius: inherit; background-color: #ef1617;</style><div class='zcs-progress-bar-wrapper zcs-flex zcs-direction-column zcs-gap-6' style='width:75px;'><p class='zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-font-14 zcs-font-medium zcs-lh-body zcs-m-0' style='display: flex;align-items: center;justify-content: center;font-size: 14px;'><span class='zcs-color-primary'>" + input.Process_Weightage + "%</span></p><div class='zcs-progress-bar zcs-rounded-sm' style='border-radius: 0.25rem;'><div class='zcs-progress-bar-indicator' style='width: " + input.Process_Weightage + "%;'></div></div></div>";
+										details_str = "<div><div style='display:flex;'><span style='font-size:13px;color:#4A5565'>#" + input.Process_ID + "</span></div><div style='color:#04204B;font-size:17px;margin-bottom:10px;'>" + input.Process_Name + "</div><div style='display:flex;'>";
+										for each  department in input.Linked_Departments
+										{
+											details_str = details_str + "<div style='border:1px solid #E6E6E6;padding:5px 8px;border-radius:6px;margin-right:7px;'>" + department.Department_Name + "</div>";
+										}
+										details_str = details_str + "</div></div>";
+										input.Process_Details = details_str;
+										objectiveStr = "<div>";
+										objectiveCount = 0;
+										for each  objective in input.Linked_Objectives
+										{
+											objectiveCount = objectiveCount + 1;
+											sizeStr = "";
+											if(objectiveCount == 2)
+											{
+												objectiveSize = input.Linked_Objectives.size();
+												objectiveSize = objectiveSize - 2;
+												if(objectiveSize > 0)
+												{
+													sizeStr = "<span style='border:1px solid #E6E6E6;padding:5px 8px;border-radius:6px;margin-bottom:7px;width: max-content !important;margin-left:6px;'> +" + objectiveSize + "</span></div>";
+												}
+											}
+											if(objectiveCount == 2 && objectiveSize > 0)
+											{
+												objectiveStr = objectiveStr + "<div style='display:flex;'>";
+											}
+											objectiveStr = objectiveStr + "<div style='border:1px solid #E6E6E6;padding:5px 8px;border-radius:6px;margin-bottom:7px;width: max-content !important;'>" + objective.Objective_Title + "</div>" + sizeStr;
+											if(objectiveCount == 2)
+											{
+												break;
+											}
+										}
+										objectiveStr = objectiveStr + "</div>";
+										input.Objectives = objectiveStr;
+										strategyStr = "<div>";
+										strategyCount = 0;
+										for each  strategy in input.Linked_Strategies
+										{
+											strategyCount = strategyCount + 1;
+											strategySizeStr = "";
+											if(strategyCount == 2)
+											{
+												strategySize = input.Linked_Strategies.size();
+												strategySize = strategySize - 2;
+												if(strategySize > 0)
+												{
+													strategySizeStr = "<span style='border:1px solid #E6E6E6;padding:5px 8px;border-radius:6px;margin-bottom:7px;width: max-content !important;margin-left:6px;'> +" + strategySize + "</span></div>";
+												}
+											}
+											if(strategyCount == 2 && strategySize > 0)
+											{
+												strategyStr = strategyStr + "<div style='display:flex;'>";
+											}
+											strategyStr = strategyStr + "<div style='border:1px solid #E6E6E6;padding:5px 8px;border-radius:6px;margin-bottom:7px;width: max-content !important;'>" + strategy.Strategy_Title + "</div>" + strategySizeStr;
+											if(strategyCount == 2)
+											{
+												break;
+											}
+										}
+										strategyStr = strategyStr + "</div>";
+										input.Strategies = strategyStr;
+										input.Risks_Display = "<style>.zcs-badge-filled-outline.zcs-badge-orange {  background-color: #F8F0EB; color: #000;  }</style><div class='zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-xl zcs-px-10 zcs-py-0 zcs-box-border zcs-badge-orange' style='border-radius: 0.75rem;padding:0 10px ; width:max-content;'><span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'> <i value='location-flag-diagonal-33' html='location-flag-diagonal-33' class='location-flag-diagonal-33 zc-li-outline' style='color:#F4660C'></i>  " + input.Associate_Risks.size() + " </span></div>";
+										input.Controls_Display = "<style>.zcs-badge-filled-outline.zcs-badge-violet { background-color: #F7EEFD; color: #000; }</style><div class='zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-xl zcs-px-10 zcs-py-0 zcs-box-border zcs-badge-violet' style='border-radius: 0.75rem;padding:0 10px ; width:max-content;'><span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'> <i value='ui-3-security' html='ui-3-security' class='ui-3-security zc-li-outline' style='color:#8200DB'></i>  " + input.Associate_Controls.size() + " </span></div>";
+										if(input.Complexity_Level == "High")
+										{
+											badgeClass = "zcs-badge-orange";
+										}
+										else if(input.Complexity_Level == "Medium")
+										{
+											badgeClass = "zcs-badge-yellow";
+										}
+										else if(input.Complexity_Level == "Very High")
+										{
+											badgeClass = "zcs-badge-red";
+										}
+										else if(input.Complexity_Level == "Low")
+										{
+											badgeClass = "zcs-badge-green";
+										}
+										input.Risk_Level_Display = "<style>.zcs-badge-filled-outline.zcs-badge-yellow {background-color: #FCF4E6; color: #FAAE13; }.zcs-badge-filled-outline.zcs-badge-green { background-color: #E4FCF3;color: #179E6C; } .zcs-badge-filled-outline.zcs-badge-red { background-color: #FDE3E6; color: #FE455D; }.zcs-badge-filled-outline.zcs-badge-orange { background-color: #F8F0EB;  color: #F4660C; }</style><div class='zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-xl zcs-px-10 zcs-py-0 zcs-box-border " + badgeClass + "' style='border-radius: 0.75rem;padding:0 10px ; width:max-content;'><span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'>" + input.Complexity_Level + " </span></div>";
+						)
+					}
+				}
+
+			
+}

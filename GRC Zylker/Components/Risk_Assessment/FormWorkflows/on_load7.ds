@@ -1,0 +1,44 @@
+on_load7 as "on load"
+{
+
+				type =  form
+				form = Risk_Assessment
+
+				record event = on add
+
+				on load
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											yearVal = zoho.currentdate.getYear();
+										monthVal = zoho.currentdate.getMonth();
+										periodList = List();
+										for each  q in {1,2,3,4}
+										{
+											if(monthVal <= q * 3)
+											{
+												periodList.add("Q" + q + " " + yearVal);
+											}
+										}
+										periodList.add("FY " + yearVal);
+										periodList.add("FY " + (yearVal + 1));
+										remaining = 6 - periodList.size();
+										for each  q in {1,2,3,4}
+										{
+											if(remaining > 0)
+											{
+												periodList.add("Q" + q + " " + (yearVal + 1));
+												remaining = remaining - 1;
+											}
+										}
+										periodList.add("Custom Period");
+										input.Assessment_Period:ui.add(periodList);
+										clear Auditors;
+						)
+					}
+				}
+
+			
+}

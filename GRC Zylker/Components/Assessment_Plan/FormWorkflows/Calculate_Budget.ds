@@ -1,0 +1,42 @@
+Calculate_Budget as "Calculate Budget"
+{
+
+				type =  form
+				form = Assessment_Plan
+
+				record event = on add or edit
+
+				on user input of Budget_Categories.Allocation
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(row.Allocation != null && input.Budget_Required != null)
+										{
+											row.Percentage=row.Allocation / input.Budget_Required * 100;
+										}
+										else
+										{
+											row.Percentage=null;
+										}
+										sumAmount = 0;
+										for each  rec in input.Budget_Categories
+										{
+											sumAmount = sumAmount + rec.Allocation;
+										}
+										input.Total_Budget_Allocated = sumAmount;
+										if(input.Total_Budget_Allocated < input.Budget_Required)
+										{
+											input.Budget_Shortfall = input.Budget_Required - input.Total_Budget_Allocated;
+										}
+										else
+										{
+											input.Budget_Shortfall = 0;
+										}
+						)
+					}
+				}
+
+			
+}

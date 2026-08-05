@@ -1,0 +1,130 @@
+get_Period as "get Period"
+{
+
+				type =  form
+				form = Risk_Assessment
+
+				record event = on add or edit
+
+				on user input of Assessment_Period
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Assessment_Period != null)
+										{
+											input.Start_Date = null;
+											input.End_Date = null;
+											if(input.Assessment_Period != "Custom Period")
+											{
+												selectedPeriod = input.Assessment_Period.toString().trim();
+												if(selectedPeriod.startsWith("Q"))
+												{
+													quarter = selectedPeriod.getPrefix(" ");
+													yearVal = selectedPeriod.getSuffix(" ").toLong();
+													if(quarter == "Q1")
+													{
+														input.Start_Date = ("01-Jan-" + yearVal).toString().toDate();
+														input.End_Date = ("31-Mar-" + yearVal).toString().toDate();
+													}
+													else if(quarter == "Q2")
+													{
+														input.Start_Date = ("01-Apr-" + yearVal).toString().toDate();
+														input.End_Date = ("30-Jun-" + yearVal).toString().toDate();
+													}
+													else if(quarter == "Q3")
+													{
+														input.Start_Date = ("01-Jul-" + yearVal).toString().toDate();
+														input.End_Date = ("30-Sep-" + yearVal).toString().toDate();
+													}
+													else if(quarter == "Q4")
+													{
+														input.Start_Date = ("01-Oct-" + yearVal).toString().toDate();
+														input.End_Date = ("31-Dec-" + yearVal).toString().toDate();
+													}
+												}
+												else if(selectedPeriod.startsWith("FY"))
+												{
+													yearVal = selectedPeriod.getSuffix(" ").toLong();
+													input.Start_Date = ("01-Jan-" + yearVal).toString().toDate();
+													input.End_Date = ("31-Dec-" + yearVal).toString().toDate();
+												}
+												if(input.Start_Date < zoho.currentdate && input.End_Date >= zoho.currentdate)
+												{
+													input.Start_Date = zoho.currentdate;
+												}
+												for each  internal in input.Internal_Resources
+												{
+													resource = Resource[ID == internal.Name];
+													hoursPerWeek = resource.Hours_per_Week;
+													totalDays = input.Start_Date.daysBetween(input.End_Date) + 1;
+													totalWeeks = totalDays / 7;
+													totalHours = totalWeeks * hoursPerWeek;
+													allocatedHours = 0;
+													for each  rec in Assessment_Plan[ID != input.ID]
+													{
+														if(rec.Start_Date <= input.End_Date && rec.End_Date >= input.Start_Date)
+														{
+															for each  res in rec.Internal_Resources
+															{
+																if(res.Name == internal.Name)
+																{
+																	allocatedHours = allocatedHours + if(res.Planned_Hours != null,res.Planned_Hours,0);
+																}
+															}
+														}
+													}
+													availability = totalHours - allocatedHours;
+													if(totalHours > 0)
+													{
+														occupancy = (allocatedHours / totalHours * 100).toNumber();
+													}
+													else
+													{
+														occupancy = 0;
+													}
+													internal.Availability=100 - occupancy;
+													internal.Occupancy=occupancy;
+												}
+												for each  external in input.External_Resources
+												{
+													exResource = Resource[ID == internal.Name];
+													hoursPerWeek = exResource.Hours_per_Week;
+													totalDays = input.Start_Date.daysBetween(input.End_Date) + 1;
+													totalWeeks = totalDays / 7;
+													totalHours = totalWeeks * hoursPerWeek;
+													allocatedHours = 0;
+													for each  rec in Assessment_Plan[ID != input.ID]
+													{
+														if(rec.Start_Date <= input.End_Date && rec.End_Date >= input.Start_Date)
+														{
+															for each  res in rec.Internal_Resources
+															{
+																if(res.Name == external.Name)
+																{
+																	allocatedHours = allocatedHours + if(res.Planned_Hours != null,res.Planned_Hours,0);
+																}
+															}
+														}
+													}
+													availability = totalHours - allocatedHours;
+													if(totalHours > 0)
+													{
+														occupancy = (allocatedHours / totalHours * 100).toNumber();
+													}
+													else
+													{
+														occupancy = 0;
+													}
+													external.Availability=100 - occupancy;
+													external.Occupancy=occupancy;
+												}
+											}
+										}
+						)
+					}
+				}
+
+			
+}

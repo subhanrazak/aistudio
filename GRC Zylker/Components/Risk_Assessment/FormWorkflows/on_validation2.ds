@@ -1,0 +1,73 @@
+on_validation2 as "on validation"
+{
+
+				type =  form
+				form = Risk_Assessment
+
+				record event = on add or edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											//actionList = {"Basic Info","Scope","Resources","Budget","Templates"};
+										language = thisapp.Content.translation();
+										if(input.Action_Field == "Scope")
+										{
+											for each  department in input.Departments
+											{
+												if(department.Departments == null)
+												{
+													alert language.get("grc.assessment.departmentAlert");
+													cancel submit;
+												}
+											}
+											for each  objective in input.Objectives
+											{
+												if(objective.Objectives == null)
+												{
+													alert language.get("grc.assessment.objectiveAlert");
+													cancel submit;
+												}
+											}
+											for each  process in input.Processes
+											{
+												if(process.Processes == null)
+												{
+													alert language.get("grc.assessment.processAlert");
+													cancel submit;
+												}
+											}
+											for each  risk in input.Risks
+											{
+												if(risk.Risks == null)
+												{
+													alert language.get("grc.assessment.riskAlert");
+													cancel submit;
+												}
+											}
+										}
+										else if(input.Action_Field == "Resource")
+										{
+											if(input.Internal_Resources.count() == 0 && input.External_Resources.count() == 0)
+											{
+												alert language.get("grc.plan.resourceAlert");
+												cancel submit;
+											}
+										}
+										else if(input.Action_Field == "Budget")
+										{
+											if(input.Budget_Categories.count() == 0)
+											{
+												alert language.get("grc.plan.budgetCategoryAlert");
+												cancel submit;
+											}
+										}
+						)
+					}
+				}
+
+			
+}

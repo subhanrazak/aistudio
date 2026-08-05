@@ -1,0 +1,99 @@
+Due_Date as "Due Date"
+{
+
+				type =  schedule
+				form = Action_Tracker[Status != "Completed"]
+				start = Due_Date at "23:59:59"
+				time zone = "Asia/Kolkata"
+				on start
+				{
+					actions 
+					{
+					on load
+					(
+						/* Action_Tracker — On Date workflow (triggers on Due_Date)
+										   Purpose: Start Level-1 escalation when action becomes overdue */
+										actRec = Action_Tracker[ID == input.ID];
+										if(actRec.Status != "Completed" && actRec.Is_Escalated == false)
+										{
+											todayNow = zoho.currenttime;
+											/* Find committee via Meeting */
+											cmId = 0;
+											if(actRec.Meeting != null)
+											{
+												mtgRec = Meeting[ID == actRec.Meeting];
+												if(mtgRec != null && mtgRec.Committee1 != null)
+												{
+													cmId = mtgRec.Committee1.ID;
+												}
+											}
+											if(cmId != 0)
+											{
+												/* Get Committee_Escalation rows for this committee */
+												cmEscRows = Committee_Escalation[Committee == cmId];
+												for each  escRow in cmEscRows
+												{
+													if(escRow.Level != null)
+													{
+														levelName = escRow.Level.Level + "";
+														if(levelName == "Level-1")
+														{
+															/* Hours for next escalation */
+															hoursNext = 0;
+															if(escRow.Hours_Next_Escalation != null)
+															{
+																hoursNext = escRow.Hours_Next_Escalation.toLong();
+															}
+															dueByTime = todayNow.addHour(hoursNext);
+															/* Member */
+															memberId = "";
+															memberName = "";
+															memberEmail = "";
+															if(escRow.Member != null)
+															{
+																memberId = escRow.Member.ID + "";
+																mbrRec = User[ID == escRow.Member];
+																if(mbrRec != null)
+																{
+																	memberName = mbrRec.Name + "";
+																	memberEmail = mbrRec.Email + "";
+																}
+															}
+															/* Insert Escalation_Tracker subform row */
+															escMap = Map();
+															escMap.put("Escalation_Level",escRow.Level.ID + "");
+															escMap.put("Role",escRow.Role.ID + "");
+															if(!memberId.isEmpty())
+															{
+																escMap.put("Escalated_To",memberId);
+															}
+															escMap.put("Escalation_Status","Pending");
+															escMap.put("Escalated_At",todayNow);
+															escMap.put("Due_By",dueByTime);
+															actRec.Escalation_Tracker.insert(escMap);
+															/* Update Action_Tracker fields */
+															actRec.Current_Escalation_Level=1;
+															actRec.Is_Escalated=true;
+															actRec.Next_Escalation_Time=dueByTime;
+															/* Send email */
+															if(memberEmail != "" && memberEmail != "null")
+															{
+																sendmail
+																[
+																	from :zoho.adminuserid
+																	to :memberEmail
+																	subject :"Escalation Alert (Level-1): " + actRec.Description
+																	message :"<p>Dear " + memberName + ",</p><p>Action item <b>" + actRec.Description + "</b> is overdue and escalated to you.</p><p>Due Date: " + actRec.Due_Date.toString("dd-MMM-yyyy") + "</p><p>Please acknowledge and take action.</p>"
+																]
+															}
+															break;
+														}
+													}
+												}
+											}
+										}
+					)
+					}
+				}
+			
+}

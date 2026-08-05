@@ -1,0 +1,44 @@
+list Process_Approvals
+{
+
+			displayName = "Process Approvals"
+			show all rows from Department_Process_Approvals    
+			(
+				Process as "Processes"
+				Status
+				Approved_By as "Approved By"
+				Department_Approvals as "Department Approvals"
+				custom action "Approve"
+				(
+	  			workflow = Process_Approve
+				show action in view header = true
+				show action in edit record menu = true
+				column header = "Approve"
+				condition = (Status == "Pending")
+				confirmation before execution
+				(
+					message for individual record = "Are you sure you want to approve the  ${Process.Process_Name}  process?"
+					message for multiple records = "Are you sure you want to approve the processes?"
+					confirm button text = "Yes"		
+					cancel button text = "No"
+				)
+				)
+				custom action "Reject"
+				(
+	  			workflow = Reject_Approval
+				show action in view header = true
+				show action in edit record menu = true
+				column header = "Reject"
+				condition = (Status == "Pending")
+				confirmation before execution
+				(
+					message for individual record = "Are you sure you want to reject the  ${Process.Process_Name}  process?"
+					message for multiple records = "Are you sure you want to reject the processes?"
+					confirm button text = "Yes"		
+					cancel button text = "No"
+				)
+				)
+				Process.Process_Name as "Name"
+			)
+		
+}

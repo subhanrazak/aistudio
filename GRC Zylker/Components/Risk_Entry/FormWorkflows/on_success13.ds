@@ -1,0 +1,57 @@
+on_success13 as "on success"
+{
+
+				type =  form
+				form = Risk_Entry
+
+				record event = on add
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											input.Risk_ID = thisapp.Get_ID("Risk",input.ID);
+										thisapp.Log.Audit_Log("Risk_Entry",input.ID,"Create",User[Email == zoho.loginuserid].ID,input.Risk_ID + " - " + input.Risk_Title);
+										riskManagerEmail = User[Role.Role_Name == "Risk Manager"].Email.getAll();
+										if(riskManagerEmail.size() > 0 && input.Risk_Owner != null)
+										{
+											sendmail
+											[
+												from :input.Risk_Owner.Email
+												to :input.Risk_Owner.Manager.Email
+												subject :"Risk Approval Required"
+												message :"<p data-start=\"67\" data-end=\"80\">Dear Manager,<br></p><p data-start=\"82\" data-end=\"167\">A risk has been submitted by the Risk Owner and is awaiting your review and approval.<br></p><div>Risk Details:<br></div><ul><li><span>Risk ID: " + input.Risk_ID + "</span><br></li><li><span><span>Risk Name: " + input.Risk_Title + "</span></span><br></li><li><span><span>Risk Owner: " + input.Risk_Owner.Name + "</span></span><br></li><li><span><span><span>Submission Date: " + zoho.currentdate + "</span></span><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></li></ul><p data-start=\"292\" data-end=\"355\">Please log in to the system to review and approve/reject the risk.<br></p><p data-start=\"357\" data-end=\"367\">Thank you.<br></p><div><br>Regards,</div><div>Risk Management Team<br><br></div><div><br></div>"
+											]
+										}
+										if(input.Risk_Assessment1 != null)
+										{
+											assessmentDet = Risk_Assessment[ID == input.Risk_Assessment1];
+											riskLib = insert into Risk_Assessment_Libraries
+											[
+												Added_User=zoho.loginuser
+												Scope_Type="Risk"
+												Risk_Assessment=input.Risk_Assessment1
+												Status="Pending"
+												Approval_Status="Pending"
+												Risks=input.ID
+												Start_Date=assessmentDet.Start_Date
+												End_Date=assessmentDet.End_Date
+											];
+											input.Risk_Assessment1 = null;
+											openUrl("#Script:page.refresh","same window");
+										}
+										else
+										{
+											input.Stepper_Stage = "Controls";
+											language = thisapp.Content.translation();
+											success message language.get("grc.success.riskInformation");
+											openUrl("#Page:Risk_Entries_Page?page_action=add&recid=" + input.ID,"same window");
+										}
+						)
+					}
+				}
+
+			
+}

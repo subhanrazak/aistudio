@@ -1,0 +1,52 @@
+validation_on_edit as "validation on edit"
+{
+
+				type =  form
+				form = Organization
+
+				record event = on edit
+
+				on validate
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											language = thisapp.Content.translation();
+										if(input.Action_Field == "")
+										{
+											if(input.Stepper_Stage == "Scale" && input.Address_Information.count() == 0)
+											{
+												alert language.get("grc.organization.addressAlert").toString();
+												cancel submit;
+											}
+											if(input.Stepper_Stage == "Address" && input.Entities.count() == 0)
+											{
+												alert language.get("grc.organization.entityAlert").toString();
+												cancel submit;
+											}
+											if(input.Stepper_Stage == "Entity")
+											{
+												if(Regulatory_Jurisdictions.count() == 0)
+												{
+													alert language.get("grc.organization.jurisdictionAlert").toString();
+													cancel submit;
+												}
+												if(Regulatory_Reporting_Requirements.count() == 0)
+												{
+													alert language.get("grc.organization.reportAlert").toString();
+													cancel submit;
+												}
+												if(Risk_Compliance_Frameworks.count() == 0)
+												{
+													alert language.get("grc.organization.frameworkAlert").toString();
+													cancel submit;
+												}
+											}
+										}
+						)
+					}
+				}
+
+			
+}

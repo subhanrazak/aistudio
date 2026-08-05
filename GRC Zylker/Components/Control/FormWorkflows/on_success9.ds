@@ -1,0 +1,97 @@
+on_success9 as "on success"
+{
+
+				type =  form
+				form = Control
+
+				record event = on add or edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											details_str = "<div><div style='display:flex;'><span style='font-size:13px;color:#4A5565'>#" + input.Control_ID_Code + "</span><div style='display:flex;'><div style='color:#4A5565;font-size:12px;margin-left: 6px;'><span style='color:#9EA0A799'>• </span>" + input.Control_Type + "</div></div></div><div style='color:#04204B;font-size:17px;margin-bottom:10px;'>" + input.Control_Name_Title + "</div><div style='display:flex;'>";
+										for each  department in input.Department
+										{
+											details_str = details_str + "<div style='border:1px solid #E6E6E6;padding:5px 8px;border-radius:6px;margin-right:7px;'>" + department.Department_Name + "</div>";
+										}
+										details_str = details_str + "</div></div>";
+										input.Control_Details = details_str;
+										input.Category_Display = "<div style='border:1px solid #E6E6E6;padding:5px 8px;border-radius:6px;'>" + input.Category.Category_Name + "</div>";
+										if(input.Control_Status == "Under Review")
+										{
+											badgeClass = "zcs-badge-yellow";
+										}
+										else if(input.Control_Status == "Inactive")
+										{
+											badgeClass = "zcs-badge-red";
+										}
+										else if(input.Control_Status == "Active")
+										{
+											badgeClass = "zcs-badge-green";
+										}
+										input.Status_Display = "<style>.zcs-badge-filled-outline.zcs-badge-yellow {background-color: #FCF4E6; color: #FAAE13; }.zcs-badge-filled-outline.zcs-badge-green { background-color: #E4FCF3;color: #179E6C; } .zcs-badge-filled-outline.zcs-badge-red { background-color: #FDE3E6; color: #FE455D; }</style><div class='zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-xl zcs-px-10 zcs-py-0 zcs-box-border " + badgeClass + "' style='border-radius: 0.75rem;padding:0 10px ; width:max-content;'><span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'>" + input.Control_Status + " </span></div>";
+										for each  risk in input.Link_Risks
+										{
+											riskDet = Risk_Entry[ID == risk];
+											overallControlValue = 0;
+											for each  control in riskDet.Link_Controls
+											{
+												totalValue = 0;
+												designValue = 0;
+												operationValue = 0;
+												if(control.Design_Effectiveness == "Highly Effective")
+												{
+													designValue = 1;
+												}
+												else if(control.Design_Effectiveness == "Effective")
+												{
+													designValue = 0.75;
+												}
+												else if(control.Design_Effectiveness == "Moderately Effective")
+												{
+													designValue = 0.5;
+												}
+												else if(control.Design_Effectiveness == "Weak")
+												{
+													designValue = 0.25;
+												}
+												else if(control.Design_Effectiveness == "Ineffective")
+												{
+													designValue = 0;
+												}
+												if(control.Operating_Effectiveness == "Highly Effective")
+												{
+													operationValue = 1;
+												}
+												else if(control.Operating_Effectiveness == "Effective")
+												{
+													operationValue = 0.75;
+												}
+												else if(control.Operating_Effectiveness == "Moderately Effective")
+												{
+													operationValue = 0.5;
+												}
+												else if(control.Operating_Effectiveness == "Weak")
+												{
+													operationValue = 0.25;
+												}
+												else if(control.Operating_Effectiveness == "Ineffective")
+												{
+													operationValue = 0;
+												}
+												totalValue = (operationValue + designValue) / 2;
+												overallControlValue = overallControlValue + totalValue;
+											}
+											avgControl = if(riskDet.Link_Controls.size() > 0,overallControlValue / riskDet.Link_Controls.size(),0);
+											riskDet.Residual_Risk_Score=if(overallControlValue > 0,(riskDet.Inherent_Score * (1 - avgControl)).toNumber(),null);
+										}
+										input.Risk_Category = Risk_Entry[ID == input.Link_Risks].distinct(Risk_Category1);
+						)
+					}
+				}
+
+			
+}

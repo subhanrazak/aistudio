@@ -1,0 +1,26 @@
+on_success12 as "on success"
+{
+
+				type =  form
+				form = Risk_Assessment
+
+				record event = on add
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											input.Assessment_ID = thisapp.Get_ID("Assessment",input.ID);
+										input.Stepper_Stage = "Scope";
+										thisapp.Log.Audit_Log("Risk_Assessment",input.ID,"Create",User[Email == zoho.loginuserid].ID,input.Assessment_ID + " - " + input.Assessment_Title);
+										language = thisapp.Content.translation();
+										success message language.get("grc.success.basicInformation");
+										openUrl("#Page:Risk_Assessment_Page?page_action=add&recid=" + input.ID,"same window");
+						)
+					}
+				}
+
+			
+}

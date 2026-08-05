@@ -1,0 +1,37 @@
+get_Resources as "get Resources"
+{
+
+				type =  form
+				form = Resource
+
+				record event = on add or edit
+
+				on user input of Resource_Type
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											if(input.Resource_Type == "Internal Resource")
+										{
+											getUsers = User[Status == "Active"].ID.getAll();
+											resourses = Resource[Resource_Type == "Internal Resource"].Internal_Resource.getAll();
+											getUsers.removeAll(resourses);
+											input.Internal_Resource:ui.add(getUsers);
+											hide Basic_Information;
+											hide Organization_Information;
+											show Internal_Resource_Details;
+										}
+										else
+										{
+											input.Internal_Resource = null;
+											show Basic_Information;
+											show Organization_Information;
+											hide Internal_Resource_Details;
+										}
+						)
+					}
+				}
+
+			
+}

@@ -1,0 +1,862 @@
+<%
+	page_link_name = "Process_Page";
+	language = thisapp.Content.translation();
+	%>
+<style>
+<%=thisapp.Styles.App_CSS()%>
+<%=thisapp.Styles.Button()%>
+<%=thisapp.Styles.Panel()%>
+<%=thisapp.Styles.Horizontal_Tab()%>
+<%=thisapp.Styles_Creator.Filter()%>
+<%=thisapp.Styles_Creator.Report_Card()%>
+<%=thisapp.Styles_Page.Common_View()%>
+</style>
+<%
+	if(input.page_action == "add")
+	{
+		actionList = {"Process Information","Risk Control Association"};
+		current_stepper = if(input.recid != null,Process[ID == input.recid].Stepper_Stage,"Process Information");
+		input.action_field = if(input.action_field.isEmpty() || input.action_field == "" || input.action_field == null || input.action_field == "null",current_stepper,input.action_field);
+		actionParam = if(input.action_field.isEmpty(),"","&Action_Field=" + input.action_field);
+		formParam = if(input.recid != null,"&recLinkID=" + input.recid + "&viewLinkName=Processes" + actionParam,actionParam);
+		previoushrefLink = if(input.action_field != "Process Information",'#Page:' + page_link_name + '?page_action=add&recid=' + input.recid + '&action_field=' + encodeUrl(actionList.get(actionList.indexOf(input.action_field) - 1)),"");
+		previoushrefAction = if(input.action_field != "Process Information","href=" + previoushrefLink,"");
+		buttonName = if(input.action_field == "Risk Control Association","Submit","Continue");
+		backurl = if(input.recid != null,"#Page:" + page_link_name + "?page_action=detailView&recid=" + input.recid,"#Page:" + page_link_name);
+		%>
+<style>
+.form-action-container {
+    position: relative;
+}
+.zc-form-footer .form-action-container .form-action.formbutton .form-label {
+    display: flex;
+    width: auto;
+    padding: 0px;
+} 
+.form-action-container label:before {
+    content: '<%=buttonName%>';
+    min-width: 75px;
+    height: 36px;
+    display: inline-block;
+    vertical-align: middle;
+    background-color: var(--theme_brand_color);
+    border-radius: var(--input_radius);
+    padding: 8px 15px;
+    font-size: 14px;
+    line-height: 17px;
+    font-weight: 400;
+    text-align: center;
+    color: var(--primary_btn_fClr);
+    cursor: pointer;
+    position: absolute;
+    top: 14px;
+    right: 30px;
+}
+.form-action-container .zc-live-primary-btn {
+    background-color: transparent;
+    color: transparent;
+    margin: 0px;
+    position: relative;
+    z-index: 1;
+}
+  .choice-table-row .choice-table-cell > span > label.choice-label-text::before {
+      position:absolute;
+  }
+    /* Visited Styles */
+    .zcs-stepper-status {
+        width: 32px;
+        height: 32px;
+        background-color: var(--zcs_brand_color);
+        
+    }
+
+    .zcs-stepper-count {
+        border: 1px solid var(--zcs_tertiary_border_color);
+        display: none;
+    }
+
+    .zcs-stepper-icon.zcs-stepper-failed {
+        display: none;
+    }
+
+    .zcs-stepper-level {
+        display: none;
+        background-color: var(--zcs_brand_color);
+    }
+
+    .zcs-stepper:not(:last-child):before {
+        content: '';
+        width: 100%;
+        height: 1px;
+        border-top: 1px solid var(--zcs_brand_color);
+        box-sizing: border-box;
+        position: absolute;
+        top: calc((32px - 1px) / 2);
+        left: 50%;
+    }
+
+    /* Active Styles */
+    .zcs-stepper-active .zcs-stepper-status {
+        border: 1px solid var(--zcs_brand_color);
+        
+        background-color: var(--zcs-white-color);
+    }
+
+    .zcs-stepper-active .zcs-stepper-count {
+        display: flex;
+        border-width: 0px;
+        color: var(--zcs_brand_color);
+    }
+
+    .zcs-stepper-active .zcs-stepper-icon {
+        display: none;
+    }
+
+    .zcs-stepper-active .zcs-stepper-text {
+        font-weight: 500;
+        color: var(--zcs_brand_color);
+    }
+
+    .zcs-stepper.zcs-stepper-active:before,
+    .zcs-stepper.zcs-stepper-active~.zcs-stepper:before {
+        border-color: var(--zcs_tertiary_border_color);
+    }
+
+    /* Stepper Failed */
+    .zcs-stepper-active.zcs-stepper-failed .zcs-stepper-status {
+        background-color: #FE455D;
+        border-color: #FE455D;
+    }
+
+    .zcs-stepper-active.zcs-stepper-failed .zcs-stepper-count {
+        display: none;
+    }
+
+    .zcs-stepper-active.zcs-stepper-failed .zcs-stepper-icon.zcs-stepper-failed {
+        display: flex;
+    }
+
+    .zcs-stepper-active.zcs-stepper-failed .zcs-stepper-text {
+        font-weight: 500;
+        color: var(--zcs_primary_text_color);
+    }
+
+    /* Level Styles */
+    .zcs-stepper-active.zcs-stepper-level-active .zcs-stepper-count,
+    .zcs-stepper-active.zcs-stepper-level-active .zcs-stepper-icon {
+        display: none;
+    }
+
+    .zcs-stepper-active.zcs-stepper-level-active .zcs-stepper-level {
+        display: flex;
+    }
+
+    /* Unvisited Styles */
+    .zcs-stepper-active~.zcs-stepper .zcs-stepper-status {
+        background-color: var(--zcs-white-color);
+    }
+
+    .zcs-stepper-active~.zcs-stepper .zcs-stepper-count {
+        display: flex;
+    }
+
+    .zcs-stepper-active~.zcs-stepper .zcs-stepper-icon {
+        display: none;
+    }
+
+    .zcs-stepper-active~.zcs-stepper .zcs-stepper-text {
+        color: var(--zcs_tertiary_text_color);
+    }
+
+    @media (max-width: 575px) {
+        .zcs-stepper-wrapper ul {
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .zcs-stepper-wrapper ul .zcs-stepper {
+            flex-direction: row;
+            gap: 16px;
+        }
+
+        .zcs-stepper:not(:last-child):before {
+            width: 1px;
+            height: 100%;
+            border-left: 1px solid var(--zcs_brand_color);
+            left: calc((32px - 1px) / 2);
+        }
+    }
+
+    .zc-rtl-wrapper .zcs-stepper:not(:last-child):before {
+        left: auto;
+        right: 50%;
+    }
+
+    @media (max-width: 575px) {
+        .zc-rtl-wrapper .zcs-stepper:not(:last-child):before {
+            border-left: 1px solid var(--zcs_brand_color);
+            left: auto;
+            right: calc((32px - 1px) / 2);
+        }
+    }
+    
+    .zcs-icon-stepper-wrapper .zcs-stepper-status {
+        width: 48px;
+        height: 48px;
+    }
+
+    .zcs-icon-stepper-wrapper .zcs-stepper:not(:last-child):before {
+        top: calc((48px - 1px) / 2);
+    }
+
+    .zcs-icon-stepper-wrapper .zcs-stepper-active .zcs-stepper-status {
+        background-color: #FFE5E6;
+    }
+
+    .zcs-icon-stepper-wrapper .zcs-stepper-active .zcs-stepper-icon {
+        display: flex;
+        color: var(--zcs_brand_color);
+    }
+
+    .zcs-icon-stepper-wrapper .zcs-stepper-active~.zcs-stepper .zcs-stepper-status {
+        background-color: #E5E7EB;
+    }
+
+    .zcs-icon-stepper-wrapper .zcs-stepper-active~.zcs-stepper .zcs-stepper-icon {
+        display: flex;
+        color: #62748E;
+    }
+
+    @media (max-width: 575px) {
+        .zcs-icon-stepper-wrapper .zcs-stepper:not(:last-child):before {
+            left: calc((48px - 1px) / 2);
+        }
+    }
+
+    @media (max-width: 575px) {
+        .zc-rtl-wrapper .zcs-icon-stepper-wrapper .zcs-stepper:not(:last-child):before {
+            right: calc((48px - 1px) / 2);
+        }
+    }
+
+
+.zcs-page-container { background-color: #F5F6FA; } .zcs-back:hover { color: #131635; }
+.zcs-card {
+    box-shadow: 0px 0px 6px 0px #E6E6E6;
+}
+/* .zcs-stepper-wrapper {
+    border-bottom: 1px solid #e7e7ee;
+} */
+.zcs-wizard-page .zcs-form .zc-form-fullheight, .zcs-wizard-page .zcs-form .row, .zcs-wizard-page .zcs-form .form-outer-wrapper form.form-table { width: 100%; height: 100%; background-color: transparent; } .zcs-wizard-page .zcs-form .zc-form-fullheight .form-outer-wrapper { height: 100% !important; border-width: 0px; background-color: transparent; } .zcs-wizard-page .zcs-form .form-outer-wrapper form.form-table { display: flex; flex-direction: column; } .zcs-wizard-page .zcs-form .form-outer-wrapper .zc-mobile-scroll-ctr { display: flex; flex-direction: column; height: 100%; padding: 0px; } .zcs-wizard-page .zcs-form form .zc-form-scroll-wrapper { background-color: var(--zcs-white-color); border: 1px solid #e7e7ee; border-radius: 12px; box-shadow: 0px 0px 6px 0px #E6E6E6; padding: 20px; box-sizing: border-box; } .zcs-page-container.zcs-wizard-page .zcs-form .zc-form-fullheight .form-outer-wrapper .form-table .formContainer { flex: 1; padding: 20px 10%; box-sizing: border-box; overflow: auto; background-color: transparent; } .zcs-wizard-page .zcs-form form .zc-footer-wrapper .zc-form-footer .formbutton { display: flex; align-items: center; padding: 20px 30px; box-sizing: border-box; justify-content: end; }
+
+@media (max-width: 768px) {
+    body:not(.zc-mobile) .zcs-page-container, body:not(.zc-mobile) .zcs-page-container-inner { height: auto; }
+    .zcs-wizard-page .zcs-page-header,
+    .zc-mobile .zcs-page-container.zcs-wizard-page .zcs-form .zc-form-fullheight .form-outer-wrapper .form-table .formContainer,
+    .zc-mobile .zcs-wizard-page .zcs-form form .zc-footer-wrapper .zc-form-footer .formbutton {
+        padding: 16px 20px;
+    }
+/*  .zcs-page-content {
+        padding: 0px 20px 20px;
+    } */
+    body:not(.zc-mobile) .zcs-card {
+        background-color: transparent;
+        border-color: transparent;
+    }
+    body:not(.zc-mobile) .zcs-stepper-wrapper {
+        border-bottom-width: 0px;
+    }
+}
+@media (max-width: 575px) {
+    .zcs-stepper-wrapper ul {
+        flex-direction: row;
+    }
+    .zcs-stepper-wrapper ul .zcs-stepper {
+        flex-direction: column;
+    }
+    .zcs-stepper-text {
+        display: none;
+    }
+    .zcs-stepper:not(:last-child):before {
+        width: 100%;
+        height: 1px;
+        top: calc((32px - 1px) / 2);
+        left: 50%;
+    }
+}
+.zcs-form .zc-footer-wrapper{
+     background-color: var(--zcs-white-color);
+       
+}
+.zcs-button-disable
+{
+    color:#99A1AF !important;
+}
+</style>
+<div class='zcs-page-container zcs-wizard-page zcs-wh-full'>
+    <div class='zcs-page-container-inner zcs-wh-full zcs-flex zcs-direction-column'>
+
+<div class='zcs-page-header zcs-w-full zcs-flex  zcs-gap-8 zcs-px-30 zcs-py-24 zcs-box-border'>
+
+            <a href="<%=backurl%>" class="zcs-back">
+					<i class="zcs-back-icon zcs-font-22 zcs-color-tertiary fa fa-angle-left"></i>
+				</a>
+			<div class='zcs-flex zcs-direction-column zcs-gap-6'>
+			<h5 class='zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-ellipsis zcs-m-0'> <%=language.get("grc.process.addProcess")%> </h5>
+			<p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-ellipsis zcs-m-0'> <%=language.get("grc.assessment.processIdentificationSubHeader")%> </p>
+			</div>
+        </div>
+        <div class='zcs-page-content zcs-col-common zcs-overflow-auto'>
+            <div class='zcs-wh-full zcs-flex zcs-direction-column zcs-box-border zcs-overflow-hidden zcs-relative'>
+			
+			<div class='zcs-stepper-wrapper zcs-icon-stepper-wrapper'>
+    <ul class='zcs-flex zcs-gap-8 zcs-p-0 zcs-m-0'>
+<%
+		stepCount = 1;
+		iconList = {"travel-hotel","users-multiple-19"};
+		for each  step in actionList
+		{
+			currentStage = if(input.recid != null,Process[ID == input.recid].Stepper_Stage,"Process Information");
+			getIndex = actionList.indexOf(currentStage) + 1;
+			ahrefAction = "";
+			if(stepCount <= getIndex)
+			{
+				ahrefLink = '#Page:' + page_link_name + '?page_action=add&recid=' + input.recid + '&action_field=' + encodeUrl(step);
+				ahrefAction = "href=" + ahrefLink;
+			}
+			%>
+<a class='zcs-stepper zcs-col-common zcs-flex zcs-direction-column zcs-align-items-center zcs-gap-4 zcs-text-center zcs-relative <%=if(step == input.action_field,"zcs-stepper-active","")%>' <%=ahrefAction%> >
+							<div class='zcs-stepper-status zcs-flex zcs-direction-column zcs-align-items-center zcs-justify-center zcs-rounded-half zcs-text-center zcs-relative zcs-box-border zcs-relative'>
+                <i class='zcs-stepper-icon zcs-font-18 zcs-font-semibold zcs-color-white zc-li-outline <%=iconList.get(stepCount - 1)%>'></i>
+            </div>
+            <span class='zcs-stepper-text zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'> <%=if(step == "Risk Control Association","Risk & Control Association",step)%></span>
+						
+						
+							</a>
+<%
+			stepCount = stepCount + 1;
+		}
+		%>
+</ul>
+</div>
+			
+
+				<div class='zcs-col-common zcs-overflow-auto'>
+					<div class='zcs-form' zc_MobileView='inline' elName='zc-component' formLinkName='Process' params='zc_Header=false&zc_Focus=false<%=formParam%>'></div>
+				</div>
+				<a class='zcs-button zcs-secondary-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body'
+    <%=previoushrefAction%> style='position: absolute;bottom: 14px;left: 40px;'>
+	<span class='zcs-button-text <%=if(input.action_field == "Process Information","zcs-button-disable","")%>'> <%=language.get("grc.button.previous")%> </span>
+</a>
+            </div>
+        </div>
+
+</div>
+</div>
+<%
+	}
+	else if(input.page_action == "detailView")
+	{
+		processDet = Process[ID == input.recid];
+		tab_map = thisapp.Page.Get_Tabs(page_link_name);
+		tab_keys = tab_map.keys();
+		input.tab = if(input.tab != "" && input.tab != "null" && input.tab != null,input.tab,tab_keys.get(0));
+		%>
+<style>
+<%=thisapp.Styles.Badge()%>
+<%=thisapp.Styles.Progress_Bar()%>
+<%=thisapp.Styles.Divider()%>
+<%=thisapp.Styles.Label_Value()%>
+<%=thisapp.Styles.Avatar()%>
+		.zcs-page-container {
+	background-color: var(--zcs-page-bg-color);
+}
+.zcs-bg-grey {
+	background-color: #F9FAFC;
+}
+.zcs-bg-blue {
+	background-color: #F9FAFC;
+}
+.zcs-green-box {
+    border: 1px solid #D0FAE5;
+    color: #008000;
+}
+.zcs-blue-box {
+    border: 1px solid #DBEAFE;
+	background-color: #EFF6FF;
+    color: #1C398E;
+}
+.zcs-grey-box {
+    border: 1px solid #E2E8F0;
+	background-color: #F8FAFC;
+    color: #155DFC;
+}
+.zcs-red-box {
+    border: 1px solid #FFE4E6;
+    color: #EC003F;
+}
+.zcs-grid {
+	display: grid !important;
+}
+@media (max-width: 768px) {
+	.zcs-page-container .zcs-button {
+		min-width: 36px;
+	}
+	.zcs-page-container .zcs-button .zcs-button-text {
+		 display: none;
+	}
+	.zcs-page-fleet_driver .zcs-left-content,
+	.zcs-page-fleet_driver .zcs-right-content {
+		height: auto;
+		overflow: initial;
+	}
+}
+.zcs-icon-wrapper {
+    width: 32px;
+    height: 32px;
+    background-color: #FEE2E2;
+    color: #FB2C36;
+}
+		</style>
+	<div class='zcs-page-container zcs-page-fleet_driver zcs-wh-full'>
+          <div class='zcs-page-container-inner zcs-wh-full zcs-flex zcs-direction-column'>
+              <div class='zcs-page-header zcs-w-full zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-8 zcs-px-30 zcs-py-24 zcs-box-border'>
+			         <div class='zcs-flex zcs-gap-16 zcs-ellipsis'>
+							<a class='zcs-back' href='#Page:<%=page_link_name%>'>
+								<i class='zcs-back-icon zcs-font-22 zcs-color-tertiary fa fa-angle-left'></i>
+							</a>
+							<div class='zcs-flex zcs-direction-column zcs-gap-6 zcs-ellipsis'>
+								<div class='zcs-row zcs-align-items-center zcs-gap-8'>
+									<h5 class='zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-ellipsis zcs-m-0'> <%=processDet.Process_Name%> </h5>
+
+								</div>
+								
+								<p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'>
+									 ID: <%=processDet.Process_ID%> 
+								</p>
+								
+							</div>
+						</div>
+						<div class='zcs-flex zcs-align-items-center zcs-gap-12'>
+<%
+		if(thisapp.permission.app_access("risk_Management_Library_Button") == true)
+		{
+			%>
+<a href='#Page:<%=page_link_name%>?page_action=add&recid=<%=processDet.ID%>&action_field=<%=encodeUrl("Process Information")%>' class='zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body'>
+								<i class='zcs-button-icon zc-li-outline ui-1-edit-72'></i>
+								<span class='zcs-button-text'> <%=language.get("grc.edit.text")%> </span>
+							</a>
+<%
+		}
+		%>
+</div>
+			  </div>
+			   <div class='zcs-page-content zcs-col-common zcs-overflow-auto zcs-px-20 zcs-pb-20 zcs-box-border'>
+			         <div class='zcs-grid zcs-gap-20 zcs-w-full zcs-mt-15' style='grid-template-columns: calc(33.3333333333% - var(--column-gap) * 0.6666666667) calc(66.6666666667% - var(--column-gap) * 0.3333333333);'>
+					        <div class='zcs-left-content zcs-h-full zcs-overflow-auto zcs-col-sm-12 zcs-flex zcs-direction-column zcs-gap-20'>
+							   <div class="zcs-card zcs-flex zcs-direction-column zcs-gap-12 zcs-p-16 zcs-box-border zcs-h-full">
+										<h6 class="zcs-font-16 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0"> <%=language.get("grc.process.basicDetails")%> </h6>
+										<div class="zcs-divider zcs-divider-horizontal"></div>
+											<div class="zcs-flex zcs-direction-column zcs-gap-20 zcs-justify-space-around" style='flex: 1;'>
+											  <div class="zcs-row">
+											         <div class='zcs-left-content zcs-h-full zcs-col-6 zcs-col-sm-12 zcs-flex zcs-direction-column zcs-gap-8'>
+													     <label class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary'><%=language.get("grc.process.processOwner")%></label>
+														 <span class='zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'> <span class='zcs-p-5 zcs-rounded-half zcs-mr-8' style='box-sizing: border-box; color: var(--zcs_brand_color); background: rgb(from var(--zcs_brand_color) r g b / 0.2); display: inline-flex; width: 24px; height: 24px; justify-content: center; align-items: center;'><%=thisapp.Content.letterGenerate(processDet.Process_Owner.Name)%> </span> <%=processDet.Process_Owner.Name%></span>
+													 </div>
+													 <div class='zcs-right-content zcs-h-full zcs-overflow-auto zcs-col-6 zcs-col-sm-12 zcs-flex zcs-direction-column zcs-gap-8'>
+													     <label class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary'><%=language.get("grc.process.processType")%></label>
+														  <span class='zcs-row zcs-gap-8 zcs-align-items-center zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'><svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g clip-path="url(#clip0_990_19958)">
+<path d="M7.48443 1.27122C7.33244 1.20189 7.16732 1.16602 7.00026 1.16602C6.8332 1.16602 6.66809 1.20189 6.5161 1.27122L1.51693 3.54622C1.41342 3.59187 1.32541 3.66662 1.26363 3.76139C1.20184 3.85616 1.16895 3.96684 1.16895 4.07997C1.16895 4.1931 1.20184 4.30379 1.26363 4.39856C1.32541 4.49332 1.41342 4.56808 1.51693 4.61372L6.52193 6.89456C6.67393 6.96389 6.83904 6.99977 7.0061 6.99977C7.17316 6.99977 7.33827 6.96389 7.49026 6.89456L12.4953 4.61956C12.5988 4.57391 12.6868 4.49916 12.7486 4.40439C12.8104 4.30962 12.8432 4.19894 12.8432 4.08581C12.8432 3.97268 12.8104 3.86199 12.7486 3.76722C12.6868 3.67246 12.5988 3.5977 12.4953 3.55206L7.48443 1.27122Z" stroke="#90A1B9" stroke-width="1.16667" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M1.16699 7C1.16672 7.11157 1.19844 7.22088 1.25841 7.31497C1.31838 7.40906 1.40407 7.48397 1.50533 7.53083L6.52199 9.81167C6.67319 9.88013 6.83726 9.91555 7.00324 9.91555C7.16922 9.91555 7.33329 9.88013 7.48449 9.81167L12.4895 7.53667C12.5927 7.49026 12.6803 7.4148 12.7414 7.31951C12.8025 7.22422 12.8346 7.1132 12.8337 7" stroke="#90A1B9" stroke-width="1.16667" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M1.16699 9.91699C1.16672 10.0286 1.19844 10.1379 1.25841 10.232C1.31838 10.326 1.40407 10.401 1.50533 10.4478L6.52199 12.7287C6.67319 12.7971 6.83726 12.8325 7.00324 12.8325C7.16922 12.8325 7.33329 12.7971 7.48449 12.7287L12.4895 10.4537C12.5927 10.4072 12.6803 10.3318 12.7414 10.2365C12.8025 10.1412 12.8346 10.0302 12.8337 9.91699" stroke="#90A1B9" stroke-width="1.16667" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+<defs>
+<clipPath id="clip0_990_19958">
+<rect width="14" height="14" fill="white"/>
+</clipPath>
+</defs>
+</svg>
+<%=processDet.Process_Type%></span>
+													 </div>
+											  </div>
+											  <div class="zcs-row">
+											  <div class='zcs-left-content zcs-h-full zcs-overflow-auto zcs-col-6 zcs-col-sm-12 zcs-flex zcs-direction-column zcs-gap-8'>
+													     <label class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary'><%=language.get("grc.objective.lastReview")%></label>
+														 
+														  <span class='zcs-row zcs-gap-8 zcs-align-items-center zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'><svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M4.66699 1.16699V3.50033" stroke="#90A1B9" stroke-width="1.16667" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M9.33301 1.16699V3.50033" stroke="#90A1B9" stroke-width="1.16667" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M11.0833 2.33301H2.91667C2.27233 2.33301 1.75 2.85534 1.75 3.49967V11.6663C1.75 12.3107 2.27233 12.833 2.91667 12.833H11.0833C11.7277 12.833 12.25 12.3107 12.25 11.6663V3.49967C12.25 2.85534 11.7277 2.33301 11.0833 2.33301Z" stroke="#90A1B9" stroke-width="1.16667" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M1.75 5.83301H12.25" stroke="#90A1B9" stroke-width="1.16667" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
+<%=processDet.Last_Review_Date%></span>
+													 </div>
+													 <div class='zcs-right-content zcs-h-full zcs-overflow-auto zcs-col-6 zcs-col-sm-12 zcs-flex zcs-direction-column zcs-gap-8'>
+													     <label class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary'><%=language.get("grc.objective.nextReview")%></label>
+														  <span class='zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'><%=processDet.Next_Review_Date%></span>
+													 </div>
+											  </div>
+											</div>
+								</div>
+							
+							</div>
+							<div class='zcs-right-content zcs-h-full zcs-overflow-auto zcs-col-sm-12 zcs-flex zcs-direction-column zcs-gap-20'>
+										<div class="zcs-card zcs-flex zcs-direction-column zcs-gap-12 zcs-p-16 zcs-box-border zcs-h-full">
+										<h6 class="zcs-font-16 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0"> <%=language.get("grc.process.criticalityAssessment")%> </h6>
+										<div class="zcs-divider zcs-divider-horizontal"></div>
+										<div class="zcs-flex zcs-direction-column zcs-gap-20">
+											<div class="zcs-progress-bar-wrapper zcs-flex zcs-direction-column zcs-gap-6">
+												<p class="zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-8 zcs-font-14 zcs-font-medium zcs-lh-body zcs-m-0">
+													<span class="zcs-color-primary">
+														<%=language.get("grc.process.riskWeightage")%>
+														
+													</span>
+													<span class="zcs-font-30 zcs-color-primary">
+													<%=if(processDet.Process_Weightage != null,processDet.Process_Weightage.toNumber(),"")%>
+													</span>
+												</p>
+												<div class="zcs-progress-bar zcs-rounded-sm">
+												<div class="zcs-progress-bar-indicator" style="width:<%=if(processDet.Process_Weightage != null,processDet.Process_Weightage,0)%>%;"></div>
+												</div>
+											</div>
+											<div class="zcs-row zcs-gap-20">
+												<div class="zcs-col-4 zcs-col-sm-12 zcs-bg-grey zcs-rounded-md zcs-p-16 zcs-box-border">
+													<div class="zcs-flex zcs-direction-column zcs-align-items-center zcs-gap-4">
+														<p class="zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-secondary zcs-m-0"> <%=language.get("grc.process.frequency")%> </p>
+														<h6 class="zcs-font-16 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0"> <%=if(processDet.Frequency != null && processDet.Frequency != "",processDet.Frequency,"-")%> </h6>
+													</div>
+												</div>
+												<div class="zcs-col-4 zcs-col-sm-12 zcs-bg-grey zcs-rounded-md zcs-p-16 zcs-box-border">
+													<div class="zcs-flex zcs-direction-column zcs-align-items-center zcs-gap-4">
+														<p class="zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-secondary zcs-m-0"> <%=language.get("grc.process.complexity")%> </p>
+														<h6 class="zcs-font-16 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0"><%=if(processDet.Complexity_Level != null && processDet.Complexity_Level != "",processDet.Complexity_Level,"-")%>  </h6>
+													</div>
+												</div>
+												<div class="zcs-col-4 zcs-col-sm-12 zcs-bg-grey zcs-rounded-md zcs-p-16 zcs-box-border">
+													<div class="zcs-flex zcs-direction-column zcs-align-items-center zcs-gap-4">
+														<p class="zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-secondary zcs-m-0"> <%=language.get("grc.process.assessedOn")%> </p>
+														<h6 class="zcs-font-16 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0"> <%=if(processDet.Last_Review_Date != null,processDet.Last_Review_Date.daysBetween(zoho.currentdate) + " days","-")%> </h6>
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+							</div>
+					 </div>
+			          <div class='zcs-grid zcs-gap-20 zcs-w-full zcs-mt-15' style='grid-template-columns: calc(66.6666666667% - var(--column-gap) * 0.3333333333) calc(33.3333333333% - var(--column-gap) * 0.6666666667);'>
+					        <div class='zcs-left-content zcs-h-full zcs-overflow-auto zcs-col-sm-12 zcs-flex zcs-direction-column zcs-gap-20'>
+							
+							<div class="zcs-card zcs-flex zcs-direction-column zcs-gap-12 zcs-p-16 zcs-box-border zcs-h-full">
+							
+							<div class='zcs-horizontal-tabpanel zcs-flex zcs-direction-column zcs-wh-full'>
+							
+							 <ul class='zcs-horizontal-tabhead zcs-flex zcs-gap-12 zcs-px-10 zcs-py-0 zcs-m-0 zcs-box-border'>
+<%
+		for each  tab_id in tab_keys
+		{
+			class_name = if(input.tab == tab_id,"zcs-horizontal-tabitem zcs-horizontal-tabactive'","zcs-horizontal-tabitem");
+			getLinkedTabCount = if(tab_id == "Risk",processDet.Associate_Risks.size(),processDet.Associate_Controls.size());
+			%>
+<li class='<%=class_name%>'> <a class='zcs-horizontal-tablink zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-10 zcs-py-12 zcs-box-border zcs-font-medium zcs-lh-body zcs-color-secondary' href='#Page:<%=page_link_name%>?tab=<%=tab_id%>&page_action=detailView&recid=<%=input.recid%>'><span class="zcs-horizontal-tab-text"> <%=tab_map.get(tab_id).get("Display")%>(<%=getLinkedTabCount%>)</span> </a> </li>
+<%
+		}
+		%>
+</ul>
+ <div class='zcs-horizontal-tabbody zcs-col-common zcs-flex zcs-direction-column zcs-mt-20'>
+<%
+		if(input.tab == "Risk")
+		{
+			%>
+<ul class="zcs-flex zcs-direction-column zcs-gap-16 zcs-m-0 zcs-p-0 zcs-overflow-auto" style='height:350px;'>
+<%
+			if(processDet.Associate_Risks.size() > 0)
+			{
+				for each  risk in processDet.Associate_Risks
+				{
+					riskDet = Risk_Entry[ID == risk];
+					riskColor = riskDet.Risk_Level.Color_Code;
+					backgroundColor = riskColor + "26";
+					%>
+<a class="zcs-checked-li zcs-bg-grey zcs-flex zcs-gap-16 zcs-rounded-md zcs-p-24 zcs-box-border" style='border: 1px solid #F1F5F9;' href='#Page:Risk_Entries_Page?page_action=detailView&recid=<%=riskDet.ID%>' target='_blank'>
+										
+										<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M14.4866 12.0005L9.15329 2.66714C9.037 2.46194 8.86836 2.29127 8.66457 2.17252C8.46078 2.05378 8.22915 1.99121 7.99329 1.99121C7.75743 1.99121 7.52579 2.05378 7.322 2.17252C7.11822 2.29127 6.94958 2.46194 6.83329 2.66714L1.49995 12.0005C1.38241 12.204 1.32077 12.4351 1.32129 12.6701C1.32181 12.9052 1.38447 13.136 1.50292 13.339C1.62136 13.5421 1.79138 13.7102 1.99575 13.8264C2.20011 13.9425 2.43156 14.0026 2.66662 14.0005H13.3333C13.5672 14.0002 13.797 13.9385 13.9995 13.8213C14.202 13.7042 14.3701 13.5359 14.487 13.3332C14.6038 13.1306 14.6653 12.9007 14.6653 12.6668C14.6652 12.4329 14.6036 12.2031 14.4866 12.0005Z" stroke="<%=riskColor%>" stroke-width="1.33333" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M8 6V8.66667" stroke="<%=riskColor%>" stroke-width="1.33333" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M8 11.333H8.00667" stroke="<%=riskColor%>" stroke-width="1.33333" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
+
+										<div class="zcs-col-common zcs-flex zcs-direction-column zcs-gap-8">
+											<h6 class="zcs-font-16 zcs-font-normal zcs-lh-body zcs-color-primary zcs-m-0"> <%=riskDet.Risk_Title%> </h6>
+											
+											<div class="zcs-flex zcs-align-items-center zcs-gap-8">
+											     <span class="zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0"> <%=riskDet.Risk_Category1.Category_Name%> </span>
+												<div class="zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-2xl zcs-px-10 zcs-py-2 zcs-box-border " style='border: none !important;color:<%=riskColor%>;background:<%=backgroundColor%>'>
+													<span class="zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body"> <i class="location-flag-diagonal-33 zc-li-solid" value="location-flag-diagonal-33"></i> <%=riskDet.Risk_Level.Label%> </span>
+												</div>
+												
+											</div>
+										</div>
+									</a>
+<%
+				}
+			}
+			else
+			{
+				%>
+<%=thisapp.Page.noData()%>
+<%
+			}
+			%>
+</ul>
+<%
+		}
+		else if(input.tab == "Control")
+		{
+			%>
+<ul class="zcs-flex zcs-direction-column zcs-gap-16 zcs-m-0 zcs-p-0 zcs-overflow-auto" style='height:350px;'>
+<%
+			if(processDet.Associate_Controls.size() > 0)
+			{
+				for each  control in processDet.Associate_Controls
+				{
+					controlDet = Control[ID == control];
+					if(controlDet.Control_Status == "Active")
+					{
+						badgeClass = "zcs-badge-green";
+						controlColor = "#179E6C";
+					}
+					else if(controlDet.Control_Status == "Inactive")
+					{
+						badgeClass = "zcs-badge-red";
+						controlColor = "#FE455D";
+					}
+					else if(controlDet.Control_Status == "Under Review")
+					{
+						badgeClass = "zcs-badge-yellow";
+						controlColor = "#FAAE13";
+					}
+					%>
+<a class="zcs-checked-li zcs-bg-grey zcs-flex zcs-gap-16 zcs-rounded-md zcs-p-24 zcs-box-border" style='border: 1px solid #F1F5F9;' href='#Page:Controls_Page?page_action=detailView&recid=<%=controlDet.ID%>' target='_blank'>
+										
+										<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M14.4866 12.0005L9.15329 2.66714C9.037 2.46194 8.86836 2.29127 8.66457 2.17252C8.46078 2.05378 8.22915 1.99121 7.99329 1.99121C7.75743 1.99121 7.52579 2.05378 7.322 2.17252C7.11822 2.29127 6.94958 2.46194 6.83329 2.66714L1.49995 12.0005C1.38241 12.204 1.32077 12.4351 1.32129 12.6701C1.32181 12.9052 1.38447 13.136 1.50292 13.339C1.62136 13.5421 1.79138 13.7102 1.99575 13.8264C2.20011 13.9425 2.43156 14.0026 2.66662 14.0005H13.3333C13.5672 14.0002 13.797 13.9385 13.9995 13.8213C14.202 13.7042 14.3701 13.5359 14.487 13.3332C14.6038 13.1306 14.6653 12.9007 14.6653 12.6668C14.6652 12.4329 14.6036 12.2031 14.4866 12.0005Z" stroke="<%=controlColor%>" stroke-width="1.33333" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M8 6V8.66667" stroke="<%=controlColor%>" stroke-width="1.33333" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M8 11.333H8.00667" stroke="<%=controlColor%>" stroke-width="1.33333" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
+
+										<div class="zcs-col-common zcs-flex zcs-direction-column zcs-gap-8">
+											<h6 class="zcs-font-16 zcs-font-normal zcs-lh-body zcs-color-primary zcs-m-0"> <%=controlDet.Control_Name_Title%> </h6>
+											
+											<div class="zcs-flex zcs-align-items-center zcs-gap-8">
+											     <span class="zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0"> <%=controlDet.Control_Type%> </span>
+												<div class="zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-2xl zcs-px-10 zcs-py-2 zcs-box-border <%=badgeClass%>" style='border: none !important;'>
+													<span class="zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body"> <i class="location-flag-diagonal-33 zc-li-solid" value="location-flag-diagonal-33"></i> <%=controlDet.Control_Status%> </span>
+												</div>
+												
+											</div>
+										</div>
+									</a>
+<%
+				}
+			}
+			else
+			{
+				%>
+<%=thisapp.Page.noData()%>
+<%
+			}
+			%>
+</ul>
+<%
+		}
+		%>
+</div>
+</div>
+										
+										
+							</div>
+							
+							</div>
+							<div class='zcs-right-content zcs-h-full zcs-overflow-auto zcs-col-sm-12 zcs-flex zcs-direction-column zcs-gap-20'>
+							
+							   <div class="zcs-card zcs-flex zcs-direction-column zcs-gap-12 zcs-p-16 zcs-box-border zcs-h-full" style='height:450px;'>
+										<h6 class="zcs-font-16 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0"> <%=language.get("grc.process.organizationalScope")%> </h6>
+										<div class="zcs-divider zcs-divider-horizontal"></div>
+										
+										<div class='zcs-flex zcs-direction-column zcs-gap-12 zcs-overflow-auto' >
+										<div class="zcs-flex zcs-direction-column zcs-gap-16">
+								<h6 class="zcs-font-14 zcs-font-normal zcs-lh-heading zcs-color-tertiary zcs-m-0"> <%=language.get("grc.process.departments")%>(<%=processDet.Linked_Departments.size()%>) </h6>
+								<div class="zcs-row zcs-gap-12">
+<%
+		for each  department in processDet.Linked_Departments
+		{
+			%>
+<div class="zcs-bg-grey zcs-rounded-md zcs-px-12 zcs-py-6 zcs-box-border">
+										<span class="zcs-badge-text zcs-font-12 zcs-font-normal zcs-lh-body"> <%=department.Department_Name%> </span>
+									</div>
+<%
+		}
+		%>
+</div>
+							</div>
+							<div class='zcs-flex zcs-direction-column zcs-gap-16'>
+							<h6 class="zcs-font-14 zcs-font-normal zcs-lh-heading zcs-color-tertiary zcs-m-0"> <%=language.get("grc.process.linkedStrategies")%> (<%=processDet.Linked_Strategies.size()%>) </h6>
+							<div class="zcs-row zcs-gap-12">
+<%
+		for each  strategy in processDet.Linked_Strategies
+		{
+			%>
+<a class="zcs-card zcs-border-box zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-8 zcs-rounded-xl zcs-p-8 zcs-box-border" href='#Page:Strategy_Page?page_action=detailView&recid=<%=strategy.ID%>' target='_blank'>
+<svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g clip-path="url(#clip0_990_20143)">
+<path d="M7.00033 12.8337C10.222 12.8337 12.8337 10.222 12.8337 7.00033C12.8337 3.77866 10.222 1.16699 7.00033 1.16699C3.77866 1.16699 1.16699 3.77866 1.16699 7.00033C1.16699 10.222 3.77866 12.8337 7.00033 12.8337Z" stroke="#90A1B9" stroke-width="1.16667" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M7 10.5C8.933 10.5 10.5 8.933 10.5 7C10.5 5.067 8.933 3.5 7 3.5C5.067 3.5 3.5 5.067 3.5 7C3.5 8.933 5.067 10.5 7 10.5Z" stroke="#90A1B9" stroke-width="1.16667" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M6.99967 8.16634C7.64401 8.16634 8.16634 7.64401 8.16634 6.99967C8.16634 6.35534 7.64401 5.83301 6.99967 5.83301C6.35534 5.83301 5.83301 6.35534 5.83301 6.99967C5.83301 7.64401 6.35534 8.16634 6.99967 8.16634Z" stroke="#90A1B9" stroke-width="1.16667" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+<defs>
+<clipPath id="clip0_990_20143">
+<rect width="14" height="14" fill="white"/>
+</clipPath>
+</defs>
+</svg>
+
+							<p class="zcs-font-12 zcs-font-normal zcs-lh-body zcs-m-0" style='color:#314158;'> <%=strategy.Strategy_Title%> </p>
+						</a>
+<%
+		}
+		%>
+</div>
+</div>
+							<div class="zcs-flex zcs-direction-column zcs-gap-16">
+								<h6 class="zcs-font-14 zcs-font-normal zcs-lh-heading zcs-color-tertiary zcs-m-0"> <%=language.get("grc.strategy.linkedObjectives")%>    (<%=processDet.Linked_Objectives.size()%>) </h6>
+								<div class="zcs-row zcs-gap-12">
+<%
+		for each  objective in processDet.Linked_Objectives
+		{
+			%>
+<a class="zcs-badge zcs-badge-filled-outline zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-md zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-blue" href='#Page:Objective_Page?page_action=detailView&recid=<%=objective.ID%>' target='_blank'
+>
+										<span class="zcs-badge-text zcs-font-12 zcs-font-normal zcs-lh-body"> <%=objective.Objective_Title%> </span>
+									</a>
+<%
+		}
+		%>
+</div>
+							</div>
+							</div>
+							
+							
+								</div>
+							</div>
+					 </div>
+			   
+			   </div>
+	      </div>
+	</div>
+<%
+	}
+	else
+	{
+		departmentList = Process[ID != 0].distinct(Linked_Departments);
+		controlList = Process[ID != 0].distinct(Associate_Controls);
+		riskList = Process[ID != 0].distinct(Associate_Risks);
+		%>
+<style>
+		.zc-container-wrapper .zc-main-content-wrapper .zc-main-content .inner .page_content_wrapper.zc-page-content-wrapper .elemContainment{
+	padding:0px !important;
+}
+</style>
+<div class='zcs-page-container zcs-commonview zcs-wh-full'>
+	<div class='zcs-page-container-inner zcs-wh-full zcs-flex zcs-direction-column zcs-gap-20 zcs-px-30 zcs-py-24 zcs-box-border'>
+		<div class='zcs-page-header zcs-w-full zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-8 zcs-ellipsis'>
+            
+			<div class='zcs-flex zcs-direction-column zcs-gap-8'>
+           <h5 class='zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-ellipsis zcs-m-0'> <%=language.get("grc.process.Header")%> </h5>
+			<p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'><%=language.get("grc.process.subHeader")%></p>
+			</div>
+<%
+		if(thisapp.permission.app_access("risk_Management_Library_Button") == true)
+		{
+			%>
+<a class='zcs-button zcs-primary-outline-button zcs-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-16 zcs-py-8 zcs-rounded-md zcs-box-border zcs-font-14 zcs-font-normal zcs-lh-body'
+                href='#Page:<%=page_link_name%>?page_action=add'>
+                <i class='zcs-button-icon zc-li-outline ui-1-simple-add'></i>
+                <span class='zcs-button-text'> <%=language.get("grc.process.addProcess")%> </span>
+            </a>
+<%
+		}
+		%>
+</div>
+        <div class='zcs-panel-wrapper'>
+            <ul class='zcs-row zcs-justify-space-between zcs-gap-20 zcs-p-0 zcs-m-0'>
+                <li class='zcs-col-3 zcs-col-sm-6 zcs-col-xs-12 zcs-relative '>
+                    <div class='zcs-panel zcs-panel-red zcs-wh-full zcs-flex  zcs-gap-8 zcs-rounded-lg zcs-p-16 zcs-box-border zcs-justify-space-between'>
+					<div class='zcs-flex zcs-justify-center zcs-gap-10 zcs-direction-column'>
+					 <p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'> <%=language.get("grc.process.totalProcesses")%> </p>
+                        <h4 class='zcs-font-20 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'> <%=Process[ID != 0].count()%> </h4>
+                        </div>
+                            <div class='zcs-panel-icon-wrapper zcs-flex zcs-align-items-center zcs-justify-center zcs-no-shrink zcs-rounded-lg'>
+                                <i class='zcs-panel-icon zcs-font-24 zc-li-outline tech-disk-reader'></i>
+                            </div>
+                            
+                       
+                    </div>
+                    <a class='zcs-overlay zcs-wh-full zcs-absolute' ></a>
+                </li>
+				<li class='zcs-col-3 zcs-col-sm-6 zcs-col-xs-12 zcs-relative '>
+                    <div class='zcs-panel zcs-panel-red zcs-wh-full zcs-flex  zcs-gap-8 zcs-rounded-lg zcs-p-16 zcs-box-border zcs-justify-space-between'>
+					<div class='zcs-flex zcs-justify-center zcs-gap-10 zcs-direction-column'>
+					 <p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'>  <%=language.get("grc.process.linkedDepartments")%> </p>
+                        <h4 class='zcs-font-20 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'> <%=departmentList.size()%> </h4>
+                        </div>
+                            <div class='zcs-panel-icon-wrapper zcs-flex zcs-align-items-center zcs-justify-center zcs-no-shrink zcs-rounded-lg'>
+                                <i class='zcs-panel-icon zcs-font-24 zc-li-outline business-briefcase-25'></i>
+                            </div>
+                            
+                       
+                    </div>
+                    <a class='zcs-overlay zcs-wh-full zcs-absolute' ></a>
+                </li>
+                <li class='zcs-col-3 zcs-col-sm-6 zcs-col-xs-12 zcs-relative '>
+                    <div class='zcs-panel zcs-panel-red zcs-wh-full zcs-flex  zcs-gap-8 zcs-rounded-lg zcs-p-16 zcs-box-border zcs-justify-space-between'>
+					<div class='zcs-flex zcs-justify-center zcs-gap-10 zcs-direction-column'>
+					 <p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'>  <%=language.get("grc.objective.linkedRisks")%> </p>
+                        <h4 class='zcs-font-20 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'> <%=riskList.size()%> </h4>
+                        </div>
+                            <div class='zcs-panel-icon-wrapper zcs-flex zcs-align-items-center zcs-justify-center zcs-no-shrink zcs-rounded-lg'>
+                                <i class='zcs-panel-icon zcs-font-24 zc-li-outline location-position-pin'></i>
+                            </div>
+                            
+                       
+                    </div>
+                    <a class='zcs-overlay zcs-wh-full zcs-absolute' ></a>
+                </li>
+               <li class='zcs-col-3 zcs-col-sm-6 zcs-col-xs-12 zcs-relative '>
+                    <div class='zcs-panel zcs-panel-red zcs-wh-full zcs-flex  zcs-gap-8 zcs-rounded-lg zcs-p-16 zcs-box-border zcs-justify-space-between'>
+					<div class='zcs-flex zcs-justify-center zcs-gap-10 zcs-direction-column'>
+					 <p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'>  <%=language.get("grc.objective.linkedControls")%> </p>
+                        <h4 class='zcs-font-20 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-m-0'> <%=controlList.size()%> </h4>
+                        </div>
+                            <div class='zcs-panel-icon-wrapper zcs-flex zcs-align-items-center zcs-justify-center zcs-no-shrink zcs-rounded-lg'>
+                                <i class='zcs-panel-icon zcs-font-24 zc-li-outline users-parent'></i>
+                            </div>
+                            
+                       
+                    </div>
+                    <a class='zcs-overlay zcs-wh-full zcs-absolute' ></a>
+                </li>
+               
+            </ul>
+        </div>
+		<div class='zcs-page-content zcs-card zcs-col-common zcs-overflow-auto zcs-flex zcs-direction-column'>
+          
+                    <div class='zcs-filter' zc_MobileView='inline' elName='zc-component' formLinkName='Filter_Form' params='zc_Header=false&zc_Footer=false&zc_Focus=false&Action_field=overView&Page=<%=page_link_name%>&Report=Processes'></div>
+					<div class='zcs-report zcs-col-common' name='embedDiv' elName='zc-component' viewLinkName='Process_Report_Page' params='zc_Header=false&zc_AddRec=false&zc_ColMenu=false&zc_Footer=false'></div>
+               
+		</div>
+	</div>
+</div>
+<%
+	}
+%>

@@ -1,0 +1,42 @@
+Attendee_update as "Attendee update"
+{
+
+				type =  form
+				form = Meeting
+
+				record event = on add or edit
+					status = inactive
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											existingMembers = list();
+										for each  attRow in input.Meeting_Attendance
+										{
+											if(attRow.Member != null)
+											{
+												existingMembers.add(attRow.Member.toLong());
+											}
+										}
+										for each  memberId in input.Invite_Members
+										{
+											if(!existingMembers.contains(memberId.toLong()))
+											{
+												insert into Meeting_Attendance
+												[
+													Member=memberId
+													Status="Maybe"
+													Meetings=input.ID
+													Added_User=zoho.loginuser
+												]
+											}
+										}
+						)
+					}
+				}
+
+			
+}

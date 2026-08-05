@@ -1,0 +1,41 @@
+check_date7 as "check date"
+{
+
+				type =  form
+				form = Risk_Assessment
+
+				record event = on add or edit
+
+				on user input of Processes.End_Date
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											language = thisapp.Content.translation();
+										if(row.End_Date != null)
+										{
+											startDateVal = null;
+											endDateVal = null;
+											getObjective = row.Processes.Linked_Objectives;
+											for each  rec in input.Objectives
+											{
+												if(rec.Objectives == getObjective)
+												{
+													startDateVal = rec.Start_Date;
+													endDateVal = rec.End_Date;
+													break;
+												}
+											}
+											if((row.Start_Date != null && row.Start_Date > row.End_Date) || row.End_Date < startDateVal || row.End_Date > endDateVal)
+											{
+												alert language.get("grc.date.endDateAlert");
+												row.End_Date=null;
+											}
+										}
+						)
+					}
+				}
+
+			
+}

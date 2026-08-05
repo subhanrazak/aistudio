@@ -1,0 +1,70 @@
+Update_Board_Details as "Update Board Details"
+{
+
+				type =  form
+				form = Board
+
+				record event = on edit
+					status = inactive
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											boardType = input.Board_Type_Board;
+										currStage = input.Completed_Stage;
+										actionFld = input.Action_Field;
+										if(actionFld == "Edit")
+										{
+											input.Action_Field = "";
+											openUrl("#Page:Board_Page","same window");
+										}
+										else
+										{
+											// Wizard step progression
+											if(currStage == "Board")
+											{
+												input.Completed_Stage = "Details";
+											}
+											else if(currStage == "Details")
+											{
+												input.Completed_Stage = "Composition";
+											}
+											else if(currStage == "Composition")
+											{
+												if(boardType == "Single-Tier")
+												{
+													input.Completed_Stage = "Members";
+												}
+												else
+												{
+													input.Completed_Stage = "Review";
+												}
+											}
+											else if(currStage == "Members")
+											{
+												input.Completed_Stage = "Review";
+											}
+											else if(currStage == "Review")
+											{
+												input.Completed_Stage = "Complete";
+											}
+											input.Action_Field = "";
+											if(input.Completed_Stage == "Complete")
+											{
+												input.Delete_Record = zoho.currentdate;
+												openUrl("#Page:Board_Page?show_popup=1","same window");
+											}
+											else
+											{
+												openUrl("#Page:Board_Page","same window");
+											}
+										}
+						)
+					}
+				}
+
+			
+}

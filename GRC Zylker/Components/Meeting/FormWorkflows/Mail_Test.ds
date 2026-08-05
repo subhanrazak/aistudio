@@ -1,0 +1,170 @@
+Mail_Test as "Mail Test"
+{
+
+				type =  form
+				form = Meeting
+
+				record event = on add or edit
+
+				on success
+				{
+					actions 
+					{
+						custom deluge script
+						(
+											formLinkName = "Meeting_Attendance";
+										viewLinkName = "All_Meeting_Attendances";
+										// === Format meeting datetime ===
+										meetingDateStr = "—";
+										meetingTimeStr = "—";
+										if(input.Start_Date_Time != null)
+										{
+											meetingDateStr = input.Start_Date_Time.toString("EEEE, dd MMM yyyy");
+											startT = input.Start_Date_Time.toString("h:mm a");
+											endT = "";
+											if(input.End_Date_Time != null)
+											{
+												endT = input.End_Date_Time.toString("h:mm a");
+											}
+											meetingTimeStr = startT + " – " + endT;
+										}
+										// === Null-safe field values ===
+										chairName = "—";
+										if(input.Meeting_Chairperson != null)
+										{
+											cn = input.Meeting_Chairperson.Name + "";
+											if(cn != "null" && !cn.isEmpty())
+											{
+												chairName = cn;
+											}
+										}
+										venueText = "—";
+										if(input.Venue_Building != null)
+										{
+											vt = input.Venue_Building.Location + "";
+											if(vt != "null" && !vt.isEmpty())
+											{
+												venueText = vt;
+											}
+										}
+										durationText = "—";
+										if(input.Duration != null)
+										{
+											dt = input.Duration + "";
+											if(dt != "null" && !dt.isEmpty())
+											{
+												durationText = dt;
+											}
+										}
+										purposeText = "";
+										if(input.Purpose != null)
+										{
+											pt = input.Purpose + "";
+											if(pt != "null" && !pt.isEmpty())
+											{
+												purposeText = pt;
+											}
+										}
+										// === Loop through Meeting_Attendance subform - send email to each member ===
+										for each  attRow in input.Meeting_Attendance
+										{
+											if(attRow.Member != null)
+											{
+												memberName = "Member";
+												memberEmail = "";
+												if(attRow.Member.Name != null)
+												{
+													memberName = attRow.Member.Name;
+												}
+												if(attRow.Member.Email != null)
+												{
+													memberEmail = attRow.Member.Email + "";
+												}
+												// Skip if no email
+												if(!memberEmail.isEmpty() && memberEmail != "null")
+												{
+													// === Popup/dialog edit URLs ===
+													baseUrl = "https://app.zohocreator.com" + zoho.appuri + "#Form:" + formLinkName;
+													urlPresent = baseUrl + "?recLinkID=" + attRow.ID + "&Status=Present&viewLinkName=" + viewLinkName + "&zc_LoadIn=dialog";
+													urlAbsent = baseUrl + "?recLinkID=" + attRow.ID + "&Status=Absent&viewLinkName=" + viewLinkName + "&zc_LoadIn=dialog";
+													urlProxy = baseUrl + "?recLinkID=" + attRow.ID + "&Status=Maybe&viewLinkName=" + viewLinkName + "&zc_LoadIn=dialog";
+													emailBody = "<!DOCTYPE html><html><body style='margin:0;padding:0;background:#f4f6fb;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;'>";
+													emailBody = emailBody + "<table width='100%' cellpadding='0' cellspacing='0' style='background:#f4f6fb;padding:30px 0;'><tr><td align='center'>";
+													emailBody = emailBody + "<table width='600' cellpadding='0' cellspacing='0' style='background:#ffffff;border-radius:14px;overflow:hidden;'>";
+													// Header
+													emailBody = emailBody + "<tr><td style='background:#ff5a65;padding:28px 32px;'>";
+													emailBody = emailBody + "<h1 style='color:#ffffff;font-size:22px;font-weight:600;margin:0;letter-spacing:-0.02em;'>You're invited to a meeting</h1>";
+													emailBody = emailBody + "<p style='color:#ffe5e7;font-size:14px;margin:6px 0 0;'>Please confirm your attendance below</p>";
+													emailBody = emailBody + "</td></tr>";
+													// Body
+													emailBody = emailBody + "<tr><td style='padding:30px 32px 24px;'>";
+													emailBody = emailBody + "<p style='color:#1a2540;font-size:15px;margin:0 0 18px;'>Hi <strong>" + memberName + "</strong>,</p>";
+													emailBody = emailBody + "<p style='color:#5a6b84;font-size:14px;line-height:1.6;margin:0 0 22px;'>You have been invited to attend the following meeting. Please select your response using the buttons below.</p>";
+													// Meeting title
+													emailBody = emailBody + "<h2 style='color:#1a2540;font-size:18px;font-weight:700;margin:0 0 18px;line-height:1.3;'>" + input.Meeting_Title + "</h2>";
+													// Meeting details card
+													emailBody = emailBody + "<table width='100%' cellpadding='0' cellspacing='0' style='background:#f7f9fd;border-radius:10px;border:1px solid #dfe6f1;margin:0 0 24px;'>";
+													emailBody = emailBody + "<tr><td style='padding:18px 20px;'>";
+													emailBody = emailBody + "<table width='100%' cellpadding='0' cellspacing='0'>";
+													emailBody = emailBody + "<tr><td style='padding:6px 0;'><span style='color:#8a9ab5;font-size:12px;text-transform:uppercase;letter-spacing:0.04em;font-weight:600;'>Date</span></td>";
+													emailBody = emailBody + "<td style='padding:6px 0;color:#1a2540;font-size:14px;font-weight:600;text-align:right;'>" + meetingDateStr + "</td></tr>";
+													emailBody = emailBody + "<tr><td style='padding:6px 0;'><span style='color:#8a9ab5;font-size:12px;text-transform:uppercase;letter-spacing:0.04em;font-weight:600;'>Time</span></td>";
+													emailBody = emailBody + "<td style='padding:6px 0;color:#1a2540;font-size:14px;font-weight:600;text-align:right;'>" + meetingTimeStr + "</td></tr>";
+													emailBody = emailBody + "<tr><td style='padding:6px 0;'><span style='color:#8a9ab5;font-size:12px;text-transform:uppercase;letter-spacing:0.04em;font-weight:600;'>Chair</span></td>";
+													emailBody = emailBody + "<td style='padding:6px 0;color:#1a2540;font-size:14px;font-weight:600;text-align:right;'>" + chairName + "</td></tr>";
+													emailBody = emailBody + "<tr><td style='padding:6px 0;'><span style='color:#8a9ab5;font-size:12px;text-transform:uppercase;letter-spacing:0.04em;font-weight:600;'>Venue</span></td>";
+													emailBody = emailBody + "<td style='padding:6px 0;color:#1a2540;font-size:14px;font-weight:600;text-align:right;'>" + venueText + "</td></tr>";
+													emailBody = emailBody + "<tr><td style='padding:6px 0;'><span style='color:#8a9ab5;font-size:12px;text-transform:uppercase;letter-spacing:0.04em;font-weight:600;'>Duration</span></td>";
+													emailBody = emailBody + "<td style='padding:6px 0;color:#1a2540;font-size:14px;font-weight:600;text-align:right;'>" + durationText + "</td></tr>";
+													emailBody = emailBody + "</table></td></tr></table>";
+													// Purpose
+													if(!purposeText.isEmpty())
+													{
+														emailBody = emailBody + "<div style='margin:0 0 24px;'>";
+														emailBody = emailBody + "<p style='color:#8a9ab5;font-size:12px;text-transform:uppercase;letter-spacing:0.04em;font-weight:600;margin:0 0 6px;'>Purpose</p>";
+														emailBody = emailBody + "<p style='color:#2f3b4f;font-size:14px;line-height:1.6;margin:0;'>" + purposeText + "</p>";
+														emailBody = emailBody + "</div>";
+													}
+													// Response label
+													emailBody = emailBody + "<p style='color:#1a2540;font-size:14px;font-weight:600;margin:0 0 14px;'>Your response:</p>";
+													// Action buttons table
+													emailBody = emailBody + "<table width='100%' cellpadding='0' cellspacing='0' style='margin:0 0 24px;border-collapse:separate;border-spacing:6px 0;'><tr>";
+													// Present (green)
+													emailBody = emailBody + "<td width='33.33%' align='center'>";
+													emailBody = emailBody + "<a href='" + urlPresent + "' target='_blank' title='Confirm attendance' style='display:block;width:100%;background:#2a9a5f;color:#ffffff;font-size:14px;font-weight:600;text-decoration:none;padding:12px 14px;border-radius:8px;text-align:center;box-sizing:border-box;'>Present</a>";
+													emailBody = emailBody + "</td>";
+													// Absent (gray)
+													emailBody = emailBody + "<td width='33.33%' align='center'>";
+													emailBody = emailBody + "<a href='" + urlAbsent + "' target='_blank' title='Mark as absent' style='display:block;width:100%;background:#506079;color:#ffffff;font-size:14px;font-weight:600;text-decoration:none;padding:12px 14px;border-radius:8px;text-align:center;box-sizing:border-box;'>Absent</a>";
+													emailBody = emailBody + "</td>";
+													// Maybe (purple)
+													emailBody = emailBody + "<td width='33.33%' align='center'>";
+													emailBody = emailBody + "<a href='" + urlProxy + "' target='_blank' title='Maybe' style='display:block;width:100%;background:#7d63ec;color:#ffffff;font-size:14px;font-weight:600;text-decoration:none;padding:12px 14px;border-radius:8px;text-align:center;box-sizing:border-box;'>Maybe</a>";
+													emailBody = emailBody + "</td>";
+													emailBody = emailBody + "</tr></table>";
+													// Tip
+													emailBody = emailBody + "<p style='color:#5a6b84;font-size:12px;line-height:1.5;margin:0;padding:14px 16px;background:#f7f9fd;border-radius:8px;border-left:3px solid #ff5a65;'>";
+													emailBody = emailBody + "<strong>Tip:</strong> Click the response that matches your availability. Your selection will update your attendance for this meeting.";
+													emailBody = emailBody + "</p>";
+													emailBody = emailBody + "</td></tr>";
+													// Footer
+													emailBody = emailBody + "<tr><td style='background:#f7f9fd;padding:20px 32px;border-top:1px solid #dfe6f1;text-align:center;'>";
+													emailBody = emailBody + "<p style='color:#8a9ab5;font-size:12px;margin:0;line-height:1.5;'>This is an automated message from your Meeting Management System.<br>Please respond before the meeting starts.</p>";
+													emailBody = emailBody + "</td></tr>";
+													emailBody = emailBody + "</table></td></tr></table></body></html>";
+													sendmail
+													[
+														from :zoho.adminuserid
+														to :memberEmail
+														subject :"Meeting Invitation: " + input.Meeting_Title
+														message :emailBody
+													]
+												}
+											}
+										}
+						)
+					}
+				}
+
+			
+}
