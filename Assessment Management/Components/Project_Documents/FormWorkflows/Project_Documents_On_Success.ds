@@ -1,0 +1,28 @@
+Project_Documents_On_Success as "Project Documents - Stamp Upload Metadata"
+{
+    type = form
+    form = Project_Documents
+    record event = on add or edit
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                rec = Project_Documents[ID == input.ID];
+                if (rec.count() > 0)
+                {
+                    if (rec.Uploaded_By_Email in ["", " ", "null"])
+                    {
+                        rec.Uploaded_By_Email = zoho.loginuser;
+                    }
+                    if (rec.Uploaded_Date == null)
+                    {
+                        rec.Uploaded_Date = zoho.currenttime;
+                    }
+                }
+            )
+        }
+    }
+}

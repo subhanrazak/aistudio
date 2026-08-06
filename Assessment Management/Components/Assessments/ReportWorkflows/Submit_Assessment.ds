@@ -1,0 +1,89 @@
+Submit_Assessment as "Submit Assessment"
+{
+    type = functions
+    form = Assessments
+    execution type = for each record
+
+    on start
+    {
+        actions
+        {
+            on click
+            (
+                assessmentRec = Assessments[ID == input.ID];
+                if (assessmentRec.count() > 0)
+                {
+                    missingMandatory = Assessment_Responses[Assessment == assessmentRec.ID && Mandatory == true && Submitted_Response == ""];
+                    if (missingMandatory.count() > 0)
+                    {
+                        input.Notes = ifnull(input.Notes,"") + "\nSubmission blocked: mandatory responses are incomplete.";
+                    }
+                    else
+                    {
+                        totalScore = 0.0;
+                        totalMax = 0.0;
+                        scoredResponses = Assessment_Responses[Assessment == assessmentRec.ID && Is_Scored == true];
+                        for each resp in scoredResponses
+                        {
+                            totalScore = totalScore + ifnull(resp.Score,0);
+                            totalMax = totalMax + ifnull(resp.Max_Score,0);
+                        }
+                        scorePercentage = 0.0;
+                        if (totalMax > 0)
+                        {
+                            scorePercentage = (totalScore / totalMax) * 100;
+                        }
+                        assessmentRec.Overall_Score = totalScore;
+                        assessmentRec.Overall_Score_Percentage = scorePercentage;
+                        if (assessmentRec.Completed_By_Email in ["", " ", "null"])
+                        {
+                            assessmentRec.Completed_By_Email = zoho.loginuser;
+                        }
+                        if (assessmentRec.Completed_By_Name in ["", " ", "null"])
+                        {
+                            assessmentRec.Completed_By_Name = zoho.loginuser;
+                        }
+                        assessmentRec.Submission_Date_Time = zoho.currenttime;
+                        assessmentRec.Valid_Until_Date = zoho.currentdate.addDay(ifnull(assessmentRec.Validity_Period_Days,180));
+                        configRec = Scoring_Maturity_Config[Industry_Type == assessmentRec.Industry_Type && Status == "Active" && Section_Category == "" && Minimum_Score_Percentage <= scorePercentage && Maximum_Score_Percentage >= scorePercentage];
+                        if (configRec.count() == 0)
+                        {
+                            configRec = Scoring_Maturity_Config[Industry_Type == assessmentRec.Industry_Type && Status == "Active" && Minimum_Score_Percentage <= scorePercentage && Maximum_Score_Percentage >= scorePercentage];
+                        }
+                        if (configRec.count() > 0)
+                        {
+                            assessmentRec.Maturity_Level = configRec.Maturity_Level;
+                            assessmentRec.Risk_Level = configRec.Risk_Level;
+                        }
+                        if (ifnull(assessmentRec.Report_Version_Number,0) <= 0)
+                        {
+                            assessmentRec.Report_Version_Number = 1;
+                        }
+                        assessmentRec.Assessment_Status = "Report Generated";
+                        projectRec = Projects[ID == assessmentRec.Project];
+                        if (projectRec.count() > 0)
+                        {
+                            projectRec.Project_Stage = "Report Generated";
+                        }
+                        existingDoc = Project_Documents[Related_Assessment == assessmentRec.ID && Document_Type == "Assessment Report" && Document_Name == "CSA Report - " + assessmentRec.Assessment_Reference_Number + " - v" + assessmentRec.Report_Version_Number];
+                        if (existingDoc.count() == 0)
+                        {
+                            insert into Project_Documents
+                            [
+                                Project = assessmentRec.Project
+                                Customer = assessmentRec.Customer
+                                Document_Name = "CSA Report - " + assessmentRec.Assessment_Reference_Number + " - v" + assessmentRec.Report_Version_Number
+                                Document_Type = "Assessment Report"
+                                Related_Assessment = assessmentRec.ID
+                                Document_Link = assessmentRec.Report_Document_Link
+                                Uploaded_By_Email = zoho.loginuser
+                                Uploaded_Date = zoho.currenttime
+                                Notes = "Assessment report tracking record created on submission. Upload the generated branded PDF into the assessment or document record."
+                            ];
+                        }
+                    }
+                }
+            )
+        }
+    }
+}

@@ -1,0 +1,45 @@
+Projects_On_Validate as "Projects - Validate Project Details"
+{
+    type = form
+    form = Projects
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if (input.Customer != null)
+                {
+                    customerRec = Customers[ID == input.Customer];
+                    if (customerRec.count() > 0)
+                    {
+                        if (customerRec.Status != "Active")
+                        {
+                            alert "Please select an active customer.";
+                            cancel submit;
+                        }
+                    }
+                }
+                if (input.Industry_Type != null)
+                {
+                    industryRec = Industry_Types[ID == input.Industry_Type];
+                    if (industryRec.count() > 0 && industryRec.Status != "Active")
+                    {
+                        alert "Please select an active industry type.";
+                        cancel submit;
+                    }
+                }
+                if (input.Start_Date != null && input.Target_Completion_Date != null)
+                {
+                    if (input.Target_Completion_Date < input.Start_Date)
+                    {
+                        alert "Target completion date cannot be earlier than start date.";
+                        cancel submit;
+                    }
+                }
+            )
+        }
+    }
+}

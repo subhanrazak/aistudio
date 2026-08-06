@@ -1,0 +1,25 @@
+Assessments_On_Success as "Assessments - Update Project Stage"
+{
+    type = form
+    form = Assessments
+    record event = on add or edit
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                rec = Assessments[ID == input.ID];
+                if (rec.count() > 0 && rec.Project != null)
+                {
+                    projectRec = Projects[ID == rec.Project];
+                    if (projectRec.count() > 0 && projectRec.Project_Stage == "Discovery")
+                    {
+                        projectRec.Project_Stage = "Assessment In Progress";
+                    }
+                }
+            )
+        }
+    }
+}

@@ -1,0 +1,34 @@
+Report_Email_Log_Assessment_On_User_Input as "Report Email Log - Populate Assessment Context"
+{
+    type = form
+    form = Report_Email_Log
+    record event = on add or edit
+
+    on user input of Assessment
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if (input.Assessment != null)
+                {
+                    assessmentRec = Assessments[ID == input.Assessment];
+                    if (assessmentRec.count() > 0)
+                    {
+                        input.Project = assessmentRec.Project;
+                        input.Customer = assessmentRec.Customer;
+                        input.Recipient_Email = assessmentRec.Customer_Portal_Email;
+                        if (input.Recipient_Email in ["", " ", "null"])
+                        {
+                            customerRec = Customers[ID == assessmentRec.Customer];
+                            if (customerRec.count() > 0)
+                            {
+                                input.Recipient_Email = customerRec.Primary_Contact_Email;
+                            }
+                        }
+                    }
+                }
+            )
+        }
+    }
+}

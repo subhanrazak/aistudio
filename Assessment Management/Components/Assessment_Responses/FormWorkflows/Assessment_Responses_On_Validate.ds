@@ -1,0 +1,43 @@
+Assessment_Responses_On_Validate as "Assessment Responses - Validate Response"
+{
+    type = form
+    form = Assessment_Responses
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if (input.Assessment != null)
+                {
+                    assessmentRec = Assessments[ID == input.Assessment];
+                    if (assessmentRec.count() > 0)
+                    {
+                        if (assessmentRec.Assessment_Status in {"Submitted", "Report Generated", "Expired", "Reassessment Required"})
+                        {
+                            alert "This assessment is locked. Reopen it for reassessment before editing responses.";
+                            cancel submit;
+                        }
+                        if (input.Customer != assessmentRec.Customer)
+                        {
+                            alert "Response customer must match the parent assessment.";
+                            cancel submit;
+                        }
+                        if (input.Project != assessmentRec.Project)
+                        {
+                            alert "Response project must match the parent assessment.";
+                            cancel submit;
+                        }
+                    }
+                }
+                if (input.Is_Scored == true && ifnull(input.Max_Score,0) < 0)
+                {
+                    alert "Maximum score cannot be negative.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}

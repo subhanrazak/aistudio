@@ -1,0 +1,32 @@
+Report_Email_Log_On_Success as "Report Email Log - Stamp Metadata"
+{
+    type = form
+    form = Report_Email_Log
+    record event = on add or edit
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                logRec = Report_Email_Log[ID == input.ID];
+                if (logRec.count() > 0)
+                {
+                    if (logRec.Sent_By_Email in ["", " ", "null"])
+                    {
+                        logRec.Sent_By_Email = zoho.loginuser;
+                    }
+                    if (logRec.Email_Status == "Sent" && logRec.Sent_Date_Time == null)
+                    {
+                        logRec.Sent_Date_Time = zoho.currenttime;
+                    }
+                    if (logRec.Email_Subject in ["", " ", "null"])
+                    {
+                        logRec.Email_Subject = "Current State Assessment Report";
+                    }
+                }
+            )
+        }
+    }
+}

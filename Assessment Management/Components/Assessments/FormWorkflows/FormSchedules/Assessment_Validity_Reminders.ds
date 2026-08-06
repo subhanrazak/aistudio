@@ -1,0 +1,74 @@
+Assessment_Validity_Reminders as "Assessment Validity Reminders"
+{
+    type = schedule
+    form = Assessments[Assessment_Status == "Report Generated" || Assessment_Status == "Expiring Soon"]
+    start = Submission_Date_Time
+    frequency = daily
+    time zone = "Asia/Kolkata"
+
+    on start
+    {
+        actions
+        {
+            on load
+            (
+                assessmentRec = Assessments[ID == input.ID];
+                if (assessmentRec.count() > 0)
+                {
+                    if (assessmentRec.Valid_Until_Date != null && assessmentRec.Valid_Until_Date < zoho.currentdate)
+                    {
+                        assessmentRec.Assessment_Status = "Expired";
+                        projectRec = Projects[ID == assessmentRec.Project];
+                        if (projectRec.count() > 0)
+                        {
+                            projectRec.Project_Stage = "Reassessment Required";
+                        }
+                    }
+                    else
+                    {
+                        settingsRec = Assessment_Settings[Status == "Active"];
+                        reminderDays = 4;
+                        if (settingsRec.count() > 0)
+                        {
+                            reminderDays = settingsRec.Reminder_Every_Days;
+                        }
+                        shouldSend = false;
+                        if (assessmentRec.Last_Reminder_Sent_Date == null)
+                        {
+                            shouldSend = true;
+                        }
+                        else if (assessmentRec.Last_Reminder_Sent_Date.addDay(reminderDays) <= zoho.currentdate)
+                        {
+                            shouldSend = true;
+                        }
+                        if (shouldSend == true)
+                        {
+                            toEmail = assessmentRec.Customer_Portal_Email;
+                            if (toEmail in ["", " ", "null"])
+                            {
+                                customerRec = Customers[ID == assessmentRec.Customer];
+                                if (customerRec.count() > 0)
+                                {
+                                    toEmail = customerRec.Primary_Contact_Email;
+                                }
+                            }
+                            if (toEmail not in ["", " ", "null"])
+                            {
+                                sendmail
+                                (
+                                    from : zoho.adminuserid
+                                    to : toEmail
+                                    cc : assessmentRec.Assigned_Consultant_Email
+                                    subject : "Assessment Validity Reminder - " + assessmentRec.Assessment_Reference_Number
+                                    message : "This is a reminder that Current State Assessment " + assessmentRec.Assessment_Reference_Number + " is valid until " + assessmentRec.Valid_Until_Date + ". Please coordinate reassessment planning if required."
+                                )
+                                assessmentRec.Last_Reminder_Sent_Date = zoho.currentdate;
+                                assessmentRec.Assessment_Status = "Expiring Soon";
+                            }
+                        }
+                    }
+                }
+            )
+        }
+    }
+}

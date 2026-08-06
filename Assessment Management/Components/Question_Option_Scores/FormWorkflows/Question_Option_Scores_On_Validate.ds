@@ -1,0 +1,38 @@
+Question_Option_Scores_On_Validate as "Question Option Scores - Validate Option Score"
+{
+    type = form
+    form = Question_Option_Scores
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if (input.Question != null)
+                {
+                    questionRec = Master_Questionnaire[ID == input.Question];
+                    if (questionRec.count() > 0)
+                    {
+                        if (questionRec.Status != "Active")
+                        {
+                            alert "Option scores can only be configured for active questions.";
+                            cancel submit;
+                        }
+                        if (questionRec.Is_Scored != true)
+                        {
+                            alert "The selected question is not marked as scored.";
+                            cancel submit;
+                        }
+                        if (input.Industry_Type != questionRec.Industry_Type)
+                        {
+                            alert "Industry type must match the selected question.";
+                            cancel submit;
+                        }
+                    }
+                }
+            )
+        }
+    }
+}

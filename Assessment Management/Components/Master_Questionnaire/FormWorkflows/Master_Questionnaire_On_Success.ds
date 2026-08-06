@@ -1,0 +1,25 @@
+Master_Questionnaire_On_Success as "Master Questionnaire - Stamp Version Metadata"
+{
+    type = form
+    form = Master_Questionnaire
+    record event = on add or edit
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                rec = Master_Questionnaire[ID == input.ID];
+                if (rec.count() > 0)
+                {
+                    rec.Last_Updated_Date = zoho.currenttime;
+                    if (ifnull(rec.Version_Number,0) <= 0)
+                    {
+                        rec.Version_Number = 1;
+                    }
+                }
+            )
+        }
+    }
+}

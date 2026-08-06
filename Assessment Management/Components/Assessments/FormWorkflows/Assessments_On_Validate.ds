@@ -1,0 +1,61 @@
+Assessments_On_Validate as "Assessments - Validate Assessment"
+{
+    type = form
+    form = Assessments
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if (input.Project != null)
+                {
+                    projectRec = Projects[ID == input.Project];
+                    if (projectRec.count() > 0)
+                    {
+                        if (projectRec.Customer != input.Customer)
+                        {
+                            alert "Selected customer must match the selected project.";
+                            cancel submit;
+                        }
+                        if (projectRec.Industry_Type != input.Industry_Type)
+                        {
+                            alert "Selected industry type must match the selected project.";
+                            cancel submit;
+                        }
+                    }
+                }
+                if (input.Customer != null)
+                {
+                    customerRec = Customers[ID == input.Customer];
+                    if (customerRec.count() > 0 && customerRec.Status != "Active")
+                    {
+                        alert "Please select an active customer.";
+                        cancel submit;
+                    }
+                }
+                if (input.Industry_Type != null)
+                {
+                    industryRec = Industry_Types[ID == input.Industry_Type];
+                    if (industryRec.count() > 0 && industryRec.Status != "Active")
+                    {
+                        alert "Please select an active industry type.";
+                        cancel submit;
+                    }
+                }
+                if (input.Assessment_Mode == "Customer Portal" && input.Customer_Portal_Email in ["", " ", "null"])
+                {
+                    alert "Customer Portal Email is required for customer portal assessments.";
+                    cancel submit;
+                }
+                if (ifnull(input.Validity_Period_Days,0) <= 0)
+                {
+                    alert "Validity period days must be greater than zero.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}

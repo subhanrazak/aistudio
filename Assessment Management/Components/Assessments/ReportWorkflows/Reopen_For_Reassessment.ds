@@ -1,0 +1,31 @@
+Reopen_For_Reassessment as "Reopen for Reassessment"
+{
+    type = functions
+    form = Assessments
+    execution type = for each record
+
+    on start
+    {
+        actions
+        {
+            on click
+            (
+                assessmentRec = Assessments[ID == input.ID];
+                if (assessmentRec.count() > 0)
+                {
+                    if (assessmentRec.Assessment_Status in {"Submitted", "Report Generated", "Expired", "Reassessment Required"})
+                    {
+                        assessmentRec.Assessment_Status = "Reopened for Reassessment";
+                        assessmentRec.Last_Reminder_Sent_Date = null;
+                        assessmentRec.Report_Version_Number = ifnull(assessmentRec.Report_Version_Number,1) + 1;
+                        projectRec = Projects[ID == assessmentRec.Project];
+                        if (projectRec.count() > 0)
+                        {
+                            projectRec.Project_Stage = "Reassessment Required";
+                        }
+                    }
+                }
+            )
+        }
+    }
+}

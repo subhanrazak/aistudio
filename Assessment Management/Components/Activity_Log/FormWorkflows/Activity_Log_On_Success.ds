@@ -1,0 +1,28 @@
+Activity_Log_On_Success as "Activity Log - Stamp Metadata"
+{
+    type = form
+    form = Activity_Log
+    record event = on add or edit
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                logRec = Activity_Log[ID == input.ID];
+                if (logRec.count() > 0)
+                {
+                    if (logRec.Activity_Date_Time == null)
+                    {
+                        logRec.Activity_Date_Time = zoho.currenttime;
+                    }
+                    if (logRec.Actor_Email in ["", " ", "null"])
+                    {
+                        logRec.Actor_Email = zoho.loginuser;
+                    }
+                }
+            )
+        }
+    }
+}

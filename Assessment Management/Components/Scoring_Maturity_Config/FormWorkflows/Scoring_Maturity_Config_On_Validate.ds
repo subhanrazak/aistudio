@@ -1,0 +1,46 @@
+Scoring_Maturity_Config_On_Validate as "Scoring Config - Validate Score Range"
+{
+    type = form
+    form = Scoring_Maturity_Config
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if (input.Industry_Type != null)
+                {
+                    industryRec = Industry_Types[ID == input.Industry_Type];
+                    if (industryRec.count() > 0 && industryRec.Status != "Active")
+                    {
+                        alert "Please select an active industry type.";
+                        cancel submit;
+                    }
+                }
+                if (ifnull(input.Minimum_Score_Percentage,-1) < 0)
+                {
+                    alert "Minimum score percentage must be 0 or above.";
+                    cancel submit;
+                }
+                if (ifnull(input.Maximum_Score_Percentage,101) > 100)
+                {
+                    alert "Maximum score percentage must be 100 or below.";
+                    cancel submit;
+                }
+                if (input.Minimum_Score_Percentage > input.Maximum_Score_Percentage)
+                {
+                    alert "Minimum score percentage must be less than or equal to maximum score percentage.";
+                    cancel submit;
+                }
+                overlapRecs = Scoring_Maturity_Config[ID != input.ID && Industry_Type == input.Industry_Type && Section_Category == input.Section_Category && Status == "Active" && Maximum_Score_Percentage >= input.Minimum_Score_Percentage && Minimum_Score_Percentage <= input.Maximum_Score_Percentage];
+                if (overlapRecs.count() > 0 && input.Status == "Active")
+                {
+                    alert "An overlapping active score range already exists for this industry and section.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}

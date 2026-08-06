@@ -1,0 +1,58 @@
+Email_Report_To_Customer as "Email Report to Customer"
+{
+    type = functions
+    form = Assessments
+    execution type = for each record
+
+    on start
+    {
+        actions
+        {
+            on click
+            (
+                assessmentRec = Assessments[ID == input.ID];
+                if (assessmentRec.count() > 0)
+                {
+                    toEmail = assessmentRec.Customer_Portal_Email;
+                    if (toEmail in ["", " ", "null"])
+                    {
+                        customerRec = Customers[ID == assessmentRec.Customer];
+                        if (customerRec.count() > 0)
+                        {
+                            toEmail = customerRec.Primary_Contact_Email;
+                        }
+                    }
+                    if (toEmail not in ["", " ", "null"])
+                    {
+                        sendmail
+                        (
+                            from : zoho.adminuserid
+                            to : toEmail
+                            cc : assessmentRec.Assigned_Consultant_Email
+                            subject : "Current State Assessment Report - " + assessmentRec.Assessment_Reference_Number
+                            message : "Dear Customer,<br><br>Please find the Current State Assessment report reference: " + assessmentRec.Assessment_Reference_Number + ".<br><br>Your Kannanware consultant will coordinate access to the PDF report.<br><br>Regards,<br>Kannanware"
+                        )
+                        docRec = Project_Documents[Related_Assessment == assessmentRec.ID && Document_Type == "Assessment Report"];
+                        if (docRec.count() > 0)
+                        {
+                            docRec.Email_Sent = true;
+                            docRec.Last_Emailed_Date = zoho.currenttime;
+                            docRec.Last_Emailed_To = toEmail;
+                        }
+                        insert into Report_Email_Log
+                        [
+                            Assessment = assessmentRec.ID
+                            Customer = assessmentRec.Customer
+                            Project = assessmentRec.Project
+                            Recipient_Email = toEmail
+                            Sent_By_Email = zoho.loginuser
+                            Sent_Date_Time = zoho.currenttime
+                            Email_Status = "Sent"
+                            Notes = "Report email sent from assessment action."
+                        ];
+                    }
+                }
+            )
+        }
+    }
+}

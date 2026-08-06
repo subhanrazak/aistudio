@@ -1,0 +1,47 @@
+Assessments_On_Load as "Assessments - Load Defaults and Behavior"
+{
+    type = form
+    form = Assessments
+    record event = on add or edit
+
+    on load
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if (ifnull(input.Validity_Period_Days,0) <= 0)
+                {
+                    settingsRec = Assessment_Settings[Status == "Active"];
+                    if (settingsRec.count() > 0)
+                    {
+                        input.Validity_Period_Days = settingsRec.Default_Validity_Days;
+                    }
+                    else
+                    {
+                        input.Validity_Period_Days = 180;
+                    }
+                }
+                if (input.Assessment_Mode == "Customer Portal")
+                {
+                    show Customer_Portal_Email;
+                    enable Customer_Portal_Email;
+                }
+                else
+                {
+                    hide Customer_Portal_Email;
+                    disable Customer_Portal_Email;
+                }
+                if (input.Assessment_Status in {"Submitted", "Report Generated", "Expired", "Reassessment Required"})
+                {
+                    disable Customer;
+                    disable Project;
+                    disable Industry_Type;
+                    disable Assessment_Mode;
+                    disable Assigned_Consultant_Email;
+                    disable Validity_Period_Days;
+                }
+            )
+        }
+    }
+}

@@ -1,0 +1,31 @@
+Assessments_Project_On_User_Input as "Assessments - Populate Project Context"
+{
+    type = form
+    form = Assessments
+    record event = on add or edit
+
+    on user input of Project
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if (input.Project != null)
+                {
+                    projectRec = Projects[ID == input.Project];
+                    if (projectRec.count() > 0)
+                    {
+                        input.Customer = projectRec.Customer;
+                        input.Industry_Type = projectRec.Industry_Type;
+                        input.Assigned_Consultant_Email = projectRec.Assigned_Consultant_Email;
+                        customerRec = Customers[ID == projectRec.Customer];
+                        if (customerRec.count() > 0)
+                        {
+                            input.Customer_Portal_Email = customerRec.Primary_Contact_Email;
+                        }
+                    }
+                }
+            )
+        }
+    }
+}

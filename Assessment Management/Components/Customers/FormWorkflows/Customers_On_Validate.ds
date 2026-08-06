@@ -1,0 +1,33 @@
+Customers_On_Validate as "Customers - Validate Active Industry"
+{
+    type = form
+    form = Customers
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if (input.Industry_Type != null)
+                {
+                    industryRec = Industry_Types[ID == input.Industry_Type];
+                    if (industryRec.count() > 0)
+                    {
+                        if (industryRec.Status != "Active")
+                        {
+                            alert "Please select an active industry type.";
+                            cancel submit;
+                        }
+                    }
+                    else
+                    {
+                        alert "Please select a valid industry type.";
+                        cancel submit;
+                    }
+                }
+            )
+        }
+    }
+}

@@ -1,0 +1,46 @@
+Master_Questionnaire_On_Validate as "Master Questionnaire - Validate Question"
+{
+    type = form
+    form = Master_Questionnaire
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if (input.Industry_Type != null)
+                {
+                    industryRec = Industry_Types[ID == input.Industry_Type];
+                    if (industryRec.count() > 0 && industryRec.Status != "Active")
+                    {
+                        alert "Please select an active industry type.";
+                        cancel submit;
+                    }
+                }
+                if (input.Question_Type in {"Yes / No", "Single Choice", "Multiple Choice", "Rating"})
+                {
+                    if (input.Answer_Options in ["", " ", "null"])
+                    {
+                        alert "Answer options are required for the selected question type.";
+                        cancel submit;
+                    }
+                }
+                if (input.Is_Scored == true)
+                {
+                    if (ifnull(input.Weightage,0) <= 0)
+                    {
+                        alert "Weightage must be greater than zero for scored questions.";
+                        cancel submit;
+                    }
+                    if (ifnull(input.Max_Score,0) < 0)
+                    {
+                        alert "Max score cannot be negative.";
+                        cancel submit;
+                    }
+                }
+            )
+        }
+    }
+}

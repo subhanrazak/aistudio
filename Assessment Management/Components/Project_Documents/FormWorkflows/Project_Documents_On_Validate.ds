@@ -1,0 +1,33 @@
+Project_Documents_On_Validate as "Project Documents - Validate Document"
+{
+    type = form
+    form = Project_Documents
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if (input.Uploaded_File == null && input.Document_Link in ["", " ", "null"])
+                {
+                    alert "Upload a file or enter an external document link.";
+                    cancel submit;
+                }
+                if (input.Project != null && input.Customer != null)
+                {
+                    projectRec = Projects[ID == input.Project];
+                    if (projectRec.count() > 0)
+                    {
+                        if (projectRec.Customer != input.Customer)
+                        {
+                            alert "Selected customer must match the selected project.";
+                            cancel submit;
+                        }
+                    }
+                }
+            )
+        }
+    }
+}

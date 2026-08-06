@@ -1,0 +1,425 @@
+<%
+  currentMonth = zoho.currentdate.getMonth();
+  currentYear = zoho.currentdate.getYear();
+  totalCustomers = Customers[ID != 0].count();
+  totalProjects = Projects[ID != 0].count();
+  totalAssessments = Assessments[ID != 0].count();
+  completedThisMonth = 0;
+  scoreTotal = 0.0;
+  scoreCount = 0;
+  for each assessmentForMetrics in Assessments[ID != 0]
+  {
+    if(assessmentForMetrics.Submission_Date_Time != null)
+    {
+      if(assessmentForMetrics.Submission_Date_Time.getMonth() == currentMonth && assessmentForMetrics.Submission_Date_Time.getYear() == currentYear && (assessmentForMetrics.Assessment_Status == "Submitted" || assessmentForMetrics.Assessment_Status == "Report Generated"))
+      {
+        completedThisMonth = completedThisMonth + 1;
+      }
+    }
+    if(assessmentForMetrics.Overall_Score_Percentage != null)
+    {
+      scoreTotal = scoreTotal + ifnull(assessmentForMetrics.Overall_Score_Percentage,0.0);
+      scoreCount = scoreCount + 1;
+    }
+  }
+  avgScore = 0.0;
+  if(scoreCount > 0)
+  {
+    avgScore = scoreTotal / scoreCount;
+  }
+
+  inProgressCount = Assessments[Assessment_Status == "In Progress" || Assessment_Status == "Reopened for Reassessment"].count();
+  expiringSoonCount = Assessments[Assessment_Status == "Expiring Soon"].count();
+  expiredReassessCount = Assessments[Assessment_Status == "Expired" || Assessment_Status == "Reassessment Required"].count();
+  highRiskCount = Assessments[Risk_Level == "High Risk"].count();
+
+  internalCount = Assessments[Assessment_Mode == "Internal"].count();
+  portalCount = Assessments[Assessment_Mode == "Customer Portal"].count();
+  internalPct = 0.0;
+  portalPct = 0.0;
+  if(totalAssessments > 0)
+  {
+    internalPct = (internalCount * 100.0) / totalAssessments;
+    portalPct = (portalCount * 100.0) / totalAssessments;
+  }
+
+  draftCount = Assessments[Assessment_Status == "Draft"].count();
+  inProgressOnlyCount = Assessments[Assessment_Status == "In Progress" || Assessment_Status == "Reopened for Reassessment"].count();
+  submittedCount = Assessments[Assessment_Status == "Submitted"].count();
+  reportGeneratedCount = Assessments[Assessment_Status == "Report Generated"].count();
+  expiringStatusCount = Assessments[Assessment_Status == "Expiring Soon"].count();
+  expiredStatusCount = Assessments[Assessment_Status == "Expired"].count();
+  reassessmentStatusCount = Assessments[Assessment_Status == "Reassessment Required"].count();
+  statusMax = draftCount;
+  if(inProgressOnlyCount > statusMax) { statusMax = inProgressOnlyCount; }
+  if(submittedCount > statusMax) { statusMax = submittedCount; }
+  if(reportGeneratedCount > statusMax) { statusMax = reportGeneratedCount; }
+  if(expiringStatusCount > statusMax) { statusMax = expiringStatusCount; }
+  if(expiredStatusCount > statusMax) { statusMax = expiredStatusCount; }
+  if(reassessmentStatusCount > statusMax) { statusMax = reassessmentStatusCount; }
+  if(statusMax == 0) { statusMax = 1; }
+  draftPct = (draftCount * 100.0) / statusMax;
+  inProgressStatusPct = (inProgressOnlyCount * 100.0) / statusMax;
+  submittedPct = (submittedCount * 100.0) / statusMax;
+  reportGeneratedPct = (reportGeneratedCount * 100.0) / statusMax;
+  expiringStatusPct = (expiringStatusCount * 100.0) / statusMax;
+  expiredStatusPct = (expiredStatusCount * 100.0) / statusMax;
+  reassessmentStatusPct = (reassessmentStatusCount * 100.0) / statusMax;
+
+  riskHigh = Assessments[Risk_Level == "High Risk"].count();
+  riskMedHigh = Assessments[Risk_Level == "Medium-High Risk"].count();
+  riskMed = Assessments[Risk_Level == "Medium Risk"].count();
+  riskLowMed = Assessments[Risk_Level == "Low-Medium Risk"].count();
+  riskLow = Assessments[Risk_Level == "Low Risk"].count();
+  riskMax = riskHigh;
+  if(riskMedHigh > riskMax) { riskMax = riskMedHigh; }
+  if(riskMed > riskMax) { riskMax = riskMed; }
+  if(riskLowMed > riskMax) { riskMax = riskLowMed; }
+  if(riskLow > riskMax) { riskMax = riskLow; }
+  if(riskMax == 0) { riskMax = 1; }
+  riskHighPct = (riskHigh * 100.0) / riskMax;
+  riskMedHighPct = (riskMedHigh * 100.0) / riskMax;
+  riskMedPct = (riskMed * 100.0) / riskMax;
+  riskLowMedPct = (riskLowMed * 100.0) / riskMax;
+  riskLowPct = (riskLow * 100.0) / riskMax;
+
+  refreshText = zoho.currenttime.toString("dd-MMM-yyyy HH:mm");
+  monthText = zoho.currentdate.toString("MMM yyyy");
+%>
+<style>
+/* ZCS global utility subset, included once for this page */
+:root { --zcs-theme-brand-color: var(--zcs_brand_color); --zcs-light-bg-color: var(--zcs_brand_light_color); --zcs-primary-text-color: var(--zcs_primary_text_color); --zcs-secondary-text-color: var(--zcs_secondary_text_color); --zcs-teritiary-text-color: var(--zcs_tertiary_text_color); --zcs-border-color: var(--zcs_tertiary_border_color); --zcs-white-color:#FFFFFF; --zcs-page-bg-color:#F3F3F4; }
+.zcs-row{display:flex;flex-wrap:wrap}.zcs-flex{display:flex}.zcs-inline-flex{display:inline-flex}.zcs-direction-column{flex-direction:column}.zcs-align-items-center{align-items:center}.zcs-align-items-start{align-items:flex-start}.zcs-justify-center{justify-content:center}.zcs-justify-space-between{justify-content:space-between}.zcs-col-common{flex:1 1 0}.zcs-no-shrink{flex-shrink:0}.zcs-w-full{width:100%}.zcs-box-border{box-sizing:border-box}.zcs-rounded-sm{border-radius:4px}.zcs-rounded-md{border-radius:6px}.zcs-rounded-lg{border-radius:8px}.zcs-rounded-xl{border-radius:12px}.zcs-rounded-2xl{border-radius:16px}.zcs-gap-4{gap:4px}.zcs-gap-6{gap:6px}.zcs-gap-8{gap:8px}.zcs-gap-10{gap:10px}.zcs-gap-12{gap:12px}.zcs-gap-16{gap:16px}.zcs-gap-20{gap:20px}.zcs-p-0{padding:0}.zcs-p-8{padding:8px}.zcs-p-16{padding:16px}.zcs-p-20{padding:20px}.zcs-p-24{padding:24px}.zcs-px-10{padding-left:10px;padding-right:10px}.zcs-px-12{padding-left:12px;padding-right:12px}.zcs-px-16{padding-left:16px;padding-right:16px}.zcs-px-20{padding-left:20px;padding-right:20px}.zcs-py-2{padding-top:2px;padding-bottom:2px}.zcs-py-6{padding-top:6px;padding-bottom:6px}.zcs-py-8{padding-top:8px;padding-bottom:8px}.zcs-py-10{padding-top:10px;padding-bottom:10px}.zcs-m-0{margin:0}.zcs-mt-4{margin-top:4px}.zcs-mt-8{margin-top:8px}.zcs-mt-12{margin-top:12px}.zcs-mt-16{margin-top:16px}.zcs-font-11{font-size:11px}.zcs-font-12{font-size:12px}.zcs-font-13{font-size:13px}.zcs-font-14{font-size:14px}.zcs-font-15{font-size:15px}.zcs-font-16{font-size:16px}.zcs-font-18{font-size:18px}.zcs-font-20{font-size:20px}.zcs-font-24{font-size:24px}.zcs-font-30{font-size:30px}.zcs-font-normal{font-weight:400}.zcs-font-medium{font-weight:500}.zcs-font-semibold{font-weight:600}.zcs-font-bold{font-weight:700}.zcs-uppercase{text-transform:uppercase}.zcs-lh-body{line-height:1.5}.zcs-lh-heading{line-height:1.25}.zcs-text-left{text-align:left}.zcs-text-center{text-align:center}.zcs-text-right{text-align:right}.zcs-color-primary{color:var(--zcs-primary-text-color,#15172E)}.zcs-color-secondary{color:var(--zcs-secondary-text-color,#596074)}.zcs-color-tertiary{color:var(--zcs-teritiary-text-color,#84899A)}.zcs-color-white{color:#fff}.zcs-color-theme{color:var(--zcs-theme-brand-color,#0B6B62)}.zcs-card{background:var(--zcs-white-color);border:1px solid #E6E8EF;border-radius:14px}.zcs-ellipsis{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}a{text-decoration:none}
+/* ZCS button component */
+.zcs-button{width:auto;min-width:5rem;min-height:36px}.zcs-primary-button{background-color:var(--zcs_brand_color,#0B6B62);color:var(--zcs_brand_foreground_color,#fff);border:1px solid var(--zcs_brand_color,#0B6B62)}.zcs-primary-outline-button{border:1px solid var(--zcs_brand_color,#0B6B62);background-color:var(--zcs-white-color);color:var(--zcs_brand_color,#0B6B62)}.zcs-secondary-button{border:1px solid var(--zcs_tertiary_border_color,#DFE3EA);background-color:#F7F8FA;color:var(--zcs_primary_text_color,#15172E)}.zcs-button:hover{filter:brightness(.98)}.zcs-button-icon{width:16px;max-height:16px}
+/* ZCS filled badge component */
+.zcs-badge{width:auto}.zcs-badge-filled{border:1px solid transparent}.zcs-badge-filled.zcs-badge-theme{background-color:var(--zcs_brand_color,#0B6B62);border-color:var(--zcs_brand_color,#0B6B62);color:#fff}.zcs-badge-filled.zcs-badge-green{background-color:#179E6C;border-color:#179E6C;color:#fff}.zcs-badge-filled.zcs-badge-red{background-color:#FE455D;border-color:#FE455D;color:#fff}.zcs-badge-filled.zcs-badge-grey{background-color:#242424;border-color:#242424;color:#fff}.zcs-badge-filled.zcs-badge-yellow{background-color:#FAAE13;border-color:#FAAE13;color:#fff}.zcs-badge-filled.zcs-badge-blue{background-color:#2A6FFC;border-color:#2A6FFC;color:#fff}.zcs-badge-filled.zcs-badge-orange{background-color:#F4660C;border-color:#F4660C;color:#fff}
+/* ZCS simple table component */
+.zcs-table-wrapper{border:1px solid #E6E8EF;background-color:#fff;overflow:auto;border-radius:10px}.zcs-table-wrapper table{line-height:normal;border-collapse:collapse}.zcs-table-wrapper table thead{top:0}.zcs-table-wrapper table thead tr th{background-color:#F9FAFE;box-shadow:0 -1px 0 0 #E6E8EF inset;white-space:nowrap}.zcs-table-wrapper table tbody tr td{border-top:1px solid #E6E8EF;vertical-align:top}.zcs-table-wrapper table tbody tr:first-child td{border-color:transparent}.zcs-table-wrapper table tbody tr:hover td{background:#F9FAFE}.zcs-table-wrapper table tbody tr td.zcs-green,.zcs-table-wrapper table tbody tr td .zcs-green{color:#179e6c}.zcs-table-wrapper table tbody tr td.zcs-red,.zcs-table-wrapper table tbody tr td .zcs-red{color:#fe455d}.zcs-table-wrapper table tbody tr td.zcs-yellow,.zcs-table-wrapper table tbody tr td .zcs-yellow{color:#b8770d}.zcs-table-wrapper table tbody tr td.zcs-l_blue,.zcs-table-wrapper table tbody tr td .zcs-l_blue{color:#1094c5}
+/* Dashboard-specific layout */
+.csd-page{font-family:Inter,Roboto,Arial,sans-serif;background:#F4F6F8;min-height:100%;padding:22px;box-sizing:border-box;color:#15172E}.csd-hero{position:relative;overflow:hidden;border-radius:20px;padding:24px;background:radial-gradient(circle at 90% 12%,rgba(255,255,255,.34) 0,rgba(255,255,255,.34) 70px,transparent 72px),radial-gradient(circle at 83% 70%,rgba(255,255,255,.18) 0,rgba(255,255,255,.18) 120px,transparent 122px),linear-gradient(135deg,#102A43 0%,#0B6B62 60%,#D99A19 130%);box-shadow:0 18px 42px rgba(16,42,67,.16)}.csd-brand-mark{width:44px;height:44px;border-radius:14px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.22);display:flex;align-items:center;justify-content:center}.csd-hero h1{font-size:28px;margin:0;color:#fff;font-weight:700;letter-spacing:-.02em}.csd-hero p{margin:6px 0 0;color:rgba(255,255,255,.82);font-size:14px;max-width:820px}.csd-hero-meta{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}.csd-hero-chip{border:1px solid rgba(255,255,255,.26);background:rgba(255,255,255,.12);color:#fff;border-radius:999px;padding:7px 11px;font-size:12px;display:inline-flex;gap:7px;align-items:center}.csd-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}.csd-action-link{background:rgba(255,255,255,.94);color:#0B5E58;border:1px solid rgba(255,255,255,.7);border-radius:10px;padding:9px 13px;font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:8px}.csd-action-link.secondary{background:rgba(16,42,67,.22);color:#fff;border-color:rgba(255,255,255,.26)}.csd-section-title{display:flex;align-items:center;justify-content:space-between;margin:22px 0 12px}.csd-section-title h2{font-size:18px;margin:0;font-weight:700;color:#15172E}.csd-section-title span{font-size:12px;color:#6B7280}.csd-kpi-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.csd-kpi-card{position:relative;overflow:hidden}.csd-kpi-card:before{content:"";position:absolute;left:0;top:0;width:5px;height:100%;background:var(--accent,#0B6B62)}.csd-kpi-card .kpi-icon{width:40px;height:40px;border-radius:12px;background:var(--accent-soft,#E6F5F2);color:var(--accent,#0B6B62);display:flex;align-items:center;justify-content:center;font-size:20px}.csd-kpi-label{font-size:12px;color:#6B7280;text-transform:uppercase;letter-spacing:.05em;font-weight:700}.csd-kpi-value{font-size:30px;font-weight:800;color:#111827;letter-spacing:-.03em;line-height:1.05;margin-top:8px}.csd-kpi-note{font-size:12px;color:#6B7280;margin-top:8px}.csd-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}.csd-grid-3{display:grid;grid-template-columns:1.15fr 1fr 1fr;gap:14px}.csd-panel{padding:18px}.csd-panel h3{font-size:16px;margin:0 0 4px;font-weight:700}.csd-panel-subtitle{font-size:12px;color:#6B7280;margin:0 0 16px}.csd-stack{display:flex;height:18px;overflow:hidden;border-radius:999px;background:#E9EDF2}.csd-stack .internal{background:#0B6B62}.csd-stack .portal{background:#D99A19}.csd-legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:14px}.csd-legend-item{display:inline-flex;align-items:center;gap:7px;color:#4B5563;font-size:13px}.csd-dot{width:10px;height:10px;border-radius:50%;background:var(--dot,#0B6B62)}.csd-bar-row{display:grid;grid-template-columns:148px 1fr 38px;gap:10px;align-items:center;margin:10px 0}.csd-bar-label{font-size:13px;color:#374151}.csd-bar-track{height:10px;border-radius:999px;background:#EEF1F5;overflow:hidden}.csd-bar-fill{height:100%;border-radius:999px;background:var(--bar,#0B6B62);width:var(--w,0%)}.csd-industry-row,.csd-project-row{padding:11px 0;border-top:1px solid #EEF1F5}.csd-industry-row:first-child,.csd-project-row:first-child{border-top:0}.csd-mini-label{font-size:13px;color:#374151;font-weight:600}.csd-mini-count{font-size:13px;color:#6B7280}.csd-mini-bar{height:7px;background:#EEF1F5;border-radius:999px;overflow:hidden;margin-top:8px}.csd-mini-bar span{display:block;height:100%;width:var(--w,0%);background:linear-gradient(90deg,#0B6B62,#D99A19);border-radius:999px}.csd-risk-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:12px}.csd-risk-box{border:1px solid #EEF1F5;border-radius:12px;padding:12px;text-align:center;background:#FBFCFD}.csd-risk-box strong{display:block;font-size:20px}.csd-risk-box span{display:block;font-size:11px;color:#6B7280;margin-top:3px}.csd-tables{display:grid;grid-template-columns:1.3fr 1fr;gap:14px}.csd-feed-item{display:flex;gap:12px;padding:13px 0;border-top:1px solid #EEF1F5}.csd-feed-item:first-child{border-top:0}.csd-feed-icon{width:32px;height:32px;border-radius:10px;background:#E6F5F2;color:#0B6B62;display:flex;align-items:center;justify-content:center;flex-shrink:0}.csd-feed-title{font-size:13px;font-weight:700;color:#15172E}.csd-feed-msg{font-size:13px;color:#4B5563;margin-top:2px}.csd-feed-meta{font-size:12px;color:#8791A3;margin-top:4px}.csd-empty{padding:18px;text-align:center;color:#6B7280;font-size:13px;background:#FBFCFD;border-radius:10px;border:1px dashed #DDE3EA}.csd-nowrap{white-space:nowrap}.csd-small{font-size:12px;color:#6B7280}.csd-score{font-weight:700;color:#0B6B62}.csd-overflow{overflow:auto}@media(max-width:1180px){.csd-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.csd-grid-3,.csd-tables{grid-template-columns:1fr}.csd-grid-2{grid-template-columns:1fr}}@media(max-width:720px){.csd-page{padding:14px}.csd-hero{padding:18px}.csd-kpi-grid{grid-template-columns:1fr}.csd-hero-meta{justify-content:flex-start}.csd-bar-row{grid-template-columns:112px 1fr 34px}.csd-risk-strip{grid-template-columns:repeat(2,1fr)}}
+</style>
+<div class="csd-page">
+  <div class="csd-hero">
+    <div class="zcs-flex zcs-justify-space-between zcs-align-items-start zcs-gap-16" style="flex-wrap:wrap;">
+      <div class="zcs-flex zcs-gap-12 zcs-align-items-center">
+        <div class="csd-brand-mark"><i class="zc-li-outline business-chart-bar-32 zcs-font-24 zcs-color-white"></i></div>
+        <div>
+          <h1>Current State Executive Dashboard</h1>
+          <p>Internal view for assessment volume, maturity, risk, project/document momentum, expiry exposure, and recent operating activity.</p>
+        </div>
+      </div>
+      <div class="csd-hero-meta">
+        <span class="csd-hero-chip"><i class="zc-li-outline users-circle-08"></i> Internal executive view</span>
+        <span class="csd-hero-chip"><i class="zc-li-outline ui-2-time"></i> Refreshed <%=refreshText%></span>
+      </div>
+    </div>
+    <div class="csd-actions">
+      <a class="csd-action-link" href="#Report:All_Assessments"><i class="zc-li-outline files-single-content-03"></i> All Assessments</a>
+      <a class="csd-action-link" href="#Report:Expiring_Assessments"><i class="zc-li-outline ui-2-time"></i> Expiring Assessments</a>
+      <a class="csd-action-link secondary" href="#Report:All_Projects"><i class="zc-li-outline business-briefcase-24"></i> All Projects</a>
+      <a class="csd-action-link secondary" href="#Report:All_Project_Documents"><i class="zc-li-outline files-archive-3d-content"></i> Project Documents</a>
+    </div>
+  </div>
+
+  <div class="csd-section-title">
+    <h2>Executive KPI Snapshot</h2>
+    <span>Completed metric period: <%=monthText%></span>
+  </div>
+  <div class="csd-kpi-grid">
+    <div class="zcs-card zcs-p-20 zcs-box-border csd-kpi-card" style="--accent:#0B6B62;--accent-soft:#E6F5F2;">
+      <div class="zcs-flex zcs-justify-space-between zcs-align-items-start">
+        <div><div class="csd-kpi-label">Total Customers</div><div class="csd-kpi-value"><%=totalCustomers%></div><div class="csd-kpi-note">Active and inactive customer master records</div></div>
+        <div class="kpi-icon"><i class="zc-li-outline users-single-01"></i></div>
+      </div>
+    </div>
+    <div class="zcs-card zcs-p-20 zcs-box-border csd-kpi-card" style="--accent:#2A6FFC;--accent-soft:#E8EFFF;">
+      <div class="zcs-flex zcs-justify-space-between zcs-align-items-start">
+        <div><div class="csd-kpi-label">Total Projects</div><div class="csd-kpi-value"><%=totalProjects%></div><div class="csd-kpi-note">Projects across all lifecycle stages</div></div>
+        <div class="kpi-icon"><i class="zc-li-outline business-briefcase-24"></i></div>
+      </div>
+    </div>
+    <div class="zcs-card zcs-p-20 zcs-box-border csd-kpi-card" style="--accent:#7C3AED;--accent-soft:#F0EAFE;">
+      <div class="zcs-flex zcs-justify-space-between zcs-align-items-start">
+        <div><div class="csd-kpi-label">Total Assessments</div><div class="csd-kpi-value"><%=totalAssessments%></div><div class="csd-kpi-note">Internal and customer portal assessment records</div></div>
+        <div class="kpi-icon"><i class="zc-li-outline education-paper-diploma"></i></div>
+      </div>
+    </div>
+    <div class="zcs-card zcs-p-20 zcs-box-border csd-kpi-card" style="--accent:#179E6C;--accent-soft:#E4FCF3;">
+      <div class="zcs-flex zcs-justify-space-between zcs-align-items-start">
+        <div><div class="csd-kpi-label">Completed This Month</div><div class="csd-kpi-value"><%=completedThisMonth%></div><div class="csd-kpi-note">Submitted or report-generated in <%=monthText%></div></div>
+        <div class="kpi-icon"><i class="zc-li-outline ui-1-check-circle-08"></i></div>
+      </div>
+    </div>
+    <div class="zcs-card zcs-p-20 zcs-box-border csd-kpi-card" style="--accent:#1094C5;--accent-soft:#E7F8FE;">
+      <div class="zcs-flex zcs-justify-space-between zcs-align-items-start">
+        <div><div class="csd-kpi-label">In Progress</div><div class="csd-kpi-value"><%=inProgressCount%></div><div class="csd-kpi-note">In Progress and Reopened for Reassessment</div></div>
+        <div class="kpi-icon"><i class="zc-li-outline arrows-1-refresh-69"></i></div>
+      </div>
+    </div>
+    <div class="zcs-card zcs-p-20 zcs-box-border csd-kpi-card" style="--accent:#FAAE13;--accent-soft:#FFF6DA;">
+      <div class="zcs-flex zcs-justify-space-between zcs-align-items-start">
+        <div><div class="csd-kpi-label">Expiring Soon</div><div class="csd-kpi-value"><%=expiringSoonCount%></div><div class="csd-kpi-note">Assessments in reminder window</div></div>
+        <div class="kpi-icon"><i class="zc-li-outline ui-2-time-clock"></i></div>
+      </div>
+    </div>
+    <div class="zcs-card zcs-p-20 zcs-box-border csd-kpi-card" style="--accent:#FE455D;--accent-soft:#FDE3E6;">
+      <div class="zcs-flex zcs-justify-space-between zcs-align-items-start">
+        <div><div class="csd-kpi-label">Expired / Reassessment</div><div class="csd-kpi-value"><%=expiredReassessCount%></div><div class="csd-kpi-note">Expired or reassessment required</div></div>
+        <div class="kpi-icon"><i class="zc-li-outline ui-1-alert-circle-i"></i></div>
+      </div>
+    </div>
+    <div class="zcs-card zcs-p-20 zcs-box-border csd-kpi-card" style="--accent:#D99A19;--accent-soft:#FCF4E6;">
+      <div class="zcs-flex zcs-justify-space-between zcs-align-items-start">
+        <div><div class="csd-kpi-label">Average Overall Score</div><div class="csd-kpi-value"><%=avgScore%>%</div><div class="csd-kpi-note">Average of scored assessments (<%=scoreCount%> records)</div></div>
+        <div class="kpi-icon"><i class="zc-li-outline business-chart-pie-35"></i></div>
+      </div>
+    </div>
+    <div class="zcs-card zcs-p-20 zcs-box-border csd-kpi-card" style="--accent:#B42318;--accent-soft:#FDECEC;">
+      <div class="zcs-flex zcs-justify-space-between zcs-align-items-start">
+        <div><div class="csd-kpi-label">High Risk Assessments</div><div class="csd-kpi-value"><%=highRiskCount%></div><div class="csd-kpi-note">Assessments currently tagged High Risk</div></div>
+        <div class="kpi-icon"><i class="zc-li-outline travel-info-warning"></i></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="csd-section-title">
+    <h2>Visual Summaries</h2>
+    <span>Mode, status, industry, risk, and document concentration</span>
+  </div>
+  <div class="csd-grid-2">
+    <div class="zcs-card csd-panel zcs-box-border">
+      <h3>Internal vs Customer Portal Assessments</h3>
+      <p class="csd-panel-subtitle">Volume split by assessment mode</p>
+      <div class="csd-stack" title="Assessment mode distribution"><div class="internal" style="width:<%=internalPct%>%"></div><div class="portal" style="width:<%=portalPct%>%"></div></div>
+      <div class="csd-legend"><span class="csd-legend-item"><span class="csd-dot" style="--dot:#0B6B62"></span>Internal: <strong><%=internalCount%></strong></span><span class="csd-legend-item"><span class="csd-dot" style="--dot:#D99A19"></span>Customer Portal: <strong><%=portalCount%></strong></span></div>
+      <div class="csd-risk-strip">
+        <div class="csd-risk-box"><strong><%=totalAssessments%></strong><span>Total</span></div>
+        <div class="csd-risk-box"><strong><%=internalPct%>%</strong><span>Internal share</span></div>
+        <div class="csd-risk-box"><strong><%=portalPct%>%</strong><span>Portal share</span></div>
+        <div class="csd-risk-box"><strong><%=completedThisMonth%></strong><span>Completed</span></div>
+        <div class="csd-risk-box"><strong><%=scoreCount%></strong><span>Scored</span></div>
+      </div>
+    </div>
+    <div class="zcs-card csd-panel zcs-box-border">
+      <h3>Assessment Status Distribution</h3>
+      <p class="csd-panel-subtitle">Current assessment pipeline health</p>
+      <div class="csd-bar-row"><div class="csd-bar-label">Draft</div><div class="csd-bar-track"><div class="csd-bar-fill" style="--w:<%=draftPct%>%;--bar:#94A3B8"></div></div><div class="zcs-text-right zcs-font-13"><%=draftCount%></div></div>
+      <div class="csd-bar-row"><div class="csd-bar-label">In Progress</div><div class="csd-bar-track"><div class="csd-bar-fill" style="--w:<%=inProgressStatusPct%>%;--bar:#1094C5"></div></div><div class="zcs-text-right zcs-font-13"><%=inProgressOnlyCount%></div></div>
+      <div class="csd-bar-row"><div class="csd-bar-label">Submitted</div><div class="csd-bar-track"><div class="csd-bar-fill" style="--w:<%=submittedPct%>%;--bar:#2A6FFC"></div></div><div class="zcs-text-right zcs-font-13"><%=submittedCount%></div></div>
+      <div class="csd-bar-row"><div class="csd-bar-label">Report Generated</div><div class="csd-bar-track"><div class="csd-bar-fill" style="--w:<%=reportGeneratedPct%>%;--bar:#179E6C"></div></div><div class="zcs-text-right zcs-font-13"><%=reportGeneratedCount%></div></div>
+      <div class="csd-bar-row"><div class="csd-bar-label">Expiring Soon</div><div class="csd-bar-track"><div class="csd-bar-fill" style="--w:<%=expiringStatusPct%>%;--bar:#FAAE13"></div></div><div class="zcs-text-right zcs-font-13"><%=expiringStatusCount%></div></div>
+      <div class="csd-bar-row"><div class="csd-bar-label">Expired</div><div class="csd-bar-track"><div class="csd-bar-fill" style="--w:<%=expiredStatusPct%>%;--bar:#FE455D"></div></div><div class="zcs-text-right zcs-font-13"><%=expiredStatusCount%></div></div>
+      <div class="csd-bar-row"><div class="csd-bar-label">Reassessment Required</div><div class="csd-bar-track"><div class="csd-bar-fill" style="--w:<%=reassessmentStatusPct%>%;--bar:#B42318"></div></div><div class="zcs-text-right zcs-font-13"><%=reassessmentStatusCount%></div></div>
+    </div>
+  </div>
+
+  <div class="csd-grid-3 zcs-mt-16">
+    <div class="zcs-card csd-panel zcs-box-border">
+      <h3>Industry-wise Assessment Summary</h3>
+      <p class="csd-panel-subtitle">Assessment count grouped by industry master</p>
+      <%
+        industryRows = 0;
+        for each industryRec in Industry_Types[ID != 0] sort by Industry_Name asc
+        {
+          industryCount = Assessments[Industry_Type == industryRec.ID].count();
+          industryPct = 0.0;
+          if(totalAssessments > 0)
+          {
+            industryPct = (industryCount * 100.0) / totalAssessments;
+          }
+          industryRows = industryRows + 1;
+          %>
+          <div class="csd-industry-row">
+            <div class="zcs-flex zcs-justify-space-between zcs-gap-12"><div class="csd-mini-label"><%=industryRec.Industry_Name%></div><div class="csd-mini-count"><%=industryCount%></div></div>
+            <div class="csd-mini-bar"><span style="--w:<%=industryPct%>%"></span></div>
+          </div>
+          <%
+        }
+        if(industryRows == 0)
+        {
+          %><div class="csd-empty">No industry records are available yet.</div><%
+        }
+      %>
+    </div>
+    <div class="zcs-card csd-panel zcs-box-border">
+      <h3>Risk Level Summary</h3>
+      <p class="csd-panel-subtitle">Distribution across maturity risk bands</p>
+      <div class="csd-bar-row"><div class="csd-bar-label">High Risk</div><div class="csd-bar-track"><div class="csd-bar-fill" style="--w:<%=riskHighPct%>%;--bar:#FE455D"></div></div><div class="zcs-text-right zcs-font-13"><%=riskHigh%></div></div>
+      <div class="csd-bar-row"><div class="csd-bar-label">Medium-High</div><div class="csd-bar-track"><div class="csd-bar-fill" style="--w:<%=riskMedHighPct%>%;--bar:#F4660C"></div></div><div class="zcs-text-right zcs-font-13"><%=riskMedHigh%></div></div>
+      <div class="csd-bar-row"><div class="csd-bar-label">Medium</div><div class="csd-bar-track"><div class="csd-bar-fill" style="--w:<%=riskMedPct%>%;--bar:#FAAE13"></div></div><div class="zcs-text-right zcs-font-13"><%=riskMed%></div></div>
+      <div class="csd-bar-row"><div class="csd-bar-label">Low-Medium</div><div class="csd-bar-track"><div class="csd-bar-fill" style="--w:<%=riskLowMedPct%>%;--bar:#2A6FFC"></div></div><div class="zcs-text-right zcs-font-13"><%=riskLowMed%></div></div>
+      <div class="csd-bar-row"><div class="csd-bar-label">Low Risk</div><div class="csd-bar-track"><div class="csd-bar-fill" style="--w:<%=riskLowPct%>%;--bar:#179E6C"></div></div><div class="zcs-text-right zcs-font-13"><%=riskLow%></div></div>
+    </div>
+    <div class="zcs-card csd-panel zcs-box-border">
+      <h3>Project-wise Document Count</h3>
+      <p class="csd-panel-subtitle">Recent project document concentration</p>
+      <%
+        projectRows = 0;
+        for each projectRec in Projects[ID != 0] sort by Start_Date desc
+        {
+          if(projectRows < 7)
+          {
+            docCount = Project_Documents[Project == projectRec.ID].count();
+            docPct = 0.0;
+            if(docCount > 0)
+            {
+              docPct = docCount * 12.5;
+              if(docPct > 100)
+              {
+                docPct = 100;
+              }
+            }
+            projectRows = projectRows + 1;
+            %>
+            <div class="csd-project-row">
+              <div class="zcs-flex zcs-justify-space-between zcs-gap-12"><div class="csd-mini-label"><%=projectRec.Project_Name%></div><div class="csd-mini-count"><%=docCount%></div></div>
+              <div class="csd-mini-bar"><span style="--w:<%=docPct%>%"></span></div>
+            </div>
+            <%
+          }
+        }
+        if(projectRows == 0)
+        {
+          %><div class="csd-empty">No project records are available yet.</div><%
+        }
+      %>
+    </div>
+  </div>
+
+  <div class="csd-section-title">
+    <h2>Tables and Feeds</h2>
+    <span>Recent submissions, expiry exposure, and audit activity</span>
+  </div>
+  <div class="csd-tables">
+    <div class="zcs-card csd-panel zcs-box-border csd-overflow">
+      <div class="zcs-flex zcs-justify-space-between zcs-align-items-center zcs-gap-12 zcs-mt-4">
+        <div><h3>Recent Submissions</h3><p class="csd-panel-subtitle">Latest completed assessment records</p></div>
+        <a class="zcs-button zcs-primary-outline-button zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-12 zcs-py-6 zcs-rounded-md zcs-box-border zcs-font-13" href="#Report:All_Assessments"><i class="zcs-button-icon zc-li-outline arrows-1-tail-right"></i><span>Open report</span></a>
+      </div>
+      <div class="zcs-table-wrapper">
+        <table class="zcs-w-full">
+          <thead><tr><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Assessment</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Customer / Project</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Date</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-color-primary">Score</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Maturity</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Risk</th></tr></thead>
+          <tbody>
+          <%
+            recentRows = 0;
+            for each recentAssessment in Assessments[Submission_Date_Time != null] sort by Submission_Date_Time desc
+            {
+              if(recentRows < 8)
+              {
+                recentRows = recentRows + 1;
+                riskText = ifnull(recentAssessment.Risk_Level,"Not rated");
+                riskClass = "zcs-badge-grey";
+                if(riskText == "High Risk") { riskClass = "zcs-badge-red"; }
+                else if(riskText == "Medium-High Risk") { riskClass = "zcs-badge-orange"; }
+                else if(riskText == "Medium Risk") { riskClass = "zcs-badge-yellow"; }
+                else if(riskText == "Low-Medium Risk") { riskClass = "zcs-badge-blue"; }
+                else if(riskText == "Low Risk") { riskClass = "zcs-badge-green"; }
+                scoreText = "Not scored";
+                if(recentAssessment.Overall_Score_Percentage != null)
+                {
+                  scoreText = recentAssessment.Overall_Score_Percentage + "%";
+                }
+                %>
+                <tr>
+                  <td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary"><strong><%=ifnull(recentAssessment.Assessment_Reference_Number,"-")%></strong><div class="csd-small"><%=ifnull(recentAssessment.Assessment_Mode,"-")%></div></td>
+                  <td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary"><%=ifnull(recentAssessment.Customer.Customer_Name,"-")%><div class="csd-small"><%=ifnull(recentAssessment.Project.Project_Name,"-")%></div></td>
+                  <td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary csd-nowrap"><%=recentAssessment.Submission_Date_Time.toString("dd-MMM-yyyy")%></td>
+                  <td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-text-right csd-score"><%=scoreText%></td>
+                  <td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary"><%=ifnull(recentAssessment.Maturity_Level,"-")%></td>
+                  <td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14"><span class="zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border <%=riskClass%>"><span class="zcs-badge-text zcs-font-12 zcs-font-normal"><%=riskText%></span></span></td>
+                </tr>
+                <%
+              }
+            }
+            if(recentRows == 0)
+            {
+              %><tr><td colspan="6" class="zcs-px-16 zcs-py-8 zcs-box-border"><div class="csd-empty">No submitted assessments yet.</div></td></tr><%
+            }
+          %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="zcs-card csd-panel zcs-box-border csd-overflow">
+      <div class="zcs-flex zcs-justify-space-between zcs-align-items-center zcs-gap-12 zcs-mt-4">
+        <div><h3>Expiring and Expired Assessments</h3><p class="csd-panel-subtitle">Validity exposure and assigned consultant ownership</p></div>
+        <a class="zcs-button zcs-primary-outline-button zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-px-12 zcs-py-6 zcs-rounded-md zcs-box-border zcs-font-13" href="#Report:Expiring_Assessments"><i class="zcs-button-icon zc-li-outline ui-2-time"></i><span>Review</span></a>
+      </div>
+      <div class="zcs-table-wrapper">
+        <table class="zcs-w-full">
+          <thead><tr><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Assessment</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Valid Until</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Consultant</th><th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-color-primary">Status</th></tr></thead>
+          <tbody>
+          <%
+            expiryRows = 0;
+            for each expAssessment in Assessments[Assessment_Status == "Expiring Soon" || Assessment_Status == "Expired" || Assessment_Status == "Reassessment Required"] sort by Valid_Until_Date asc
+            {
+              if(expiryRows < 8)
+              {
+                expiryRows = expiryRows + 1;
+                statusText = ifnull(expAssessment.Assessment_Status,"-");
+                statusClass = "zcs-badge-yellow";
+                if(statusText == "Expired" || statusText == "Reassessment Required") { statusClass = "zcs-badge-red"; }
+                validText = "Not set";
+                if(expAssessment.Valid_Until_Date != null)
+                {
+                  validText = expAssessment.Valid_Until_Date.toString("dd-MMM-yyyy");
+                }
+                %>
+                <tr>
+                  <td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary"><strong><%=ifnull(expAssessment.Assessment_Reference_Number,"-")%></strong><div class="csd-small"><%=ifnull(expAssessment.Customer.Customer_Name,"-")%></div></td>
+                  <td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary csd-nowrap"><%=validText%></td>
+                  <td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary"><%=ifnull(expAssessment.Assigned_Consultant_Email,"-")%></td>
+                  <td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14"><span class="zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border <%=statusClass%>"><span class="zcs-badge-text zcs-font-12 zcs-font-normal"><%=statusText%></span></span></td>
+                </tr>
+                <%
+              }
+            }
+            if(expiryRows == 0)
+            {
+              %><tr><td colspan="4" class="zcs-px-16 zcs-py-8 zcs-box-border"><div class="csd-empty">No expiring or expired assessments at this time.</div></td></tr><%
+            }
+          %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="zcs-card csd-panel zcs-box-border zcs-mt-16">
+    <div class="zcs-flex zcs-justify-space-between zcs-align-items-center zcs-gap-12">
+      <div><h3>Recent Activity Feed</h3><p class="csd-panel-subtitle">Latest operational activity from Activity Log</p></div>
+      <span class="zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-theme"><span class="zcs-badge-text zcs-font-12 zcs-font-normal">Audit visibility</span></span>
+    </div>
+    <%
+      activityRows = 0;
+      for each activityRec in Activity_Log[ID != 0] sort by Activity_Date_Time desc
+      {
+        if(activityRows < 10)
+        {
+          activityRows = activityRows + 1;
+          activityDateText = "No date";
+          if(activityRec.Activity_Date_Time != null)
+          {
+            activityDateText = activityRec.Activity_Date_Time.toString("dd-MMM-yyyy HH:mm");
+          }
+          %>
+          <div class="csd-feed-item">
+            <div class="csd-feed-icon"><i class="zc-li-outline ui-1-bell-53"></i></div>
+            <div class="zcs-col-common">
+              <div class="csd-feed-title"><%=ifnull(activityRec.Activity_Type,"Activity")%></div>
+              <div class="csd-feed-msg"><%=ifnull(activityRec.Message,"No message captured.")%></div>
+              <div class="csd-feed-meta"><%=activityDateText%> by <%=ifnull(activityRec.Actor_Email,"System")%> <%=ifnull(activityRec.Customer.Customer_Name,"")%></div>
+            </div>
+          </div>
+          <%
+        }
+      }
+      if(activityRows == 0)
+      {
+        %><div class="csd-empty">No activity log entries are available yet.</div><%
+      }
+    %>
+  </div>
+</div>

@@ -1,0 +1,57 @@
+Generate_Assessment_Responses as "Generate Responses / Refresh Questions"
+{
+    type = functions
+    form = Assessments
+    execution type = for each record
+
+    on start
+    {
+        actions
+        {
+            on click
+            (
+                assessmentRec = Assessments[ID == input.ID];
+                if (assessmentRec.count() > 0)
+                {
+                    if (assessmentRec.Assessment_Status in {"Draft", "In Progress", "Reopened for Reassessment"})
+                    {
+                        questions = Master_Questionnaire[Industry_Type == assessmentRec.Industry_Type && Status == "Active"];
+                        for each q in questions
+                        {
+                            existingResp = Assessment_Responses[Assessment == assessmentRec.ID && Master_Question == q.ID];
+                            if (existingResp.count() == 0)
+                            {
+                                insert into Assessment_Responses
+                                [
+                                    Assessment = assessmentRec.ID
+                                    Customer = assessmentRec.Customer
+                                    Project = assessmentRec.Project
+                                    Industry_Type = assessmentRec.Industry_Type
+                                    Master_Question = q.ID
+                                    Section_Category_Snapshot = q.Section_Category
+                                    Question_Text_Snapshot = q.Question_Text
+                                    Question_Type_Snapshot = q.Question_Type
+                                    Answer_Options_Snapshot = q.Answer_Options
+                                    Help_Text_Snapshot = q.Help_Text
+                                    Display_Order = q.Display_Order
+                                    Mandatory = q.Mandatory
+                                    Is_Scored = q.Is_Scored
+                                    Weightage = q.Weightage
+                                    Max_Score = q.Max_Score
+                                    Question_Version_Number = q.Version_Number
+                                    Response_Status = "Not Started"
+                                ];
+                            }
+                        }
+                        assessmentRec.Assessment_Status = "In Progress";
+                        projectRec = Projects[ID == assessmentRec.Project];
+                        if (projectRec.count() > 0)
+                        {
+                            projectRec.Project_Stage = "Assessment In Progress";
+                        }
+                    }
+                }
+            )
+        }
+    }
+}

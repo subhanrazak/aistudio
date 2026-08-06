@@ -1,0 +1,35 @@
+Assessment_Settings_On_Validate as "Assessment Settings - Validate Defaults"
+{
+    type = form
+    form = Assessment_Settings
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if (ifnull(input.Default_Validity_Days,0) <= 0)
+                {
+                    alert "Default validity days must be greater than zero.";
+                    cancel submit;
+                }
+                if (ifnull(input.Reminder_Every_Days,0) <= 0)
+                {
+                    alert "Reminder frequency must be greater than zero.";
+                    cancel submit;
+                }
+                if (input.Status == "Active")
+                {
+                    activeSettings = Assessment_Settings[ID != input.ID && Status == "Active"];
+                    if (activeSettings.count() > 0)
+                    {
+                        alert "Only one active assessment settings record is allowed.";
+                        cancel submit;
+                    }
+                }
+            )
+        }
+    }
+}

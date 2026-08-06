@@ -1,0 +1,52 @@
+Assessment_Responses_On_Success as "Assessment Responses - Score and Update Parent"
+{
+    type = form
+    form = Assessment_Responses
+    record event = on add or edit
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                respRec = Assessment_Responses[ID == input.ID];
+                if (respRec.count() > 0)
+                {
+                    if (respRec.Submitted_Response not in ["", " ", "null"])
+                    {
+                        respRec.Response_Status = "Answered";
+                    }
+                    else if (respRec.Response_Status == "Answered")
+                    {
+                        respRec.Response_Status = "In Progress";
+                    }
+                    if (respRec.Is_Scored == true)
+                    {
+                        resolvedScore = ifnull(respRec.Score,0);
+                        if (respRec.Question_Type_Snapshot in {"Yes / No", "Single Choice", "Multiple Choice", "Rating"})
+                        {
+                            optionRec = Question_Option_Scores[Question == respRec.Master_Question && Status == "Active" && Option_Label == respRec.Submitted_Response];
+                            if (optionRec.count() > 0)
+                            {
+                                resolvedScore = ifnull(optionRec.Score_Value,0);
+                            }
+                        }
+                        respRec.Score = resolvedScore;
+                        respRec.Weighted_Score = resolvedScore * ifnull(respRec.Weightage,1);
+                    }
+                    else
+                    {
+                        respRec.Score = 0;
+                        respRec.Weighted_Score = 0;
+                    }
+                    assessmentRec = Assessments[ID == respRec.Assessment];
+                    if (assessmentRec.count() > 0 && assessmentRec.Assessment_Status in {"Draft", "Reopened for Reassessment"})
+                    {
+                        assessmentRec.Assessment_Status = "In Progress";
+                    }
+                }
+            )
+        }
+    }
+}

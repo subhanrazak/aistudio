@@ -1,0 +1,60 @@
+list My_Assigned_Assessments
+{
+    displayName = "My Assigned Assessments"
+    show all rows from Assessments [Assigned_Consultant_Email == zoho.loginuser]
+    (
+        Assessment_Reference_Number
+        Customer
+        Project
+        Assessment_Mode
+        Assessment_Status
+        Submission_Date_Time
+        Valid_Until_Date
+        Overall_Score_Percentage
+        Maturity_Level
+        Risk_Level
+        custom action "Generate Responses / Refresh Questions"
+        (
+            workflow = Generate_Assessment_Responses
+            show action for each record = true
+            column header = "Generate Responses / Refresh Questions"
+            success message = "Assessment response snapshot refreshed."
+            condition = (Assessment_Status == "Draft" || Assessment_Status == "In Progress" || Assessment_Status == "Reopened for Reassessment")
+        )
+        custom action "Submit Assessment"
+        (
+            workflow = Submit_Assessment
+            show action for each record = true
+            column header = "Submit Assessment"
+            success message = "Assessment submitted and scored."
+            condition = (Assessment_Status == "Draft" || Assessment_Status == "In Progress" || Assessment_Status == "Reopened for Reassessment")
+        )
+        custom action "Reopen for Reassessment"
+        (
+            workflow = Reopen_For_Reassessment
+            show action for each record = true
+            column header = "Reopen for Reassessment"
+            success message = "Assessment reopened for reassessment."
+            condition = (Assessment_Status == "Submitted" || Assessment_Status == "Report Generated" || Assessment_Status == "Expired" || Assessment_Status == "Reassessment Required")
+        )
+        custom action "Email Report to Customer"
+        (
+            workflow = Email_Report_To_Customer
+            show action for each record = true
+            column header = "Email Report to Customer"
+            success message = "Report email request completed."
+            condition = (Assessment_Status == "Report Generated")
+        )
+    )
+    filters
+    (
+        Project
+        Assessment_Mode
+        Assessment_Status
+        Risk_Level
+    )
+    sort by
+    (
+        Submission_Date_Time descending
+    )
+}
