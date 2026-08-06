@@ -1,0 +1,28 @@
+Assessment_Settings_On_Success as "Assessment Settings On Success"
+{
+    type = form
+    form = Assessment_Settings
+    record event = on add or edit
+    description = "Ensures only one active settings row is used for new assessments."
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Active == true)
+                {
+                    otherSettings = Assessment_Settings[ID != input.ID && Active == true];
+                    if(otherSettings.count() > 0)
+                    {
+                        for each settingRow in otherSettings
+                        {
+                            settingRow.Active = false;
+                        }
+                    }
+                }
+            )
+        }
+    }
+}

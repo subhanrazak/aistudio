@@ -1,0 +1,23 @@
+string Build_Public_Assessment_Link(int assessmentId)
+{
+    assessmentRow = Assessments[ID == assessmentId];
+    linkValue = "";
+    if(assessmentRow.count() > 0)
+    {
+        tokenValue = assessmentRow.Public_Token;
+        if(ifnull(tokenValue,"").trim() == "")
+        {
+            tokenValue = "CSA-" + assessmentId.toString() + "-" + zoho.currenttime.toString("yyyyMMddHHmmss") + "-" + randomNumber(100000,999999).toString();
+        }
+        expiryDate = zoho.currentdate.addMonth(ifnull(assessmentRow.Validity_Period_Months,3));
+        linkValue = zoho.appuri + "form-perma/External_Assessment_Submission?Token=" + tokenValue;
+        update Assessments[ID == assessmentId]
+        [
+            Public_Token = tokenValue
+            Public_Link = "<a href=\"" + linkValue + "\" target=\"_blank\">Open Questionnaire</a>"
+            Public_Link_Generated_On = zoho.currenttime
+            Public_Link_Expires_On = expiryDate
+        ];
+    }
+    return linkValue;
+}

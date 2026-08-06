@@ -1,0 +1,82 @@
+<div class='assess-page-section'>
+  <div class='zcs-card zcs-p-20 zcs-box-border'>
+    <div class='zcs-flex zcs-justify-space-between zcs-align-items-center zcs-gap-12'>
+      <div>
+        <h2 class='zcs-font-20 zcs-font-semibold zcs-lh-heading zcs-m-0 zcs-color-primary'>Document activity</h2>
+        <p class='zcs-font-13 zcs-font-normal zcs-lh-body zcs-mt-4 zcs-mb-0 zcs-color-secondary'>Latest generated reports and supporting document uploads from Assessment Documents.</p>
+      </div>
+      <a class='zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-theme' href='#Report:All_Assessment_Documents'>
+        <span class='zcs-badge-text zcs-font-13 zcs-font-normal zcs-lh-body'>View documents</span>
+      </a>
+    </div>
+
+    <div class='zcs-timeline-wrapper zcs-without-time zcs-mt-8'>
+      <ul class='zcs-flex zcs-direction-column zcs-gap-20 zcs-p-0 zcs-m-0'>
+        <%
+          activityRows = Assessment_Documents[Document_Type == "Generated Report" || Document_Type == "Supporting"] sort by Upload_Date desc;
+          renderedActivity = 0;
+          if(activityRows.count() > 0)
+          {
+            for each activityRow in activityRows
+            {
+              if(renderedActivity < 10)
+              {
+                renderedActivity = renderedActivity + 1;
+                activityDateText = "-";
+                if(activityRow.Upload_Date != null)
+                {
+                  activityDateText = activityRow.Upload_Date.toString("dd-MMM-yyyy HH:mm");
+                }
+                docBadgeClass = "zcs-badge-blue";
+                docIcon = "files-2-doc";
+                if(activityRow.Document_Type == "Generated Report")
+                {
+                  docBadgeClass = "zcs-badge-green";
+                  docIcon = "files-2-paper-diploma";
+                }
+        %>
+        <li class='zcs-tl-li zcs-row zcs-gap-0 zcs-relative'>
+          <div class='zcs-tl-indicator zcs-h-full zcs-flex zcs-justify-center zcs-absolute'>
+            <span class='zcs-tl-dot zcs-rounded-half zcs-mt-4 zcs-box-border zcs-relative'></span>
+          </div>
+          <div class='zcs-flex zcs-direction-column zcs-col-common zcs-px-60 zcs-box-border'>
+            <div class='zcs-flex zcs-justify-space-between zcs-align-items-start zcs-gap-12'>
+              <div class='zcs-flex zcs-direction-column zcs-gap-4 zcs-col-common'>
+                <h3 class='zcs-font-16 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0'>
+                  <i class='zc-li-outline <%=docIcon%>'></i>
+                  <%=activityRow.Document_Name%>
+                </h3>
+                <p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-secondary zcs-m-0'>
+                  Assessment: <%=activityRow.Assessment.Assessment_Reference%>
+                </p>
+                <p class='zcs-font-13 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0'>
+                  Uploaded on <%=activityDateText%>
+                </p>
+              </div>
+              <span class='zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border <%=docBadgeClass%>'>
+                <span class='zcs-badge-text zcs-font-13 zcs-font-normal zcs-lh-body'><%=activityRow.Document_Type%></span>
+              </span>
+            </div>
+          </div>
+        </li>
+        <%
+              }
+            }
+          }
+          if(renderedActivity == 0)
+          {
+        %>
+        <li class='zcs-tl-li zcs-row zcs-gap-0 zcs-relative'>
+          <div class='zcs-tl-indicator zcs-h-full zcs-flex zcs-justify-center zcs-absolute'>
+            <span class='zcs-tl-dot zcs-rounded-half zcs-mt-4 zcs-box-border zcs-relative'></span>
+          </div>
+          <div class='zcs-flex zcs-direction-column zcs-col-common zcs-px-60 zcs-box-border'>
+            <h3 class='zcs-font-16 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0'>No document activity yet</h3>
+            <p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-secondary zcs-mt-4 zcs-mb-0'>Generated reports and supporting uploads will appear here.</p>
+          </div>
+        </li>
+        <% } %>
+      </ul>
+    </div>
+  </div>
+</div>

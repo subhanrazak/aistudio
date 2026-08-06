@@ -1,0 +1,28 @@
+Assessment_Mode_On_User_Input as "Assessment Mode On User Input"
+{
+    type = form
+    form = Assessments
+    record event = on add or edit
+    description = "Shows external link metadata only when the assessment is customer-facing."
+
+    on user input of Assessment_Mode
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Assessment_Mode == "External")
+                {
+                    show Public_Link, Public_Link_Generated_On, Public_Link_Expires_On;
+                }
+                else
+                {
+                    hide Public_Link, Public_Link_Generated_On, Public_Link_Expires_On;
+                    input.Public_Link = "";
+                    input.Public_Link_Generated_On = null;
+                    input.Public_Link_Expires_On = null;
+                }
+            )
+        }
+    }
+}

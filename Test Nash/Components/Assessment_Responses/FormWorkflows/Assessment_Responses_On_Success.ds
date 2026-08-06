@@ -1,0 +1,60 @@
+Assessment_Responses_On_Success as "Assessment Responses On Success"
+{
+    type = form
+    form = Assessment_Responses
+    record event = on add or edit
+    description = "Stores a normalized answer for reporting and document templates."
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                normalized = "";
+                if(input.Answer_Type_Snapshot == "Single-Line Text")
+                {
+                    normalized = ifnull(input.Single_Line_Answer,"");
+                }
+                else if(input.Answer_Type_Snapshot == "Paragraph")
+                {
+                    normalized = ifnull(input.Paragraph_Answer,"");
+                }
+                else if(input.Answer_Type_Snapshot == "Dropdown")
+                {
+                    normalized = ifnull(input.Dropdown_Answer,"");
+                }
+                else if(input.Answer_Type_Snapshot == "Multi-Select")
+                {
+                    normalized = input.Multi_Select_Answer.toString();
+                }
+                else if(input.Answer_Type_Snapshot == "Rating/Scale")
+                {
+                    if(input.Rating_Answer != null)
+                    {
+                        normalized = input.Rating_Answer.toString();
+                    }
+                }
+                else if(input.Answer_Type_Snapshot == "Yes-No")
+                {
+                    normalized = ifnull(input.Yes_No_Answer,"");
+                }
+                input.Normalized_Answer = normalized;
+                if(ifnull(normalized,"").trim() != "" && normalized != "Not Applicable")
+                {
+                    if(input.Row_Status != "Submitted")
+                    {
+                        input.Row_Status = "Answered";
+                    }
+                }
+                else
+                {
+                    if(input.Row_Status != "Submitted")
+                    {
+                        input.Row_Status = "Draft";
+                    }
+                }
+            )
+        }
+    }
+}

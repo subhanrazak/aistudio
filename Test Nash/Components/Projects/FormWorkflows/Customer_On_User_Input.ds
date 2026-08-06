@@ -1,0 +1,32 @@
+Customer_On_User_Input as "Customer On User Input"
+{
+    type = form
+    form = Projects
+    record event = on add or edit
+    description = "Copies the selected customer's primary email to the project contact email."
+
+    on user input of Customer
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Customer != null)
+                {
+                    customerRec = Customers[ID == input.Customer];
+                    if(customerRec.count() > 0)
+                    {
+                        if(ifnull(customerRec.Primary_Contact_Email,"").trim() != "")
+                        {
+                            input.Customer_Contact_Email = customerRec.Primary_Contact_Email;
+                        }
+                    }
+                }
+                else
+                {
+                    input.Customer_Contact_Email = null;
+                }
+            )
+        }
+    }
+}

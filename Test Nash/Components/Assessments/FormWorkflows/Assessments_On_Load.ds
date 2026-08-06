@@ -1,0 +1,47 @@
+Assessments_On_Load as "Assessments On Load"
+{
+    type = form
+    form = Assessments
+    record event = on add or edit
+    description = "Defaults settings and controls public-link visibility on the assessment form."
+
+    on load
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Validity_Period_Months == null || input.Validity_Period_Months <= 0)
+                {
+                    activeSettings = Assessment_Settings[Active == true];
+                    if(activeSettings.count() > 0)
+                    {
+                        input.Validity_Period_Months = activeSettings.Default_Validity_Months;
+                    }
+                    else
+                    {
+                        input.Validity_Period_Months = 3;
+                    }
+                }
+                if(input.Assigned_Consultant == null)
+                {
+                    input.Assigned_Consultant = zoho.loginuser;
+                }
+                disable Assessment_Reference, Submission_Date, Valid_Until, Expiry_Reminder_Sent, Expired_Notification_Sent, Submission_Timestamp, Submission_Mode, Public_Token, Public_Link_Generated_On, Public_Link_Expires_On, Questions_Generated;
+                hide Public_Token;
+                if(input.Assessment_Mode == "External")
+                {
+                    show Public_Link, Public_Link_Generated_On, Public_Link_Expires_On;
+                }
+                else
+                {
+                    hide Public_Link, Public_Link_Generated_On, Public_Link_Expires_On;
+                }
+                if(input.Status == "Expired")
+                {
+                    disable Project, Customer, Customer_Contact_Email, Industry_Type, Assigned_Consultant, Assessment_Mode, Status, Validity_Period_Months, Completed_By_Name, Completed_By_Email;
+                }
+            )
+        }
+    }
+}

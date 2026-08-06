@@ -1,0 +1,59 @@
+Assessment_Responses_On_Load as "Assessment Responses On Load"
+{
+    type = form
+    form = Assessment_Responses
+    record event = on add or edit
+    description = "Shows only the answer control matching the snapshotted answer type."
+
+    on load
+    {
+        actions
+        {
+            custom deluge script
+            (
+                disable Assessment, Question_Bank_Question, Category_Snapshot, Category_Display_Order, Question_Text_Snapshot, Question_Display_Order, Industry_Type_Snapshot, Answer_Type_Snapshot, Option_Values_Snapshot, Mandatory_Snapshot, Normalized_Answer, Completed_Mode, Submitted_At, Row_Status;
+                hide Single_Line_Answer, Paragraph_Answer, Dropdown_Answer, Multi_Select_Answer, Rating_Answer, Yes_No_Answer;
+                if(input.Answer_Type_Snapshot == "Single-Line Text")
+                {
+                    show Single_Line_Answer;
+                    enable Single_Line_Answer;
+                }
+                else if(input.Answer_Type_Snapshot == "Paragraph")
+                {
+                    show Paragraph_Answer;
+                    enable Paragraph_Answer;
+                }
+                else if(input.Answer_Type_Snapshot == "Dropdown")
+                {
+                    show Dropdown_Answer;
+                    enable Dropdown_Answer;
+                    if(ifnull(input.Option_Values_Snapshot,"").trim() != "")
+                    {
+                        optionList = input.Option_Values_Snapshot.replaceAll("\n",",").toList(",");
+                        input.Dropdown_Answer:ui.add(optionList);
+                    }
+                }
+                else if(input.Answer_Type_Snapshot == "Multi-Select")
+                {
+                    show Multi_Select_Answer;
+                    enable Multi_Select_Answer;
+                    if(ifnull(input.Option_Values_Snapshot,"").trim() != "")
+                    {
+                        multiOptionList = input.Option_Values_Snapshot.replaceAll("\n",",").toList(",");
+                        input.Multi_Select_Answer:ui.add(multiOptionList);
+                    }
+                }
+                else if(input.Answer_Type_Snapshot == "Rating/Scale")
+                {
+                    show Rating_Answer;
+                    enable Rating_Answer;
+                }
+                else if(input.Answer_Type_Snapshot == "Yes-No")
+                {
+                    show Yes_No_Answer;
+                    enable Yes_No_Answer;
+                }
+            )
+        }
+    }
+}

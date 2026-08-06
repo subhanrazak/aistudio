@@ -1,0 +1,26 @@
+WF_Generate_Public_Link as "Generate Public Link"
+{
+    type = functions
+    form = Assessments
+    execution type = for each record
+    description = "Generates a tokenized public questionnaire link for an external assessment."
+
+    on start
+    {
+        actions
+        {
+            on click
+            (
+                generatedLink = thisapp.Build_Public_Assessment_Link(input.ID);
+                if(input.Status == "Draft")
+                {
+                    update Assessments[ID == input.ID]
+                    [
+                        Status = "In Progress"
+                    ];
+                }
+                openUrl("#Report:All_Assessments", "same window");
+            )
+        }
+    }
+}

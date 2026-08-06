@@ -1,0 +1,65 @@
+void Submit_Assessment(int assessmentId, string completedByName, string completedByEmail, string mode)
+{
+    assessmentRow = Assessments[ID == assessmentId];
+    if(assessmentRow.count() > 0)
+    {
+        thisapp.Generate_Assessment_Responses(assessmentId);
+        missingMandatory = false;
+        missingQuestion = "";
+        for each responseRow in Assessment_Responses[Assessment == assessmentId && Mandatory_Snapshot == true]
+        {
+            if(ifnull(responseRow.Normalized_Answer,"").trim() == "" || responseRow.Normalized_Answer == "Not Applicable")
+            {
+                missingMandatory = true;
+                missingQuestion = responseRow.Question_Text_Snapshot;
+                break;
+            }
+        }
+        if(missingMandatory == false)
+        {
+            submitDate = zoho.currentdate;
+            validityMonths = ifnull(assessmentRow.Validity_Period_Months,3);
+            validUntilDate = submitDate.addMonth(validityMonths);
+            submitMode = mode;
+            if(submitMode in {"", " ", "null", null})
+            {
+                submitMode = assessmentRow.Assessment_Mode;
+            }
+            completeName = completedByName;
+            if(completeName in {"", " ", "null", null})
+            {
+                completeName = zoho.loginuser;
+            }
+            completeEmail = completedByEmail;
+            if(completeEmail in {"", " ", "null", null})
+            {
+                completeEmail = zoho.loginuserid;
+            }
+            update Assessments[ID == assessmentId]
+            [
+                Status = "Submitted"
+                Submission_Date = submitDate
+                Valid_Until = validUntilDate
+                Submission_Timestamp = zoho.currenttime
+                Submission_Mode = submitMode
+                Completed_By_Name = completeName
+                Completed_By_Email = completeEmail
+                Expiry_Reminder_Sent = false
+                Expired_Notification_Sent = false
+            ];
+            for each responseRowToSubmit in Assessment_Responses[Assessment == assessmentId]
+            {
+                responseRowToSubmit.Row_Status = "Submitted";
+                responseRowToSubmit.Completed_By_Name = completeName;
+                responseRowToSubmit.Completed_By_Email = completeEmail;
+                responseRowToSubmit.Completed_Mode = submitMode;
+                responseRowToSubmit.Submitted_At = zoho.currenttime;
+            }
+            thisapp.Generate_Assessment_Report(assessmentId);
+        }
+        else
+        {
+            info "Mandatory response is unanswered: " + missingQuestion;
+        }
+    }
+}

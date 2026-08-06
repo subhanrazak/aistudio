@@ -1,0 +1,35 @@
+Questions_On_Validate as "Questions On Validate"
+{
+    type = form
+    form = Questions
+    record event = on add or edit
+    description = "Validates option values, display order, and category/industry alignment."
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if((input.Answer_Type == "Dropdown" || input.Answer_Type == "Multi-Select") && ifnull(input.Option_Values,"").trim() == "")
+                {
+                    alert "Option Values are required for Dropdown and Multi-Select questions.";
+                    cancel submit;
+                }
+                if(ifnull(input.Display_Order,0) <= 0)
+                {
+                    input.Display_Order = 1;
+                }
+                if(input.Category != null && input.Industry_Type != null)
+                {
+                    categoryRec = Question_Categories[ID == input.Category];
+                    if(categoryRec.count() > 0 && categoryRec.Industry_Type != input.Industry_Type)
+                    {
+                        alert "The selected category must belong to the selected industry type.";
+                        cancel submit;
+                    }
+                }
+            )
+        }
+    }
+}

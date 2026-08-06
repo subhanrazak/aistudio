@@ -1,0 +1,99 @@
+default list All_Assessments
+{
+    displayName = "All Assessments"
+    show all rows from Assessments
+    (
+        Assessment_Reference
+        Project
+        Customer
+        Industry_Type
+        Assessment_Mode
+        Status
+        Assigned_Consultant
+        Submission_Date
+        (
+            displayformat = fulldate
+        )
+        Valid_Until
+        (
+            displayformat = fulldate
+        )
+        Customer_Contact_Email
+        Validity_Period_Months
+        Expiry_Reminder_Sent
+        Expired_Notification_Sent
+        Completed_By_Name
+        Completed_By_Email
+        Submission_Timestamp
+        (
+            displayformat = fulldate
+        )
+        Submission_Mode
+        Public_Link
+        Public_Link_Generated_On
+        (
+            displayformat = fulldate
+        )
+        Public_Link_Expires_On
+        (
+            displayformat = fulldate
+        )
+        Questions_Generated
+        Responses
+        Documents
+        custom action "Generate Public Link"
+        (
+            workflow = WF_Generate_Public_Link
+            show action for each record = true
+            column header = "Generate Public Link"
+            success message = "Public questionnaire link generated."
+            condition = (Assessment_Mode == "External" && Status != "Submitted" && Status != "Expired")
+        )
+        custom action "Submit Assessment"
+        (
+            workflow = WF_Submit_Assessment
+            show action for each record = true
+            column header = "Submit Assessment"
+            success message = "Assessment submitted."
+            condition = (Status == "Draft" || Status == "In Progress")
+            confirmation before execution
+            (
+                message for individual record = "Submit this assessment and generate the branded report?"
+                confirm button text = "Submit"
+                cancel button text = "Cancel"
+            )
+        )
+        custom action "Generate Report"
+        (
+            workflow = WF_Generate_Assessment_Report
+            show action for each record = true
+            show action in edit record menu = true
+            column header = "Generate Report"
+            success message = "Assessment report generated."
+            condition = (Status == "Submitted")
+        )
+        custom action "Start Reassessment"
+        (
+            workflow = WF_Start_Reassessment
+            show action for each record = true
+            column header = "Start Reassessment"
+            success message = "Draft reassessment created."
+            condition = (Status == "Expired")
+        )
+    )
+    filters
+    (
+        Customer
+        Project
+        Industry_Type
+        Assessment_Mode
+        Status
+        Assigned_Consultant
+        Submission_Date
+        Valid_Until
+    )
+    sort by
+    (
+        Assessment_Reference descending
+    )
+}

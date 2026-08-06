@@ -1,0 +1,71 @@
+<div class='assess-page-section'>
+  <div class='zcs-card zcs-p-20 zcs-box-border'>
+    <div class='zcs-flex zcs-justify-space-between zcs-align-items-center zcs-gap-12'>
+      <div>
+        <h2 class='zcs-font-20 zcs-font-semibold zcs-lh-heading zcs-m-0 zcs-color-primary'>Recent submissions</h2>
+        <p class='zcs-font-13 zcs-font-normal zcs-lh-body zcs-mt-4 zcs-mb-0 zcs-color-secondary'>Latest submitted assessments by customer, project, industry, and validity window.</p>
+      </div>
+      <a class='zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-theme' href='#Report:All_Assessments'>
+        <span class='zcs-badge-text zcs-font-13 zcs-font-normal zcs-lh-body'>View all</span>
+      </a>
+    </div>
+
+    <div class='zcs-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative zcs-mt-8'>
+      <table class='zcs-w-full'>
+        <thead class='zcs-sticky'>
+          <tr>
+            <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Assessment Reference</th>
+            <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Customer</th>
+            <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Project</th>
+            <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Industry Type</th>
+            <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Submission Date</th>
+            <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Valid Until</th>
+          </tr>
+          <tr class='zcs-tspace'><th class='zcs-p-8 zcs-box-border' colspan='6'></th></tr>
+        </thead>
+        <tbody>
+          <%
+            recentSubmitted = Assessments[Status == "Submitted"] sort by Submission_Date desc;
+            renderedRows = 0;
+            if(recentSubmitted.count() > 0)
+            {
+              for each submissionRow in recentSubmitted
+              {
+                if(renderedRows < 8)
+                {
+                  renderedRows = renderedRows + 1;
+                  submissionDateText = "-";
+                  validUntilText = "-";
+                  if(submissionRow.Submission_Date != null)
+                  {
+                    submissionDateText = submissionRow.Submission_Date.toString("dd-MMM-yyyy");
+                  }
+                  if(submissionRow.Valid_Until != null)
+                  {
+                    validUntilText = submissionRow.Valid_Until.toString("dd-MMM-yyyy");
+                  }
+          %>
+          <tr>
+            <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'><%=submissionRow.Assessment_Reference%></td>
+            <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=submissionRow.Customer.Customer_Name%></td>
+            <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=submissionRow.Project.Project_Name%></td>
+            <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=submissionRow.Industry_Type.Industry_Name%></td>
+            <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=submissionDateText%></td>
+            <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary'><%=validUntilText%></td>
+          </tr>
+          <%
+                }
+              }
+            }
+            if(renderedRows == 0)
+            {
+          %>
+          <tr class='zcs-tnodata'>
+            <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-center zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-secondary' colspan='6'>No submitted assessments found.</td>
+          </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

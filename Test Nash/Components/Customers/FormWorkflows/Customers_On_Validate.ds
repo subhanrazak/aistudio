@@ -1,0 +1,27 @@
+Customers_On_Validate as "Customers On Validate"
+{
+    type = form
+    form = Customers
+    record event = on add or edit
+    description = "Defensively validates primary contact email whitespace and format."
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(ifnull(input.Primary_Contact_Email,"").trim() != "")
+                {
+                    emailValue = input.Primary_Contact_Email.trim().toLowerCase();
+                    if(emailValue.matches("[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?") == false)
+                    {
+                        alert "Please enter a valid primary contact email address.";
+                        cancel submit;
+                    }
+                    input.Primary_Contact_Email = emailValue;
+                }
+            )
+        }
+    }
+}

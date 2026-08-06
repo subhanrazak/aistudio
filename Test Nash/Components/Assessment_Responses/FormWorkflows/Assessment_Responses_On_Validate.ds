@@ -1,0 +1,55 @@
+Assessment_Responses_On_Validate as "Assessment Responses On Validate"
+{
+    type = form
+    form = Assessment_Responses
+    record event = on add or edit
+    description = "Validates mandatory answers and rating ranges."
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Answer_Type_Snapshot == "Rating/Scale" && input.Rating_Answer != null && (input.Rating_Answer < 1 || input.Rating_Answer > 5))
+                {
+                    alert "Rating answers must be between 1 and 5.";
+                    cancel submit;
+                }
+                if(input.Mandatory_Snapshot == true)
+                {
+                    missingAnswer = false;
+                    if(input.Answer_Type_Snapshot == "Single-Line Text" && ifnull(input.Single_Line_Answer,"").trim() == "")
+                    {
+                        missingAnswer = true;
+                    }
+                    else if(input.Answer_Type_Snapshot == "Paragraph" && ifnull(input.Paragraph_Answer,"").trim() == "")
+                    {
+                        missingAnswer = true;
+                    }
+                    else if(input.Answer_Type_Snapshot == "Dropdown" && input.Dropdown_Answer in {"", " ", "null", null, "Not Applicable"})
+                    {
+                        missingAnswer = true;
+                    }
+                    else if(input.Answer_Type_Snapshot == "Multi-Select" && input.Multi_Select_Answer.isEmpty())
+                    {
+                        missingAnswer = true;
+                    }
+                    else if(input.Answer_Type_Snapshot == "Rating/Scale" && input.Rating_Answer == null)
+                    {
+                        missingAnswer = true;
+                    }
+                    else if(input.Answer_Type_Snapshot == "Yes-No" && input.Yes_No_Answer in {"", " ", "null", null})
+                    {
+                        missingAnswer = true;
+                    }
+                    if(missingAnswer == true)
+                    {
+                        alert "This question is mandatory. Please provide an answer.";
+                        cancel submit;
+                    }
+                }
+            )
+        }
+    }
+}

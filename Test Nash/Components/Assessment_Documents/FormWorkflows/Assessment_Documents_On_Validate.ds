@@ -1,0 +1,27 @@
+Assessment_Documents_On_Validate as "Assessment Documents On Validate"
+{
+    type = form
+    form = Assessment_Documents
+    record event = on add or edit
+    description = "Requires a stored file or preview URL and validates version number."
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Document_File == null && ifnull(input.Document_URL,"").trim() == "")
+                {
+                    alert "Please upload a file or provide a document URL.";
+                    cancel submit;
+                }
+                if(ifnull(input.Version_Number,0) < 1)
+                {
+                    alert "Version number must be at least 1.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}

@@ -1,0 +1,61 @@
+External_Assessment_On_Success as "External Assessment On Success"
+{
+    type = form
+    form = External_Assessment_Submission
+    record event = on add
+    description = "Writes public answers back to the assessment response snapshots and submits the parent assessment."
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                for each responseRow in input.Responses
+                {
+                    normalizedAnswer = "";
+                    if(responseRow.Answer_Type_Snapshot == "Single-Line Text")
+                    {
+                        normalizedAnswer = ifnull(responseRow.Single_Line_Answer,"");
+                    }
+                    else if(responseRow.Answer_Type_Snapshot == "Paragraph")
+                    {
+                        normalizedAnswer = ifnull(responseRow.Paragraph_Answer,"");
+                    }
+                    else if(responseRow.Answer_Type_Snapshot == "Dropdown")
+                    {
+                        normalizedAnswer = ifnull(responseRow.Dropdown_Answer,"");
+                    }
+                    else if(responseRow.Answer_Type_Snapshot == "Multi-Select")
+                    {
+                        normalizedAnswer = responseRow.Multi_Select_Answer.toString();
+                    }
+                    else if(responseRow.Answer_Type_Snapshot == "Rating/Scale" && responseRow.Rating_Answer != null)
+                    {
+                        normalizedAnswer = responseRow.Rating_Answer.toString();
+                    }
+                    else if(responseRow.Answer_Type_Snapshot == "Yes-No")
+                    {
+                        normalizedAnswer = ifnull(responseRow.Yes_No_Answer,"");
+                    }
+                    update Assessment_Responses[ID == responseRow.Assessment_Response_ID && Assessment == input.Assessment_ID]
+                    [
+                        Single_Line_Answer = responseRow.Single_Line_Answer
+                        Paragraph_Answer = responseRow.Paragraph_Answer
+                        Dropdown_Answer = responseRow.Dropdown_Answer
+                        Multi_Select_Answer = responseRow.Multi_Select_Answer
+                        Rating_Answer = responseRow.Rating_Answer
+                        Yes_No_Answer = responseRow.Yes_No_Answer
+                        Normalized_Answer = normalizedAnswer
+                        Completed_By_Name = input.Completed_By_Name
+                        Completed_By_Email = input.Completed_By_Email
+                        Completed_Mode = "External"
+                        Submitted_At = zoho.currenttime
+                        Row_Status = "Submitted"
+                    ];
+                }
+                thisapp.Submit_Assessment(input.Assessment_ID, input.Completed_By_Name, input.Completed_By_Email, "External");
+            )
+        }
+    }
+}

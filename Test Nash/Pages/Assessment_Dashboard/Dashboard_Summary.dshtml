@@ -1,0 +1,345 @@
+<%
+  totalAssessments = Assessments[ID != 0].count();
+  draftCount = Assessments[Status == "Draft"].count();
+  inProgressCount = Assessments[Status == "In Progress"].count();
+  submittedCount = Assessments[Status == "Submitted"].count();
+  expiredStatusCount = Assessments[Status == "Expired"].count();
+
+  expiringSoonCount = Assessments[Status == "Submitted" && Valid_Until != null && Valid_Until >= zoho.currentdate && Valid_Until <= zoho.currentdate.addDay(15)].count();
+  alreadyExpiredCount = Assessments[(Status == "Expired") || (Valid_Until != null && Valid_Until < zoho.currentdate)].count();
+
+  if(totalAssessments > 0)
+  {
+    draftPct = (draftCount * 100) / totalAssessments;
+    inProgressPct = (inProgressCount * 100) / totalAssessments;
+    submittedPct = (submittedCount * 100) / totalAssessments;
+    expiredPct = (expiredStatusCount * 100) / totalAssessments;
+  }
+  else
+  {
+    draftPct = 0;
+    inProgressPct = 0;
+    submittedPct = 0;
+    expiredPct = 0;
+  }
+%>
+<style>
+/* zcs-global utility stylesheet included once for this page: minimal utility set used by fetched ZCS components */
+:root { --zcs-theme-brand-color: var(--zcs_brand_color); --zcs-light-bg-color: var(--zcs_brand_light_color); --zcs-primary-text-color: var(--zcs_primary_text_color); --zcs-secondary-text-color: var(--zcs_secondary_text_color); --zcs-teritiary-text-color: var(--zcs_tertiary_text_color); --zcs-border-color: var(--zcs_tertiary_border_color); --zcs-white-color: #FFFFFF; --zcs-page-bg-color: #F3F3F4; }
+.zcs-card { background-color: var(--zcs-white-color); border: 1px solid #e7e7ee; border-radius: 12px; }
+.zcs-row, .zcs-flex { display: flex; flex-wrap: wrap; }
+.zcs-inline-flex { display: inline-flex; }
+.zcs-direction-column { flex-direction: column; }
+.zcs-row-nowrap { flex-wrap: nowrap; }
+.zcs-align-items-center { align-items: center; }
+.zcs-align-items-start { align-items: flex-start; }
+.zcs-justify-center { justify-content: center; }
+.zcs-justify-space-between { justify-content: space-between; }
+.zcs-col-common { flex: 1 1 0%; min-width: 0; }
+.zcs-col-auto { flex: 0 0 auto; width: auto; }
+.zcs-no-shrink { flex-shrink: 0; }
+.zcs-w-full { width: 100%; }
+.zcs-h-full { height: 100%; }
+.zcs-wh-full { width: 100%; height: 100%; }
+.zcs-box-border { box-sizing: border-box; }
+.zcs-relative { position: relative; }
+.zcs-absolute { position: absolute; }
+.zcs-sticky { position: sticky; }
+.zcs-overflow-hidden { overflow: hidden; }
+.zcs-overflow-auto { overflow: auto; }
+.zcs-ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.zcs-cursor-pointer { cursor: pointer; }
+.zcs-text-left { text-align: left; }
+.zcs-text-right { text-align: right; }
+.zcs-text-center { text-align: center; }
+.zcs-color-primary { color: var(--zcs-primary-text-color); }
+.zcs-color-secondary { color: var(--zcs-secondary-text-color); }
+.zcs-color-tertiary { color: var(--zcs-teritiary-text-color); }
+.zcs-color-white { color: var(--zcs-white-color); }
+.zcs-color-theme { color: var(--zcs-theme-brand-color); }
+.zcs-font-12 { font-size: 0.75rem; }
+.zcs-font-13 { font-size: 0.8125rem; }
+.zcs-font-14 { font-size: 0.875rem; }
+.zcs-font-15 { font-size: 0.9375rem; }
+.zcs-font-16 { font-size: 1rem; }
+.zcs-font-18 { font-size: 1.125rem; }
+.zcs-font-20 { font-size: 1.25rem; }
+.zcs-font-24 { font-size: 1.5rem; }
+.zcs-font-28 { font-size: 1.75rem; }
+.zcs-font-40 { font-size: 2.5rem; }
+.zcs-font-normal { font-weight: 400; }
+.zcs-font-medium { font-weight: 500; }
+.zcs-font-semibold { font-weight: 600; }
+.zcs-font-bold { font-weight: 700; }
+.zcs-lh-heading { line-height: 1.25; }
+.zcs-lh-body { line-height: 1.5; }
+.zcs-m-0 { margin: 0; }
+.zcs-mx-0 { margin-left: 0; margin-right: 0; }
+.zcs-mt-4 { margin-top: 0.25rem; }
+.zcs-mt-8 { margin-top: 0.5rem; }
+.zcs-mb-0 { margin-bottom: 0; }
+.zcs-p-0 { padding: 0; }
+.zcs-p-8 { padding: 0.5rem; }
+.zcs-p-12 { padding: 0.75rem; }
+.zcs-p-16 { padding: 1rem; }
+.zcs-p-20 { padding: 1.25rem; }
+.zcs-p-24 { padding: 1.5rem; }
+.zcs-px-10 { padding-left: 0.625rem; padding-right: 0.625rem; }
+.zcs-px-12 { padding-left: 0.75rem; padding-right: 0.75rem; }
+.zcs-px-16 { padding-left: 1rem; padding-right: 1rem; }
+.zcs-px-20 { padding-left: 1.25rem; padding-right: 1.25rem; }
+.zcs-px-60 { padding-left: 3.75rem; padding-right: 3.75rem; }
+.zcs-py-2 { padding-top: 0.125rem; padding-bottom: 0.125rem; }
+.zcs-py-8 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+.zcs-py-12 { padding-top: 0.75rem; padding-bottom: 0.75rem; }
+.zcs-gap-4 { gap: 0.25rem; }
+.zcs-gap-6 { gap: 0.375rem; }
+.zcs-gap-8 { gap: 0.5rem; }
+.zcs-gap-10 { gap: 0.625rem; }
+.zcs-gap-12 { gap: 0.75rem; }
+.zcs-gap-16 { gap: 1rem; }
+.zcs-gap-20 { gap: 1.25rem; }
+.zcs-gap-24 { gap: 1.5rem; }
+.zcs-gap-32 { gap: 2rem; }
+.zcs-rounded-sm { border-radius: 0.25rem; }
+.zcs-rounded-md { border-radius: 0.375rem; }
+.zcs-rounded-lg { border-radius: 0.5rem; }
+.zcs-rounded-xl { border-radius: 0.75rem; }
+.zcs-rounded-half { border-radius: 50%; }
+a { text-decoration: none; color: inherit; }
+
+/* ZCS table-simple-table */
+:root { --zcs-thead-color: #F9FAFE; --zcs-tr-h-color: #F9FAFE; }
+.zcs-table-wrapper { border: 1px solid var(--zcs_tertiary_border_color); background-color: var(--zcs-white-color); overflow: auto; }
+.zcs-table-wrapper table { line-height: normal; border-collapse: collapse; }
+.zcs-table-wrapper table thead { top: 0; }
+.zcs-table-wrapper table thead tr th { background-color: var(--zcs-thead-color); box-shadow: 0 -1px 0 0 var(--zcs_tertiary_border_color) inset; white-space: nowrap; }
+.zcs-table-wrapper table thead tr.zcs-tspace th { background-color: var(--zcs-white-color); box-shadow: none; }
+.zcs-table-wrapper table tbody tr td { border-top: 1px solid var(--zcs_tertiary_border_color); vertical-align: top; }
+.zcs-table-wrapper table tbody tr:first-child td { border-color: transparent; }
+.zcs-table-wrapper table tbody tr:hover td { background-color: var(--zcs-tr-h-color); }
+.zcs-table-wrapper table tbody tr:first-child:hover td { border-color: var(--zcs_tertiary_border_color); }
+.zcs-table-wrapper table tbody tr.zcs-tnodata:hover td { background-color: transparent; }
+.zcs-table-wrapper table tbody tr td.zcs-green { color: #179e6c; }
+.zcs-table-wrapper table tbody tr td.zcs-red { color: #fe455d; }
+.zcs-table-wrapper table tbody tr td.zcs-yellow { color: #b8770d; }
+.zcs-table-wrapper table tbody tr td.zcs-blue { color: #09598e; }
+.zcs-table-wrapper table tbody tr td.zcs-l_blue { color: #1094c5; }
+
+/* ZCS badge-filled-badge */
+.zcs-badge { width: auto; }
+.zcs-badge-filled { border: 1px solid transparent; }
+.zcs-badge-filled.zcs-badge-theme { background-color: var(--zcs_brand_color); border-color: var(--zcs_brand_color); color: var(--zcs-white-color); }
+.zcs-badge-filled.zcs-badge-green { background-color: #179E6C; border-color: #179E6C; color: var(--zcs-white-color); }
+.zcs-badge-filled.zcs-badge-red { background-color: #FE455D; border-color: #FE455D; color: var(--zcs-white-color); }
+.zcs-badge-filled.zcs-badge-yellow { background-color: #FAAE13; border-color: #FAAE13; color: var(--zcs-white-color); }
+.zcs-badge-filled.zcs-badge-blue { background-color: #2A6FFC; border-color: #2A6FFC; color: var(--zcs-white-color); }
+.zcs-badge-filled.zcs-badge-grey { background-color: #242424; border-color: #242424; color: var(--zcs-white-color); }
+
+/* ZCS progress-bar-range-bar-with-texts */
+.zcs-progress-bar { height: 8px; background-color: var(--zcs_component_hover_color); }
+.zcs-progress-bar-indicator { height: inherit; border-radius: inherit; background-color: var(--zcs_brand_color); }
+
+/* ZCS quick-actions-card-type-quick-actions */
+.zcs-quick-action-item { list-style-type: none; }
+.zcs-quick-action-item.zcs-card:hover { border-color: var(--zcs_brand_color); }
+.zcs-quick-action-item:hover .zcs-quick-action-link { color: var(--zcs_brand_color); }
+.zcs-quick-action-item:hover .zcs-quick-action-text { text-decoration: none; }
+
+/* ZCS timeline-without-time */
+.zcs-timeline-wrapper ul { list-style-type: none; }
+.zcs-tl-indicator { width: 44px; left: 0; }
+.zcs-tl-dot { width: 12px; height: 12px; background-color: var(--zcs_brand_color); border: 1px solid var(--zcs-white-color); box-shadow: 0 2px 6px 0 #C4DEE4; }
+.zcs-tl-li:not(:last-child) .zcs-tl-indicator:before { content: ''; display: flex; position: absolute; width: 1px; height: calc(100% + 20px); background-color: #E1E1E1; top: 5px; }
+
+/* Dashboard-specific layout built from ZCS components */
+.assess-dashboard { background: var(--zcs-page-bg-color); box-sizing: border-box; width: 100%; padding: 20px; color: var(--zcs_primary_text_color); }
+.assess-hero { background: linear-gradient(135deg, var(--zcs_brand_color), var(--zcs_brand_dark_color)); border-radius: 18px; padding: 24px; color: #fff; overflow: hidden; position: relative; }
+.assess-hero:after { content: ''; position: absolute; right: -80px; top: -110px; width: 260px; height: 260px; border-radius: 50%; border: 36px solid rgba(255,255,255,0.12); }
+.assess-hero > * { position: relative; z-index: 1; }
+.assess-kpi-grid { display: grid; grid-template-columns: repeat(4, minmax(160px, 1fr)); gap: 16px; margin-top: 16px; }
+.assess-two-col { display: grid; grid-template-columns: minmax(280px, 0.9fr) minmax(420px, 1.4fr); gap: 16px; margin-top: 16px; }
+.assess-visual-grid { display: grid; grid-template-columns: minmax(280px, 0.85fr) minmax(340px, 1.15fr); gap: 16px; }
+.assess-card-title { display: flex; align-items: center; gap: 8px; color: var(--zcs_secondary_text_color); }
+.assess-icon-box { width: 42px; height: 42px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; background: var(--zcs_brand_light_color); color: var(--zcs_brand_color); }
+.assess-kpi-card { min-height: 120px; }
+.assess-kpi-value { font-size: 34px; line-height: 1; margin-top: 12px; }
+.assess-focus-card { border-left: 4px solid var(--focus-color); }
+.assess-status-stack { display: flex; width: 100%; height: 18px; overflow: hidden; border-radius: 999px; background: var(--zcs_component_hover_color); }
+.assess-stack-seg { min-width: 0; }
+.assess-legend-grid { display: grid; grid-template-columns: repeat(2, minmax(180px, 1fr)); gap: 12px; margin-top: 16px; }
+.assess-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.assess-industry-list { max-height: 270px; overflow: auto; padding-right: 4px; }
+.assess-empty { border: 1px dashed var(--zcs_tertiary_border_color); border-radius: 10px; padding: 20px; text-align: center; color: var(--zcs_secondary_text_color); background: #fff; }
+.assess-quick-grid { display: grid; grid-template-columns: repeat(4, minmax(170px, 1fr)); gap: 12px; margin-top: 16px; }
+.assess-quick-actions-wrapper { margin-top: 16px; }
+.assess-page-section { background: var(--zcs-page-bg-color); padding: 0 20px 20px; box-sizing: border-box; }
+@media (max-width: 1100px) { .assess-kpi-grid, .assess-quick-grid { grid-template-columns: repeat(2, minmax(160px, 1fr)); } .assess-two-col, .assess-visual-grid { grid-template-columns: 1fr; } }
+@media (max-width: 640px) { .assess-dashboard { padding: 12px; } .assess-kpi-grid, .assess-quick-grid, .assess-legend-grid { grid-template-columns: 1fr; } }
+</style>
+
+<div class='assess-dashboard'>
+  <div class='assess-hero zcs-box-border'>
+    <div class='zcs-flex zcs-justify-space-between zcs-align-items-center zcs-gap-16'>
+      <div class='zcs-flex zcs-direction-column zcs-gap-6'>
+        <h1 class='zcs-font-28 zcs-font-semibold zcs-lh-heading zcs-m-0 zcs-color-white'>Assessment Dashboard</h1>
+        <p class='zcs-font-14 zcs-font-normal zcs-lh-body zcs-m-0 zcs-color-white'>Monitor assessment volume, lifecycle status, expiry exposure, submissions, and generated document activity.</p>
+      </div>
+      <div class='zcs-flex zcs-direction-column zcs-gap-4 zcs-text-right'>
+        <span class='zcs-font-13 zcs-font-normal zcs-lh-body zcs-color-white'>Total assessments</span>
+        <strong class='zcs-font-40 zcs-font-bold zcs-lh-heading zcs-color-white'><%=totalAssessments%></strong>
+      </div>
+    </div>
+  </div>
+
+  <div class='assess-kpi-grid'>
+    <div class='zcs-card assess-kpi-card zcs-p-20 zcs-box-border'>
+      <div class='zcs-flex zcs-justify-space-between zcs-gap-12'>
+        <div class='assess-card-title zcs-font-14 zcs-font-medium'><span>Draft</span></div>
+        <span class='assess-icon-box'><i class='zc-li-outline files-1-single-content-03 zcs-font-20'></i></span>
+      </div>
+      <div class='assess-kpi-value zcs-font-bold zcs-color-primary'><%=draftCount%></div>
+      <div class='zcs-progress-bar-wrapper zcs-flex zcs-direction-column zcs-gap-6 zcs-mt-8'>
+        <div class='zcs-progress-bar zcs-rounded-sm'><div class='zcs-progress-bar-indicator' style='width:<%=draftPct%>%; background-color:#FAAE13;'></div></div>
+      </div>
+    </div>
+    <div class='zcs-card assess-kpi-card zcs-p-20 zcs-box-border'>
+      <div class='zcs-flex zcs-justify-space-between zcs-gap-12'>
+        <div class='assess-card-title zcs-font-14 zcs-font-medium'><span>In Progress</span></div>
+        <span class='assess-icon-box'><i class='zc-li-outline ui-2-time zcs-font-20'></i></span>
+      </div>
+      <div class='assess-kpi-value zcs-font-bold zcs-color-primary'><%=inProgressCount%></div>
+      <div class='zcs-progress-bar-wrapper zcs-flex zcs-direction-column zcs-gap-6 zcs-mt-8'>
+        <div class='zcs-progress-bar zcs-rounded-sm'><div class='zcs-progress-bar-indicator' style='width:<%=inProgressPct%>%; background-color:#2A6FFC;'></div></div>
+      </div>
+    </div>
+    <div class='zcs-card assess-kpi-card zcs-p-20 zcs-box-border'>
+      <div class='zcs-flex zcs-justify-space-between zcs-gap-12'>
+        <div class='assess-card-title zcs-font-14 zcs-font-medium'><span>Submitted</span></div>
+        <span class='assess-icon-box'><i class='zc-li-outline ui-1-check-circle-08 zcs-font-20'></i></span>
+      </div>
+      <div class='assess-kpi-value zcs-font-bold zcs-color-primary'><%=submittedCount%></div>
+      <div class='zcs-progress-bar-wrapper zcs-flex zcs-direction-column zcs-gap-6 zcs-mt-8'>
+        <div class='zcs-progress-bar zcs-rounded-sm'><div class='zcs-progress-bar-indicator' style='width:<%=submittedPct%>%; background-color:#179E6C;'></div></div>
+      </div>
+    </div>
+    <div class='zcs-card assess-kpi-card zcs-p-20 zcs-box-border'>
+      <div class='zcs-flex zcs-justify-space-between zcs-gap-12'>
+        <div class='assess-card-title zcs-font-14 zcs-font-medium'><span>Expired</span></div>
+        <span class='assess-icon-box'><i class='zc-li-outline ui-3-alert zcs-font-20'></i></span>
+      </div>
+      <div class='assess-kpi-value zcs-font-bold zcs-color-primary'><%=expiredStatusCount%></div>
+      <div class='zcs-progress-bar-wrapper zcs-flex zcs-direction-column zcs-gap-6 zcs-mt-8'>
+        <div class='zcs-progress-bar zcs-rounded-sm'><div class='zcs-progress-bar-indicator' style='width:<%=expiredPct%>%; background-color:#FE455D;'></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class='assess-two-col'>
+    <div class='zcs-flex zcs-direction-column zcs-gap-16'>
+      <div class='zcs-card assess-focus-card zcs-p-20 zcs-box-border' style='--focus-color:#FAAE13;'>
+        <div class='zcs-flex zcs-justify-space-between zcs-align-items-center'>
+          <div>
+            <h3 class='zcs-font-18 zcs-font-semibold zcs-lh-heading zcs-m-0 zcs-color-primary'>Expiring in next 15 days</h3>
+            <p class='zcs-font-13 zcs-font-normal zcs-lh-body zcs-mt-4 zcs-mb-0 zcs-color-secondary'>Submitted assessments with Valid Until date within the next 15 days.</p>
+          </div>
+          <strong class='zcs-font-40 zcs-font-bold zcs-lh-heading' style='color:#b8770d;'><%=expiringSoonCount%></strong>
+        </div>
+      </div>
+      <div class='zcs-card assess-focus-card zcs-p-20 zcs-box-border' style='--focus-color:#FE455D;'>
+        <div class='zcs-flex zcs-justify-space-between zcs-align-items-center'>
+          <div>
+            <h3 class='zcs-font-18 zcs-font-semibold zcs-lh-heading zcs-m-0 zcs-color-primary'>Already expired</h3>
+            <p class='zcs-font-13 zcs-font-normal zcs-lh-body zcs-mt-4 zcs-mb-0 zcs-color-secondary'>Assessments marked Expired or past their Valid Until date.</p>
+          </div>
+          <strong class='zcs-font-40 zcs-font-bold zcs-lh-heading' style='color:#FE455D;'><%=alreadyExpiredCount%></strong>
+        </div>
+      </div>
+    </div>
+
+    <div class='assess-visual-grid'>
+      <div class='zcs-card zcs-p-20 zcs-box-border'>
+        <div class='zcs-flex zcs-justify-space-between zcs-align-items-center zcs-gap-12'>
+          <h3 class='zcs-font-18 zcs-font-semibold zcs-lh-heading zcs-m-0 zcs-color-primary'>Status distribution</h3>
+          <span class='zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-theme'><span class='zcs-badge-text zcs-font-13 zcs-font-normal zcs-lh-body'><%=totalAssessments%> total</span></span>
+        </div>
+        <div class='assess-status-stack zcs-mt-8' title='Assessment status distribution'>
+          <span class='assess-stack-seg' style='width:<%=draftPct%>%; background:#FAAE13;'></span>
+          <span class='assess-stack-seg' style='width:<%=inProgressPct%>%; background:#2A6FFC;'></span>
+          <span class='assess-stack-seg' style='width:<%=submittedPct%>%; background:#179E6C;'></span>
+          <span class='assess-stack-seg' style='width:<%=expiredPct%>%; background:#FE455D;'></span>
+        </div>
+        <div class='assess-legend-grid'>
+          <div class='zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-14 zcs-color-primary'><span class='assess-dot' style='background:#FAAE13;'></span><span>Draft</span><strong><%=draftCount%></strong></div>
+          <div class='zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-14 zcs-color-primary'><span class='assess-dot' style='background:#2A6FFC;'></span><span>In Progress</span><strong><%=inProgressCount%></strong></div>
+          <div class='zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-14 zcs-color-primary'><span class='assess-dot' style='background:#179E6C;'></span><span>Submitted</span><strong><%=submittedCount%></strong></div>
+          <div class='zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-14 zcs-color-primary'><span class='assess-dot' style='background:#FE455D;'></span><span>Expired</span><strong><%=expiredStatusCount%></strong></div>
+        </div>
+      </div>
+
+      <div class='zcs-card zcs-p-20 zcs-box-border'>
+        <h3 class='zcs-font-18 zcs-font-semibold zcs-lh-heading zcs-m-0 zcs-color-primary'>Industry distribution</h3>
+        <div class='assess-industry-list zcs-flex zcs-direction-column zcs-gap-12 zcs-mt-8'>
+          <%
+            industryRendered = 0;
+            for each industryRow in Industry_Types[Active == true] sort by Display_Order asc
+            {
+              industryCount = Assessments[Industry_Type == industryRow.ID].count();
+              if(industryCount > 0)
+              {
+                if(totalAssessments > 0)
+                {
+                  industryPct = (industryCount * 100) / totalAssessments;
+                }
+                else
+                {
+                  industryPct = 0;
+                }
+                industryRendered = industryRendered + 1;
+          %>
+          <div class='zcs-progress-bar-wrapper zcs-flex zcs-direction-column zcs-gap-6'>
+            <p class='zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-8 zcs-font-13 zcs-font-medium zcs-lh-body zcs-m-0'>
+              <span class='zcs-color-primary'><%=industryRow.Industry_Name%></span>
+              <span class='zcs-color-secondary'><%=industryCount%></span>
+            </p>
+            <div class='zcs-progress-bar zcs-rounded-sm'><div class='zcs-progress-bar-indicator' style='width:<%=industryPct%>%;'></div></div>
+          </div>
+          <%
+              }
+            }
+            if(industryRendered == 0)
+            {
+          %>
+          <div class='assess-empty zcs-font-14'>No assessment volume by industry yet.</div>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class='assess-quick-actions-wrapper zcs-card zcs-flex zcs-direction-column zcs-gap-16 zcs-p-16 zcs-box-border'>
+    <h3 class='zcs-font-18 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0'>Quick actions</h3>
+    <ul class='assess-quick-grid zcs-p-0 zcs-m-0'>
+      <li class='zcs-quick-action-item zcs-card zcs-px-12 zcs-py-12 zcs-box-border'>
+        <a class='zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary zcs-cursor-pointer' href='#Report:All_Assessments'>
+          <i class='zcs-quick-action-icon zcs-font-medium zc-li-outline design-bullet-list-67'></i><span class='zcs-quick-action-text'>All Assessments</span>
+        </a>
+      </li>
+      <li class='zcs-quick-action-item zcs-card zcs-px-12 zcs-py-12 zcs-box-border'>
+        <a class='zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary zcs-cursor-pointer' href='#Report:Expiring_Assessments'>
+          <i class='zcs-quick-action-icon zcs-font-medium zc-li-outline ui-2-time'></i><span class='zcs-quick-action-text'>Expiring Assessments</span>
+        </a>
+      </li>
+      <li class='zcs-quick-action-item zcs-card zcs-px-12 zcs-py-12 zcs-box-border'>
+        <a class='zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary zcs-cursor-pointer' href='#Report:All_Questions'>
+          <i class='zcs-quick-action-icon zcs-font-medium zc-li-outline education-paper-diploma'></i><span class='zcs-quick-action-text'>All Questions</span>
+        </a>
+      </li>
+      <li class='zcs-quick-action-item zcs-card zcs-px-12 zcs-py-12 zcs-box-border'>
+        <a class='zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary zcs-cursor-pointer' href='#Report:All_Assessment_Documents'>
+          <i class='zcs-quick-action-icon zcs-font-medium zc-li-outline files-2-doc'></i><span class='zcs-quick-action-text'>All Assessment Documents</span>
+        </a>
+      </li>
+    </ul>
+  </div>
+</div>

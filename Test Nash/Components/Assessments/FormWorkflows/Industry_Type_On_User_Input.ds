@@ -1,0 +1,25 @@
+Assessments_Industry_Type_On_User_Input as "Assessment Industry Type On User Input"
+{
+    type = form
+    form = Assessments
+    record event = on add or edit
+    description = "Warns users that the selected industry drives question snapshot generation."
+
+    on user input of Industry_Type
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Questions_Generated == true && input.Status == "Draft")
+                {
+                    alert "Changing the industry on a draft assessment will rebuild draft response rows from the active question bank after save.";
+                }
+                else if(input.Questions_Generated == true && input.Status == "Submitted")
+                {
+                    alert "Submitted assessments keep historical question snapshots and cannot change industry.";
+                }
+            )
+        }
+    }
+}

@@ -1,0 +1,27 @@
+Assessment_Settings_On_Validate as "Assessment Settings On Validate"
+{
+    type = form
+    form = Assessment_Settings
+    record event = on add or edit
+    description = "Validates assessment defaults."
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(ifnull(input.Default_Validity_Months,0) <= 0)
+                {
+                    alert "Default validity months must be greater than zero.";
+                    cancel submit;
+                }
+                if(ifnull(input.Reminder_Days_Before_Expiry,0) < 0)
+                {
+                    alert "Reminder days before expiry cannot be negative.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}

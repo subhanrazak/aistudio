@@ -1,0 +1,30 @@
+Project_On_User_Input as "Project On User Input"
+{
+    type = form
+    form = Assessments
+    record event = on add or edit
+    description = "Copies customer, contact, and consultant defaults from the selected project."
+
+    on user input of Project
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Project != null)
+                {
+                    projectRow = Projects[ID == input.Project];
+                    if(projectRow.count() > 0)
+                    {
+                        input.Customer = projectRow.Customer;
+                        input.Customer_Contact_Email = projectRow.Customer_Contact_Email;
+                        if(projectRow.Assigned_Consultant != null)
+                        {
+                            input.Assigned_Consultant = projectRow.Assigned_Consultant;
+                        }
+                    }
+                }
+            )
+        }
+    }
+}

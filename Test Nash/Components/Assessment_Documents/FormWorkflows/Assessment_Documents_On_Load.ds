@@ -1,0 +1,33 @@
+Assessment_Documents_On_Load as "Assessment Documents On Load"
+{
+    type = form
+    form = Assessment_Documents
+    record event = on add or edit
+    description = "Defaults document metadata for manual uploads."
+
+    on load
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Document_Type in {"", " ", "null", null})
+                {
+                    input.Document_Type = "Supporting";
+                }
+                if(input.Source_Action in {"", " ", "null", null})
+                {
+                    input.Source_Action = "Manual Upload";
+                }
+                if(input.Upload_Date == null)
+                {
+                    input.Upload_Date = zoho.currenttime;
+                }
+                if(input.Uploaded_By == null)
+                {
+                    input.Uploaded_By = zoho.loginuser;
+                }
+            )
+        }
+    }
+}

@@ -1,0 +1,46 @@
+void Generate_Assessment_Responses(int assessmentId)
+{
+    assessmentRow = Assessments[ID == assessmentId];
+    if(assessmentRow.count() > 0)
+    {
+        if(assessmentRow.Industry_Type != null)
+        {
+            existingRows = Assessment_Responses[Assessment == assessmentId];
+            if(existingRows.count() == 0)
+            {
+                industryName = "";
+                industryRow = Industry_Types[ID == assessmentRow.Industry_Type];
+                if(industryRow.count() > 0)
+                {
+                    industryName = industryRow.Industry_Name;
+                }
+                for each categoryRow in Question_Categories[Industry_Type == assessmentRow.Industry_Type && Active == true] sort by Display_Order
+                {
+                    categoryName = categoryRow.Category_Name;
+                    categoryOrder = ifnull(categoryRow.Display_Order,1);
+                    for each questionRow in Questions[Industry_Type == assessmentRow.Industry_Type && Category == categoryRow.ID && Active == true] sort by Display_Order
+                    {
+                        insert into Assessment_Responses
+                        [
+                            Assessment = assessmentId
+                            Question_Bank_Question = questionRow.ID
+                            Category_Snapshot = categoryName
+                            Category_Display_Order = categoryOrder
+                            Question_Text_Snapshot = questionRow.Question_Text
+                            Question_Display_Order = ifnull(questionRow.Display_Order,1)
+                            Industry_Type_Snapshot = industryName
+                            Answer_Type_Snapshot = questionRow.Answer_Type
+                            Option_Values_Snapshot = questionRow.Option_Values
+                            Mandatory_Snapshot = questionRow.Mandatory
+                            Row_Status = "Draft"
+                        ];
+                    }
+                }
+                update Assessments[ID == assessmentId]
+                [
+                    Questions_Generated = true
+                ];
+            }
+        }
+    }
+}

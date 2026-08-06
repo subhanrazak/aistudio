@@ -1,0 +1,5349 @@
+application "Test-Nash"
+{
+	date format = "dd-MMM-yyyy"
+	time zone = "Asia/Kolkata"
+	time format = "24-hr"
+
+
+
+	forms
+	{
+		form Assessment_Documents
+		{
+		    displayname = "Assessment Documents"
+		
+		    Document_Details
+		    (
+		        type = section
+		        displayname = "Document Details"
+		        row = 1
+		        column = 0
+		    )
+		
+		    must have Assessment
+		    (
+		        type = picklist
+		        displayname = "Assessment"
+		        values = Assessments.ID
+		        displayformat = [Assessment_Reference]
+		        searchable = true
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    must have Document_Name
+		    (
+		        type = text
+		        displayname = "Document Name"
+		        maxchar = 200
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    Document_Type
+		    (
+		        type = picklist
+		        displayname = "Document Type"
+		        values = {"Generated Report","Supporting"}
+		        initial value = "Supporting"
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    Document_File
+		    (
+		        type = upload file
+		        displayname = "Document File"
+		        file count = 1
+		        browse = local_drive, google_docs, zoho_docs
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    Document_URL
+		    (
+		        type = url
+		        displayname = "Document URL"
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    Uploaded_By
+		    (
+		        type = picklist
+		        displayname = "Uploaded By"
+		        module = users
+		        displayformat = [name]
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    Upload_Date
+		    (
+		        type = datetime
+		        displayname = "Upload Date"
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    Version_Number
+		    (
+		        type = number
+		        displayname = "Version Number"
+		        initial value = 1
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    Revision_Notes
+		    (
+		        type = textarea
+		        displayname = "Revision Notes"
+		        height = 100px
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    Source_Action
+		    (
+		        type = picklist
+		        displayname = "Source Action"
+		        values = {"Manual Upload","Generated on Submit","Regenerated"}
+		        initial value = "Manual Upload"
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    actions
+		    {
+		        on add
+		        {
+		            Submit
+		            (
+		                type = submit
+		                displayname = "Submit"
+		            )
+		            Reset
+		            (
+		                type = reset
+		                displayname = "Reset"
+		            )
+		        }
+		        on edit
+		        {
+		            Update
+		            (
+		                type = submit
+		                displayname = "Update"
+		            )
+		            Cancel
+		            (
+		                type = cancel
+		                displayname = "Cancel"
+		            )
+		        }
+		    }
+		}
+
+		form Assessment_Responses
+		{
+		    displayname = "Assessment Responses"
+		
+		    Response_Context
+		    (
+		        type = section
+		        displayname = "Response Context"
+		        row = 1
+		        column = 0
+		    )
+		
+		    must have Assessment
+		    (
+		        type = picklist
+		        displayname = "Assessment"
+		        values = Assessments.ID
+		        displayformat = [Assessment_Reference]
+		        searchable = true
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    Question_Bank_Question
+		    (
+		        type = picklist
+		        displayname = "Question Bank Question"
+		        values = Questions.ID
+		        displayformat = [Question_Text]
+		        searchable = true
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    Category_Snapshot
+		    (
+		        type = text
+		        displayname = "Category Snapshot"
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    Category_Display_Order
+		    (
+		        type = number
+		        displayname = "Category Display Order"
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    Question_Text_Snapshot
+		    (
+		        type = textarea
+		        displayname = "Question Snapshot"
+		        height = 120px
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    Question_Display_Order
+		    (
+		        type = number
+		        displayname = "Question Display Order"
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    Industry_Type_Snapshot
+		    (
+		        type = text
+		        displayname = "Industry Type Snapshot"
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    Answer_Type_Snapshot
+		    (
+		        type = picklist
+		        displayname = "Answer Type Snapshot"
+		        values = {"Single-Line Text","Paragraph","Dropdown","Multi-Select","Rating/Scale","Yes-No"}
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    Option_Values_Snapshot
+		    (
+		        type = textarea
+		        displayname = "Option Values Snapshot"
+		        height = 100px
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    Mandatory_Snapshot
+		    (
+		        type = checkbox
+		        displayname = "Mandatory Snapshot"
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    Answer_Section
+		    (
+		        type = section
+		        displayname = "Answer"
+		        visibility = true
+		        row = 2
+		        column = 1
+		    )
+		
+		    Single_Line_Answer
+		    (
+		        type = text
+		        displayname = "Single Line Answer"
+		        maxchar = 255
+		        row = 2
+		        column = 1
+		        width = medium
+		    )
+		
+		    Paragraph_Answer
+		    (
+		        type = textarea
+		        displayname = "Paragraph Answer"
+		        height = 120px
+		        row = 2
+		        column = 1
+		        width = medium
+		    )
+		
+		    Dropdown_Answer
+		    (
+		        type = picklist
+		        displayname = "Dropdown Answer"
+		        values = {"Not Applicable"}
+		        row = 2
+		        column = 1
+		        width = medium
+		    )
+		
+		    Multi_Select_Answer
+		    (
+		        type = list
+		        displayname = "Multi Select Answer"
+		        values = {"Not Applicable"}
+		        height = 80px
+		        row = 2
+		        column = 1
+		        width = medium
+		    )
+		
+		    Rating_Answer
+		    (
+		        type = number
+		        displayname = "Rating Answer"
+		        row = 2
+		        column = 1
+		        width = medium
+		    )
+		
+		    Yes_No_Answer
+		    (
+		        type = picklist
+		        displayname = "Yes No Answer"
+		        values = {"Yes","No"}
+		        row = 2
+		        column = 1
+		        width = medium
+		    )
+		
+		    Normalized_Answer
+		    (
+		        type = textarea
+		        displayname = "Normalized Answer"
+		        height = 100px
+		        row = 2
+		        column = 1
+		        width = medium
+		    )
+		
+		    Submission_Metadata
+		    (
+		        type = section
+		        displayname = "Submission Metadata"
+		        visibility = true
+		        row = 3
+		        column = 1
+		    )
+		
+		    Completed_By_Name
+		    (
+		        type = text
+		        displayname = "Completed By Name"
+		        personal data = true
+		        row = 3
+		        column = 1
+		        width = medium
+		    )
+		
+		    Completed_By_Email
+		    (
+		        type = email
+		        displayname = "Completed By Email"
+		        personal data = true
+		        row = 3
+		        column = 1
+		        width = medium
+		    )
+		
+		    Completed_Mode
+		    (
+		        type = picklist
+		        displayname = "Completed Mode"
+		        values = {"Internal","External"}
+		        row = 3
+		        column = 1
+		        width = medium
+		    )
+		
+		    Submitted_At
+		    (
+		        type = datetime
+		        displayname = "Submitted At"
+		        row = 3
+		        column = 1
+		        width = medium
+		    )
+		
+		    Row_Status
+		    (
+		        type = picklist
+		        displayname = "Row Status"
+		        values = {"Draft","Answered","Submitted"}
+		        initial value = "Draft"
+		        row = 3
+		        column = 1
+		        width = medium
+		    )
+		
+		    actions
+		    {
+		        on add
+		        {
+		            Submit
+		            (
+		                type = submit
+		                displayname = "Submit"
+		            )
+		            Reset
+		            (
+		                type = reset
+		                displayname = "Reset"
+		            )
+		        }
+		        on edit
+		        {
+		            Update
+		            (
+		                type = submit
+		                displayname = "Update"
+		            )
+		            Cancel
+		            (
+		                type = cancel
+		                displayname = "Cancel"
+		            )
+		        }
+		    }
+		}
+
+		form Assessment_Settings
+		{
+		    displayname = "Assessment Settings"
+		
+		    Validity_Settings
+		    (
+		        type = section
+		        displayname = "Validity Settings"
+		        row = 1
+		        column = 0
+		    )
+		
+		    must have unique Setting_Name
+		    (
+		        type = text
+		        displayname = "Setting Name"
+		        maxchar = 100
+		        initial value = "Default"
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    Default_Validity_Months
+		    (
+		        type = number
+		        displayname = "Default Validity Months"
+		        initial value = 3
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    Reminder_Days_Before_Expiry
+		    (
+		        type = number
+		        displayname = "Reminder Days Before Expiry"
+		        initial value = 15
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    Notify_Customer_On_Expiry
+		    (
+		        type = checkbox
+		        displayname = "Notify Customer On Expiry"
+		        initial value = true
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    Branding_Section
+		    (
+		        type = section
+		        displayname = "Branding"
+		        visibility = true
+		        row = 2
+		        column = 1
+		    )
+		
+		    Branding_Name
+		    (
+		        type = text
+		        displayname = "Branding Name"
+		        initial value = "Kannanware"
+		        row = 2
+		        column = 1
+		        width = medium
+		    )
+		
+		    Logo_URL
+		    (
+		        type = url
+		        displayname = "Logo URL"
+		        row = 2
+		        column = 1
+		        width = medium
+		    )
+		
+		    Report_Header_Text
+		    (
+		        type = text
+		        displayname = "Report Header Text"
+		        initial value = "Current State Assessment Report"
+		        row = 2
+		        column = 1
+		        width = medium
+		    )
+		
+		    Report_Footer_Text
+		    (
+		        type = text
+		        displayname = "Report Footer Text"
+		        initial value = "Confidential - Kannanware"
+		        row = 2
+		        column = 1
+		        width = medium
+		    )
+		
+		    Active
+		    (
+		        type = checkbox
+		        displayname = "Active"
+		        initial value = true
+		        row = 2
+		        column = 1
+		        width = medium
+		    )
+		
+		    actions
+		    {
+		        on add
+		        {
+		            Submit
+		            (
+		                type = submit
+		                displayname = "Submit"
+		            )
+		            Reset
+		            (
+		                type = reset
+		                displayname = "Reset"
+		            )
+		        }
+		        on edit
+		        {
+		            Update
+		            (
+		                type = submit
+		                displayname = "Update"
+		            )
+		            Cancel
+		            (
+		                type = cancel
+		                displayname = "Cancel"
+		            )
+		        }
+		    }
+		}
+
+		form Assessments
+		{
+		    displayname = "Assessments"
+		
+		    Assessment_Details
+		    (
+		        type = section
+		        displayname = "Assessment Details"
+		        row = 1
+		        column = 0
+		    )
+		
+		    Assessment_Sequence
+		    (
+		        type = autonumber
+		        displayname = "Assessment Sequence"
+		        start index = 1
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    unique Assessment_Reference
+		    (
+		        type = text
+		        displayname = "Assessment Reference"
+		        maxchar = 30
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    must have Project
+		    (
+		        type = picklist
+		        displayname = "Project"
+		        values = Projects[Project_Status != "Cancelled"].ID
+		        displayformat = [Project_Name]
+		        searchable = true
+		        allow new entries
+		        [
+		            displayname = "Add New Project"
+		        ]
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    must have Customer
+		    (
+		        type = picklist
+		        displayname = "Customer"
+		        values = Customers.ID
+		        displayformat = [Customer_Name]
+		        searchable = true
+		        allow new entries
+		        [
+		            displayname = "Add New Customer"
+		        ]
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    Customer_Contact_Email
+		    (
+		        type = email
+		        displayname = "Customer Contact Email"
+		        personal data = true
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    must have Industry_Type
+		    (
+		        type = picklist
+		        displayname = "Industry Type"
+		        values = Industry_Types[Active == true].ID
+		        displayformat = [Industry_Name]
+		        searchable = true
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    Assigned_Consultant
+		    (
+		        type = picklist
+		        displayname = "Assigned Consultant"
+		        module = users
+		        displayformat = [name]
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    Assessment_Mode
+		    (
+		        type = picklist
+		        displayname = "Assessment Mode"
+		        values = {"Internal","External"}
+		        initial value = "Internal"
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    Status
+		    (
+		        type = picklist
+		        displayname = "Status"
+		        values = {"Draft","In Progress","Submitted","Expired"}
+		        initial value = "Draft"
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    Validity_Section
+		    (
+		        type = section
+		        displayname = "Validity"
+		        visibility = true
+		        row = 2
+		        column = 1
+		    )
+		
+		    Validity_Period_Months
+		    (
+		        type = number
+		        displayname = "Validity Period Months"
+		        initial value = 3
+		        row = 2
+		        column = 1
+		        width = medium
+		    )
+		
+		    Submission_Date
+		    (
+		        type = date
+		        displayname = "Submission Date"
+		        row = 2
+		        column = 1
+		        width = medium
+		    )
+		
+		    Valid_Until
+		    (
+		        type = date
+		        displayname = "Valid Until"
+		        row = 2
+		        column = 1
+		        width = medium
+		    )
+		
+		    Expiry_Reminder_Sent
+		    (
+		        type = checkbox
+		        displayname = "Expiry Reminder Sent"
+		        initial value = false
+		        row = 2
+		        column = 1
+		        width = medium
+		    )
+		
+		    Expired_Notification_Sent
+		    (
+		        type = checkbox
+		        displayname = "Expired Notification Sent"
+		        initial value = false
+		        row = 2
+		        column = 1
+		        width = medium
+		    )
+		
+		    Assessment_Submission_Metadata
+		    (
+		        type = section
+		        displayname = "Assessment Submission Metadata"
+		        visibility = true
+		        row = 3
+		        column = 1
+		    )
+		
+		    Completed_By_Name
+		    (
+		        type = text
+		        displayname = "Completed By Name"
+		        personal data = true
+		        row = 3
+		        column = 1
+		        width = medium
+		    )
+		
+		    Completed_By_Email
+		    (
+		        type = email
+		        displayname = "Completed By Email"
+		        personal data = true
+		        row = 3
+		        column = 1
+		        width = medium
+		    )
+		
+		    Submission_Timestamp
+		    (
+		        type = datetime
+		        displayname = "Submission Timestamp"
+		        row = 3
+		        column = 1
+		        width = medium
+		    )
+		
+		    Submission_Mode
+		    (
+		        type = picklist
+		        displayname = "Submission Mode"
+		        values = {"Internal","External"}
+		        row = 3
+		        column = 1
+		        width = medium
+		    )
+		
+		    External_Access
+		    (
+		        type = section
+		        displayname = "External Access"
+		        visibility = true
+		        row = 4
+		        column = 1
+		    )
+		
+		    unique Public_Token
+		    (
+		        type = text
+		        displayname = "Public Token"
+		        maxchar = 100
+		        row = 4
+		        column = 1
+		        width = medium
+		    )
+		
+		    Public_Link
+		    (
+		        type = url
+		        displayname = "Public Link"
+		        row = 4
+		        column = 1
+		        width = medium
+		    )
+		
+		    Public_Link_Generated_On
+		    (
+		        type = datetime
+		        displayname = "Public Link Generated On"
+		        row = 4
+		        column = 1
+		        width = medium
+		    )
+		
+		    Public_Link_Expires_On
+		    (
+		        type = date
+		        displayname = "Public Link Expires On"
+		        row = 4
+		        column = 1
+		        width = medium
+		    )
+		
+		    Questions_Generated
+		    (
+		        type = checkbox
+		        displayname = "Questions Generated"
+		        initial value = false
+		        row = 4
+		        column = 1
+		        width = medium
+		    )
+		
+		    Assessment_Responses_Section
+		    (
+		        type = section
+		        displayname = "Assessment Response Rows"
+		        visibility = false
+		        row = 5
+		        column = 1
+		    )
+		
+		    Responses
+		    (
+		        type = grid
+		        displayname = "Responses"
+		        values = Assessment_Responses.ID
+		        bidirectional = Assessment
+		        defaultrow = 0
+		        sorttype = fieldbased
+		        sort by
+		        (
+		            Category_Display_Order ascending
+		            Question_Display_Order ascending
+		        )
+		        row = 5
+		        column = 1
+		        width = medium
+		    )
+		
+		    Assessment_Documents_Section
+		    (
+		        type = section
+		        displayname = "Assessment Document Files"
+		        visibility = false
+		        row = 6
+		        column = 1
+		    )
+		
+		    Documents
+		    (
+		        type = grid
+		        displayname = "Documents"
+		        values = Assessment_Documents.ID
+		        bidirectional = Assessment
+		        defaultrow = 0
+		        sorttype = fieldbased
+		        sort by
+		        (
+		            Version_Number descending
+		            Upload_Date descending
+		        )
+		        row = 6
+		        column = 1
+		        width = medium
+		    )
+		    actions
+		    {
+		        on add
+		        {
+		            Submit
+		            (
+		                type = submit
+		                displayname = "Submit"
+		            )
+		            Reset
+		            (
+		                type = reset
+		                displayname = "Reset"
+		            )
+		        }
+		        on edit
+		        {
+		            Update
+		            (
+		                type = submit
+		                displayname = "Update"
+		            )
+		            Cancel
+		            (
+		                type = cancel
+		                displayname = "Cancel"
+		            )
+		        }
+		    }
+		}
+
+		form Customers
+		{
+		    displayname = "Customers"
+		
+		    Customer_Details
+		    (
+		        type = section
+		        displayname = "Customer Details"
+		        row = 1
+		        column = 0
+		    )
+		
+		    must have unique Customer_Name
+		    (
+		        type = text
+		        displayname = "Customer Name"
+		        maxchar = 200
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    Primary_Contact_Name
+		    (
+		        type = text
+		        displayname = "Primary Contact Name"
+		        maxchar = 150
+		        personal data = true
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    Primary_Contact_Email
+		    (
+		        type = email
+		        displayname = "Primary Contact Email"
+		        personal data = true
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    Primary_Contact_Phone
+		    (
+		        type = phonenumber
+		        displayname = "Primary Contact Phone"
+		        personal data = true
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    Customer_Status
+		    (
+		        type = picklist
+		        displayname = "Customer Status"
+		        values = {"Active","Inactive"}
+		        initial value = "Active"
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    Notes
+		    (
+		        type = textarea
+		        displayname = "Notes"
+		        height = 100px
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    actions
+		    {
+		        on add
+		        {
+		            Submit
+		            (
+		                type = submit
+		                displayname = "Submit"
+		            )
+		            Reset
+		            (
+		                type = reset
+		                displayname = "Reset"
+		            )
+		        }
+		        on edit
+		        {
+		            Update
+		            (
+		                type = submit
+		                displayname = "Update"
+		            )
+		            Cancel
+		            (
+		                type = cancel
+		                displayname = "Cancel"
+		            )
+		        }
+		    }
+		}
+
+		form External_Assessment_Submission
+		{
+		    displayname = "External Assessment Submission"
+		    success message = "Thank you. Your assessment has been submitted."
+		    captcha = true
+		
+		    Access_Section
+		    (
+		        type = section
+		        displayname = "Assessment Access"
+		        row = 1
+		        column = 0
+		    )
+		
+		    Token
+		    (
+		        type = text
+		        displayname = "Token"
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    Assessment_ID
+		    (
+		        type = number
+		        displayname = "Assessment ID"
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    Assessment_Reference
+		    (
+		        type = text
+		        displayname = "Assessment Reference"
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    Project_Name
+		    (
+		        type = text
+		        displayname = "Project Name"
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    Customer_Name
+		    (
+		        type = text
+		        displayname = "Customer Name"
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    Industry_Name
+		    (
+		        type = text
+		        displayname = "Industry"
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    Completion_Section
+		    (
+		        type = section
+		        displayname = "Completed By"
+		        visibility = true
+		        row = 2
+		        column = 1
+		    )
+		
+		    must have Completed_By_Name
+		    (
+		        type = text
+		        displayname = "Completed By Name"
+		        personal data = true
+		        row = 2
+		        column = 1
+		        width = medium
+		    )
+		
+		    must have Completed_By_Email
+		    (
+		        type = email
+		        displayname = "Completed By Email"
+		        personal data = true
+		        row = 2
+		        column = 1
+		        width = medium
+		    )
+		
+		    Response_Rows
+		    (
+		        type = section
+		        displayname = "Questionnaire Responses"
+		        visibility = false
+		        row = 3
+		        column = 1
+		    )
+		
+		    Responses
+		    (
+		        type = grid
+		        displayname = "Responses"
+		        defaultrow = 0
+		        maxrow = 500
+		        Assessment_Response_ID
+		        (
+		            type = number
+		            displayname = "Assessment Response ID"
+		        )
+		        Category_Snapshot
+		        (
+		            type = text
+		            displayname = "Category"
+		        )
+		        Question_Text_Snapshot
+		        (
+		            type = textarea
+		            displayname = "Question"
+		            height = 120px
+		        )
+		        Answer_Type_Snapshot
+		        (
+		            type = picklist
+		            displayname = "Answer Type"
+		            values = {"Single-Line Text","Paragraph","Dropdown","Multi-Select","Rating/Scale","Yes-No"}
+		        )
+		        Option_Values_Snapshot
+		        (
+		            type = textarea
+		            displayname = "Options"
+		        )
+		        Mandatory_Snapshot
+		        (
+		            type = checkbox
+		            displayname = "Mandatory"
+		        )
+		        Single_Line_Answer
+		        (
+		            type = text
+		            displayname = "Text Answer"
+		            maxchar = 255
+		        )
+		        Paragraph_Answer
+		        (
+		            type = textarea
+		            displayname = "Paragraph Answer"
+		            height = 120px
+		        )
+		        Dropdown_Answer
+		        (
+		            type = picklist
+		            displayname = "Dropdown Answer"
+		            values = {"Not Applicable"}
+		        )
+		        Multi_Select_Answer
+		        (
+		            type = list
+		            displayname = "Multi-Select Answer"
+		            values = {"Not Applicable"}
+		            height = 80px
+		        )
+		        Rating_Answer
+		        (
+		            type = number
+		            displayname = "Rating Answer"
+		        )
+		        Yes_No_Answer
+		        (
+		            type = picklist
+		            displayname = "Yes / No Answer"
+		            values = {"Yes","No"}
+		        )
+		        row = 3
+		        column = 1
+		        width = medium
+		    )
+		    actions
+		    {
+		        on add
+		        {
+		            Submit_Assessment
+		            (
+		                type = submit
+		                displayname = "Submit Assessment"
+		            )
+		            Reset
+		            (
+		                type = reset
+		                displayname = "Reset"
+		            )
+		        }
+		    }
+		}
+
+		form Industry_Types
+		{
+		    displayname = "Industry Types"
+		
+		    Industry_Details
+		    (
+		        type = section
+		        displayname = "Industry Details"
+		        row = 1
+		        column = 0
+		    )
+		
+		    must have unique Industry_Name
+		    (
+		        type = text
+		        displayname = "Industry Name"
+		        maxchar = 150
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    unique Industry_Code
+		    (
+		        type = text
+		        displayname = "Industry Code"
+		        maxchar = 50
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    Description
+		    (
+		        type = textarea
+		        displayname = "Description"
+		        height = 100px
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    Display_Order
+		    (
+		        type = number
+		        displayname = "Display Order"
+		        initial value = 1
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    Active
+		    (
+		        type = checkbox
+		        displayname = "Active"
+		        initial value = true
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    actions
+		    {
+		        on add
+		        {
+		            Submit
+		            (
+		                type = submit
+		                displayname = "Submit"
+		            )
+		            Reset
+		            (
+		                type = reset
+		                displayname = "Reset"
+		            )
+		        }
+		        on edit
+		        {
+		            Update
+		            (
+		                type = submit
+		                displayname = "Update"
+		            )
+		            Cancel
+		            (
+		                type = cancel
+		                displayname = "Cancel"
+		            )
+		        }
+		    }
+		}
+
+		form Projects
+		{
+		    displayname = "Projects"
+		
+		    Project_Details
+		    (
+		        type = section
+		        displayname = "Project Details"
+		        row = 1
+		        column = 0
+		    )
+		
+		    must have Project_Name
+		    (
+		        type = text
+		        displayname = "Project Name"
+		        maxchar = 200
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    unique Project_Code
+		    (
+		        type = text
+		        displayname = "Project Code"
+		        maxchar = 50
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    must have Customer
+		    (
+		        type = picklist
+		        displayname = "Customer"
+		        values = Customers.ID
+		        displayformat = [Customer_Name]
+		        allow new entries
+		        [
+		            displayname = "Add New Customer"
+		        ]
+		        searchable = true
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    Assigned_Consultant
+		    (
+		        type = picklist
+		        displayname = "Assigned Consultant"
+		        module = users
+		        displayformat = [name]
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    Customer_Contact_Email
+		    (
+		        type = email
+		        displayname = "Customer Contact Email"
+		        personal data = true
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    Project_Status
+		    (
+		        type = picklist
+		        displayname = "Project Status"
+		        values = {"Active","On Hold","Completed","Cancelled"}
+		        initial value = "Active"
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    Start_Date
+		    (
+		        type = date
+		        displayname = "Start Date"
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    End_Date
+		    (
+		        type = date
+		        displayname = "End Date"
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    Notes
+		    (
+		        type = textarea
+		        displayname = "Notes"
+		        height = 120px
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    actions
+		    {
+		        on add
+		        {
+		            Submit
+		            (
+		                type = submit
+		                displayname = "Submit"
+		            )
+		            Reset
+		            (
+		                type = reset
+		                displayname = "Reset"
+		            )
+		        }
+		        on edit
+		        {
+		            Update
+		            (
+		                type = submit
+		                displayname = "Update"
+		            )
+		            Cancel
+		            (
+		                type = cancel
+		                displayname = "Cancel"
+		            )
+		        }
+		    }
+		}
+
+		form Question_Categories
+		{
+		    displayname = "Question Categories"
+		
+		    Category_Details
+		    (
+		        type = section
+		        displayname = "Category Details"
+		        row = 1
+		        column = 0
+		    )
+		
+		    must have Category_Name
+		    (
+		        type = text
+		        displayname = "Category Name"
+		        maxchar = 150
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    must have Industry_Type
+		    (
+		        type = picklist
+		        displayname = "Industry Type"
+		        values = Industry_Types[Active == true].ID
+		        displayformat = [Industry_Name]
+		        searchable = true
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    Display_Order
+		    (
+		        type = number
+		        displayname = "Display Order"
+		        initial value = 1
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    Active
+		    (
+		        type = checkbox
+		        displayname = "Active"
+		        initial value = true
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    Description
+		    (
+		        type = textarea
+		        displayname = "Description"
+		        height = 100px
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    actions
+		    {
+		        on add
+		        {
+		            Submit
+		            (
+		                type = submit
+		                displayname = "Submit"
+		            )
+		            Reset
+		            (
+		                type = reset
+		                displayname = "Reset"
+		            )
+		        }
+		        on edit
+		        {
+		            Update
+		            (
+		                type = submit
+		                displayname = "Update"
+		            )
+		            Cancel
+		            (
+		                type = cancel
+		                displayname = "Cancel"
+		            )
+		        }
+		    }
+		}
+
+		form Questions
+		{
+		    displayname = "Questions"
+		
+		    Question_Details
+		    (
+		        type = section
+		        displayname = "Question Details"
+		        row = 1
+		        column = 0
+		    )
+		
+		    must have Question_Text
+		    (
+		        type = textarea
+		        displayname = "Question Text"
+		        height = 120px
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    must have Industry_Type
+		    (
+		        type = picklist
+		        displayname = "Industry Type"
+		        values = Industry_Types[Active == true].ID
+		        displayformat = [Industry_Name]
+		        searchable = true
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    must have Category
+		    (
+		        type = picklist
+		        displayname = "Category"
+		        values = Question_Categories[Active == true].ID
+		        displayformat = [Category_Name]
+		        allow new entries
+		        [
+		            displayname = "Add New Category"
+		            set values
+		            (
+		                Industry_Type = input.Industry_Type
+		            )
+		        ]
+		        searchable = true
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    must have Answer_Type
+		    (
+		        type = picklist
+		        displayname = "Answer Type"
+		        values = {"Single-Line Text","Paragraph","Dropdown","Multi-Select","Rating/Scale","Yes-No"}
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    Option_Values
+		    (
+		        type = textarea
+		        displayname = "Option Values"
+		        height = 100px
+		        row = 1
+		        column = 1
+		        width = medium
+		        description [ type = tooltip  message = "Use one option per line, or comma-separated values, for Dropdown and Multi-Select questions." ]
+		    )
+		
+		    Mandatory
+		    (
+		        type = checkbox
+		        displayname = "Mandatory"
+		        initial value = false
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    Display_Order
+		    (
+		        type = number
+		        displayname = "Display Order"
+		        initial value = 1
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    Active
+		    (
+		        type = checkbox
+		        displayname = "Active"
+		        initial value = true
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    Help_Text
+		    (
+		        type = textarea
+		        displayname = "Help Text"
+		        height = 80px
+		        row = 1
+		        column = 1
+		        width = medium
+		    )
+		
+		    actions
+		    {
+		        on add
+		        {
+		            Submit
+		            (
+		                type = submit
+		                displayname = "Submit"
+		            )
+		            Reset
+		            (
+		                type = reset
+		                displayname = "Reset"
+		            )
+		        }
+		        on edit
+		        {
+		            Update
+		            (
+		                type = submit
+		                displayname = "Update"
+		            )
+		            Cancel
+		            (
+		                type = cancel
+		                displayname = "Cancel"
+		            )
+		        }
+		    }
+		}
+	}
+
+	reports
+	{
+		default list All_Assessment_Documents
+		{
+		    displayName = "All Assessment Documents"
+		    show all rows from Assessment_Documents
+		    (
+		        Assessment
+		        Document_Name
+		        Document_Type
+		        Document_File
+		        Document_URL
+		        Uploaded_By
+		        Upload_Date
+		        (
+		            displayformat = dateonly
+		        )
+		        Version_Number
+		        Source_Action
+		    )
+		    filters
+		    (
+		        Assessment
+		        Document_Type
+		        Uploaded_By
+		        Upload_Date
+		        Source_Action
+		    )
+		    sort by
+		    (
+		        Assessment ascending
+		        Version_Number descending
+		        Upload_Date descending
+		    )
+		}
+
+		list Generated_Assessment_Reports
+		{
+		    displayName = "Generated Assessment Reports"
+		    show all rows from Assessment_Documents [Document_Type == "Generated Report"]
+		    (
+		        Assessment
+		        Document_Name
+		        Document_Type
+		        Document_File
+		        Document_URL
+		        Upload_Date
+		        (
+		            displayformat = dateonly
+		        )
+		        Version_Number
+		        Source_Action
+		    )
+		    filters
+		    (
+		        Assessment
+		        Upload_Date
+		        Source_Action
+		    )
+		    sort by
+		    (
+		        Upload_Date descending
+		    )
+		}
+
+		default list All_Assessment_Responses
+		{
+		    displayName = "All Assessment Responses"
+		    show all rows from Assessment_Responses
+		    (
+		        Assessment
+		        Category_Snapshot
+		        Category_Display_Order
+		        Question_Text_Snapshot
+		        (
+		            foldcontent = enable
+		        )
+		        Question_Display_Order
+		        Answer_Type_Snapshot
+		        Normalized_Answer
+		        (
+		            foldcontent = enable
+		        )
+		        Row_Status
+		        Completed_Mode
+		        Submitted_At
+		        (
+		            displayformat = dateonly
+		        )
+		    )
+		    filters
+		    (
+		        Assessment
+		        Category_Snapshot
+		        Answer_Type_Snapshot
+		        Row_Status
+		        Completed_Mode
+		        Submitted_At
+		    )
+		    group by
+		    (
+		        properties
+		        (
+		            display record count = true
+		        )
+		        Assessment ascending
+		        Category_Display_Order ascending
+		    )
+		    sort by
+		    (
+		        Assessment ascending
+		        Category_Display_Order ascending
+		        Question_Display_Order ascending
+		    )
+		}
+
+		list Submitted_Responses
+		{
+		    displayName = "Submitted Responses"
+		    show all rows from Assessment_Responses [Row_Status == "Submitted"]
+		    (
+		        Assessment
+		        Category_Snapshot
+		        Question_Text_Snapshot
+		        (
+		            foldcontent = enable
+		        )
+		        Normalized_Answer
+		        (
+		            foldcontent = enable
+		        )
+		        Completed_Mode
+		        Submitted_At
+		        (
+		            displayformat = dateonly
+		        )
+		    )
+		    filters
+		    (
+		        Assessment
+		        Category_Snapshot
+		        Completed_Mode
+		        Submitted_At
+		    )
+		    sort by
+		    (
+		        Submitted_At descending
+		    )
+		}
+
+		default list All_Assessment_Settings
+		{
+		    displayName = "All Assessment Settings"
+		    show all rows from Assessment_Settings
+		    (
+		        Setting_Name
+		        Default_Validity_Months
+		        Reminder_Days_Before_Expiry
+		        Notify_Customer_On_Expiry
+		        Branding_Name
+		        Active
+		    )
+		    filters
+		    (
+		        Active
+		    )
+		    sort by
+		    (
+		        Setting_Name ascending
+		    )
+		}
+
+		default list All_Assessments
+		{
+		    displayName = "All Assessments"
+		    show all rows from Assessments
+		    (
+		        Assessment_Reference
+		        Project
+		        Customer
+		        Industry_Type
+		        Assessment_Mode
+		        Status
+		        Assigned_Consultant
+		        Submission_Date
+		        (
+		            displayformat = fulldate
+		        )
+		        Valid_Until
+		        (
+		            displayformat = fulldate
+		        )
+		        Customer_Contact_Email
+		        Validity_Period_Months
+		        Expiry_Reminder_Sent
+		        Expired_Notification_Sent
+		        Completed_By_Name
+		        Completed_By_Email
+		        Submission_Timestamp
+		        (
+		            displayformat = fulldate
+		        )
+		        Submission_Mode
+		        Public_Link
+		        Public_Link_Generated_On
+		        (
+		            displayformat = fulldate
+		        )
+		        Public_Link_Expires_On
+		        (
+		            displayformat = fulldate
+		        )
+		        Questions_Generated
+		        Responses
+		        Documents
+		        custom action "Generate Public Link"
+		        (
+		            workflow = WF_Generate_Public_Link
+		            show action for each record = true
+		            column header = "Generate Public Link"
+		            success message = "Public questionnaire link generated."
+		            condition = (Assessment_Mode == "External" && Status != "Submitted" && Status != "Expired")
+		        )
+		        custom action "Submit Assessment"
+		        (
+		            workflow = WF_Submit_Assessment
+		            show action for each record = true
+		            column header = "Submit Assessment"
+		            success message = "Assessment submitted."
+		            condition = (Status == "Draft" || Status == "In Progress")
+		            confirmation before execution
+		            (
+		                message for individual record = "Submit this assessment and generate the branded report?"
+		                confirm button text = "Submit"
+		                cancel button text = "Cancel"
+		            )
+		        )
+		        custom action "Generate Report"
+		        (
+		            workflow = WF_Generate_Assessment_Report
+		            show action for each record = true
+		            show action in edit record menu = true
+		            column header = "Generate Report"
+		            success message = "Assessment report generated."
+		            condition = (Status == "Submitted")
+		        )
+		        custom action "Start Reassessment"
+		        (
+		            workflow = WF_Start_Reassessment
+		            show action for each record = true
+		            column header = "Start Reassessment"
+		            success message = "Draft reassessment created."
+		            condition = (Status == "Expired")
+		        )
+		    )
+		    filters
+		    (
+		        Customer
+		        Project
+		        Industry_Type
+		        Assessment_Mode
+		        Status
+		        Assigned_Consultant
+		        Submission_Date
+		        Valid_Until
+		    )
+		    sort by
+		    (
+		        Assessment_Reference descending
+		    )
+		}
+
+		list Assessment_Report_Print_View
+		{
+		    displayName = "Assessment Report Print View"
+		    show all rows from Assessments [Status == "Submitted"]
+		    (
+		        Assessment_Reference
+		        Customer
+		        Project
+		        Industry_Type
+		        Assessment_Mode
+		        Assigned_Consultant
+		        Submission_Date
+		        (
+		            displayformat = fulldate
+		        )
+		        Valid_Until
+		        (
+		            displayformat = fulldate
+		        )
+		        Completed_By_Name
+		        Completed_By_Email
+		        Submission_Mode
+		        Questions_Generated
+		        Responses
+		        Documents
+		    )
+		    filters
+		    (
+		        Customer
+		        Project
+		        Industry_Type
+		        Assessment_Mode
+		        Assigned_Consultant
+		        Valid_Until
+		    )
+		    sort by
+		    (
+		        Assessment_Reference descending
+		    )
+		}
+
+		list Assessments_By_Status
+		{
+		    displayName = "Assessments By Status"
+		    show all rows from Assessments
+		    (
+		        Assessment_Reference
+		        Project
+		        Customer
+		        Industry_Type
+		        Assessment_Mode
+		        Status
+		        Assigned_Consultant
+		        Valid_Until
+		        (
+		            displayformat = fulldate
+		        )
+		        Questions_Generated
+		        Expiry_Reminder_Sent
+		        Expired_Notification_Sent
+		    )
+		    filters
+		    (
+		        Status
+		        Industry_Type
+		        Assessment_Mode
+		        Assigned_Consultant
+		        Valid_Until
+		    )
+		    group by
+		    (
+		        properties
+		        (
+		            display record count = true
+		        )
+		        Status ascending
+		    )
+		    sort by
+		    (
+		        Valid_Until ascending
+		    )
+		}
+
+		list Expiring_Assessments
+		{
+		    displayName = "Expiring Assessments"
+		    show all rows from Assessments [Status == "Submitted" && Valid_Until != null]
+		    (
+		        Assessment_Reference
+		        Customer
+		        Project
+		        Industry_Type
+		        Assigned_Consultant
+		        Valid_Until
+		        (
+		            displayformat = fulldate
+		        )
+		        Customer_Contact_Email
+		        Expiry_Reminder_Sent
+		    )
+		    filters
+		    (
+		        Customer
+		        Industry_Type
+		        Assigned_Consultant
+		        Valid_Until
+		    )
+		    sort by
+		    (
+		        Valid_Until ascending
+		    )
+		    conditional formatting
+		    (
+		        "Expires Soon"
+		        {
+		            condition = (Valid_Until in next 15 days)
+		            fields = [Assessment_Reference, Customer, Project, Valid_Until]
+		            format = "background-color:#fff4cc;color:#7a4b00"
+		        }
+		    )
+		}
+
+		default list All_Customers
+		{
+		    displayName = "All Customers"
+		    show all rows from Customers
+		    (
+		        Customer_Name
+		        Primary_Contact_Name
+		        Primary_Contact_Email
+		        Primary_Contact_Phone
+		        (
+		            displayformat = formattednumber
+		            linktodial = enable
+		        )
+		        Customer_Status
+		    )
+		    filters
+		    (
+		        Customer_Status
+		    )
+		    sort by
+		    (
+		        Customer_Name ascending
+		    )
+		    conditional formatting
+		    (
+		        "Highlight Inactive"
+		        {
+		            condition = (Customer_Status == "Inactive")
+		            fields = [Customer_Name, Primary_Contact_Name, Primary_Contact_Email, Customer_Status]
+		            format = "background-color:#FFF3E0;color:#8A4B08"
+		        }
+		    )
+		}
+
+		default list All_Industry_Types
+		{
+		    displayName = "All Industry Types"
+		    show all rows from Industry_Types
+		    (
+		        Industry_Name
+		        Industry_Code
+		        Display_Order
+		        Active
+		    )
+		    filters
+		    (
+		        Active
+		    )
+		    sort by
+		    (
+		        Display_Order ascending
+		        Industry_Name ascending
+		    )
+		    conditional formatting
+		    (
+		        "Highlight Inactive"
+		        {
+		            condition = (Active == false)
+		            fields = [Industry_Name, Industry_Code, Display_Order, Active]
+		            format = "background-color:#ECEFF1;color:#546E7A"
+		        }
+		    )
+		}
+
+		default list All_Projects
+		{
+		    displayName = "All Projects"
+		    show all rows from Projects
+		    (
+		        Project_Name
+		        Project_Code
+		        Customer
+		        Assigned_Consultant
+		        Customer_Contact_Email
+		        Project_Status
+		        Start_Date
+		        (
+		            displayformat = fulldate
+		        )
+		        End_Date
+		        (
+		            displayformat = fulldate
+		        )
+		    )
+		    filters
+		    (
+		        Customer
+		        Project_Status
+		        Assigned_Consultant
+		        Start_Date
+		    )
+		    sort by
+		    (
+		        Project_Name ascending
+		    )
+		    conditional formatting
+		    (
+		        "Highlight On Hold"
+		        {
+		            condition = (Project_Status == "On Hold")
+		            fields = [Project_Name, Project_Code, Customer, Project_Status]
+		            format = "background-color:#FFF8E1;color:#7A4F00"
+		        }
+		        "Highlight Cancelled"
+		        {
+		            condition = (Project_Status == "Cancelled")
+		            fields = [Project_Name, Project_Code, Customer, Project_Status]
+		            format = "background-color:#FFEBEE;color:#B71C1C"
+		        }
+		    )
+		}
+
+		default list All_Question_Categories
+		{
+		    displayName = "All Question Categories"
+		    show all rows from Question_Categories
+		    (
+		        Category_Name
+		        Industry_Type
+		        Display_Order
+		        Active
+		        Description
+		        (
+		            foldcontent = enable
+		        )
+		    )
+		    filters
+		    (
+		        Industry_Type
+		        Active
+		    )
+		    group by
+		    (
+		        properties
+		        (
+		            display record count = true
+		        )
+		        Industry_Type ascending
+		    )
+		    sort by
+		    (
+		        Display_Order ascending
+		        Category_Name ascending
+		    )
+		    conditional formatting
+		    (
+		        "Highlight Inactive"
+		        {
+		            condition = (Active == false)
+		            fields = [Category_Name, Industry_Type, Display_Order, Active]
+		            format = "background-color:#ECEFF1;color:#546E7A"
+		        }
+		    )
+		}
+
+		list Active_Questions_By_Industry
+		{
+		    displayName = "Active Questions By Industry"
+		    show all rows from Questions [Active == true]
+		    (
+		        Question_Text
+		        (
+		            foldcontent = enable
+		        )
+		        Industry_Type
+		        Category
+		        Answer_Type
+		        Mandatory
+		        Display_Order
+		        Active
+		    )
+		    filters
+		    (
+		        Industry_Type
+		        Category
+		        Answer_Type
+		        Mandatory
+		    )
+		    sort by
+		    (
+		        Industry_Type ascending
+		        Category ascending
+		        Display_Order ascending
+		    )
+		}
+
+		default list All_Questions
+		{
+		    displayName = "All Questions"
+		    show all rows from Questions
+		    (
+		        Question_Text
+		        (
+		            foldcontent = enable
+		        )
+		        Industry_Type
+		        Category
+		        Answer_Type
+		        Mandatory
+		        Display_Order
+		        Active
+		    )
+		    filters
+		    (
+		        Industry_Type
+		        Category
+		        Answer_Type
+		        Mandatory
+		        Active
+		    )
+		    group by
+		    (
+		        properties
+		        (
+		            display record count = true
+		        )
+		        Industry_Type ascending
+		        Category ascending
+		    )
+		    sort by
+		    (
+		        Display_Order ascending
+		    )
+		    conditional formatting
+		    (
+		        "Highlight Inactive"
+		        {
+		            condition = (Active == false)
+		            fields = [Question_Text, Industry_Type, Category, Active]
+		            format = "background-color:#ECEFF1;color:#546E7A"
+		        }
+		        "Highlight Mandatory"
+		        {
+		            condition = (Mandatory == true)
+		            fields = [Question_Text, Mandatory]
+		            format = "background-color:#E3F2FD;color:#0E7C86;font-weight:bold"
+		        }
+		    )
+		}
+	}
+
+	pages
+	{
+		page Assessment_Dashboard
+		{
+					displayname = "Assessment Dashboard"
+					Content="<zml>\n\t<layout>\n\t\t<row>\n\t\t\t<column width='100%'>\n\t\t\t\t<dsp id='Dashboard_Summary' elementName='Dashboard_Summary'>\n\t\t\t\t\t<![CDATA[htmlpage Dashboard_Summary()\n\t\t\t\t\t\tcontent\n\t\t\t\t\t\t&lt;%{%&gt;\n\t\t\t\t\t\t\t&lt;%\n\ttotalAssessments = Assessments[ID != 0].count();\n\tdraftCount = Assessments[Status == &quot;Draft&quot;].count();\n\tinProgressCount = Assessments[Status == &quot;In Progress&quot;].count();\n\tsubmittedCount = Assessments[Status == &quot;Submitted&quot;].count();\n\texpiredStatusCount = Assessments[Status == &quot;Expired&quot;].count();\n\n\texpiringSoonCount = Assessments[Status == &quot;Submitted&quot; &amp;&amp; Valid_Until != null &amp;&amp; Valid_Until &gt;= zoho.currentdate &amp;&amp; Valid_Until &lt;= zoho.currentdate.addDay(15)].count();\n\talreadyExpiredCount = Assessments[(Status == &quot;Expired&quot;) || (Valid_Until != null &amp;&amp; Valid_Until &lt; zoho.currentdate)].count();\n\n\tif(totalAssessments &gt; 0)\n\t{\n\t\tdraftPct = (draftCount * 100) / totalAssessments;\n\t\tinProgressPct = (inProgressCount * 100) / totalAssessments;\n\t\tsubmittedPct = (submittedCount * 100) / totalAssessments;\n\t\texpiredPct = (expiredStatusCount * 100) / totalAssessments;\n\t}\n\telse\n\t{\n\t\tdraftPct = 0;\n\t\tinProgressPct = 0;\n\t\tsubmittedPct = 0;\n\t\texpiredPct = 0;\n\t}\n%&gt;\n&lt;style&gt;\n/* zcs-global utility stylesheet included once for this page: minimal utility set used by fetched ZCS components */\n:root { --zcs-theme-brand-color: var(--zcs_brand_color); --zcs-light-bg-color: var(--zcs_brand_light_color); --zcs-primary-text-color: var(--zcs_primary_text_color); --zcs-secondary-text-color: var(--zcs_secondary_text_color); --zcs-teritiary-text-color: var(--zcs_tertiary_text_color); --zcs-border-color: var(--zcs_tertiary_border_color); --zcs-white-color: #FFFFFF; --zcs-page-bg-color: #F3F3F4; }\n.zcs-card { background-color: var(--zcs-white-color); border: 1px solid #e7e7ee; border-radius: 12px; }\n.zcs-row, .zcs-flex { display: flex; flex-wrap: wrap; }\n.zcs-inline-flex { display: inline-flex; }\n.zcs-direction-column { flex-direction: column; }\n.zcs-row-nowrap { flex-wrap: nowrap; }\n.zcs-align-items-center { align-items: center; }\n.zcs-align-items-start { align-items: flex-start; }\n.zcs-justify-center { justify-content: center; }\n.zcs-justify-space-between { justify-content: space-between; }\n.zcs-col-common { flex: 1 1 0%; min-width: 0; }\n.zcs-col-auto { flex: 0 0 auto; width: auto; }\n.zcs-no-shrink { flex-shrink: 0; }\n.zcs-w-full { width: 100%; }\n.zcs-h-full { height: 100%; }\n.zcs-wh-full { width: 100%; height: 100%; }\n.zcs-box-border { box-sizing: border-box; }\n.zcs-relative { position: relative; }\n.zcs-absolute { position: absolute; }\n.zcs-sticky { position: sticky; }\n.zcs-overflow-hidden { overflow: hidden; }\n.zcs-overflow-auto { overflow: auto; }\n.zcs-ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }\n.zcs-cursor-pointer { cursor: pointer; }\n.zcs-text-left { text-align: left; }\n.zcs-text-right { text-align: right; }\n.zcs-text-center { text-align: center; }\n.zcs-color-primary { color: var(--zcs-primary-text-color); }\n.zcs-color-secondary { color: var(--zcs-secondary-text-color); }\n.zcs-color-tertiary { color: var(--zcs-teritiary-text-color); }\n.zcs-color-white { color: var(--zcs-white-color); }\n.zcs-color-theme { color: var(--zcs-theme-brand-color); }\n.zcs-font-12 { font-size: 0.75rem; }\n.zcs-font-13 { font-size: 0.8125rem; }\n.zcs-font-14 { font-size: 0.875rem; }\n.zcs-font-15 { font-size: 0.9375rem; }\n.zcs-font-16 { font-size: 1rem; }\n.zcs-font-18 { font-size: 1.125rem; }\n.zcs-font-20 { font-size: 1.25rem; }\n.zcs-font-24 { font-size: 1.5rem; }\n.zcs-font-28 { font-size: 1.75rem; }\n.zcs-font-40 { font-size: 2.5rem; }\n.zcs-font-normal { font-weight: 400; }\n.zcs-font-medium { font-weight: 500; }\n.zcs-font-semibold { font-weight: 600; }\n.zcs-font-bold { font-weight: 700; }\n.zcs-lh-heading { line-height: 1.25; }\n.zcs-lh-body { line-height: 1.5; }\n.zcs-m-0 { margin: 0; }\n.zcs-mx-0 { margin-left: 0; margin-right: 0; }\n.zcs-mt-4 { margin-top: 0.25rem; }\n.zcs-mt-8 { margin-top: 0.5rem; }\n.zcs-mb-0 { margin-bottom: 0; }\n.zcs-p-0 { padding: 0; }\n.zcs-p-8 { padding: 0.5rem; }\n.zcs-p-12 { padding: 0.75rem; }\n.zcs-p-16 { padding: 1rem; }\n.zcs-p-20 { padding: 1.25rem; }\n.zcs-p-24 { padding: 1.5rem; }\n.zcs-px-10 { padding-left: 0.625rem; padding-right: 0.625rem; }\n.zcs-px-12 { padding-left: 0.75rem; padding-right: 0.75rem; }\n.zcs-px-16 { padding-left: 1rem; padding-right: 1rem; }\n.zcs-px-20 { padding-left: 1.25rem; padding-right: 1.25rem; }\n.zcs-px-60 { padding-left: 3.75rem; padding-right: 3.75rem; }\n.zcs-py-2 { padding-top: 0.125rem; padding-bottom: 0.125rem; }\n.zcs-py-8 { padding-top: 0.5rem; padding-bottom: 0.5rem; }\n.zcs-py-12 { padding-top: 0.75rem; padding-bottom: 0.75rem; }\n.zcs-gap-4 { gap: 0.25rem; }\n.zcs-gap-6 { gap: 0.375rem; }\n.zcs-gap-8 { gap: 0.5rem; }\n.zcs-gap-10 { gap: 0.625rem; }\n.zcs-gap-12 { gap: 0.75rem; }\n.zcs-gap-16 { gap: 1rem; }\n.zcs-gap-20 { gap: 1.25rem; }\n.zcs-gap-24 { gap: 1.5rem; }\n.zcs-gap-32 { gap: 2rem; }\n.zcs-rounded-sm { border-radius: 0.25rem; }\n.zcs-rounded-md { border-radius: 0.375rem; }\n.zcs-rounded-lg { border-radius: 0.5rem; }\n.zcs-rounded-xl { border-radius: 0.75rem; }\n.zcs-rounded-half { border-radius: 50%; }\na { text-decoration: none; color: inherit; }\n\n/* ZCS table-simple-table */\n:root { --zcs-thead-color: #F9FAFE; --zcs-tr-h-color: #F9FAFE; }\n.zcs-table-wrapper { border: 1px solid var(--zcs_tertiary_border_color); background-color: var(--zcs-white-color); overflow: auto; }\n.zcs-table-wrapper table { line-height: normal; border-collapse: collapse; }\n.zcs-table-wrapper table thead { top: 0; }\n.zcs-table-wrapper table thead tr th { background-color: var(--zcs-thead-color); box-shadow: 0 -1px 0 0 var(--zcs_tertiary_border_color) inset; white-space: nowrap; }\n.zcs-table-wrapper table thead tr.zcs-tspace th { background-color: var(--zcs-white-color); box-shadow: none; }\n.zcs-table-wrapper table tbody tr td { border-top: 1px solid var(--zcs_tertiary_border_color); vertical-align: top; }\n.zcs-table-wrapper table tbody tr:first-child td { border-color: transparent; }\n.zcs-table-wrapper table tbody tr:hover td { background-color: var(--zcs-tr-h-color); }\n.zcs-table-wrapper table tbody tr:first-child:hover td { border-color: var(--zcs_tertiary_border_color); }\n.zcs-table-wrapper table tbody tr.zcs-tnodata:hover td { background-color: transparent; }\n.zcs-table-wrapper table tbody tr td.zcs-green { color: #179e6c; }\n.zcs-table-wrapper table tbody tr td.zcs-red { color: #fe455d; }\n.zcs-table-wrapper table tbody tr td.zcs-yellow { color: #b8770d; }\n.zcs-table-wrapper table tbody tr td.zcs-blue { color: #09598e; }\n.zcs-table-wrapper table tbody tr td.zcs-l_blue { color: #1094c5; }\n\n/* ZCS badge-filled-badge */\n.zcs-badge { width: auto; }\n.zcs-badge-filled { border: 1px solid transparent; }\n.zcs-badge-filled.zcs-badge-theme { background-color: var(--zcs_brand_color); border-color: var(--zcs_brand_color); color: var(--zcs-white-color); }\n.zcs-badge-filled.zcs-badge-green { background-color: #179E6C; border-color: #179E6C; color: var(--zcs-white-color); }\n.zcs-badge-filled.zcs-badge-red { background-color: #FE455D; border-color: #FE455D; color: var(--zcs-white-color); }\n.zcs-badge-filled.zcs-badge-yellow { background-color: #FAAE13; border-color: #FAAE13; color: var(--zcs-white-color); }\n.zcs-badge-filled.zcs-badge-blue { background-color: #2A6FFC; border-color: #2A6FFC; color: var(--zcs-white-color); }\n.zcs-badge-filled.zcs-badge-grey { background-color: #242424; border-color: #242424; color: var(--zcs-white-color); }\n\n/* ZCS progress-bar-range-bar-with-texts */\n.zcs-progress-bar { height: 8px; background-color: var(--zcs_component_hover_color); }\n.zcs-progress-bar-indicator { height: inherit; border-radius: inherit; background-color: var(--zcs_brand_color); }\n\n/* ZCS quick-actions-card-type-quick-actions */\n.zcs-quick-action-item { list-style-type: none; }\n.zcs-quick-action-item.zcs-card:hover { border-color: var(--zcs_brand_color); }\n.zcs-quick-action-item:hover .zcs-quick-action-link { color: var(--zcs_brand_color); }\n.zcs-quick-action-item:hover .zcs-quick-action-text { text-decoration: none; }\n\n/* ZCS timeline-without-time */\n.zcs-timeline-wrapper ul { list-style-type: none; }\n.zcs-tl-indicator { width: 44px; left: 0; }\n.zcs-tl-dot { width: 12px; height: 12px; background-color: var(--zcs_brand_color); border: 1px solid var(--zcs-white-color); box-shadow: 0 2px 6px 0 #C4DEE4; }\n.zcs-tl-li:not(:last-child) .zcs-tl-indicator:before { content: &apos;&apos;; display: flex; position: absolute; width: 1px; height: calc(100% + 20px); background-color: #E1E1E1; top: 5px; }\n\n/* Dashboard-specific layout built from ZCS components */\n.assess-dashboard { background: var(--zcs-page-bg-color); box-sizing: border-box; width: 100%; padding: 20px; color: var(--zcs_primary_text_color); }\n.assess-hero { background: linear-gradient(135deg, var(--zcs_brand_color), var(--zcs_brand_dark_color)); border-radius: 18px; padding: 24px; color: #fff; overflow: hidden; position: relative; }\n.assess-hero:after { content: &apos;&apos;; position: absolute; right: -80px; top: -110px; width: 260px; height: 260px; border-radius: 50%; border: 36px solid rgba(255,255,255,0.12); }\n.assess-hero &gt; * { position: relative; z-index: 1; }\n.assess-kpi-grid { display: grid; grid-template-columns: repeat(4, minmax(160px, 1fr)); gap: 16px; margin-top: 16px; }\n.assess-two-col { display: grid; grid-template-columns: minmax(280px, 0.9fr) minmax(420px, 1.4fr); gap: 16px; margin-top: 16px; }\n.assess-visual-grid { display: grid; grid-template-columns: minmax(280px, 0.85fr) minmax(340px, 1.15fr); gap: 16px; }\n.assess-card-title { display: flex; align-items: center; gap: 8px; color: var(--zcs_secondary_text_color); }\n.assess-icon-box { width: 42px; height: 42px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; background: var(--zcs_brand_light_color); color: var(--zcs_brand_color); }\n.assess-kpi-card { min-height: 120px; }\n.assess-kpi-value { font-size: 34px; line-height: 1; margin-top: 12px; }\n.assess-focus-card { border-left: 4px solid var(--focus-color); }\n.assess-status-stack { display: flex; width: 100%; height: 18px; overflow: hidden; border-radius: 999px; background: var(--zcs_component_hover_color); }\n.assess-stack-seg { min-width: 0; }\n.assess-legend-grid { display: grid; grid-template-columns: repeat(2, minmax(180px, 1fr)); gap: 12px; margin-top: 16px; }\n.assess-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }\n.assess-industry-list { max-height: 270px; overflow: auto; padding-right: 4px; }\n.assess-empty { border: 1px dashed var(--zcs_tertiary_border_color); border-radius: 10px; padding: 20px; text-align: center; color: var(--zcs_secondary_text_color); background: #fff; }\n.assess-quick-grid { display: grid; grid-template-columns: repeat(4, minmax(170px, 1fr)); gap: 12px; margin-top: 16px; }\n.assess-quick-actions-wrapper { margin-top: 16px; }\n.assess-page-section { background: var(--zcs-page-bg-color); padding: 0 20px 20px; box-sizing: border-box; }\n@media (max-width: 1100px) { .assess-kpi-grid, .assess-quick-grid { grid-template-columns: repeat(2, minmax(160px, 1fr)); } .assess-two-col, .assess-visual-grid { grid-template-columns: 1fr; } }\n@media (max-width: 640px) { .assess-dashboard { padding: 12px; } .assess-kpi-grid, .assess-quick-grid, .assess-legend-grid { grid-template-columns: 1fr; } }\n&lt;/style&gt;\n\n&lt;div class=&apos;assess-dashboard&apos;&gt;\n\t&lt;div class=&apos;assess-hero zcs-box-border&apos;&gt;\n\t\t&lt;div class=&apos;zcs-flex zcs-justify-space-between zcs-align-items-center zcs-gap-16&apos;&gt;\n\t\t\t&lt;div class=&apos;zcs-flex zcs-direction-column zcs-gap-6&apos;&gt;\n\t\t\t\t&lt;h1 class=&apos;zcs-font-28 zcs-font-semibold zcs-lh-heading zcs-m-0 zcs-color-white&apos;&gt;Assessment Dashboard&lt;/h1&gt;\n\t\t\t\t&lt;p class=&apos;zcs-font-14 zcs-font-normal zcs-lh-body zcs-m-0 zcs-color-white&apos;&gt;Monitor assessment volume, lifecycle status, expiry exposure, submissions, and generated document activity.&lt;/p&gt;\n\t\t\t&lt;/div&gt;\n\t\t\t&lt;div class=&apos;zcs-flex zcs-direction-column zcs-gap-4 zcs-text-right&apos;&gt;\n\t\t\t\t&lt;span class=&apos;zcs-font-13 zcs-font-normal zcs-lh-body zcs-color-white&apos;&gt;Total assessments&lt;/span&gt;\n\t\t\t\t&lt;strong class=&apos;zcs-font-40 zcs-font-bold zcs-lh-heading zcs-color-white&apos;&gt;&lt;%=totalAssessments%&gt;&lt;/strong&gt;\n\t\t\t&lt;/div&gt;\n\t\t&lt;/div&gt;\n\t&lt;/div&gt;\n\n\t&lt;div class=&apos;assess-kpi-grid&apos;&gt;\n\t\t&lt;div class=&apos;zcs-card assess-kpi-card zcs-p-20 zcs-box-border&apos;&gt;\n\t\t\t&lt;div class=&apos;zcs-flex zcs-justify-space-between zcs-gap-12&apos;&gt;\n\t\t\t\t&lt;div class=&apos;assess-card-title zcs-font-14 zcs-font-medium&apos;&gt;&lt;span&gt;Draft&lt;/span&gt;&lt;/div&gt;\n\t\t\t\t&lt;span class=&apos;assess-icon-box&apos;&gt;&lt;i class=&apos;zc-li-outline files-1-single-content-03 zcs-font-20&apos;&gt;&lt;/i&gt;&lt;/span&gt;\n\t\t\t&lt;/div&gt;\n\t\t\t&lt;div class=&apos;assess-kpi-value zcs-font-bold zcs-color-primary&apos;&gt;&lt;%=draftCount%&gt;&lt;/div&gt;\n\t\t\t&lt;div class=&apos;zcs-progress-bar-wrapper zcs-flex zcs-direction-column zcs-gap-6 zcs-mt-8&apos;&gt;\n\t\t\t\t&lt;div class=&apos;zcs-progress-bar zcs-rounded-sm&apos;&gt;&lt;div class=&apos;zcs-progress-bar-indicator&apos; style=&apos;width:&lt;%=draftPct%&gt;%; background-color:#FAAE13;&apos;&gt;&lt;/div&gt;&lt;/div&gt;\n\t\t\t&lt;/div&gt;\n\t\t&lt;/div&gt;\n\t\t&lt;div class=&apos;zcs-card assess-kpi-card zcs-p-20 zcs-box-border&apos;&gt;\n\t\t\t&lt;div class=&apos;zcs-flex zcs-justify-space-between zcs-gap-12&apos;&gt;\n\t\t\t\t&lt;div class=&apos;assess-card-title zcs-font-14 zcs-font-medium&apos;&gt;&lt;span&gt;In Progress&lt;/span&gt;&lt;/div&gt;\n\t\t\t\t&lt;span class=&apos;assess-icon-box&apos;&gt;&lt;i class=&apos;zc-li-outline ui-2-time zcs-font-20&apos;&gt;&lt;/i&gt;&lt;/span&gt;\n\t\t\t&lt;/div&gt;\n\t\t\t&lt;div class=&apos;assess-kpi-value zcs-font-bold zcs-color-primary&apos;&gt;&lt;%=inProgressCount%&gt;&lt;/div&gt;\n\t\t\t&lt;div class=&apos;zcs-progress-bar-wrapper zcs-flex zcs-direction-column zcs-gap-6 zcs-mt-8&apos;&gt;\n\t\t\t\t&lt;div class=&apos;zcs-progress-bar zcs-rounded-sm&apos;&gt;&lt;div class=&apos;zcs-progress-bar-indicator&apos; style=&apos;width:&lt;%=inProgressPct%&gt;%; background-color:#2A6FFC;&apos;&gt;&lt;/div&gt;&lt;/div&gt;\n\t\t\t&lt;/div&gt;\n\t\t&lt;/div&gt;\n\t\t&lt;div class=&apos;zcs-card assess-kpi-card zcs-p-20 zcs-box-border&apos;&gt;\n\t\t\t&lt;div class=&apos;zcs-flex zcs-justify-space-between zcs-gap-12&apos;&gt;\n\t\t\t\t&lt;div class=&apos;assess-card-title zcs-font-14 zcs-font-medium&apos;&gt;&lt;span&gt;Submitted&lt;/span&gt;&lt;/div&gt;\n\t\t\t\t&lt;span class=&apos;assess-icon-box&apos;&gt;&lt;i class=&apos;zc-li-outline ui-1-check-circle-08 zcs-font-20&apos;&gt;&lt;/i&gt;&lt;/span&gt;\n\t\t\t&lt;/div&gt;\n\t\t\t&lt;div class=&apos;assess-kpi-value zcs-font-bold zcs-color-primary&apos;&gt;&lt;%=submittedCount%&gt;&lt;/div&gt;\n\t\t\t&lt;div class=&apos;zcs-progress-bar-wrapper zcs-flex zcs-direction-column zcs-gap-6 zcs-mt-8&apos;&gt;\n\t\t\t\t&lt;div class=&apos;zcs-progress-bar zcs-rounded-sm&apos;&gt;&lt;div class=&apos;zcs-progress-bar-indicator&apos; style=&apos;width:&lt;%=submittedPct%&gt;%; background-color:#179E6C;&apos;&gt;&lt;/div&gt;&lt;/div&gt;\n\t\t\t&lt;/div&gt;\n\t\t&lt;/div&gt;\n\t\t&lt;div class=&apos;zcs-card assess-kpi-card zcs-p-20 zcs-box-border&apos;&gt;\n\t\t\t&lt;div class=&apos;zcs-flex zcs-justify-space-between zcs-gap-12&apos;&gt;\n\t\t\t\t&lt;div class=&apos;assess-card-title zcs-font-14 zcs-font-medium&apos;&gt;&lt;span&gt;Expired&lt;/span&gt;&lt;/div&gt;\n\t\t\t\t&lt;span class=&apos;assess-icon-box&apos;&gt;&lt;i class=&apos;zc-li-outline ui-3-alert zcs-font-20&apos;&gt;&lt;/i&gt;&lt;/span&gt;\n\t\t\t&lt;/div&gt;\n\t\t\t&lt;div class=&apos;assess-kpi-value zcs-font-bold zcs-color-primary&apos;&gt;&lt;%=expiredStatusCount%&gt;&lt;/div&gt;\n\t\t\t&lt;div class=&apos;zcs-progress-bar-wrapper zcs-flex zcs-direction-column zcs-gap-6 zcs-mt-8&apos;&gt;\n\t\t\t\t&lt;div class=&apos;zcs-progress-bar zcs-rounded-sm&apos;&gt;&lt;div class=&apos;zcs-progress-bar-indicator&apos; style=&apos;width:&lt;%=expiredPct%&gt;%; background-color:#FE455D;&apos;&gt;&lt;/div&gt;&lt;/div&gt;\n\t\t\t&lt;/div&gt;\n\t\t&lt;/div&gt;\n\t&lt;/div&gt;\n\n\t&lt;div class=&apos;assess-two-col&apos;&gt;\n\t\t&lt;div class=&apos;zcs-flex zcs-direction-column zcs-gap-16&apos;&gt;\n\t\t\t&lt;div class=&apos;zcs-card assess-focus-card zcs-p-20 zcs-box-border&apos; style=&apos;--focus-color:#FAAE13;&apos;&gt;\n\t\t\t\t&lt;div class=&apos;zcs-flex zcs-justify-space-between zcs-align-items-center&apos;&gt;\n\t\t\t\t\t&lt;div&gt;\n\t\t\t\t\t\t&lt;h3 class=&apos;zcs-font-18 zcs-font-semibold zcs-lh-heading zcs-m-0 zcs-color-primary&apos;&gt;Expiring in next 15 days&lt;/h3&gt;\n\t\t\t\t\t\t&lt;p class=&apos;zcs-font-13 zcs-font-normal zcs-lh-body zcs-mt-4 zcs-mb-0 zcs-color-secondary&apos;&gt;Submitted assessments with Valid Until date within the next 15 days.&lt;/p&gt;\n\t\t\t\t\t&lt;/div&gt;\n\t\t\t\t\t&lt;strong class=&apos;zcs-font-40 zcs-font-bold zcs-lh-heading&apos; style=&apos;color:#b8770d;&apos;&gt;&lt;%=expiringSoonCount%&gt;&lt;/strong&gt;\n\t\t\t\t&lt;/div&gt;\n\t\t\t&lt;/div&gt;\n\t\t\t&lt;div class=&apos;zcs-card assess-focus-card zcs-p-20 zcs-box-border&apos; style=&apos;--focus-color:#FE455D;&apos;&gt;\n\t\t\t\t&lt;div class=&apos;zcs-flex zcs-justify-space-between zcs-align-items-center&apos;&gt;\n\t\t\t\t\t&lt;div&gt;\n\t\t\t\t\t\t&lt;h3 class=&apos;zcs-font-18 zcs-font-semibold zcs-lh-heading zcs-m-0 zcs-color-primary&apos;&gt;Already expired&lt;/h3&gt;\n\t\t\t\t\t\t&lt;p class=&apos;zcs-font-13 zcs-font-normal zcs-lh-body zcs-mt-4 zcs-mb-0 zcs-color-secondary&apos;&gt;Assessments marked Expired or past their Valid Until date.&lt;/p&gt;\n\t\t\t\t\t&lt;/div&gt;\n\t\t\t\t\t&lt;strong class=&apos;zcs-font-40 zcs-font-bold zcs-lh-heading&apos; style=&apos;color:#FE455D;&apos;&gt;&lt;%=alreadyExpiredCount%&gt;&lt;/strong&gt;\n\t\t\t\t&lt;/div&gt;\n\t\t\t&lt;/div&gt;\n\t\t&lt;/div&gt;\n\n\t\t&lt;div class=&apos;assess-visual-grid&apos;&gt;\n\t\t\t&lt;div class=&apos;zcs-card zcs-p-20 zcs-box-border&apos;&gt;\n\t\t\t\t&lt;div class=&apos;zcs-flex zcs-justify-space-between zcs-align-items-center zcs-gap-12&apos;&gt;\n\t\t\t\t\t&lt;h3 class=&apos;zcs-font-18 zcs-font-semibold zcs-lh-heading zcs-m-0 zcs-color-primary&apos;&gt;Status distribution&lt;/h3&gt;\n\t\t\t\t\t&lt;span class=&apos;zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-theme&apos;&gt;&lt;span class=&apos;zcs-badge-text zcs-font-13 zcs-font-normal zcs-lh-body&apos;&gt;&lt;%=totalAssessments%&gt; total&lt;/span&gt;&lt;/span&gt;\n\t\t\t\t&lt;/div&gt;\n\t\t\t\t&lt;div class=&apos;assess-status-stack zcs-mt-8&apos; title=&apos;Assessment status distribution&apos;&gt;\n\t\t\t\t\t&lt;span class=&apos;assess-stack-seg&apos; style=&apos;width:&lt;%=draftPct%&gt;%; background:#FAAE13;&apos;&gt;&lt;/span&gt;\n\t\t\t\t\t&lt;span class=&apos;assess-stack-seg&apos; style=&apos;width:&lt;%=inProgressPct%&gt;%; background:#2A6FFC;&apos;&gt;&lt;/span&gt;\n\t\t\t\t\t&lt;span class=&apos;assess-stack-seg&apos; style=&apos;width:&lt;%=submittedPct%&gt;%; background:#179E6C;&apos;&gt;&lt;/span&gt;\n\t\t\t\t\t&lt;span class=&apos;assess-stack-seg&apos; style=&apos;width:&lt;%=expiredPct%&gt;%; background:#FE455D;&apos;&gt;&lt;/span&gt;\n\t\t\t\t&lt;/div&gt;\n\t\t\t\t&lt;div class=&apos;assess-legend-grid&apos;&gt;\n\t\t\t\t\t&lt;div class=&apos;zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-14 zcs-color-primary&apos;&gt;&lt;span class=&apos;assess-dot&apos; style=&apos;background:#FAAE13;&apos;&gt;&lt;/span&gt;&lt;span&gt;Draft&lt;/span&gt;&lt;strong&gt;&lt;%=draftCount%&gt;&lt;/strong&gt;&lt;/div&gt;\n\t\t\t\t\t&lt;div class=&apos;zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-14 zcs-color-primary&apos;&gt;&lt;span class=&apos;assess-dot&apos; style=&apos;background:#2A6FFC;&apos;&gt;&lt;/span&gt;&lt;span&gt;In Progress&lt;/span&gt;&lt;strong&gt;&lt;%=inProgressCount%&gt;&lt;/strong&gt;&lt;/div&gt;\n\t\t\t\t\t&lt;div class=&apos;zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-14 zcs-color-primary&apos;&gt;&lt;span class=&apos;assess-dot&apos; style=&apos;background:#179E6C;&apos;&gt;&lt;/span&gt;&lt;span&gt;Submitted&lt;/span&gt;&lt;strong&gt;&lt;%=submittedCount%&gt;&lt;/strong&gt;&lt;/div&gt;\n\t\t\t\t\t&lt;div class=&apos;zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-14 zcs-color-primary&apos;&gt;&lt;span class=&apos;assess-dot&apos; style=&apos;background:#FE455D;&apos;&gt;&lt;/span&gt;&lt;span&gt;Expired&lt;/span&gt;&lt;strong&gt;&lt;%=expiredStatusCount%&gt;&lt;/strong&gt;&lt;/div&gt;\n\t\t\t\t&lt;/div&gt;\n\t\t\t&lt;/div&gt;\n\n\t\t\t&lt;div class=&apos;zcs-card zcs-p-20 zcs-box-border&apos;&gt;\n\t\t\t\t&lt;h3 class=&apos;zcs-font-18 zcs-font-semibold zcs-lh-heading zcs-m-0 zcs-color-primary&apos;&gt;Industry distribution&lt;/h3&gt;\n\t\t\t\t&lt;div class=&apos;assess-industry-list zcs-flex zcs-direction-column zcs-gap-12 zcs-mt-8&apos;&gt;\n\t\t\t\t\t&lt;%\n\t\t\t\t\t\tindustryRendered = 0;\n\t\t\t\t\t\tfor each industryRow in Industry_Types[Active == true] sort by Display_Order asc\n\t\t\t\t\t\t{\n\t\t\t\t\t\t\tindustryCount = Assessments[Industry_Type == industryRow.ID].count();\n\t\t\t\t\t\t\tif(industryCount &gt; 0)\n\t\t\t\t\t\t\t{\n\t\t\t\t\t\t\t\tif(totalAssessments &gt; 0)\n\t\t\t\t\t\t\t\t{\n\t\t\t\t\t\t\t\t\tindustryPct = (industryCount * 100) / totalAssessments;\n\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\telse\n\t\t\t\t\t\t\t\t{\n\t\t\t\t\t\t\t\t\tindustryPct = 0;\n\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\tindustryRendered = industryRendered + 1;\n\t\t\t\t\t%&gt;\n\t\t\t\t\t&lt;div class=&apos;zcs-progress-bar-wrapper zcs-flex zcs-direction-column zcs-gap-6&apos;&gt;\n\t\t\t\t\t\t&lt;p class=&apos;zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-8 zcs-font-13 zcs-font-medium zcs-lh-body zcs-m-0&apos;&gt;\n\t\t\t\t\t\t\t&lt;span class=&apos;zcs-color-primary&apos;&gt;&lt;%=industryRow.Industry_Name%&gt;&lt;/span&gt;\n\t\t\t\t\t\t\t&lt;span class=&apos;zcs-color-secondary&apos;&gt;&lt;%=industryCount%&gt;&lt;/span&gt;\n\t\t\t\t\t\t&lt;/p&gt;\n\t\t\t\t\t\t&lt;div class=&apos;zcs-progress-bar zcs-rounded-sm&apos;&gt;&lt;div class=&apos;zcs-progress-bar-indicator&apos; style=&apos;width:&lt;%=industryPct%&gt;%;&apos;&gt;&lt;/div&gt;&lt;/div&gt;\n\t\t\t\t\t&lt;/div&gt;\n\t\t\t\t\t&lt;%\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t}\n\t\t\t\t\t\tif(industryRendered == 0)\n\t\t\t\t\t\t{\n\t\t\t\t\t%&gt;\n\t\t\t\t\t&lt;div class=&apos;assess-empty zcs-font-14&apos;&gt;No assessment volume by industry yet.&lt;/div&gt;\n\t\t\t\t\t&lt;% } %&gt;\n\t\t\t\t&lt;/div&gt;\n\t\t\t&lt;/div&gt;\n\t\t&lt;/div&gt;\n\t&lt;/div&gt;\n\n\t&lt;div class=&apos;assess-quick-actions-wrapper zcs-card zcs-flex zcs-direction-column zcs-gap-16 zcs-p-16 zcs-box-border&apos;&gt;\n\t\t&lt;h3 class=&apos;zcs-font-18 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0&apos;&gt;Quick actions&lt;/h3&gt;\n\t\t&lt;ul class=&apos;assess-quick-grid zcs-p-0 zcs-m-0&apos;&gt;\n\t\t\t&lt;li class=&apos;zcs-quick-action-item zcs-card zcs-px-12 zcs-py-12 zcs-box-border&apos;&gt;\n\t\t\t\t&lt;a class=&apos;zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary zcs-cursor-pointer&apos; href=&apos;#Report:All_Assessments&apos;&gt;\n\t\t\t\t\t&lt;i class=&apos;zcs-quick-action-icon zcs-font-medium zc-li-outline design-bullet-list-67&apos;&gt;&lt;/i&gt;&lt;span class=&apos;zcs-quick-action-text&apos;&gt;All Assessments&lt;/span&gt;\n\t\t\t\t&lt;/a&gt;\n\t\t\t&lt;/li&gt;\n\t\t\t&lt;li class=&apos;zcs-quick-action-item zcs-card zcs-px-12 zcs-py-12 zcs-box-border&apos;&gt;\n\t\t\t\t&lt;a class=&apos;zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary zcs-cursor-pointer&apos; href=&apos;#Report:Expiring_Assessments&apos;&gt;\n\t\t\t\t\t&lt;i class=&apos;zcs-quick-action-icon zcs-font-medium zc-li-outline ui-2-time&apos;&gt;&lt;/i&gt;&lt;span class=&apos;zcs-quick-action-text&apos;&gt;Expiring Assessments&lt;/span&gt;\n\t\t\t\t&lt;/a&gt;\n\t\t\t&lt;/li&gt;\n\t\t\t&lt;li class=&apos;zcs-quick-action-item zcs-card zcs-px-12 zcs-py-12 zcs-box-border&apos;&gt;\n\t\t\t\t&lt;a class=&apos;zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary zcs-cursor-pointer&apos; href=&apos;#Report:All_Questions&apos;&gt;\n\t\t\t\t\t&lt;i class=&apos;zcs-quick-action-icon zcs-font-medium zc-li-outline education-paper-diploma&apos;&gt;&lt;/i&gt;&lt;span class=&apos;zcs-quick-action-text&apos;&gt;All Questions&lt;/span&gt;\n\t\t\t\t&lt;/a&gt;\n\t\t\t&lt;/li&gt;\n\t\t\t&lt;li class=&apos;zcs-quick-action-item zcs-card zcs-px-12 zcs-py-12 zcs-box-border&apos;&gt;\n\t\t\t\t&lt;a class=&apos;zcs-quick-action-link zcs-flex zcs-align-items-center zcs-gap-8 zcs-font-15 zcs-font-normal zcs-lh-body zcs-color-primary zcs-cursor-pointer&apos; href=&apos;#Report:All_Assessment_Documents&apos;&gt;\n\t\t\t\t\t&lt;i class=&apos;zcs-quick-action-icon zcs-font-medium zc-li-outline files-2-doc&apos;&gt;&lt;/i&gt;&lt;span class=&apos;zcs-quick-action-text&apos;&gt;All Assessment Documents&lt;/span&gt;\n\t\t\t\t&lt;/a&gt;\n\t\t\t&lt;/li&gt;\n\t\t&lt;/ul&gt;\n\t&lt;/div&gt;\n&lt;/div&gt;\n\t\t\t\t\t\t&lt;%}%&gt;\n\t\t\t\t\t]]>\n\t\t\t\t</dsp>\n\t\t\t</column>\n\t\t</row>\n\t\t<row>\n\t\t\t<column width='100%'>\n\t\t\t\t<dsp id='Recent_Submissions' elementName='Recent_Submissions'>\n\t\t\t\t\t<![CDATA[htmlpage Recent_Submissions()\n\t\t\t\t\t\tcontent\n\t\t\t\t\t\t&lt;%{%&gt;\n\t\t\t\t\t\t\t&lt;div class=&apos;assess-page-section&apos;&gt;\n\t&lt;div class=&apos;zcs-card zcs-p-20 zcs-box-border&apos;&gt;\n\t\t&lt;div class=&apos;zcs-flex zcs-justify-space-between zcs-align-items-center zcs-gap-12&apos;&gt;\n\t\t\t&lt;div&gt;\n\t\t\t\t&lt;h2 class=&apos;zcs-font-20 zcs-font-semibold zcs-lh-heading zcs-m-0 zcs-color-primary&apos;&gt;Recent submissions&lt;/h2&gt;\n\t\t\t\t&lt;p class=&apos;zcs-font-13 zcs-font-normal zcs-lh-body zcs-mt-4 zcs-mb-0 zcs-color-secondary&apos;&gt;Latest submitted assessments by customer, project, industry, and validity window.&lt;/p&gt;\n\t\t\t&lt;/div&gt;\n\t\t\t&lt;a class=&apos;zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-theme&apos; href=&apos;#Report:All_Assessments&apos;&gt;\n\t\t\t\t&lt;span class=&apos;zcs-badge-text zcs-font-13 zcs-font-normal zcs-lh-body&apos;&gt;View all&lt;/span&gt;\n\t\t\t&lt;/a&gt;\n\t\t&lt;/div&gt;\n\n\t\t&lt;div class=&apos;zcs-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative zcs-mt-8&apos;&gt;\n\t\t\t&lt;table class=&apos;zcs-w-full&apos;&gt;\n\t\t\t\t&lt;thead class=&apos;zcs-sticky&apos;&gt;\n\t\t\t\t\t&lt;tr&gt;\n\t\t\t\t\t\t&lt;th class=&apos;zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary&apos;&gt;Assessment Reference&lt;/th&gt;\n\t\t\t\t\t\t&lt;th class=&apos;zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary&apos;&gt;Customer&lt;/th&gt;\n\t\t\t\t\t\t&lt;th class=&apos;zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary&apos;&gt;Project&lt;/th&gt;\n\t\t\t\t\t\t&lt;th class=&apos;zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary&apos;&gt;Industry Type&lt;/th&gt;\n\t\t\t\t\t\t&lt;th class=&apos;zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary&apos;&gt;Submission Date&lt;/th&gt;\n\t\t\t\t\t\t&lt;th class=&apos;zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary&apos;&gt;Valid Until&lt;/th&gt;\n\t\t\t\t\t&lt;/tr&gt;\n\t\t\t\t\t&lt;tr class=&apos;zcs-tspace&apos;&gt;&lt;th class=&apos;zcs-p-8 zcs-box-border&apos; colspan=&apos;6&apos;&gt;&lt;/th&gt;&lt;/tr&gt;\n\t\t\t\t&lt;/thead&gt;\n\t\t\t\t&lt;tbody&gt;\n\t\t\t\t\t&lt;%\n\t\t\t\t\t\trecentSubmitted = Assessments[Status == &quot;Submitted&quot;] sort by Submission_Date desc;\n\t\t\t\t\t\trenderedRows = 0;\n\t\t\t\t\t\tif(recentSubmitted.count() &gt; 0)\n\t\t\t\t\t\t{\n\t\t\t\t\t\t\tfor each submissionRow in recentSubmitted\n\t\t\t\t\t\t\t{\n\t\t\t\t\t\t\t\tif(renderedRows &lt; 8)\n\t\t\t\t\t\t\t\t{\n\t\t\t\t\t\t\t\t\trenderedRows = renderedRows + 1;\n\t\t\t\t\t\t\t\t\tsubmissionDateText = &quot;-&quot;;\n\t\t\t\t\t\t\t\t\tvalidUntilText = &quot;-&quot;;\n\t\t\t\t\t\t\t\t\tif(submissionRow.Submission_Date != null)\n\t\t\t\t\t\t\t\t\t{\n\t\t\t\t\t\t\t\t\t\tsubmissionDateText = submissionRow.Submission_Date.toString(&quot;dd-MMM-yyyy&quot;);\n\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\tif(submissionRow.Valid_Until != null)\n\t\t\t\t\t\t\t\t\t{\n\t\t\t\t\t\t\t\t\t\tvalidUntilText = submissionRow.Valid_Until.toString(&quot;dd-MMM-yyyy&quot;);\n\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t%&gt;\n\t\t\t\t\t&lt;tr&gt;\n\t\t\t\t\t\t&lt;td class=&apos;zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary&apos;&gt;&lt;%=submissionRow.Assessment_Reference%&gt;&lt;/td&gt;\n\t\t\t\t\t\t&lt;td class=&apos;zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary&apos;&gt;&lt;%=submissionRow.Customer.Customer_Name%&gt;&lt;/td&gt;\n\t\t\t\t\t\t&lt;td class=&apos;zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary&apos;&gt;&lt;%=submissionRow.Project.Project_Name%&gt;&lt;/td&gt;\n\t\t\t\t\t\t&lt;td class=&apos;zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary&apos;&gt;&lt;%=submissionRow.Industry_Type.Industry_Name%&gt;&lt;/td&gt;\n\t\t\t\t\t\t&lt;td class=&apos;zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary&apos;&gt;&lt;%=submissionDateText%&gt;&lt;/td&gt;\n\t\t\t\t\t\t&lt;td class=&apos;zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary&apos;&gt;&lt;%=validUntilText%&gt;&lt;/td&gt;\n\t\t\t\t\t&lt;/tr&gt;\n\t\t\t\t\t&lt;%\n\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t}\n\t\t\t\t\t\tif(renderedRows == 0)\n\t\t\t\t\t\t{\n\t\t\t\t\t%&gt;\n\t\t\t\t\t&lt;tr class=&apos;zcs-tnodata&apos;&gt;\n\t\t\t\t\t\t&lt;td class=&apos;zcs-px-16 zcs-py-8 zcs-box-border zcs-text-center zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-secondary&apos; colspan=&apos;6&apos;&gt;No submitted assessments found.&lt;/td&gt;\n\t\t\t\t\t&lt;/tr&gt;\n\t\t\t\t\t&lt;% } %&gt;\n\t\t\t\t&lt;/tbody&gt;\n\t\t\t&lt;/table&gt;\n\t\t&lt;/div&gt;\n\t&lt;/div&gt;\n&lt;/div&gt;\n\t\t\t\t\t\t&lt;%}%&gt;\n\t\t\t\t\t]]>\n\t\t\t\t</dsp>\n\t\t\t</column>\n\t\t</row>\n\t\t<row>\n\t\t\t<column width='100%'>\n\t\t\t\t<dsp id='Document_Activity' elementName='Document_Activity'>\n\t\t\t\t\t<![CDATA[htmlpage Document_Activity()\n\t\t\t\t\t\tcontent\n\t\t\t\t\t\t&lt;%{%&gt;\n\t\t\t\t\t\t\t&lt;div class=&apos;assess-page-section&apos;&gt;\n\t&lt;div class=&apos;zcs-card zcs-p-20 zcs-box-border&apos;&gt;\n\t\t&lt;div class=&apos;zcs-flex zcs-justify-space-between zcs-align-items-center zcs-gap-12&apos;&gt;\n\t\t\t&lt;div&gt;\n\t\t\t\t&lt;h2 class=&apos;zcs-font-20 zcs-font-semibold zcs-lh-heading zcs-m-0 zcs-color-primary&apos;&gt;Document activity&lt;/h2&gt;\n\t\t\t\t&lt;p class=&apos;zcs-font-13 zcs-font-normal zcs-lh-body zcs-mt-4 zcs-mb-0 zcs-color-secondary&apos;&gt;Latest generated reports and supporting document uploads from Assessment Documents.&lt;/p&gt;\n\t\t\t&lt;/div&gt;\n\t\t\t&lt;a class=&apos;zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-theme&apos; href=&apos;#Report:All_Assessment_Documents&apos;&gt;\n\t\t\t\t&lt;span class=&apos;zcs-badge-text zcs-font-13 zcs-font-normal zcs-lh-body&apos;&gt;View documents&lt;/span&gt;\n\t\t\t&lt;/a&gt;\n\t\t&lt;/div&gt;\n\n\t\t&lt;div class=&apos;zcs-timeline-wrapper zcs-without-time zcs-mt-8&apos;&gt;\n\t\t\t&lt;ul class=&apos;zcs-flex zcs-direction-column zcs-gap-20 zcs-p-0 zcs-m-0&apos;&gt;\n\t\t\t\t&lt;%\n\t\t\t\t\tactivityRows = Assessment_Documents[Document_Type == &quot;Generated Report&quot; || Document_Type == &quot;Supporting&quot;] sort by Upload_Date desc;\n\t\t\t\t\trenderedActivity = 0;\n\t\t\t\t\tif(activityRows.count() &gt; 0)\n\t\t\t\t\t{\n\t\t\t\t\t\tfor each activityRow in activityRows\n\t\t\t\t\t\t{\n\t\t\t\t\t\t\tif(renderedActivity &lt; 10)\n\t\t\t\t\t\t\t{\n\t\t\t\t\t\t\t\trenderedActivity = renderedActivity + 1;\n\t\t\t\t\t\t\t\tactivityDateText = &quot;-&quot;;\n\t\t\t\t\t\t\t\tif(activityRow.Upload_Date != null)\n\t\t\t\t\t\t\t\t{\n\t\t\t\t\t\t\t\t\tactivityDateText = activityRow.Upload_Date.toString(&quot;dd-MMM-yyyy HH:mm&quot;);\n\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\tdocBadgeClass = &quot;zcs-badge-blue&quot;;\n\t\t\t\t\t\t\t\tdocIcon = &quot;files-2-doc&quot;;\n\t\t\t\t\t\t\t\tif(activityRow.Document_Type == &quot;Generated Report&quot;)\n\t\t\t\t\t\t\t\t{\n\t\t\t\t\t\t\t\t\tdocBadgeClass = &quot;zcs-badge-green&quot;;\n\t\t\t\t\t\t\t\t\tdocIcon = &quot;files-2-paper-diploma&quot;;\n\t\t\t\t\t\t\t\t}\n\t\t\t\t%&gt;\n\t\t\t\t&lt;li class=&apos;zcs-tl-li zcs-row zcs-gap-0 zcs-relative&apos;&gt;\n\t\t\t\t\t&lt;div class=&apos;zcs-tl-indicator zcs-h-full zcs-flex zcs-justify-center zcs-absolute&apos;&gt;\n\t\t\t\t\t\t&lt;span class=&apos;zcs-tl-dot zcs-rounded-half zcs-mt-4 zcs-box-border zcs-relative&apos;&gt;&lt;/span&gt;\n\t\t\t\t\t&lt;/div&gt;\n\t\t\t\t\t&lt;div class=&apos;zcs-flex zcs-direction-column zcs-col-common zcs-px-60 zcs-box-border&apos;&gt;\n\t\t\t\t\t\t&lt;div class=&apos;zcs-flex zcs-justify-space-between zcs-align-items-start zcs-gap-12&apos;&gt;\n\t\t\t\t\t\t\t&lt;div class=&apos;zcs-flex zcs-direction-column zcs-gap-4 zcs-col-common&apos;&gt;\n\t\t\t\t\t\t\t\t&lt;h3 class=&apos;zcs-font-16 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0&apos;&gt;\n\t\t\t\t\t\t\t\t\t&lt;i class=&apos;zc-li-outline &lt;%=docIcon%&gt;&apos;&gt;&lt;/i&gt;\n\t\t\t\t\t\t\t\t\t&lt;%=activityRow.Document_Name%&gt;\n\t\t\t\t\t\t\t\t&lt;/h3&gt;\n\t\t\t\t\t\t\t\t&lt;p class=&apos;zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-secondary zcs-m-0&apos;&gt;\n\t\t\t\t\t\t\t\t\tAssessment: &lt;%=activityRow.Assessment.Assessment_Reference%&gt;\n\t\t\t\t\t\t\t\t&lt;/p&gt;\n\t\t\t\t\t\t\t\t&lt;p class=&apos;zcs-font-13 zcs-font-normal zcs-lh-body zcs-color-tertiary zcs-m-0&apos;&gt;\n\t\t\t\t\t\t\t\t\tUploaded on &lt;%=activityDateText%&gt;\n\t\t\t\t\t\t\t\t&lt;/p&gt;\n\t\t\t\t\t\t\t&lt;/div&gt;\n\t\t\t\t\t\t\t&lt;span class=&apos;zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border &lt;%=docBadgeClass%&gt;&apos;&gt;\n\t\t\t\t\t\t\t\t&lt;span class=&apos;zcs-badge-text zcs-font-13 zcs-font-normal zcs-lh-body&apos;&gt;&lt;%=activityRow.Document_Type%&gt;&lt;/span&gt;\n\t\t\t\t\t\t\t&lt;/span&gt;\n\t\t\t\t\t\t&lt;/div&gt;\n\t\t\t\t\t&lt;/div&gt;\n\t\t\t\t&lt;/li&gt;\n\t\t\t\t&lt;%\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t}\n\t\t\t\t\t}\n\t\t\t\t\tif(renderedActivity == 0)\n\t\t\t\t\t{\n\t\t\t\t%&gt;\n\t\t\t\t&lt;li class=&apos;zcs-tl-li zcs-row zcs-gap-0 zcs-relative&apos;&gt;\n\t\t\t\t\t&lt;div class=&apos;zcs-tl-indicator zcs-h-full zcs-flex zcs-justify-center zcs-absolute&apos;&gt;\n\t\t\t\t\t\t&lt;span class=&apos;zcs-tl-dot zcs-rounded-half zcs-mt-4 zcs-box-border zcs-relative&apos;&gt;&lt;/span&gt;\n\t\t\t\t\t&lt;/div&gt;\n\t\t\t\t\t&lt;div class=&apos;zcs-flex zcs-direction-column zcs-col-common zcs-px-60 zcs-box-border&apos;&gt;\n\t\t\t\t\t\t&lt;h3 class=&apos;zcs-font-16 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0&apos;&gt;No document activity yet&lt;/h3&gt;\n\t\t\t\t\t\t&lt;p class=&apos;zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-secondary zcs-mt-4 zcs-mb-0&apos;&gt;Generated reports and supporting uploads will appear here.&lt;/p&gt;\n\t\t\t\t\t&lt;/div&gt;\n\t\t\t\t&lt;/li&gt;\n\t\t\t\t&lt;% } %&gt;\n\t\t\t&lt;/ul&gt;\n\t\t&lt;/div&gt;\n\t&lt;/div&gt;\n&lt;/div&gt;\n\t\t\t\t\t\t&lt;%}%&gt;\n\t\t\t\t\t]]>\n\t\t\t\t</dsp>\n\t\t\t</column>\n\t\t</row>\n\t</layout>\n</zml>"
+		}
+	}
+
+	workflow
+	{
+		form
+		{
+			Assessment_Documents_On_Load as "Assessment Documents On Load"
+			{
+			    type = form
+			    form = Assessment_Documents
+			    record event = on add or edit
+			    description = "Defaults document metadata for manual uploads."
+			
+			    on load
+			    {
+			        actions
+			        {
+			            custom deluge script
+			            (
+			                if(input.Document_Type in {"", " ", "null", null})
+			                {
+			                    input.Document_Type = "Supporting";
+			                }
+			                if(input.Source_Action in {"", " ", "null", null})
+			                {
+			                    input.Source_Action = "Manual Upload";
+			                }
+			                if(input.Upload_Date == null)
+			                {
+			                    input.Upload_Date = zoho.currenttime;
+			                }
+			                if(input.Uploaded_By == null)
+			                {
+			                    input.Uploaded_By = zoho.loginuser;
+			                }
+			            )
+			        }
+			    }
+			}
+
+			Assessment_Documents_On_Success as "Assessment Documents On Success"
+			{
+			    type = form
+			    form = Assessment_Documents
+			    record event = on add or edit
+			    description = "Completes upload metadata and version defaults."
+			
+			    on success
+			    {
+			        actions
+			        {
+			            custom deluge script
+			            (
+			                if(input.Upload_Date == null)
+			                {
+			                    input.Upload_Date = zoho.currenttime;
+			                }
+			                if(input.Uploaded_By == null)
+			                {
+			                    input.Uploaded_By = zoho.loginuser;
+			                }
+			                if(input.Version_Number == null)
+			                {
+			                    maxVersion = 0;
+			                    documentRows = Assessment_Documents[Assessment == input.Assessment && Document_Type == input.Document_Type && ID != input.ID];
+			                    for each documentRow in documentRows
+			                    {
+			                        if(ifnull(documentRow.Version_Number,0) > maxVersion)
+			                        {
+			                            maxVersion = documentRow.Version_Number;
+			                        }
+			                    }
+			                    input.Version_Number = maxVersion + 1;
+			                }
+			            )
+			        }
+			    }
+			}
+
+			Assessment_Documents_On_Validate as "Assessment Documents On Validate"
+			{
+			    type = form
+			    form = Assessment_Documents
+			    record event = on add or edit
+			    description = "Requires a stored file or preview URL and validates version number."
+			
+			    on validate
+			    {
+			        actions
+			        {
+			            custom deluge script
+			            (
+			                if(input.Document_File == null && ifnull(input.Document_URL,"").trim() == "")
+			                {
+			                    alert "Please upload a file or provide a document URL.";
+			                    cancel submit;
+			                }
+			                if(ifnull(input.Version_Number,0) < 1)
+			                {
+			                    alert "Version number must be at least 1.";
+			                    cancel submit;
+			                }
+			            )
+			        }
+			    }
+			}
+
+			Answer_Type_Snapshot_On_User_Input as "Answer Type Snapshot On User Input"
+			{
+			    type = form
+			    form = Assessment_Responses
+			    record event = on add or edit
+			    description = "Re-applies answer field visibility when the answer type snapshot is changed by an administrator."
+			
+			    on user input of Answer_Type_Snapshot
+			    {
+			        actions
+			        {
+			            custom deluge script
+			            (
+			                hide Single_Line_Answer, Paragraph_Answer, Dropdown_Answer, Multi_Select_Answer, Rating_Answer, Yes_No_Answer;
+			                if(input.Answer_Type_Snapshot == "Single-Line Text")
+			                {
+			                    show Single_Line_Answer;
+			                    enable Single_Line_Answer;
+			                }
+			                else if(input.Answer_Type_Snapshot == "Paragraph")
+			                {
+			                    show Paragraph_Answer;
+			                    enable Paragraph_Answer;
+			                }
+			                else if(input.Answer_Type_Snapshot == "Dropdown")
+			                {
+			                    show Dropdown_Answer;
+			                    enable Dropdown_Answer;
+			                }
+			                else if(input.Answer_Type_Snapshot == "Multi-Select")
+			                {
+			                    show Multi_Select_Answer;
+			                    enable Multi_Select_Answer;
+			                }
+			                else if(input.Answer_Type_Snapshot == "Rating/Scale")
+			                {
+			                    show Rating_Answer;
+			                    enable Rating_Answer;
+			                }
+			                else if(input.Answer_Type_Snapshot == "Yes-No")
+			                {
+			                    show Yes_No_Answer;
+			                    enable Yes_No_Answer;
+			                }
+			            )
+			        }
+			    }
+			}
+
+			Assessment_Responses_On_Load as "Assessment Responses On Load"
+			{
+			    type = form
+			    form = Assessment_Responses
+			    record event = on add or edit
+			    description = "Shows only the answer control matching the snapshotted answer type."
+			
+			    on load
+			    {
+			        actions
+			        {
+			            custom deluge script
+			            (
+			                disable Assessment, Question_Bank_Question, Category_Snapshot, Category_Display_Order, Question_Text_Snapshot, Question_Display_Order, Industry_Type_Snapshot, Answer_Type_Snapshot, Option_Values_Snapshot, Mandatory_Snapshot, Normalized_Answer, Completed_Mode, Submitted_At, Row_Status;
+			                hide Single_Line_Answer, Paragraph_Answer, Dropdown_Answer, Multi_Select_Answer, Rating_Answer, Yes_No_Answer;
+			                if(input.Answer_Type_Snapshot == "Single-Line Text")
+			                {
+			                    show Single_Line_Answer;
+			                    enable Single_Line_Answer;
+			                }
+			                else if(input.Answer_Type_Snapshot == "Paragraph")
+			                {
+			                    show Paragraph_Answer;
+			                    enable Paragraph_Answer;
+			                }
+			                else if(input.Answer_Type_Snapshot == "Dropdown")
+			                {
+			                    show Dropdown_Answer;
+			                    enable Dropdown_Answer;
+			                    if(ifnull(input.Option_Values_Snapshot,"").trim() != "")
+			                    {
+			                        optionList = input.Option_Values_Snapshot.replaceAll("\n",",").toList(",");
+			                        input.Dropdown_Answer:ui.add(optionList);
+			                    }
+			                }
+			                else if(input.Answer_Type_Snapshot == "Multi-Select")
+			                {
+			                    show Multi_Select_Answer;
+			                    enable Multi_Select_Answer;
+			                    if(ifnull(input.Option_Values_Snapshot,"").trim() != "")
+			                    {
+			                        multiOptionList = input.Option_Values_Snapshot.replaceAll("\n",",").toList(",");
+			                        input.Multi_Select_Answer:ui.add(multiOptionList);
+			                    }
+			                }
+			                else if(input.Answer_Type_Snapshot == "Rating/Scale")
+			                {
+			                    show Rating_Answer;
+			                    enable Rating_Answer;
+			                }
+			                else if(input.Answer_Type_Snapshot == "Yes-No")
+			                {
+			                    show Yes_No_Answer;
+			                    enable Yes_No_Answer;
+			                }
+			            )
+			        }
+			    }
+			}
+
+			Assessment_Responses_On_Success as "Assessment Responses On Success"
+			{
+			    type = form
+			    form = Assessment_Responses
+			    record event = on add or edit
+			    description = "Stores a normalized answer for reporting and document templates."
+			
+			    on success
+			    {
+			        actions
+			        {
+			            custom deluge script
+			            (
+			                normalized = "";
+			                if(input.Answer_Type_Snapshot == "Single-Line Text")
+			                {
+			                    normalized = ifnull(input.Single_Line_Answer,"");
+			                }
+			                else if(input.Answer_Type_Snapshot == "Paragraph")
+			                {
+			                    normalized = ifnull(input.Paragraph_Answer,"");
+			                }
+			                else if(input.Answer_Type_Snapshot == "Dropdown")
+			                {
+			                    normalized = ifnull(input.Dropdown_Answer,"");
+			                }
+			                else if(input.Answer_Type_Snapshot == "Multi-Select")
+			                {
+			                    normalized = input.Multi_Select_Answer.toString();
+			                }
+			                else if(input.Answer_Type_Snapshot == "Rating/Scale")
+			                {
+			                    if(input.Rating_Answer != null)
+			                    {
+			                        normalized = input.Rating_Answer.toString();
+			                    }
+			                }
+			                else if(input.Answer_Type_Snapshot == "Yes-No")
+			                {
+			                    normalized = ifnull(input.Yes_No_Answer,"");
+			                }
+			                input.Normalized_Answer = normalized;
+			                if(ifnull(normalized,"").trim() != "" && normalized != "Not Applicable")
+			                {
+			                    if(input.Row_Status != "Submitted")
+			                    {
+			                        input.Row_Status = "Answered";
+			                    }
+			                }
+			                else
+			                {
+			                    if(input.Row_Status != "Submitted")
+			                    {
+			                        input.Row_Status = "Draft";
+			                    }
+			                }
+			            )
+			        }
+			    }
+			}
+
+			Assessment_Responses_On_Validate as "Assessment Responses On Validate"
+			{
+			    type = form
+			    form = Assessment_Responses
+			    record event = on add or edit
+			    description = "Validates mandatory answers and rating ranges."
+			
+			    on validate
+			    {
+			        actions
+			        {
+			            custom deluge script
+			            (
+			                if(input.Answer_Type_Snapshot == "Rating/Scale" && input.Rating_Answer != null && (input.Rating_Answer < 1 || input.Rating_Answer > 5))
+			                {
+			                    alert "Rating answers must be between 1 and 5.";
+			                    cancel submit;
+			                }
+			                if(input.Mandatory_Snapshot == true)
+			                {
+			                    missingAnswer = false;
+			                    if(input.Answer_Type_Snapshot == "Single-Line Text" && ifnull(input.Single_Line_Answer,"").trim() == "")
+			                    {
+			                        missingAnswer = true;
+			                    }
+			                    else if(input.Answer_Type_Snapshot == "Paragraph" && ifnull(input.Paragraph_Answer,"").trim() == "")
+			                    {
+			                        missingAnswer = true;
+			                    }
+			                    else if(input.Answer_Type_Snapshot == "Dropdown" && input.Dropdown_Answer in {"", " ", "null", null, "Not Applicable"})
+			                    {
+			                        missingAnswer = true;
+			                    }
+			                    else if(input.Answer_Type_Snapshot == "Multi-Select" && input.Multi_Select_Answer.isEmpty())
+			                    {
+			                        missingAnswer = true;
+			                    }
+			                    else if(input.Answer_Type_Snapshot == "Rating/Scale" && input.Rating_Answer == null)
+			                    {
+			                        missingAnswer = true;
+			                    }
+			                    else if(input.Answer_Type_Snapshot == "Yes-No" && input.Yes_No_Answer in {"", " ", "null", null})
+			                    {
+			                        missingAnswer = true;
+			                    }
+			                    if(missingAnswer == true)
+			                    {
+			                        alert "This question is mandatory. Please provide an answer.";
+			                        cancel submit;
+			                    }
+			                }
+			            )
+			        }
+			    }
+			}
+
+			Assessment_Settings_On_Success as "Assessment Settings On Success"
+			{
+			    type = form
+			    form = Assessment_Settings
+			    record event = on add or edit
+			    description = "Ensures only one active settings row is used for new assessments."
+			
+			    on success
+			    {
+			        actions
+			        {
+			            custom deluge script
+			            (
+			                if(input.Active == true)
+			                {
+			                    otherSettings = Assessment_Settings[ID != input.ID && Active == true];
+			                    if(otherSettings.count() > 0)
+			                    {
+			                        for each settingRow in otherSettings
+			                        {
+			                            settingRow.Active = false;
+			                        }
+			                    }
+			                }
+			            )
+			        }
+			    }
+			}
+
+			Assessment_Settings_On_Validate as "Assessment Settings On Validate"
+			{
+			    type = form
+			    form = Assessment_Settings
+			    record event = on add or edit
+			    description = "Validates assessment defaults."
+			
+			    on validate
+			    {
+			        actions
+			        {
+			            custom deluge script
+			            (
+			                if(ifnull(input.Default_Validity_Months,0) <= 0)
+			                {
+			                    alert "Default validity months must be greater than zero.";
+			                    cancel submit;
+			                }
+			                if(ifnull(input.Reminder_Days_Before_Expiry,0) < 0)
+			                {
+			                    alert "Reminder days before expiry cannot be negative.";
+			                    cancel submit;
+			                }
+			            )
+			        }
+			    }
+			}
+
+			Assessment_Mode_On_User_Input as "Assessment Mode On User Input"
+			{
+			    type = form
+			    form = Assessments
+			    record event = on add or edit
+			    description = "Shows external link metadata only when the assessment is customer-facing."
+			
+			    on user input of Assessment_Mode
+			    {
+			        actions
+			        {
+			            custom deluge script
+			            (
+			                if(input.Assessment_Mode == "External")
+			                {
+			                    show Public_Link, Public_Link_Generated_On, Public_Link_Expires_On;
+			                }
+			                else
+			                {
+			                    hide Public_Link, Public_Link_Generated_On, Public_Link_Expires_On;
+			                    input.Public_Link = "";
+			                    input.Public_Link_Generated_On = null;
+			                    input.Public_Link_Expires_On = null;
+			                }
+			            )
+			        }
+			    }
+			}
+
+			Assessments_On_Load as "Assessments On Load"
+			{
+			    type = form
+			    form = Assessments
+			    record event = on add or edit
+			    description = "Defaults settings and controls public-link visibility on the assessment form."
+			
+			    on load
+			    {
+			        actions
+			        {
+			            custom deluge script
+			            (
+			                if(input.Validity_Period_Months == null || input.Validity_Period_Months <= 0)
+			                {
+			                    activeSettings = Assessment_Settings[Active == true];
+			                    if(activeSettings.count() > 0)
+			                    {
+			                        input.Validity_Period_Months = activeSettings.Default_Validity_Months;
+			                    }
+			                    else
+			                    {
+			                        input.Validity_Period_Months = 3;
+			                    }
+			                }
+			                if(input.Assigned_Consultant == null)
+			                {
+			                    input.Assigned_Consultant = zoho.loginuser;
+			                }
+			                disable Assessment_Reference, Submission_Date, Valid_Until, Expiry_Reminder_Sent, Expired_Notification_Sent, Submission_Timestamp, Submission_Mode, Public_Token, Public_Link_Generated_On, Public_Link_Expires_On, Questions_Generated;
+			                hide Public_Token;
+			                if(input.Assessment_Mode == "External")
+			                {
+			                    show Public_Link, Public_Link_Generated_On, Public_Link_Expires_On;
+			                }
+			                else
+			                {
+			                    hide Public_Link, Public_Link_Generated_On, Public_Link_Expires_On;
+			                }
+			                if(input.Status == "Expired")
+			                {
+			                    disable Project, Customer, Customer_Contact_Email, Industry_Type, Assigned_Consultant, Assessment_Mode, Status, Validity_Period_Months, Completed_By_Name, Completed_By_Email;
+			                }
+			            )
+			        }
+			    }
+			}
+
+			Assessments_On_Success as "Assessments On Success"
+			{
+			    type = form
+			    form = Assessments
+			    record event = on add or edit
+			    description = "Creates assessment references, snapshots questions, and routes manual submissions through the central submit routine."
+			
+			    on success
+			    {
+			        actions
+			        {
+			            custom deluge script
+			            (
+			                if(ifnull(input.Assessment_Reference,"").trim() == "")
+			                {
+			                    seqText = input.Assessment_Sequence.toString();
+			                    paddedSeq = seqText;
+			                    if(seqText.length() == 1)
+			                    {
+			                        paddedSeq = "000" + seqText;
+			                    }
+			                    else if(seqText.length() == 2)
+			                    {
+			                        paddedSeq = "00" + seqText;
+			                    }
+			                    else if(seqText.length() == 3)
+			                    {
+			                        paddedSeq = "0" + seqText;
+			                    }
+			                    assessmentToNumber = Assessments[ID == input.ID];
+			                    assessmentToNumber.Assessment_Reference = "CSA-" + zoho.currentdate.getYear().toString() + "-" + paddedSeq;
+			                }
+			                if(input.Status in {"Draft","In Progress"} && input.Questions_Generated == false)
+			                {
+			                    thisapp.Generate_Assessment_Responses(input.ID);
+			                }
+			                if(input.Status == "Submitted" && input.Submission_Timestamp == null)
+			                {
+			                    thisapp.Submit_Assessment(input.ID, input.Completed_By_Name, input.Completed_By_Email, input.Assessment_Mode);
+			                }
+			            )
+			        }
+			    }
+			}
+
+			Assessments_On_Validate as "Assessments On Validate"
+			{
+			    type = form
+			    form = Assessments
+			    record event = on add or edit
+			    description = "Validates assessment status changes and mandatory response completion."
+			
+			    on validate
+			    {
+			        actions
+			        {
+			            custom deluge script
+			            (
+			                if(input.Project == null || input.Customer == null || input.Industry_Type == null)
+			                {
+			                    alert "Project, customer, and industry type are required.";
+			                    cancel submit;
+			                }
+			                if(ifnull(input.Validity_Period_Months,0) <= 0)
+			                {
+			                    alert "Validity period must be greater than zero.";
+			                    cancel submit;
+			                }
+			                if(input.Status == "Expired")
+			                {
+			                    alert "Expired assessments are locked. Use Start Reassessment to create a fresh cycle.";
+			                    cancel submit;
+			                }
+			                if(input.Status == "Submitted")
+			                {
+			                    responseRows = Assessment_Responses[Assessment == input.ID];
+			                    if(responseRows.count() == 0)
+			                    {
+			                        alert "Generate and answer assessment questions before submitting.";
+			                        cancel submit;
+			                    }
+			                    for each responseRow in Assessment_Responses[Assessment == input.ID && Mandatory_Snapshot == true]
+			                    {
+			                        if(ifnull(responseRow.Normalized_Answer,"").trim() == "" || responseRow.Normalized_Answer == "Not Applicable")
+			                        {
+			                            alert "Mandatory response is unanswered: " + responseRow.Question_Text_Snapshot;
+			                            cancel submit;
+			                            break;
+			                        }
+			                    }
+			                }
+			            )
+			        }
+			    }
+			}
+
+			Assessments_Industry_Type_On_User_Input as "Assessment Industry Type On User Input"
+			{
+			    type = form
+			    form = Assessments
+			    record event = on add or edit
+			    description = "Warns users that the selected industry drives question snapshot generation."
+			
+			    on user input of Industry_Type
+			    {
+			        actions
+			        {
+			            custom deluge script
+			            (
+			                if(input.Questions_Generated == true && input.Status == "Draft")
+			                {
+			                    alert "Changing the industry on a draft assessment will rebuild draft response rows from the active question bank after save.";
+			                }
+			                else if(input.Questions_Generated == true && input.Status == "Submitted")
+			                {
+			                    alert "Submitted assessments keep historical question snapshots and cannot change industry.";
+			                }
+			            )
+			        }
+			    }
+			}
+
+			Project_On_User_Input as "Project On User Input"
+			{
+			    type = form
+			    form = Assessments
+			    record event = on add or edit
+			    description = "Copies customer, contact, and consultant defaults from the selected project."
+			
+			    on user input of Project
+			    {
+			        actions
+			        {
+			            custom deluge script
+			            (
+			                if(input.Project != null)
+			                {
+			                    projectRow = Projects[ID == input.Project];
+			                    if(projectRow.count() > 0)
+			                    {
+			                        input.Customer = projectRow.Customer;
+			                        input.Customer_Contact_Email = projectRow.Customer_Contact_Email;
+			                        if(projectRow.Assigned_Consultant != null)
+			                        {
+			                            input.Assigned_Consultant = projectRow.Assigned_Consultant;
+			                        }
+			                    }
+			                }
+			            )
+			        }
+			    }
+			}
+
+			Customers_On_Validate as "Customers On Validate"
+			{
+			    type = form
+			    form = Customers
+			    record event = on add or edit
+			    description = "Defensively validates primary contact email whitespace and format."
+			
+			    on validate
+			    {
+			        actions
+			        {
+			            custom deluge script
+			            (
+			                if(ifnull(input.Primary_Contact_Email,"").trim() != "")
+			                {
+			                    emailValue = input.Primary_Contact_Email.trim().toLowerCase();
+			                    if(emailValue.matches("[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?") == false)
+			                    {
+			                        alert "Please enter a valid primary contact email address.";
+			                        cancel submit;
+			                    }
+			                    input.Primary_Contact_Email = emailValue;
+			                }
+			            )
+			        }
+			    }
+			}
+
+			External_Assessment_On_Load as "External Assessment On Load"
+			{
+			    type = form
+			    form = External_Assessment_Submission
+			    record event = on add
+			    description = "Loads the assessment questionnaire for a valid public token without exposing internal data."
+			
+			    on load
+			    {
+			        actions
+			        {
+			            custom deluge script
+			            (
+			                disable Assessment_ID, Assessment_Reference, Project_Name, Customer_Name, Industry_Name;
+			                hide Token, Assessment_ID;
+			                input.Responses.clear();
+			                tokenValue = input.Token;
+			                if(ifnull(tokenValue,"").trim() == "")
+			                {
+			                    alert "This questionnaire link is missing its access token. Please ask your Kannanware consultant for a fresh link.";
+			                }
+			                else
+			                {
+			                    assessmentRow = Assessments[Public_Token == tokenValue && Assessment_Mode == "External" && Status != "Submitted" && Status != "Expired"];
+			                    if(assessmentRow.count() == 0)
+			                    {
+			                        alert "This questionnaire link is invalid, expired, or already submitted.";
+			                    }
+			                    else if(assessmentRow.Public_Link_Expires_On != null && assessmentRow.Public_Link_Expires_On < zoho.currentdate)
+			                    {
+			                        alert "This questionnaire link has expired. Please ask your Kannanware consultant for a fresh link.";
+			                    }
+			                    else
+			                    {
+			                        thisapp.Generate_Assessment_Responses(assessmentRow.ID);
+			                        input.Assessment_ID = assessmentRow.ID;
+			                        input.Assessment_Reference = assessmentRow.Assessment_Reference;
+			                        input.Project_Name = assessmentRow.Project.Project_Name;
+			                        input.Customer_Name = assessmentRow.Customer.Customer_Name;
+			                        input.Industry_Name = assessmentRow.Industry_Type.Industry_Name;
+			                        responseRows = Collection();
+			                        for each responseRow in Assessment_Responses[Assessment == assessmentRow.ID] sort by Category_Display_Order, Question_Display_Order
+			                        {
+			                            publicRow = External_Assessment_Submission.Responses();
+			                            publicRow.Assessment_Response_ID = responseRow.ID;
+			                            publicRow.Category_Snapshot = responseRow.Category_Snapshot;
+			                            publicRow.Question_Text_Snapshot = responseRow.Question_Text_Snapshot;
+			                            publicRow.Answer_Type_Snapshot = responseRow.Answer_Type_Snapshot;
+			                            publicRow.Option_Values_Snapshot = responseRow.Option_Values_Snapshot;
+			                            publicRow.Mandatory_Snapshot = responseRow.Mandatory_Snapshot;
+			                            responseRows.insert(publicRow);
+			                        }
+			                        input.Responses.insert(responseRows);
+			                    }
+			                }
+			            )
+			        }
+			    }
+			}
+
+			External_Assessment_On_Success as "External Assessment On Success"
+			{
+			    type = form
+			    form = External_Assessment_Submission
+			    record event = on add
+			    description = "Writes public answers back to the assessment response snapshots and submits the parent assessment."
+			
+			    on success
+			    {
+			        actions
+			        {
+			            custom deluge script
+			            (
+			                for each responseRow in input.Responses
+			                {
+			                    normalizedAnswer = "";
+			                    if(responseRow.Answer_Type_Snapshot == "Single-Line Text")
+			                    {
+			                        normalizedAnswer = ifnull(responseRow.Single_Line_Answer,"");
+			                    }
+			                    else if(responseRow.Answer_Type_Snapshot == "Paragraph")
+			                    {
+			                        normalizedAnswer = ifnull(responseRow.Paragraph_Answer,"");
+			                    }
+			                    else if(responseRow.Answer_Type_Snapshot == "Dropdown")
+			                    {
+			                        normalizedAnswer = ifnull(responseRow.Dropdown_Answer,"");
+			                    }
+			                    else if(responseRow.Answer_Type_Snapshot == "Multi-Select")
+			                    {
+			                        normalizedAnswer = responseRow.Multi_Select_Answer.toString();
+			                    }
+			                    else if(responseRow.Answer_Type_Snapshot == "Rating/Scale" && responseRow.Rating_Answer != null)
+			                    {
+			                        normalizedAnswer = responseRow.Rating_Answer.toString();
+			                    }
+			                    else if(responseRow.Answer_Type_Snapshot == "Yes-No")
+			                    {
+			                        normalizedAnswer = ifnull(responseRow.Yes_No_Answer,"");
+			                    }
+			                    update Assessment_Responses[ID == responseRow.Assessment_Response_ID && Assessment == input.Assessment_ID]
+			                    [
+			                        Single_Line_Answer = responseRow.Single_Line_Answer
+			                        Paragraph_Answer = responseRow.Paragraph_Answer
+			                        Dropdown_Answer = responseRow.Dropdown_Answer
+			                        Multi_Select_Answer = responseRow.Multi_Select_Answer
+			                        Rating_Answer = responseRow.Rating_Answer
+			                        Yes_No_Answer = responseRow.Yes_No_Answer
+			                        Normalized_Answer = normalizedAnswer
+			                        Completed_By_Name = input.Completed_By_Name
+			                        Completed_By_Email = input.Completed_By_Email
+			                        Completed_Mode = "External"
+			                        Submitted_At = zoho.currenttime
+			                        Row_Status = "Submitted"
+			                    ];
+			                }
+			                thisapp.Submit_Assessment(input.Assessment_ID, input.Completed_By_Name, input.Completed_By_Email, "External");
+			            )
+			        }
+			    }
+			}
+
+			External_Assessment_On_Validate as "External Assessment On Validate"
+			{
+			    type = form
+			    form = External_Assessment_Submission
+			    record event = on add
+			    description = "Revalidates token access and required answers before public submission."
+			
+			    on validate
+			    {
+			        actions
+			        {
+			            custom deluge script
+			            (
+			                tokenValue = input.Token;
+			                assessmentRow = Assessments[Public_Token == tokenValue && Assessment_Mode == "External" && Status != "Submitted" && Status != "Expired"];
+			                if(assessmentRow.count() == 0)
+			                {
+			                    alert "This questionnaire link is invalid, expired, or already submitted.";
+			                    cancel submit;
+			                }
+			                if(assessmentRow.Public_Link_Expires_On != null && assessmentRow.Public_Link_Expires_On < zoho.currentdate)
+			                {
+			                    alert "This questionnaire link has expired. Please ask your Kannanware consultant for a fresh link.";
+			                    cancel submit;
+			                }
+			                for each responseRow in input.Responses
+			                {
+			                    if(responseRow.Rating_Answer != null && (responseRow.Rating_Answer < 1 || responseRow.Rating_Answer > 5))
+			                    {
+			                        alert "Rating answers must be between 1 and 5.";
+			                        cancel submit;
+			                        break;
+			                    }
+			                    if(responseRow.Mandatory_Snapshot == true)
+			                    {
+			                        missing = false;
+			                        if(responseRow.Answer_Type_Snapshot == "Single-Line Text" && ifnull(responseRow.Single_Line_Answer,"").trim() == "")
+			                        {
+			                            missing = true;
+			                        }
+			                        else if(responseRow.Answer_Type_Snapshot == "Paragraph" && ifnull(responseRow.Paragraph_Answer,"").trim() == "")
+			                        {
+			                            missing = true;
+			                        }
+			                        else if(responseRow.Answer_Type_Snapshot == "Dropdown" && (ifnull(responseRow.Dropdown_Answer,"").trim() == "" || responseRow.Dropdown_Answer == "Not Applicable"))
+			                        {
+			                            missing = true;
+			                        }
+			                        else if(responseRow.Answer_Type_Snapshot == "Multi-Select" && responseRow.Multi_Select_Answer.isEmpty())
+			                        {
+			                            missing = true;
+			                        }
+			                        else if(responseRow.Answer_Type_Snapshot == "Rating/Scale" && responseRow.Rating_Answer == null)
+			                        {
+			                            missing = true;
+			                        }
+			                        else if(responseRow.Answer_Type_Snapshot == "Yes-No" && ifnull(responseRow.Yes_No_Answer,"").trim() == "")
+			                        {
+			                            missing = true;
+			                        }
+			                        if(missing == true)
+			                        {
+			                            alert "Please answer the mandatory question: " + responseRow.Question_Text_Snapshot;
+			                            cancel submit;
+			                            break;
+			                        }
+			                    }
+			                }
+			            )
+			        }
+			    }
+			}
+
+			Responses_Answer_Type_Snapshot_On_User_Input as "External Response Answer Type On User Input"
+			{
+			    type = form
+			    form = External_Assessment_Submission
+			    record event = on add
+			    description = "Shows the answer field that matches the current response row's answer type."
+			
+			    on user input of Responses.Answer_Type_Snapshot
+			    {
+			        actions
+			        {
+			            custom deluge script
+			            (
+			                info "External response answer type changed.";
+			            )
+			        }
+			    }
+			}
+
+			Industry_Types_On_Validate as "Industry Types On Validate"
+			{
+			    type = form
+			    form = Industry_Types
+			    record event = on add or edit
+			    description = "Ensures industry display order stays positive."
+			
+			    on validate
+			    {
+			        actions
+			        {
+			            custom deluge script
+			            (
+			                if(ifnull(input.Display_Order,0) <= 0)
+			                {
+			                    input.Display_Order = 1;
+			                }
+			            )
+			        }
+			    }
+			}
+
+			Customer_On_User_Input as "Customer On User Input"
+			{
+			    type = form
+			    form = Projects
+			    record event = on add or edit
+			    description = "Copies the selected customer's primary email to the project contact email."
+			
+			    on user input of Customer
+			    {
+			        actions
+			        {
+			            custom deluge script
+			            (
+			                if(input.Customer != null)
+			                {
+			                    customerRec = Customers[ID == input.Customer];
+			                    if(customerRec.count() > 0)
+			                    {
+			                        if(ifnull(customerRec.Primary_Contact_Email,"").trim() != "")
+			                        {
+			                            input.Customer_Contact_Email = customerRec.Primary_Contact_Email;
+			                        }
+			                    }
+			                }
+			                else
+			                {
+			                    input.Customer_Contact_Email = null;
+			                }
+			            )
+			        }
+			    }
+			}
+
+			Projects_On_Validate as "Projects On Validate"
+			{
+			    type = form
+			    form = Projects
+			    record event = on add or edit
+			    description = "Validates project date range."
+			
+			    on validate
+			    {
+			        actions
+			        {
+			            custom deluge script
+			            (
+			                if(input.Start_Date != null && input.End_Date != null && input.End_Date < input.Start_Date)
+			                {
+			                    alert "End Date cannot be before Start Date.";
+			                    cancel submit;
+			                }
+			            )
+			        }
+			    }
+			}
+
+			Question_Categories_On_Validate as "Question Categories On Validate"
+			{
+			    type = form
+			    form = Question_Categories
+			    record event = on add or edit
+			    description = "Ensures category display order stays positive."
+			
+			    on validate
+			    {
+			        actions
+			        {
+			            custom deluge script
+			            (
+			                if(ifnull(input.Display_Order,0) <= 0)
+			                {
+			                    input.Display_Order = 1;
+			                }
+			            )
+			        }
+			    }
+			}
+
+			Answer_Type_On_User_Input as "Answer Type On User Input"
+			{
+			    type = form
+			    form = Questions
+			    record event = on add or edit
+			    description = "Toggles option value entry based on the selected answer type."
+			
+			    on user input of Answer_Type
+			    {
+			        actions
+			        {
+			            custom deluge script
+			            (
+			                if(input.Answer_Type == "Dropdown" || input.Answer_Type == "Multi-Select")
+			                {
+			                    show Option_Values;
+			                    enable Option_Values;
+			                }
+			                else
+			                {
+			                    input.Option_Values = "";
+			                    hide Option_Values;
+			                }
+			            )
+			        }
+			    }
+			}
+
+			Industry_Type_On_User_Input as "Industry Type On User Input"
+			{
+			    type = form
+			    form = Questions
+			    record event = on add or edit
+			    description = "Clears category when the industry changes so users choose a matching section."
+			
+			    on user input of Industry_Type
+			    {
+			        actions
+			        {
+			            custom deluge script
+			            (
+			                input.Category = null;
+			            )
+			        }
+			    }
+			}
+
+			Questions_On_Load as "Questions On Load"
+			{
+			    type = form
+			    form = Questions
+			    record event = on add or edit
+			    description = "Shows option values only for choice-based answer types."
+			
+			    on load
+			    {
+			        actions
+			        {
+			            custom deluge script
+			            (
+			                if(input.Answer_Type == "Dropdown" || input.Answer_Type == "Multi-Select")
+			                {
+			                    show Option_Values;
+			                }
+			                else
+			                {
+			                    hide Option_Values;
+			                }
+			            )
+			        }
+			    }
+			}
+
+			Questions_On_Validate as "Questions On Validate"
+			{
+			    type = form
+			    form = Questions
+			    record event = on add or edit
+			    description = "Validates option values, display order, and category/industry alignment."
+			
+			    on validate
+			    {
+			        actions
+			        {
+			            custom deluge script
+			            (
+			                if((input.Answer_Type == "Dropdown" || input.Answer_Type == "Multi-Select") && ifnull(input.Option_Values,"").trim() == "")
+			                {
+			                    alert "Option Values are required for Dropdown and Multi-Select questions.";
+			                    cancel submit;
+			                }
+			                if(ifnull(input.Display_Order,0) <= 0)
+			                {
+			                    input.Display_Order = 1;
+			                }
+			                if(input.Category != null && input.Industry_Type != null)
+			                {
+			                    categoryRec = Question_Categories[ID == input.Category];
+			                    if(categoryRec.count() > 0 && categoryRec.Industry_Type != input.Industry_Type)
+			                    {
+			                        alert "The selected category must belong to the selected industry type.";
+			                        cancel submit;
+			                    }
+			                }
+			            )
+			        }
+			    }
+			}
+		}
+
+		schedule
+		{
+			Assessment_Expiry_Reminder as "Assessment Expiry Reminder"
+			{
+			    type = schedule
+			    form = Assessments[Status == "Submitted" && Expiry_Reminder_Sent == false && Valid_Until != null]
+			    start = before 15 days from Valid_Until at "09:00:00"
+			    time zone = "Asia/Kolkata"
+			
+			    on start
+			    {
+			        actions
+			        {
+			            on load
+			            (
+			                consultantEmail = zoho.adminuserid;
+			                if(input.Assigned_Consultant != null)
+			                {
+			                    consultantEmail = input.Assigned_Consultant.email;
+			                }
+			                customerEmail = input.Customer_Contact_Email;
+			                sendmail
+			                [
+			                    from : zoho.adminuserid
+			                    to : consultantEmail
+			                    subject : "Assessment approaching expiry: " + input.Assessment_Reference
+			                    message : "The Current State Assessment for " + input.Customer.Customer_Name + " / " + input.Project.Project_Name + " expires on " + input.Valid_Until.toString("dd-MMM-yyyy") + ". Please plan reassessment if required."
+			                ];
+			                activeSettings = Assessment_Settings[Active == true];
+			                notifyCustomer = true;
+			                if(activeSettings.count() > 0)
+			                {
+			                    notifyCustomer = activeSettings.Notify_Customer_On_Expiry;
+			                }
+			                if(notifyCustomer == true && ifnull(customerEmail,"").trim() != "")
+			                {
+			                    sendmail
+			                    [
+			                        from : zoho.adminuserid
+			                        to : customerEmail
+			                        subject : "Current State Assessment approaching expiry"
+			                        message : "Your Current State Assessment " + input.Assessment_Reference + " is valid until " + input.Valid_Until.toString("dd-MMM-yyyy") + ". Your Kannanware consultant will coordinate next steps if reassessment is needed."
+			                    ];
+			                }
+			                update Assessments[ID == input.ID]
+			                [
+			                    Expiry_Reminder_Sent = true
+			                ];
+			            )
+			        }
+			    }
+			}
+
+			Assessment_Expiry_Status_Update as "Assessment Expiry Status Update"
+			{
+			    type = schedule
+			    form = Assessments[Status == "Submitted" && Valid_Until != null]
+			    start = Valid_Until at "09:00:00"
+			    time zone = "Asia/Kolkata"
+			
+			    on start
+			    {
+			        actions
+			        {
+			            on load
+			            (
+			                consultantEmail = zoho.adminuserid;
+			                if(input.Assigned_Consultant != null)
+			                {
+			                    consultantEmail = input.Assigned_Consultant.email;
+			                }
+			                customerEmail = input.Customer_Contact_Email;
+			                update Assessments[ID == input.ID]
+			                [
+			                    Status = "Expired"
+			                    Expired_Notification_Sent = true
+			                ];
+			                sendmail
+			                [
+			                    from : zoho.adminuserid
+			                    to : consultantEmail
+			                    subject : "Assessment expired: " + input.Assessment_Reference
+			                    message : "The Current State Assessment for " + input.Customer.Customer_Name + " / " + input.Project.Project_Name + " expired today. Use Start Reassessment on the assessment report to create a fresh draft while preserving historical responses and documents."
+			                ];
+			                activeSettings = Assessment_Settings[Active == true];
+			                notifyCustomer = true;
+			                if(activeSettings.count() > 0)
+			                {
+			                    notifyCustomer = activeSettings.Notify_Customer_On_Expiry;
+			                }
+			                if(notifyCustomer == true && ifnull(customerEmail,"").trim() != "")
+			                {
+			                    sendmail
+			                    [
+			                        from : zoho.adminuserid
+			                        to : customerEmail
+			                        subject : "Current State Assessment expired"
+			                        message : "Your Current State Assessment " + input.Assessment_Reference + " has expired. Kannanware will coordinate reassessment if a renewed current-state view is needed."
+			                    ];
+			                }
+			            )
+			        }
+			    }
+			}
+		}
+
+		functions
+		{
+			WF_Generate_Assessment_Report as "Generate Assessment Report"
+			{
+			    type = functions
+			    form = Assessments
+			    execution type = for each record
+			    description = "Regenerates the branded Current State Assessment report and versions it in the assessment document history."
+			
+			    on start
+			    {
+			        actions
+			        {
+			            on click
+			            (
+			                thisapp.Generate_Assessment_Report(input.ID);
+			            )
+			        }
+			    }
+			}
+
+			WF_Generate_Public_Link as "Generate Public Link"
+			{
+			    type = functions
+			    form = Assessments
+			    execution type = for each record
+			    description = "Generates a tokenized public questionnaire link for an external assessment."
+			
+			    on start
+			    {
+			        actions
+			        {
+			            on click
+			            (
+			                generatedLink = thisapp.Build_Public_Assessment_Link(input.ID);
+			                if(input.Status == "Draft")
+			                {
+			                    update Assessments[ID == input.ID]
+			                    [
+			                        Status = "In Progress"
+			                    ];
+			                }
+			                openUrl("#Report:All_Assessments", "same window");
+			            )
+			        }
+			    }
+			}
+
+			WF_Start_Reassessment as "Start Reassessment"
+			{
+			    type = functions
+			    form = Assessments
+			    execution type = for each record
+			    description = "Clones core assessment context into a fresh Draft without copying responses or documents."
+			
+			    on start
+			    {
+			        actions
+			        {
+			            on click
+			            (
+			                newAssessmentId = insert into Assessments
+			                [
+			                    Project = input.Project
+			                    Customer = input.Customer
+			                    Customer_Contact_Email = input.Customer_Contact_Email
+			                    Industry_Type = input.Industry_Type
+			                    Assigned_Consultant = input.Assigned_Consultant
+			                    Assessment_Mode = input.Assessment_Mode
+			                    Status = "Draft"
+			                    Validity_Period_Months = input.Validity_Period_Months
+			                    Expiry_Reminder_Sent = false
+			                    Expired_Notification_Sent = false
+			                    Questions_Generated = false
+			                ];
+			                openUrl("#Form:Assessments?recLinkID=" + newAssessmentId + "&viewLinkName=All_Assessments", "same window");
+			            )
+			        }
+			    }
+			}
+
+			WF_Submit_Assessment as "Submit Assessment"
+			{
+			    type = functions
+			    form = Assessments
+			    execution type = for each record
+			    description = "Runs central assessment submission logic and creates the branded report document row."
+			
+			    on start
+			    {
+			        actions
+			        {
+			            on click
+			            (
+			                thisapp.Submit_Assessment(input.ID, input.Completed_By_Name, input.Completed_By_Email, input.Assessment_Mode);
+			            )
+			        }
+			    }
+			}
+		}
+	}
+
+	functions
+	{
+		Deluge
+		{
+			string Build_Public_Assessment_Link(int assessmentId)
+			{
+			    assessmentRow = Assessments[ID == assessmentId];
+			    linkValue = "";
+			    if(assessmentRow.count() > 0)
+			    {
+			        tokenValue = assessmentRow.Public_Token;
+			        if(ifnull(tokenValue,"").trim() == "")
+			        {
+			            tokenValue = "CSA-" + assessmentId.toString() + "-" + zoho.currenttime.toString("yyyyMMddHHmmss") + "-" + randomNumber(100000,999999).toString();
+			        }
+			        expiryDate = zoho.currentdate.addMonth(ifnull(assessmentRow.Validity_Period_Months,3));
+			        linkValue = zoho.appuri + "form-perma/External_Assessment_Submission?Token=" + tokenValue;
+			        update Assessments[ID == assessmentId]
+			        [
+			            Public_Token = tokenValue
+			            Public_Link = "<a href=\"" + linkValue + "\" target=\"_blank\">Open Questionnaire</a>"
+			            Public_Link_Generated_On = zoho.currenttime
+			            Public_Link_Expires_On = expiryDate
+			        ];
+			    }
+			    return linkValue;
+			}
+
+			void Generate_Assessment_Report(int assessmentId)
+			{
+			    assessmentRow = Assessments[ID == assessmentId];
+			    if(assessmentRow.count() > 0)
+			    {
+			        maxVersion = 0;
+			        for each documentRow in Assessment_Documents[Assessment == assessmentId && Document_Type == "Generated Report"]
+			        {
+			            if(ifnull(documentRow.Version_Number,0) > maxVersion)
+			            {
+			                maxVersion = documentRow.Version_Number;
+			            }
+			        }
+			        nextVersion = maxVersion + 1;
+			        reportName = "Current State Assessment Report - " + assessmentRow.Assessment_Reference + " - v" + nextVersion.toString();
+			        printUrl = zoho.appuri + "print/Assessment_Report_Print_View?Assessment=" + assessmentId.toString() + "&zc_FileName=" + assessmentRow.Assessment_Reference + "-CSA-Report-v" + nextVersion.toString();
+			        sourceAction = "Regenerated";
+			        if(maxVersion == 0)
+			        {
+			            sourceAction = "Generated on Submit";
+			        }
+			        insert into Assessment_Documents
+			        [
+			            Assessment = assessmentId
+			            Document_Name = reportName
+			            Document_Type = "Generated Report"
+			            Document_URL = "<a href=\"" + printUrl + "\" target=\"_blank\">Preview / Download PDF</a>"
+			            Uploaded_By = zoho.loginuser
+			            Upload_Date = zoho.currenttime
+			            Version_Number = nextVersion
+			            Revision_Notes = "Generated from Kannanware Current State Assessment print template. PDF is primary; report view remains export-ready for Excel/Word-compatible formats."
+			            Source_Action = sourceAction
+			        ];
+			    }
+			}
+
+			void Generate_Assessment_Responses(int assessmentId)
+			{
+			    assessmentRow = Assessments[ID == assessmentId];
+			    if(assessmentRow.count() > 0)
+			    {
+			        if(assessmentRow.Industry_Type != null)
+			        {
+			            existingRows = Assessment_Responses[Assessment == assessmentId];
+			            if(existingRows.count() == 0)
+			            {
+			                industryName = "";
+			                industryRow = Industry_Types[ID == assessmentRow.Industry_Type];
+			                if(industryRow.count() > 0)
+			                {
+			                    industryName = industryRow.Industry_Name;
+			                }
+			                for each categoryRow in Question_Categories[Industry_Type == assessmentRow.Industry_Type && Active == true] sort by Display_Order
+			                {
+			                    categoryName = categoryRow.Category_Name;
+			                    categoryOrder = ifnull(categoryRow.Display_Order,1);
+			                    for each questionRow in Questions[Industry_Type == assessmentRow.Industry_Type && Category == categoryRow.ID && Active == true] sort by Display_Order
+			                    {
+			                        insert into Assessment_Responses
+			                        [
+			                            Assessment = assessmentId
+			                            Question_Bank_Question = questionRow.ID
+			                            Category_Snapshot = categoryName
+			                            Category_Display_Order = categoryOrder
+			                            Question_Text_Snapshot = questionRow.Question_Text
+			                            Question_Display_Order = ifnull(questionRow.Display_Order,1)
+			                            Industry_Type_Snapshot = industryName
+			                            Answer_Type_Snapshot = questionRow.Answer_Type
+			                            Option_Values_Snapshot = questionRow.Option_Values
+			                            Mandatory_Snapshot = questionRow.Mandatory
+			                            Row_Status = "Draft"
+			                        ];
+			                    }
+			                }
+			                update Assessments[ID == assessmentId]
+			                [
+			                    Questions_Generated = true
+			                ];
+			            }
+			        }
+			    }
+			}
+
+			void Submit_Assessment(int assessmentId, string completedByName, string completedByEmail, string mode)
+			{
+			    assessmentRow = Assessments[ID == assessmentId];
+			    if(assessmentRow.count() > 0)
+			    {
+			        thisapp.Generate_Assessment_Responses(assessmentId);
+			        missingMandatory = false;
+			        missingQuestion = "";
+			        for each responseRow in Assessment_Responses[Assessment == assessmentId && Mandatory_Snapshot == true]
+			        {
+			            if(ifnull(responseRow.Normalized_Answer,"").trim() == "" || responseRow.Normalized_Answer == "Not Applicable")
+			            {
+			                missingMandatory = true;
+			                missingQuestion = responseRow.Question_Text_Snapshot;
+			                break;
+			            }
+			        }
+			        if(missingMandatory == false)
+			        {
+			            submitDate = zoho.currentdate;
+			            validityMonths = ifnull(assessmentRow.Validity_Period_Months,3);
+			            validUntilDate = submitDate.addMonth(validityMonths);
+			            submitMode = mode;
+			            if(submitMode in {"", " ", "null", null})
+			            {
+			                submitMode = assessmentRow.Assessment_Mode;
+			            }
+			            completeName = completedByName;
+			            if(completeName in {"", " ", "null", null})
+			            {
+			                completeName = zoho.loginuser;
+			            }
+			            completeEmail = completedByEmail;
+			            if(completeEmail in {"", " ", "null", null})
+			            {
+			                completeEmail = zoho.loginuserid;
+			            }
+			            update Assessments[ID == assessmentId]
+			            [
+			                Status = "Submitted"
+			                Submission_Date = submitDate
+			                Valid_Until = validUntilDate
+			                Submission_Timestamp = zoho.currenttime
+			                Submission_Mode = submitMode
+			                Completed_By_Name = completeName
+			                Completed_By_Email = completeEmail
+			                Expiry_Reminder_Sent = false
+			                Expired_Notification_Sent = false
+			            ];
+			            for each responseRowToSubmit in Assessment_Responses[Assessment == assessmentId]
+			            {
+			                responseRowToSubmit.Row_Status = "Submitted";
+			                responseRowToSubmit.Completed_By_Name = completeName;
+			                responseRowToSubmit.Completed_By_Email = completeEmail;
+			                responseRowToSubmit.Completed_Mode = submitMode;
+			                responseRowToSubmit.Submitted_At = zoho.currenttime;
+			            }
+			            thisapp.Generate_Assessment_Report(assessmentId);
+			        }
+			        else
+			        {
+			            info "Mandatory response is unanswered: " + missingQuestion;
+			        }
+			    }
+			}
+		}
+	}
+
+	share_settings
+	{
+	"CSA_Admin"
+	{
+	    name = "CSA_Admin"
+	    type = Users_Permissions
+	    permissions = { Chat:false, Predefined:false, ApiAccess:true, PIIAccess:true, ePHIAccess:false }
+	    description = "Administrators manage setup, questionnaire bank, assessments, documents, dashboards, and exports."
+	
+	    ModulePermissions
+	    {
+	        Customers
+	        {
+	            enabled = Create,Viewall,Modifyall,Import,Export,Tab,View,Edit,Delete,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Customers={"View","Edit","Delete"}
+	            }
+	        }
+	        Projects
+	        {
+	            enabled = Create,Viewall,Modifyall,Import,Export,Tab,View,Edit,Delete,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Projects={"View","Edit","Delete"}
+	            }
+	        }
+	        Industry_Types
+	        {
+	            enabled = Create,Viewall,Modifyall,Import,Export,Tab,View,Edit,Delete,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Industry_Types={"View","Edit","Delete"}
+	            }
+	        }
+	        Assessment_Settings
+	        {
+	            enabled = Create,Viewall,Modifyall,Import,Export,Tab,View,Edit,Delete,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Assessment_Settings={"View","Edit","Delete"}
+	            }
+	        }
+	        Question_Categories
+	        {
+	            enabled = Create,Viewall,Modifyall,Import,Export,Tab,View,Edit,Delete,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Question_Categories={"View","Edit","Delete"}
+	            }
+	        }
+	        Questions
+	        {
+	            enabled = Create,Viewall,Modifyall,Import,Export,Tab,View,Edit,Delete,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Questions={"View","Edit","Delete"}
+	                Active_Questions_By_Industry={"View","Edit","Delete"}
+	            }
+	        }
+	        Assessment_Responses
+	        {
+	            enabled = Create,Viewall,Modifyall,Import,Export,Tab,View,Edit,Delete,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Assessment_Responses={"View","Edit","Delete"}
+	                Submitted_Responses={"View","Edit","Delete"}
+	            }
+	        }
+	        Assessment_Documents
+	        {
+	            enabled = Create,Viewall,Modifyall,Import,Export,Tab,View,Edit,Delete,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Assessment_Documents={"View","Edit","Delete"}
+	                Generated_Assessment_Reports={"View","Edit","Delete"}
+	            }
+	        }
+	        Assessments
+	        {
+	            enabled = Create,Viewall,Modifyall,Import,Export,Tab,View,Edit,Delete,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Assessments={"View","Edit","Delete"}
+	                Assessments_By_Status={"View","Edit","Delete"}
+	                Expiring_Assessments={"View","Edit","Delete"}
+	                Assessment_Report_Print_View={"View","Edit","Delete"}
+	            }
+	        }
+	        External_Assessment_Submission
+	        {
+	            enabled = Create,Viewall,Modifyall,Tab,View,Edit,Delete,Search
+	            allFieldsVisible = true
+	        }
+	        Assessment_Dashboard
+	        {
+	            enabled = tab
+	        }
+	    }
+	}
+	"CSA_Consultant"
+	{
+	    name = "CSA_Consultant"
+	    type = Users_Permissions
+	    permissions = { Chat:false, Predefined:false, ApiAccess:false, PIIAccess:true, ePHIAccess:false }
+	    description = "Consultants create and complete assessments, generate links and reports, manage documents, and view dashboards."
+	
+	    ModulePermissions
+	    {
+	        Customers
+	        {
+	            enabled = Create,Viewall,Modifyall,Export,Tab,View,Edit,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Customers={"View"}
+	            }
+	        }
+	        Projects
+	        {
+	            enabled = Create,Viewall,Modifyall,Export,Tab,View,Edit,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Projects={"View"}
+	            }
+	        }
+	        Industry_Types
+	        {
+	            enabled = Viewall,Tab,View,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Industry_Types={"View"}
+	            }
+	        }
+	        Assessment_Settings
+	        {
+	            enabled = Viewall,View,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Assessment_Settings={"View"}
+	            }
+	        }
+	        Question_Categories
+	        {
+	            enabled = Viewall,Tab,View,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Question_Categories={"View"}
+	            }
+	        }
+	        Questions
+	        {
+	            enabled = Viewall,Tab,View,Search
+	            allFieldsVisible = true
+	            ReportPermissions
+	            {
+	                All_Questions={"View"}
+	                Active_Questions_By_Industry={"View"}
+	            }
+	        }
+	        Assessment_Responses
+	        {
+	            enabled = Create,Viewall,Modifyall,Export,Tab,View,Edit,Search
+	            allFieldsVisible = false
+	            FieldPermissions
+	            {
+	                Assessment{visibility:true,readonly:true}
+	                Question_Bank_Question{visibility:false}
+	                Category_Snapshot{visibility:true,readonly:true}
+	                Category_Display_Order{visibility:true,readonly:true}
+	                Question_Text_Snapshot{visibility:true,readonly:true}
+	                Question_Display_Order{visibility:true,readonly:true}
+	                Industry_Type_Snapshot{visibility:true,readonly:true}
+	                Answer_Type_Snapshot{visibility:true,readonly:true}
+	                Option_Values_Snapshot{visibility:true,readonly:true}
+	                Mandatory_Snapshot{visibility:true,readonly:true}
+	                Single_Line_Answer{visibility:true,readonly:false}
+	                Paragraph_Answer{visibility:true,readonly:false}
+	                Dropdown_Answer{visibility:true,readonly:false}
+	                Multi_Select_Answer{visibility:true,readonly:false}
+	                Rating_Answer{visibility:true,readonly:false}
+	                Yes_No_Answer{visibility:true,readonly:false}
+	                Normalized_Answer{visibility:true,readonly:true}
+	                Completed_By_Name{visibility:true,readonly:true}
+	                Completed_By_Email{visibility:true,readonly:true}
+	                Completed_Mode{visibility:true,readonly:true}
+	                Submitted_At{visibility:true,readonly:true}
+	                Row_Status{visibility:true,readonly:true}
+	            }
+	            ReportPermissions
+	            {
+	                All_Assessment_Responses={"View"}
+	                Submitted_Responses={"View"}
+	            }
+	        }
+	        Assessment_Documents
+	        {
+	            enabled = Create,Viewall,Modifyall,Export,Tab,View,Edit,Search
+	            allFieldsVisible = false
+	            FieldPermissions
+	            {
+	                Assessment{visibility:true,readonly:true}
+	                Document_Name{visibility:true,readonly:false}
+	                Document_Type{visibility:true,readonly:false}
+	                Document_File{visibility:true,readonly:false}
+	                Document_URL{visibility:true,readonly:true}
+	                Uploaded_By{visibility:true,readonly:true}
+	                Upload_Date{visibility:true,readonly:true}
+	                Version_Number{visibility:true,readonly:true}
+	                Revision_Notes{visibility:true,readonly:false}
+	                Source_Action{visibility:true,readonly:true}
+	            }
+	            ReportPermissions
+	            {
+	                All_Assessment_Documents={"View"}
+	                Generated_Assessment_Reports={"View"}
+	            }
+	        }
+	        Assessments
+	        {
+	            enabled = Create,Viewall,Modifyall,Export,Tab,View,Edit,Search
+	            allFieldsVisible = false
+	            FieldPermissions
+	            {
+	                Assessment_Sequence{visibility:true,readonly:true}
+	                Assessment_Reference{visibility:true,readonly:true}
+	                Project{visibility:true,readonly:false}
+	                Customer{visibility:true,readonly:false}
+	                Customer_Contact_Email{visibility:true,readonly:false}
+	                Industry_Type{visibility:true,readonly:false}
+	                Assigned_Consultant{visibility:true,readonly:false}
+	                Assessment_Mode{visibility:true,readonly:false}
+	                Status{visibility:true,readonly:false}
+	                Validity_Period_Months{visibility:true,readonly:false}
+	                Submission_Date{visibility:true,readonly:true}
+	                Valid_Until{visibility:true,readonly:true}
+	                Expiry_Reminder_Sent{visibility:true,readonly:true}
+	                Expired_Notification_Sent{visibility:true,readonly:true}
+	                Completed_By_Name{visibility:true,readonly:true}
+	                Completed_By_Email{visibility:true,readonly:true}
+	                Submission_Timestamp{visibility:true,readonly:true}
+	                Submission_Mode{visibility:true,readonly:true}
+	                Public_Token{visibility:false}
+	                Public_Link{visibility:true,readonly:true}
+	                Public_Link_Generated_On{visibility:true,readonly:true}
+	                Public_Link_Expires_On{visibility:true,readonly:true}
+	                Questions_Generated{visibility:true,readonly:true}
+	                Responses{visibility:true,readonly:true}
+	                Documents{visibility:true,readonly:true}
+	            }
+	            ReportPermissions
+	            {
+	                All_Assessments={"View"}
+	                Assessments_By_Status={"View"}
+	                Expiring_Assessments={"View"}
+	                Assessment_Report_Print_View={"View"}
+	            }
+	        }
+	        Assessment_Dashboard
+	        {
+	            enabled = tab
+	        }
+	    }
+	}
+	"CSA_Customer_Portal"
+	{
+	    name = "CSA_Customer_Portal"
+	    type = customer_portal
+	    permissions = { Chat:false, Predefined:false, ApiAccess:false, PIIAccess:false, ePHIAccess:false }
+	    description = "Future authenticated customer access; token-based public questionnaire is the active external flow."
+	}
+	}
+
+	web
+	{
+	forms
+	{
+	    form Customers
+	    {
+	        label placement = left
+	    }
+	    form Projects
+	    {
+	        label placement = left
+	    }
+	    form Industry_Types
+	    {
+	        label placement = left
+	    }
+	    form Assessment_Settings
+	    {
+	        label placement = left
+	    }
+	    form Question_Categories
+	    {
+	        label placement = left
+	    }
+	    form Questions
+	    {
+	        label placement = left
+	    }
+	    form Assessments
+	    {
+	        label placement = left
+	    }
+	    form Assessment_Responses
+	    {
+	        label placement = left
+	    }
+	    form Assessment_Documents
+	    {
+	        label placement = left
+	    }
+	    form External_Assessment_Submission
+	    {
+	        label placement = left
+	    }
+	}
+	reports
+	{
+		report All_Assessment_Documents
+		{
+		    quickview
+		    (
+		        layout
+		        (
+		            type = -1
+		            datablock1
+		            (
+		                layout type = -1
+		                fields
+		                (
+		                    Assessment
+		                    Document_Name
+		                    Document_Type
+		                    Document_File
+		                    Document_URL
+		                    Uploaded_By
+		                    Upload_Date
+		                    Version_Number
+		                    Source_Action
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header ( Edit  Duplicate  Delete )
+		            record ( Edit  Duplicate  Delete )
+		        )
+		        action
+		        (
+		            on click ( View Record )
+		            on right click ( Edit  Delete  Duplicate  View Record )
+		        )
+		    )
+		    detailview
+		    (
+		        layout
+		        (
+		            type = 1
+		            datablock1
+		            (
+		                layout type = -2
+		                fields
+		                (
+		                    Assessment
+		                    Document_Name
+		                    Document_Type
+		                    Document_File
+		                    Document_URL
+		                    Uploaded_By
+		                    Upload_Date
+		                    Version_Number
+		                    Source_Action
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header ( Edit  Duplicate  Delete )
+		        )
+		    )
+		}
+	
+		report Generated_Assessment_Reports
+		{
+		    quickview
+		    (
+		        layout
+		        (
+		            type = -1
+		            datablock1
+		            (
+		                layout type = -1
+		                fields
+		                (
+		                    Assessment
+		                    Document_Name
+		                    Document_Type
+		                    Document_File
+		                    Document_URL
+		                    Upload_Date
+		                    Version_Number
+		                    Source_Action
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header ( Edit  Duplicate  Delete )
+		            record ( Edit  Duplicate  Delete )
+		        )
+		        action
+		        (
+		            on click ( View Record )
+		            on right click ( Edit  Delete  Duplicate  View Record )
+		        )
+		    )
+		    detailview
+		    (
+		        layout
+		        (
+		            type = 1
+		            datablock1
+		            (
+		                layout type = -2
+		                fields
+		                (
+		                    Assessment
+		                    Document_Name
+		                    Document_Type
+		                    Document_File
+		                    Document_URL
+		                    Upload_Date
+		                    Version_Number
+		                    Source_Action
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header ( Edit  Duplicate  Delete )
+		        )
+		    )
+		}
+	
+		report All_Assessment_Responses
+		{
+		    quickview
+		    (
+		        layout
+		        (
+		            type = -1
+		            datablock1
+		            (
+		                layout type = -1
+		                fields
+		                (
+		                    Assessment
+		                    Category_Snapshot
+		                    Question_Text_Snapshot
+		                    Answer_Type_Snapshot
+		                    Normalized_Answer
+		                    Row_Status
+		                    Completed_Mode
+		                    Submitted_At
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header ( Edit  Duplicate  Delete )
+		            record ( Edit  Duplicate  Delete )
+		        )
+		        action
+		        (
+		            on click ( View Record )
+		            on right click ( Edit  Delete  Duplicate  View Record )
+		        )
+		    )
+		    detailview
+		    (
+		        layout
+		        (
+		            type = 1
+		            datablock1
+		            (
+		                layout type = -2
+		                fields
+		                (
+		                    Assessment
+		                    Category_Snapshot
+		                    Category_Display_Order
+		                    Question_Text_Snapshot
+		                    Question_Display_Order
+		                    Answer_Type_Snapshot
+		                    Normalized_Answer
+		                    Row_Status
+		                    Completed_Mode
+		                    Submitted_At
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header ( Edit  Duplicate  Delete )
+		        )
+		    )
+		}
+	
+		report Submitted_Responses
+		{
+		    quickview
+		    (
+		        layout
+		        (
+		            type = -1
+		            datablock1
+		            (
+		                layout type = -1
+		                fields
+		                (
+		                    Assessment
+		                    Category_Snapshot
+		                    Question_Text_Snapshot
+		                    Normalized_Answer
+		                    Completed_Mode
+		                    Submitted_At
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header ( Edit  Duplicate  Delete )
+		            record ( Edit  Duplicate  Delete )
+		        )
+		        action
+		        (
+		            on click ( View Record )
+		            on right click ( Edit  Delete  Duplicate  View Record )
+		        )
+		    )
+		    detailview
+		    (
+		        layout
+		        (
+		            type = 1
+		            datablock1
+		            (
+		                layout type = -2
+		                fields
+		                (
+		                    Assessment
+		                    Category_Snapshot
+		                    Question_Text_Snapshot
+		                    Normalized_Answer
+		                    Completed_Mode
+		                    Submitted_At
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header ( Edit  Duplicate  Delete )
+		        )
+		    )
+		}
+	
+		report All_Assessment_Settings
+		{
+		    quickview
+		    (
+		        layout
+		        (
+		            type = -1
+		            datablock1
+		            (
+		                layout type = -1
+		                fields
+		                (
+		                    Setting_Name
+		                    Default_Validity_Months
+		                    Reminder_Days_Before_Expiry
+		                    Notify_Customer_On_Expiry
+		                    Active
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header ( Edit  Duplicate  Delete )
+		            record ( Edit  Duplicate  Delete )
+		        )
+		        action
+		        (
+		            on click ( View Record )
+		            on right click ( Edit  Delete  Duplicate  View Record )
+		        )
+		    )
+		    detailview
+		    (
+		        layout
+		        (
+		            type = 1
+		            datablock1
+		            (
+		                layout type = -2
+		                fields
+		                (
+		                    Setting_Name
+		                    Default_Validity_Months
+		                    Reminder_Days_Before_Expiry
+		                    Notify_Customer_On_Expiry
+		                    Branding_Name
+		                    Active
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header ( Edit  Duplicate  Delete )
+		        )
+		    )
+		}
+	
+		report All_Assessments
+		{
+		    quickview
+		    (
+		        layout
+		        (
+		            type = -1
+		            datablock1
+		            (
+		                layout type = -1
+		                fields
+		                (
+		                    Assessment_Reference
+		                    Customer
+		                    Project
+		                    Industry_Type
+		                    Assessment_Mode
+		                    Status
+		                    Assigned_Consultant
+		                    Valid_Until
+		                    "Generate Public Link"
+		                    "Submit Assessment"
+		                    "Generate Report"
+		                    "Start Reassessment"
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header ( Edit  Duplicate  Delete )
+		            record ( Edit  Duplicate  Delete )
+		        )
+		        action
+		        (
+		            on click ( View Record )
+		            on right click ( Edit  Delete  Duplicate  View Record )
+		        )
+		    )
+		    detailview
+		    (
+		        layout
+		        (
+		            type = 1
+		            datablock1
+		            (
+		                layout type = -2
+		                title = "Assessment Details"
+		                fields
+		                (
+		                    Assessment_Reference
+		                    Project
+		                    Customer
+		                    Industry_Type
+		                    Assessment_Mode
+		                    Status
+		                    Assigned_Consultant
+		                    Customer_Contact_Email
+		                    "Generate Public Link"
+		                    "Submit Assessment"
+		                    "Generate Report"
+		                    "Start Reassessment"
+		                )
+		            )
+		            datablock2
+		            (
+		                layout type = -2
+		                title = "Validity"
+		                fields
+		                (
+		                    Validity_Period_Months
+		                    Submission_Date
+		                    Valid_Until
+		                    Expiry_Reminder_Sent
+		                    Expired_Notification_Sent
+		                )
+		            )
+		            datablock3
+		            (
+		                layout type = -2
+		                title = "Submission Metadata"
+		                fields
+		                (
+		                    Completed_By_Name
+		                    Completed_By_Email
+		                    Submission_Timestamp
+		                    Submission_Mode
+		                )
+		            )
+		            datablock4
+		            (
+		                layout type = -2
+		                title = "External Access"
+		                fields
+		                (
+		                    Public_Link
+		                    Public_Link_Generated_On
+		                    Public_Link_Expires_On
+		                    Questions_Generated
+		                )
+		            )
+		            datablock5
+		            (
+		                layout type = -2
+		                title = "Responses"
+		                fields
+		                (
+		                    Responses
+		                )
+		            )
+		            datablock6
+		            (
+		                layout type = -2
+		                title = "Documents"
+		                fields
+		                (
+		                    Documents
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header ( Edit  Duplicate  Delete )
+		        )
+		    )
+		}
+	
+		report Assessment_Report_Print_View
+		{
+		    quickview
+		    (
+		        layout
+		        (
+		            type = -1
+		            datablock1
+		            (
+		                layout type = -1
+		                fields
+		                (
+		                    Assessment_Reference
+		                    Customer
+		                    Project
+		                    Industry_Type
+		                    Assessment_Mode
+		                    Assigned_Consultant
+		                    Valid_Until
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header ( Edit  Duplicate  Delete )
+		            record ( Edit  Duplicate  Delete )
+		        )
+		        action
+		        (
+		            on click ( View Record )
+		            on right click ( Edit  Delete  Duplicate  View Record )
+		        )
+		    )
+		    detailview
+		    (
+		        layout
+		        (
+		            type = 1
+		            datablock1
+		            (
+		                layout type = -2
+		                fields
+		                (
+		                    Assessment_Reference
+		                    Customer
+		                    Project
+		                    Industry_Type
+		                    Assessment_Mode
+		                    Assigned_Consultant
+		                    Submission_Date
+		                    Valid_Until
+		                    Completed_By_Name
+		                    Completed_By_Email
+		                    Submission_Mode
+		                    Questions_Generated
+		                    Responses
+		                    Documents
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header ( Edit  Duplicate  Delete )
+		        )
+		    )
+		}
+	
+		report Assessments_By_Status
+		{
+		    quickview
+		    (
+		        layout
+		        (
+		            type = -1
+		            datablock1
+		            (
+		                layout type = -1
+		                fields
+		                (
+		                    Assessment_Reference
+		                    Customer
+		                    Project
+		                    Industry_Type
+		                    Assessment_Mode
+		                    Status
+		                    Assigned_Consultant
+		                    Valid_Until
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header ( Edit  Duplicate  Delete )
+		            record ( Edit  Duplicate  Delete )
+		        )
+		        action
+		        (
+		            on click ( View Record )
+		            on right click ( Edit  Delete  Duplicate  View Record )
+		        )
+		    )
+		    detailview
+		    (
+		        layout
+		        (
+		            type = 1
+		            datablock1
+		            (
+		                layout type = -2
+		                fields
+		                (
+		                    Assessment_Reference
+		                    Project
+		                    Customer
+		                    Industry_Type
+		                    Assessment_Mode
+		                    Status
+		                    Assigned_Consultant
+		                    Valid_Until
+		                    Questions_Generated
+		                    Expiry_Reminder_Sent
+		                    Expired_Notification_Sent
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header ( Edit  Duplicate  Delete )
+		        )
+		    )
+		}
+	
+		report Expiring_Assessments
+		{
+		    quickview
+		    (
+		        layout
+		        (
+		            type = -1
+		            datablock1
+		            (
+		                layout type = -1
+		                fields
+		                (
+		                    Assessment_Reference
+		                    Customer
+		                    Project
+		                    Assigned_Consultant
+		                    Valid_Until
+		                    Customer_Contact_Email
+		                    Expiry_Reminder_Sent
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header ( Edit  Duplicate  Delete )
+		            record ( Edit  Duplicate  Delete )
+		        )
+		        action
+		        (
+		            on click ( View Record )
+		            on right click ( Edit  Delete  Duplicate  View Record )
+		        )
+		    )
+		    detailview
+		    (
+		        layout
+		        (
+		            type = 1
+		            datablock1
+		            (
+		                layout type = -2
+		                fields
+		                (
+		                    Assessment_Reference
+		                    Customer
+		                    Project
+		                    Industry_Type
+		                    Assigned_Consultant
+		                    Valid_Until
+		                    Customer_Contact_Email
+		                    Expiry_Reminder_Sent
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header ( Edit  Duplicate  Delete )
+		        )
+		    )
+		}
+	
+		report All_Customers
+		{
+		    quickview
+		    (
+		        layout
+		        (
+		            type = -1
+		            datablock1
+		            (
+		                layout type = -1
+		                fields
+		                (
+		                    Customer_Name
+		                    Primary_Contact_Name
+		                    Primary_Contact_Email
+		                    Customer_Status
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header ( Edit  Duplicate  Delete )
+		            record ( Edit  Duplicate  Delete )
+		        )
+		        action
+		        (
+		            on click ( View Record )
+		            on right click ( Edit  Delete  Duplicate  View Record )
+		        )
+		    )
+		    detailview
+		    (
+		        layout
+		        (
+		            type = 1
+		            datablock1
+		            (
+		                layout type = -2
+		                fields
+		                (
+		                    Customer_Name
+		                    Primary_Contact_Name
+		                    Primary_Contact_Email
+		                    Primary_Contact_Phone
+		                    Customer_Status
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header ( Edit  Duplicate  Delete )
+		        )
+		    )
+		}
+	
+		report All_Industry_Types
+		{
+		    quickview
+		    (
+		        layout
+		        (
+		            type = -1
+		            datablock1
+		            (
+		                layout type = -1
+		                fields
+		                (
+		                    Industry_Name
+		                    Industry_Code
+		                    Display_Order
+		                    Active
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header ( Edit  Duplicate  Delete )
+		            record ( Edit  Duplicate  Delete )
+		        )
+		        action
+		        (
+		            on click ( View Record )
+		            on right click ( Edit  Delete  Duplicate  View Record )
+		        )
+		    )
+		    detailview
+		    (
+		        layout
+		        (
+		            type = 1
+		            datablock1
+		            (
+		                layout type = -2
+		                fields
+		                (
+		                    Industry_Name
+		                    Industry_Code
+		                    Display_Order
+		                    Active
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header ( Edit  Duplicate  Delete )
+		        )
+		    )
+		}
+	
+		report All_Projects
+		{
+		    quickview
+		    (
+		        layout
+		        (
+		            type = -1
+		            datablock1
+		            (
+		                layout type = -1
+		                fields
+		                (
+		                    Project_Name
+		                    Project_Code
+		                    Customer
+		                    Assigned_Consultant
+		                    Project_Status
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header ( Edit  Duplicate  Delete )
+		            record ( Edit  Duplicate  Delete )
+		        )
+		        action
+		        (
+		            on click ( View Record )
+		            on right click ( Edit  Delete  Duplicate  View Record )
+		        )
+		    )
+		    detailview
+		    (
+		        layout
+		        (
+		            type = 1
+		            datablock1
+		            (
+		                layout type = -2
+		                fields
+		                (
+		                    Project_Name
+		                    Project_Code
+		                    Customer
+		                    Assigned_Consultant
+		                    Customer_Contact_Email
+		                    Project_Status
+		                    Start_Date
+		                    End_Date
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header ( Edit  Duplicate  Delete )
+		        )
+		    )
+		}
+	
+		report All_Question_Categories
+		{
+		    quickview
+		    (
+		        layout
+		        (
+		            type = -1
+		            datablock1
+		            (
+		                layout type = -1
+		                fields
+		                (
+		                    Category_Name
+		                    Industry_Type
+		                    Display_Order
+		                    Active
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header ( Edit  Duplicate  Delete )
+		            record ( Edit  Duplicate  Delete )
+		        )
+		        action
+		        (
+		            on click ( View Record )
+		            on right click ( Edit  Delete  Duplicate  View Record )
+		        )
+		    )
+		    detailview
+		    (
+		        layout
+		        (
+		            type = 1
+		            datablock1
+		            (
+		                layout type = -2
+		                fields
+		                (
+		                    Category_Name
+		                    Industry_Type
+		                    Display_Order
+		                    Active
+		                    Description
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header ( Edit  Duplicate  Delete )
+		        )
+		    )
+		}
+	
+		report Active_Questions_By_Industry
+		{
+		    quickview
+		    (
+		        layout
+		        (
+		            type = -1
+		            datablock1
+		            (
+		                layout type = -1
+		                fields
+		                (
+		                    Question_Text
+		                    Industry_Type
+		                    Category
+		                    Answer_Type
+		                    Mandatory
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header ( Edit  Duplicate  Delete )
+		            record ( Edit  Duplicate  Delete )
+		        )
+		        action
+		        (
+		            on click ( View Record )
+		            on right click ( Edit  Delete  Duplicate  View Record )
+		        )
+		    )
+		    detailview
+		    (
+		        layout
+		        (
+		            type = 1
+		            datablock1
+		            (
+		                layout type = -2
+		                fields
+		                (
+		                    Question_Text
+		                    Industry_Type
+		                    Category
+		                    Answer_Type
+		                    Mandatory
+		                    Display_Order
+		                    Active
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header ( Edit  Duplicate  Delete )
+		        )
+		    )
+		}
+	
+		report All_Questions
+		{
+		    quickview
+		    (
+		        layout
+		        (
+		            type = -1
+		            datablock1
+		            (
+		                layout type = -1
+		                fields
+		                (
+		                    Question_Text
+		                    Industry_Type
+		                    Category
+		                    Answer_Type
+		                    Mandatory
+		                    Active
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header ( Edit  Duplicate  Delete )
+		            record ( Edit  Duplicate  Delete )
+		        )
+		        action
+		        (
+		            on click ( View Record )
+		            on right click ( Edit  Delete  Duplicate  View Record )
+		        )
+		    )
+		    detailview
+		    (
+		        layout
+		        (
+		            type = 1
+		            datablock1
+		            (
+		                layout type = -2
+		                fields
+		                (
+		                    Question_Text
+		                    Industry_Type
+		                    Category
+		                    Answer_Type
+		                    Mandatory
+		                    Display_Order
+		                    Active
+		                )
+		            )
+		        )
+		        menu
+		        (
+		            header ( Edit  Duplicate  Delete )
+		        )
+		    )
+		}
+	}
+	menu
+	{
+	    unused
+	    {
+	        form External_Assessment_Submission
+	        {
+	            icon = "files-locked"
+	        }
+	    }
+	
+	    space Admin_Workspace
+	    {
+	        displayname = "Admin Workspace"
+	        icon = "business-safe"
+	
+	        section Admin_Dashboard_Section
+	        {
+	            displayname = "Admin Dashboard"
+	            icon = "business-chart-bar-33"
+	
+	            page Assessment_Dashboard
+	            {
+	                icon = "business-chart"
+	            }
+	        }
+	
+	        section Admin_Customer_Project_Section
+	        {
+	            displayname = "Customers & Projects"
+	            icon = "users-multiple-19"
+	
+	            form Customers
+	            {
+	                icon = "users-multiple-19"
+	            }
+	            report All_Customers
+	            {
+	                icon = "users-contacts"
+	            }
+	            form Projects
+	            {
+	                icon = "business-briefcase-26"
+	            }
+	            report All_Projects
+	            {
+	                icon = "business-agenda"
+	            }
+	        }
+	
+	        section Admin_Questionnaire_Bank_Section
+	        {
+	            displayname = "Questionnaire Bank"
+	            icon = "files-question"
+	
+	            form Industry_Types
+	            {
+	                icon = "business-factory"
+	            }
+	            report All_Industry_Types
+	            {
+	                icon = "business-globe"
+	            }
+	            form Question_Categories
+	            {
+	                icon = "files-folder-13"
+	            }
+	            report All_Question_Categories
+	            {
+	                icon = "files-folder-search"
+	            }
+	            form Questions
+	            {
+	                icon = "files-question"
+	            }
+	            report All_Questions
+	            {
+	                icon = "files-book-08"
+	            }
+	            report Active_Questions_By_Industry
+	            {
+	                icon = "business-board-27"
+	            }
+	        }
+	
+	        section Admin_Settings_Section
+	        {
+	            displayname = "Settings"
+	            icon = "files-settings-46"
+	
+	            form Assessment_Settings
+	            {
+	                icon = "files-settings-99"
+	            }
+	            report All_Assessment_Settings
+	            {
+	                icon = "files-settings-46"
+	            }
+	        }
+	
+	        section SharedAnalytics_Section
+	        {
+	            type = shared_user_report_section
+	            displayname = "Reports"
+	            icon = "business-chart-bar-33"
+	        }
+	
+	        designcomponent designcomponent1
+	        {
+	            type = separator
+	            separator = "line"
+	        }
+	    }
+	
+	    space Consultant_Workspace
+	    {
+	        displayname = "Consultant Workspace"
+	        icon = "business-briefcase-26"
+	
+	        section Consultant_Assessment_Work_Section
+	        {
+	            displayname = "Assessment Work"
+	            icon = "business-board-29"
+	
+	            form Assessments
+	            {
+	                icon = "business-board-30"
+	            }
+	            report All_Assessments
+	            {
+	                icon = "business-notes"
+	            }
+	            report Assessments_By_Status
+	            {
+	                icon = "business-chart-pie-36"
+	            }
+	            report Expiring_Assessments
+	            {
+	                icon = "files-time"
+	            }
+	        }
+	
+	        section Consultant_Response_Section
+	        {
+	            displayname = "Responses"
+	            icon = "files-single-content-03"
+	
+	            form Assessment_Responses
+	            {
+	                icon = "files-single-content-03"
+	            }
+	            report All_Assessment_Responses
+	            {
+	                icon = "files-single-paragraph"
+	            }
+	            report Submitted_Responses
+	            {
+	                icon = "files-check"
+	            }
+	            report Assessment_Report_Print_View
+	            {
+	                icon = "files-paper"
+	            }
+	        }
+	
+	        section Consultant_Document_Section
+	        {
+	            displayname = "Documents"
+	            icon = "files-folder-info"
+	
+	            form Assessment_Documents
+	            {
+	                icon = "files-folder-14"
+	            }
+	            report All_Assessment_Documents
+	            {
+	                icon = "files-folder-info"
+	            }
+	            report Generated_Assessment_Reports
+	            {
+	                icon = "files-archive-paper-check"
+	            }
+	        }
+	
+	        designcomponent designcomponent2
+	        {
+	            type = separator
+	            separator = "line"
+	        }
+	    }
+	
+	    preference
+	    {
+	        icon
+	        {
+	            style = outline
+	            show = {space,section,component}
+	        }
+	    }
+	}
+	customize
+	{
+	    layout
+	    {
+	        theme = "theme_2"
+	        variant = "variant_2"
+	    }
+	
+	    font = "lato"
+	
+	    color options
+	    {
+	        color = "11"
+	    }
+	
+	    logo
+	    {
+	        preference = "app_icon"
+	        placement = "left"
+	    }
+	
+	    custom css
+	    {
+	        content = ".zc-app-header,.zc-menu-header{background:#083D56;} .zc-button-primary,.zc-primary{background:#0E7C86;border-color:#0E7C86;} .zc-report-title,.zc-page-title{color:#083D56;}"
+	    }
+	}
+	}
+}

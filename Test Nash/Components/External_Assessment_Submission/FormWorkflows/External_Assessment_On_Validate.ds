@@ -1,0 +1,72 @@
+External_Assessment_On_Validate as "External Assessment On Validate"
+{
+    type = form
+    form = External_Assessment_Submission
+    record event = on add
+    description = "Revalidates token access and required answers before public submission."
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                tokenValue = input.Token;
+                assessmentRow = Assessments[Public_Token == tokenValue && Assessment_Mode == "External" && Status != "Submitted" && Status != "Expired"];
+                if(assessmentRow.count() == 0)
+                {
+                    alert "This questionnaire link is invalid, expired, or already submitted.";
+                    cancel submit;
+                }
+                if(assessmentRow.Public_Link_Expires_On != null && assessmentRow.Public_Link_Expires_On < zoho.currentdate)
+                {
+                    alert "This questionnaire link has expired. Please ask your Kannanware consultant for a fresh link.";
+                    cancel submit;
+                }
+                for each responseRow in input.Responses
+                {
+                    if(responseRow.Rating_Answer != null && (responseRow.Rating_Answer < 1 || responseRow.Rating_Answer > 5))
+                    {
+                        alert "Rating answers must be between 1 and 5.";
+                        cancel submit;
+                        break;
+                    }
+                    if(responseRow.Mandatory_Snapshot == true)
+                    {
+                        missing = false;
+                        if(responseRow.Answer_Type_Snapshot == "Single-Line Text" && ifnull(responseRow.Single_Line_Answer,"").trim() == "")
+                        {
+                            missing = true;
+                        }
+                        else if(responseRow.Answer_Type_Snapshot == "Paragraph" && ifnull(responseRow.Paragraph_Answer,"").trim() == "")
+                        {
+                            missing = true;
+                        }
+                        else if(responseRow.Answer_Type_Snapshot == "Dropdown" && (ifnull(responseRow.Dropdown_Answer,"").trim() == "" || responseRow.Dropdown_Answer == "Not Applicable"))
+                        {
+                            missing = true;
+                        }
+                        else if(responseRow.Answer_Type_Snapshot == "Multi-Select" && responseRow.Multi_Select_Answer.isEmpty())
+                        {
+                            missing = true;
+                        }
+                        else if(responseRow.Answer_Type_Snapshot == "Rating/Scale" && responseRow.Rating_Answer == null)
+                        {
+                            missing = true;
+                        }
+                        else if(responseRow.Answer_Type_Snapshot == "Yes-No" && ifnull(responseRow.Yes_No_Answer,"").trim() == "")
+                        {
+                            missing = true;
+                        }
+                        if(missing == true)
+                        {
+                            alert "Please answer the mandatory question: " + responseRow.Question_Text_Snapshot;
+                            cancel submit;
+                            break;
+                        }
+                    }
+                }
+            )
+        }
+    }
+}

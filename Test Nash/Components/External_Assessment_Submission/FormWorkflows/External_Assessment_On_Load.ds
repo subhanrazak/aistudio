@@ -1,0 +1,59 @@
+External_Assessment_On_Load as "External Assessment On Load"
+{
+    type = form
+    form = External_Assessment_Submission
+    record event = on add
+    description = "Loads the assessment questionnaire for a valid public token without exposing internal data."
+
+    on load
+    {
+        actions
+        {
+            custom deluge script
+            (
+                disable Assessment_ID, Assessment_Reference, Project_Name, Customer_Name, Industry_Name;
+                hide Token, Assessment_ID;
+                input.Responses.clear();
+                tokenValue = input.Token;
+                if(ifnull(tokenValue,"").trim() == "")
+                {
+                    alert "This questionnaire link is missing its access token. Please ask your Kannanware consultant for a fresh link.";
+                }
+                else
+                {
+                    assessmentRow = Assessments[Public_Token == tokenValue && Assessment_Mode == "External" && Status != "Submitted" && Status != "Expired"];
+                    if(assessmentRow.count() == 0)
+                    {
+                        alert "This questionnaire link is invalid, expired, or already submitted.";
+                    }
+                    else if(assessmentRow.Public_Link_Expires_On != null && assessmentRow.Public_Link_Expires_On < zoho.currentdate)
+                    {
+                        alert "This questionnaire link has expired. Please ask your Kannanware consultant for a fresh link.";
+                    }
+                    else
+                    {
+                        thisapp.Generate_Assessment_Responses(assessmentRow.ID);
+                        input.Assessment_ID = assessmentRow.ID;
+                        input.Assessment_Reference = assessmentRow.Assessment_Reference;
+                        input.Project_Name = assessmentRow.Project.Project_Name;
+                        input.Customer_Name = assessmentRow.Customer.Customer_Name;
+                        input.Industry_Name = assessmentRow.Industry_Type.Industry_Name;
+                        responseRows = Collection();
+                        for each responseRow in Assessment_Responses[Assessment == assessmentRow.ID] sort by Category_Display_Order, Question_Display_Order
+                        {
+                            publicRow = External_Assessment_Submission.Responses();
+                            publicRow.Assessment_Response_ID = responseRow.ID;
+                            publicRow.Category_Snapshot = responseRow.Category_Snapshot;
+                            publicRow.Question_Text_Snapshot = responseRow.Question_Text_Snapshot;
+                            publicRow.Answer_Type_Snapshot = responseRow.Answer_Type_Snapshot;
+                            publicRow.Option_Values_Snapshot = responseRow.Option_Values_Snapshot;
+                            publicRow.Mandatory_Snapshot = responseRow.Mandatory_Snapshot;
+                            responseRows.insert(publicRow);
+                        }
+                        input.Responses.insert(responseRows);
+                    }
+                }
+            )
+        }
+    }
+}

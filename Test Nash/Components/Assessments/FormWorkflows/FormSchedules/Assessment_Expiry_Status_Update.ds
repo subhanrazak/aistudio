@@ -1,0 +1,51 @@
+Assessment_Expiry_Status_Update as "Assessment Expiry Status Update"
+{
+    type = schedule
+    form = Assessments[Status == "Submitted" && Valid_Until != null]
+    start = Valid_Until at "09:00:00"
+    time zone = "Asia/Kolkata"
+
+    on start
+    {
+        actions
+        {
+            on load
+            (
+                consultantEmail = zoho.adminuserid;
+                if(input.Assigned_Consultant != null)
+                {
+                    consultantEmail = input.Assigned_Consultant.email;
+                }
+                customerEmail = input.Customer_Contact_Email;
+                update Assessments[ID == input.ID]
+                [
+                    Status = "Expired"
+                    Expired_Notification_Sent = true
+                ];
+                sendmail
+                [
+                    from : zoho.adminuserid
+                    to : consultantEmail
+                    subject : "Assessment expired: " + input.Assessment_Reference
+                    message : "The Current State Assessment for " + input.Customer.Customer_Name + " / " + input.Project.Project_Name + " expired today. Use Start Reassessment on the assessment report to create a fresh draft while preserving historical responses and documents."
+                ];
+                activeSettings = Assessment_Settings[Active == true];
+                notifyCustomer = true;
+                if(activeSettings.count() > 0)
+                {
+                    notifyCustomer = activeSettings.Notify_Customer_On_Expiry;
+                }
+                if(notifyCustomer == true && ifnull(customerEmail,"").trim() != "")
+                {
+                    sendmail
+                    [
+                        from : zoho.adminuserid
+                        to : customerEmail
+                        subject : "Current State Assessment expired"
+                        message : "Your Current State Assessment " + input.Assessment_Reference + " has expired. Kannanware will coordinate reassessment if a renewed current-state view is needed."
+                    ];
+                }
+            )
+        }
+    }
+}

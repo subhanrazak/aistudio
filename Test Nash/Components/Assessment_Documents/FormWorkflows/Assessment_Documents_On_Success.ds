@@ -1,0 +1,38 @@
+Assessment_Documents_On_Success as "Assessment Documents On Success"
+{
+    type = form
+    form = Assessment_Documents
+    record event = on add or edit
+    description = "Completes upload metadata and version defaults."
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Upload_Date == null)
+                {
+                    input.Upload_Date = zoho.currenttime;
+                }
+                if(input.Uploaded_By == null)
+                {
+                    input.Uploaded_By = zoho.loginuser;
+                }
+                if(input.Version_Number == null)
+                {
+                    maxVersion = 0;
+                    documentRows = Assessment_Documents[Assessment == input.Assessment && Document_Type == input.Document_Type && ID != input.ID];
+                    for each documentRow in documentRows
+                    {
+                        if(ifnull(documentRow.Version_Number,0) > maxVersion)
+                        {
+                            maxVersion = documentRow.Version_Number;
+                        }
+                    }
+                    input.Version_Number = maxVersion + 1;
+                }
+            )
+        }
+    }
+}

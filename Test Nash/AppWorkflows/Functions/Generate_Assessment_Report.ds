@@ -1,0 +1,35 @@
+void Generate_Assessment_Report(int assessmentId)
+{
+    assessmentRow = Assessments[ID == assessmentId];
+    if(assessmentRow.count() > 0)
+    {
+        maxVersion = 0;
+        for each documentRow in Assessment_Documents[Assessment == assessmentId && Document_Type == "Generated Report"]
+        {
+            if(ifnull(documentRow.Version_Number,0) > maxVersion)
+            {
+                maxVersion = documentRow.Version_Number;
+            }
+        }
+        nextVersion = maxVersion + 1;
+        reportName = "Current State Assessment Report - " + assessmentRow.Assessment_Reference + " - v" + nextVersion.toString();
+        printUrl = zoho.appuri + "print/Assessment_Report_Print_View?Assessment=" + assessmentId.toString() + "&zc_FileName=" + assessmentRow.Assessment_Reference + "-CSA-Report-v" + nextVersion.toString();
+        sourceAction = "Regenerated";
+        if(maxVersion == 0)
+        {
+            sourceAction = "Generated on Submit";
+        }
+        insert into Assessment_Documents
+        [
+            Assessment = assessmentId
+            Document_Name = reportName
+            Document_Type = "Generated Report"
+            Document_URL = "<a href=\"" + printUrl + "\" target=\"_blank\">Preview / Download PDF</a>"
+            Uploaded_By = zoho.loginuser
+            Upload_Date = zoho.currenttime
+            Version_Number = nextVersion
+            Revision_Notes = "Generated from Kannanware Current State Assessment print template. PDF is primary; report view remains export-ready for Excel/Word-compatible formats."
+            Source_Action = sourceAction
+        ];
+    }
+}

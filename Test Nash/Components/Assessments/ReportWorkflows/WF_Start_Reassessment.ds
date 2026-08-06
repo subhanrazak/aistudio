@@ -1,0 +1,32 @@
+WF_Start_Reassessment as "Start Reassessment"
+{
+    type = functions
+    form = Assessments
+    execution type = for each record
+    description = "Clones core assessment context into a fresh Draft without copying responses or documents."
+
+    on start
+    {
+        actions
+        {
+            on click
+            (
+                newAssessmentId = insert into Assessments
+                [
+                    Project = input.Project
+                    Customer = input.Customer
+                    Customer_Contact_Email = input.Customer_Contact_Email
+                    Industry_Type = input.Industry_Type
+                    Assigned_Consultant = input.Assigned_Consultant
+                    Assessment_Mode = input.Assessment_Mode
+                    Status = "Draft"
+                    Validity_Period_Months = input.Validity_Period_Months
+                    Expiry_Reminder_Sent = false
+                    Expired_Notification_Sent = false
+                    Questions_Generated = false
+                ];
+                openUrl("#Form:Assessments?recLinkID=" + newAssessmentId + "&viewLinkName=All_Assessments", "same window");
+            )
+        }
+    }
+}

@@ -1,0 +1,50 @@
+Assessment_Expiry_Reminder as "Assessment Expiry Reminder"
+{
+    type = schedule
+    form = Assessments[Status == "Submitted" && Expiry_Reminder_Sent == false && Valid_Until != null]
+    start = before 15 days from Valid_Until at "09:00:00"
+    time zone = "Asia/Kolkata"
+
+    on start
+    {
+        actions
+        {
+            on load
+            (
+                consultantEmail = zoho.adminuserid;
+                if(input.Assigned_Consultant != null)
+                {
+                    consultantEmail = input.Assigned_Consultant.email;
+                }
+                customerEmail = input.Customer_Contact_Email;
+                sendmail
+                [
+                    from : zoho.adminuserid
+                    to : consultantEmail
+                    subject : "Assessment approaching expiry: " + input.Assessment_Reference
+                    message : "The Current State Assessment for " + input.Customer.Customer_Name + " / " + input.Project.Project_Name + " expires on " + input.Valid_Until.toString("dd-MMM-yyyy") + ". Please plan reassessment if required."
+                ];
+                activeSettings = Assessment_Settings[Active == true];
+                notifyCustomer = true;
+                if(activeSettings.count() > 0)
+                {
+                    notifyCustomer = activeSettings.Notify_Customer_On_Expiry;
+                }
+                if(notifyCustomer == true && ifnull(customerEmail,"").trim() != "")
+                {
+                    sendmail
+                    [
+                        from : zoho.adminuserid
+                        to : customerEmail
+                        subject : "Current State Assessment approaching expiry"
+                        message : "Your Current State Assessment " + input.Assessment_Reference + " is valid until " + input.Valid_Until.toString("dd-MMM-yyyy") + ". Your Kannanware consultant will coordinate next steps if reassessment is needed."
+                    ];
+                }
+                update Assessments[ID == input.ID]
+                [
+                    Expiry_Reminder_Sent = true
+                ];
+            )
+        }
+    }
+}

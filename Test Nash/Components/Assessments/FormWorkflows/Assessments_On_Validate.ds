@@ -1,0 +1,50 @@
+Assessments_On_Validate as "Assessments On Validate"
+{
+    type = form
+    form = Assessments
+    record event = on add or edit
+    description = "Validates assessment status changes and mandatory response completion."
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Project == null || input.Customer == null || input.Industry_Type == null)
+                {
+                    alert "Project, customer, and industry type are required.";
+                    cancel submit;
+                }
+                if(ifnull(input.Validity_Period_Months,0) <= 0)
+                {
+                    alert "Validity period must be greater than zero.";
+                    cancel submit;
+                }
+                if(input.Status == "Expired")
+                {
+                    alert "Expired assessments are locked. Use Start Reassessment to create a fresh cycle.";
+                    cancel submit;
+                }
+                if(input.Status == "Submitted")
+                {
+                    responseRows = Assessment_Responses[Assessment == input.ID];
+                    if(responseRows.count() == 0)
+                    {
+                        alert "Generate and answer assessment questions before submitting.";
+                        cancel submit;
+                    }
+                    for each responseRow in Assessment_Responses[Assessment == input.ID && Mandatory_Snapshot == true]
+                    {
+                        if(ifnull(responseRow.Normalized_Answer,"").trim() == "" || responseRow.Normalized_Answer == "Not Applicable")
+                        {
+                            alert "Mandatory response is unanswered: " + responseRow.Question_Text_Snapshot;
+                            cancel submit;
+                            break;
+                        }
+                    }
+                }
+            )
+        }
+    }
+}

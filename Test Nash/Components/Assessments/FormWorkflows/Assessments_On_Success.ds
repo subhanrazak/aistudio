@@ -1,0 +1,44 @@
+Assessments_On_Success as "Assessments On Success"
+{
+    type = form
+    form = Assessments
+    record event = on add or edit
+    description = "Creates assessment references, snapshots questions, and routes manual submissions through the central submit routine."
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(ifnull(input.Assessment_Reference,"").trim() == "")
+                {
+                    seqText = input.Assessment_Sequence.toString();
+                    paddedSeq = seqText;
+                    if(seqText.length() == 1)
+                    {
+                        paddedSeq = "000" + seqText;
+                    }
+                    else if(seqText.length() == 2)
+                    {
+                        paddedSeq = "00" + seqText;
+                    }
+                    else if(seqText.length() == 3)
+                    {
+                        paddedSeq = "0" + seqText;
+                    }
+                    assessmentToNumber = Assessments[ID == input.ID];
+                    assessmentToNumber.Assessment_Reference = "CSA-" + zoho.currentdate.getYear().toString() + "-" + paddedSeq;
+                }
+                if(input.Status in {"Draft","In Progress"} && input.Questions_Generated == false)
+                {
+                    thisapp.Generate_Assessment_Responses(input.ID);
+                }
+                if(input.Status == "Submitted" && input.Submission_Timestamp == null)
+                {
+                    thisapp.Submit_Assessment(input.ID, input.Completed_By_Name, input.Completed_By_Email, input.Assessment_Mode);
+                }
+            )
+        }
+    }
+}

@@ -1,0 +1,38 @@
+list Expiring_Assessments
+{
+    displayName = "Expiring Assessments"
+    show all rows from Assessments [Status == "Submitted" && Valid_Until != null]
+    (
+        Assessment_Reference
+        Customer
+        Project
+        Industry_Type
+        Assigned_Consultant
+        Valid_Until
+        (
+            displayformat = fulldate
+        )
+        Customer_Contact_Email
+        Expiry_Reminder_Sent
+    )
+    filters
+    (
+        Customer
+        Industry_Type
+        Assigned_Consultant
+        Valid_Until
+    )
+    sort by
+    (
+        Valid_Until ascending
+    )
+    conditional formatting
+    (
+        "Expires Soon"
+        {
+            condition = (Valid_Until in next 15 days)
+            fields = [Assessment_Reference, Customer, Project, Valid_Until]
+            format = "background-color:#fff4cc;color:#7a4b00"
+        }
+    )
+}
