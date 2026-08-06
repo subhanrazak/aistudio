@@ -1,0 +1,37 @@
+Risk_Assessment_On_Validate as "Risk Assessment On Validate"
+{
+    type = form
+    form = Risk_Assessment
+    record event = on add or edit
+    description = "Validates risk assessment readiness and mitigation details."
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                critRec = Criteria[ID == input.Criteria];
+                if (critRec.count() > 0 && critRec.Applies_To != "Risk Assessment")
+                {
+                    alert "Selected criterion is not configured for Risk Assessment.";
+                    cancel submit;
+                }
+                if (input.Risk_Status == "Mitigation Required")
+                {
+                    if (input.Mitigation_Action in ["", " ", "null"])
+                    {
+                        alert "Mitigation Action is required when mitigation is required.";
+                        cancel submit;
+                    }
+                    if (input.Target_Date == null)
+                    {
+                        alert "Target Date is required when mitigation is required.";
+                        cancel submit;
+                    }
+                }
+                input.Weighted_Risk_Score = (ifnull(input.Weight_Percentage,0) * ifnull(input.Risk_Score_Percentage,0)) / 100;
+            )
+        }
+    }
+}

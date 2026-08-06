@@ -1,0 +1,26 @@
+Documents_Expiry_Reminder as "Documents Expiry Reminder"
+{
+    type = schedule
+    form = Documents[Expiry_Date is not null]
+    start = Expiry_Date at "09:00:00"
+    frequency = daily
+    time zone = "Asia/Kolkata"
+
+    on start
+    {
+        actions
+        {
+            on load
+            (
+                if (input.Expiry_Date != null && input.Expiry_Date < zoho.currentdate && input.Verification_Status != "Expired")
+                {
+                    input.Verification_Status = "Expired";
+                }
+                if (input.Expiry_Date != null && input.Expiry_Date >= zoho.currentdate && input.Expiry_Date <= zoho.currentdate.addDay(30))
+                {
+                    info "Document expiring within 30 days: " + input.ID;
+                }
+            )
+        }
+    }
+}

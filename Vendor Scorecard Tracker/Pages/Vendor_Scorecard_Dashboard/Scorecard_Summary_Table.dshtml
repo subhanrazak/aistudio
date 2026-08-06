@@ -1,0 +1,215 @@
+<%
+vendorRows = Vendors[ID == input.Vendor_ID];
+if(vendorRows.count() == 0)
+{
+%>
+<div class='vendor-scorecard-shell'>
+  <div class='zcs-card zcs-p-20 zcs-box-border'>
+    <div class='zcs-nodata-wrapper zcs-wh-full zcs-flex zcs-align-items-center zcs-justify-center zcs-text-center'>
+      <div class='zcs-nodata-content zcs-p-20 zcs-box-border'>
+        <h5 class='zcs-nodata-header zcs-font-18 zcs-font-medium zcs-lh-heading zcs-color-primary zcs-mt-10 zcs-mx-0 zcs-mb-0'>No scorecard summary is available for this Vendor_ID.</h5>
+      </div>
+    </div>
+  </div>
+</div>
+<%
+}
+else
+{
+  vendorRec = vendorRows;
+  vendorStatus = ifnull(vendorRec.Vendor_Status,"Not available");
+  riskLevel = ifnull(vendorRec.Risk_Level,"Not Assessed");
+  evaluationScore = ifnull(vendorRec.Evaluation_Score,0);
+  riskScore = ifnull(vendorRec.Risk_Score,0);
+  performanceScore = ifnull(vendorRec.Performance_Score,0);
+  evalCount = Evaluation[Vendor == input.Vendor_ID].count();
+  evalFinalCount = Evaluation[Vendor == input.Vendor_ID && Evaluation_Status == "Finalized"].count();
+  riskOpenCount = Risk_Assessment[Vendor == input.Vendor_ID && Risk_Status != "Closed"].count();
+  riskMitigationCount = Risk_Assessment[Vendor == input.Vendor_ID && Risk_Status == "Mitigation Required"].count();
+  onboardingCount = Onboarding[Vendor == input.Vendor_ID].count();
+  onboardingPendingCount = Onboarding[Vendor == input.Vendor_ID && Onboarding_Status != "Completed" && Onboarding_Status != "Rejected"].count();
+  onboardingCompleteCount = Onboarding[Vendor == input.Vendor_ID && Onboarding_Status == "Completed"].count();
+  docCount = Documents[Vendor == input.Vendor_ID].count();
+  docPendingCount = Documents[Vendor == input.Vendor_ID && Verification_Status == "Pending"].count();
+  docExpiredCount = Documents[Vendor == input.Vendor_ID && Verification_Status == "Expired"].count();
+  perfCount = Performance_Review[Vendor == input.Vendor_ID].count();
+  perfFinalCount = Performance_Review[Vendor == input.Vendor_ID && Review_Status == "Finalized"].count();
+  registrationClass = "zcs-badge-yellow";
+  if(vendorStatus == "Approved" || vendorStatus == "Onboarded" || vendorStatus == "Registered")
+  {
+    registrationClass = "zcs-badge-green";
+  }
+  else if(vendorStatus == "Rejected" || vendorStatus == "Suspended")
+  {
+    registrationClass = "zcs-badge-red";
+  }
+  evaluationStatus = "Needs Review";
+  evaluationClass = "zcs-badge-yellow";
+  if(evalFinalCount > 0 && evaluationScore >= 70)
+  {
+    evaluationStatus = "Reviewed";
+    evaluationClass = "zcs-badge-green";
+  }
+  else if(evalCount == 0)
+  {
+    evaluationStatus = "Not Started";
+    evaluationClass = "zcs-badge-grey";
+  }
+  riskStatus = "Under Control";
+  riskClass = "zcs-badge-green";
+  if(riskLevel == "Critical" || riskMitigationCount > 0)
+  {
+    riskStatus = "Mitigation Required";
+    riskClass = "zcs-badge-red";
+  }
+  else if(riskLevel == "High" || riskOpenCount > 0)
+  {
+    riskStatus = "Open Risks";
+    riskClass = "zcs-badge-orange";
+  }
+  else if(riskLevel == "Not Assessed")
+  {
+    riskStatus = "Not Assessed";
+    riskClass = "zcs-badge-grey";
+  }
+  onboardingStatus = "Not Started";
+  onboardingClass = "zcs-badge-grey";
+  if(onboardingCompleteCount > 0)
+  {
+    onboardingStatus = "Completed";
+    onboardingClass = "zcs-badge-green";
+  }
+  else if(onboardingPendingCount > 0)
+  {
+    onboardingStatus = "In Progress";
+    onboardingClass = "zcs-badge-blue";
+  }
+  documentStatus = "No Documents";
+  documentClass = "zcs-badge-grey";
+  if(docExpiredCount > 0)
+  {
+    documentStatus = "Expired Documents";
+    documentClass = "zcs-badge-red";
+  }
+  else if(docPendingCount > 0)
+  {
+    documentStatus = "Pending Verification";
+    documentClass = "zcs-badge-yellow";
+  }
+  else if(docCount > 0)
+  {
+    documentStatus = "Verified or Current";
+    documentClass = "zcs-badge-green";
+  }
+  performanceStatus = "Needs Review";
+  performanceClass = "zcs-badge-yellow";
+  if(perfFinalCount > 0 && performanceScore >= 70)
+  {
+    performanceStatus = "Reviewed";
+    performanceClass = "zcs-badge-green";
+  }
+  else if(perfCount == 0)
+  {
+    performanceStatus = "Not Started";
+    performanceClass = "zcs-badge-grey";
+  }
+  recommendedAction = "Maintain approved vendor relationship and schedule the next review.";
+  if(vendorStatus == "Rejected" || vendorStatus == "Suspended")
+  {
+    recommendedAction = "Review vendor status before any sourcing or onboarding activity.";
+  }
+  else if(riskLevel == "Critical" || riskMitigationCount > 0 || riskOpenCount > 0)
+  {
+    recommendedAction = "Resolve open risk items and mitigation actions before approval progression.";
+  }
+  else if(docExpiredCount > 0 || docPendingCount > 0)
+  {
+    recommendedAction = "Collect and verify missing or expired vendor documents.";
+  }
+  else if(evalCount == 0 || evaluationScore < 70)
+  {
+    recommendedAction = "Complete or refresh vendor evaluation to improve evaluation score.";
+  }
+  else if(perfCount == 0 || performanceScore < 70)
+  {
+    recommendedAction = "Schedule a performance review and capture corrective action where required.";
+  }
+  else if(onboardingPendingCount > 0)
+  {
+    recommendedAction = "Complete pending onboarding tasks and confirm compliance clearance.";
+  }
+%>
+<div class='vendor-scorecard-shell'>
+  <div class='zcs-card zcs-p-20 zcs-box-border'>
+    <div class='zcs-flex zcs-justify-space-between zcs-align-items-center zcs-gap-16' style='margin-bottom:14px;'>
+      <div>
+        <div class='zcs-font-13 zcs-font-medium zcs-color-tertiary'>Scorecard Summary</div>
+        <h5 class='zcs-font-20 zcs-font-semibold zcs-color-primary zcs-lh-heading zcs-m-0'>Status by process area and recommended next action</h5>
+      </div>
+      <i class='zcs-font-24 zcs-color-theme zc-li-outline files-single-folded-content'></i>
+    </div>
+    <div class='zcs-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative'>
+      <table class='zcs-w-full'>
+        <thead class='zcs-sticky'>
+          <tr>
+            <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Area</th>
+            <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Current Signal</th>
+            <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Status</th>
+            <th class='zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary'>Notes</th>
+          </tr>
+          <tr class='zcs-tspace'><th class='zcs-p-2 zcs-box-border' colspan='4'> </th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary'>Registration</td>
+            <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary'><%=vendorStatus%></td>
+            <td class='zcs-px-16 zcs-py-8 zcs-box-border'><span class='zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border <%=registrationClass%>'><span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'><%=vendorStatus%></span></span></td>
+            <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary'>Vendor master profile and approval status.</td>
+          </tr>
+          <tr>
+            <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary'>Evaluation</td>
+            <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary'><%=evaluationScore%> score, <%=evalCount%> records</td>
+            <td class='zcs-px-16 zcs-py-8 zcs-box-border'><span class='zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border <%=evaluationClass%>'><span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'><%=evaluationStatus%></span></span></td>
+            <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary'>Finalized evaluations and category scores drive vendor eligibility.</td>
+          </tr>
+          <tr>
+            <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary'>Risk</td>
+            <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary'><%=riskLevel%>, <%=riskScore%> score, <%=riskOpenCount%> open</td>
+            <td class='zcs-px-16 zcs-py-8 zcs-box-border'><span class='zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border <%=riskClass%>'><span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'><%=riskStatus%></span></span></td>
+            <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary'>Open and mitigation-required risks should be cleared before progression.</td>
+          </tr>
+          <tr>
+            <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary'>Onboarding</td>
+            <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary'><%=onboardingCount%> tracker records, <%=onboardingPendingCount%> pending</td>
+            <td class='zcs-px-16 zcs-py-8 zcs-box-border'><span class='zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border <%=onboardingClass%>'><span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'><%=onboardingStatus%></span></span></td>
+            <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary'>Bank, contract, compliance, and ERP checks are tracked below.</td>
+          </tr>
+          <tr>
+            <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary'>Documents</td>
+            <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary'><%=docCount%> documents, <%=docPendingCount%> pending, <%=docExpiredCount%> expired</td>
+            <td class='zcs-px-16 zcs-py-8 zcs-box-border'><span class='zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border <%=documentClass%>'><span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'><%=documentStatus%></span></span></td>
+            <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary'>Verification and expiry status are surfaced in the document report.</td>
+          </tr>
+          <tr>
+            <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary'>Performance</td>
+            <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary'><%=performanceScore%> score, <%=perfCount%> reviews</td>
+            <td class='zcs-px-16 zcs-py-8 zcs-box-border'><span class='zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border <%=performanceClass%>'><span class='zcs-badge-text zcs-font-14 zcs-font-normal zcs-lh-body'><%=performanceStatus%></span></span></td>
+            <td class='zcs-px-16 zcs-py-8 zcs-box-border zcs-font-14 zcs-color-primary'>Weighted review categories feed the performance scorecard.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class='zcs-card zcs-p-16 zcs-box-border' style='margin-top:14px; border-left:4px solid var(--zcs_brand_color);'>
+      <div class='zcs-flex zcs-align-items-center zcs-gap-10'>
+        <i class='zcs-font-18 zcs-color-theme zc-li-outline ui-1-check-circle-08'></i>
+        <div>
+          <div class='zcs-font-13 zcs-font-medium zcs-color-tertiary'>Recommended Next Action</div>
+          <div class='zcs-font-16 zcs-font-semibold zcs-color-primary'><%=recommendedAction%></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<%
+}
+%>

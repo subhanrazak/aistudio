@@ -1,0 +1,34 @@
+Onboarding_On_Validate as "Onboarding On Validate"
+{
+    type = form
+    form = Onboarding
+    record event = on add or edit
+    description = "Validates target dates and completion readiness."
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if (input.Onboarding_Start_Date != null && input.Target_Completion_Date != null && input.Target_Completion_Date < input.Onboarding_Start_Date)
+                {
+                    alert "Target Completion Date cannot be before Onboarding Start Date.";
+                    cancel submit;
+                }
+                if (input.Onboarding_Status == "Completed")
+                {
+                    if (input.Bank_Details_Received == false || input.Contract_Signed == false || input.Compliance_Clearance == false || input.ERP_Created == false)
+                    {
+                        alert "All onboarding checks must be completed before marking onboarding as Completed.";
+                        cancel submit;
+                    }
+                    if (input.Completion_Date == null)
+                    {
+                        input.Completion_Date = zoho.currentdate;
+                    }
+                }
+            )
+        }
+    }
+}

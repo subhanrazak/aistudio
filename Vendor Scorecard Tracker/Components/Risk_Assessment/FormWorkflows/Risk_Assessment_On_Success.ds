@@ -1,0 +1,54 @@
+Risk_Assessment_On_Success as "Risk Assessment On Success"
+{
+    type = form
+    form = Risk_Assessment
+    record event = on add or edit
+    description = "Aggregates vendor risk score, updates risk level, and moves vendors into risk review when needed."
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                totalRisk = 0;
+                riskRecords = Risk_Assessment[Vendor == input.Vendor && Assessment_Cycle == input.Assessment_Cycle && (Risk_Status == "Reviewed" || Risk_Status == "Mitigation Required" || Risk_Status == "Closed")];
+                if (riskRecords.count() == 0)
+                {
+                    riskRecords = Risk_Assessment[Vendor == input.Vendor && Assessment_Cycle == input.Assessment_Cycle && Risk_Status == "Submitted"];
+                }
+                for each riskRec in riskRecords
+                {
+                    totalRisk = totalRisk + ifnull(riskRec.Weighted_Risk_Score,0);
+                }
+                vendorRec = Vendors[ID == input.Vendor];
+                if (vendorRec.count() > 0)
+                {
+                    vendorRec.Risk_Score = totalRisk;
+                    if (totalRisk >= 85)
+                    {
+                        vendorRec.Risk_Level = "Critical";
+                    }
+                    else if (totalRisk >= 70)
+                    {
+                        vendorRec.Risk_Level = "High";
+                    }
+                    else if (totalRisk >= 40)
+                    {
+                        vendorRec.Risk_Level = "Medium";
+                    }
+                    else
+                    {
+                        vendorRec.Risk_Level = "Low";
+                    }
+                    vendorRec.Overall_Score = (ifnull(vendorRec.Evaluation_Score,0) + ifnull(vendorRec.Risk_Score,0) + ifnull(vendorRec.Performance_Score,0)) / 3;
+                    openMitigation = Risk_Assessment[Vendor == input.Vendor && Risk_Status == "Mitigation Required"];
+                    if (openMitigation.count() > 0)
+                    {
+                        vendorRec.Vendor_Status = "Risk Review";
+                    }
+                }
+            )
+        }
+    }
+}

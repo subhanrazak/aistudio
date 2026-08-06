@@ -1,0 +1,32 @@
+Risk_Assessment_Criteria_On_User_Input as "Risk Criteria On User Input"
+{
+    type = form
+    form = Risk_Assessment
+    record event = on add or edit
+    description = "Loads the active risk assessment weight for the selected criterion."
+
+    on user input of Criteria
+    {
+        actions
+        {
+            custom deluge script
+            (
+                input.Weight_Percentage = 0;
+                input.Weighted_Risk_Score = 0;
+                if (input.Criteria != null)
+                {
+                    weightRec = Weightages[Process_Area == "Risk Assessment" && Criteria == input.Criteria && Status == "Active" && Effective_From <= zoho.currentdate && (Effective_To == null || Effective_To >= zoho.currentdate)];
+                    if (weightRec.count() > 0)
+                    {
+                        input.Weight_Percentage = ifnull(weightRec.Weight_Percentage,0);
+                        input.Weighted_Risk_Score = (ifnull(input.Weight_Percentage,0) * ifnull(input.Risk_Score_Percentage,0)) / 100;
+                    }
+                    else
+                    {
+                        alert "No active Risk Assessment weightage is configured for this criterion.";
+                    }
+                }
+            )
+        }
+    }
+}

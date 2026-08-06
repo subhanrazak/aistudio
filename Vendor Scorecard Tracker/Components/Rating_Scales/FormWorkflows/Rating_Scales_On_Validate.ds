@@ -1,0 +1,36 @@
+Rating_Scales_On_Validate as "Rating Scales On Validate"
+{
+    type = form
+    form = Rating_Scales
+    record event = on add or edit
+    description = "Validates rating value, score range, and active duplicate scale rows."
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if (ifnull(input.Rating_Value,0) <= 0)
+                {
+                    alert "Rating Value must be positive.";
+                    cancel submit;
+                }
+                if (ifnull(input.Score_Percentage,0) < 0 || ifnull(input.Score_Percentage,0) > 100)
+                {
+                    alert "Score Percentage must be between 0 and 100.";
+                    cancel submit;
+                }
+                if (input.Status == "Active")
+                {
+                    dup = Rating_Scales[ID != input.ID && Scale_Name == input.Scale_Name && Process_Area == input.Process_Area && Rating_Value == input.Rating_Value && Status == "Active"];
+                    if (dup.count() > 0)
+                    {
+                        alert "An active rating row already exists for this scale, process area, and rating value.";
+                        cancel submit;
+                    }
+                }
+            )
+        }
+    }
+}

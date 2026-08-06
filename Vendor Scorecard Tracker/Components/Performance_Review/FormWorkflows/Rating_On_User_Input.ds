@@ -1,0 +1,31 @@
+Performance_Review_Rating_On_User_Input as "Performance Review Rating On User Input"
+{
+    type = form
+    form = Performance_Review
+    record event = on add or edit
+    description = "Loads rating score percentage and recalculates weighted performance score."
+
+    on user input of Rating
+    {
+        actions
+        {
+            custom deluge script
+            (
+                input.Rating_Score_Percentage = 0;
+                if (input.Rating != null)
+                {
+                    ratingRec = Rating_Scales[ID == input.Rating && Status == "Active" && (Process_Area == "Performance Review" || Process_Area == "General")];
+                    if (ratingRec.count() > 0)
+                    {
+                        input.Rating_Score_Percentage = ifnull(ratingRec.Score_Percentage,0);
+                    }
+                    else
+                    {
+                        alert "Selected rating scale is not active for Performance Review.";
+                    }
+                }
+                input.Weighted_Score = (ifnull(input.Weight_Percentage,0) * ifnull(input.Rating_Score_Percentage,0)) / 100;
+            )
+        }
+    }
+}

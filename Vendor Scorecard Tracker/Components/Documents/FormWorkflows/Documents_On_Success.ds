@@ -1,0 +1,25 @@
+Documents_On_Success as "Documents On Success"
+{
+    type = form
+    form = Documents
+    record event = on add or edit
+    description = "Marks documents expired after successful save when the expiry date has passed."
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if (input.Expiry_Date != null && input.Expiry_Date < zoho.currentdate && input.Verification_Status != "Expired")
+                {
+                    docRec = Documents[ID == input.ID];
+                    if (docRec.count() > 0)
+                    {
+                        docRec.Verification_Status = "Expired";
+                    }
+                }
+            )
+        }
+    }
+}

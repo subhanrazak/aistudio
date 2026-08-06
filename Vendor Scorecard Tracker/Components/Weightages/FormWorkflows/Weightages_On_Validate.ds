@@ -1,0 +1,48 @@
+Weightages_On_Validate as "Weightages On Validate"
+{
+    type = form
+    form = Weightages
+    record event = on add or edit
+    description = "Validates weight percentages, dates, duplicates, and process totals."
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if (ifnull(input.Weight_Percentage,0) <= 0 || ifnull(input.Weight_Percentage,0) > 100)
+                {
+                    alert "Weight Percentage must be greater than 0 and less than or equal to 100.";
+                    cancel submit;
+                }
+                if (input.Effective_From != null && input.Effective_To != null && input.Effective_To < input.Effective_From)
+                {
+                    alert "Effective To cannot be before Effective From.";
+                    cancel submit;
+                }
+                if (input.Status == "Active")
+                {
+                    dup = Weightages[ID != input.ID && Process_Area == input.Process_Area && Criteria == input.Criteria && Status == "Active"];
+                    if (dup.count() > 0)
+                    {
+                        alert "An active weightage already exists for this process and criterion.";
+                        cancel submit;
+                    }
+                    totalWeight = 0;
+                    existingWeights = Weightages[ID != input.ID && Process_Area == input.Process_Area && Status == "Active"];
+                    for each  w in existingWeights
+                    {
+                        totalWeight = totalWeight + ifnull(w.Weight_Percentage,0);
+                    }
+                    totalWeight = totalWeight + ifnull(input.Weight_Percentage,0);
+                    if (totalWeight > 100)
+                    {
+                        alert "Active weightages for this process area cannot exceed 100%. Current total would be " + totalWeight + ".";
+                        cancel submit;
+                    }
+                }
+            )
+        }
+    }
+}

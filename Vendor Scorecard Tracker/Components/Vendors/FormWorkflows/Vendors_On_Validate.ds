@@ -1,0 +1,27 @@
+Vendors_On_Validate as "Vendors On Validate"
+{
+    type = form
+    form = Vendors
+    record event = on add or edit
+    description = "Validates vendor status and score ranges."
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if (input.Vendor_Status != "Prospective" && ifnull(input.Primary_Email,"") == "")
+                {
+                    alert "Primary Email is required once a vendor moves beyond Prospective.";
+                    cancel submit;
+                }
+                if (ifnull(input.Overall_Score,0) < 0 || ifnull(input.Overall_Score,0) > 100 || ifnull(input.Evaluation_Score,0) < 0 || ifnull(input.Evaluation_Score,0) > 100 || ifnull(input.Risk_Score,0) < 0 || ifnull(input.Risk_Score,0) > 100 || ifnull(input.Performance_Score,0) < 0 || ifnull(input.Performance_Score,0) > 100)
+                {
+                    alert "All score fields must be between 0 and 100.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}

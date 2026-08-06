@@ -1,0 +1,54 @@
+Performance_Review_On_Success as "Performance Review On Success"
+{
+    type = form
+    form = Performance_Review
+    record event = on add or edit
+    description = "Aggregates performance scores and refreshes the vendor scorecard."
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                totalScore = 0;
+                perfRecords = Performance_Review[Vendor == input.Vendor && Review_Period == input.Review_Period && (Review_Status == "Reviewed" || Review_Status == "Finalized")];
+                if (perfRecords.count() == 0)
+                {
+                    perfRecords = Performance_Review[Vendor == input.Vendor && Review_Period == input.Review_Period && Review_Status == "Submitted"];
+                }
+                for each perfRec in perfRecords
+                {
+                    totalScore = totalScore + ifnull(perfRec.Weighted_Score,0);
+                }
+                vendorRec = Vendors[ID == input.Vendor];
+                if (vendorRec.count() > 0)
+                {
+                    vendorRec.Performance_Score = totalScore;
+                    vendorRec.Last_Performance_Review_Date = input.Review_Date;
+                    vendorRec.Overall_Score = (ifnull(vendorRec.Evaluation_Score,0) + ifnull(vendorRec.Risk_Score,0) + ifnull(vendorRec.Performance_Score,0)) / 3;
+                    if (vendorRec.Risk_Level == "Critical")
+                    {
+                        vendorRec.Vendor_Tier = "Blocked";
+                    }
+                    else if (vendorRec.Overall_Score >= 85 && (vendorRec.Risk_Level == "Low" || vendorRec.Risk_Level == "Medium" || vendorRec.Risk_Level == "Not Assessed"))
+                    {
+                        vendorRec.Vendor_Tier = "Preferred";
+                    }
+                    else if (vendorRec.Overall_Score >= 70)
+                    {
+                        vendorRec.Vendor_Tier = "Approved";
+                    }
+                    else if (vendorRec.Overall_Score >= 50 || vendorRec.Risk_Level == "High")
+                    {
+                        vendorRec.Vendor_Tier = "Conditional";
+                    }
+                    else
+                    {
+                        vendorRec.Vendor_Tier = "Watchlist";
+                    }
+                }
+            )
+        }
+    }
+}

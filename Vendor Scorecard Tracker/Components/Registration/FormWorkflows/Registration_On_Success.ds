@@ -1,0 +1,41 @@
+Registration_On_Success as "Registration On Success"
+{
+    type = form
+    form = Registration
+    record event = on add or edit
+    description = "Updates the linked vendor status and primary email from registration progress."
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                vendorRec = Vendors[ID == input.Vendor];
+                if (vendorRec.count() > 0)
+                {
+                    if (input.Registration_Status == "Submitted")
+                    {
+                        vendorRec.Vendor_Status = "Registered";
+                    }
+                    else if (input.Registration_Status == "Under Review" || input.Registration_Status == "Clarification Required")
+                    {
+                        vendorRec.Vendor_Status = "Under Evaluation";
+                    }
+                    else if (input.Registration_Status == "Accepted")
+                    {
+                        vendorRec.Vendor_Status = "Approved";
+                    }
+                    else if (input.Registration_Status == "Rejected")
+                    {
+                        vendorRec.Vendor_Status = "Rejected";
+                    }
+                    if (vendorRec.Primary_Email in ["", " ", "null"] && input.Submitted_By_Email not in ["", " ", "null"])
+                    {
+                        vendorRec.Primary_Email = input.Submitted_By_Email;
+                    }
+                }
+            )
+        }
+    }
+}

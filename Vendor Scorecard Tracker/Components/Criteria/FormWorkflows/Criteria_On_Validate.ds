@@ -1,0 +1,22 @@
+Criteria_On_Validate as "Criteria On Validate"
+{
+    type = form
+    form = Criteria
+    record event = on add or edit
+    description = "Validates active scorecard criteria before save."
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if (input.Status == "Active" && ifnull(input.Applies_To,"") == "")
+                {
+                    alert "Applies To is required for active criteria.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}

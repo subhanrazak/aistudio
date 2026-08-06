@@ -1,0 +1,42 @@
+Evaluation_On_Success as "Evaluation On Success"
+{
+    type = form
+    form = Evaluation
+    record event = on add or edit
+    description = "Aggregates vendor evaluation scores and updates the vendor scorecard."
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                totalScore = 0;
+                evalRecords = Evaluation[Vendor == input.Vendor && Evaluation_Cycle == input.Evaluation_Cycle && (Evaluation_Status == "Reviewed" || Evaluation_Status == "Finalized")];
+                if (evalRecords.count() == 0)
+                {
+                    evalRecords = Evaluation[Vendor == input.Vendor && Evaluation_Cycle == input.Evaluation_Cycle && Evaluation_Status == "Submitted"];
+                }
+                for each evalRec in evalRecords
+                {
+                    totalScore = totalScore + ifnull(evalRec.Weighted_Score,0);
+                }
+                vendorRec = Vendors[ID == input.Vendor];
+                if (vendorRec.count() > 0)
+                {
+                    vendorRec.Evaluation_Score = totalScore;
+                    vendorRec.Last_Evaluation_Date = input.Evaluation_Date;
+                    vendorRec.Overall_Score = (ifnull(vendorRec.Evaluation_Score,0) + ifnull(vendorRec.Risk_Score,0) + ifnull(vendorRec.Performance_Score,0)) / 3;
+                    if (input.Evaluation_Status == "Finalized" && vendorRec.Vendor_Status != "Rejected" && vendorRec.Vendor_Status != "Suspended")
+                    {
+                        vendorRec.Vendor_Status = "Approved";
+                    }
+                    else if (input.Evaluation_Status == "Submitted" || input.Evaluation_Status == "Reviewed")
+                    {
+                        vendorRec.Vendor_Status = "Under Evaluation";
+                    }
+                }
+            )
+        }
+    }
+}

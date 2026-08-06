@@ -1,0 +1,31 @@
+Risk_Rating_On_User_Input as "Risk Rating On User Input"
+{
+    type = form
+    form = Risk_Assessment
+    record event = on add or edit
+    description = "Loads risk rating score percentage and recalculates weighted risk score."
+
+    on user input of Risk_Rating
+    {
+        actions
+        {
+            custom deluge script
+            (
+                input.Risk_Score_Percentage = 0;
+                if (input.Risk_Rating != null)
+                {
+                    ratingRec = Rating_Scales[ID == input.Risk_Rating && Status == "Active" && (Process_Area == "Risk Assessment" || Process_Area == "General")];
+                    if (ratingRec.count() > 0)
+                    {
+                        input.Risk_Score_Percentage = ifnull(ratingRec.Score_Percentage,0);
+                    }
+                    else
+                    {
+                        alert "Selected rating scale is not active for Risk Assessment.";
+                    }
+                }
+                input.Weighted_Risk_Score = (ifnull(input.Weight_Percentage,0) * ifnull(input.Risk_Score_Percentage,0)) / 100;
+            )
+        }
+    }
+}

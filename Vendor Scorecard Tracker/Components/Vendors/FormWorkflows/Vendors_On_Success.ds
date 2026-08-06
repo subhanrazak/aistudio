@@ -1,0 +1,45 @@
+Vendors_On_Success as "Vendors On Success"
+{
+    type = form
+    form = Vendors
+    record event = on add or edit
+    description = "Assigns vendor tier from overall score and risk level."
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                vendorRec = Vendors[ID == input.ID];
+                if (vendorRec.count() > 0)
+                {
+                    score = ifnull(input.Overall_Score,0);
+                    risk = ifnull(input.Risk_Level,"Not Assessed");
+                    tier = "Unclassified";
+                    if (risk == "Critical")
+                    {
+                        tier = "Blocked";
+                    }
+                    else if (score >= 85 && (risk == "Low" || risk == "Medium" || risk == "Not Assessed"))
+                    {
+                        tier = "Preferred";
+                    }
+                    else if (score >= 70)
+                    {
+                        tier = "Approved";
+                    }
+                    else if (score >= 50 || risk == "High")
+                    {
+                        tier = "Conditional";
+                    }
+                    else
+                    {
+                        tier = "Watchlist";
+                    }
+                    vendorRec.Vendor_Tier = tier;
+                }
+            )
+        }
+    }
+}
