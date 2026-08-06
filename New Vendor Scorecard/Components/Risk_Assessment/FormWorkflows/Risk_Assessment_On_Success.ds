@@ -12,14 +12,29 @@ Risk_Assessment_On_Success as "Risk Assessment On Success"
             custom deluge script
             (
                 totalRisk = 0;
-                riskRecords = Risk_Assessment[Vendor == input.Vendor && Assessment_Cycle == input.Assessment_Cycle && (Risk_Status == "Reviewed" || Risk_Status == "Mitigation Required" || Risk_Status == "Closed")];
-                if (riskRecords.count() == 0)
-                {
-                    riskRecords = Risk_Assessment[Vendor == input.Vendor && Assessment_Cycle == input.Assessment_Cycle && Risk_Status == "Submitted"];
-                }
+                reviewedRisk = 0;
+                reviewedCount = 0;
+                submittedRisk = 0;
+                riskRecords = Risk_Assessment[Vendor == input.Vendor && Assessment_Cycle == input.Assessment_Cycle];
                 for each riskRec in riskRecords
                 {
-                    totalRisk = totalRisk + ifnull(riskRec.Weighted_Risk_Score,0);
+                    if (riskRec.Risk_Status == "Reviewed" || riskRec.Risk_Status == "Mitigation Required" || riskRec.Risk_Status == "Closed")
+                    {
+                        reviewedRisk = reviewedRisk + ifnull(riskRec.Weighted_Risk_Score,0);
+                        reviewedCount = reviewedCount + 1;
+                    }
+                    else if (riskRec.Risk_Status == "Submitted")
+                    {
+                        submittedRisk = submittedRisk + ifnull(riskRec.Weighted_Risk_Score,0);
+                    }
+                }
+                if (reviewedCount > 0)
+                {
+                    totalRisk = reviewedRisk;
+                }
+                else
+                {
+                    totalRisk = submittedRisk;
                 }
                 vendorRec = Vendors[ID == input.Vendor];
                 if (vendorRec.count() > 0)

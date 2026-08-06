@@ -1,0 +1,63 @@
+<%
+vendorRows = Vendors[ID == input.Vendor_ID];
+riskScore = 0;
+if(vendorRows.count() > 0)
+{
+  vendorRec = vendorRows;
+  riskScore = ifnull(vendorRec.Risk_Score,0);
+}
+riskWidth = riskScore;
+if(riskWidth < 0)
+{
+  riskWidth = 0;
+}
+if(riskWidth > 100)
+{
+  riskWidth = 100;
+}
+riskColor = "#179E6C";
+riskLabel = "Low";
+if(riskScore > 75)
+{
+  riskColor = "#FE455D";
+  riskLabel = "Critical";
+}
+else if(riskScore > 50)
+{
+  riskColor = "#F4660C";
+  riskLabel = "High";
+}
+else if(riskScore > 25)
+{
+  riskColor = "#FAAE13";
+  riskLabel = "Medium";
+}
+%>
+<style>
+.vendor-risk-card{background:#FFFFFF;border:1px solid #F0F1F7;border-radius:18px;padding:22px;box-sizing:border-box;box-shadow:0 10px 24px rgba(18,19,43,0.07);font-family:lato, arimo, sans-serif;}
+.vendor-risk-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:18px;}
+.vendor-risk-title{margin:0;color:#222326;font-size:16px;font-weight:700;line-height:1.35;}
+.vendor-risk-value{color:#12132B;font-size:34px;font-weight:800;line-height:1;}
+.vendor-risk-badge{display:inline-block;margin-top:8px;padding:4px 10px;border-radius:999px;background:#F7F8FC;color:#5F6199;font-size:12px;font-weight:700;}
+.vendor-risk-track{height:16px;background:#F0F1F7;border-radius:999px;overflow:hidden;margin:14px 0 10px;}
+.vendor-risk-fill{height:100%;border-radius:999px;}
+.vendor-risk-foot{display:flex;justify-content:space-between;color:#5F6199;font-size:12px;line-height:1.4;}
+.vendor-risk-target{color:#7F7F7F;font-weight:700;}
+</style>
+<div class='vendor-risk-card'>
+  <div class='vendor-risk-head'>
+    <div>
+      <h4 class='vendor-risk-title'>Risk Score Gauge</h4>
+      <span class='vendor-risk-badge'><%=riskLabel%> risk</span>
+    </div>
+    <div class='vendor-risk-value'><%=riskScore%></div>
+  </div>
+  <div class='vendor-risk-track'>
+    <div class='vendor-risk-fill' style='width:<%=riskWidth%>%;background:<%=riskColor%>;'></div>
+  </div>
+  <div class='vendor-risk-foot'>
+    <span>0</span>
+    <span class='vendor-risk-target'>Target 30</span>
+    <span>100</span>
+  </div>
+</div>

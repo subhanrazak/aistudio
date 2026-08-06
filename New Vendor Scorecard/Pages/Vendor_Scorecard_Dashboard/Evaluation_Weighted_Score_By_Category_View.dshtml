@@ -1,0 +1,74 @@
+<%
+evalRows = Evaluation[Vendor == input.Vendor_ID] sort by Weighted_Score desc range from 1 to 8;
+maxScore = 0;
+for each evalRec in evalRows
+{
+  scoreValue = ifnull(evalRec.Weighted_Score,0);
+  if(scoreValue > maxScore)
+  {
+    maxScore = scoreValue;
+  }
+}
+if(maxScore <= 0)
+{
+  maxScore = 100;
+}
+%>
+<style>
+.vsc-chart-card{background:#FFFFFF;border:1px solid #E7E7EE;border-radius:14px;padding:18px;box-sizing:border-box;box-shadow:0 8px 20px rgba(18,19,43,0.06);font-family:lato, arimo, sans-serif;min-height:320px;}
+.vsc-chart-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px;}
+.vsc-chart-title{margin:0;color:#222326;font-size:16px;font-weight:700;line-height:1.3;}
+.vsc-chart-subtitle{margin-top:4px;color:#5F6199;font-size:12px;line-height:1.4;}
+.vsc-chart-empty{min-height:220px;display:flex;align-items:center;justify-content:center;color:#5F6199;background:#F9FAFE;border:1px dashed #D9DCE8;border-radius:12px;text-align:center;font-size:13px;}
+.vsc-bar-row{display:grid;grid-template-columns:minmax(120px,34%) 1fr auto;align-items:center;gap:10px;margin:11px 0;}
+.vsc-bar-label{color:#12132B;font-size:13px;line-height:1.35;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.vsc-bar-track{height:14px;background:#EEF3FF;border-radius:999px;overflow:hidden;}
+.vsc-bar-fill{height:100%;background:#2A6FFC;border-radius:999px;}
+.vsc-bar-value{min-width:42px;text-align:right;color:#12132B;font-size:13px;font-weight:700;}
+.vsc-status{display:inline-block;padding:4px 9px;border-radius:999px;background:#EEF3FF;color:#2A6FFC;font-size:11px;font-weight:700;}
+</style>
+<div class='vsc-chart-card'>
+  <div class='vsc-chart-head'>
+    <div>
+      <h4 class='vsc-chart-title'>Evaluation Weighted Score by Category</h4>
+      <div class='vsc-chart-subtitle'>Top weighted evaluation entries for this vendor.</div>
+    </div>
+    <span class='vsc-status'><%=evalRows.count()%> rows</span>
+  </div>
+<%
+if(evalRows.count() == 0)
+{
+%>
+  <div class='vsc-chart-empty'>No evaluation scores are available for this vendor.</div>
+<%
+}
+else
+{
+  for each evalRec in evalRows
+  {
+    categoryName = "Uncategorized";
+    if(evalRec.Category != null)
+    {
+      categoryName = ifnull(evalRec.Category.Category_Name,"Uncategorized");
+    }
+    scoreValue = ifnull(evalRec.Weighted_Score,0);
+    barWidth = (scoreValue * 100) / maxScore;
+    if(barWidth < 0)
+    {
+      barWidth = 0;
+    }
+    if(barWidth > 100)
+    {
+      barWidth = 100;
+    }
+%>
+  <div class='vsc-bar-row'>
+    <div class='vsc-bar-label'><%=categoryName%></div>
+    <div class='vsc-bar-track'><div class='vsc-bar-fill' style='width:<%=barWidth%>%;'></div></div>
+    <div class='vsc-bar-value'><%=scoreValue%></div>
+  </div>
+<%
+  }
+}
+%>
+</div>

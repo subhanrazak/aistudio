@@ -12,14 +12,29 @@ Performance_Review_On_Success as "Performance Review On Success"
             custom deluge script
             (
                 totalScore = 0;
-                perfRecords = Performance_Review[Vendor == input.Vendor && Review_Period == input.Review_Period && (Review_Status == "Reviewed" || Review_Status == "Finalized")];
-                if (perfRecords.count() == 0)
-                {
-                    perfRecords = Performance_Review[Vendor == input.Vendor && Review_Period == input.Review_Period && Review_Status == "Submitted"];
-                }
+                reviewedScore = 0;
+                reviewedCount = 0;
+                submittedScore = 0;
+                perfRecords = Performance_Review[Vendor == input.Vendor && Review_Period == input.Review_Period];
                 for each perfRec in perfRecords
                 {
-                    totalScore = totalScore + ifnull(perfRec.Weighted_Score,0);
+                    if (perfRec.Review_Status == "Reviewed" || perfRec.Review_Status == "Finalized")
+                    {
+                        reviewedScore = reviewedScore + ifnull(perfRec.Weighted_Score,0);
+                        reviewedCount = reviewedCount + 1;
+                    }
+                    else if (perfRec.Review_Status == "Submitted")
+                    {
+                        submittedScore = submittedScore + ifnull(perfRec.Weighted_Score,0);
+                    }
+                }
+                if (reviewedCount > 0)
+                {
+                    totalScore = reviewedScore;
+                }
+                else
+                {
+                    totalScore = submittedScore;
                 }
                 vendorRec = Vendors[ID == input.Vendor];
                 if (vendorRec.count() > 0)

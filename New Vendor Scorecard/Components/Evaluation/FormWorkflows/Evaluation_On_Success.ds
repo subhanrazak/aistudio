@@ -12,14 +12,29 @@ Evaluation_On_Success as "Evaluation On Success"
             custom deluge script
             (
                 totalScore = 0;
-                evalRecords = Evaluation[Vendor == input.Vendor && Evaluation_Cycle == input.Evaluation_Cycle && (Evaluation_Status == "Reviewed" || Evaluation_Status == "Finalized")];
-                if (evalRecords.count() == 0)
-                {
-                    evalRecords = Evaluation[Vendor == input.Vendor && Evaluation_Cycle == input.Evaluation_Cycle && Evaluation_Status == "Submitted"];
-                }
+                reviewedScore = 0;
+                reviewedCount = 0;
+                submittedScore = 0;
+                evalRecords = Evaluation[Vendor == input.Vendor && Evaluation_Cycle == input.Evaluation_Cycle];
                 for each evalRec in evalRecords
                 {
-                    totalScore = totalScore + ifnull(evalRec.Weighted_Score,0);
+                    if (evalRec.Evaluation_Status == "Reviewed" || evalRec.Evaluation_Status == "Finalized")
+                    {
+                        reviewedScore = reviewedScore + ifnull(evalRec.Weighted_Score,0);
+                        reviewedCount = reviewedCount + 1;
+                    }
+                    else if (evalRec.Evaluation_Status == "Submitted")
+                    {
+                        submittedScore = submittedScore + ifnull(evalRec.Weighted_Score,0);
+                    }
+                }
+                if (reviewedCount > 0)
+                {
+                    totalScore = reviewedScore;
+                }
+                else
+                {
+                    totalScore = submittedScore;
                 }
                 vendorRec = Vendors[ID == input.Vendor];
                 if (vendorRec.count() > 0)
