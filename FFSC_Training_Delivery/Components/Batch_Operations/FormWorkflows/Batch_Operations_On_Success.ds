@@ -1,0 +1,32 @@
+Batch_Operations_On_Success as "Batch Operations - RAG Escalation Notification"
+{
+    type = form
+    form = Batch_Operations
+    record event = on edit
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                currentRisk = input.Risk_Flag;
+                if(currentRisk == "Red" || currentRisk == "Amber")
+                {
+                    adminEmail = zoho.adminuserid;
+                    batchID = input.Batch_ID;
+                    nextStep = input.Next_Step;
+                    subject = "Batch Risk Flag Changed to " + currentRisk + " - " + batchID;
+                    msgBody = "Batch " + batchID + " has been flagged as " + currentRisk + " risk. Next Step: " + nextStep;
+                    sendmail
+                    (
+                        from : adminEmail
+                        to : zoho.adminuserid
+                        subject : subject
+                        message : msgBody
+                    )
+                }
+            )
+        }
+    }
+}
