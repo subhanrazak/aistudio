@@ -1,0 +1,42 @@
+list Driver_My_Trips
+{
+    displayName = "My Assigned Trips"
+    show all rows from Transport_Requests [Assigned_Driver.Driver_Email == zoho.loginuserid && Request_Status == "Vehicle Assigned"]
+    (
+        Request_Number
+        Travel_Start
+        Travel_End
+        Destination
+        Pickup_Location
+        Passenger_Count
+        Assigned_Vehicle
+        Assignment_Remarks
+        Driver_Acknowledgement
+        Driver_Remarks
+        Request_Status
+        Completion_Remarks
+        custom action "Mark Completed"
+        (
+            workflow = Mark_Completed
+            show action for each record = true
+            column header = "Mark Completed"
+            success message = "Trip marked completed."
+            condition = (Request_Status == "Vehicle Assigned")
+            confirmation before execution
+            (
+                message for individual record = "Mark this assigned trip as completed?"
+                confirm button text = "Complete"
+                cancel button text = "Cancel"
+            )
+        )
+    )
+    filters
+    (
+        Travel_Start
+        Driver_Acknowledgement
+    )
+    sort by
+    (
+        Travel_Start ascending
+    )
+}

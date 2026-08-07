@@ -1,0 +1,25 @@
+Travel_Start_On_User_Input as "Travel Start On User Input"
+{
+    type = form
+    form = Transport_Requests
+    record event = on add or edit
+    description = "Warns users when the travel start is invalid."
+
+    on user input of Travel_Start
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Travel_Start != null && input.Travel_Start < zoho.currenttime)
+                {
+                    alert "Travel start should not be in the past.";
+                }
+                if(input.Travel_Start != null && input.Travel_End != null && input.Travel_Start >= input.Travel_End)
+                {
+                    alert "Travel start must be before travel end.";
+                }
+            )
+        }
+    }
+}

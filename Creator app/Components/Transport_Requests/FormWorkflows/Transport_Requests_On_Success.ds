@@ -1,0 +1,133 @@
+Transport_Requests_On_Success as "Transport Requests On Success"
+{
+    type = form
+    form = Transport_Requests
+    record event = on add or edit
+    description = "Sends lifecycle notifications and updates driver/vehicle availability after request changes."
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                approverRecipients = List();
+                approvers = Transport_Team[Active_Status == "Active" && Can_Approve == true];
+                for each approver in approvers
+                {
+                    if(approver.Email != null && approver.Email != "")
+                    {
+                        approverRecipients.add(approver.Email);
+                    }
+                }
+                if(input.Request_Status == "Pending" && approverRecipients.size() > 0)
+                {
+                    sendmail
+                    [
+                        from: zoho.adminuserid
+                        to: approverRecipients
+                        subject: "New Transport Request #" + input.Request_Number
+                        message: "A new transport request has been submitted for " + input.Destination + " from " + input.Travel_Start + " to " + input.Travel_End + ". Please review it in Pending Transport Approvals."
+                    ]
+                }
+                if(input.Request_Status == "Approved" && input.Approval_Notification_Sent != true && input.Requester_Email != null && input.Requester_Email != "")
+                {
+                    sendmail
+                    [
+                        from: zoho.adminuserid
+                        to: input.Requester_Email
+                        subject: "Transport Request Approved #" + input.Request_Number
+                        message: "Your transport request has been approved. Remarks: " + input.Manager_Remarks
+                    ]
+                    input.Approval_Notification_Sent = true;
+                }
+                if(input.Request_Status == "Rejected" && input.Rejection_Notification_Sent != true && input.Requester_Email != null && input.Requester_Email != "")
+                {
+                    sendmail
+                    [
+                        from: zoho.adminuserid
+                        to: input.Requester_Email
+                        subject: "Transport Request Rejected #" + input.Request_Number
+                        message: "Your transport request has been rejected. Remarks: " + input.Manager_Remarks
+                    ]
+                    input.Rejection_Notification_Sent = true;
+                }
+                if(input.Request_Status == "Vehicle Assigned" && input.Assignment_Notification_Sent != true)
+                {
+                    driverRecipients = List();
+                    if(input.Requester_Email != null && input.Requester_Email != "")
+                    {
+                        driverRecipients.add(input.Requester_Email);
+                    }
+                    if(input.Assigned_Driver != null)
+                    {
+                        driverRecord = Drivers[ID == input.Assigned_Driver];
+                        if(driverRecord.count() > 0 && driverRecord.Driver_Email != null && driverRecord.Driver_Email != "")
+                        {
+                            driverRecipients.add(driverRecord.Driver_Email);
+                            driverRecord.Availability_Status = "Assigned";
+                        }
+                    }
+                    if(input.Assigned_Vehicle != null)
+                    {
+                        vehicleRecord = Vehicles[ID == input.Assigned_Vehicle];
+                        if(vehicleRecord.count() > 0)
+                        {
+                            vehicleRecord.Availability_Status = "Assigned";
+                        }
+                    }
+                    if(driverRecipients.size() > 0)
+                    {
+                        sendmail
+                        [
+                            from: zoho.adminuserid
+                            to: driverRecipients
+                            subject: "Vehicle Assigned for Transport Request #" + input.Request_Number
+                            message: "Vehicle and driver have been assigned for the trip to " + input.Destination + ". Assignment remarks: " + input.Assignment_Remarks
+                        ]
+                    }
+                    input.Assignment_Notification_Sent = true;
+                }
+                if(input.Request_Status == "Completed" && input.Completion_Notification_Sent != true)
+                {
+                    completionRecipients = List();
+                    if(input.Requester_Email != null && input.Requester_Email != "")
+                    {
+                        completionRecipients.add(input.Requester_Email);
+                    }
+                    for each approverMail in approverRecipients
+                    {
+                        completionRecipients.add(approverMail);
+                    }
+                    if(input.Assigned_Driver != null)
+                    {
+                        completedDriver = Drivers[ID == input.Assigned_Driver];
+                        if(completedDriver.count() > 0)
+                        {
+                            completedDriver.Availability_Status = "Available";
+                        }
+                    }
+                    if(input.Assigned_Vehicle != null)
+                    {
+                        completedVehicle = Vehicles[ID == input.Assigned_Vehicle];
+                        if(completedVehicle.count() > 0)
+                        {
+                            completedVehicle.Availability_Status = "Available";
+                        }
+                    }
+                    if(completionRecipients.size() > 0)
+                    {
+                        sendmail
+                        [
+                            from: zoho.adminuserid
+                            to: completionRecipients
+                            subject: "Transport Request Completed #" + input.Request_Number
+                            message: "The transport request for " + input.Destination + " has been completed. Completion remarks: " + input.Completion_Remarks
+                        ]
+                    }
+                    input.Completion_Notification_Sent = true;
+                }
+            )
+        }
+    }
+}

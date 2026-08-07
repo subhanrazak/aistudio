@@ -1,0 +1,79 @@
+Marks_On_Validate as "Validate Marks"
+{
+    type = form
+    form = Marks
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                selectedExam = Exams[ID == input.Exam];
+                selectedStudent = Students[ID == input.Student];
+                if(selectedExam.count() > 0)
+                {
+                    if(input.Marks_Obtained < 0)
+                    {
+                        alert "Marks Obtained cannot be negative.";
+                        cancel submit;
+                    }
+                    if(input.Marks_Obtained > selectedExam.Max_Marks)
+                    {
+                        alert "Marks Obtained cannot exceed the exam Max Marks.";
+                        cancel submit;
+                    }
+                    if(selectedStudent.count() > 0 && selectedStudent.Class != selectedExam.Class)
+                    {
+                        alert "Selected Student does not belong to the Exam Class.";
+                        cancel submit;
+                    }
+                    duplicateMarks = Marks[Exam == input.Exam && Student == input.Student && ID != input.ID];
+                    if(duplicateMarks.count() > 0)
+                    {
+                        alert "Marks already exist for this Exam and Student.";
+                        cancel submit;
+                    }
+                    input.Percentage = ((input.Marks_Obtained / selectedExam.Max_Marks) * 100).round(2);
+                    if(input.Marks_Obtained >= selectedExam.Pass_Marks)
+                    {
+                        input.Result = "Pass";
+                    }
+                    else
+                    {
+                        input.Result = "Fail";
+                    }
+                    if(input.Percentage >= 90)
+                    {
+                        input.Grade = "A+";
+                    }
+                    else if(input.Percentage >= 80)
+                    {
+                        input.Grade = "A";
+                    }
+                    else if(input.Percentage >= 70)
+                    {
+                        input.Grade = "B";
+                    }
+                    else if(input.Percentage >= 60)
+                    {
+                        input.Grade = "C";
+                    }
+                    else if(input.Percentage >= 50)
+                    {
+                        input.Grade = "D";
+                    }
+                    else if(input.Percentage >= 40)
+                    {
+                        input.Grade = "E";
+                    }
+                    else
+                    {
+                        input.Grade = "F";
+                    }
+                }
+            )
+        }
+    }
+}

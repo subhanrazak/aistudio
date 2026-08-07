@@ -1,0 +1,33 @@
+Attendance_On_Validate as "Validate Attendance"
+{
+    type = form
+    form = Attendance
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Attendance_Date > zoho.currentdate)
+                {
+                    alert "Attendance Date cannot be in the future.";
+                    cancel submit;
+                }
+                selectedStudent = Students[ID == input.Student];
+                if(selectedStudent.count() > 0 && selectedStudent.Class != input.Class)
+                {
+                    alert "Selected Student does not belong to the selected Class.";
+                    cancel submit;
+                }
+                duplicateAttendance = Attendance[Student == input.Student && Attendance_Date == input.Attendance_Date && Session == input.Session && ID != input.ID];
+                if(duplicateAttendance.count() > 0)
+                {
+                    alert "Attendance already exists for this Student, Date and Session.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}

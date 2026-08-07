@@ -1,0 +1,57 @@
+list Pending_Transport_Approvals
+{
+    displayName = "Pending Transport Approvals"
+    show all rows from Transport_Requests [Request_Status == "Pending"]
+    (
+        Request_Number
+        Requester
+        Department
+        Request_DateTime
+        Travel_Start
+        Travel_End
+        Destination
+        Passenger_Count
+        Preferred_Vehicle_Type
+        Purpose
+        Manager_Remarks
+        Request_Status
+        custom action "Approve Request"
+        (
+            workflow = Approve_Request
+            show action for each record = true
+            column header = "Approve Request"
+            success message = "Request approved."
+            condition = (Request_Status == "Pending")
+            confirmation before execution
+            (
+                message for individual record = "Approve this transport request?"
+                confirm button text = "Approve"
+                cancel button text = "Cancel"
+            )
+        )
+        custom action "Reject Request"
+        (
+            workflow = Reject_Request
+            show action for each record = true
+            column header = "Reject Request"
+            success message = "Request rejected."
+            condition = (Request_Status == "Pending")
+            confirmation before execution
+            (
+                message for individual record = "Reject this transport request?"
+                confirm button text = "Reject"
+                cancel button text = "Cancel"
+            )
+        )
+    )
+    filters
+    (
+        Department
+        Travel_Start
+        Preferred_Vehicle_Type
+    )
+    sort by
+    (
+        Travel_Start ascending
+    )
+}

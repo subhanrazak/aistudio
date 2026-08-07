@@ -1,0 +1,41 @@
+Mark_Completed as "Mark Completed"
+{
+    type = functions
+    form = Transport_Requests
+    execution type = for each record
+    description = "Marks an assigned trip as completed from transport manager or driver reports."
+
+    on start
+    {
+        actions
+        {
+            on click
+            (
+                isTransportManager = thisapp.permissions.isUserInProfile("Transport_Manager");
+                isAssignedDriver = false;
+                if(input.Assigned_Driver != null)
+                {
+                    driverRecord = Drivers[ID == input.Assigned_Driver];
+                    if(driverRecord.count() > 0 && driverRecord.Driver_Email == zoho.loginuserid)
+                    {
+                        isAssignedDriver = true;
+                    }
+                }
+                if(input.Request_Status == "Vehicle Assigned" && (isTransportManager == true || isAssignedDriver == true))
+                {
+                    input.Request_Status = "Completed";
+                    input.Completed_By_Email = zoho.loginuserid;
+                    input.Completed_DateTime = zoho.currenttime;
+                    if(input.Completion_Remarks == null || input.Completion_Remarks == "")
+                    {
+                        input.Completion_Remarks = "Trip completed.";
+                    }
+                }
+                else
+                {
+                    info "Only the assigned driver or transport manager can complete an assigned trip.";
+                }
+            )
+        }
+    }
+}

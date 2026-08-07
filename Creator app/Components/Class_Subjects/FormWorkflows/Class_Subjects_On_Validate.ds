@@ -1,0 +1,30 @@
+Class_Subjects_On_Validate as "Validate Class Subject Mapping"
+{
+    type = form
+    form = Class_Subjects
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Weekly_Periods != null && input.Weekly_Periods <= 0)
+                {
+                    alert "Weekly Periods must be greater than zero.";
+                    cancel submit;
+                }
+                if(input.Status == "Active")
+                {
+                    duplicateMappings = Class_Subjects[Academic_Year == input.Academic_Year && Class == input.Class && Subject == input.Subject && Status == "Active" && ID != input.ID];
+                    if(duplicateMappings.count() > 0)
+                    {
+                        alert "An active mapping already exists for this Academic Year, Class and Subject.";
+                        cancel submit;
+                    }
+                }
+            )
+        }
+    }
+}

@@ -1,0 +1,44 @@
+list Approved_For_Assignment
+{
+    displayName = "Approved For Assignment"
+    show all rows from Transport_Requests [Request_Status == "Approved"]
+    (
+        Request_Number
+        Requester
+        Department
+        Travel_Start
+        Travel_End
+        Destination
+        Passenger_Count
+        Preferred_Vehicle_Type
+        Manager_Remarks
+        Assigned_Vehicle
+        Assigned_Driver
+        Assignment_Remarks
+        Request_Status
+        custom action "Assign Vehicle & Driver"
+        (
+            workflow = Assign_Vehicle_Driver
+            show action for each record = true
+            column header = "Assign Vehicle & Driver"
+            success message = "Assignment action completed."
+            condition = (Request_Status == "Approved")
+            confirmation before execution
+            (
+                message for individual record = "Assign the selected vehicle and driver to this request?"
+                confirm button text = "Assign"
+                cancel button text = "Cancel"
+            )
+        )
+    )
+    filters
+    (
+        Department
+        Travel_Start
+        Preferred_Vehicle_Type
+    )
+    sort by
+    (
+        Travel_Start ascending
+    )
+}

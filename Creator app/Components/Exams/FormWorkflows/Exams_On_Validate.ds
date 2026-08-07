@@ -1,0 +1,40 @@
+Exams_On_Validate as "Validate Exam Details"
+{
+    type = form
+    form = Exams
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Max_Marks <= 0)
+                {
+                    alert "Max Marks must be greater than zero.";
+                    cancel submit;
+                }
+                if(input.Pass_Marks < 0)
+                {
+                    alert "Pass Marks cannot be negative.";
+                    cancel submit;
+                }
+                if(input.Pass_Marks > input.Max_Marks)
+                {
+                    alert "Pass Marks cannot exceed Max Marks.";
+                    cancel submit;
+                }
+                selectedYear = Academic_Years[ID == input.Academic_Year];
+                if(selectedYear.count() > 0)
+                {
+                    if(input.Exam_Date < selectedYear.Start_Date || input.Exam_Date > selectedYear.End_Date)
+                    {
+                        alert "Exam Date must fall within the selected Academic Year.";
+                        cancel submit;
+                    }
+                }
+            )
+        }
+    }
+}

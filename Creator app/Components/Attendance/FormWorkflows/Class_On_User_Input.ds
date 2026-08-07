@@ -1,0 +1,25 @@
+Class_On_User_Input as "Filter Students By Class"
+{
+    type = form
+    form = Attendance
+    record event = on add or edit
+
+    on user input of Class
+    {
+        actions
+        {
+            custom deluge script
+            (
+                clear Student;
+                input.Student = null;
+                if(input.Class != null)
+                {
+                    for each activeStudent in Students[Class == input.Class && Enrollment_Status == "Active"] sort by Admission_Number
+                    {
+                        Student:ui.add(activeStudent.ID);
+                    }
+                }
+            )
+        }
+    }
+}

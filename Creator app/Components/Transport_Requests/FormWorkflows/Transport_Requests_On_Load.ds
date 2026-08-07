@@ -1,0 +1,64 @@
+Transport_Requests_On_Load as "Transport Requests On Load"
+{
+    type = form
+    form = Transport_Requests
+    record event = on add or edit
+    description = "Prefills request details and adjusts browser field visibility by profile."
+
+    on load
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Request_DateTime == null)
+                {
+                    input.Request_DateTime = zoho.currenttime;
+                }
+                if(input.Request_Status == null || input.Request_Status == "")
+                {
+                    input.Request_Status = "Pending";
+                }
+                if(input.Driver_Acknowledgement == null || input.Driver_Acknowledgement == "")
+                {
+                    input.Driver_Acknowledgement = "Pending";
+                }
+                loggedInStaff = Staff_Directory[Email == zoho.loginuserid && Active_Status == "Active"];
+                if(input.Requester_Email == null || input.Requester_Email == "")
+                {
+                    input.Requester_Email = zoho.loginuserid;
+                }
+                if(loggedInStaff.count() > 0)
+                {
+                    input.Requester = loggedInStaff.ID;
+                    input.Department = loggedInStaff.Department;
+                    input.Requester_Email = loggedInStaff.Email;
+                }
+                hide Approval_Notification_Sent;
+                hide Rejection_Notification_Sent;
+                hide Assignment_Notification_Sent;
+                hide Completion_Notification_Sent;
+                if(thisapp.permissions.isUserInProfile("Staff"))
+                {
+                    hide Approval_and_Assignment;
+                    hide Driver_and_Completion;
+                    disable Request_Status;
+                    disable Request_DateTime;
+                }
+                else if(thisapp.permissions.isUserInProfile("Transport_Manager"))
+                {
+                    show Approval_and_Assignment;
+                    show Driver_and_Completion;
+                    disable Request_DateTime;
+                }
+                else if(thisapp.permissions.isUserInProfile("Driver"))
+                {
+                    hide Approval_and_Assignment;
+                    show Driver_and_Completion;
+                    disable Request_DateTime;
+                    disable Request_Status;
+                }
+            )
+        }
+    }
+}

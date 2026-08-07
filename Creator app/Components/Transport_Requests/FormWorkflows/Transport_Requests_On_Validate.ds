@@ -1,0 +1,114 @@
+Transport_Requests_On_Validate as "Transport Requests On Validate"
+{
+    type = form
+    form = Transport_Requests
+    record event = on add or edit
+    description = "Validates trip timing, passenger count, lifecycle requirements, capacity, and assignment conflicts."
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Requester_Email == null || input.Requester_Email == "")
+                {
+                    alert "Requester Email is required.";
+                    cancel submit;
+                }
+                if(input.Passenger_Count != null && input.Passenger_Count <= 0)
+                {
+                    alert "Passenger Count must be greater than zero.";
+                    cancel submit;
+                }
+                if(input.Travel_Start != null && input.Travel_End != null && input.Travel_End <= input.Travel_Start)
+                {
+                    alert "Travel End must be after Travel Start.";
+                    cancel submit;
+                }
+                if((input.Request_Status == "Approved" || input.Request_Status == "Rejected") && (input.Manager_Remarks == null || input.Manager_Remarks == ""))
+                {
+                    alert "Manager Remarks are required before approving or rejecting a request.";
+                    cancel submit;
+                }
+                if(input.Request_Status == "Vehicle Assigned")
+                {
+                    if(input.Assigned_Vehicle == null || input.Assigned_Driver == null)
+                    {
+                        alert "Assigned Vehicle and Assigned Driver are required before moving to Vehicle Assigned.";
+                        cancel submit;
+                    }
+                    if(input.Assigned_Vehicle != null)
+                    {
+                        selectedVehicle = Vehicles[ID == input.Assigned_Vehicle];
+                        if(selectedVehicle.count() > 0)
+                        {
+                            if(selectedVehicle.Active_Status != "Active")
+                            {
+                                alert "Selected vehicle is not active.";
+                                cancel submit;
+                            }
+                            if(selectedVehicle.Availability_Status != "Available")
+                            {
+                                currentVehicleAssignment = Transport_Requests[ID == input.ID && Assigned_Vehicle == input.Assigned_Vehicle && Request_Status == "Vehicle Assigned"];
+                                if(currentVehicleAssignment.count() == 0)
+                                {
+                                    alert "Selected vehicle is not available.";
+                                    cancel submit;
+                                }
+                            }
+                            if(selectedVehicle.Seating_Capacity < input.Passenger_Count)
+                            {
+                                alert "Selected vehicle does not have enough seating capacity.";
+                                cancel submit;
+                            }
+                        }
+                    }
+                    if(input.Assigned_Driver != null)
+                    {
+                        selectedDriver = Drivers[ID == input.Assigned_Driver];
+                        if(selectedDriver.count() > 0)
+                        {
+                            if(selectedDriver.Active_Status != "Active")
+                            {
+                                alert "Selected driver is not active.";
+                                cancel submit;
+                            }
+                            if(selectedDriver.Availability_Status != "Available")
+                            {
+                                currentDriverAssignment = Transport_Requests[ID == input.ID && Assigned_Driver == input.Assigned_Driver && Request_Status == "Vehicle Assigned"];
+                                if(currentDriverAssignment.count() == 0)
+                                {
+                                    alert "Selected driver is not available.";
+                                    cancel submit;
+                                }
+                            }
+                        }
+                    }
+                    vehicleConflicts = Transport_Requests[ID != input.ID && Assigned_Vehicle == input.Assigned_Vehicle && Request_Status != "Completed" && Request_Status != "Rejected" && Travel_Start < input.Travel_End && Travel_End > input.Travel_Start];
+                    if(vehicleConflicts.count() > 0)
+                    {
+                        alert "Selected vehicle has another active booking in this travel window.";
+                        cancel submit;
+                    }
+                    driverConflicts = Transport_Requests[ID != input.ID && Assigned_Driver == input.Assigned_Driver && Request_Status != "Completed" && Request_Status != "Rejected" && Travel_Start < input.Travel_End && Travel_End > input.Travel_Start];
+                    if(driverConflicts.count() > 0)
+                    {
+                        alert "Selected driver has another active booking in this travel window.";
+                        cancel submit;
+                    }
+                }
+                if(input.Request_Status == "Completed" && (input.Completion_Remarks == null || input.Completion_Remarks == ""))
+                {
+                    alert "Completion Remarks are required before marking the trip completed.";
+                    cancel submit;
+                }
+                if(input.Driver_Acknowledgement == "Unable To Serve" && (input.Driver_Remarks == null || input.Driver_Remarks == ""))
+                {
+                    alert "Driver Remarks are required when the driver is unable to serve.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}

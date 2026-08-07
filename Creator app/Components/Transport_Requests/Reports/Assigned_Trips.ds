@@ -1,0 +1,46 @@
+list Assigned_Trips
+{
+    displayName = "Assigned Trips"
+    show all rows from Transport_Requests [Request_Status == "Vehicle Assigned"]
+    (
+        Request_Number
+        Requester
+        Department
+        Travel_Start
+        Travel_End
+        Destination
+        Pickup_Location
+        Passenger_Count
+        Assigned_Vehicle
+        Assigned_Driver
+        Assignment_Remarks
+        Driver_Acknowledgement
+        Request_Status
+        Completion_Remarks
+        custom action "Mark Completed"
+        (
+            workflow = Mark_Completed
+            show action for each record = true
+            column header = "Mark Completed"
+            success message = "Trip marked completed."
+            condition = (Request_Status == "Vehicle Assigned")
+            confirmation before execution
+            (
+                message for individual record = "Mark this trip as completed?"
+                confirm button text = "Complete"
+                cancel button text = "Cancel"
+            )
+        )
+    )
+    filters
+    (
+        Assigned_Vehicle
+        Assigned_Driver
+        Travel_Start
+        Driver_Acknowledgement
+    )
+    sort by
+    (
+        Travel_Start ascending
+    )
+}

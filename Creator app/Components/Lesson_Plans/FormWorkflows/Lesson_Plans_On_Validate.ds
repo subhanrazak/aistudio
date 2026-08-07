@@ -1,0 +1,31 @@
+Lesson_Plans_On_Validate as "Validate Lesson Plan"
+{
+    type = form
+    form = Lesson_Plans
+    record event = on add or edit
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Plan_Status == "Completed" && input.Completion_Date == null)
+                {
+                    alert "Completion Date is required when the lesson plan is Completed.";
+                    cancel submit;
+                }
+                if(input.Completion_Date != null && input.Completion_Date < input.Plan_Date)
+                {
+                    alert "Completion Date cannot be before Plan Date.";
+                    cancel submit;
+                }
+                if(input.Plan_Date < zoho.currentdate.subDay(365))
+                {
+                    alert "Plan Date cannot be more than 365 days in the past.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}

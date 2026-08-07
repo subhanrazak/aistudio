@@ -1,0 +1,27 @@
+Approve_Request as "Approve Request"
+{
+    type = functions
+    form = Transport_Requests
+    execution type = for each record
+    description = "Approves a pending transport request from the approvals report."
+
+    on start
+    {
+        actions
+        {
+            on click
+            (
+                if(input.Request_Status == "Pending")
+                {
+                    input.Request_Status = "Approved";
+                    input.Approved_By_Email = zoho.loginuserid;
+                    input.Approval_DateTime = zoho.currenttime;
+                    if(input.Manager_Remarks == null || input.Manager_Remarks == "")
+                    {
+                        input.Manager_Remarks = "Approved by transport manager.";
+                    }
+                }
+            )
+        }
+    }
+}

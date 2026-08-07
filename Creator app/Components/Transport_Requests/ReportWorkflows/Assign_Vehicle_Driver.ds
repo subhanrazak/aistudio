@@ -1,0 +1,39 @@
+Assign_Vehicle_Driver as "Assign Vehicle & Driver"
+{
+    type = functions
+    form = Transport_Requests
+    execution type = for each record
+    description = "Moves an approved request to Vehicle Assigned when vehicle and driver details are valid."
+
+    on start
+    {
+        actions
+        {
+            on click
+            (
+                if(input.Request_Status == "Approved" && input.Assigned_Vehicle != null && input.Assigned_Driver != null)
+                {
+                    vehicleRecord = Vehicles[ID == input.Assigned_Vehicle];
+                    driverRecord = Drivers[ID == input.Assigned_Driver];
+                    if(vehicleRecord.count() > 0 && driverRecord.count() > 0 && vehicleRecord.Active_Status == "Active" && driverRecord.Active_Status == "Active" && vehicleRecord.Availability_Status == "Available" && driverRecord.Availability_Status == "Available" && vehicleRecord.Seating_Capacity >= input.Passenger_Count)
+                    {
+                        input.Request_Status = "Vehicle Assigned";
+                        input.Assignment_DateTime = zoho.currenttime;
+                        if(input.Assignment_Remarks == null || input.Assignment_Remarks == "")
+                        {
+                            input.Assignment_Remarks = "Vehicle and driver assigned by transport team.";
+                        }
+                    }
+                    else
+                    {
+                        info "Vehicle/driver must be active, available, and capacity must cover passenger count.";
+                    }
+                }
+                else
+                {
+                    info "Please edit the request to select Assigned Vehicle and Assigned Driver before running this action.";
+                }
+            )
+        }
+    }
+}
