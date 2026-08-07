@@ -1,0 +1,27 @@
+Applicants_On_Validate as "Applicants On Validate"
+{
+    type = form
+    form = Applicants
+    record event = on add or edit
+    description = "Validates candidate compensation and notice period values."
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Current_CTC != null && input.Expected_CTC != null && input.Expected_CTC < input.Current_CTC)
+                {
+                    alert "Expected CTC cannot be less than Current CTC.";
+                    cancel submit;
+                }
+                if(input.Notice_Period_Days != null && input.Notice_Period_Days < 0)
+                {
+                    alert "Notice Period Days cannot be negative.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}

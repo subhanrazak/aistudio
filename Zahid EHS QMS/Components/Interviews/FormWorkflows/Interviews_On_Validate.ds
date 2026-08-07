@@ -1,0 +1,40 @@
+Interviews_On_Validate as "Interviews On Validate"
+{
+    type = form
+    form = Interviews
+    record event = on add or edit
+    description = "Validates interview dates and completed feedback."
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Interview_End != null && input.Interview_End < input.Interview_Start)
+                {
+                    alert "Interview End cannot be earlier than Interview Start.";
+                    cancel submit;
+                }
+                if(input.Interview_Status == "Completed")
+                {
+                    if(input.Rating == null || input.Rating < 1 || input.Rating > 5)
+                    {
+                        alert "Rating is required and must be between 1 and 5 when the interview is Completed.";
+                        cancel submit;
+                    }
+                    if(input.Recommendation == null || input.Recommendation == "")
+                    {
+                        alert "Recommendation is required when the interview is Completed.";
+                        cancel submit;
+                    }
+                    if(input.Feedback == null || input.Feedback == "")
+                    {
+                        alert "Feedback is required when the interview is Completed.";
+                        cancel submit;
+                    }
+                }
+            )
+        }
+    }
+}

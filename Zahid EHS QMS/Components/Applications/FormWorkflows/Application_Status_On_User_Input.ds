@@ -1,0 +1,41 @@
+Application_Status_On_User_Input as "Application Status On User Input"
+{
+    type = form
+    form = Applications
+    record event = on add or edit
+    description = "Shows decision fields that match the selected application status."
+
+    on user input of Application_Status
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Application_Status == "Rejected")
+                {
+                    show Rejection_Reason;
+                    hide Withdrawal_Reason;
+                    show Final_Decision_Date;
+                }
+                else if(input.Application_Status == "Withdrawn")
+                {
+                    hide Rejection_Reason;
+                    show Withdrawal_Reason;
+                    show Final_Decision_Date;
+                }
+                else if(input.Application_Status == "Hired")
+                {
+                    hide Rejection_Reason;
+                    hide Withdrawal_Reason;
+                    show Final_Decision_Date;
+                }
+                else
+                {
+                    hide Rejection_Reason;
+                    hide Withdrawal_Reason;
+                    hide Final_Decision_Date;
+                }
+            )
+        }
+    }
+}

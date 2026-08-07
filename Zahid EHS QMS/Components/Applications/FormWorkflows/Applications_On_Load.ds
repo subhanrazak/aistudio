@@ -1,0 +1,41 @@
+Applications_On_Load as "Applications On Load"
+{
+    type = form
+    form = Applications
+    record event = on add or edit
+    description = "Initializes application decision field visibility."
+
+    on load
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Application_Status == "Rejected")
+                {
+                    show Rejection_Reason;
+                    hide Withdrawal_Reason;
+                    show Final_Decision_Date;
+                }
+                else if(input.Application_Status == "Withdrawn")
+                {
+                    hide Rejection_Reason;
+                    show Withdrawal_Reason;
+                    show Final_Decision_Date;
+                }
+                else if(input.Application_Status == "Hired")
+                {
+                    hide Rejection_Reason;
+                    hide Withdrawal_Reason;
+                    show Final_Decision_Date;
+                }
+                else
+                {
+                    hide Rejection_Reason;
+                    hide Withdrawal_Reason;
+                    hide Final_Decision_Date;
+                }
+            )
+        }
+    }
+}

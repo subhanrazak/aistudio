@@ -1,0 +1,37 @@
+Job_Openings_On_Validate as "Job Openings On Validate"
+{
+    type = form
+    form = Job_Openings
+    record event = on add or edit
+    description = "Validates job opening counts, salary range, and status dates."
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(ifnull(input.Positions,0) <= 0)
+                {
+                    alert "Positions must be greater than zero.";
+                    cancel submit;
+                }
+                if(input.Salary_Min != null && input.Salary_Max != null && input.Salary_Max < input.Salary_Min)
+                {
+                    alert "Salary Max cannot be less than Salary Min.";
+                    cancel submit;
+                }
+                if(input.Opening_Status == "Open" && input.Date_Opened == null)
+                {
+                    alert "Date Opened is required when the opening is Open.";
+                    cancel submit;
+                }
+                if((input.Opening_Status == "Closed" || input.Opening_Status == "Filled") && input.Date_Closed == null)
+                {
+                    alert "Date Closed is required when the opening is Closed or Filled.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}

@@ -1,0 +1,40 @@
+Offers_On_Validate as "Offers On Validate"
+{
+    type = form
+    form = Offers
+    record event = on add or edit
+    description = "Validates offer acceptance requirements and duplicate active offers."
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Offered_CTC != null && input.Offered_CTC < 0)
+                {
+                    alert "Offered CTC cannot be negative.";
+                    cancel submit;
+                }
+                if(input.Offer_Status == "Accepted")
+                {
+                    if(input.Acceptance_Date == null)
+                    {
+                        input.Acceptance_Date = zoho.currentdate;
+                    }
+                    if(input.Expected_Joining_Date == null)
+                    {
+                        alert "Expected Joining Date is required when the offer is Accepted.";
+                        cancel submit;
+                    }
+                }
+                activeOffers = Offers[Application == input.Application && ID != input.ID && Offer_Status != "Withdrawn" && Offer_Status != "Declined"];
+                if(activeOffers.count() > 0 && input.Offer_Status != "Withdrawn" && input.Offer_Status != "Declined")
+                {
+                    alert "Another active offer already exists for this application.";
+                    cancel submit;
+                }
+            )
+        }
+    }
+}

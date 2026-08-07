@@ -1,0 +1,68 @@
+Offers_On_Success as "Offers On Success"
+{
+    type = form
+    form = Offers
+    record event = on add or edit
+    description = "Converts accepted offers into employee records and updates linked recruitment records."
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                if(input.Offer_Status == "Accepted")
+                {
+                    appRec = Applications[ID == input.Application];
+                    if(appRec.ID != null)
+                    {
+                        decisionDate = ifnull(input.Acceptance_Date,zoho.currentdate);
+                        appRec.Application_Status = "Hired";
+                        appRec.Final_Decision_Date = decisionDate;
+                        applicantRec = Applicants[ID == appRec.Applicant];
+                        if(applicantRec.ID != null)
+                        {
+                            applicantRec.Candidate_Status = "Hired";
+                        }
+                        existingEmployees = Employees[Source_Application == appRec.ID];
+                        if(existingEmployees.count() == 0 && applicantRec.ID != null)
+                        {
+                            openingRec = Job_Openings[ID == appRec.Job_Opening];
+                            empType = "Full-time";
+                            if(openingRec.ID != null && openingRec.Employment_Type != null)
+                            {
+                                empType = openingRec.Employment_Type;
+                            }
+                            employeeId = insert into Employees
+                            [
+                                Employee_Name = applicantRec.Applicant_Name
+                                Work_Email = applicantRec.Email
+                                Personal_Email = applicantRec.Email
+                                Phone = applicantRec.Phone
+                                Department = input.Offered_Department
+                                Designation = input.Offered_Designation
+                                Employment_Type = empType
+                                Joining_Date = input.Expected_Joining_Date
+                                Employee_Status = "Active"
+                                Source_Application = appRec.ID
+                            ];
+                        }
+                        openingRec = Job_Openings[ID == appRec.Job_Opening];
+                        if(openingRec.ID != null)
+                        {
+                            hiredApps = Applications[Job_Opening == openingRec.ID && Application_Status == "Hired"];
+                            if(hiredApps.count() >= openingRec.Positions)
+                            {
+                                openingRec.Opening_Status = "Filled";
+                                if(openingRec.Date_Closed == null)
+                                {
+                                    openingRec.Date_Closed = zoho.currentdate;
+                                }
+                            }
+                        }
+                    }
+                }
+            )
+        }
+    }
+}

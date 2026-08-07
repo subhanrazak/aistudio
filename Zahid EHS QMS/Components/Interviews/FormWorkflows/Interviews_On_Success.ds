@@ -1,0 +1,44 @@
+Interviews_On_Success as "Interviews On Success"
+{
+    type = form
+    form = Interviews
+    record event = on add or edit
+    description = "Updates the linked application with the latest completed interview outcome."
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                appRec = Applications[ID == input.Application];
+                if(appRec.ID != null && input.Interview_Status == "Completed")
+                {
+                    appRec.Latest_Interview_Round = input.Interview_Round;
+                    appRec.Latest_Recommendation = input.Recommendation;
+                    if(input.Recommendation == "Reject")
+                    {
+                        appRec.Application_Status = "Rejected";
+                        if(appRec.Rejection_Reason == null || appRec.Rejection_Reason == "")
+                        {
+                            appRec.Rejection_Reason = "Rejected after " + input.Interview_Round + " interview.";
+                        }
+                        appRec.Final_Decision_Date = zoho.currentdate;
+                    }
+                    else if(input.Interview_Round == "Screening" && input.Recommendation == "Advance" && appRec.Application_Status == "Screening")
+                    {
+                        appRec.Application_Status = "Technical Interview";
+                    }
+                    else if(input.Interview_Round == "Technical" && input.Recommendation == "Advance" && appRec.Application_Status == "Technical Interview")
+                    {
+                        appRec.Application_Status = "HR Interview";
+                    }
+                    else if(input.Interview_Round == "HR" && input.Recommendation == "Hire" && appRec.Application_Status == "HR Interview")
+                    {
+                        appRec.Application_Status = "Offer";
+                    }
+                }
+            )
+        }
+    }
+}

@@ -1,0 +1,128 @@
+Application_Selection_Process as "Application Selection Process"
+{
+    type = blueprint
+    form = Applications
+
+    start
+    {
+        start stage = "Applied"
+    }
+
+    stages
+    {
+        "Applied" { }
+        "Screening" { }
+        "Technical Interview" { }
+        "HR Interview" { }
+        "Offer" { }
+        "Hired" { }
+        "Rejected" { }
+        "Withdrawn" { }
+    }
+
+    transitions
+    {
+        Shortlist as "Shortlist"
+        {
+            type = normal
+            from stage = "Applied"
+            to stage = "Screening"
+            before
+            {
+                transition owner
+                (
+                    permissions = {"HR_Recruiter", "Hiring_Manager"}
+                )
+            }
+            after { }
+        }
+        Move_to_Technical as "Move to Technical"
+        {
+            type = normal
+            from stage = "Screening"
+            to stage = "Technical Interview"
+            before
+            {
+                transition owner
+                (
+                    permissions = {"HR_Recruiter", "Hiring_Manager"}
+                )
+            }
+            after { }
+        }
+        Move_to_HR as "Move to HR"
+        {
+            type = normal
+            from stage = "Technical Interview"
+            to stage = "HR Interview"
+            before
+            {
+                transition owner
+                (
+                    permissions = {"HR_Recruiter", "Hiring_Manager"}
+                )
+            }
+            after { }
+        }
+        Approve_for_Offer as "Approve for Offer"
+        {
+            type = normal
+            from stage = "HR Interview"
+            to stage = "Offer"
+            before
+            {
+                transition owner
+                (
+                    permissions = {"HR_Recruiter", "Hiring_Manager"}
+                )
+            }
+            after { }
+        }
+        Mark_Hired as "Mark Hired"
+        {
+            type = normal
+            from stage = "Offer"
+            to stage = "Hired"
+            before
+            {
+                transition owner
+                (
+                    permissions = {"HR_Recruiter", "Hiring_Manager"}
+                )
+            }
+            after { }
+        }
+        Reject as "Reject"
+        {
+            type = common
+            from stage = "Applied"
+            to stage = "Rejected"
+            common stages = {"Screening", "Technical Interview", "HR Interview", "Offer"}
+            before
+            {
+                transition owner
+                (
+                    permissions = {"HR_Recruiter", "Hiring_Manager"}
+                )
+                tooltip message = "Reject this candidate for the opening"
+            }
+            after { }
+        }
+        Withdraw as "Withdraw"
+        {
+            type = common
+            from stage = "Applied"
+            to stage = "Withdrawn"
+            common stages = {"Screening", "Technical Interview", "HR Interview", "Offer"}
+            before
+            {
+                transition owner
+                (
+                    permissions = {"HR_Recruiter", "Hiring_Manager"}
+                )
+                tooltip message = "Mark this application as withdrawn"
+            }
+            after { }
+        }
+    }
+}

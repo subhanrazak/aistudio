@@ -1,0 +1,33 @@
+Applications_On_Success as "Applications On Success"
+{
+    type = form
+    form = Applications
+    record event = on add or edit
+    description = "Keeps applicant hiring status synchronized with application decisions."
+
+    on success
+    {
+        actions
+        {
+            custom deluge script
+            (
+                applicantRec = Applicants[ID == input.Applicant];
+                if(applicantRec.ID != null)
+                {
+                    if(input.Application_Status == "Hired")
+                    {
+                        applicantRec.Candidate_Status = "Hired";
+                    }
+                    else if(input.Application_Status != "Rejected" && input.Application_Status != "Withdrawn")
+                    {
+                        hiredApps = Applications[Applicant == input.Applicant && Application_Status == "Hired"];
+                        if(hiredApps.count() == 0 && applicantRec.Candidate_Status != "Blacklisted")
+                        {
+                            applicantRec.Candidate_Status = "Active";
+                        }
+                    }
+                }
+            )
+        }
+    }
+}

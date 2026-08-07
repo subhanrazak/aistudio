@@ -1,0 +1,40 @@
+Applications_On_Validate as "Applications On Validate"
+{
+    type = form
+    form = Applications
+    record event = on add or edit
+    description = "Validates duplicate applications and final decision requirements."
+
+    on validate
+    {
+        actions
+        {
+            custom deluge script
+            (
+                duplicates = Applications[Applicant == input.Applicant && Job_Opening == input.Job_Opening && ID != input.ID];
+                if(duplicates.count() > 0)
+                {
+                    alert "This applicant is already linked to this job opening.";
+                    cancel submit;
+                }
+                if(input.Application_Status == "Rejected" && (input.Rejection_Reason == null || input.Rejection_Reason == ""))
+                {
+                    alert "Rejection Reason is required when the application is Rejected.";
+                    cancel submit;
+                }
+                if(input.Application_Status == "Withdrawn" && (input.Withdrawal_Reason == null || input.Withdrawal_Reason == ""))
+                {
+                    alert "Withdrawal Reason is required when the application is Withdrawn.";
+                    cancel submit;
+                }
+                if(input.Application_Status == "Hired" || input.Application_Status == "Rejected" || input.Application_Status == "Withdrawn")
+                {
+                    if(input.Final_Decision_Date == null)
+                    {
+                        input.Final_Decision_Date = zoho.currentdate;
+                    }
+                }
+            )
+        }
+    }
+}

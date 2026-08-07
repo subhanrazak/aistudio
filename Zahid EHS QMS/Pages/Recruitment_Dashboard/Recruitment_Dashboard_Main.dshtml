@@ -1,0 +1,406 @@
+<%
+currentStamp = zoho.currenttime.toString("dd-MMM-yyyy hh:mm a");
+weekEnd = zoho.currenttime.addDay(7);
+openOpenings = Job_Openings[Opening_Status == "Open"].count();
+activeApplicants = Applicants[Candidate_Status == "Active"].count();
+scheduledThisWeek = Interviews[Interview_Status == "Scheduled" && Interview_Start >= zoho.currenttime && Interview_Start <= weekEnd].count();
+pendingFeedback = Interviews[Interview_Status == "Scheduled" || (Interview_Status == "Completed" && Recommendation is null)].count();
+offersAccepted = Offers[Offer_Status == "Accepted"].count();
+hiresCreated = Employees[Source_Application != null].count();
+appliedCount = Applications[Application_Status == "Applied"].count();
+screeningCount = Applications[Application_Status == "Screening"].count();
+technicalCount = Applications[Application_Status == "Technical Interview"].count();
+hrCount = Applications[Application_Status == "HR Interview"].count();
+offerStageCount = Applications[Application_Status == "Offer"].count();
+hiredStageCount = Applications[Application_Status == "Hired"].count();
+rejectedCount = Applications[Application_Status == "Rejected"].count();
+withdrawnCount = Applications[Application_Status == "Withdrawn"].count();
+totalPipeline = appliedCount + screeningCount + technicalCount + hrCount + offerStageCount + hiredStageCount + rejectedCount + withdrawnCount;
+maxStage = 1;
+if(appliedCount > maxStage)
+{
+	maxStage = appliedCount;
+}
+if(screeningCount > maxStage)
+{
+	maxStage = screeningCount;
+}
+if(technicalCount > maxStage)
+{
+	maxStage = technicalCount;
+}
+if(hrCount > maxStage)
+{
+	maxStage = hrCount;
+}
+if(offerStageCount > maxStage)
+{
+	maxStage = offerStageCount;
+}
+if(hiredStageCount > maxStage)
+{
+	maxStage = hiredStageCount;
+}
+if(rejectedCount > maxStage)
+{
+	maxStage = rejectedCount;
+}
+if(withdrawnCount > maxStage)
+{
+	maxStage = withdrawnCount;
+}
+appliedPct = (appliedCount * 100) / maxStage;
+screeningPct = (screeningCount * 100) / maxStage;
+technicalPct = (technicalCount * 100) / maxStage;
+hrPct = (hrCount * 100) / maxStage;
+offerStagePct = (offerStageCount * 100) / maxStage;
+hiredStagePct = (hiredStageCount * 100) / maxStage;
+rejectedPct = (rejectedCount * 100) / maxStage;
+withdrawnPct = (withdrawnCount * 100) / maxStage;
+offerDraftCount = Offers[Offer_Status == "Draft"].count();
+offerSentCount = Offers[Offer_Status == "Sent"].count();
+offerAcceptedCount = Offers[Offer_Status == "Accepted"].count();
+offerDeclinedCount = Offers[Offer_Status == "Declined"].count();
+offerWithdrawnCount = Offers[Offer_Status == "Withdrawn"].count();
+maxOffer = 1;
+if(offerDraftCount > maxOffer)
+{
+	maxOffer = offerDraftCount;
+}
+if(offerSentCount > maxOffer)
+{
+	maxOffer = offerSentCount;
+}
+if(offerAcceptedCount > maxOffer)
+{
+	maxOffer = offerAcceptedCount;
+}
+if(offerDeclinedCount > maxOffer)
+{
+	maxOffer = offerDeclinedCount;
+}
+if(offerWithdrawnCount > maxOffer)
+{
+	maxOffer = offerWithdrawnCount;
+}
+offerDraftPct = (offerDraftCount * 100) / maxOffer;
+offerSentPct = (offerSentCount * 100) / maxOffer;
+offerAcceptedPct = (offerAcceptedCount * 100) / maxOffer;
+offerDeclinedPct = (offerDeclinedCount * 100) / maxOffer;
+offerWithdrawnPct = (offerWithdrawnCount * 100) / maxOffer;
+%>
+<style>
+/* ===== zcs-global.css utility subset included once for this page after fetching zcs-global ===== */
+:root { --zcs-theme-brand-color: var(--zcs_brand_color, #2A6FFC); --zcs-light-bg-color: var(--zcs_brand_light_color, #E8EFFF); --zcs-primary-text-color: var(--zcs_primary_text_color, #12132B); --zcs-secondary-text-color: var(--zcs_secondary_text_color, #5F6199); --zcs-teritiary-text-color: var(--zcs_tertiary_text_color, #878895); --zcs-border-color: var(--zcs_tertiary_border_color, #E7E7EE); --zcs-white-color: #FFFFFF; --zcs-page-bg-color: #F3F3F4; --zcs-component-hover-color: var(--zcs_component_hover_color, #F4F7FF); font-size: 16px; line-height: 1.5; }
+.zcs-w-full{width:100%;}.zcs-h-full{height:100%;}.zcs-wh-full{width:100%;height:100%;}.zcs-flex{display:flex;}.zcs-inline-flex{display:inline-flex;}.zcs-row{display:flex;flex-wrap:wrap;}.zcs-direction-column{flex-direction:column;}.zcs-align-items-center{align-items:center;}.zcs-align-items-start{align-items:flex-start;}.zcs-align-items-end{align-items:flex-end;}.zcs-justify-center{justify-content:center;}.zcs-justify-space-between{justify-content:space-between;}.zcs-justify-start{justify-content:flex-start;}.zcs-col-common{flex:1 1 0%;}.zcs-gap-4{gap:.25rem;}.zcs-gap-8{gap:.5rem;}.zcs-gap-10{gap:.625rem;}.zcs-gap-12{gap:.75rem;}.zcs-gap-16{gap:1rem;}.zcs-gap-20{gap:1.25rem;}.zcs-p-0{padding:0;}.zcs-p-2{padding:.125rem;}.zcs-p-8{padding:.5rem;}.zcs-p-10{padding:.625rem;}.zcs-p-12{padding:.75rem;}.zcs-p-16{padding:1rem;}.zcs-p-20{padding:1.25rem;}.zcs-p-24{padding:1.5rem;}.zcs-px-10{padding-left:.625rem;padding-right:.625rem;}.zcs-px-16{padding-left:1rem;padding-right:1rem;}.zcs-px-20{padding-left:1.25rem;padding-right:1.25rem;}.zcs-px-24{padding-left:1.5rem;padding-right:1.5rem;}.zcs-px-30{padding-left:1.875rem;padding-right:1.875rem;}.zcs-py-2{padding-top:.125rem;padding-bottom:.125rem;}.zcs-py-4{padding-top:.25rem;padding-bottom:.25rem;}.zcs-py-8{padding-top:.5rem;padding-bottom:.5rem;}.zcs-py-12{padding-top:.75rem;padding-bottom:.75rem;}.zcs-py-16{padding-top:1rem;padding-bottom:1rem;}.zcs-py-24{padding-top:1.5rem;padding-bottom:1.5rem;}.zcs-m-0{margin:0;}.zcs-mt-8{margin-top:.5rem;}.zcs-box-border{box-sizing:border-box;}.zcs-rounded-sm{border-radius:.25rem;}.zcs-rounded-md{border-radius:.375rem;}.zcs-rounded-lg{border-radius:.5rem;}.zcs-rounded-xl{border-radius:.75rem;}.zcs-font-11{font-size:.6875rem;}.zcs-font-12{font-size:.75rem;}.zcs-font-13{font-size:.8125rem;}.zcs-font-14{font-size:.875rem;}.zcs-font-15{font-size:.9375rem;}.zcs-font-16{font-size:1rem;}.zcs-font-18{font-size:1.125rem;}.zcs-font-20{font-size:1.25rem;}.zcs-font-22{font-size:1.375rem;}.zcs-font-28{font-size:1.75rem;}.zcs-font-30{font-size:1.875rem;}.zcs-font-normal{font-weight:400;}.zcs-font-medium{font-weight:500;}.zcs-font-semibold{font-weight:600;}.zcs-font-bold{font-weight:700;}.zcs-lh-body{line-height:1.5;}.zcs-lh-heading{line-height:1.25;}.zcs-color-primary{color:var(--zcs-primary-text-color);}.zcs-color-secondary{color:var(--zcs-secondary-text-color);}.zcs-color-tertiary{color:var(--zcs-teritiary-text-color);}.zcs-color-white{color:var(--zcs-white-color);}.zcs-color-theme{color:var(--zcs-theme-brand-color);}.zcs-text-left{text-align:left;}.zcs-text-right{text-align:right;}.zcs-text-center{text-align:center;}.zcs-ellipsis{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}.zcs-relative{position:relative;}.zcs-absolute{position:absolute;}.zcs-sticky{position:sticky;}.zcs-card{background-color:var(--zcs-white-color);border:1px solid var(--zcs-border-color);border-radius:12px;}a{text-decoration:none;color:inherit;}
+/* ===== ZCS component CSS: card-template-default, table-simple-table, badge-filled-badge, header-heading-with-actions, chart-bar-chart ===== */
+.zcs-card-header{border-bottom:1px solid var(--zcs-border-color);}.zcs-template-card-badge{top:0;right:0;background-color:var(--zcs-theme-brand-color);border-bottom-left-radius:32px;}.zcs-template-card{overflow:hidden;}.zcs-button{width:auto;min-width:5rem;min-height:36px;}.zcs-primary-outline-button{border:1px solid var(--zcs-theme-brand-color);background-color:var(--zcs-white-color);color:var(--zcs-theme-brand-color);}.zcs-primary-outline-button:hover{background-color:var(--zcs-component-hover-color);border-color:var(--zcs-theme-brand-color);color:var(--zcs-theme-brand-color);} .zcs-button-icon{width:16px;max-height:16px;}.zcs-table-wrapper{border:1px solid var(--zcs-border-color);background-color:var(--zcs-white-color);overflow:auto;}.zcs-table-wrapper table{line-height:normal;border-collapse:collapse;}.zcs-table-wrapper table thead{top:0;z-index:1;}.zcs-table-wrapper table thead tr th{background-color:#F9FAFE;box-shadow:0 -1px 0 0 var(--zcs-border-color) inset;white-space:nowrap;}.zcs-table-wrapper table tbody tr td{border-top:1px solid var(--zcs-border-color);}.zcs-table-wrapper table tbody tr:first-child td{border-color:transparent;}.zcs-table-wrapper table tbody tr:hover td{background-color:#F9FAFE;}.zcs-table-wrapper table tbody tr.zcs-tnodata td{color:var(--zcs-teritiary-text-color);text-align:center;}.zcs-badge{width:auto;}.zcs-badge-filled{border:1px solid transparent;}.zcs-badge-filled.zcs-badge-theme{background-color:var(--zcs-theme-brand-color);border-color:var(--zcs-theme-brand-color);color:var(--zcs-white-color);}.zcs-badge-filled.zcs-badge-green{background-color:#179E6C;border-color:#179E6C;color:#FFFFFF;}.zcs-badge-filled.zcs-badge-red{background-color:#FE455D;border-color:#FE455D;color:#FFFFFF;}.zcs-badge-filled.zcs-badge-grey{background-color:#242424;border-color:#242424;color:#FFFFFF;}.zcs-badge-filled.zcs-badge-yellow{background-color:#FAAE13;border-color:#FAAE13;color:#FFFFFF;}.zcs-badge-filled.zcs-badge-blue{background-color:#2A6FFC;border-color:#2A6FFC;color:#FFFFFF;}.zcs-badge-filled.zcs-badge-orange{background-color:#F4660C;border-color:#F4660C;color:#FFFFFF;}.zcs-chart ul li{list-style-type:none;}.zcs-bar-value{border-radius:999px;background-color:var(--zcs-theme-brand-color);display:block;min-width:3px;}
+/* ===== Recruitment dashboard custom layer ===== */
+.rdash *{box-sizing:border-box;}.rdash{min-height:100%;background:linear-gradient(180deg,#F8FAFF 0%,#F3F3F4 100%);padding:22px;font-family:Arial, sans-serif;color:var(--zcs-primary-text-color);}.rdash-hero{position:relative;overflow:hidden;border-radius:20px;padding:26px;background:linear-gradient(135deg,var(--zcs-theme-brand-color) 0%,#1C1C40 100%);color:#FFFFFF;box-shadow:0 12px 34px rgba(28,28,64,.18);}.rdash-hero:after{content:"";position:absolute;right:-80px;top:-120px;width:340px;height:340px;border-radius:50%;border:52px solid rgba(255,255,255,.12);}.rdash-hero:before{content:"";position:absolute;right:90px;bottom:-90px;width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,.08);}.rdash-hero-content{position:relative;z-index:1;gap:18px;}.rdash-title{font-size:30px;font-weight:700;line-height:1.15;margin:0 0 8px;}.rdash-subtitle{margin:0;color:rgba(255,255,255,.82);font-size:14px;max-width:680px;}.rdash-actions{flex-wrap:wrap;}.rdash-action{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);color:#FFFFFF;border-radius:10px;padding:9px 12px;font-size:13px;display:inline-flex;gap:8px;align-items:center;}.rdash-action:hover{background:rgba(255,255,255,.22);}.rdash-stamp{margin-top:14px;color:rgba(255,255,255,.72);font-size:12px;}.rdash-grid{display:grid;gap:16px;}.rdash-kpi-grid{grid-template-columns:repeat(6,minmax(0,1fr));margin-top:18px;}.rdash-kpi{min-height:150px;color:inherit;transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease;}.rdash-kpi:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(28,28,64,.08);border-color:rgba(42,111,252,.35);}.rdash-kpi .zcs-card-header{min-height:62px;}.rdash-kpi-icon{width:38px;height:38px;border-radius:12px;background:var(--zcs-light-bg-color);color:var(--zcs-theme-brand-color);display:flex;align-items:center;justify-content:center;font-size:20px;flex:0 0 auto;}.rdash-kpi-value{font-size:32px;font-weight:700;line-height:1;margin:0 0 8px;}.rdash-kpi-note{font-size:12px;color:var(--zcs-teritiary-text-color);margin:0;}.rdash-main-grid{grid-template-columns:minmax(0,1.35fr) minmax(360px,.65fr);margin-top:16px;align-items:start;}.rdash-section-card{overflow:hidden;box-shadow:0 1px 2px rgba(28,28,64,.03);}.rdash-section-title{display:flex;align-items:center;gap:10px;font-weight:700;font-size:16px;margin:0;}.rdash-section-title i{color:var(--zcs-theme-brand-color);font-size:18px;}.rdash-section-meta{font-size:12px;color:var(--zcs-teritiary-text-color);}.rdash-pipeline-list,.rdash-offer-list,.rdash-hire-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px;}.rdash-bar-row{display:grid;grid-template-columns:150px minmax(0,1fr) 42px;gap:12px;align-items:center;}.rdash-bar-label{font-size:13px;font-weight:600;color:var(--zcs-secondary-text-color);white-space:nowrap;}.rdash-bar-track{height:10px;background:#EEF1F7;border-radius:999px;overflow:hidden;}.rdash-bar-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--zcs-theme-brand-color),#77A3FF);}.rdash-bar-count{text-align:right;font-size:13px;font-weight:700;color:var(--zcs-primary-text-color);}.rdash-table-card{margin-top:16px;}.rdash-table-wrapper{max-height:360px;}.rdash-table-wrapper table{min-width:760px;}.rdash-table-link{color:var(--zcs-theme-brand-color);font-weight:600;}.rdash-muted{color:var(--zcs-teritiary-text-color);font-size:12px;}.rdash-open-grid{grid-template-columns:minmax(0,1fr) minmax(330px,.55fr);margin-top:16px;align-items:start;}.rdash-hire-item{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;padding:12px;border:1px solid var(--zcs-border-color);border-radius:10px;background:#FFFFFF;}.rdash-avatar{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--zcs-light-bg-color);color:var(--zcs-theme-brand-color);font-weight:700;flex:0 0 auto;}.rdash-empty{padding:22px;text-align:center;color:var(--zcs-teritiary-text-color);}.rdash-empty i{display:block;font-size:24px;color:var(--zcs-theme-brand-color);margin-bottom:8px;}.rdash-stage-dot{width:8px;height:8px;border-radius:50%;background:var(--zcs-theme-brand-color);display:inline-block;}.rdash-badge-soft{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 9px;background:var(--zcs-light-bg-color);color:var(--zcs-theme-brand-color);font-weight:600;font-size:12px;}
+@media (max-width:1280px){.rdash-kpi-grid{grid-template-columns:repeat(3,minmax(0,1fr));}.rdash-main-grid,.rdash-open-grid{grid-template-columns:1fr;}}
+@media (max-width:760px){.rdash{padding:14px;}.rdash-hero{padding:20px;}.rdash-hero-content{flex-direction:column;align-items:flex-start;}.rdash-title{font-size:24px;}.rdash-kpi-grid{grid-template-columns:1fr;}.rdash-bar-row{grid-template-columns:1fr;gap:6px;}.rdash-bar-count{text-align:left;}.rdash-page-header{padding-left:0;padding-right:0;}.rdash-actions{width:100%;}.rdash-action{width:100%;justify-content:center;}}
+</style>
+<div class="rdash">
+    <div class="rdash-hero">
+        <div class="rdash-hero-content zcs-flex zcs-align-items-center zcs-justify-space-between">
+            <div>
+                <div class="rdash-badge-soft" style="background:rgba(255,255,255,.16);color:#FFFFFF;"><i class="zc-li-outline users-2-single-01"></i><span>HR recruitment command center</span></div>
+                <h1 class="rdash-title">Recruitment Dashboard</h1>
+                <p class="rdash-subtitle">Monitor open roles, applicant flow, interviews, offers, and hires from one responsive view.</p>
+                <div class="rdash-stamp"><i class="zc-li-outline ui-2-time"></i> Refreshed <%=currentStamp%></div>
+            </div>
+            <div class="rdash-actions zcs-flex zcs-align-items-center zcs-gap-8">
+                <a class="rdash-action" href="#Report:Open_Job_Openings"><i class="zc-li-outline business-briefcase-24"></i><span>Open openings</span></a>
+                <a class="rdash-action" href="#Report:Application_Pipeline"><i class="zc-li-outline arrows-1-refresh-69"></i><span>Pipeline</span></a>
+                <a class="rdash-action" href="#Report:Interview_Calendar"><i class="zc-li-outline ui-1-calendar-60"></i><span>Calendar</span></a>
+                <a class="rdash-action" href="#Report:Offer_Status_Board"><i class="zc-li-outline business-handout"></i><span>Offers</span></a>
+            </div>
+        </div>
+    </div>
+
+    <div class="rdash-grid rdash-kpi-grid">
+        <a class="zcs-template-card rdash-kpi zcs-card zcs-flex zcs-direction-column zcs-relative" href="#Report:Open_Job_Openings">
+            <div class="zcs-card-header zcs-p-16 zcs-box-border zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12">
+                <h6 class="zcs-font-14 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0">Open openings</h6>
+                <div class="rdash-kpi-icon"><i class="zc-li-outline business-briefcase-24"></i></div>
+            </div>
+            <div class="zcs-card-content zcs-p-16 zcs-box-border">
+                <p class="rdash-kpi-value"><%=openOpenings%></p>
+                <p class="rdash-kpi-note">Roles currently accepting candidates</p>
+            </div>
+        </a>
+        <a class="zcs-template-card rdash-kpi zcs-card zcs-flex zcs-direction-column zcs-relative" href="#Report:Active_Applicants">
+            <div class="zcs-card-header zcs-p-16 zcs-box-border zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12">
+                <h6 class="zcs-font-14 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0">Active applicants</h6>
+                <div class="rdash-kpi-icon"><i class="zc-li-outline users-3-single-body"></i></div>
+            </div>
+            <div class="zcs-card-content zcs-p-16 zcs-box-border">
+                <p class="rdash-kpi-value"><%=activeApplicants%></p>
+                <p class="rdash-kpi-note">Candidates available in the pool</p>
+            </div>
+        </a>
+        <a class="zcs-template-card rdash-kpi zcs-card zcs-flex zcs-direction-column zcs-relative" href="#Report:Interview_Calendar">
+            <div class="zcs-card-header zcs-p-16 zcs-box-border zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12">
+                <h6 class="zcs-font-14 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0">Scheduled this week</h6>
+                <div class="rdash-kpi-icon"><i class="zc-li-outline ui-1-calendar-60"></i></div>
+            </div>
+            <div class="zcs-card-content zcs-p-16 zcs-box-border">
+                <p class="rdash-kpi-value"><%=scheduledThisWeek%></p>
+                <p class="rdash-kpi-note">Interviews from now through 7 days</p>
+            </div>
+        </a>
+        <a class="zcs-template-card rdash-kpi zcs-card zcs-flex zcs-direction-column zcs-relative" href="#Report:Pending_Feedback">
+            <div class="zcs-card-header zcs-p-16 zcs-box-border zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12">
+                <h6 class="zcs-font-14 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0">Pending feedback</h6>
+                <div class="rdash-kpi-icon"><i class="zc-li-outline files-check"></i></div>
+            </div>
+            <div class="zcs-card-content zcs-p-16 zcs-box-border">
+                <p class="rdash-kpi-value"><%=pendingFeedback%></p>
+                <p class="rdash-kpi-note">Scheduled or awaiting recommendation</p>
+            </div>
+        </a>
+        <a class="zcs-template-card rdash-kpi zcs-card zcs-flex zcs-direction-column zcs-relative" href="#Report:Accepted_Offers">
+            <div class="zcs-card-header zcs-p-16 zcs-box-border zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12">
+                <h6 class="zcs-font-14 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0">Offers accepted</h6>
+                <div class="rdash-kpi-icon"><i class="zc-li-outline ui-1-check-circle-08"></i></div>
+            </div>
+            <div class="zcs-card-content zcs-p-16 zcs-box-border">
+                <p class="rdash-kpi-value"><%=offersAccepted%></p>
+                <p class="rdash-kpi-note">Accepted offers ready for conversion</p>
+            </div>
+        </a>
+        <a class="zcs-template-card rdash-kpi zcs-card zcs-flex zcs-direction-column zcs-relative" href="#Report:All_Employees">
+            <div class="zcs-card-header zcs-p-16 zcs-box-border zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12">
+                <h6 class="zcs-font-14 zcs-font-semibold zcs-lh-heading zcs-color-primary zcs-m-0">Hires created</h6>
+                <div class="rdash-kpi-icon"><i class="zc-li-outline users-2-a-add"></i></div>
+            </div>
+            <div class="zcs-card-content zcs-p-16 zcs-box-border">
+                <p class="rdash-kpi-value"><%=hiresCreated%></p>
+                <p class="rdash-kpi-note">Employee records linked to applications</p>
+            </div>
+        </a>
+    </div>
+
+    <div class="rdash-grid rdash-main-grid">
+        <section class="rdash-section-card zcs-card">
+            <div class="zcs-card-header zcs-p-20 zcs-box-border zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12">
+                <h2 class="rdash-section-title"><i class="zc-li-outline arrows-1-refresh-69"></i><span>Pipeline summary</span></h2>
+                <span class="rdash-section-meta"><%=totalPipeline%> total applications</span>
+            </div>
+            <div class="zcs-card-content zcs-p-20 zcs-box-border">
+                <div class="zcs-chart zcs-w-full zcs-barchart-wrapper zcs-relative">
+                    <ul class="rdash-pipeline-list">
+                        <li class="rdash-bar-row"><span class="rdash-bar-label"><span class="rdash-stage-dot"></span> Applied</span><span class="rdash-bar-track"><span class="zcs-bar-value rdash-bar-fill" style="width:<%=appliedPct%>%"></span></span><span class="rdash-bar-count"><%=appliedCount%></span></li>
+                        <li class="rdash-bar-row"><span class="rdash-bar-label"><span class="rdash-stage-dot"></span> Screening</span><span class="rdash-bar-track"><span class="zcs-bar-value rdash-bar-fill" style="width:<%=screeningPct%>%"></span></span><span class="rdash-bar-count"><%=screeningCount%></span></li>
+                        <li class="rdash-bar-row"><span class="rdash-bar-label"><span class="rdash-stage-dot"></span> Technical Interview</span><span class="rdash-bar-track"><span class="zcs-bar-value rdash-bar-fill" style="width:<%=technicalPct%>%"></span></span><span class="rdash-bar-count"><%=technicalCount%></span></li>
+                        <li class="rdash-bar-row"><span class="rdash-bar-label"><span class="rdash-stage-dot"></span> HR Interview</span><span class="rdash-bar-track"><span class="zcs-bar-value rdash-bar-fill" style="width:<%=hrPct%>%"></span></span><span class="rdash-bar-count"><%=hrCount%></span></li>
+                        <li class="rdash-bar-row"><span class="rdash-bar-label"><span class="rdash-stage-dot"></span> Offer</span><span class="rdash-bar-track"><span class="zcs-bar-value rdash-bar-fill" style="width:<%=offerStagePct%>%"></span></span><span class="rdash-bar-count"><%=offerStageCount%></span></li>
+                        <li class="rdash-bar-row"><span class="rdash-bar-label"><span class="rdash-stage-dot"></span> Hired</span><span class="rdash-bar-track"><span class="zcs-bar-value rdash-bar-fill" style="width:<%=hiredStagePct%>%"></span></span><span class="rdash-bar-count"><%=hiredStageCount%></span></li>
+                        <li class="rdash-bar-row"><span class="rdash-bar-label"><span class="rdash-stage-dot"></span> Rejected</span><span class="rdash-bar-track"><span class="zcs-bar-value rdash-bar-fill" style="width:<%=rejectedPct%>%;background:linear-gradient(90deg,#FE455D,#FF9AA8);"></span></span><span class="rdash-bar-count"><%=rejectedCount%></span></li>
+                        <li class="rdash-bar-row"><span class="rdash-bar-label"><span class="rdash-stage-dot"></span> Withdrawn</span><span class="rdash-bar-track"><span class="zcs-bar-value rdash-bar-fill" style="width:<%=withdrawnPct%>%;background:linear-gradient(90deg,#878895,#C2C4D1);"></span></span><span class="rdash-bar-count"><%=withdrawnCount%></span></li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section class="rdash-section-card zcs-card">
+            <div class="zcs-card-header zcs-p-20 zcs-box-border zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12">
+                <h2 class="rdash-section-title"><i class="zc-li-outline business-handout"></i><span>Offer conversion</span></h2>
+                <a class="rdash-section-meta" href="#Report:All_Offers">All offers</a>
+            </div>
+            <div class="zcs-card-content zcs-p-20 zcs-box-border">
+                <ul class="rdash-offer-list">
+                    <li class="rdash-bar-row"><span class="rdash-bar-label">Draft</span><span class="rdash-bar-track"><span class="zcs-bar-value rdash-bar-fill" style="width:<%=offerDraftPct%>%;background:#878895;"></span></span><span class="rdash-bar-count"><%=offerDraftCount%></span></li>
+                    <li class="rdash-bar-row"><span class="rdash-bar-label">Sent</span><span class="rdash-bar-track"><span class="zcs-bar-value rdash-bar-fill" style="width:<%=offerSentPct%>%;background:#2A6FFC;"></span></span><span class="rdash-bar-count"><%=offerSentCount%></span></li>
+                    <li class="rdash-bar-row"><span class="rdash-bar-label">Accepted</span><span class="rdash-bar-track"><span class="zcs-bar-value rdash-bar-fill" style="width:<%=offerAcceptedPct%>%;background:#179E6C;"></span></span><span class="rdash-bar-count"><%=offerAcceptedCount%></span></li>
+                    <li class="rdash-bar-row"><span class="rdash-bar-label">Declined</span><span class="rdash-bar-track"><span class="zcs-bar-value rdash-bar-fill" style="width:<%=offerDeclinedPct%>%;background:#FE455D;"></span></span><span class="rdash-bar-count"><%=offerDeclinedCount%></span></li>
+                    <li class="rdash-bar-row"><span class="rdash-bar-label">Withdrawn</span><span class="rdash-bar-track"><span class="zcs-bar-value rdash-bar-fill" style="width:<%=offerWithdrawnPct%>%;background:#FAAE13;"></span></span><span class="rdash-bar-count"><%=offerWithdrawnCount%></span></li>
+                </ul>
+            </div>
+        </section>
+    </div>
+
+    <section class="rdash-section-card rdash-table-card zcs-card">
+        <div class="zcs-card-header zcs-p-20 zcs-box-border zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12">
+            <h2 class="rdash-section-title"><i class="zc-li-outline ui-1-calendar-60"></i><span>Upcoming interviews</span></h2>
+            <span class="rdash-section-meta">Next 7 days</span>
+        </div>
+        <div class="zcs-card-content zcs-p-20 zcs-box-border">
+            <div class="zcs-table-wrapper rdash-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative">
+                <table class="zcs-w-full">
+                    <thead class="zcs-sticky">
+                        <tr>
+                            <th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Applicant / application</th>
+                            <th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Opening</th>
+                            <th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Round</th>
+                            <th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Interviewer</th>
+                            <th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Mode</th>
+                            <th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Date / time</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+<%
+interviewRows = 0;
+for each interviewRec in Interviews[Interview_Status == "Scheduled" && Interview_Start >= zoho.currenttime && Interview_Start <= weekEnd] sort by Interview_Start asc
+{
+	if(interviewRows < 8)
+	{
+		applicationText = "-";
+		applicantText = "-";
+		openingText = "-";
+		if(interviewRec.Application != null)
+		{
+			applicationText = ifnull(interviewRec.Application.Application_ID,"-");
+			if(interviewRec.Application.Applicant != null)
+			{
+				applicantText = ifnull(interviewRec.Application.Applicant.Applicant_Name,"-");
+			}
+			if(interviewRec.Application.Job_Opening != null)
+			{
+				openingText = ifnull(interviewRec.Application.Job_Opening.Job_Title,"-");
+			}
+		}
+		interviewWhen = "-";
+		if(interviewRec.Interview_Start != null)
+		{
+			interviewWhen = interviewRec.Interview_Start.toString("dd-MMM-yyyy hh:mm a");
+		}
+%>
+                        <tr>
+                            <td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"><a class="rdash-table-link" href="#Report:All_Interviews?ID=<%=interviewRec.ID%>"><%=applicantText%></a><div class="rdash-muted">Application <%=applicationText%></div></td>
+                            <td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"><%=openingText%></td>
+                            <td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"><span class="zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-blue"><span class="zcs-badge-text zcs-font-12 zcs-font-normal zcs-lh-body"><%=ifnull(interviewRec.Interview_Round,"-")%></span></span></td>
+                            <td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"><%=ifnull(interviewRec.Interviewer_Name,"-")%></td>
+                            <td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"><%=ifnull(interviewRec.Interview_Mode,"-")%></td>
+                            <td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"><%=interviewWhen%></td>
+                        </tr>
+<%
+		interviewRows = interviewRows + 1;
+	}
+}
+if(interviewRows == 0)
+{
+%>
+                        <tr class="zcs-tnodata"><td class="zcs-px-16 zcs-py-16 zcs-box-border zcs-font-14" colspan="6"><i class="zc-li-outline ui-1-check-circle-08"></i> No scheduled interviews in the next 7 days.</td></tr>
+<%
+}
+%>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <div class="rdash-grid rdash-open-grid">
+        <section class="rdash-section-card zcs-card">
+            <div class="zcs-card-header zcs-p-20 zcs-box-border zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12">
+                <h2 class="rdash-section-title"><i class="zc-li-outline business-briefcase-24"></i><span>Open openings summary</span></h2>
+                <a class="rdash-section-meta" href="#Report:Open_Job_Openings">View report</a>
+            </div>
+            <div class="zcs-card-content zcs-p-20 zcs-box-border">
+                <div class="zcs-table-wrapper rdash-table-wrapper zcs-rounded-sm zcs-box-border zcs-relative">
+                    <table class="zcs-w-full">
+                        <thead class="zcs-sticky">
+                            <tr>
+                                <th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Role</th>
+                                <th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Department</th>
+                                <th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Positions</th>
+                                <th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Hiring manager</th>
+                                <th class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-medium zcs-lh-body zcs-color-primary">Target joining</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+<%
+openingRows = 0;
+for each openingRec in Job_Openings[Opening_Status == "Open"] sort by Target_Join_Date asc
+{
+	if(openingRows < 8)
+	{
+		departmentText = "-";
+		if(openingRec.Department != null)
+		{
+			departmentText = ifnull(openingRec.Department.Department_Name,"-");
+		}
+		targetJoinText = "-";
+		if(openingRec.Target_Join_Date != null)
+		{
+			targetJoinText = openingRec.Target_Join_Date.toString("dd-MMM-yyyy");
+		}
+%>
+                            <tr>
+                                <td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"><a class="rdash-table-link" href="#Report:Open_Job_Openings?ID=<%=openingRec.ID%>"><%=ifnull(openingRec.Job_Title,"-")%></a></td>
+                                <td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"><%=departmentText%></td>
+                                <td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-right zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"><%=ifnull(openingRec.Positions,0)%></td>
+                                <td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"><%=ifnull(openingRec.Hiring_Manager_Name,"-")%></td>
+                                <td class="zcs-px-16 zcs-py-8 zcs-box-border zcs-text-left zcs-font-14 zcs-font-normal zcs-lh-body zcs-color-primary"><%=targetJoinText%></td>
+                            </tr>
+<%
+		openingRows = openingRows + 1;
+	}
+}
+if(openingRows == 0)
+{
+%>
+                            <tr class="zcs-tnodata"><td class="zcs-px-16 zcs-py-16 zcs-box-border zcs-font-14" colspan="5"><i class="zc-li-outline ui-1-check-circle-08"></i> No open job openings found.</td></tr>
+<%
+}
+%>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section class="rdash-section-card zcs-card">
+            <div class="zcs-card-header zcs-p-20 zcs-box-border zcs-flex zcs-align-items-center zcs-justify-space-between zcs-gap-12">
+                <h2 class="rdash-section-title"><i class="zc-li-outline users-2-a-add"></i><span>Recent hires</span></h2>
+                <a class="rdash-section-meta" href="#Report:Active_Employees">Employees</a>
+            </div>
+            <div class="zcs-card-content zcs-p-20 zcs-box-border">
+                <ul class="rdash-hire-list">
+<%
+hireRows = 0;
+for each employeeRec in Employees[Employee_Status == "Active"] sort by Joining_Date desc
+{
+	if(hireRows < 6)
+	{
+		empDepartment = "-";
+		if(employeeRec.Department != null)
+		{
+			empDepartment = ifnull(employeeRec.Department.Department_Name,"-");
+		}
+		joiningText = "-";
+		if(employeeRec.Joining_Date != null)
+		{
+			joiningText = employeeRec.Joining_Date.toString("dd-MMM-yyyy");
+		}
+		empName = ifnull(employeeRec.Employee_Name,"Employee");
+		initialText = empName.subString(0,1);
+%>
+                    <li class="rdash-hire-item">
+                        <div class="zcs-flex zcs-align-items-start zcs-gap-12">
+                            <div class="rdash-avatar"><%=initialText%></div>
+                            <div>
+                                <a class="rdash-table-link zcs-font-14 zcs-font-semibold" href="#Report:All_Employees?ID=<%=employeeRec.ID%>"><%=empName%></a>
+                                <div class="rdash-muted"><%=ifnull(employeeRec.Designation,"-")%></div>
+                                <div class="rdash-muted"><%=empDepartment%></div>
+                            </div>
+                        </div>
+                        <span class="zcs-badge zcs-badge-filled zcs-inline-flex zcs-align-items-center zcs-justify-center zcs-gap-8 zcs-rounded-sm zcs-px-10 zcs-py-2 zcs-box-border zcs-badge-green"><span class="zcs-badge-text zcs-font-12 zcs-font-normal zcs-lh-body"><%=joiningText%></span></span>
+                    </li>
+<%
+		hireRows = hireRows + 1;
+	}
+}
+if(hireRows == 0)
+{
+%>
+                    <li class="rdash-empty"><i class="zc-li-outline users-2-a-add"></i>No active employee hires found.</li>
+<%
+}
+%>
+                </ul>
+            </div>
+        </section>
+    </div>
+</div>
